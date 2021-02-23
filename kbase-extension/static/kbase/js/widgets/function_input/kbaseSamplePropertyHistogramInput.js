@@ -11,7 +11,7 @@ define (
 		'kbaseNarrativeMethodInput',
 		'kbaseNarrativeParameterCheckboxInput',
 		'kbaseNarrativeParameterCustomTextSubdataInput'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -19,10 +19,10 @@ define (
 		kbaseNarrativeMethodInput,
 		kbaseNarrativeParameterCheckboxInput,
 		kbaseNarrativeParameterCustomTextSubdataInput
-	) {
+	) => {
     
-    var workspaceUrl = Config.url('workspace');
-    var loadingImage = Config.get('loading_gif');
+    const workspaceUrl = Config.url('workspace');
+    const loadingImage = Config.get('loading_gif');
     return KBWidget({
         name: "kbaseSamplePropertyHistogramInput",
         parent : kbaseNarrativeMethodInput,
@@ -42,7 +42,7 @@ define (
         state: 0,
         ws : null,
         initWsClient: function() {
-            var self = this;
+            const self = this;
 
             if(this.authToken){
                 this.ws = new Workspace(workspaceUrl, {token: this.authToken()});
@@ -61,16 +61,16 @@ define (
          */
         
         render: function(){
-            var self = this;
+            const self = this;
             self.initWsClient();
             
             this.parameters = [];
             this.parameterIdLookup = {};
-            var $inputParameterContainer = $('<div>');
-            var $optionsDiv = $('<div>');
+            const $inputParameterContainer = $('<div>');
+            const $optionsDiv = $('<div>');
             
-            var method = this.options.method;
-            var params = method.parameters;
+            const method = this.options.method;
+            const params = method.parameters;
                         
             this.addParameterDiv(params[0], "kbaseNarrativeParameterTextInput", $optionsDiv);
             this.addParameterDiv(params[1], "kbaseNarrativeParameterCustomTextSubdataInput", $optionsDiv, self);
@@ -78,7 +78,7 @@ define (
             this.addParameterDiv(params[3], "kbaseNarrativeParameterCheckboxInput", $optionsDiv);
             
             
-            self.parameterIdLookup['input_sample_property_matrix'].addInputListener(function(){
+            self.parameterIdLookup['input_sample_property_matrix'].addInputListener(()=> {
                 if(!self.inRefreshState){
                     self.state = self.STATE_NONE;
                     self.parameterIdLookup['input_samples'].setParameterValue('');
@@ -91,9 +91,9 @@ define (
         },
                 
         addParameterDiv: function(paramSpec, widgetName, $optionsDiv, $dataModel){
-            var self = this;
-            var $stepDiv = $('<div>');
-            var $widget = $stepDiv[widgetName](
+            const self = this;
+            const $stepDiv = $('<div>');
+            const $widget = $stepDiv[widgetName](
                 {
                     loadingImage: loadingImage, 
                     parsedParameterSpec: paramSpec, 
@@ -109,27 +109,27 @@ define (
         },
                         
         fetchData: function(doneCallback){
-            var self = this;
+            const self = this;
             console.log('fetchData.self', self);
             if(self.state == self.STATE_NONE){
                 $(document).trigger('workspaceQuery.Narrative', 
-                    function(ws_name) {
-                        var matrixId = self.getParameterValue( 'input_sample_property_matrix' );
+                    (ws_name) => {
+                        const matrixId = self.getParameterValue( 'input_sample_property_matrix' );
                         if(!matrixId) return;
                     
-                        var query = [];
+                        const query = [];
                         query.push( {ref:ws_name+'/'+matrixId, included: ["metadata/row_metadata"]} );
 
 
                         self.state = self.STATE_FETCHING;                    
                         self.ws.get_object_subset(query,
-                            function(result) {
+                            (result) => {
                                 self.rowMetadata = result[0].data.metadata.row_metadata;
-                                var wellIds = {};
-                                for(var i in self.rowMetadata){
-                                    var rm = self.rowMetadata[i];
-                                    for(var j in rm){
-                                        var propValue = rm[j];
+                                const wellIds = {};
+                                for(const i in self.rowMetadata){
+                                    const rm = self.rowMetadata[i];
+                                    for(const j in rm){
+                                        const propValue = rm[j];
                                         if( propValue.category == 'Sample' && propValue.property_name == 'Name' ){
                                             wellIds[propValue.property_value] = propValue.property_value;
                                         }
@@ -137,15 +137,15 @@ define (
                                 }
 
                                 self.wellIdParams = [];
-                                for(var wellId in wellIds){
+                                for(const wellId in wellIds){
                                     self.wellIdParams.push({id: wellId, text: wellId});
                                 }
-                                self.wellIdParams.sort(function(a, b) { return a.text > b.text ? 1 : -1});
+                                self.wellIdParams.sort((a, b) => { return a.text > b.text ? 1 : -1});
 
                                 self.state = self.STATE_READY;
                                 if(doneCallback) { doneCallback(self.wellIdParams); }
                             },
-                            function(error) {
+                            (error) => {
                                 console.error(error);
                             }
                         );                        
@@ -158,7 +158,7 @@ define (
         refresh: function() {
             this.inRefreshState = true;
             if (this.parameters) {
-                for(var i=0; i<this.parameters.length; i++) {
+                for(let i=0; i<this.parameters.length; i++) {
                     this.parameters[i].widget.refresh();
                 }
             }

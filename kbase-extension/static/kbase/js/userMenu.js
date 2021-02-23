@@ -9,7 +9,7 @@ define([
     'kb_common/html',
     'util/bootstrapDialog',
     'util/string'
-], function(
+], (
     $,
     NarrativeConfig,
     UserProfile,
@@ -17,11 +17,11 @@ define([
     html,
     BootstrapDialog,
     StringUtil
-) {
+) => {
     'use strict';
 
     function factory(config) {
-        var target = config.target,
+        let target = config.target,
             email = config.email,
             userName = StringUtil.escape(config.userName),
             displayName = StringUtil.escape(config.displayName),

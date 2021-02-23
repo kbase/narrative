@@ -9,7 +9,7 @@ define([
     'kbase-generic-client-api',
     'util/display',
     'util/kbaseApiUtil'
-], function(
+], (
     KBWidget,
     $,
     Promise,
@@ -20,7 +20,7 @@ define([
     GenericClient,
     Display,
     ApiUtil
-) {
+) => {
     'use strict';
     return KBWidget({
         name: 'kbasePanGenome',
@@ -58,7 +58,7 @@ define([
                     [{ pangenome_ref: this.objRef }]
                 )
             );
-            var $tabContainer = $('<div>');
+            const $tabContainer = $('<div>');
             this.$elem.append($tabContainer);
             this.tabs = new KBaseTabs($tabContainer, {
                 tabPosition: top,
@@ -88,19 +88,19 @@ define([
         },
 
         tableRow: function(items) {
-            var $row = $('<tr>');
-            items.forEach(function(item) {
+            const $row = $('<tr>');
+            items.forEach((item) => {
                 $row.append($('<td>').append(item));
             });
             return $row;
         },
 
         showSummary: function() {
-            var self = this;
-            var $summaryDiv = $('<div>').append(Display.loadingDiv().div);
-            this.dataPromise.then(function(data) {
+            const self = this;
+            const $summaryDiv = $('<div>').append(Display.loadingDiv().div);
+            this.dataPromise.then((data) => {
                 data = data[0];
-                var $topTable = $('<table class="table table-hover table-striped table-bordered">');
+                const $topTable = $('<table class="table table-hover table-striped table-bordered">');
 
                 $topTable
                     .append(self.tableRow(['Pan-genome object Id', self.options.name]))
@@ -124,7 +124,7 @@ define([
                         '</b> singleton families'
                     ].join(' ')]));
 
-                var $genomeTable = $('<table class="table table-hover table-striped table-bordered">')
+                const $genomeTable = $('<table class="table table-hover table-striped table-bordered">')
                     .append($('<tr>')
                         .append($('<th>Genome</th>'))
                         .append($('<th># Genes</th>'))
@@ -133,8 +133,8 @@ define([
                         .append($('<th># Homolog Families</th>'))
                         );
 
-                Object.keys(data.genomes).forEach(function(genome) {
-                    var genomeData = data.genomes[genome];
+                Object.keys(data.genomes).forEach((genome) => {
+                    const genomeData = data.genomes[genome];
                     $genomeTable.append(self.tableRow([
                         genome,
                         genomeData.genome_genes,
@@ -146,7 +146,7 @@ define([
 
                 $summaryDiv.empty().append($topTable).append($genomeTable);
             })
-            .catch(function(error) {
+            .catch((error) => {
                 $summaryDiv
                 .empty()
                 .append(Display.createError('Pangenome data summary error', error.error));
@@ -155,21 +155,21 @@ define([
         },
 
         showHomologFamilies: function() {
-            var self = this;
-            var $homologDiv = $('<div>').append(Display.loadingDiv().div);
-            self.dataPromise.then(function(data) {
+            const self = this;
+            const $homologDiv = $('<div>').append(Display.loadingDiv().div);
+            self.dataPromise.then((data) => {
                 data = data[0];
-                var genomeList = Object.keys(data.genomes).sort();
-                var numGenomes = genomeList.length;
-                var numberTable = [];
-                var header = ["<th>Genome</th><th>Legend</th>"];
+                const genomeList = Object.keys(data.genomes).sort();
+                const numGenomes = genomeList.length;
+                const numberTable = [];
+                const header = ["<th>Genome</th><th>Legend</th>"];
                 for (var i=0; i<numGenomes; i++) {
                     header.push('<th style="text-align:center"><b>G' + (i+1) + '</b></th>');
-                    var singleComp = [];
+                    const singleComp = [];
                     singleComp.push('<b>G' + (i+1) + '</b> - ' + genomeList[i]);
                     singleComp.push('# homolog families');
-                    for (var j=0; j<numGenomes; j++) {
-                        var cell = data.shared_family_map[genomeList[i]][genomeList[j]];
+                    for (let j=0; j<numGenomes; j++) {
+                        let cell = data.shared_family_map[genomeList[i]][genomeList[j]];
                         if (i === j) {
                             cell = '<font color="#d2691e">' + cell + '</font>';
                         }
@@ -179,14 +179,14 @@ define([
                     numberTable.push(singleComp);
                 }
 
-                var $prettyTable = $('<table class="table table-hover table-striped table-bordered">');
+                const $prettyTable = $('<table class="table table-hover table-striped table-bordered">');
                 $prettyTable.append($('<tr>').append(header.join()));
                 for (var i=0; i<numberTable.length; i++) {
                     $prettyTable.append(self.tableRow(numberTable[i]));
                 }
                 $homologDiv.empty().append($prettyTable);
             })
-            .catch(function(error) {
+            .catch((error) => {
                 $homologDiv
                 .empty()
                 .append(Display.createError('Pangenome homolog family data error', error.error));
@@ -195,7 +195,7 @@ define([
         },
 
         showProteinFamilies: function() {
-            var $pfDiv = $('<div>');
+            const $pfDiv = $('<div>');
             new DynamicTable($pfDiv, {
                 headers: [{
                     id: 'id',
@@ -220,7 +220,7 @@ define([
                 enableDownload: false,
                 downloadFileName: this.options.name + '.csv',
                 updateFunction: function(pageNum, query, sortColId, sortColDir) {
-                    var sortBy = [];
+                    const sortBy = [];
                     if (sortColId && sortColDir !== 0) {
                         sortBy.push([ sortColId, sortColDir === 1 ? 1 : 0 ]);
                     }
@@ -238,7 +238,7 @@ define([
         },
 
         addFamilyTab: function(fam) {
-            var self = this;
+            const self = this;
             if (self.tabs.hasTab(fam.id)) {
                 self.tabs.showTab(fam.id);
             } else {
@@ -257,29 +257,29 @@ define([
         },
 
         createProteinFamilyTab: function(fam) {
-            var self = this;
-            var $div = $('<div>').append(Display.loadingDiv().div);
+            const self = this;
+            const $div = $('<div>').append(Display.loadingDiv().div);
 
-            var colMap = {
+            const colMap = {
                 genome: 0,
                 feature: 1,
                 function: 2,
                 len: 3
             };
 
-            var getFamilyFunctionNames = function(orthologs) {
+            const getFamilyFunctionNames = function(orthologs) {
                 // prep calls
-                var genomeToGenes = {};
-                orthologs.forEach(function(ortho) {
-                    var genome = ortho[2];
-                    var feature = ortho[0];
+                const genomeToGenes = {};
+                orthologs.forEach((ortho) => {
+                    const genome = ortho[2];
+                    const feature = ortho[0];
                     if (!genomeToGenes[genome]) {
                         genomeToGenes[genome] = [];
                     }
                     genomeToGenes[genome].push(feature);
                 });
-                var promises = [];
-                Object.keys(genomeToGenes).forEach(function(genome) {
+                const promises = [];
+                Object.keys(genomeToGenes).forEach((genome) => {
                     promises.push(Promise.resolve(self.serviceClient.sync_call(
                         'GenomeAnnotationAPI.get_feature_functions',
                         [{
@@ -287,8 +287,8 @@ define([
                             feature_id_list: genomeToGenes[genome]
                         }]
                     ))
-                    .then(function(names) {
-                        return Promise.try(function() {
+                    .then((names) => {
+                        return Promise.try(() => {
                             return {
                                 genome: genome,
                                 features: names[0]
@@ -296,29 +296,29 @@ define([
                         });
                     }));
                 });
-                return Promise.all(promises).then(function(nameSets) {
-                    var res = {};
-                    nameSets.forEach(function(nameSet) {
+                return Promise.all(promises).then((nameSets) => {
+                    const res = {};
+                    nameSets.forEach((nameSet) => {
                         res[nameSet.genome] = nameSet.features;
                     });
                     return res;
                 });
             };
 
-            var getFamData = function(start, query, sortColId, sortDir, genomeRefMap, geneFunctionMap) {
-                var rows = [];
+            const getFamData = function(start, query, sortColId, sortDir, genomeRefMap, geneFunctionMap) {
+                let rows = [];
                 query = query.toLocaleLowerCase();
-                return Promise.try(function() {
-                    fam.orthologs.forEach(function(ortho) {
+                return Promise.try(() => {
+                    fam.orthologs.forEach((ortho) => {
                         // first filter so we only get the rows we want.
-                        var row = [
+                        const row = [
                             '<span kb-gid="' + ortho[2] + '">' + genomeRefMap[ortho[2]] + '</span>',
                             ortho[0],
                             geneFunctionMap[ortho[2]][ortho[0]],
                             // ortho[1]
                         ];
-                        var pass = false;
-                        row.forEach(function(elem) {
+                        let pass = false;
+                        row.forEach((elem) => {
                             if (String(elem).toLocaleLowerCase().indexOf(query) !== -1) {
                                 pass = true;
                             }
@@ -329,9 +329,9 @@ define([
                     });
                     // now we sort and return.
                     if (sortColId && sortDir) {
-                        rows = rows.sort(function(a, b) {
-                            var aVal = a[colMap[sortColId]];
-                            var bVal = b[colMap[sortColId]];
+                        rows = rows.sort((a, b) => {
+                            const aVal = a[colMap[sortColId]];
+                            const bVal = b[colMap[sortColId]];
                             if ($.isNumeric(aVal) && $.isNumeric(bVal)) {
                                 if (sortDir > 0) {
                                     return aVal > bVal ? 1 : -1;
@@ -355,10 +355,10 @@ define([
                 });
             };
 
-            self.dataPromise.then(function(results) {
+            self.dataPromise.then((results) => {
                 results = results[0];
                 getFamilyFunctionNames(fam.orthologs)
-                .then(function(names) {
+                .then((names) => {
                     console.log(names);
                     $div.empty();
                     new DynamicTable($div, {
@@ -390,13 +390,13 @@ define([
                         rowsPerPage: self.options.pFamsPerPage,
                         style: {'margin-top': '5px'},
                         rowFunction: function($row) {
-                            var genomeRef = $row.find('td:eq(0) span').attr('kb-gid');
+                            const genomeRef = $row.find('td:eq(0) span').attr('kb-gid');
                             $row.find('td:eq(0)').html($('<a>')
                                 .attr('href', '/#dataview/' + genomeRef)
                                 .attr('target', '_blank')
                                 .append($row.find('td:eq(0) span')));
 
-                            var featureRef = $row.find('td:eq(1)').text();
+                            const featureRef = $row.find('td:eq(1)').text();
                             $row.find('td:eq(1)').html($('<a>')
                                 .attr('href', '/#dataview/' + genomeRef + '?sub=Feature&subid=' + featureRef)
                                 .attr('target', '_blank')
@@ -411,7 +411,7 @@ define([
         },
 
         searchAndCacheOrthologs: function(query, sortBy, start, limit) {
-            var self = this;
+            const self = this;
             return Promise.resolve(this.serviceClient.sync_call('PanGenomeAPI.search_orthologs_from_pangenome', [{
                 pangenome_ref: this.objRef,
                 query: query,
@@ -419,14 +419,14 @@ define([
                 start: start,
                 limit: limit
             }]))
-            .then(function(results) {
+            .then((results) => {
                 results = results[0];
-                var rows = [];
+                const rows = [];
                 self.dataCache = {};
-                results.orthologs.forEach(function(info) {
+                results.orthologs.forEach((info) => {
                     self.dataCache[info.id] = info;
-                    var orthoGenomes = {};
-                    info.orthologs.forEach(function(ortholog) {
+                    const orthoGenomes = {};
+                    info.orthologs.forEach((ortholog) => {
                         orthoGenomes[ortholog[2]] = 1;
                     });
                     rows.push([
@@ -443,7 +443,7 @@ define([
                     total: results.num_found
                 };
             })
-            .catch(function(error) {
+            .catch((error) => {
                 console.error(error);
                 throw error;
             });

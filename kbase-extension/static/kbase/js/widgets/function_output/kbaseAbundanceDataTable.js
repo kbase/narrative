@@ -9,14 +9,14 @@ define (
         'narrativeConfig',
 		'kbaseAuthenticatedWidget',
 		'kbStandaloneTable'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
         Config,
 		kbaseAuthenticatedWidget,
 		kbStandaloneTable
-	) {
+	) => {
     return KBWidget({
         name: 'AbundanceDataTable',
         parent : kbaseAuthenticatedWidget,
@@ -36,10 +36,10 @@ define (
         },
 
         render: function() {
-	        var self = this;
-	        var pref = this.uuidv4();
+	        const self = this;
+	        const pref = this.uuidv4();
 
-	        var container = this.$elem;
+	        const container = this.$elem;
 	        container.empty();
             if (self.token == null) {
                 container.append("<div>[Error] You're not logged in</div>");
@@ -47,16 +47,16 @@ define (
             }
             container.append("<div><img src=\""+self.loading_image+"\">&nbsp;&nbsp;loading data...</div>");
 
-	        var kbws = new Workspace(self.ws_url, {'token': self.token});
-	        kbws.get_objects([{ref: self.options.ws+"/"+self.options.id}], function(data) {
+	        const kbws = new Workspace(self.ws_url, {'token': self.token});
+	        kbws.get_objects([{ref: self.options.ws+"/"+self.options.id}], (data) => {
 	            container.empty();
 		        // parse data
 		        if (data.length == 0) {
-		            var msg = "[Error] Object "+self.options.id+" does not exist in workspace "+self.options.ws;
+		            const msg = "[Error] Object "+self.options.id+" does not exist in workspace "+self.options.ws;
 		            container.append('<div><p>'+msg+'>/p></div>');
 		        } else {
-		            var biom = data[0]['data'];
-		            var matrix = [];
+		            const biom = data[0]['data'];
+		            let matrix = [];
 		            var tdata = [];
 		            // get matrix
 		            if (biom['matrix_type'] == 'sparse') {
@@ -65,8 +65,8 @@ define (
 			            matrix = biom['data'];
 		            }
 		            // get column names
-		            var clength = biom['columns'].length + 1;
-		            var cnames = new Array(clength)
+		            const clength = biom['columns'].length + 1;
+		            const cnames = new Array(clength)
 		            cnames[0] = "Annotation";
 		            for (var c = 0; c < biom['columns'].length; c++) {
 		                if (self.options.name == 0) {
@@ -81,11 +81,11 @@ define (
 		            }
 		            // add values
 		            var tdata = new Array(matrix.length);
-		            for (var r = 0; r < matrix.length; r++) {
+		            for (let r = 0; r < matrix.length; r++) {
 			            tdata[r] = new Array(clength);
 			            tdata[r][0] = biom['rows'][r]['id'];
 			            for (var c = 0; c < matrix[r].length; c++) {
-                            var value = Math.round(matrix[r][c] * 1000) / 1000;
+                            let value = Math.round(matrix[r][c] * 1000) / 1000;
 			                if (! value) {
 				                value = "0";
 			                }
@@ -93,25 +93,25 @@ define (
 			            }
 		            }
 			        // TABLE
-                    var tlen = 0;
+                    let tlen = 0;
 	    		    if (window.hasOwnProperty('rendererTable') && rendererTable.length) {
 				        tlen = rendererTable.length;
 			        }
 	   		        container.append("<div id='outputTable"+tlen+"' style='width: 95%;'></div>");
-	   		        var tableTest = standaloneTable.create({index: tlen});
+	   		        const tableTest = standaloneTable.create({index: tlen});
 	  		        tableTest.settings.target = document.getElementById("outputTable"+tlen);
 	    		    tableTest.settings.data = { header: cnames, data: tdata };
 			        tableTest.settings.filter = { 0: { type: "text" } };
-			        var mw = [ 120 ];
-			        for (var i=1; i<cnames.length; i++) {
+			        const mw = [ 120 ];
+			        for (let i=1; i<cnames.length; i++) {
 				        mw.push(130);
 			        }
 			        tableTest.settings.minwidths = mw;
 			        tableTest.render(tlen);
 		        }
-	        }, function(data) {
+	        }, (data) => {
 		        container.empty();
-		        var main = $('<div>');
+		        const main = $('<div>');
 		        main.append($('<p>')
 		            .css({'padding': '10px 20px'})
 		            .text('[Error] '+data.error.message));
@@ -133,7 +133,7 @@ define (
         },
 
 	    sparse2dense: function(sparse, rmax, cmax) {
-	        var dense = new Array(rmax);
+	        const dense = new Array(rmax);
 	        // dense matrix of 0's
 	        for (var i = 0; i < rmax; i++) {
 		        dense[i] = Array.apply(null, new Array(cmax)).map(Number.prototype.valueOf, 0);

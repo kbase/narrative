@@ -13,7 +13,7 @@ define (
 		'geometry_rectangle',
 		'geometry_point',
 		'geometry_size'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -23,7 +23,7 @@ define (
 		geometry_rectangle,
 		geometry_point,
 		geometry_size
-	) {
+	) => {
 
     return KBWidget({
 
@@ -85,7 +85,7 @@ define (
                 if (d.data == undefined) {
                     d.data = {};
                 }
-                var ret = d.data.id || (d.data.id = this.ticker() );
+                const ret = d.data.id || (d.data.id = this.ticker() );
                 return ret;
             }, this);
 
@@ -97,7 +97,7 @@ define (
         },
 
         childOptions : function(idx, dataset) {
-            var options = this._super(idx, dataset);
+            const options = this._super(idx, dataset);
 
             if (this.options.rescaleChildren) {
                 options.outerRadius = this.options.innerRadius * (idx + 1);
@@ -142,15 +142,15 @@ define (
         },
 
         midAngle : function(d){
-            var ret =  (d.startAngle + (d.endAngle - d.startAngle)/2);
+            const ret =  (d.startAngle + (d.endAngle - d.startAngle)/2);
             return ret;
         },
 
         midPosition : function(d) {
-        var m1 = (this.midAngle(d)) ;//- this.options.startAngle);
-            var midAngle = m1 % (2 * Math.PI);
+        const m1 = (this.midAngle(d)) ;//- this.options.startAngle);
+            const midAngle = m1 % (2 * Math.PI);
 
-            var ret =
+            const ret =
                 (0 < midAngle && midAngle < Math.PI) || midAngle < - Math.PI
                     ? 1
                     : -1;
@@ -169,7 +169,7 @@ define (
             if (newDataset != undefined) {
                 $.each(
                     newDataset,
-                    function (idx, val) {
+                    (idx, val) => {
 
                     if (typeof val == 'number') {
                         newDataset[idx] = {value : val};
@@ -183,11 +183,11 @@ define (
 
         outerRadius : function() {
 
-            var bounds = this.chartBounds();
+            const bounds = this.chartBounds();
 
-            var radius = this.options.outerRadius;
+            let radius = this.options.outerRadius;
             if (radius <= 0) {
-                var diameter = bounds.size.width < bounds.size.height
+                let diameter = bounds.size.width < bounds.size.height
                     ? bounds.size.width
                     : bounds.size.height;
 
@@ -205,7 +205,7 @@ define (
         },
 
         innerRadius : function() {
-            var innerRadius = this.options.innerRadius;
+            let innerRadius = this.options.innerRadius;
             if (innerRadius < 0) {
                 innerRadius = this.outerRadius() + this.options.innerRadius;
             }
@@ -220,9 +220,9 @@ define (
         sliceAction : function($pie) {
 
             return function() {
-                var radius = $pie.outerRadius() - $pie.options.outerRadiusInset;
+                const radius = $pie.outerRadius() - $pie.options.outerRadiusInset;
 
-                var outerArcMaker = d3.svg.arc()
+                const outerArcMaker = d3.svg.arc()
                     .innerRadius(radius)
                     .outerRadius(radius + 10);
 
@@ -232,7 +232,7 @@ define (
                         return;
                     }
 
-                    var slice = this;
+                    const slice = this;
 
                     if ($pie.dragging) {
                         return;
@@ -242,20 +242,20 @@ define (
                         .transition()
                         .duration(0)
                         .attr('fill-opacity', $pie.options.outerArcOpacity)
-                        .attr('fill', function (d2, idx) { return d.data.color || $pie.options.colorScale(idx, d.data, $pie) })
-                        .attr('transform', function (d2) { return d3.select(slice).attr('transform') } )
-                        .attr('d', function(d2) {
+                        .attr('fill', (d2, idx) => { return d.data.color || $pie.options.colorScale(idx, d.data, $pie) })
+                        .attr('transform', (d2) => { return d3.select(slice).attr('transform') } )
+                        .attr('d', (d2) => {
                             return outerArcMaker({startAngle : d.startAngle, endAngle : d.endAngle});
                         })
                     ;
 
-                    var coordinates = [0, 0];
+                    let coordinates = [0, 0];
                     coordinates = d3.mouse(this);
-                    var x = coordinates[0];
-                    var y = coordinates[1];
+                    const x = coordinates[0];
+                    const y = coordinates[1];
 
                     if ($pie.options.tooltips) {
-                        var tooltip = $pie.tooltip(d);
+                        const tooltip = $pie.tooltip(d);
                         if (tooltip) {
                             $pie.showToolTip(
                                 {
@@ -270,7 +270,7 @@ define (
                     }
 
                 })
-                .on('mouseout', function(d) {
+                .on('mouseout', (d) => {
                     if (d.data.gap) {
                         return;
                     }
@@ -279,7 +279,7 @@ define (
                     }
                     $pie.outerArc.attr('fill-opacity', 0);
                 })
-                .on('dblclick', function(d) {
+                .on('dblclick', (d) => {
                     if (d.data.gap) {
                         return;
                     }
@@ -311,7 +311,7 @@ define (
                 .sort(null)
                 .startAngle(this.options.startAngle)
                 .endAngle(this.options.endAngle)
-                .value(function (d, idx) { return d.value ;});
+                .value((d, idx) => { return d.value ;});
 
             return this.pieLayout(dataset);
         },
@@ -327,19 +327,19 @@ define (
                 this.lastPieData = undefined;
             }
 
-            var startingOpacity = 0;
+            let startingOpacity = 0;
             if (this.options.startingPosition == 'final') {
                 startingOpacity = 1;
             }
 
-            var bounds = this.chartBounds();
-            var $pie  = this;
+            const bounds = this.chartBounds();
+            const $pie  = this;
 
             if (this.options.autoEndAngle) {
-                var percent = 0;
+                let percent = 0;
                 $.each(
                     $pie.dataset(),
-                    function (idx, val) {
+                    (idx, val) => {
                         percent += val.value;
                     }
                 );
@@ -354,24 +354,24 @@ define (
                 this.options.endAngle = this.options.startAngle + this.pieSize;
             }
 
-            var pieData = this.pieData($pie.dataset());
+            const pieData = this.pieData($pie.dataset());
 
-            var radius = this.outerRadius() - this.options.outerRadiusInset;
-            var innerRadius = this.innerRadius();
+            const radius = this.outerRadius() - this.options.outerRadiusInset;
+            const innerRadius = this.innerRadius();
 
-            var arcMaker = d3.svg.arc()
+            const arcMaker = d3.svg.arc()
                 .innerRadius(innerRadius)
                 .outerRadius(radius);
 
-            var textArcMaker = d3.svg.arc()
+            const textArcMaker = d3.svg.arc()
                 .innerRadius(innerRadius + (radius - innerRadius) * 8 / 10)
                 .outerRadius(innerRadius + (radius - innerRadius) * 8 / 10);
 
-            var smallArcMaker = d3.svg.arc()
+            const smallArcMaker = d3.svg.arc()
                 .innerRadius(innerRadius + (radius - innerRadius) / 2)
                 .outerRadius(innerRadius + (radius - innerRadius) / 2);
 
-            var funkyTown = function() {
+            const funkyTown = function() {
 
                 //this.attr('fill', function (d, idx) { return d.data.color });
                 /*this.attr('transform',
@@ -382,27 +382,27 @@ define (
                 );*/
 
                 this
-                    .attr('transform', function(d, idx) {
+                    .attr('transform', (d, idx) => {
                         if (d.data.offset == undefined) {
                             return;
                         }
 
-                        var sliceMover = d3.svg.arc()
+                        const sliceMover = d3.svg.arc()
                             .innerRadius(0)
                             .outerRadius(d.data.offset || 0);
 
-                        var pos = sliceMover.centroid(d);
+                        const pos = sliceMover.centroid(d);
 
                         return 'translate(' + pos + ')';
 
                     })
-                    .attr('fill-opacity', function(d) { return d.data.gap ? 0 : 1 })
-                    .attr('stroke-opacity', function(d) { return d.data.gap ? 0 : 1 })
+                    .attr('fill-opacity', (d) => { return d.data.gap ? 0 : 1 })
+                    .attr('stroke-opacity', (d) => { return d.data.gap ? 0 : 1 })
                 ;
 
 
                 if (! $pie.options.gradient) {
-                    this.attr('fill', function(d, idx) {
+                    this.attr('fill', (d, idx) => {
 
                         if (d.data.color == undefined) {
                             d.data.color = $pie.options.colorScale(idx, d.data, $pie);
@@ -417,17 +417,17 @@ define (
                         this
                             //*
                             .attrTween('fill',
-                                function (d, idx) {
-                                    var uniqueFunc = $pie.uniqueness();
+                                (d, idx) => {
+                                    const uniqueFunc = $pie.uniqueness();
 
-                                    var currentID = uniqueFunc == undefined
+                                    const currentID = uniqueFunc == undefined
                                         ? undefined
                                         : uniqueFunc(d);
 
-                                    var gradID = d.data.gradID;
+                                    let gradID = d.data.gradID;
                                     if (gradID == undefined) {
 
-                                        var newGradID;
+                                        let newGradID;
                                         if ($pie.lastPieData != undefined && idx < $pie.lastPieData.length) {
 
 
@@ -439,8 +439,8 @@ define (
                                             else {
                                                 $.each(
                                                     $pie.lastPieData,
-                                                    function (idx, val) {
-                                                        var lastID = uniqueFunc(val);
+                                                    (idx, val) => {
+                                                        const lastID = uniqueFunc(val);
                                                         if (lastID == currentID) {
                                                             newGradID = val.data.gradID;
                                                             return;
@@ -458,7 +458,7 @@ define (
                                         gradID = d.data.gradID = newGradID;
                                     }
 
-                                    var gradient = d.data.color;
+                                    let gradient = d.data.color;
 
                                     if (d.data.color == undefined) {
                                         d.data.color = $pie.options.colorScale(idx, d.data, $pie);
@@ -492,7 +492,7 @@ define (
                             //if (idx > 0) {
                             //    this._current = { startAngle : pieData[idx - 1].startAngle, endAngle : pieData[idx - 1].endAngle};
                             //}
-                            var interpolate = d3.interpolate(this._current, d);
+                            const interpolate = d3.interpolate(this._current, d);
 
                             this._current = interpolate(0);
                             return function(t) {
@@ -506,7 +506,7 @@ define (
 
             };
 
-            var labelTown = function labelTown( opacity ) {
+            const labelTown = function labelTown( opacity ) {
 
                 if (opacity == undefined) {
                     opacity = 1;
@@ -519,16 +519,16 @@ define (
                 if (this.attrTween) {
 
                     this
-                        .text(function(d) {
+                        .text((d) => {
                             return d.data.label;
                         })
                         .attrTween('fill-opacity', function (d, idx) {
                             if (this._currentOpacity == undefined) {
                                 this._currentOpacity = $pie.initialized ? 0 : startingOpacity;
                             }
-                            var interpolate = d3.interpolate(this._currentOpacity, opacity);
+                            const interpolate = d3.interpolate(this._currentOpacity, opacity);
                             this._currentOpacity = interpolate(0);
-                            var $me = this;
+                            const $me = this;
                             return function (t) {
                                 return $me._currentOpacity = interpolate(t);
                             }
@@ -539,7 +539,7 @@ define (
                                 this._current = $pie.startingPosition(d, idx);
                             }
 
-                            var endPoint = d;
+                            let endPoint = d;
                             if (opacity == 0) {
                                 endPoint = {startAngle : d.startAngle, endAngle : d.startAngle};
                                 if (idx > 0 && pieData.length) {
@@ -550,19 +550,19 @@ define (
                                 }
                             }
 
-                            var interpolate = d3.interpolate(this._current, endPoint);
+                            const interpolate = d3.interpolate(this._current, endPoint);
 
                             this._current = interpolate(0);
 
-                            var useOutsideLabels = $pie.useOutsideLabels(d);
+                            const useOutsideLabels = $pie.useOutsideLabels(d);
 
-                            var myArcMaker = useOutsideLabels
+                            const myArcMaker = useOutsideLabels
                                 ? textArcMaker
                                 : arcMaker;
 
                             return function(t) {
-                                var d2 = interpolate(t);
-                                var pos = myArcMaker.centroid(d2);
+                                const d2 = interpolate(t);
+                                const pos = myArcMaker.centroid(d2);
                                 if (useOutsideLabels) {
                                     pos[0] = radius * 1.06 * $pie.midPosition(d2);
                                     pos[1] += 2;
@@ -573,13 +573,13 @@ define (
                         })
                         .styleTween("text-anchor", function(d){
                             this._current = this._current || d;
-                            var interpolate = d3.interpolate(this._current, d);
+                            const interpolate = d3.interpolate(this._current, d);
                             this._current = interpolate(0);
 
-                            var useOutsideLabels = $pie.useOutsideLabels(d);
+                            const useOutsideLabels = $pie.useOutsideLabels(d);
 
                             return function(t) {
-                                var d2 = interpolate(t);
+                                const d2 = interpolate(t);
                                 if (useOutsideLabels) {
                                     return $pie.midPosition(d2) > 0 ? "start" : "end";
                                 }
@@ -594,7 +594,7 @@ define (
                 return this;
             }
 
-            var drag = d3.behavior.drag();
+            const drag = d3.behavior.drag();
 
                 drag.on('dragstart', function(d) {
                     //d.__dragX = 0;
@@ -610,13 +610,13 @@ define (
 
                     this.__delta +=  $pie.midPosition(d) * d3.event.dy;// + d3.event.dx;// - d3.event.dx;
 
-                    var dragThrottle = 20;
+                    const dragThrottle = 20;
 
                     if (this.__delta > dragThrottle || this.__delta < -1 * dragThrottle) {
-                        var distance = this.__delta;
+                        const distance = this.__delta;
 
-                        var currentStartAngle = $pie.options.startAngle;
-                        var proposedStartAngle = currentStartAngle + Math.PI * (distance / 2) / radius;
+                        const currentStartAngle = $pie.options.startAngle;
+                        const proposedStartAngle = currentStartAngle + Math.PI * (distance / 2) / radius;
 
                         $pie.options.startAngle = proposedStartAngle;
 //XXX                        $pie.options.endAngle = $pie.options.startAngle + 2 * Math.PI;
@@ -635,9 +635,9 @@ define (
 
             //there is no mouse action on a pie chart for now.
 
-            var labelAction = function() { return this };
+            const labelAction = function() { return this };
 
-            var pie = this.D3svg().select( this.region('chart') ).selectAll('.pie').data([0]);
+            const pie = this.D3svg().select( this.region('chart') ).selectAll('.pie').data([0]);
             pie.enter().append('g')
                 .attr('class', 'pie')
                 .attr('transform',
@@ -649,7 +649,7 @@ define (
                 );
                 $.each(
                     pieData,
-                    function (idx, val) {
+                    (idx, val) => {
                         if (val.data.id != undefined) {
                             val.id = val.data.id;
                         }
@@ -657,11 +657,11 @@ define (
                 );
 
             if ($pie.options.pieColor != undefined) {
-                var chartSelection = this.D3svg().select( this.region('chart') ).data([0]);
+                const chartSelection = this.D3svg().select( this.region('chart') ).data([0]);
 
-                var pieBG = chartSelection.selectAll('.pieBG').data([0]);
+                const pieBG = chartSelection.selectAll('.pieBG').data([0]);
 
-                var pieMaker = d3.svg.arc()
+                const pieMaker = d3.svg.arc()
                     .innerRadius(0)
                     .outerRadius(radius);
 
@@ -675,7 +675,7 @@ define (
                             + (bounds.size.height / 2 + this.options.yOffset)
                             + ')'
                     )
-                    .attr('d', function(d) { return pieMaker({startAngle : 0, endAngle : 2 * Math.PI}) } )
+                    .attr('d', (d) => { return pieMaker({startAngle : 0, endAngle : 2 * Math.PI}) } )
                 ;
                 pieBG
                     .attr('fill', $pie.options.pieColor);
@@ -690,13 +690,13 @@ define (
                         .attr('class', 'outerArc')
             ;
 
-            var slices = pie.selectAll('.slice').data(pieData, this.uniqueness());
+            const slices = pie.selectAll('.slice').data(pieData, this.uniqueness());
 
             slices
                 .enter()
                     .append('path')
                         .attr('class', 'slice')
-                        .attr('fill', function (d, idx) {
+                        .attr('fill', (d, idx) => {
                             if (d.data.color == undefined) {
                                 d.data.color = $pie.options.colorScale(idx, d.data, $pie);
                             }
@@ -708,7 +708,7 @@ define (
                         //.call(funkyTown);
             ;
 
-            var transitionTime = this.initialized || this.options.startingPosition != 'final'
+            const transitionTime = this.initialized || this.options.startingPosition != 'final'
                 ? this.options.transitionTime
                 : 0;
 
@@ -718,7 +718,7 @@ define (
                 .call($pie.sliceAction($pie))
                 .transition().duration(transitionTime)
                 .call(funkyTown)
-                .call($pie.endall, function() {
+                .call($pie.endall, () => {
                     $pie.initialized = true;
                     $pie.lastPieData = pieData;
                 });
@@ -736,12 +736,12 @@ define (
                     .duration(transitionTime)
                     .attrTween("d", function(d, idx) {
 
-                            var endPoint = {startAngle : d.startAngle, endAngle : d.startAngle};
+                            let endPoint = {startAngle : d.startAngle, endAngle : d.startAngle};
                             if (idx > 0 && pieData.length && idx <= pieData.length) {
                                 endPoint = {startAngle : pieData[idx - 1].endAngle, endAngle : pieData[idx - 1].endAngle};
                             }
 
-                            var interpolate = d3.interpolate(this._current, endPoint);
+                            const interpolate = d3.interpolate(this._current, endPoint);
 
                             this._current = interpolate(0);
                             return function(t) {
@@ -751,7 +751,7 @@ define (
                     .each('end', function(d) { d3.select(this).remove() } )
                     ;
 
-            var labelG = this.D3svg().select( this.region('chart') ).selectAll('.labelG').data([0]);
+            const labelG = this.D3svg().select( this.region('chart') ).selectAll('.labelG').data([0]);
             labelG.enter().append('g')
                 .attr('class', 'labelG')
                 .attr('transform',
@@ -762,9 +762,9 @@ define (
                         + ')'
                 );
 
-            var labels = labelG.selectAll('.label')
+            const labels = labelG.selectAll('.label')
                 .data(
-                    pieData.filter( function(d) {
+                    pieData.filter( (d) => {
                         return (
                                ($pie.options.labels || d.data.forceLabel)
                             && d.data.label != undefined
@@ -798,7 +798,7 @@ define (
                     .each('end', function(d) { d3.select(this).remove() } )
             ;
 
-            var lineTown = function(opacity) {
+            const lineTown = function(opacity) {
 
                 if (opacity == undefined) {
                     opacity = 1;
@@ -810,9 +810,9 @@ define (
                             if (this._currentOpacity == undefined) {
                                 this._currentOpacity = $pie.initialized ? 0 : startingOpacity;
                             }
-                            var interpolate = d3.interpolate(this._currentOpacity, opacity);
+                            const interpolate = d3.interpolate(this._currentOpacity, opacity);
                             this._currentOpacity = interpolate(0);
-                            var $me = this;
+                            const $me = this;
                             return function (t) {
                                 return $me._currentOpacity = interpolate(t);
                             }
@@ -820,7 +820,7 @@ define (
                         .attrTween("points", function(d, idx){
                             this._current = this._current || $pie.startingPosition(d, idx);
 
-                            var endPoint = d;
+                            let endPoint = d;
                             if (opacity == 0) {
                                 endPoint = {startAngle : d.startAngle, endAngle : d.startAngle};
                                 if (idx > 0 && pieData.length) {
@@ -832,18 +832,18 @@ define (
 
                             }
 
-                            var interpolate = d3.interpolate(this._current, endPoint);
+                            const interpolate = d3.interpolate(this._current, endPoint);
 
-                            var useOutsideLabels = $pie.useOutsideLabels(d);
+                            const useOutsideLabels = $pie.useOutsideLabels(d);
 
-                            var myArcMaker = useOutsideLabels
+                            const myArcMaker = useOutsideLabels
                                 ? textArcMaker
                                 : arcMaker;
 
                             this._current = interpolate(0);
                             return function(t) {
-                                var d2 = interpolate(t);
-                                var textAnchor = myArcMaker.centroid(d2);
+                                const d2 = interpolate(t);
+                                const textAnchor = myArcMaker.centroid(d2);
                                 if (useOutsideLabels) {
                                     textAnchor[0] = radius * 1.05 * $pie.midPosition(d2);
                                 }
@@ -854,11 +854,11 @@ define (
                 return this;
             };
 
-            var lines = labelG
+            const lines = labelG
                 .selectAll('polyline')
                 .data(
                     pieData
-                        .filter( function(d) {
+                        .filter( (d) => {
                             return (
                                     ($pie.options.labels || d.data.forceLabel)
                                 && ($pie.options.outsideLabels || d.data.outsideLabel)

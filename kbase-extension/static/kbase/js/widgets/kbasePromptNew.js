@@ -56,11 +56,11 @@ define (
 		'kbwidget',
 		'bootstrap',
 		'jquery'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$
-	) {
+	) => {
     return KBWidget({
 
         name: "kbasePrompt",
@@ -137,7 +137,7 @@ define (
                 return this.data('dialogModal');
             }
 
-            var $dialogModal =
+            const $dialogModal =
                 $('<div></div>')
                     .attr('class', 'modal ' + this.options.modalClass)
                     .attr('tabindex', '-1')
@@ -195,7 +195,7 @@ define (
             ;
 
             $dialogModal.unbind('keypress');
-            $dialogModal.keypress(function(e) {
+            $dialogModal.keypress((e) => {
                 if (e.keyCode == 13) {
                     e.stopPropagation();
                     e.preventDefault();
@@ -220,20 +220,20 @@ define (
             }
 
 
-            var $prompt = this;
+            const $prompt = this;
 
             $.each(
                 this.options.controls,
-                function (idx, val) {
+                (idx, val) => {
                     if (typeof val == 'string') {
                         val = $prompt[val]();
                     }
-                    var btnClass = 'btn btn-default';
+                    let btnClass = 'btn btn-default';
                     if (val.type) {
                         btnClass = btnClass + ' btn-' + val.type;
                     }
 
-                    var $button =
+                    const $button =
                         $('<a></a>')
                             //.attr('href', '#')
                             .attr('class', btnClass)
@@ -259,15 +259,15 @@ define (
 
             this.data('dialogModal', $dialogModal);
 
-            var $firstField = undefined;
-            var selection = false;
+            let $firstField = undefined;
+            let selection = false;
 
             $dialogModal.on('shown.bs.modal',
                 $.proxy(
-                    function () {
+                    () => {
                         $.each(
                             $dialogModal.find('input[type=text],input[type=password],textarea'),
-                            function (idx, val) {
+                            (idx, val) => {
                                 if ($firstField == undefined) {
                                     $firstField = $(val);
                                 }
@@ -317,7 +317,7 @@ define (
                 this.rmAlert();
             }
 
-            var ele = $('<div class="alert'+(type ? ' alert-'+type : ' alert-danger')+'">'+text+'</div>');
+            const ele = $('<div class="alert'+(type ? ' alert-'+type : ' alert-danger')+'">'+text+'</div>');
 
             if (text) {
                 this.data('dialogModal').find('.modal-body').prepend(ele);                
@@ -337,7 +337,7 @@ define (
                 this.rmCover();
             }
 
-            var ele = $('<div class="modal-cover"> \
+            const ele = $('<div class="modal-cover"> \
                              <div class="modal-cover-table"> \
                                <div class="modal-cover-cell"> \
                                  <span class="modal-cover-box">'+

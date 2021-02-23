@@ -17,14 +17,14 @@ define ([
     'datatables.net-buttons-bs',
     'datatables.net-buttons-html5',
     'datatables.net-buttons-print'
-], function(
+], (
     Uuid,
     $,
     KBWidget,
     kbaseAuthenticatedWidget,
     kbaseTabs,
     Config
-) {
+) => {
     'use strict';
 
     return KBWidget({
@@ -72,12 +72,12 @@ define ([
         },
 
         loadAndRender: function(){
-            var self = this;
+            const self = this;
             self.loading(true);
 
             self.wsClient.get_objects(
                 [{ref: this.options.upas.output}]
-            ).then( function (res) {
+            ).then( (res) => {
                 self.objData = res[0]['data'];
                 self.objData.alignment_stats['total_reads'] =
                     self.objData.alignment_stats['mapped_reads'] +
@@ -88,21 +88,21 @@ define ([
         },
 
         render: function() {
-            var self = this;
-            var pref = this.pref;
-            var container = this.$elem;
-            var objData = this.objData;
+            const self = this;
+            const pref = this.pref;
+            const container = this.$elem;
+            const objData = this.objData;
 
             ///////////////////////////////////// Instantiating Tabs ////////////////////////////////////////////
             container.empty();
-            var tabPane = $('<div id="'+pref+'tab-content">');
+            const tabPane = $('<div id="'+pref+'tab-content">');
             container.append(tabPane);
 
-            var tabWidget = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
+            const tabWidget = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
             ///////////////////////////////////// Overview table ////////////////////////////////////////////
-            var tabOverview = $('<div/>');
+            const tabOverview = $('<div/>');
             tabWidget.addTab({tab: 'Overview', content: tabOverview, canDelete : false, show: true});
-            var tableOver = $('<table class="table table-striped table-bordered" '+
+            const tableOver = $('<table class="table table-striped table-bordered" '+
                 'style="width: 100%; margin-left: 0px; margin-right: 0px;" id="'+pref+'overview-table"/>');
             tabOverview.append(tableOver);
             tableOver
@@ -126,12 +126,12 @@ define ([
         },
 
         formatPercentage: function(value, total) {
-            var percent = (value / total * 100).toFixed(2);
+            const percent = (value / total * 100).toFixed(2);
             return value.toLocaleString() + ' (' + percent + '%)'
         },
 
         makeRow: function(name, value) {
-            var $row = $('<tr/>')
+            const $row = $('<tr/>')
                 .append($('<th />').css('width','20%').append(name))
                 .append($('<td />').append(value));
             return $row;
@@ -146,7 +146,7 @@ define ([
         },
 
         showMessage: function(message) {
-            var span = $('<span/>').append(message);
+            const span = $('<span/>').append(message);
 
             this.$messagePane.append(span);
             this.$messagePane.show();

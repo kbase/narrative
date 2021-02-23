@@ -13,7 +13,7 @@ define (
 		'handlebars',
 		'kbaseNarrativeParameterInput',
 		'select2'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -21,7 +21,7 @@ define (
 		Handlebars,
 		kbaseNarrativeParameterInput,
 		select2
-	) {
+	) => {
     'use strict';
     return KBWidget({
         name: "kbaseNarrativeParameterTextSubdataInput",
@@ -67,8 +67,8 @@ define (
 
 
         render: function() {
-            var self = this;
-            var spec = self.spec;
+            const self = this;
+            const spec = self.spec;
 
             self.initWsClient();
 
@@ -97,7 +97,7 @@ define (
             }
             
             // check if this is a multiselection
-            var multiselection = false;
+            let multiselection = false;
             if (spec.textsubdata_options) {
                 if (spec.textsubdata_options.multiselection) {
                     multiselection = spec.textsubdata_options.multiselection;
@@ -133,7 +133,7 @@ define (
                 self.addRow(defaultValue,true,false);
                 if (spec.default_values) {
                     var d = spec.default_values;
-                    for(var i=1; i<d.length; d++) {
+                    for(let i=1; i<d.length; d++) {
                         defaultValue = (d[i] !== '' && d[i] !== undefined) ? d[i] : '';
                         self.addRow(defaultValue,false,false); 
                     }
@@ -150,8 +150,8 @@ define (
         firstLookup: null,
 
         fetchSubData: function(doneCallback) {
-            var self = this;
-            var spec = self.spec;
+            const self = this;
+            const spec = self.spec;
 
             if(!self.ws) return;
             if(!spec.textsubdata_options) return;
@@ -161,15 +161,15 @@ define (
             if(!self.enabled) return; // do not search if disabled
             if(self.locked_inputs) return; // do not search if disabled
 
-            var path_to_subdata = spec.textsubdata_options.subdata_selection.path_to_subdata;
-            var selection_id = spec.textsubdata_options.subdata_selection.selection_id;
-            var selection_description = spec.textsubdata_options.subdata_selection.selection_description;
-            var subdata_included = spec.textsubdata_options.subdata_selection.subdata_included;
-            var text_template = spec.textsubdata_options.subdata_selection.description_template;
+            const path_to_subdata = spec.textsubdata_options.subdata_selection.path_to_subdata;
+            const selection_id = spec.textsubdata_options.subdata_selection.selection_id;
+            const selection_description = spec.textsubdata_options.subdata_selection.selection_description;
+            const subdata_included = spec.textsubdata_options.subdata_selection.subdata_included;
+            let text_template = spec.textsubdata_options.subdata_selection.description_template;
             if(!text_template) {
                 text_template = "";
                 if(selection_description) {
-                    for(var sd=0; sd<selection_description.length; sd++) {
+                    for(let sd=0; sd<selection_description.length; sd++) {
                         text_template += " - {{"+selection_description[sd]+"}}";
                     }
                 }
@@ -192,18 +192,18 @@ define (
                 }
                 self.isFetching = true;
 
-                var query = [];
-                for(var i=0; i<spec.textsubdata_options.subdata_selection.constant_ref.length; i++) {
+                const query = [];
+                for(let i=0; i<spec.textsubdata_options.subdata_selection.constant_ref.length; i++) {
                     query.push({ref:spec.textsubdata_options.subdata_selection.constant_ref[i], included:subdata_included});
                 }
                 self.ws.get_object_subset(query,
-                    function(result) {
+                    (result) => {
                         self.processSubdataQueryResult(result, path_to_subdata, selection_id, 
                                                         selection_description, true, text_template);
                         self.isFetching = false;
                         if(doneCallback) { doneCallback(); }
                     },
-                    function(error) {
+                    (error) => {
                         console.error(error);
                         self.isFetching = false;
                         if(doneCallback) { doneCallback(); }
@@ -218,7 +218,7 @@ define (
                 }
 
                 // get the parameter value, and quit if we've already seen it
-                var param = self.options.kbaseMethodInputWidget
+                const param = self.options.kbaseMethodInputWidget
                                 .getParameterValue(spec.textsubdata_options.subdata_selection.parameter_id);
                 if(self.lastLookup) {
                     if(self.lastLookup === param) {
@@ -236,12 +236,12 @@ define (
                     self.firstLookup = false;
                     self.isFetching = true;
                     self.trigger('workspaceQuery.Narrative', 
-                        function(ws_name) {
-                            var query = []
+                        (ws_name) => {
+                            const query = []
                             if(typeof param === 'string') {
                                 query.push({ref:ws_name+'/'+param, included:subdata_included});
                             } else if(param instanceof Array) {
-                                for(var i=0; i<param.length; i++) {
+                                for(let i=0; i<param.length; i++) {
                                     query.push({ref:ws_name+'/'+param[i], included:subdata_included});
                                 }
                             } else {
@@ -253,13 +253,13 @@ define (
                             // reset the autofill data and fetch again
                             self.autofillData = [];
                             self.ws.get_object_subset(query,
-                                function(result) {
+                                (result) => {
                                     self.processSubdataQueryResult(result, path_to_subdata, selection_id, 
                                                                     selection_description, false, text_template);
                                     self.isFetching = false;
                                     if(doneCallback) { doneCallback(); }
                                 },
-                                function(error) {
+                                (error) => {
                                     console.error(error);
                                     self.isFetching = false;
                                     if(doneCallback) { doneCallback(); }
@@ -279,17 +279,17 @@ define (
         },
 
         processSubdataQueryResult : function(result, path_to_subdata, selection_id, selection_description, includeWsId, text_template) {
-            var self = this;
+            const self = this;
 
 console.log("h7", Handlebars, text_template);
-            var hb_template = Handlebars.compile(text_template);
+            const hb_template = Handlebars.compile(text_template);
 
             // loop over subdata from every object
-            for(var r=0; r<result.length; r++) {
-                var subdata = result[r].data;
-                var datainfo = result[r].info;
+            for(let r=0; r<result.length; r++) {
+                let subdata = result[r].data;
+                const datainfo = result[r].info;
 
-                for(var p=0; p<path_to_subdata.length; p++) {
+                for(let p=0; p<path_to_subdata.length; p++) {
                     subdata = subdata[path_to_subdata[p]];
                 }
 
@@ -311,7 +311,7 @@ console.log("h7", Handlebars, text_template);
                         self.autofillData.push(autofill);
                     }
                 } else {
-                    for(var key in subdata) {
+                    for(const key in subdata) {
                         if(subdata.hasOwnProperty(key)) {
                             var dname = datainfo[1];
                             if(includeWsId) { dname = datainfo[6] + '/' + datainfo[1]; }
@@ -340,7 +340,7 @@ console.log("h7", Handlebars, text_template);
                 }
             }
             // sort the list
-            self.autofillData.sort(function (a,b) {
+            self.autofillData.sort((a,b) => {
                 if (a.id > b.id) { return 1; }
                 if (a.id < b.id) { return -1; }
                 return 0;
@@ -350,8 +350,8 @@ console.log("h7", Handlebars, text_template);
 
 
         clearInput: function () {
-            var self = this;
-            for(var i=0; i<self.rowInfo.length; i++) {
+            const self = this;
+            for(let i=0; i<self.rowInfo.length; i++) {
                 self.setSpecificRowValue(i,'');
             }
             this.isValid();
@@ -360,23 +360,23 @@ console.log("h7", Handlebars, text_template);
 
 
         addTheAddRowController: function () {
-            var self = this;
-            var $nameCol = $('<div>').addClass(self.nameColClass).addClass("kb-method-parameter-name");
+            const self = this;
+            const $nameCol = $('<div>').addClass(self.nameColClass).addClass("kb-method-parameter-name");
             if (self.options.isInSidePanel)
             	$nameCol.css({'text-align': 'left', 'padding-left': '10px'});
-            var $buttonCol = $('<div>').addClass(self.inputColClass).addClass("kb-method-parameter-input").append(
+            const $buttonCol = $('<div>').addClass(self.inputColClass).addClass("kb-method-parameter-input").append(
                                 $('<button>').addClass("kb-default-btn kb-btn-sm")
                                 .append($('<span class="kb-parameter-data-row-add">').addClass("fa fa-plus"))
                                 .append(" add another "+self.spec.ui_name)
-                                .on("click",function() { self.addRow() }) );
+                                .on("click",() => { self.addRow() }) );
             self.$addRowController = $('<div>').addClass("row kb-method-parameter-row").append($nameCol).append($buttonCol);
             self.$mainPanel.append(self.$addRowController)
         },
         
         
         removeRow : function(uuid) {
-            var self = this;
-            for(var i=0; i<self.rowInfo.length; i++) {
+            const self = this;
+            for(let i=0; i<self.rowInfo.length; i++) {
                 if (self.rowInfo[i].uuid === uuid) {
                     self.rowInfo[i].$all.remove();
                     self.rowInfo.splice(i,1);
@@ -387,10 +387,10 @@ console.log("h7", Handlebars, text_template);
         
         /* row number should only be set when first creating this row */
         addRow : function(defaultValue, showHint, useRowHighlight) {
-            var self = this;
-            var spec = self.spec;
+            const self = this;
+            const spec = self.spec;
             
-            var placeholder = '';
+            let placeholder = '';
             if(spec.textsubdata_options) {
                 if(spec.textsubdata_options.placeholder) {
                     placeholder = spec.textsubdata_options.placeholder;
@@ -399,31 +399,31 @@ console.log("h7", Handlebars, text_template);
             }
             if (!defaultValue) { defaultValue = ""; }
             
-            var form_id = spec.id;
+            const form_id = spec.id;
             var $input= $input =$('<input id="' + form_id + '" type="text" style="width:100%" />')
-                                    .on("change",function() { self.isValid() });
+                                    .on("change",() => { self.isValid() });
 
 
-            var $feedbackTip = $("<span>").removeClass();
+            const $feedbackTip = $("<span>").removeClass();
             if (self.required && showHint) {  // it must be required, and it must be the first element (showHint is only added on first row)
                 $feedbackTip.addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left').prop("title","required field");
             }
                 
-            var $row = $('<div>').addClass("row kb-method-parameter-row");
+            const $row = $('<div>').addClass("row kb-method-parameter-row");
             if (useRowHighlight) {
                 $row.mouseenter(function(){$(this).addClass('kb-method-parameter-row-hover');})
                     .mouseleave(function(){$(this).removeClass('kb-method-parameter-row-hover');});
             }
                             
-            var $nameCol = $('<div>').addClass(self.nameColClass).addClass("kb-method-parameter-name");
+            const $nameCol = $('<div>').addClass(self.nameColClass).addClass("kb-method-parameter-name");
             if (self.options.isInSidePanel)
             	$nameCol.css({'text-align': 'left', 'padding-left': '10px'});
             if (showHint) { $nameCol.append(spec.ui_name); }
-            var $inputCol = $('<div>').addClass(self.inputColClass).addClass("kb-method-parameter-input")
+            const $inputCol = $('<div>').addClass(self.inputColClass).addClass("kb-method-parameter-input")
                                 .append($('<div>').css({"width":"100%","display":"inline-block"}).append($input))
                                 .append($('<div>').css({"display":"inline-block"}).append($feedbackTip));
-            var $hintCol  = $('<div>').addClass(self.hintColClass).addClass("kb-method-parameter-hint");
-            var uuidForRemoval = self.genUUID(); var $removalButton=null;
+            const $hintCol  = $('<div>').addClass(self.hintColClass).addClass("kb-method-parameter-hint");
+            const uuidForRemoval = self.genUUID(); let $removalButton=null;
             if(showHint) {
                 $hintCol.append(spec.short_hint);
                 if (spec.description && spec.short_hint !== spec.description) {
@@ -434,16 +434,16 @@ console.log("h7", Handlebars, text_template);
                 $removalButton = $('<button>').addClass("kb-default-btn kb-btn-sm")
                                 .append($('<span class="kb-parameter-data-row-remove">').addClass("fa fa-remove"))
                                 .append(" remove "+spec.ui_name)
-                                .on("click",function() { self.removeRow(uuidForRemoval); })
+                                .on("click",() => { self.removeRow(uuidForRemoval); })
                 $hintCol.append($removalButton);
             }
             $row.append($nameCol).append($inputCol).append($hintCol);
-            var $errorPanel = $('<div>').addClass("kb-method-parameter-error-mssg").hide();
-            var $errorRow = $('<div>').addClass('row')
+            const $errorPanel = $('<div>').addClass("kb-method-parameter-error-mssg").hide();
+            const $errorRow = $('<div>').addClass('row')
                                 .append($('<div>').addClass(self.nameColClass))
                                 .append($errorPanel.addClass(self.inputColClass));
             
-            var $allRowComponents = $('<div>').append($row).append($errorRow);
+            const $allRowComponents = $('<div>').append($row).append($errorRow);
             self.$rowsContainer.append($allRowComponents);
             self.rowInfo.push({uuid: uuidForRemoval, $row:$row, $input:$input, $error:$errorPanel, $feedback:$feedbackTip, $all:$allRowComponents, $removalButton:$removalButton});
                 
@@ -469,10 +469,10 @@ console.log("h7", Handlebars, text_template);
         /* private method - note: if placeholder is empty, then users cannot cancel a selection*/
         setupSelect2: function ($input, placeholder, defaultValue, multiselection,
                                     show_src_obj, allow_custom) {
-            var self = this;
-            var noMatchesFoundStr = "No matching data found or loaded yet.";
+            const self = this;
+            const noMatchesFoundStr = "No matching data found or loaded yet.";
 
-            var multiple = false;
+            let multiple = false;
             if(multiselection) multiple=true;
             if(show_src_obj===null) show_src_obj = true;
             if(allow_custom===null) allow_custom = false;
@@ -485,14 +485,14 @@ console.log("h7", Handlebars, text_template);
                 multiple:multiple,
                 tokenSeparators: [',', ' '],
                 query: function (query) {
-                    var data = {results:[]};
+                    const data = {results:[]};
                     
                     self.fetchSubData(
-                        function() {
+                        () => {
                             // if there is a current selection (this is a bit of a hack) we
                             // prefill the input box so we don't have to do additional typing
                             if (!multiple && query.term.trim()==="" && $input.select2('data') && $input.data('select2').kbaseHackLastSelection) {
-                                var searchbox = $input.data('select2').search;
+                                const searchbox = $input.data('select2').search;
                                 if (searchbox) {
                                     $(searchbox).val($input.select2('data').id);
                                     query.term = $input.select2('data').id;
@@ -502,11 +502,11 @@ console.log("h7", Handlebars, text_template);
                             $input.data('select2').kbaseHackLastTerm = query.term;
                             
                             // populate the names from our valid data object list
-                            var exactMatch = false;
+                            const exactMatch = false;
                             if (self.autofillData) {
-                                for(var i=0; i<self.autofillData.length; i++){
-                                    var d = self.autofillData[i];
-                                    var text = ' '; // for some reason, this has to be nonempty in some cases
+                                for(let i=0; i<self.autofillData.length; i++){
+                                    const d = self.autofillData[i];
+                                    let text = ' '; // for some reason, this has to be nonempty in some cases
                                     if(d.desc) { text = d.desc; }
                                     if (query.term.trim()!=="") {
                                         if(self.select2Matcher(query.term, d.id) ||
@@ -529,18 +529,18 @@ console.log("h7", Handlebars, text_template);
                             }
 
                             // paginate results
-                            var pageSize = self.options.wsObjSelectPageSize;
+                            const pageSize = self.options.wsObjSelectPageSize;
                             query.callback({results:data.results.slice((query.page-1)*pageSize, query.page*pageSize),
                                         more:data.results.length >= query.page*pageSize });
                         });
                 },
                 
                 formatSelection: function(object, container) {
-                    var display = '<span class="kb-parameter-data-selection">'+object.id+'</span>';
+                    const display = '<span class="kb-parameter-data-selection">'+object.id+'</span>';
                     return display;
                 },
                 formatResult: function(object, container, query) {
-                    var display = '<span style="word-wrap:break-word;"><b>'+object.id+'</b>';
+                    let display = '<span style="word-wrap:break-word;"><b>'+object.id+'</b>';
                     if(object.text) display+= object.text;
                     if(show_src_obj && object.dname)
                         display += '<br>&nbsp&nbsp&nbsp&nbsp&nbsp<i>in ' + object.dname + '</i>';
@@ -549,7 +549,7 @@ console.log("h7", Handlebars, text_template);
                 }
             })
             .on("select2-selecting",
-                function(e) {
+                (e) => {
                     $input.data('select2').kbaseHackLastSelection = e.choice;
                 });
             
@@ -570,21 +570,21 @@ console.log("h7", Handlebars, text_template);
          * red (see kbaseNarrativeMethodInput for default styles).
          */
         isValid: function() {
-            var self = this;
+            const self = this;
             if (!self.enabled) {
                 return { isValid: true, errormssgs:[]}; // do not validate if disabled
             }
-            var p= self.getParameterValue();
+            let p= self.getParameterValue();
             if (p===null) { return { isValid: true, errormssgs:[]}; }
-            var errorDetected = false;
-            var errorMessages = [];
+            let errorDetected = false;
+            const errorMessages = [];
 
             if(p instanceof Array) {
             } else { p = [p]; }
-            for(var i=0; i<p.length; i++) {
-                var errorDetectedHere = false;
+            for(let i=0; i<p.length; i++) {
+                let errorDetectedHere = false;
                 if (p[i]===null) { continue; }
-                var pVal = p[i].trim();
+                const pVal = p[i].trim();
                 // if it is a required field and not empty, keep the required icon around but we have an error (only for the first element)
                 if (pVal==='' && self.required && i===0) {
                     self.rowInfo[i].$row.removeClass("kb-method-parameter-row-error");
@@ -624,7 +624,7 @@ console.log("h7", Handlebars, text_template);
         disableParameterEditing: function() {
             // disable the input
             this.enabled = false;
-            for(var i=0; i<this.rowInfo.length; i++) {
+            for(let i=0; i<this.rowInfo.length; i++) {
                 this.rowInfo[i].$input.select2('disable',true);
                 // stylize the row div
                 this.rowInfo[i].$feedback.removeClass();
@@ -639,7 +639,7 @@ console.log("h7", Handlebars, text_template);
         enableParameterEditing: function() {
             // enable the input
             this.enabled = true;
-            for(var i=0; i<this.rowInfo.length; i++) {
+            for(let i=0; i<this.rowInfo.length; i++) {
                 this.rowInfo[i].$input.select2('enable',true);
                 if (this.rowInfo[i].$removalButton) { this.rowInfo[i].$removalButton.show(); }
             }
@@ -664,7 +664,7 @@ console.log("h7", Handlebars, text_template);
         unlockInputs: function() {
             this.locked_inputs = false;
             if (this.enabled) {
-                for(var i=0; i<this.rowInfo.length; i++) {
+                for(let i=0; i<this.rowInfo.length; i++) {
                     this.rowInfo[i].$input.select2('enable',true);
                     if (this.rowInfo[i].$removalButton) { this.rowInfo[i].$removalButton.show(); }
                 }
@@ -688,8 +688,8 @@ console.log("h7", Handlebars, text_template);
             if(value instanceof Array) {
             } else { value = [value]; }
             
-            for(var i=0; i<value.length; i++) {
-                var v = value[i].trim();
+            for(let i=0; i<value.length; i++) {
+                const v = value[i].trim();
                 if (i<this.rowInfo.length) {
                     if(v) { this.setSpecificRowValue(i,v) };
                 } else {
@@ -701,11 +701,11 @@ console.log("h7", Handlebars, text_template);
         },
         
         setSpecificRowValue: function(i,value) {
-            var setValue = {id:value, text:value};
+            let setValue = {id:value, text:value};
             if(this.spec.textsubdata_options.multiselection) {
-                var valueList = value.split(',');
+                const valueList = value.split(',');
                 setValue = [];
-                for(var k=0; k<valueList.length; k++) {
+                for(let k=0; k<valueList.length; k++) {
                     setValue.push({id:valueList[k],text:valueList[k]});
                 }
             }
@@ -763,8 +763,8 @@ console.log("h7", Handlebars, text_template);
         },
 
         genUUID: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+                const r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                 return v.toString(16);
             });
         },

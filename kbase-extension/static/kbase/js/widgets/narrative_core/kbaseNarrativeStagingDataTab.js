@@ -6,7 +6,7 @@ define([
     'kbase/js/widgets/narrative_core/upload/fileUploadWidget',
     'kbase/js/widgets/narrative_core/upload/stagingAreaViewer',
     'base/js/namespace'
-], function(
+], (
     $,
     KBWidget,
     Config,
@@ -14,7 +14,7 @@ define([
     FileUploadWidget,
     StagingAreaViewer,
     Jupyter
-) {
+) => {
     'use strict';
     return new KBWidget({
         name: 'kbaseNarrativeStagingDataTab',

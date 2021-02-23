@@ -2,7 +2,7 @@ define([
     'bluebird',
     'kb_service/client/workspace',
     'kb_service/utils'
-], function(Promise, Workspace, serviceUtils) {
+], (Promise, Workspace, serviceUtils) => {
     'use strict';
 
     function Validators() {
@@ -63,7 +63,7 @@ define([
          *  - values = Array, the set of acceptable values
          */
         function validateSet(value, options) {
-            var errorMessage, diagnosis;
+            let errorMessage, diagnosis;
             // values are raw, no parsing.
 
             // the only meaningful value for an empty value is 'undefined'.
@@ -75,7 +75,7 @@ define([
                     diagnosis = 'optional-empty';
                 }
             } else {
-                if (!options.values.some(function(setValue) {
+                if (!options.values.some((setValue) => {
                         return (setValue === value);
                     })) {
                     diagnosis = 'invalid';
@@ -105,7 +105,7 @@ define([
          * @returns {Object}
          */
         function validateWorkspaceDataPaletteRef(value, options) {
-            var parsedValue,
+            let parsedValue,
                 errorMessage, diagnosis;
 
             if (typeof value !== 'string') {
@@ -150,7 +150,7 @@ define([
          * - required - boolean
          */
         function validateWorkspaceObjectRef(value, options) {
-            var parsedValue,
+            let parsedValue,
                 errorMessage, diagnosis;
 
             if (typeof value !== 'string') {
@@ -185,7 +185,7 @@ define([
         }
 
         function getObjectInfo(workspaceId, objectName, authToken, serviceUrl) {
-            var workspace = new Workspace(serviceUrl, {
+            const workspace = new Workspace(serviceUrl, {
                 token: authToken
             });
 
@@ -193,7 +193,7 @@ define([
                     objects: [{ wsid: workspaceId, name: objectName }],
                     ignoreErrors: 1
                 })
-                .then(function(data) {
+                .then((data) => {
                     console.error(data);
                     if (data[0]) {
                         return serviceUtils.objectInfoToObject(data[0]);
@@ -216,10 +216,10 @@ define([
          * - types - Array
          */
         function validateWorkspaceObjectName(value, options) {
-            var parsedValue,
+            let parsedValue,
                 messageId, shortMessage, errorMessage, diagnosis = 'valid';
 
-            return Promise.try(function() {
+            return Promise.try(() => {
                 const validateName = validateWorkspaceObjectNameString(value, options);
                 errorMessage = validateName.errorMessage;
                 shortMessage = validateName.shortMessage;
@@ -228,10 +228,10 @@ define([
                 parsedValue = validateName.parsedValue;
                 if (options.shouldNotExist) {
                     return getObjectInfo(options.workspaceId, parsedValue, options.authToken, options.workspaceServiceUrl)
-                        .then(function(objectInfo) {
+                        .then((objectInfo) => {
                             if (objectInfo) {
-                                var type = objectInfo.typeModule + '.' + objectInfo.typeName,
-                                    matchingType = options.types.some(function(typeId) {
+                                const type = objectInfo.typeModule + '.' + objectInfo.typeName,
+                                    matchingType = options.types.some((typeId) => {
                                         if (typeId === type) {
                                             return true;
                                         }
@@ -250,7 +250,7 @@ define([
                         });
                 }
             })
-                .then(function() {
+                .then(() => {
                     return {
                         isValid: errorMessage ? false : true,
                         messageId: messageId,
@@ -279,7 +279,7 @@ define([
         }
 
         function validateIntString(value, options) {
-            var plainValue,
+            let plainValue,
                 parsedValue,
                 errorObject, messageId, errorMessage, diagnosis = 'valid',
                 min = options.min_int,
@@ -345,7 +345,7 @@ define([
         }
 
         function validateFloatString(value, options) {
-            var normalizedValue,
+            let normalizedValue,
                 parsedValue,
                 errorMessage, diagnosis,
                 min = options.min_float,
@@ -383,7 +383,7 @@ define([
         }
 
         function validateWorkspaceObjectNameString(value, options) {
-            var parsedValue,
+            let parsedValue,
                 messageId, shortMessage, errorMessage, diagnosis = 'valid';
 
             if (typeof value !== 'string') {
@@ -448,7 +448,7 @@ define([
          *      are ignored)
          */
         function validateText(value, options) {
-            var parsedValue,
+            let parsedValue,
                 errorMessage, diagnosis = 'valid',
                 minLength = options.min_length,
                 maxLength = options.max_length,
@@ -503,7 +503,7 @@ define([
          * @param {*} options
          */
         function validateTextSet(value, options) {
-            var errorMessage,
+            let errorMessage,
                 diagnosis,
                 parsedSet;
             // values are raw, no parsing.
@@ -518,7 +518,7 @@ define([
                 diagnosis = 'invalid';
                 errorMessage = 'value must be an array';
             } else {
-                parsedSet = value.filter(function(setValue) {
+                parsedSet = value.filter((setValue) => {
                     return !isEmptyString(setValue);
                 });
                 if (parsedSet.length === 0) {
@@ -529,7 +529,7 @@ define([
                         diagnosis = 'optional-empty';
                     }
                 } else if (options.values) {
-                    var matchedSet = parsedSet.filter(function(setValue) {
+                    const matchedSet = parsedSet.filter((setValue) => {
                         return (options.values.indexOf(setValue) >= 0);
                     });
                     if (matchedSet.length !== parsedSet.length) {
@@ -581,7 +581,7 @@ define([
          * - required - boolean
          */
         function validateBoolean(value, options) {
-            var parsedValue,
+            let parsedValue,
                 errorMessage,
                 diagnosis = 'valid';
 

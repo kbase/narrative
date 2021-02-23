@@ -47,9 +47,9 @@
 
 define([
   'jquery'
-], function(
+], (
   $
-) {
+) => {
   'use strict';
 
   return function constructor(args) {
@@ -58,17 +58,17 @@ define([
     this.routes = args.routes;
     this.token  = args.token;
 
-    var routeKeys = Object.keys(args.routes || {});
+    const routeKeys = Object.keys(args.routes || {});
 
     // gawd. What i wouldn't give for some ES6 syntax here.
-    routeKeys.forEach( function(routeName) {
-      var route = args.routes[routeName];
+    routeKeys.forEach( (routeName) => {
+      const route = args.routes[routeName];
 
-      var routeArgs = route.path.match(/\${\w+}/g) || [];
+      const routeArgs = route.path.match(/\${\w+}/g) || [];
 
       if (routeArgs) {
-        for (var j = 0; j < routeArgs.length; j++) {
-          var remapped = routeArgs[j].match(/\w+/g)[0];
+        for (let j = 0; j < routeArgs.length; j++) {
+          const remapped = routeArgs[j].match(/\w+/g)[0];
           routeArgs[j] = remapped;
         }
       }
@@ -79,15 +79,15 @@ define([
           fArgs = {};
         }
 
-        var path = route.path;
+        let path = route.path;
 
-        for (var i = 0; i < routeArgs.length; i++) {
-          var replacement = fArgs[routeArgs[i]] !== undefined
+        for (let i = 0; i < routeArgs.length; i++) {
+          const replacement = fArgs[routeArgs[i]] !== undefined
             ? fArgs[routeArgs[i]]
             : '';
           path = path.replace('${' + routeArgs[i] + '}', replacement);
         }
-       var restURL = [this.root, path].join('/');
+       const restURL = [this.root, path].join('/');
 
        return this.ajax(
         {
@@ -98,16 +98,16 @@ define([
         });
 
       }
-    }.bind(this));
+    });
 
     this.ajax = function ajax(args) {
-      var deferred = $.Deferred();
+      const deferred = $.Deferred();
 
-      var beforeSend = function (xhr) {
+      const beforeSend = function (xhr) {
           xhr.setRequestHeader("Authorization", args.token);
       }
 
-      var xhr = $.ajax({
+      const xhr = $.ajax({
           url: args.url,
           dataType: "text",
           type: args.route.method,
@@ -122,7 +122,7 @@ define([
           }
       });
 
-      var promise = deferred.promise();
+      const promise = deferred.promise();
       promise.xhr = xhr;
       return promise;
     }

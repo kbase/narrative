@@ -12,7 +12,7 @@ define([
 
     'bootstrap',
     'css!font-awesome'
-], function(
+], (
     Promise,
     html,
     Validation,
@@ -21,15 +21,15 @@ define([
     Props,
     Runtime,
     inputUtils
-) {
+) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         input = t('input');
 
     function factory(config) {
-        var spec = config.parameterSpec,
+        let spec = config.parameterSpec,
             runtime = Runtime.make(),
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(config.channelName),
@@ -74,20 +74,20 @@ define([
         // VALIDATION
 
         function importControlValue() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 return Validation.importString(getControlValue());
             });
         }
 
         function validate(value) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 return Validation.validate(value, spec);
             });
         }
 
         function autoValidate() {
             return validate(model.getItem('value'))
-                .then(function(result) {
+                .then((result) => {
                     channel.emit('validation', result);
                 });
         }
@@ -95,7 +95,7 @@ define([
 
         // DOM & RENDERING
 
-        var autoChangeTimer;
+        let autoChangeTimer;
 
         function cancelTouched() {
             if (autoChangeTimer) {
@@ -105,13 +105,13 @@ define([
         }
 
         function handleTouched(interval) {
-            var editPauseInterval = interval || 100;
+            const editPauseInterval = interval || 100;
             return {
                 type: 'keyup',
                 handler: function(e) {
                     channel.emit('touched');
                     cancelTouched();
-                    autoChangeTimer = window.setTimeout(function() {
+                    autoChangeTimer = window.setTimeout(() => {
                         autoChangeTimer = null;
                         e.target.dispatchEvent(new Event('change'));
                     }, editPauseInterval);
@@ -125,14 +125,14 @@ define([
                 handler: function() {
                     cancelTouched();
                     importControlValue()
-                        .then(function(value) {
+                        .then((value) => {
                             model.setItem('value', value);
                             channel.emit('changed', {
                                 newValue: value
                             });
                             return validate(value);
                         })
-                        .then(function(result) {
+                        .then((result) => {
                             if (result.isValid) {
                                 if (config.showOwnMessages) {
                                     ui.setContent('input-container.message', '');
@@ -142,7 +142,7 @@ define([
                             } else {
                                 if (config.showOwnMessages) {
                                     // show error message -- new!
-                                    var message = inputUtils.buildMessageAlert({
+                                    const message = inputUtils.buildMessageAlert({
                                         title: 'ERROR',
                                         type: 'danger',
                                         id: result.messageId,
@@ -154,7 +154,7 @@ define([
                             }
                             channel.emit('validation', result);
                         })
-                        .catch(function(err) {
+                        .catch((err) => {
                             channel.emit('validation', {
                                 isValid: false,
                                 diagnosis: 'invalid',
@@ -189,7 +189,7 @@ define([
             Focus the input control.
         */
         function doFocus() {
-            var node = ui.getElement('input-container.input');
+            const node = ui.getElement('input-container.input');
             if (node) {
                 node.focus();
             }
@@ -199,28 +199,28 @@ define([
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
 
-                var events = Events.make();
+                const events = Events.make();
                 container.innerHTML = render(events);
                 events.attachEvents(container);
                 // model.setItem('value', config.initialValue);
                 syncModelToControl();
                 autoValidate();
 
-                channel.on('reset-to-defaults', function() {
+                channel.on('reset-to-defaults', () => {
                     resetModelValue();
                 });
-                channel.on('update', function(message) {
+                channel.on('update', (message) => {
                     setModelValue(message.value);
                     syncModelToControl();
                     autoValidate();
                 });
-                channel.on('focus', function() {
+                channel.on('focus', () => {
                     doFocus();
                 });
                 // channel.emit('sync');
@@ -228,7 +228,7 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (container) {
                     parent.removeChild(container);
                 }

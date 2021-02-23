@@ -2,7 +2,7 @@
 /*jslint white:true,browser:true,jsnomen:true*/
 define([
     '../../jsonRpc-native'
-], function (jsonRpc) {
+], (jsonRpc) => {
     'use strict';
 
     /*
@@ -18,8 +18,8 @@ define([
      */
     function TaxonAPI(arg) {
         // Establish an auth object which has properties token and user_id.
-        var module = 'TaxonAPI';
-        var auth;
+        const module = 'TaxonAPI';
+        let auth;
         if (typeof arg.auth === 'function') {
             auth = arg.auth();
         } else {
@@ -44,7 +44,7 @@ define([
         }
 
         this.lookupModule = function () {
-            var func = 'get_service_status',
+            const func = 'get_service_status',
                 params = [{
                         module_name: module,
                         version: arg.version || 'dev'
@@ -56,11 +56,11 @@ define([
          * ref
          */
         this.get_parent = function () {
-            var params = Array.prototype.slice.call(arguments),
+            const params = Array.prototype.slice.call(arguments),
                 func = 'get_parent';
 
             return this.lookupModule()
-                .then(function (serviceStatus) {
+                .then((serviceStatus) => {
                     return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
                 });
         };
@@ -69,11 +69,11 @@ define([
          * ref
          */
         this.get_children = function () {
-            var params = Array.prototype.slice.call(arguments),
+            const params = Array.prototype.slice.call(arguments),
                 func = 'get_children';
 
             return this.lookupModule()
-                .then(function (serviceStatus) {
+                .then((serviceStatus) => {
                     return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
                 });
         };
@@ -82,11 +82,11 @@ define([
          * ref
          */
         this.get_genome_annotations = function () {
-            var params = Array.prototype.slice.call(arguments),
+            const params = Array.prototype.slice.call(arguments),
                 func = 'get_genome_annotations';
 
             return this.lookupModule()
-                .then(function (serviceStatus) {
+                .then((serviceStatus) => {
                     return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
                 });
         };
@@ -95,11 +95,11 @@ define([
          * ref
          */
         this.get_scientific_lineage = function () {
-            var params = Array.prototype.slice.call(arguments),
+            const params = Array.prototype.slice.call(arguments),
                 func = 'get_scientific_lineage';
 
             return this.lookupModule()
-                .then(function (serviceStatus) {
+                .then((serviceStatus) => {
                     return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
                 });
         };
@@ -108,11 +108,11 @@ define([
          * ref
          */
         this.get_scientific_name = function () {
-            var params = Array.prototype.slice.call(arguments),
+            const params = Array.prototype.slice.call(arguments),
                 func = 'get_scientific_name';
 
             return this.lookupModule()
-                .then(function (serviceStatus) {
+                .then((serviceStatus) => {
                     return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
                 });
         };
@@ -121,11 +121,11 @@ define([
          * ref
          */
         this.get_taxonomic_id = function () {
-            var params = Array.prototype.slice.call(arguments),
+            const params = Array.prototype.slice.call(arguments),
                 func = 'get_taxonomic_id';
 
             return this.lookupModule()
-                .then(function (serviceStatus) {
+                .then((serviceStatus) => {
                     return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
                 });
         };
@@ -134,11 +134,11 @@ define([
          * ref
          */
         this.get_kingdom = function () {
-            var params = Array.prototype.slice.call(arguments),
+            const params = Array.prototype.slice.call(arguments),
                 func = 'get_kingdom';
 
             return this.lookupModule()
-                .then(function (serviceStatus) {
+                .then((serviceStatus) => {
                     return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
                 });
         };
@@ -147,11 +147,11 @@ define([
          * ref
          */
         this.get_domain = function () {
-            var params = Array.prototype.slice.call(arguments),
+            const params = Array.prototype.slice.call(arguments),
                 func = 'get_domain';
 
             return this.lookupModule()
-                .then(function (serviceStatus) {
+                .then((serviceStatus) => {
                     return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
                 });
         };
@@ -160,11 +160,11 @@ define([
          * ref
          */
         this.get_genetic_code = function () {
-            var params = Array.prototype.slice.call(arguments),
+            const params = Array.prototype.slice.call(arguments),
                 func = 'get_genetic_code';
 
             return this.lookupModule()
-                .then(function (serviceStatus) {
+                .then((serviceStatus) => {
                     return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
                 });
         };
@@ -173,11 +173,11 @@ define([
          * ref
          */
         this.get_aliases = function () {
-            var params = Array.prototype.slice.call(arguments),
+            const params = Array.prototype.slice.call(arguments),
                 func = 'get_aliases';
 
             return this.lookupModule()
-                .then(function (serviceStatus) {
+                .then((serviceStatus) => {
                     return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
                 });
         };
@@ -186,11 +186,11 @@ define([
          * ref
          */
         this.get_info = function () {
-            var params = Array.prototype.slice.call(arguments),
+            const params = Array.prototype.slice.call(arguments),
                 func = 'get_info';
 
             return this.lookupModule()
-                .then(function (serviceStatus) {
+                .then((serviceStatus) => {
                     return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
                 });
         };
@@ -199,11 +199,11 @@ define([
          * ref
          */
         this.get_history = function () {
-            var params = Array.prototype.slice.call(arguments),
+            const params = Array.prototype.slice.call(arguments),
                 func = 'get_history';
 
             return this.lookupModule()
-                .then(function (serviceStatus) {
+                .then((serviceStatus) => {
                     return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
                 });
         };
@@ -212,11 +212,11 @@ define([
          * ref
          */
         this.get_provenance = function () {
-            var params = Array.prototype.slice.call(arguments),
+            const params = Array.prototype.slice.call(arguments),
                 func = 'get_provenance';
 
             return this.lookupModule()
-                .then(function (serviceStatus) {
+                .then((serviceStatus) => {
                     return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
                 });
         };
@@ -225,11 +225,11 @@ define([
          * ref
          */
         this.get_id = function () {
-            var params = Array.prototype.slice.call(arguments),
+            const params = Array.prototype.slice.call(arguments),
                 func = 'get_id';
 
             return this.lookupModule()
-                .then(function (serviceStatus) {
+                .then((serviceStatus) => {
                     return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
                 });
         };
@@ -238,11 +238,11 @@ define([
          * ref
          */
         this.get_name = function () {
-            var params = Array.prototype.slice.call(arguments),
+            const params = Array.prototype.slice.call(arguments),
                 func = 'get_name';
 
             return this.lookupModule()
-                .then(function (serviceStatus) {
+                .then((serviceStatus) => {
                     return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
                 });
         };
@@ -260,11 +260,11 @@ define([
          * ref
          */
         this.get_all_data = function () {
-            var params = Array.prototype.slice.call(arguments),
+            const params = Array.prototype.slice.call(arguments),
                 func = 'get_all_data';
 
             return this.lookupModule()
-                .then(function (serviceStatus) {
+                .then((serviceStatus) => {
                     return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
                 });
         };
@@ -278,21 +278,21 @@ define([
             // and may conflict with Javascript reserved words, variables
             // internal to this function, or shadow other symbols we need 
             // (e.g. the options function).
-            var params = Array.prototype.slice.call(arguments),
+            const params = Array.prototype.slice.call(arguments),
                 func = 'get_decorated_scientific_lineage';
 
             return this.lookupModule()
-                .then(function (serviceStatus) {
+                .then((serviceStatus) => {
                     return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
                 });
         };
         
         this.get_decorated_children = function () {
-            var params = Array.prototype.slice.call(arguments),
+            const params = Array.prototype.slice.call(arguments),
                 func = 'get_decorated_children';
 
             return this.lookupModule()
-                .then(function (serviceStatus) {
+                .then((serviceStatus) => {
                     return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
                 });
         };
@@ -301,11 +301,11 @@ define([
          * ref
          */
         this.get_version = function () {
-            var params = Array.prototype.slice.call(arguments),
+            const params = Array.prototype.slice.call(arguments),
                 func = 'get_version';
 
             return this.lookupModule()
-                .then(function (serviceStatus) {
+                .then((serviceStatus) => {
                     return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
                 });
         };
@@ -314,11 +314,11 @@ define([
          * 
          */
         this.status = function () {
-            var params = Array.prototype.slice.call(arguments),
+            const params = Array.prototype.slice.call(arguments),
                 func = 'status';
 
             return this.lookupModule()
-                .then(function (serviceStatus) {
+                .then((serviceStatus) => {
                     return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
                 });
         };

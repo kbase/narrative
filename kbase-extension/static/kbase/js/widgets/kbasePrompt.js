@@ -102,7 +102,7 @@
                 return this.data('dialogModal');
             }
 
-            var $dialogModal =
+            const $dialogModal =
                 $('<div></div>')
                     .attr('class', 'modal ' + this.options.modalClass)
                     .attr('tabindex', '-1')
@@ -160,7 +160,7 @@
             ;
 
             $dialogModal.unbind('keypress');
-            $dialogModal.keypress(function(e) {
+            $dialogModal.keypress((e) => {
                 if (e.keyCode == 13) {
                     e.stopPropagation();
                     e.preventDefault();
@@ -184,20 +184,20 @@
                 $dialogModal.data('footer').append(this.options.footer);
             }
 
-            var $prompt = this;
+            const $prompt = this;
 
             $.each(
                 this.options.controls,
-                function (idx, val) {
+                (idx, val) => {
                     if (typeof val == 'string') {
                         val = $prompt[val]();
                     }
-                    var btnClass = 'btn btn-default';
+                    let btnClass = 'btn btn-default';
                     if (val.type) {
                         btnClass = btnClass + ' btn-' + val.type;
                     }
 
-                    var $button =
+                    const $button =
                         $('<a></a>')
                             .attr('href', '#')
                             .attr('class', btnClass)
@@ -223,15 +223,15 @@
 
             this.data('dialogModal', $dialogModal);
 
-            var $firstField = undefined;
-            var selection = false;
+            let $firstField = undefined;
+            let selection = false;
 
             $dialogModal.on('shown.bs.modal',
                 $.proxy(
-                    function () {
+                    () => {
                         $.each(
                             $dialogModal.find('input[type=text],input[type=password],textarea'),
-                            function (idx, val) {
+                            (idx, val) => {
                                 if ($firstField == undefined) {
                                     $firstField = $(val);
                                 }

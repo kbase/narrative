@@ -17,7 +17,7 @@ define([
     'typeahead',
     'bootstrap',
     'css!font-awesome'
-], function(
+], (
     $,
     Promise,
     html,
@@ -30,16 +30,16 @@ define([
     Config,
     TaxonomyClientAPI,
     GenericClient
-) {
+) => {
     'use strict';
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         input = t('input');
 
     function factory(config) {
-        var bus = config.bus,
+        let bus = config.bus,
             spec = config.parameterSpec,
             parent,
             container,
@@ -53,7 +53,7 @@ define([
         }
 
         function setModelValue(value) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (model.value !== value) {
                     model.value = value;
                     bus.emit('changed', {
@@ -70,7 +70,7 @@ define([
         // VALIDATION
 
         function validate(rawValue) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (rawValue === undefined) {
                     rawValue = getInputValue();
                 }
@@ -80,7 +80,7 @@ define([
 
         function autoValidate() {
             return validate()
-                .then(function(result) {
+                .then((result) => {
                     bus.emit('validation', {
                         errorMessage: result.errorMessage,
                         diagnosis: result.diagnosis
@@ -93,7 +93,7 @@ define([
 
         function handleChange(newValue) {
             validate(newValue)
-                .then(function(result) {
+                .then((result) => {
                     if (result.isValid) {
                         setModelValue(result.parsedValue);
                     } else if (result.diagnosis === 'required-missing') {
@@ -103,7 +103,7 @@ define([
                         });
                     } else {
                         if (config.showOwnMessages) {
-                            var message = inputUtils.buildMessageAlert({
+                            const message = inputUtils.buildMessageAlert({
                                 title: 'ERROR',
                                 type: 'danger',
                                 id: result.messageId,
@@ -136,22 +136,22 @@ define([
         }
 
         function render() {
-            var ic_id;
+            let ic_id;
 
-            Promise.try(function() {
-                    var events = Events.make(),
+            Promise.try(() => {
+                    const events = Events.make(),
                         inputControl = makeInputControl(model.value, events, bus);
                     ui.setContent('autocomplete-container', inputControl);
                     ic_id = $(inputControl).attr('id');
                     events.attachEvents(container);
                 })
-                .then(function() {
-                    setTimeout(function() {
-                        var genericClient = new GenericClient(Config.url('service_wizard'), {
+                .then(() => {
+                    setTimeout(() => {
+                        const genericClient = new GenericClient(Config.url('service_wizard'), {
                             token: Runtime.make().authToken()
                         });
 
-                        var dog = new Bloodhound({
+                        const dog = new Bloodhound({
                             datumTokenizer: Bloodhound.tokenizers.whitespace,
                             queryTokenizer: Bloodhound.tokenizers.whitespace,
                             // `states` is an array of state names defined in "The Basics"
@@ -170,15 +170,15 @@ define([
                                         search: options.url,
                                         limit: 10,
                                         start: 0
-                                    }]).then(function(d) {
+                                    }]).then((d) => {
                                         onSuccess(d[0]);
-                                    }).catch(function(e) {
+                                    }).catch((e) => {
                                         onError(e);
                                     });
                                 }
                             }
                         });
-                        var $control = $('#' + ic_id);
+                        const $control = $('#' + ic_id);
                         $control.typeahead({
                             hint: true,
                             highlight: true,
@@ -191,7 +191,7 @@ define([
                                 return v.label
                             }
                         });
-                        $control.bind('typeahead:select', function(e, suggestion) {
+                        $control.bind('typeahead:select', (e, suggestion) => {
                             // NB for 'select' event it is the suggestion object,
                             // for 'change' it is the display value as defined above.
                             // e.g. 
@@ -217,7 +217,7 @@ define([
         }
 
         function syncModelToControl() {
-            var controlValue;
+            let controlValue;
             if (model.value === undefined) {
                 // should never be the case ...
                 // should either be the nullValue, defaultValue, or the present value.
@@ -233,34 +233,34 @@ define([
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                     parent = arg.node;
                     container = parent.appendChild(document.createElement('div'));
                     ui = UI.make({ node: arg.node });
 
-                    var events = Events.make();
+                    const events = Events.make();
                     container.innerHTML = layout(events);
                     events.attachEvents(container);
 
                     setModelValue(config.initialValue);
 
-                    bus.on('reset-to-defaults', function() {
+                    bus.on('reset-to-defaults', () => {
                         resetModelValue();
                     });
-                    bus.on('update', function(message) {
+                    bus.on('update', (message) => {
                         setModelValue(message.value);
                     });
 
                     // bus.emit('sync');
                     return render();
                 })
-                .then(function() {
+                .then(() => {
                     syncModelToControl();
                 });
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (container) {
                     parent.removeChild(container);
                 }

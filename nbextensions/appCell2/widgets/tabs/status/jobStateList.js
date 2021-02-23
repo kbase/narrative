@@ -5,17 +5,17 @@ define([
     'common/format',
     'kb_common/html',
     './jobStateListRow'
-], function(
+], (
     Promise,
     Runtime,
     UI,
     format,
     html,
     JobStateListRow
-) {
+) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         p = t('p'),
         span = t('span'),
@@ -33,7 +33,7 @@ define([
     }
 
     function factory(config) {
-        var container, ui, listeners = [],
+        let container, ui, listeners = [],
             runtime = Runtime.make(),
             widgets = {},
             model = config.model,
@@ -41,8 +41,8 @@ define([
             parentListener;
 
         function createTableRow(id) {
-            var table = container.getElementsByTagName('tbody')[0];
-            var newRow = document.createElement('tr');
+            const table = container.getElementsByTagName('tbody')[0];
+            const newRow = document.createElement('tr');
             newRow.setAttribute('data-element-job-id', id);
             newRow.classList.add('job-info');
             table.appendChild(newRow);
@@ -50,7 +50,7 @@ define([
         }
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 container = arg.node;
                 container.classList.add('batch-mode-list');
                 ui = UI.make({ node: container });
@@ -61,8 +61,8 @@ define([
                     createJobStateWidget('parent', parentJobId, model.getItem('exec.jobState.status'), arg.clickFunction, true);
                     container.getElementsByTagName('tr')[0].classList.add('job-selected'); // start with the parent selected
 
-                    for (var i=0; i<Math.max(arg.batchSize, arg.childJobs.length); i++) {
-                        var jobId = null,
+                    for (let i=0; i<Math.max(arg.batchSize, arg.childJobs.length); i++) {
+                        let jobId = null,
                             initialState = null;
                         if (i < arg.childJobs.length) {
                             jobId = arg.childJobs[i].job_id;
@@ -137,7 +137,7 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 runtime.bus().removeListener(parentListener);
             });
         }

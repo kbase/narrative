@@ -6,15 +6,15 @@
 		'narrativeConfig',        
 		'kbaseAuthenticatedWidget',
         'kbase-generic-client-api'        
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
         Config,
 		kbaseAuthenticatedWidget,
         GenericClient
-	) {
-    var loadingImage = Config.get('loading_gif');
+	) => {
+    const loadingImage = Config.get('loading_gif');
         
     return KBWidget({
         name: 'kbaseRESKESearchResultDemo',
@@ -165,8 +165,8 @@
 
 
         buildKBaseSearchPanel: function(){
-            var self = this;
-            var $panel = $(
+            const self = this;
+            const $panel = $(
                 `
                 <div class="container" style="margin-top:70px; margin-bottom:70px">
                 <div class="row align-items-center">
@@ -191,17 +191,17 @@
 
             self.$container.append($panel);
 
-            var query = self.options.query;
+            const query = self.options.query;
             if( query != null && query.length > 0){
                 $('#searchTypesImput').val(query);
             }
 
             $('#searchTypesBtn')
-            .on('click', function (e) {
+            .on('click', (e) => {
                 self.onSearchTypesClick();
             });
 
-            $('#searchTypesImput').keyup(function(e){
+            $('#searchTypesImput').keyup((e)=> {
                 if(e.keyCode == 13)
                 {
                     self.onSearchTypesClick();
@@ -211,7 +211,7 @@
         },
 
         onSearchTypesClick: function(){
-            var self = this;            
+            const self = this;            
             self.searchText = $("#searchTypesImput").val().trim();
 
             if( self.$searchObjectsResultPane != null){
@@ -237,18 +237,18 @@
             }
 
             self.genericClient.sync_call("KBaseRelationEngine.search_types",
-                    [self.searchTypesInput], function(data){
+                    [self.searchTypesInput], (data)=> {
                     self.searchTypesOutput = data[0];
                     self.buildSearchTypesResultPane(self.searchTypesOutput);
                 },
-                function(error){
+                (error)=> {
                     // self.clientError(error);
                 });
         },
 
 
         buildSearchTypesResultPane: function(searchTypesOutput){
-            var self = this;
+            const self = this;
             self.$searchTypesResultPane = $(
                 `
                 <div class="container" style="margin-top:70px; margin-bottom:70px">
@@ -271,11 +271,11 @@
             );
             self.$container.append(self.$searchTypesResultPane);
 
-            var $searchTypeRestulsListGroup = $("#searchTypeRestulsListGroup");
+            const $searchTypeRestulsListGroup = $("#searchTypeRestulsListGroup");
 
-            var types2counts = searchTypesOutput.type_to_count;
-            Object.keys(types2counts).forEach(function (dtype) { 
-                var count = types2counts[dtype]
+            const types2counts = searchTypesOutput.type_to_count;
+            Object.keys(types2counts).forEach((dtype) => { 
+                const count = types2counts[dtype]
                 $searchTypeRestulsListGroup.append(
                     $(
                         `
@@ -287,7 +287,7 @@
                     )
                 );
             });
-            $('.search_type_results a').click(function(evt) {
+            $('.search_type_results a').click((evt) => {
                 self.searchObjectType = evt.target.text;
                 self.onSelectTypeResultClick(evt.target.text,{
                     start: 0,
@@ -298,7 +298,7 @@
         },
 
         onSelectTypeResultClick: function(dType, pagination){
-            var self = this;
+            const self = this;
 
             if( self.$searchObjectsResultPane != null){
                 self.$searchObjectsResultPane.remove();
@@ -321,30 +321,30 @@
 
             console.log("searchObjectsInput: ",  self.searchObjectsInput);
             self.genericClient.sync_call("KBaseRelationEngine.search_objects",
-                    [self.searchObjectsInput], function(data){
+                    [self.searchObjectsInput], (data)=> {
                     self.searchObjectsOutput = data[0];
                     self.buildSearchObjectsResultPane(self.searchObjectsOutput);
                 },
-                function(error){
+                (error)=> {
                     // self.clientError(error);
                 });
         },
 
         buildPagenator: function($container, searchObjectsOutput){
-            var self = this;
-            var start  = searchObjectsOutput.pagination.start + 1;
-            var count = searchObjectsOutput.objects.length;
-            var end = searchObjectsOutput.pagination.start + 1 + count - 1;
-            var total = searchObjectsOutput.total;
-            var pageIndex = Math.floor((end-1)/self.PAGE_SIZE) + 1;
-            var pageTotal = Math.floor((total-1)/self.PAGE_SIZE) + 1;
+            const self = this;
+            const start  = searchObjectsOutput.pagination.start + 1;
+            const count = searchObjectsOutput.objects.length;
+            const end = searchObjectsOutput.pagination.start + 1 + count - 1;
+            const total = searchObjectsOutput.total;
+            const pageIndex = Math.floor((end-1)/self.PAGE_SIZE) + 1;
+            const pageTotal = Math.floor((total-1)/self.PAGE_SIZE) + 1;
 
-            var firstClass = (start > 1) ? "enabled" : "disabled";
-            var prevClass = (start > 1) ? "enabled" : "disabled";
+            const firstClass = (start > 1) ? "enabled" : "disabled";
+            const prevClass = (start > 1) ? "enabled" : "disabled";
 
             // TODO problem with elasticsearch scroll            
-            var nextClass = (end < total && end < 10000 - self.PAGE_SIZE) ? "enabled" : "disabled";
-            var lastClass = (end < total && end < 10000 - self.PAGE_SIZE) ? "enabled" : "disabled";
+            const nextClass = (end < total && end < 10000 - self.PAGE_SIZE) ? "enabled" : "disabled";
+            const lastClass = (end < total && end < 10000 - self.PAGE_SIZE) ? "enabled" : "disabled";
 
 
             $container.append(
@@ -365,15 +365,15 @@
             `));
 
 
-            $("#firstItem").click(function(e){
+            $("#firstItem").click((e)=> {
                 self.onSelectTypeResultClick(self.searchObjectType, {
                     start: 0,
                     count: self.PAGE_SIZE
                 });
             });
 
-            $("#prevItem").click(function(e){
-                var newStart = searchObjectsOutput.pagination.start - self.PAGE_SIZE;
+            $("#prevItem").click((e)=> {
+                let newStart = searchObjectsOutput.pagination.start - self.PAGE_SIZE;
                 if(newStart < 0) newStart = 0;
                 self.onSelectTypeResultClick(self.searchObjectType, {
                     start: newStart,
@@ -382,16 +382,16 @@
             });
 
 
-            $("#nextItem").click(function(e){
-                var newStart = searchObjectsOutput.pagination.start + searchObjectsOutput.pagination.count;
+            $("#nextItem").click((e)=> {
+                const newStart = searchObjectsOutput.pagination.start + searchObjectsOutput.pagination.count;
                 self.onSelectTypeResultClick(self.searchObjectType, {
                     start:newStart,
                     count: self.PAGE_SIZE
                 });
             });
 
-            $("#lastItem").click(function(e){
-                var newStart = Math.floor( searchObjectsOutput.total/self.PAGE_SIZE )*self.PAGE_SIZE;    
+            $("#lastItem").click((e)=> {
+                let newStart = Math.floor( searchObjectsOutput.total/self.PAGE_SIZE )*self.PAGE_SIZE;    
 
                 // TODO problem with elasticsearch scroll                
                 if(newStart > 10000 - self.PAGE_SIZE){
@@ -405,12 +405,12 @@
         },
 
         buildSearchObjectsResultPane: function(searchObjectsOutput){
-            var self = this;
-            var dtype = self.searchObjectType;
-            var start  = searchObjectsOutput.pagination.start + 1;
-            var count = searchObjectsOutput.objects.length;
-            var end = searchObjectsOutput.pagination.start + 1 + count - 1;
-            var total = searchObjectsOutput.total;
+            const self = this;
+            const dtype = self.searchObjectType;
+            const start  = searchObjectsOutput.pagination.start + 1;
+            const count = searchObjectsOutput.objects.length;
+            const end = searchObjectsOutput.pagination.start + 1 + count - 1;
+            const total = searchObjectsOutput.total;
 
             self.$searchObjectsResultPane = $(
             `
@@ -436,9 +436,9 @@
 
 
             self.$container.append(self.$searchObjectsResultPane);
-            var $searchResultPanel = $("#searchResultPanel");
+            const $searchResultPanel = $("#searchResultPanel");
 
-            $.each( searchObjectsOutput.objects, function(i, value){
+            $.each( searchObjectsOutput.objects, (i, value)=> {
                 $searchResultPanel.append($(
                     `
                       <div class="row" style="margin-top:30px;">
@@ -456,9 +456,9 @@
                       </div>
                     `
                 ));
-                var $row = $(`#row${i}`);
-                Object.keys(value.key_props).forEach(function (key) {
-                    var val = self.escapeHtml(value.key_props[key]);
+                const $row = $(`#row${i}`);
+                Object.keys(value.key_props).forEach((key) => {
+                    let val = self.escapeHtml(value.key_props[key]);
                     if(val.length > 100){
                         val = val.substring(0,100) + "...";
                     }
@@ -471,7 +471,7 @@
             self.buildPagenator($searchResultPanel, searchObjectsOutput);
 
 
-            var $searchTypeRestulsListGroup = $("#searchTypeRestulsListGroup");
+            const $searchTypeRestulsListGroup = $("#searchTypeRestulsListGroup");
         },
 
 
@@ -483,8 +483,8 @@
         },
 
         render: function(){
-            var self = this;
-            var $container = $("<div/>");
+            const self = this;
+            const $container = $("<div/>");
             self.$elem.append( $container );
             self.$container = $container;
 
@@ -500,7 +500,7 @@
         },
 
         showMessage: function(message) {
-            var span = $("<span/>").append(message);
+            const span = $("<span/>").append(message);
 
             this.$messagePane.append(span);
             this.$messagePane.show();
@@ -517,8 +517,8 @@
         },        
 
         escapeHtml:  function(string) {
-            var self = this;
-            return String(string).replace(/[&<>"'`=\/]/g, function (s) {
+            const self = this;
+            return String(string).replace(/[&<>"'`=\/]/g, (s) => {
                 return self.escapeSymbols[s];
             });
         }        

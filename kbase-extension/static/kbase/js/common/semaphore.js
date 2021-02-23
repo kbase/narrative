@@ -1,8 +1,8 @@
 define([
     'bluebird'
-], function(
+], (
     Promise
-) {
+) => {
     'use strict';
 
     // Ensure semaphore structure is in place when the module is loaded.
@@ -28,7 +28,7 @@ define([
         }
 
         function get(name, defaultValue) {
-            var value = window.__kbase_semaphores__[name];
+            const value = window.__kbase_semaphores__[name];
             if (value === undefined) {
                 return defaultValue;
             }
@@ -40,10 +40,10 @@ define([
         }
 
         function when(name, value, timeout) {
-            var startTime = new Date().getTime();
-            return new Promise(function (resolve, reject) {
+            const startTime = new Date().getTime();
+            return new Promise((resolve, reject) => {
                 function waiter() {
-                    var elapsed = new Date().getTime() - startTime;
+                    const elapsed = new Date().getTime() - startTime;
                     if (elapsed > timeout) {
                         reject(new Error('Timed out waiting for semaphore "' + name + '" with value "' + value + '"'));
                         return;
@@ -52,7 +52,7 @@ define([
                         resolve();
                         return;
                     }
-                    window.setTimeout(function () {
+                    window.setTimeout(() => {
                         waiter();
                     }, 100);
                 }

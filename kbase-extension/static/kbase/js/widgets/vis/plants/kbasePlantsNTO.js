@@ -10,13 +10,13 @@ define (
 		'jquery',
 		'kbaseIrisWidget',
 		'kbaseTable'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		kbaseIrisWidget,
 		kbaseTable
-	) {
+	) => {
         return KBWidget(
         {
 
@@ -53,7 +53,7 @@ define (
 
                 $elem.empty();
 
-                var $self = this;
+                const $self = this;
 
                 if (this.input() == undefined) {
                     this.setError("Cannot use network table widget w/o input file");
@@ -61,23 +61,23 @@ define (
                 else {
 //$elem.append(JSON.stringify(this.input(), undefined, 2));
 
-var datasets = [];
-var colorCats = d3.scale.category20();
+const datasets = [];
+const colorCats = d3.scale.category20();
 
 $.each(
     this.input().nodes,
-    function (idx, cluster) {
+    (idx, cluster) => {
         if (cluster.type == 'CLUSTER') {
 
-            var enrichment = cluster.user_annotations.go_enrichnment_annotation;
+            const enrichment = cluster.user_annotations.go_enrichnment_annotation;
 
-            var go_id = [];
-            var go_term = [];
-            var p_value = [];
+            const go_id = [];
+            const go_term = [];
+            const p_value = [];
 
             if (enrichment != undefined) {
-                var enrichments = enrichment.split(/\n/);
-                for (var j = 0; j < enrichments.length; j++) {
+                const enrichments = enrichment.split(/\n/);
+                for (let j = 0; j < enrichments.length; j++) {
                     var m;
                     if ( m = enrichments[j].match( /(GO:\d+)\(([\d.]+)\)(.+)/ ) ) {
                         go_id.push(m[1]);
@@ -115,18 +115,18 @@ $.each(
     }
 )
 
-var throttle = 0;
-var edge_ids = [];
-var node_to_cluster = {};
+const throttle = 0;
+const edge_ids = [];
+const node_to_cluster = {};
 
 
 
 $.each(
     this.input().edges,
-    function (eidx, edge) {
+    (eidx, edge) => {
         $.each(
             datasets,
-            function (idx, dataset) {
+            (idx, dataset) => {
 //if (throttle++ > 10) {
 //    return false;
 //}
@@ -155,18 +155,18 @@ $.each(
 
 //okay, now we go back through the damn nodes and pull out the actual data we need.
 
-var nodes = {};
-var edges = {};
+const nodes = {};
+const edges = {};
 
 $.each(
     this.input().nodes,
-    function (idx, node) {
+    (idx, node) => {
         $.each(
             edge_ids,
-            function (eidx, edge_id) {
+            (eidx, edge_id) => {
                 if (node.id == edge_id) {
 
-                    var cluster_gene_data = node_to_cluster[node.id];
+                    const cluster_gene_data = node_to_cluster[node.id];
                     if (cluster_gene_data.gene_data == undefined) {
                         cluster_gene_data.gene_data = [];
                     }
@@ -215,7 +215,7 @@ $.each(
 );
 
 
-var linkScale = d3.scale.pow()
+const linkScale = d3.scale.pow()
     .domain([0, datasets.length])
     .range([-100,100]);
 
@@ -223,13 +223,13 @@ var linkScale = d3.scale.pow()
 //counts if it's between two genes in the same cluster.
 $.each(
     this.input().edges,
-    function (eidx, edge) {
+    (eidx, edge) => {
         $.each(
             datasets,
-            function (idx, dataset) {
+            (idx, dataset) => {
 
-                var validEdge = false;
-                var datasetRec;
+                let validEdge = false;
+                let datasetRec;
 
                 if (node_to_cluster[edge.node_id1].id == dataset.id && (node_to_cluster[edge.node_id2] || {}).id == dataset.id) {
                     dataset.num_edges++;
@@ -243,8 +243,8 @@ $.each(
                 }
 
                 if (validEdge) {
-                    var node1 = nodes[edge.node_id1];
-                    var node2 = nodes[edge.node_id2];
+                    const node1 = nodes[edge.node_id1];
+                    const node2 = nodes[edge.node_id2];
 
                     if (! datasetRec.nodesByName[node1.name]) {
                         datasetRec.nodesByName[node1.name] = 1;
@@ -256,10 +256,10 @@ $.each(
                         datasetRec.nodes.push(node2);
                     }
 
-                    var edgeName = [edge.dataset_id, node1.name, node2.name].sort().join('-');//node1.name + '-' + node2.name;
-                    var edgeObj = edges[edgeName];
+                    const edgeName = [edge.dataset_id, node1.name, node2.name].sort().join('-');//node1.name + '-' + node2.name;
+                    let edgeObj = edges[edgeName];
 
-                    var dataset_idx = datasets.indexOf(datasetRec);
+                    const dataset_idx = datasets.indexOf(datasetRec);
 
                     if (edge.name == 'is interact with') {
                         edge.name = 'interacts with';
@@ -278,7 +278,7 @@ $.each(
                         };
                     }
 
-                    var color = datasetRec.color;//colorCats(datasets.indexOf(edge.dataset_id) % 20);
+                    const color = datasetRec.color;//colorCats(datasets.indexOf(edge.dataset_id) % 20);
                     edgeObj.colors[edge.dataset_id] = color;
 
                     if (! datasetRec.edgesByName[edgeName]) {
@@ -293,17 +293,17 @@ $.each(
     }
 );
 
-var $nto = this;
+const $nto = this;
 
-var $checkbox = $.jqElem('input')
+const $checkbox = $.jqElem('input')
     .attr('type', 'checkbox')
 ;
 
 $.each(
     datasets,
-    function (ridx, row) {
+    (ridx, row) => {
 
-        var checkbox = {
+        const checkbox = {
             externalSortValue : true,
             value : $checkbox.clone(),
             sortValue : false,
@@ -313,7 +313,7 @@ $.each(
                     $checkbox.on('click',
                         function(e) {
 
-                            var $check = this;
+                            const $check = this;
                             //not that we should be able to be here w/o a graph, but just in case.
                             if ($self.networkGraph == undefined) {
                                 return;
@@ -321,7 +321,7 @@ $.each(
 
                             cell.sortValue = $check.checked;
 
-                            var dataset = $self.networkGraph().dataset();
+                            let dataset = $self.networkGraph().dataset();
 
                             if (dataset == undefined) {
                                 dataset = {
@@ -330,20 +330,20 @@ $.each(
                                 };
                             }
 
-                            var newDataset = {
+                            const newDataset = {
                                 nodes : [],
                                 edges : []
                             };
 
-                            var activeNodes = {};
-                            var activeEdges = {};
+                            const activeNodes = {};
+                            const activeEdges = {};
 
                             //first thing we do is pull over all the existing nodes/edges
                             //only copy from our network if we're checked (not really possible)
                             //otherwise, copy all the other networks.
                             $.each(
                                 dataset.nodes,
-                                function(idx, node) {
+                                (idx, node) => {
                                     if (node.activeDatasets[row.cluster_id] && ! $check.checked) {
                                         delete node.activeDatasets[row.cluster_id];
                                     }
@@ -357,7 +357,7 @@ $.each(
 
                             $.each(
                                 dataset.edges,
-                                function(idx, edge) {
+                                (idx, edge) => {
                                     if (edge.activeDatasets[row.cluster_id] && ! $check.checked) {
                                         delete edge.activeDatasets[row.cluster_id];
                                     }
@@ -375,7 +375,7 @@ $.each(
 
                                 $.each(
                                     row.nodes,
-                                    function (idx, node) {
+                                    (idx, node) => {
                                         node.activeDatasets[row.cluster_id] = 1;
                                         if (! activeNodes[node.name]) {
                                             newDataset.nodes.push(node);
@@ -388,11 +388,11 @@ $.each(
                                     }
                                 );
 
-                                var color = row.color;
+                                const color = row.color;
 
                                 $.each(
                                     row.edges,
-                                    function (idx, edge) {
+                                    (idx, edge) => {
                                         edge.activeDatasets[row.cluster_id] = 1;
                                         edge.color = color;
                                         if (! activeEdges[edge.name]) {
@@ -406,7 +406,7 @@ $.each(
 
                             $.each(
                                 newDataset.nodes,
-                                function (idx, node) {
+                                (idx, node) => {
                                     node.label = '<b>' + node.name + '</b>'
                                         + '<hr>' + node.func
                                         + '<hr>'
@@ -419,7 +419,7 @@ $.each(
 
                             $.each(
                                 newDataset.edges,
-                                function (idx, edge) {
+                                (idx, edge) => {
                                     edge.label = '<b>' + edge.description + '</b>'
                                         + '<hr>'
                                         + d3.keys(edge.activeDatasets).sort().join('<br>');
@@ -460,7 +460,7 @@ $.each(
     }
 );
 
-var cluster_data = {
+const cluster_data = {
     structure : {
         header      : [
             {
@@ -521,7 +521,7 @@ var cluster_data = {
             var $return = $.jqElem('ul').css('list-style', 'none').css('padding-left', '0px');
 
             for (var i = 0; i < 3 && i < row.gene_data.length; i++) {
-                var label = row.gene_data[i].external_id;
+                let label = row.gene_data[i].external_id;
                 label = label.replace(/\.CDS$/, '');
                 $return.append(
                     $.jqElem('li').append(label)
@@ -536,7 +536,7 @@ var cluster_data = {
                             $.jqElem('a')
                                 .attr('href', '#')
                                 .append('more...')
-                                .on('click', function(e) {
+                                .on('click', (e) => {
                                     e.stopPropagation(); e.preventDefault();
                                     $nto.display_gene_list(row.gene_data);
                             })
@@ -564,7 +564,7 @@ var cluster_data = {
             return $.jqElem('a')
                 .attr('href', '#')
                 .append('Compare with KBase networks' + row.id)
-                .on('click', function(e) {
+                .on('click', (e) => {
                     $nto.display_gene_list(row.gene_data);
                 })
         }
@@ -584,7 +584,7 @@ var cluster_data = {
 };
 
 
-var $tables =
+const $tables =
     $.jqElem('div')
         .attr('id', 'tables')
         .append(
@@ -600,7 +600,7 @@ var $tables =
 
 this._rewireIds($tables, this);
 
-var $networkGraph = this.data('network')
+const $networkGraph = this.data('network')
     .css({width : 700, height : 600})
     .attr('align', 'center');
 new kbaseForcedNetwork($networkGraph, {
@@ -612,10 +612,10 @@ new kbaseForcedNetwork($networkGraph, {
 $networkGraph.$elem.hide();
 this.networkGraph($networkGraph);
 
-var clusterTable = $.jqElem('div').kbaseTable(cluster_data);
+const clusterTable = $.jqElem('div').kbaseTable(cluster_data);
 
 // all of this stuff here? This is to hack in a grouped header over the top.
-    var headerRow = clusterTable.data('headerRow');
+    const headerRow = clusterTable.data('headerRow');
     headerRow.find('th:nth-child(3)').after(
         $.jqElem('th')
             .attr('style', "background-color : black; color : white")
@@ -624,7 +624,7 @@ var clusterTable = $.jqElem('div').kbaseTable(cluster_data);
     );
 
 
-    var hrow2 = $.jqElem('tr');
+    const hrow2 = $.jqElem('tr');
     hrow2.append(headerRow.find('th:nth-child(5)'));
     hrow2.append(headerRow.find('th:nth-child(5)'));
     hrow2.append(headerRow.find('th:nth-child(5)'));
@@ -653,7 +653,7 @@ $elem.append($tables);
                     return;
                 }
 
-                var table_data = {
+                const table_data = {
                     structure : {
                         header      : [
                             {
@@ -702,15 +702,15 @@ $elem.append($tables);
                 };
 
                 //damn tables don't update, they're just static. I need to write a new table widget.
-                var $tbl = $.jqElem('div').kbaseTable(table_data);
+                const $tbl = $.jqElem('div').kbaseTable(table_data);
                 this.data('gene_table').empty();
                 this.data('gene_table').append($tbl.$elem);
 
                 this.data('last_gene_data', gene_data);
 
-                var $self = this;
+                const $self = this;
 
-                setTimeout(function() {
+                setTimeout(() => {
 
                     /*var $parent = $tbl.$elem.parent();
                     var throttle = 0;

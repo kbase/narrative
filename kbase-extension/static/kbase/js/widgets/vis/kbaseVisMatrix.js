@@ -12,7 +12,7 @@ define (
 		'geometry_rectangle',
 		'geometry_point',
 		'geometry_size'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -21,7 +21,7 @@ define (
 		geometry_rectangle,
 		geometry_point,
 		geometry_size
-	) {
+	) => {
 
     return KBWidget({
 
@@ -40,7 +40,7 @@ define (
         init : function init(options) {
             this._super(options);
 
-            var $vis = this;
+            const $vis = this;
 
             if (this.options.matrix_class == undefined) {
                 this.$elem.append(
@@ -50,25 +50,25 @@ define (
                 );
             }
             else {
-                require(this.options.matrix_class, function() {
+                require(this.options.matrix_class, () => {
 
-                    var total_children = $vis.options.child_data.length;
-                    var kids_per_row = Math.floor(Math.sqrt(total_children));
+                    const total_children = $vis.options.child_data.length;
+                    const kids_per_row = Math.floor(Math.sqrt(total_children));
 
-                    var bounds = $vis.chartBounds();
+                    const bounds = $vis.chartBounds();
 
-                    var childSize = new Size(bounds.size.width / kids_per_row, bounds.size.height / kids_per_row);
+                    const childSize = new Size(bounds.size.width / kids_per_row, bounds.size.height / kids_per_row);
 
-                    var row = 0;
-                    var col = 0;
+                    let row = 0;
+                    let col = 0;
 
                     //$vis.$elem.empty();
 
 
-                    for (var idx = 0; idx < $vis.options.child_data.length; idx++) {
-                        var child_data = $vis.options.child_data[idx];
+                    for (let idx = 0; idx < $vis.options.child_data.length; idx++) {
+                        const child_data = $vis.options.child_data[idx];
 
-                        var childOptions = $.extend(
+                        const childOptions = $.extend(
                             {},
                             $vis.options.childOptions,
                             child_data,
@@ -85,7 +85,7 @@ define (
                             }
                         );
 
-                        var $child1 = $.jqElem('div').css({width : $vis.$elem.width(), height : $vis.$elem.height()});
+                        const $child1 = $.jqElem('div').css({width : $vis.$elem.width(), height : $vis.$elem.height()});
                         //$vis.$elem.append($child1);
 
                         $child1[$vis.options.matrix_class](

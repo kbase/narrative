@@ -7,7 +7,7 @@ define (
 		'kbaseGrowthParametersAbstract',
 		'kbaseTabs',
 		'jquery-dataTables'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -15,7 +15,7 @@ define (
 		kbaseGrowthParametersAbstract,
 		kbaseTabs,
 		jquery_dataTables
-	) {
+	) => {
     return KBWidget({
         name: 'kbaseGrowthParameters',
         parent : kbaseAuthenticatedWidget,
@@ -24,33 +24,33 @@ define (
 
 
         render: function(){
-            var pref = self.pref;
+            const pref = self.pref;
 
-            var sampleParams = this.buildSamplesWithParameters();
-            var seriesParams = this.groupSamplesWithParametersIntoSeries(sampleParams);
+            const sampleParams = this.buildSamplesWithParameters();
+            const seriesParams = this.groupSamplesWithParametersIntoSeries(sampleParams);
 
             this.loading(false);
-            var $container = $("<div/>");
+            const $container = $("<div/>");
             this.$elem.append( $container );
 
             // Create a tabPane for all tabs
-            var $tabPane = $('<div>')
+            const $tabPane = $('<div>')
                 .attr( 'id', pref+'tab-content')
                 .appendTo($container);
-            var tabWidget = new kbaseTabs($tabPane, {canDelete : true, tabs : []});
+            const tabWidget = new kbaseTabs($tabPane, {canDelete : true, tabs : []});
 
             // Build matrix overview tab
-            var $tabOverview = $("<div/>");
+            const $tabOverview = $("<div/>");
             tabWidget.addTab({tab: 'Overview', content: $tabOverview, canDelete : false, show: true});
             this.buildMatrixOverview( $tabOverview );
 
             // Build  grwoth parameters tab
-            var $tabSamplesGrowthParameters = $("<div/>");
+            const $tabSamplesGrowthParameters = $("<div/>");
             tabWidget.addTab({tab: 'Samples growth parameters', content: $tabSamplesGrowthParameters, canDelete : false, show: false});
             this.buildSampleParams($tabSamplesGrowthParameters, sampleParams);
 
             // Build  grwoth parameters tab
-            var $tabSeriesGrowthParameters = $("<div/>");
+            const $tabSeriesGrowthParameters = $("<div/>");
             tabWidget.addTab({tab: 'Series growth parameters', content: $tabSeriesGrowthParameters, canDelete : false, show: false});
             this.buildSeriesParams($tabSeriesGrowthParameters, seriesParams);
 

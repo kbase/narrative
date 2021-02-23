@@ -12,13 +12,13 @@ define (
 		'jquery',
 		'narrativeConfig',
 		'kbaseNarrativeParameterInput'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		Config,
 		kbaseNarrativeParameterInput
-	) {
+	) => {
     'use strict';
     return KBWidget({
         name: "kbaseNarrativeParameterTextareaInput",
@@ -40,11 +40,11 @@ define (
         rowDivs: null,
         
         render: function() {
-            var self = this;
-            var spec = self.spec;
+            const self = this;
+            const spec = self.spec;
             
             // check if we need to allow multiple values
-            var allow_multiple = false;
+            let allow_multiple = false;
             if (spec.allow_multiple) {
                 if (spec.allow_multiple===true || spec.allow_multiple===1) {
                     allow_multiple = true;
@@ -54,7 +54,7 @@ define (
             self.rowDivs = [];
             if (!allow_multiple) {
                 // just one field, phew, this one should be easy    
-                var d = spec.default_values;
+                const d = spec.default_values;
                 
                 // check if this is a required field
                 self.required= true;
@@ -62,10 +62,10 @@ define (
                     self.required=false;
                 }
                 
-                var defaultValue = (d[0] !== "" && d[0] !== undefined) ? d[0] : "";
-                var form_id = spec.id;
+                const defaultValue = (d[0] !== "" && d[0] !== undefined) ? d[0] : "";
+                const form_id = spec.id;
                 
-                var rows = 3; var placeholder="";
+                let rows = 3; let placeholder="";
                 if(spec.textarea_options) {
                     if (spec.textarea_options.n_rows) {
                         rows = spec.textarea_options.n_rows;
@@ -74,38 +74,38 @@ define (
                         placeholder = spec.textarea_options.placeholder;
                     }
                 }
-                var $textArea= $('<textarea id="'+form_id+'">').addClass("form-control")
+                const $textArea= $('<textarea id="'+form_id+'">').addClass("form-control")
                                 .css({width:"100%",resize:"vertical"})
                                 .attr('rows',rows)
                                 .attr('placeholder',placeholder)
                                 .append(defaultValue)
-                                .on("input",function() { self.isValid() });
+                                .on("input",() => { self.isValid() });
                 
-                var $feedbackTip = $("<span>").removeClass();
+                const $feedbackTip = $("<span>").removeClass();
                 if (self.required) {
                     $feedbackTip.addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left').prop("title","required field");
                 }
                 
                 // set the widths of the columns
-                var nameColClass  = "col-md-2";
-                var inputColClass = "col-md-5";
-                var hintColClass  = "col-md-5";
+                let nameColClass  = "col-md-2";
+                let inputColClass = "col-md-5";
+                let hintColClass  = "col-md-5";
                 if (self.options.isInSidePanel) {
                     nameColClass  = "col-md-12";
                     inputColClass = "col-md-12";
                     hintColClass  = "col-md-12";
                 }
                 
-                var $row = $('<div>').addClass("row kb-method-parameter-row")
+                const $row = $('<div>').addClass("row kb-method-parameter-row")
                                 .hover(function(){$(this).toggleClass('kb-method-parameter-row-hover');});
-                var $nameCol = $('<div>').addClass(nameColClass).addClass("kb-method-parameter-name")
+                const $nameCol = $('<div>').addClass(nameColClass).addClass("kb-method-parameter-name")
                                     .append(spec.ui_name);
                 if (self.options.isInSidePanel)
                 	$nameCol.css({'text-align': 'left', 'padding-left': '10px'});
-                var $inputCol = $('<div>').addClass(inputColClass).addClass("kb-method-parameter-input")
+                const $inputCol = $('<div>').addClass(inputColClass).addClass("kb-method-parameter-input")
                                 .append($('<div>').css({"width":"100%","display":"inline-block"}).append($textArea))
                                 .append($('<div>').css({"display":"inline-block"}).append($feedbackTip));
-                var $hintCol  = $('<div>').addClass(hintColClass).addClass("kb-method-parameter-hint")
+                const $hintCol  = $('<div>').addClass(hintColClass).addClass("kb-method-parameter-hint")
                                 .append(spec.short_hint);
 		if (spec.description && spec.short_hint !== spec.description) {
 		    $hintCol.append($('<span>').addClass('fa fa-info kb-method-parameter-info')
@@ -113,8 +113,8 @@ define (
 		}
                 $row.append($nameCol).append($inputCol).append($hintCol);
                 
-                var $errorPanel = $('<div>').addClass("kb-method-parameter-error-mssg").hide();
-                var $errorRow = $('<div>').addClass('row')
+                const $errorPanel = $('<div>').addClass("kb-method-parameter-error-mssg").hide();
+                const $errorRow = $('<div>').addClass('row')
                                     .append($('<div>').addClass(nameColClass))
                                     .append($errorPanel.addClass(inputColClass));
                 
@@ -146,14 +146,14 @@ define (
          * red (see kbaseNarrativeMethodInput for default styles).
          */
         isValid: function() {
-            var self = this;
+            const self = this;
             if (!self.enabled) {
                 return { isValid: true, errormssgs:[]}; // do not validate if disabled
             }
-            var p= self.getParameterValue();
+            let p= self.getParameterValue();
 	    if (p===null) { return { isValid: true, errormssgs:[]}; }
-            var errorDetected = false;
-            var errorMessages = [];
+            let errorDetected = false;
+            const errorMessages = [];
             if(p instanceof Array) {
                 // todo: handle this case when there are multiple fields
             } else {
@@ -246,7 +246,7 @@ define (
          * in the method spec.
          */
         getParameterValue: function() {
-            var value = this.$elem.find("#"+this.spec.id).val();
+            const value = this.$elem.find("#"+this.spec.id).val();
 	    if (this.spec.optional === 1) {
 		if (value.trim().length===0) {
 		    return null;

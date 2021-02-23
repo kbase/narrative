@@ -49,14 +49,14 @@ define (
 		'd3',
 		'kbaseBarchart',
 		'kbaseAuthenticatedWidget'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		d3,
 		kbaseBarchart,
 		kbaseAuthenticatedWidget
-	) {
+	) => {
 
     //'use strict';
 
@@ -78,7 +78,7 @@ define (
 
         setDataset : function setDataset(newDataset) {
 
-            var $pmi = this;
+            const $pmi = this;
 
             if (this.data('loader')) {
                 this.data('loader').hide();
@@ -86,20 +86,20 @@ define (
                 this.data('formElem').show();
             }
 
-            var colorScale = d3.scale.category20();
-            var groups = {};
+            const colorScale = d3.scale.category20();
+            const groups = {};
 
             if (this.data('selectbox')) {
                 this.data('selectbox').empty();
 
-                var keys = Object.keys(newDataset.subsystems).sort();
+                const keys = Object.keys(newDataset.subsystems).sort();
 
-                for (var f = 0; f < keys.length; f++) {
-                    var func = keys[f];
+                for (let f = 0; f < keys.length; f++) {
+                    const func = keys[f];
 
-                    var name = func.replace(/_/g, ' ');
-                    var group = name.replace(/:.+/, "");
-                    var sub_name = name.replace(/.+:\s*/, "");
+                    const name = func.replace(/_/g, ' ');
+                    const group = name.replace(/:.+/, "");
+                    const sub_name = name.replace(/.+:\s*/, "");
 
                     this.data('selectbox')
                         .append(
@@ -110,13 +110,13 @@ define (
                                 .append(name)
                         )
 
-                    for (var bar = 0; bar < newDataset.subsystems[func].length; bar++) {
+                    for (let bar = 0; bar < newDataset.subsystems[func].length; bar++) {
                         newDataset.subsystems[func][bar].color = colorScale(f);
                     }
 
                     if (! groups[group]) {
 
-                        var $groupButton = $.jqElem('div')
+                        const $groupButton = $.jqElem('div')
                             .addClass('btn-group dropup')
                             .css({'padding-right' : '5px'})
                             .append(
@@ -139,18 +139,18 @@ define (
 
                                         if ( $(this).parent().hasClass( 'open') ) {
                                             $(this).parent().removeClass('open');
-                                            var $span = $(this).next().find('span');
+                                            const $span = $(this).next().find('span');
                                             $span.toggleClass('fa-plus fa-caret-up');
                                         }
 
-                                        var $check = $(this).parent().find('.check');
-                                        var shouldOpen = $check.data('checked')
+                                        const $check = $(this).parent().find('.check');
+                                        const shouldOpen = $check.data('checked')
                                             ? false
                                             : true;
 
                                         $.each(
                                             $(this).parent().find('.subsystem-checkbox'),
-                                            function(i, c) {
+                                            (i, c) => {
                                                 if (shouldOpen && ! c.checked) {
                                                     $(c).prop('checked', true);
                                                 }
@@ -174,10 +174,10 @@ define (
 
                                         }
 
-                                        var selected_subsystems = [];
+                                        const selected_subsystems = [];
                                         $.each(
                                             $pmi.$elem.find('.subsystem-checkbox'),
-                                            function(i,c) {
+                                            (i,c) => {
                                                 if (c.checked) {
                                                     selected_subsystems.push($(c).val());
                                                 }
@@ -194,7 +194,7 @@ define (
                                     .addClass('btn btn-sm btn-default dropdown-toggle')
                                     .append($.jqElem('span').addClass('fa fa-caret-up'))
                                     .on('click', function(e) {
-                                        var isOpen = $(this).parent().hasClass('open');
+                                        const isOpen = $(this).parent().hasClass('open');
                                         $pmi.data('formElem').find('.btn-group').removeClass('open');
                                         if (! isOpen) {
                                             $(this).parent().addClass('open');
@@ -203,7 +203,7 @@ define (
                                             $(this).find('span').toggleClass('fa-caret-up');
                                             $(this).find('span').toggleClass('fa-plus');
 
-                                        var $check = $pmi.data('formElem').find('.check');
+                                        const $check = $pmi.data('formElem').find('.check');
                                         if (this.checked) {
                                             $check.data('checked', ($check.data('checked') || 0) + 1);
                                             if ($check.data('checked') == $(this).closest('.btn-group').find('.subsystem-checkbox').length) {
@@ -225,10 +225,10 @@ define (
                                             }
                                         }
 
-                                        var selected_subsystems = [];
+                                        const selected_subsystems = [];
                                         $.each(
                                             $pmi.$elem.find('.subsystem-checkbox'),
-                                            function(i,c) {
+                                            (i,c) => {
                                                 if (c.checked) {
                                                     selected_subsystems.push($(c).val());
                                                 }
@@ -263,7 +263,7 @@ define (
                                             .addClass('subsystem-checkbox')
                                             .on('change', function(e) {
 return;
-                                                var $check = $(this).closest('.btn-group').find('.check');
+                                                const $check = $(this).closest('.btn-group').find('.check');
                                                 if (this.checked) {
                                                     $check.data('checked', ($check.data('checked') || 0) + 1);
                                                     if ($check.data('checked') == $(this).closest('.btn-group').find('.subsystem-checkbox').length) {
@@ -285,10 +285,10 @@ return;
                                                     }
                                                 }
 
-                                                var selected_subsystems = [];
+                                                const selected_subsystems = [];
                                                 $.each(
                                                     $pmi.$elem.find('.subsystem-checkbox'),
-                                                    function(i,c) {
+                                                    (i,c) => {
                                                         if (c.checked) {
                                                             selected_subsystems.push($(c).val());
                                                         }
@@ -328,9 +328,9 @@ return;
 
         parseWorkspaceData : function parseWorkspaceData(d1, d2) {
 
-            var $pmi = this;
-                var sub_anno = d1[0].data;
-                var fba_obj = d2[0].data;
+            const $pmi = this;
+                const sub_anno = d1[0].data;
+                const fba_obj = d2[0].data;
 
             /* //for easy testing
             $.when(
@@ -340,34 +340,34 @@ return;
                 var sub_anno = r1[0];//JSON.parse(r1[0]);
                 var fba_obj = r2[0];//JSON.parse(r2[0]);*/
 
-                var subsystem_fluxes = {};
+                const subsystem_fluxes = {};
 
-                var all_subsystems = Object.keys(sub_anno.subsystems);
+                const all_subsystems = Object.keys(sub_anno.subsystems);
 
                 $.each(
                     all_subsystems,
-                    function (i, subsystem) {
+                    (i, subsystem) => {
 
                         if (subsystem_fluxes[subsystem] == undefined) {
                             subsystem_fluxes[subsystem] = {};
                         }
 
-                        var my_fluxes = subsystem_fluxes[subsystem];
+                        const my_fluxes = subsystem_fluxes[subsystem];
 
                         $.each(
                             sub_anno.subsystems[subsystem],
-                            function (i, val) {
-                                var ss_rxn = val[0];
-                                var rxn_dict = val[1];
+                            (i, val) => {
+                                const ss_rxn = val[0];
+                                const rxn_dict = val[1];
 
                                 $.each(
                                     fba_obj.FBAReactionVariables,
-                                    function (i, fba_rxn) {
-                                        var model_rxn = fba_rxn.modelreaction_ref;
-                                        var tmp = model_rxn.split(/\//);
+                                    (i, fba_rxn) => {
+                                        let model_rxn = fba_rxn.modelreaction_ref;
+                                        const tmp = model_rxn.split(/\//);
                                         model_rxn = tmp[tmp.length - 1];
 
-                                        var biochem_rxn = model_rxn;
+                                        let biochem_rxn = model_rxn;
                                         biochem_rxn = biochem_rxn.replace(/_\w\d+$/, '');
 
                                         if (biochem_rxn == ss_rxn) {
@@ -378,7 +378,7 @@ return;
 
                                             my_fluxes[model_rxn]['flux'] = fba_rxn.value;
 
-                                            var tooltip = rxn_dict.tooltip
+                                            let tooltip = rxn_dict.tooltip
 
                                             tooltip = tooltip.replace(/\n/g, "<br>");
                                             //tooltip = tooltip.replace(/:(.+?)<br>/g, ": <i>$1</i><br>");
@@ -396,19 +396,19 @@ return;
                     }
                 );
 
-                var dataset = {subsystems:{}};
+                const dataset = {subsystems:{}};
 
                 $.each(
                     subsystem_fluxes,
-                    function (subsystem, data) {
+                    (subsystem, data) => {
 
-                        var sortedKeys = Object.keys(data).sort();
+                        const sortedKeys = Object.keys(data).sort();
 
                         $.each(
                             sortedKeys,
-                            function (i,k) {
+                            (i,k) => {
 
-                                var v = data[k];
+                                const v = data[k];
 
                                 if (dataset.subsystems[subsystem] == undefined) {
                                     dataset.subsystems[subsystem] = [];
@@ -438,16 +438,16 @@ return;
 
             this._super(options);
 
-            var $pmi = this;
+            const $pmi = this;
 
-            var ws = new Workspace(window.kbconfig.urls.workspace, {token : $pmi.authToken()});
+            const ws = new Workspace(window.kbconfig.urls.workspace, {token : $pmi.authToken()});
 
-            var subanno_params = {
+            const subanno_params = {
                 workspace : this.options.subsystem_annotation_workspace,
                 name : this.options.subsystem_annotation_object,
             };
 
-            var fbaobj_params = {
+            const fbaobj_params = {
                 workspace : this.options.fba_workspace,
                 name : this.options.fba_object,
             };
@@ -455,9 +455,9 @@ return;
             $.when(
                 ws.get_objects([subanno_params])    ,
                 ws.get_objects([fbaobj_params])
-            ).then(function (d1, d2) {
+            ).then((d1, d2) => {
 
-                var interval = setInterval(function(){
+                var interval = setInterval(()=> {
                     if ($pmi.data('loader').is(':visible')) {
                         clearInterval(interval);
                         $pmi.parseWorkspaceData(d1, d2);
@@ -465,7 +465,7 @@ return;
                 }, 2000);
 
             })
-            .fail(function(d) {
+            .fail((d) => {
 
                 $pmi.$elem.empty();
                 $pmi.$elem
@@ -480,29 +480,29 @@ return;
 
         displaySubsystems : function displaySubsystems(subsystems) {
 
-            var lastSubsystems = this.lastSubsystems;
+            const lastSubsystems = this.lastSubsystems;
 
             if (lastSubsystems != undefined) {
-                var newKeys = {};
+                const newKeys = {};
                 $.each(
                     subsystems,
-                    function (i,v) {
+                    (i,v) => {
                         newKeys[v] = 1;
                     }
                 );
 
-                var oldKeys = {};
+                const oldKeys = {};
                 $.each(
                     lastSubsystems,
-                    function (i,v) {
+                    (i,v) => {
                         oldKeys[v] = 1;
                     }
                 );
 
-                var newSubsystems = [];
+                const newSubsystems = [];
                 $.each(
                     lastSubsystems,
-                    function (i,v) {
+                    (i,v) => {
                         if (newKeys[v]) {
                             newSubsystems.push(v);
                         }
@@ -511,7 +511,7 @@ return;
 
                 $.each(
                     subsystems,
-                    function (i,v) {
+                    (i,v) => {
                         if (! oldKeys[v]) {
                             newSubsystems.push(v);
                         }
@@ -523,21 +523,21 @@ return;
 
             this.lastSubsystems = subsystems;
 
-            var $pmi = this;
-            var merged = {};
-            var legend = {};
+            const $pmi = this;
+            const merged = {};
+            const legend = {};
             $.each(
                 subsystems,
-                function (i,subsystem) {
+                (i,subsystem) => {
 
-                    var $check = $pmi.$elem.find("[value='" + subsystem + "']");
+                    const $check = $pmi.$elem.find("[value='" + subsystem + "']");
                     $check.prop('checked', true);
                     $check.closest('.btn-group').find('.check').show();
                     $check.closest('.btn-group').find('.check').data('checked', subsystems.length);
 
                     $.each(
                         $pmi.dataset().subsystems[subsystem],
-                        function (i, bar) {
+                        (i, bar) => {
 
                             if (legend[subsystem] == undefined) {
                                 legend[subsystem] = bar.color;
@@ -562,20 +562,20 @@ return;
                 }
             );
 
-            var sortedKeys = Object.keys(merged).sort();
-            var bars = [];
+            const sortedKeys = Object.keys(merged).sort();
+            const bars = [];
             $.each(
                 sortedKeys,
-                function (i,bar) {
+                (i,bar) => {
                     bars.push(merged[bar]);
                 }
             );
 
-            var sortedLegendKeys = Object.keys(legend).sort();
-            var sortedLegend = [];
+            const sortedLegendKeys = Object.keys(legend).sort();
+            const sortedLegend = [];
             $.each(
                 sortedLegendKeys,
-                function (i, key) {
+                (i, key) => {
                     sortedLegend.push(
                         {
                             label : key,
@@ -592,9 +592,9 @@ return;
 
         appendUI : function appendUI($elem) {
 
-            var $pmi = this;
+            const $pmi = this;
 
-            var $container = $.jqElem('div')
+            const $container = $.jqElem('div')
                 .append(
                     $.jqElem('div')
                         .css('display', 'none')
@@ -660,12 +660,12 @@ return;
                 )
             );
 
-            var $barchart = this.data('barchart');
+            const $barchart = this.data('barchart');
             $barchart.superYDomain = $barchart.defaultYDomain;
             $barchart.defaultYDomain = function() {
-                var domain = $barchart.superYDomain();
+                const domain = $barchart.superYDomain();
 
-                var max = Math.max(Math.abs(domain[0]), Math.abs(domain[1]))
+                const max = Math.max(Math.abs(domain[0]), Math.abs(domain[1]))
 
                 return [-max, max]
 
@@ -678,14 +678,14 @@ return;
                 this.D3svg()
                     .selectAll('.xAxis .tick text')
                     .data(this.dataset())
-                    .on('mouseover', function(L, i) {
+                    .on('mouseover', (L, i) => {
                         $barchart.showToolTip(
                             {
                                 label : $barchart.dataset()[i].tooltip[0],
                             }
                         );
                     })
-                    .on('mouseout', function(d) {
+                    .on('mouseout', (d) => {
                         $barchart.hideToolTip();
                     })
             };

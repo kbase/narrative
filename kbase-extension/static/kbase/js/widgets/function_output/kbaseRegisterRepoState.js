@@ -12,13 +12,13 @@ define (
 		'jquery',
 		'kbaseAuthenticatedWidget',
 		'catalog-client-api'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		kbaseAuthenticatedWidget,
 		catalog_client_api
-	) {
+	) => {
 	return KBWidget({
 		name: 'kbaseRegisterRepoState',
 		parent : kbaseAuthenticatedWidget,
@@ -79,13 +79,13 @@ define (
         },
 
         render: function() {
-            var self = this;
-            var container = this.$elem;
+            const self = this;
+            const container = this.$elem;
 
-            var $table = $('<table class="table table-striped table-bordered" style="margin-left: auto; margin-right: auto;" />');
+            const $table = $('<table class="table table-striped table-bordered" style="margin-left: auto; margin-right: auto;" />');
 
             container.append($table);
-            var width = "15%"
+            const width = "15%"
 
             $table.append('<tr><td width="'+width+'">Registration ID</td><td>'+self.registration_id+'</td></tr>');
             //table.append('<tr><td width="'+width+'">Is active</td><td id="'+pref+'_active"></td></tr>');
@@ -102,7 +102,7 @@ define (
             container.append(self.$log_window);
 
             self.$track_checkbox= $('<input type="checkbox">').prop('checked', true);;
-            var $checkboxContainer = $('<div>').addClass('checkbox').css({width:"100%"})
+            const $checkboxContainer = $('<div>').addClass('checkbox').css({width:"100%"})
                 .append($('<label>')
                     .append(self.$track_checkbox)
                     .append('Auto scroll to new log output'));
@@ -122,25 +122,25 @@ define (
         },
 
         getLogAndState: function(registration_id, skip) {
-            var self = this;
+            const self = this;
 
-            var chunk_size = 10000
+            const chunk_size = 10000
             
             self.catalogClient.get_parsed_build_log({
                                             'registration_id':self.registration_id,
                                             'skip':skip,
                                             'limit':chunk_size
                                         },
-                    function(build_info) {
+                    (build_info) => {
 
                         // display the state
                         self.updateBuildState(build_info.registration, build_info.error_message);
 
                         // make sure our log array is big enough
-                        var log_length = skip+build_info.log.length;
+                        const log_length = skip+build_info.log.length;
                         self.last_log_line = log_length;
 
-                        for(var k=self.log.length; k<log_length; k++) {
+                        for(let k=self.log.length; k<log_length; k++) {
                             if(k>=skip) {
                                 self.log.push(build_info.log[k-skip]);
                                 self.appendLineToLog(build_info.log[k-skip].content);
@@ -157,7 +157,7 @@ define (
                             self.getLogAndState(registration_id, skip+chunk_size);
                         }
 
-                    }, function(error) {
+                    }, (error) => {
                         console.error(error);
                         //self.showData(data, error.error.error);
                     });
@@ -174,7 +174,7 @@ define (
         },
 
         updateBuildState: function(state, error) {
-            var self = this;
+            const self = this;
             self.loading(false);
             self.$registration_state_td
             if (state === 'error') {
@@ -187,7 +187,7 @@ define (
                 //$('#'+pref+'_error').val(data.error_message);
             } else if (state !== 'complete') {
                 self.$registration_state_td.empty().append(state)
-                setTimeout(function(event) {
+                setTimeout((event) => {
                     self.getLogAndState(self.registration_id, self.last_log_line);
                 }, 1000);
             } else {
@@ -204,7 +204,7 @@ define (
         },
 
         showMessage: function(message) {
-            var span = $("<span/>").append(message);
+            const span = $("<span/>").append(message);
             this.$messagePane.append(span);
             this.$messagePane.show();
         },

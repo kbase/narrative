@@ -2,7 +2,7 @@ define([
     'bluebird',
     'kb_service/utils',
     'kb_service/client/workspace'
-], function(Promise, serviceUtils, Workspace) {
+], (Promise, serviceUtils, Workspace) => {
     'use strict';
 
     // function getObjectInfo(workspaceId, objectName, authToken, serviceUrl) {
@@ -32,9 +32,9 @@ define([
 
 
     function validateWorkspaceObjectRef(value, constraints, options) {
-        var messageId, shortMessage, errorMessage, diagnosis = 'valid';
+        let messageId, shortMessage, errorMessage, diagnosis = 'valid';
 
-        return Promise.try(function() {
+        return Promise.try(() => {
                 if (value === null) {
                     if (constraints.required) {
                         messageId = 'required-missing';
@@ -52,7 +52,7 @@ define([
                 //     errorMessage = 'Invalid object reference format (#/#/#)';
                 // }
             })
-            .then(function() {
+            .then(() => {
                 return {
                     isValid: errorMessage ? false : true,
                     messageId: messageId,

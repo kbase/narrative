@@ -92,8 +92,8 @@
 
 */
 (function () {
-    var root = this || {};
-    var standalonePlot = root.standalonePlot = {
+    const root = this || {};
+    const standalonePlot = root.standalonePlot = {
 	about: {
 	    name: "plot",
 	    title: "Plot",
@@ -199,11 +199,11 @@
         },
 
 	create: function (params) {
-	    var renderer = this;
+	    const renderer = this;
 	    if (! window.hasOwnProperty('rendererPlot')) {
 		window.rendererPlot = [];
 	    }
-	    var instance = { settings: {},
+	    const instance = { settings: {},
 			     index: params.index };
 	    jQuery.extend(true, instance, renderer);
 	    jQuery.extend(true, instance.settings, renderer.about.defaults, params);
@@ -213,18 +213,18 @@
 	},
 
 	render: function (index) {
-	    var renderer = rendererPlot[index];
+	    const renderer = rendererPlot[index];
 
 	    // get the target div
-	    var target = renderer.settings.target;
+	    const target = renderer.settings.target;
 	    target.innerHTML = "<div id='plot_div"+index+"'></div>";
 	    target.firstChild.setAttribute('style', "width: "+ renderer.settings.width+"px; height: "+renderer.settings.height+"px;");
-	    jQuery('#plot_div'+index).svg().bind('dragstart', function(event) { event.preventDefault(); });
+	    jQuery('#plot_div'+index).svg().bind('dragstart', (event) => { event.preventDefault(); });
 	    rendererPlot[index].svg = jQuery('#plot_div'+index).svg('get');
 	    rendererPlot[index].drawImage(rendererPlot[index].svg, index);
 
 	    if (renderer.settings.drag_select && typeof(renderer.settings.drag_select) == 'function') {
-		var svg = document.getElementById('plot_div'+index).firstChild;
+		const svg = document.getElementById('plot_div'+index).firstChild;
 		trackMarquee(svg, renderer.settings.drag_select);
 	    }
 
@@ -232,9 +232,9 @@
 	},
 
 	niceNum: function (range, round) {
-            var exponent = Math.floor(Math.log10(range)); /** exponent of range */
-            var fraction = range / Math.pow(10, exponent); /** fractional part of range */
-            var niceFraction; /** nice, rounded fraction */
+            const exponent = Math.floor(Math.log10(range)); /** exponent of range */
+            const fraction = range / Math.pow(10, exponent); /** fractional part of range */
+            let niceFraction; /** nice, rounded fraction */
 
             if (round) {
 		if (fraction < 1.5) {
@@ -263,32 +263,32 @@
 
 	/* get a nice scale, min, max and tick interval */
 	niceScale: function (params) {
- 	    var minPoint = params.min;
-	    var maxPoint = params.max;
-	    var maxTicks = params.ticks || 10;
-	    var range = rendererPlot[0].niceNum(maxPoint - minPoint, false);
-	    var tickSpacing = rendererPlot[0].niceNum(range / (maxTicks - 1), true);
-	    var niceMin = Math.floor(minPoint / tickSpacing) * tickSpacing;;
-	    var niceMax = Math.ceil(maxPoint / tickSpacing) * tickSpacing;
+ 	    const minPoint = params.min;
+	    const maxPoint = params.max;
+	    const maxTicks = params.ticks || 10;
+	    const range = rendererPlot[0].niceNum(maxPoint - minPoint, false);
+	    const tickSpacing = rendererPlot[0].niceNum(range / (maxTicks - 1), true);
+	    const niceMin = Math.floor(minPoint / tickSpacing) * tickSpacing;;
+	    const niceMax = Math.ceil(maxPoint / tickSpacing) * tickSpacing;
 
 	    return { min: niceMin, max: niceMax, space: tickSpacing };
 	},
 
 	drawImage: function (svg, index) {
-	    var renderer = rendererPlot[index];
+	    const renderer = rendererPlot[index];
 
-	    var chartAreas  = [ [ 0.1, 0.1, 0.95, 0.9 ],
+	    const chartAreas  = [ [ 0.1, 0.1, 0.95, 0.9 ],
 				[ 0.2, 0.1, 0.95, 0.9 ],
 				[ 0.1, 0.1, 0.8, 0.9 ],
 				[ 0.1, 0.25, 0.9, 0.9 ],
 				[ 0.1, 0.1, 0.9, 0.8 ] ];
-	    var legendAreas = [ [ 0.0, 0.0, 0.0, 0.0 ],
+	    const legendAreas = [ [ 0.0, 0.0, 0.0, 0.0 ],
 				[ 0.005, 0.1, 0.125, 0.5 ],
 				[ 0.85, 0.1, 0.97, 0.5 ],
 				[ 0.2, 0.1, 0.8, 0.2 ],
 				[ 0.2, 0.9, 0.8, 0.995 ] ];
 
-	    var colors = [ '#BD362F', // red
+	    const colors = [ '#BD362F', // red
 			   '#0044CC', // blue
 			   '#51A351', // green
 			   '#F89406', // yellow
@@ -297,29 +297,29 @@
 			 ];
 
 	    if (renderer.settings.x_min === undefined) {
-		var x_min = undefined;
-		var x_max = undefined;
-		var y_min = undefined;
-		var y_max = undefined;
+		let x_min = undefined;
+		let x_max = undefined;
+		let y_min = undefined;
+		let y_max = undefined;
 		for (var i=0; i<renderer.settings.data.points.length; i++) {
-		    for (var h=0; h<renderer.settings.data.points[i].length; h++) {
+		    for (let h=0; h<renderer.settings.data.points[i].length; h++) {
 			if (x_min === undefined || renderer.settings.data.points[i][h].x < x_min) x_min = renderer.settings.data.points[i][h].x;
 			if (x_max === undefined || renderer.settings.data.points[i][h].x > x_max) x_max = renderer.settings.data.points[i][h].x;
 			if (y_min === undefined || renderer.settings.data.points[i][h].y < y_min) y_min = renderer.settings.data.points[i][h].y;
 			if (y_max === undefined || renderer.settings.data.points[i][h].y > y_max) y_max = renderer.settings.data.points[i][h].y;
 		    }
 		}
-		var sx = rendererPlot[0].niceScale({min: x_min, max: x_max});
+		const sx = rendererPlot[0].niceScale({min: x_min, max: x_max});
 		renderer.settings.x_min = sx.min;
 		renderer.settings.x_max = sx.max;
-		var sy = rendererPlot[0].niceScale({min: y_min, max: y_max});
+		const sy = rendererPlot[0].niceScale({min: y_min, max: y_max});
 		renderer.settings.y_min = sy.min;
 		renderer.settings.y_max = sy.max;
 	    }
 
 	    svg.plot.noDraw().title(renderer.settings.title, renderer.settings.titleOffset, renderer.settings.title_color, renderer.settings.title_settings);
 	    for (i=0;i<renderer.settings.data.length;i++) {
-		var d = renderer.settings.data[i];
+		const d = renderer.settings.data[i];
 	    }
 
 	    svg.plot.plotPoints = renderer.settings.data.points;
@@ -332,7 +332,7 @@
 	    svg.plot.yAxis.scale(renderer.settings.y_min, renderer.settings.y_max, renderer.settings.y_scale).ticks(parseFloat((renderer.settings.y_max - renderer.settings.y_min) / 10), parseFloat((renderer.settings.y_max - renderer.settings.y_min) / 5), 8, 'sw', renderer.settings.y_scale).title(renderer.settings.y_title, renderer.settings.y_titleOffset);
 	    svg.plot.legend.settings({fill: 'white', stroke: 'gray'});
 
-	    var plotLegend = 0;
+	    let plotLegend = 0;
 	    if (renderer.settings.show_legend) {
 		switch (renderer.settings.legend_position) {
 		case 'left': plotLegend = 1;

@@ -1,12 +1,12 @@
 /*global define*/
 /*jslint white:true,browser:true */
 define([
-], function () {
+], () => {
     'use strict';
 
     function factory(config) {
-        var cdnUrl = config.cdnUrl;
-        var runtimes = {
+        const cdnUrl = config.cdnUrl;
+        const runtimes = {
             '0.1.0': {
                 version: '0.1.0',
                 amd: {
@@ -107,17 +107,17 @@ define([
         // This is done because the requirejs object produced by the client
         // will be localized to itself (e.g. widget) so we don't want to 
         // set the base url here to the cdn.
-        Object.keys(runtimes).forEach(function (version) {            
-            var newMap = {},
+        Object.keys(runtimes).forEach((version) => {            
+            const newMap = {},
                 runtime = runtimes[version];
-            Object.keys(runtime.amd.paths).forEach(function (moduleName) {
+            Object.keys(runtime.amd.paths).forEach((moduleName) => {
                 newMap[moduleName] = [cdnUrl, runtime.amd.paths[moduleName]].join('/');
             });
             runtime.amd.paths = newMap;
         });
 
         function getRuntime(version) {
-            var runtime = runtimes[version];
+            const runtime = runtimes[version];
             if (!runtime) {
                 throw new Error('No runtime defined for version ' + version);
             }
@@ -125,7 +125,7 @@ define([
         }
         
         function getModuleLoader(version, baseRequire, baseUrl) {
-            var runtime = getRuntime(version);
+            const runtime = getRuntime(version);
             return baseRequire.config({
                 context: 'runtime_' + runtime.version,
                 baseUrl: baseUrl,

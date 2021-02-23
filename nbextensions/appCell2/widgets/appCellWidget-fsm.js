@@ -1,10 +1,10 @@
 /*global define*/
 /*jslint white:true,browser:true*/
 
-define([], function() {
+define([], () => {
     'use strict';
 
-    var appStates = [
+    const appStates = [
         {
             state: {
                 mode: 'new'

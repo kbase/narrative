@@ -156,17 +156,17 @@ define([
 
         return getViewerInfo().then((viewerInfo) => {
 
-            var o = dataCell.obj_info;
-            var methodId = viewerInfo.viewers[o.bare_type];
+            const o = dataCell.obj_info;
+            const methodId = viewerInfo.viewers[o.bare_type];
             if (!methodId) {
                 console.debug('No viewer found for type=' + o.bare_type);
                 return { widget: defaultViewer(dataCell), title: 'Unknown Data Type' };
             }
-            var spec = viewerInfo.specs[methodId];
-            var output = { '_obj_info': o };
+            const spec = viewerInfo.specs[methodId];
+            const output = { '_obj_info': o };
             _.each(spec.behavior.output_mapping, (mapping) => {
                 // Get parameter value
-                var param = getParamValue(o, mapping);
+                let param = getParamValue(o, mapping);
                 if (param === null) {
                     console.error('Unsupported output mapping structure:', mapping);
                     return null;
@@ -222,8 +222,8 @@ define([
      * This returns a jquery node with a <pre> containing that info.
      */
     function defaultViewer(dataCell) {
-        var o = dataCell.obj_info;
-        var mdDesc = '';
+        const o = dataCell.obj_info;
+        let mdDesc = '';
 
         if (_.isEmpty(o.meta)) {
             mdDesc += 'No metadata';

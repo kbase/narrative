@@ -12,13 +12,13 @@ define(
         'jquery',
         'kbaseNarrativeParameterDropdownInput',
         'kbaseNarrativeParameterInput',
-    ], function (
+    ], (
     KBWidget,
     bootstrap,
     $,
     kbaseNarrativeParameterDropdownInput,
     kbaseNarrativeParameterInput
-    ) {
+    ) => {
 
     return KBWidget({
         name: "kbaseNarrativeParameterCustomDropdownGroupInput",
@@ -34,11 +34,11 @@ define(
         value: true,
         parameters: [],
         show: function (loadSpecs) {
-            var self = this;
+            const self = this;
             self.reset();
 
             self.$optionsDiv.append($('<div>').append('<hr>'));
-            var specs = [];
+            let specs = [];
             if (loadSpecs) {
                 specs = loadSpecs;
             } else {
@@ -47,7 +47,7 @@ define(
 
             if (specs.length > 0) {
                 self.$optionsDiv.append($('<div>').append(self.spec.ui_name + ":"));
-                for (var i in specs) {
+                for (const i in specs) {
                     self.addParameterDiv(specs[i], "kbaseNarrativeParameterDropdownInput", self.$optionsDiv);
                 }
             } else {
@@ -60,9 +60,9 @@ define(
             this.parameters = [];
         },
         addParameterDiv: function (paramSpec, widgetName, $optionsDiv) {
-            var self = this;
-            var $stepDiv = $('<div>');
-            var $widget = $stepDiv[widgetName](
+            const self = this;
+            const $stepDiv = $('<div>');
+            const $widget = $stepDiv[widgetName](
                 {
                     loadingImage: self.options.loadingImage,
                     parsedParameterSpec: paramSpec,
@@ -72,19 +72,19 @@ define(
             $optionsDiv.append($stepDiv);
         },
         render: function () {
-            var self = this;
+            const self = this;
 
             self.$optionsDiv = $('<div>');
             self.$mainPanel.append(self.$optionsDiv);
         },
         getState: function () {
-            var state = {
+            const state = {
                 specs: [],
                 value: this.getParameterValue()
             };
 
-            for (var i in this.parameters) {
-                var param = this.parameters[i]
+            for (const i in this.parameters) {
+                const param = this.parameters[i]
                 state.specs.push(param.spec);
             }
             return state;
@@ -99,28 +99,28 @@ define(
             return {isValid: true, errormssgs: []};
         },
         disableParameterEditing: function () {
-            for (var i in this.parameters) {
-                var param = this.parameters[i];
+            for (const i in this.parameters) {
+                const param = this.parameters[i];
                 param.widget.disableParameterEditing();
             }
         },
         enableParameterEditing: function () {
-            for (var i in this.parameters) {
-                var param = this.parameters[i];
+            for (const i in this.parameters) {
+                const param = this.parameters[i];
                 param.widget.enableParameterEditing();
             }
         },
         setParameterValue: function (value) {
-            for (var i in this.parameters) {
-                var param = this.parameters[i];
-                var paramValue = value[param.name];
+            for (const i in this.parameters) {
+                const param = this.parameters[i];
+                const paramValue = value[param.name];
                 param.widget.setParameterValue(paramValue);
             }
         },
         getParameterValue: function () {
-            var value = {};
-            for (var i in this.parameters) {
-                var param = this.parameters[i];
+            const value = {};
+            for (const i in this.parameters) {
+                const param = this.parameters[i];
                 value[param.name] = param.widget.getParameterValue();
             }
             return value;

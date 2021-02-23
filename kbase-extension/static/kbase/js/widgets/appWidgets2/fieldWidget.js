@@ -19,7 +19,7 @@ define([
     'common/props',
     './errorControl',
     'css!google-code-prettify/prettify.css'
-], function(
+], (
     Promise,
     $,
     PR,
@@ -27,9 +27,9 @@ define([
     Events,
     UI,
     Props,
-    ErrorControlFactory) {
+    ErrorControlFactory) => {
     'use strict';
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         span = t('span'),
         label = t('label'),
@@ -55,7 +55,7 @@ define([
 
 
     function factory(config) {
-        var ui,
+        let ui,
             bus = config.bus,
             places, container,
             inputControlFactory = config.inputControlFactory,
@@ -93,7 +93,7 @@ define([
         }
 
         function buildInputMessage(messageDef) {
-            var events = Events.make(),
+            const events = Events.make(),
                 content = div({
                     class: 'alert alert-' + messageDef.type,
                     role: 'alert'
@@ -120,7 +120,7 @@ define([
         }
 
         function setError(error) {
-            var component = buildInputMessage({
+            const component = buildInputMessage({
                 title: 'ERROR',
                 type: 'danger',
                 message: error.message,
@@ -135,7 +135,7 @@ define([
         }
 
         function setWarning(warning) {
-            var component = buildInputMessage({
+            const component = buildInputMessage({
                 title: 'Warning',
                 type: 'warning',
                 message: warning.message,
@@ -198,7 +198,7 @@ define([
         }
 
         function rawSpec(spec) {
-            var specText = JSON.stringify(spec.spec, false, 3),
+            const specText = JSON.stringify(spec.spec, false, 3),
                 fixedSpec = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
             return pre({ class: 'prettyprint lang-json', style: { fontSize: '80%' } }, fixedSpec);
         }
@@ -246,7 +246,7 @@ define([
                     if (spec.spec.default_values.length === 0) {
                         return;
                     }
-                    var defaultValues = spec.defaultValue();
+                    const defaultValues = spec.defaultValue();
                     if (defaultValues instanceof Array) {
                         return tr([th('Default value'), td(defaultValues.join('<br>'))]);
                     }
@@ -269,7 +269,7 @@ define([
 
 
         function renderInfoTip() {
-            var infoTipText;
+            let infoTipText;
             if (spec.description() && spec.hint() !== spec.description()) {
                 infoTipText = spec.description();
             } else {
@@ -311,7 +311,7 @@ define([
         //        }
 
         function render(events) {
-            var placeholder = '',
+            let placeholder = '',
                 fieldContainer,
                 feedbackTip, nameCol, inputCol, hintCol;
 
@@ -329,18 +329,18 @@ define([
                 });
             }
 
-            var infoId = html.genId();
+            const infoId = html.genId();
 
             console.log('HERE, really?');
 
-            var advanced;
+            let advanced;
             if (spec.spec.advanced) {
                 advanced = 'advanced-parameter-hidden';
             } else {
                 advanced = '';
             }
 
-            var content = div({ class: ['form-horizontal', 'kb-app-parameter-row', 'parameter-panel', advanced].join(' '), dataAdvancedParameter: spec.isAdvanced(), style: { marginTop: '8px' }, id: fieldId }, [
+            const content = div({ class: ['form-horizontal', 'kb-app-parameter-row', 'parameter-panel', advanced].join(' '), dataAdvancedParameter: spec.isAdvanced(), style: { marginTop: '8px' }, id: fieldId }, [
                 div({ class: 'form-group kb-app-parameter-input field-panel', dataElement: 'field-panel', style: { marginBottom: '0' } }, [
                     label({ class: 'col-md-3 xcontrol-label kb-app-parameter-name control-label' }, [
                         spec.label() || spec.id()
@@ -388,8 +388,8 @@ define([
         // LIFECYCLE
 
         function attach(node) {
-            return Promise.try(function() {
-                var events = Events.make(),
+            return Promise.try(() => {
+                let events = Events.make(),
                     $container;
                 container = node;
                 container.innerHTML = render(events);
@@ -419,8 +419,8 @@ define([
         }
 
         function start() {
-            return Promise.try(function() {
-                bus.on('validation', function(message) {
+            return Promise.try(() => {
+                bus.on('validation', (message) => {
                     switch (message.diagnosis) {
                         case 'valid':
                             feedbackOk();
@@ -452,20 +452,20 @@ define([
                             break;
                     }
                 });
-                bus.on('touched', function(message) {
+                bus.on('touched', (message) => {
                     places.$feedback.css('background-color', 'yellow');
                     // console.log('FIELD detected touched');
                 });
-                bus.on('changed', function() {
+                bus.on('changed', () => {
                     places.$feedback.css('background-color', '');
                 })
-                bus.on('saved', function(message) {
+                bus.on('saved', (message) => {
                     console.log('FIELD detected saved');
 
                 });
                 if (inputControl.start) {
                     return inputControl.start()
-                        .then(function() {
+                        .then(() => {
                             bus.emit('run', {
                                 node: ui.getElement('input-control')
                             });
@@ -475,7 +475,7 @@ define([
         }
 
         function run(params) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (inputControl.run) {
                     return inputControl.run(params);
                 }

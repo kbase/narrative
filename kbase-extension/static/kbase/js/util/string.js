@@ -5,7 +5,7 @@
  *
  * @author Bill Riehl wjriehl@lbl.gov
  */
-define([], function() {
+define([], () => {
     'use strict';
 
     /**
@@ -15,9 +15,9 @@ define([], function() {
      * @public
      */
     function uuid () {
-        var template = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx';
-        return template.replace(/[xy]/g, function(c) {
-            var r = Math.random()*16|0, v = c === 'x' ? r : (r&0x3|0x8);
+        const template = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx';
+        return template.replace(/[xy]/g, (c) => {
+            const r = Math.random()*16|0, v = c === 'x' ? r : (r&0x3|0x8);
             return v.toString(16);});
     }
 
@@ -27,10 +27,10 @@ define([], function() {
      * @public
      */
     function safeJSONStringify (obj) {
-        var esc = function(s) {
+        const esc = function(s) {
             return s.replace(/'/g, '&apos;').replace(/"/g, '&quot;');
         };
-        return JSON.stringify(obj, function(key, value) {
+        return JSON.stringify(obj, (key, value) => {
             return (typeof(value) === 'string') ? esc(value) : value;
         });
     }
@@ -65,7 +65,7 @@ define([], function() {
         if (value === 0) {
             return '0 B';
         }
-        var k = 1024,
+        const k = 1024,
             unitList = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
             unitIndex = Math.min(Math.floor(Math.log(value) / Math.log(k)), unitList.length-1),
             readableValue = parseFloat((value / Math.pow(k, unitIndex)).toFixed(2)) + ' ' + unitList[unitIndex];
@@ -73,13 +73,13 @@ define([], function() {
     }
 
     function prettyPrintJSON (obj) {
-        var s = obj;
+        let s = obj;
         if (typeof s != 'string') {
             s = JSON.stringify(s, undefined, 2);
             s = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             s = s.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
-                function (match) {
-                    var cls = 'number';
+                (match) => {
+                    let cls = 'number';
                     if (/^"/.test(match)) {
                         if (/:$/.test(match)) {
                             cls = 'key';

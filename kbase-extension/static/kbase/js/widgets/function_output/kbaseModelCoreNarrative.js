@@ -17,27 +17,27 @@ return KBWidget({
 
     init: function(options) {
         this._super(options);
-        var self = this;
-        var models = options.ids;
-        var workspaces = options.workspaces;
-        var models_data = options.modelsData;
-        var fbas_data = options.fbasData;
+        const self = this;
+        const models = options.ids;
+        const workspaces = options.workspaces;
+        const models_data = options.modelsData;
+        const fbas_data = options.fbasData;
 
-        var randId = this._uuidgen();
+        const randId = this._uuidgen();
 
-        var container = this.$elem
+        const container = this.$elem
         container.append('<div id="core-model"></div>');
 
-        var flux_threshold = 0.001;
-        var heat_colors = ['#731d1d','#8a2424', '#b35050', '#d05060', '#f28e8e'];
-        var neg_heat_colors = ['#4f4f04','#7c7c07', '#8b8d08', '#acc474', '#dded00'];
-        var gapfill_color = '#f000ff';
-        var gene_stroke = '#777';
-        var g_present_color = '#8bc7e5';
-        var grid = 50;
-        var r_width = grid*(4/5);
-        var r_height = grid*(1/5);
-        var radius = 5;
+        const flux_threshold = 0.001;
+        const heat_colors = ['#731d1d','#8a2424', '#b35050', '#d05060', '#f28e8e'];
+        const neg_heat_colors = ['#4f4f04','#7c7c07', '#8b8d08', '#acc474', '#dded00'];
+        const gapfill_color = '#f000ff';
+        const gene_stroke = '#777';
+        const g_present_color = '#8bc7e5';
+        const grid = 50;
+        const r_width = grid*(4/5);
+        const r_height = grid*(1/5);
+        const radius = 5;
 
         load_core_model(models);
 
@@ -47,18 +47,18 @@ return KBWidget({
         }
 
         function draw_core_model(kbids) {
-            var graph_AJAX = $.getJSON('assets/data/core.json');
+            const graph_AJAX = $.getJSON('assets/data/core.json');
 
-            $.when(graph_AJAX).done(function(core_data){
-                var core = join_model_to_core(core_data, models_data, kbids, fbas_data);
-                var stage = core_model(core, true);
+            $.when(graph_AJAX).done((core_data)=> {
+                const core = join_model_to_core(core_data, models_data, kbids, fbas_data);
+                const stage = core_model(core, true);
             });
         }
 
         // Fixme: This looks a little worse than it is, but can be refactored.
         function join_model_to_core(core, models, kbids, fba_data) {
 
-            var org_names = [];
+            const org_names = [];
             for (var i in models) {
                 org_names.push(models[i].name)
             }
@@ -69,17 +69,17 @@ return KBWidget({
                 obj['kbids'] = {};
                 for (var j in kbids) {
                     kbid = kbids[j];
-                    var kb_gid = get_genome_id(kbid);
+                    const kb_gid = get_genome_id(kbid);
                     obj.kbids[kb_gid] = [];
                 }
             }
 
-            for (var n in models) {
-                var model = models[n];
+            for (const n in models) {
+                const model = models[n];
                 rxn_list = model.reactions;
 
-                var model_fba = [];
-                for (var k in fba_data) {
+                let model_fba = [];
+                for (const k in fba_data) {
                     console.log(get_genome_id(fba_data[k].id), get_genome_id(model.id) )
                     if (get_genome_id(fba_data[k].id) == get_genome_id(model.id) ) {
                         model_fba = fba_data[k];
@@ -87,9 +87,9 @@ return KBWidget({
                 }
 
                 for (var i in rxn_list) {
-                    var rxn_obj = rxn_list[i];
-                    var rxn_id = rxn_obj.reaction;
-                    var data = find_shape_by_rxn(core, rxn_id);
+                    const rxn_obj = rxn_list[i];
+                    const rxn_id = rxn_obj.reaction;
+                    const data = find_shape_by_rxn(core, rxn_id);
 
                     // if a shape was not found in the core json for 
                     // a reaction, skip
@@ -99,15 +99,15 @@ return KBWidget({
                     for (var j in data) {
                         obj = data[j];
 
-                        var dict = $.extend({}, rxn_obj);
+                        const dict = $.extend({}, rxn_obj);
 
                         dict.reaction_id = rxn_id;
                         dict.gene_present = true; //not really needed
                         dict.org_name = org_names[n];
 
                         // get any associated flux values for rxn_id
-                        for (var z in model_fba.reactionFluxes) {
-                            var rxn_flux = model_fba.reactionFluxes[z];
+                        for (const z in model_fba.reactionFluxes) {
+                            const rxn_flux = model_fba.reactionFluxes[z];
                             console.log(rxn_flux)
                             if (rxn_flux[0].slice(0,rxn_flux[0].indexOf('_')) == rxn_id) {
                                 dict.flux = parseFloat(rxn_flux[1]); // reaction flux value
@@ -122,14 +122,14 @@ return KBWidget({
         }
 
         function find_shape_by_rxn(core, rxn_id) {
-            var objs = []
-            for (var k in core) {
-                var obj = core[k];
-                var core_rxns = obj.rxns;
+            const objs = []
+            for (const k in core) {
+                const obj = core[k];
+                const core_rxns = obj.rxns;
 
                 if (core_rxns){
-                    for (var j in core_rxns) {
-                        var core_rxn = core_rxns[j];
+                    for (const j in core_rxns) {
+                        const core_rxn = core_rxns[j];
                         if (core_rxn == rxn_id) {
                             objs.push(obj);
                         }
@@ -142,22 +142,22 @@ return KBWidget({
         }
 
         function core_model(data, show_flux) {
-            var stage =  Raphael("core-model", 1000, 1500);
+            const stage =  Raphael("core-model", 1000, 1500);
 
             // Draw shapes
             for (var i in data) {
                 var obj = data[i];
 
-                var x = (obj.x - 2) * grid; //Fixme: update json
-                var y = (obj.y - 2) * grid;
+                const x = (obj.x - 2) * grid; //Fixme: update json
+                const y = (obj.y - 2) * grid;
 
 
                 if (obj.shape == 'rect') {
-                    var rect = stage.core_rect(obj, x, y, r_width, r_height, show_flux);
+                    const rect = stage.core_rect(obj, x, y, r_width, r_height, show_flux);
                     //var text = stage.text(x+r_width/2+50, y+r_height/2, obj.rxns.join('\n'))
                     //text.attr({'font-size':8})
                 } else if(obj.shape == 'circ') {
-                    var circle = stage.circle(x+r_width/2, y+r_height/2, radius);
+                    const circle = stage.circle(x+r_width/2, y+r_height/2, radius);
                     if (obj.textPos) {
                         if (obj.textPos == 'left') {
                             var text = stage.text(x, y+r_height/2, obj.text);
@@ -183,7 +183,7 @@ return KBWidget({
             var obj = data[i];
             if (obj.shape != 'circ') continue;
 
-            var conns = obj.connects;
+            const conns = obj.connects;
             if (!conns) continue; 
 
             if (conns instanceof Array){
@@ -198,7 +198,7 @@ return KBWidget({
                     }
                 }
             } else if (conns instanceof Object){
-                for (var key in conns) {
+                for (const key in conns) {
                     if (key == 'curve') {
                         stage.draw_curve(obj);
                     } 
@@ -234,7 +234,7 @@ return KBWidget({
           // event for reaction view
           $('.model-rxn').unbind('click')
           $('.model-rxn').click(function(event){
-                var rxns = $(this).data('rxns').split(',');
+                const rxns = $(this).data('rxns').split(',');
                 self.trigger('rxnClick', {rxns: rxns});
           })  
 
@@ -242,32 +242,32 @@ return KBWidget({
         }
 
         Raphael.fn.core_rect = function(obj, x, y, r_width, r_height, show_flux) {
-            var orgs = obj.kbids;
-            var org_count = 0;
+            const orgs = obj.kbids;
+            let org_count = 0;
             for (var i in orgs) {
                 org_count++;
             }
 
-            var offset = r_width / org_count;
+            const offset = r_width / org_count;
 
             if (orgs){
                 var i = 0;
-                for (var kbid in orgs) {
+                for (const kbid in orgs) {
                     // draw box for that org
-                    var rect = this.rect(x+(i*offset), y, offset, r_height);
+                    const rect = this.rect(x+(i*offset), y, offset, r_height);
                     rect.node.setAttribute("class","model-rxn");
                     rect.node.setAttribute("data-rxns", obj.rxns.join(','));
 
-                    var rxn_list = orgs[kbid]; // reaction list for a given org
+                    const rxn_list = orgs[kbid]; // reaction list for a given org
 
                     // Go through rxns for each org, 
                     // if at least one gene is present (or has flux), mark
                     var has_flux = false;
-                    var flux = 0;
+                    let flux = 0;
                     var gene_present = false;
-                    var tip = '';
-                    for (var j in rxn_list) {
-                        var rxn_obj = rxn_list[j];
+                    let tip = '';
+                    for (const j in rxn_list) {
+                        const rxn_obj = rxn_list[j];
                         if (rxn_obj.gene_present == true) var gene_present = true;
                         flux += rxn_obj.flux;
                         tip += core_tooltip(rxn_obj, rxn_obj.flux);
@@ -315,7 +315,7 @@ return KBWidget({
         }
 
         function core_tooltip(rxn_obj, flux_val) {
-            var tip = '';
+            let tip = '';
             tip += '<b>Rxn:</b> '+rxn_obj.reaction +'<br>';
             tip += '<b>Eq:</b> '+rxn_obj.definition+'<br>';
             tip += '<b>Flux Value:</b> '+flux_val+'<br><br>';
@@ -325,7 +325,7 @@ return KBWidget({
         }
 
         Raphael.fn.draw_curve = function(obj) {
-            var xys = obj.connects.curve.path;
+            const xys = obj.connects.curve.path;
             if (obj.pathPos == 'below') {
                 var x1 = (xys[0][0]-2)*grid+r_width/2;
                 var y1 = (xys[0][1]-2)*grid+radius*3;
@@ -341,13 +341,13 @@ return KBWidget({
                 var x3 = (xys[2][0]-2)*grid+r_width/2;
                 var y3 = (xys[2][1]-2)*grid-radius      
             }
-            var path = this.path('M'+x1+','+y1+'C'+x1+','+y2+' '+x3+','+y2+' '+x3+','+y3);
+            const path = this.path('M'+x1+','+y1+'C'+x1+','+y2+' '+x3+','+y2+' '+x3+','+y3);
             path.toBack()
             return path;
         }
 
         Raphael.fn.draw_curved_arrow = function(obj) {
-            var xys = obj.connects.curve.path;
+            const xys = obj.connects.curve.path;
             if (obj.pathPos == 'below') {
                 var x1 = (xys[0][0]*grid-2)+r_width/2;
                 var y1 = (xys[0][1]*grid-2)+radius*3;
@@ -364,10 +364,10 @@ return KBWidget({
                 var y3 = (xys[2][1]-2)*grid-radius
             }
 
-            var angle = Math.atan2(x1-x2,y2-y1);
+            let angle = Math.atan2(x1-x2,y2-y1);
             angle = (angle / (2 * Math.PI)) * 360;
-            var arrowPath = this.path("M" + x2 + " " + y2 + " L" + (x2  - size) + " " + (y2  - size) + " L" + (x2  - size)  + " " + (y2  + size) + " L" + x2 + " " + y2 ).rotate((90+angle),x2,y2);
-            var linePath = this.path("M" + x1 + " " + y1 + " L" + x2 + " " + y2);
+            const arrowPath = this.path("M" + x2 + " " + y2 + " L" + (x2  - size) + " " + (y2  - size) + " L" + (x2  - size)  + " " + (y2  + size) + " L" + x2 + " " + y2 ).rotate((90+angle),x2,y2);
+            const linePath = this.path("M" + x1 + " " + y1 + " L" + x2 + " " + y2);
 
             linePath.attr({'stroke': '#444', 'stroke-dasharray':style})
             arrowPath.attr({'stroke': '#444', 'fill': '#666', 'stroke-dasharray':style})
@@ -432,10 +432,10 @@ return KBWidget({
         }
 
         Raphael.fn.arrow = function (x1, y1, x2, y2, size, style) {
-            var angle = Math.atan2(x1-x2,y2-y1);
+            let angle = Math.atan2(x1-x2,y2-y1);
             angle = (angle / (2 * Math.PI)) * 360;
-            var arrowPath = this.path("M" + x2 + " " + y2 + " L" + (x2  - size) + " " + (y2  - size) + " L" + (x2  - size)  + " " + (y2  + size) + " L" + x2 + " " + y2 ).rotate((90+angle),x2,y2);
-            var linePath = this.path("M" + x1 + " " + y1 + " L" + x2 + " " + y2);
+            const arrowPath = this.path("M" + x2 + " " + y2 + " L" + (x2  - size) + " " + (y2  - size) + " L" + (x2  - size)  + " " + (y2  + size) + " L" + x2 + " " + y2 ).rotate((90+angle),x2,y2);
+            const linePath = this.path("M" + x1 + " " + y1 + " L" + x2 + " " + y2);
 
             linePath.attr({'stroke': '#444', 'stroke-dasharray':style});
             arrowPath.attr({'stroke': '#444', 'fill': '#666', 'stroke-dasharray':style});
@@ -448,7 +448,7 @@ return KBWidget({
 
 
         function get_genome_id(ws_id) {
-            var pos = ws_id.indexOf('.');
+            const pos = ws_id.indexOf('.');
             var ws_id = ws_id.slice(0, ws_id.indexOf('.', pos+1));
             return ws_id;
         }
@@ -464,8 +464,8 @@ return KBWidget({
      * @private
      */
      _uuidgen: function() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-            var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+            const r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
             return v.toString(16);});
      },
      

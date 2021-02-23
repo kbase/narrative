@@ -16,7 +16,7 @@ define([
     'util/string',
     'select2',
     'bootstrap'
-], function (
+], (
     KBWidget,
     $,
     Config,
@@ -25,7 +25,7 @@ define([
     Jupyter,
     TimeFormat,
     StringUtil
-    ) {
+    ) => {
     'use strict';
     return KBWidget({
         name: "kbaseNarrativeParameterTextInput",
@@ -75,14 +75,14 @@ define([
                 });
         },
         render: function () {
-            var self = this;
+            const self = this;
             if (self.options.isInSidePanel) {
                 self.nameColClass = "col-md-12";
                 self.inputColClass = "col-md-12";
                 self.hintColClass = "col-md-12";
             }
 
-            var spec = self.spec;
+            const spec = self.spec;
 
             this.validateAs = "string";
             if (spec.text_options && spec.text_options.validate_as) {
@@ -146,7 +146,7 @@ define([
                 self.addRow(defaultValue, true, false);
                 if (spec.default_values) {
                     var d = spec.default_values;
-                    for (var i = 1; i < d.length; d++) {
+                    for (let i = 1; i < d.length; d++) {
                         defaultValue = (d[i] !== '' && d[i] !== undefined) ? d[i] : '';
                         self.addRow(defaultValue, false, false);
                     }
@@ -156,23 +156,23 @@ define([
             self.refresh();
         },
         addTheAddRowController: function () {
-            var self = this;
-            var $nameCol = $('<div>').addClass(self.nameColClass).addClass("kb-method-parameter-name");
+            const self = this;
+            const $nameCol = $('<div>').addClass(self.nameColClass).addClass("kb-method-parameter-name");
             if (self.options.isInSidePanel)
                 $nameCol.css({'text-align': 'left', 'padding-left': '10px'});
-            var $buttonCol = $('<div>').addClass(self.inputColClass).addClass("kb-method-parameter-input").append(
+            const $buttonCol = $('<div>').addClass(self.inputColClass).addClass("kb-method-parameter-input").append(
                 $('<button>').addClass("kb-default-btn kb-btn-sm")
                 .append($('<span class="kb-parameter-data-row-add">').addClass("fa fa-plus"))
                 .append(" add another " + self.spec.ui_name)
-                .on("click", function () {
+                .on("click", () => {
                     self.addRow()
                 }));
             self.$addRowController = $('<div>').addClass("row kb-method-parameter-row").append($nameCol).append($buttonCol);
             self.$mainPanel.append(self.$addRowController)
         },
         removeRow: function (uuid) {
-            var self = this;
-            for (var i = 0; i < self.rowInfo.length; i++) {
+            const self = this;
+            for (let i = 0; i < self.rowInfo.length; i++) {
                 if (self.rowInfo[i].uuid === uuid) {
                     self.rowInfo[i].$all.remove();
                     self.rowInfo.splice(i, 1);
@@ -182,10 +182,10 @@ define([
         },
         /* row number should only be set when first creating this row */
         addRow: function (defaultValue, showHint, useRowHighlight) {
-            var self = this;
-            var spec = self.spec;
+            const self = this;
+            const spec = self.spec;
 
-            var placeholder = '';
+            let placeholder = '';
             if (spec.text_options) {
                 if (spec.text_options.placeholder) {
                     placeholder = spec.text_options.placeholder;
@@ -196,10 +196,10 @@ define([
                 defaultValue = "";
             }
 
-            var form_id = spec.id;
-            var $input = $('<input id="' + form_id + '" placeholder="' + placeholder + '"' +
+            const form_id = spec.id;
+            let $input = $('<input id="' + form_id + '" placeholder="' + placeholder + '"' +
                 ' value="' + defaultValue + '" type="text" style="width:100%"/>').addClass("form-control")
-                .on("input", function () {
+                .on("input", () => {
                     self.isValid();
                 });
 
@@ -208,18 +208,18 @@ define([
                 spec.text_options.valid_ws_types.length > 0) {
                 self.isUsingSelect2 = true;
                 $input = $('<select id="' + form_id + '" type="text" style="width:100%" />')
-                    .on("change", function () {
+                    .on("change", () => {
                         self.isValid()
                     });
                     //this.validDataObjectList = []; - why was this here? ...
             }
 
-            var $feedbackTip = $("<span>").removeClass();
+            const $feedbackTip = $("<span>").removeClass();
             if (self.required && showHint) {  // it must be required, and it must be the first element (showHint is only added on first row)
                 $feedbackTip.addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left').prop("title", "required field");
             }
 
-            var $row = $('<div>').addClass("row kb-method-parameter-row");
+            const $row = $('<div>').addClass("row kb-method-parameter-row");
             if (useRowHighlight) {
                 $row.mouseenter(function () {
                     $(this).addClass('kb-method-parameter-row-hover');
@@ -229,18 +229,18 @@ define([
                     });
             }
 
-            var $nameCol = $('<div>').addClass(self.nameColClass).addClass("kb-method-parameter-name");
+            const $nameCol = $('<div>').addClass(self.nameColClass).addClass("kb-method-parameter-name");
             if (self.options.isInSidePanel)
                 $nameCol.css({'text-align': 'left', 'padding-left': '10px'});
             if (showHint) {
                 $nameCol.append(spec.ui_name);
             }
-            var $inputCol = $('<div>').addClass(self.inputColClass).addClass("kb-method-parameter-input")
+            const $inputCol = $('<div>').addClass(self.inputColClass).addClass("kb-method-parameter-input")
                 .append($('<div>').css({"width": "100%", "display": "inline-block"}).append($input))
                 .append($('<div>').css({"display": "inline-block"}).append($feedbackTip));
-            var $hintCol = $('<div>').addClass(self.hintColClass).addClass("kb-method-parameter-hint");
-            var uuidForRemoval = StringUtil.uuid();
-            var $removalButton = null;
+            const $hintCol = $('<div>').addClass(self.hintColClass).addClass("kb-method-parameter-hint");
+            const uuidForRemoval = StringUtil.uuid();
+            let $removalButton = null;
             if (showHint) {
                 $hintCol.append(spec.short_hint);
                 if (spec.description && spec.short_hint !== spec.description) {
@@ -251,18 +251,18 @@ define([
                 $removalButton = $('<button>').addClass("kb-default-btn kb-btn-sm")
                     .append($('<span class="kb-parameter-data-row-remove">').addClass("fa fa-remove"))
                     .append(" remove " + spec.ui_name)
-                    .on("click", function () {
+                    .on("click", () => {
                         self.removeRow(uuidForRemoval);
                     })
                 $hintCol.append($removalButton);
             }
             $row.append($nameCol).append($inputCol).append($hintCol);
-            var $errorPanel = $('<div>').addClass("kb-method-parameter-error-mssg").hide();
-            var $errorRow = $('<div>').addClass('row')
+            const $errorPanel = $('<div>').addClass("kb-method-parameter-error-mssg").hide();
+            const $errorRow = $('<div>').addClass('row')
                 .append($('<div>').addClass(self.nameColClass))
                 .append($errorPanel.addClass(self.inputColClass));
 
-            var $allRowComponents = $('<div>').append($row).append($errorRow);
+            const $allRowComponents = $('<div>').append($row).append($errorRow);
             self.$rowsContainer.append($allRowComponents);
             self.rowInfo.push({uuid: uuidForRemoval, $row: $row, $input: $input, $error: $errorPanel, $feedback: $feedbackTip, $all: $allRowComponents, $removalButton: $removalButton});
 
@@ -279,13 +279,13 @@ define([
             }
         },
         getLookupTypes: function () {
-            var lookupTypes = [],
+            let lookupTypes = [],
                 foundTypes = {},
                 validWsTypes;
             if (this.spec.text_options && this.spec.text_options.valid_ws_types) {
                 validWsTypes = this.spec.text_options.valid_ws_types;
                 if (validWsTypes.length > 0) {
-                    validWsTypes.forEach(function (type) {
+                    validWsTypes.forEach((type) => {
                         lookupTypes.push(type);
                         foundTypes[type] = true;
                     });
@@ -294,14 +294,14 @@ define([
             return foundTypes;
         },
         updateDataList: function (workspaceObjectInfo) {
-            var lookupTypes = this.getLookupTypes();
+            const lookupTypes = this.getLookupTypes();
 
             this.validDataObjectList = workspaceObjectInfo
-                .filter(function (info) {
-                    var type = info[2].split('-')[0];
+                .filter((info) => {
+                    const type = info[2].split('-')[0];
                     return lookupTypes[type];
                 })
-                .map(function (info) {
+                .map((info) => {
                     return {
                         name: info[1],
                         info: info
@@ -314,18 +314,18 @@ define([
             }
         },
         refresh: function () {
-            var self = this;
+            const self = this;
 
-            var needToMakeCall = false;
-            var lookupTypes = [];
-            var foundTypes = {};
+            let needToMakeCall = false;
+            const lookupTypes = [];
+            const foundTypes = {};
 
             // could also check if we are using select2... that for now is only used for ws types
             if (self.spec.text_options) {
                 if (self.spec.text_options.valid_ws_types) {
                     if (self.spec.text_options.valid_ws_types.length > 0) {
-                        var types = self.spec.text_options.valid_ws_types;
-                        for (var i = 0; i < types.length; i++) {
+                        const types = self.spec.text_options.valid_ws_types;
+                        for (let i = 0; i < types.length; i++) {
                             if (!foundTypes.hasOwnProperty(types[i])) {
                                 lookupTypes.push(types[i]);
                                 foundTypes[types[i]] = 1;
@@ -346,8 +346,8 @@ define([
                     // we also know how many of each type there is.
                     // so, iterate over all parameters and fulfill cases as below.
                     // extract the object infos
-                    var allObjInfo = [];
-                    for (var typeName in objects) {
+                    const allObjInfo = [];
+                    for (const typeName in objects) {
                         if (objects.hasOwnProperty(typeName)) {
                             for (var i = 0; i < objects[typeName].length; i++) {
                                 allObjInfo.push(objects[typeName][i]);
@@ -355,7 +355,7 @@ define([
                         }
                     }
                     // sort them by date, then by name
-                    allObjInfo.sort(function (a, b) {
+                    allObjInfo.sort((a, b) => {
                         if (a[3] > b[3])
                             return -1; // sort by date
                         if (a[3] < b[3])
@@ -400,9 +400,9 @@ define([
         },
         /* private method - note: if placeholder is empty, then users cannot cancel a selection*/
         setupSelect2: function ($input, placeholder, defaultValue, data) {
-            var self = this;
-            var noMatchesFoundStr = "No matching data found.";
-            var tags = false;
+            const self = this;
+            let noMatchesFoundStr = "No matching data found.";
+            let tags = false;
             if (self.isOutputName) {
                 noMatchesFoundStr = "Enter a name for the output data object.";
                 tags = true;
@@ -419,11 +419,11 @@ define([
                 allowClear: true,
                 selectOnBlur: true,
                 templateSelection: function (object) {
-                    var display = '<span class="kb-parameter-data-selection">' + object.text + '</span>';
+                    const display = '<span class="kb-parameter-data-selection">' + object.text + '</span>';
                     return $(display);
                 },
                 templateResult: function (object) {
-                    var display = '<span style="word-wrap:break-word;"><b>' + object.text + "</b></span>";
+                    let display = '<span style="word-wrap:break-word;"><b>' + object.text + "</b></span>";
                     if (object.info) {
                         // we can add additional info here in the dropdown ...
                         display = display + " (v" + object.info[4] + ")<br>";
@@ -448,26 +448,26 @@ define([
          * red (see kbaseNarrativeMethodInput for default styles).
          */
         isValid: function () {
-            var self = this;
+            const self = this;
             if (!self.enabled) {
                 return {isValid: true, errormssgs: []}; // do not validate if disabled
             }
-            var p = self.getParameterValue(true);
+            let p = self.getParameterValue(true);
             if (p === null && !self.required) {
                 return {isValid: true, errormssgs: []};
             }
-            var errorDetected = false;
-            var errorMessages = [];
+            let errorDetected = false;
+            const errorMessages = [];
             if (p instanceof Array) {
             } else {
                 p = [p];
             }
-            for (var i = 0; i < p.length; i++) {
-                var errorDetectedHere = false;
+            for (let i = 0; i < p.length; i++) {
+                let errorDetectedHere = false;
                 if (p[i] === null) {
                     continue;
                 }
-                var pVal = p ? p[i].trim() : '';
+                const pVal = p ? p[i].trim() : '';
                 // if it is a required field and not empty, keep the required icon around but we have an error (only for the first element)
                 if (pVal === '' && self.required && i === 0) {
                     self.rowInfo[i].$row.removeClass("kb-method-parameter-row-error");
@@ -479,7 +479,7 @@ define([
                 } else {
                     if (self.spec.text_options) {
                         if (self.spec.text_options.validate_as) {
-                            var fieldtype = self.spec.text_options.validate_as;
+                            const fieldtype = self.spec.text_options.validate_as;
                             // int | float | nonnumeric | nospaces | none
                             if ("int" === fieldtype.toLowerCase()) {
                                 if (pVal !== '') {
@@ -613,7 +613,7 @@ define([
         disableParameterEditing: function () {
             // disable the input
             this.enabled = false;
-            for (var i = 0; i < this.rowInfo.length; i++) {
+            for (let i = 0; i < this.rowInfo.length; i++) {
                 this.rowInfo[i].$input.prop('disabled', true);
                 this.rowInfo[i].$feedback.removeClass();
                 if (this.rowInfo[i].$removalButton) {
@@ -628,7 +628,7 @@ define([
         enableParameterEditing: function () {
             // enable the input
             this.enabled = true;
-            for (var i = 0; i < this.rowInfo.length; i++) {
+            for (let i = 0; i < this.rowInfo.length; i++) {
                 this.rowInfo[i].$input.prop('disabled', false);
                 if (this.rowInfo[i].$removalButton) {
                     this.rowInfo[i].$removalButton.show();
@@ -653,7 +653,7 @@ define([
         },
         unlockInputs: function () {
             if (this.enabled) {
-                for (var i = 0; i < this.rowInfo.length; i++) {
+                for (let i = 0; i < this.rowInfo.length; i++) {
                     this.rowInfo[i].$input.prop('disabled', false);
                     if (this.rowInfo[i].$removalButton) {
                         this.rowInfo[i].$removalButton.show();
@@ -683,8 +683,8 @@ define([
                 value = [value];
             }
 
-            for (var i = 0; i < value.length; i++) {
-                var v = value[i].trim();
+            for (let i = 0; i < value.length; i++) {
+                const v = value[i].trim();
                 if (i < this.rowInfo.length) {
                     if (v) {
                         this.setSpecificRowValue(i, v)
@@ -720,8 +720,8 @@ define([
          * in the method spec.
          */
         getParameterValue: function (ignoreType) {
-            var value = [];
-            var isOptional = this.spec.optional === 1 ? true : false;
+            const value = [];
+            const isOptional = this.spec.optional === 1 ? true : false;
 
             /* Shove everything into an array.
              * If we don't allow multiple, just take the first one.
@@ -729,8 +729,8 @@ define([
              * If we're not ignoring the validate as type, then coerce the type into
              *    what it's expected to validate as.
              */
-            for (var i=0; i<this.rowInfo.length; i++) {
-                var val = this.rowInfo[i].$input.val() || '';
+            for (let i=0; i<this.rowInfo.length; i++) {
+                let val = this.rowInfo[i].$input.val() || '';
                 val = val.trim();
                 if (!isOptional || val.length > 0) {
                     if (!ignoreType) {
@@ -781,13 +781,13 @@ define([
 
         // make a randomized string, assuming it's for an output.
         generateRandomOutputString: function (generProps) {
-            var strArr = [];
-            var symbols = 8;
+            const strArr = [];
+            let symbols = 8;
             if (generProps['symbols'])
                 symbols = generProps['symbols'];
-            for (var i = 0; i < symbols; i++)
+            for (let i = 0; i < symbols; i++)
                 strArr.push(String.fromCharCode(65 + Math.floor(Math.random() * 26)));
-            var ret = strArr.join('');
+            let ret = strArr.join('');
             if (generProps['prefix'])
                 ret = generProps['prefix'] + ret;
             if (generProps['suffix'])
@@ -806,18 +806,18 @@ define([
                 //	.replace(/^Object.<anonymous>\s*\(/gm, '{anonymous}()@')
                 //	.split('\n');
                 //console.log(stack);
-                var paramId = this.spec.id;
+                const paramId = this.spec.id;
                 var inputMapping = null;
-                var isScript = false;
+                let isScript = false;
                 var inputMapping = methodSpec['behavior']['kb_service_input_mapping'];
                 if (!inputMapping) {
                     inputMapping = methodSpec['behavior']['script_input_mapping'];
                     isScript = true;
                 }
-                var generatedValueMapping = null;
-                for (var i in inputMapping) {
-                    var mapping = inputMapping[i];
-                    var aParamId = mapping['input_parameter'];
+                let generatedValueMapping = null;
+                for (const i in inputMapping) {
+                    const mapping = inputMapping[i];
+                    const aParamId = mapping['input_parameter'];
                     if (aParamId && aParamId === paramId && mapping['generated_value']) {
                         generatedValueMapping = mapping['generated_value'];
                         break;

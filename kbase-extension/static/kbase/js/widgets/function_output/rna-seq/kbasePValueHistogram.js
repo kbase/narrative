@@ -9,7 +9,7 @@ define (
 		'kbaseTabs',
 		'kbaseHistogram',
 		'kbaseTable'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -17,7 +17,7 @@ define (
 		kbaseTabs,
 		kbaseHistogram,
 		kbaseTable
-	) {
+	) => {
 
     'use strict';
 
@@ -55,12 +55,12 @@ define (
         init : function init(options) {
             this._super(options);
 
-            var $self = this;
+            const $self = this;
 
-            var ws = new Workspace(window.kbconfig.urls.workspace, {token : $self.authToken()});
+            const ws = new Workspace(window.kbconfig.urls.workspace, {token : $self.authToken()});
             //var ws = new Workspace('https://ci.kbase.us/services/ws', {token : $self.authToken()});
 
-            var ws_params = {
+            const ws_params = {
                 workspace : this.options.workspace,
                 name : this.options.figure_object
             };
@@ -69,7 +69,7 @@ define (
 
             ws.get_objects([ws_params]).then(function (d) {
 
-                ws.get_objects([{ref : d[0].data.data_ref}]).then(function(r) {
+                ws.get_objects([{ref : d[0].data.data_ref}]).then((r) => {
                     $self.setDataset(r[0]);
                 }).fail(this.failure);
 
@@ -80,10 +80,10 @@ define (
 
         appendUI : function appendUI($elem) {
 
-            var $me = this;
+            const $me = this;
 
 
-            var $histElem = $.jqElem('div').css({width : 800, height : 500});
+            const $histElem = $.jqElem('div').css({width : 800, height : 500});
 
             $elem
                 .append( $histElem )
@@ -102,7 +102,7 @@ define (
 
             this._rewireIds($elem, this);
 
-            var $histogram =
+            const $histogram =
                  new kbaseHistogram($histElem, {
                         scaleAxes   : true,
                         xPadding : 60,

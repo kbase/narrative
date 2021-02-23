@@ -4,14 +4,14 @@
 define([
     'common/runtime',
     'kb_common/html'
-], function (Runtime, html) {
+], (Runtime, html) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div');
 
     function factory(config) {
-        var runtime = Runtime.make();
+        const runtime = Runtime.make();
 
         function propertyValueToString(pv) {
             return pv.property_name
@@ -20,28 +20,28 @@ define([
         }
 
         function propertiesToString(properties) {
-            return properties.map(function (pv) {
+            return properties.map((pv) => {
                 return propertyValueToString(pv);
             }).join(';');
         }
         
         function buildSamples(columnsMetadata) {
-            return Object.keys(columnsMetadata).map(function (columnId) {
-                var columnMetadata = columnsMetadata[columnId],
+            return Object.keys(columnsMetadata).map((columnId) => {
+                let columnMetadata = columnsMetadata[columnId],
                     seriesId = null,
                     conditions = [];
 
-                columnMetadata.forEach(function (pv) {
+                columnMetadata.forEach((pv) => {
                     if (pv.category === 'Condition') {
                         conditions.push(pv);
                     } else if (pv.category === 'DataSeries' && pv.property_name === 'SeriesID') {
                         seriesId = pv.property_value;
                     }
                 });
-                conditions.sort(function (a, b) {
+                conditions.sort((a, b) => {
                     return a.property_name > b.property_name ? 1 : (a.property_name < b.property_name ? -1 : 0);
                 });
-                var sampleLabel = propertiesToString(conditions);
+                const sampleLabel = propertiesToString(conditions);
 
                 return {
                     sampleId: columnId,
@@ -52,26 +52,26 @@ define([
         }
 
         function groupSamplesIntoSeries(samples) {
-            var seriesHash = {};
-            samples.forEach(function (sample) {
+            const seriesHash = {};
+            samples.forEach((sample) => {
                 seriesHash[sample.seriesId] = {
                     seriesId: sample.seriesId,
                     label: sample.label
                 };
             });
-            return Object.keys(seriesHash).map(function (seriesId) {
+            return Object.keys(seriesHash).map((seriesId) => {
                 return seriesHash[seriesId];
             });
         }
         
         function extractItems(result, params) {
-            var sampleSeriesIds,
+            let sampleSeriesIds,
                 valueType = params.input_value_type;
 
-            var samples = buildSamples(result[0].data.metadata.column_metadata);
+            const samples = buildSamples(result[0].data.metadata.column_metadata);
             switch (valueType) {
                 case 'Samples':
-                    sampleSeriesIds = samples.map(function (sample) {
+                    sampleSeriesIds = samples.map((sample) => {
                         return {
                             id: sample.sampleId,
                             text: sample.sampleId + ' - ' + sample.label
@@ -79,7 +79,7 @@ define([
                     });
                     break;
                 case 'Series':
-                    sampleSeriesIds = samples.map(function (series) {
+                    sampleSeriesIds = samples.map((series) => {
                         return {
                             id: series.seriesId,
                             text: series.seriesId + ' - ' + series.label
@@ -90,7 +90,7 @@ define([
                     // WHAT to do?
             }
 
-            return sampleSeriesIds.sort(function (a, b) {
+            return sampleSeriesIds.sort((a, b) => {
                 return a.text > b.text ? 1 : (a.text < b.text ? -1 : 0);
             });
         }

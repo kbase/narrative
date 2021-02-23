@@ -4,8 +4,8 @@
 function AbstractHandle(url, auth, auth_cb) {
 
     this.url = url;
-    var _url = url;
-    var deprecationWarningSent = false;
+    let _url = url;
+    let deprecationWarningSent = false;
 
     function deprecationWarning() {
         if (!deprecationWarningSent) {
@@ -21,8 +21,8 @@ function AbstractHandle(url, auth, auth_cb) {
     if (typeof(_url) != "string" || _url.length == 0) {
         _url = "http://localhost:7109";
     }
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
 
     this.new_handle = function (_callback, _errorCallback) {
@@ -190,7 +190,7 @@ function AbstractHandle(url, auth, auth_cb) {
      * JSON call using jQuery method.
      */
     function json_call_ajax(method, params, numRets, callback, errorCallback) {
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
 
         if (typeof callback === 'function') {
            deferred.done(callback);
@@ -200,15 +200,15 @@ function AbstractHandle(url, auth, auth_cb) {
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
             id: String(Math.random()).slice(2),
         };
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -216,7 +216,7 @@ function AbstractHandle(url, auth, auth_cb) {
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: _url,
             dataType: "text",
             type: 'POST',
@@ -224,9 +224,9 @@ function AbstractHandle(url, auth, auth_cb) {
             data: JSON.stringify(rpc),
             beforeSend: beforeSend,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -240,10 +240,10 @@ function AbstractHandle(url, auth, auth_cb) {
                 deferred.resolve(result);
             },
             error: function (xhr, textStatus, errorThrown) {
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -258,7 +258,7 @@ function AbstractHandle(url, auth, auth_cb) {
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }
@@ -271,8 +271,8 @@ function AbstractHandle(url, auth, auth_cb) {
 function CDMI_API(url, auth, auth_cb) {
 
     this.url = url;
-    var _url = url;
-    var deprecationWarningSent = false;
+    let _url = url;
+    let deprecationWarningSent = false;
 
     function deprecationWarning() {
         if (!deprecationWarningSent) {
@@ -288,8 +288,8 @@ function CDMI_API(url, auth, auth_cb) {
     if (typeof(_url) != "string" || _url.length == 0) {
         _url = "http://kbase.us/services/cdmi_api";
     }
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
 
     this.fids_to_annotations = function (fids, _callback, _errorCallback) {
@@ -1117,7 +1117,7 @@ function CDMI_API(url, auth, auth_cb) {
      * JSON call using jQuery method.
      */
     function json_call_ajax(method, params, numRets, callback, errorCallback) {
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
 
         if (typeof callback === 'function') {
            deferred.done(callback);
@@ -1127,15 +1127,15 @@ function CDMI_API(url, auth, auth_cb) {
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
             id: String(Math.random()).slice(2),
         };
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -1143,7 +1143,7 @@ function CDMI_API(url, auth, auth_cb) {
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: _url,
             dataType: "text",
             type: 'POST',
@@ -1151,9 +1151,9 @@ function CDMI_API(url, auth, auth_cb) {
             data: JSON.stringify(rpc),
             beforeSend: beforeSend,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -1167,10 +1167,10 @@ function CDMI_API(url, auth, auth_cb) {
                 deferred.resolve(result);
             },
             error: function (xhr, textStatus, errorThrown) {
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -1185,7 +1185,7 @@ function CDMI_API(url, auth, auth_cb) {
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }
@@ -1196,8 +1196,8 @@ function CDMI_API(url, auth, auth_cb) {
 function CDMI_EntityAPI(url, auth, auth_cb) {
 
     this.url = url;
-    var _url = url;
-    var deprecationWarningSent = false;
+    let _url = url;
+    let deprecationWarningSent = false;
 
     function deprecationWarning() {
         if (!deprecationWarningSent) {
@@ -1213,8 +1213,8 @@ function CDMI_EntityAPI(url, auth, auth_cb) {
     if (typeof(_url) != "string" || _url.length == 0) {
         _url = "http://kbase.us/services/cdmi_api";
     }
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
 
     this.get_all = function (object_names, filter_clause, parameters, fields, count, _callback, _errorCallback) {
@@ -6692,7 +6692,7 @@ function CDMI_EntityAPI(url, auth, auth_cb) {
      * JSON call using jQuery method.
      */
     function json_call_ajax(method, params, numRets, callback, errorCallback) {
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
 
         if (typeof callback === 'function') {
            deferred.done(callback);
@@ -6702,15 +6702,15 @@ function CDMI_EntityAPI(url, auth, auth_cb) {
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
             id: String(Math.random()).slice(2),
         };
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -6718,7 +6718,7 @@ function CDMI_EntityAPI(url, auth, auth_cb) {
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: _url,
             dataType: "text",
             type: 'POST',
@@ -6726,9 +6726,9 @@ function CDMI_EntityAPI(url, auth, auth_cb) {
             data: JSON.stringify(rpc),
             beforeSend: beforeSend,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -6742,10 +6742,10 @@ function CDMI_EntityAPI(url, auth, auth_cb) {
                 deferred.resolve(result);
             },
             error: function (xhr, textStatus, errorThrown) {
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -6760,7 +6760,7 @@ function CDMI_EntityAPI(url, auth, auth_cb) {
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }
@@ -6773,8 +6773,8 @@ function CDMI_EntityAPI(url, auth, auth_cb) {
 function CoExpression(url, auth, auth_cb) {
 
     this.url = url;
-    var _url = url;
-    var deprecationWarningSent = false;
+    const _url = url;
+    let deprecationWarningSent = false;
 
     function deprecationWarning() {
         if (!deprecationWarningSent) {
@@ -6787,8 +6787,8 @@ function CoExpression(url, auth, auth_cb) {
         }
     }
 
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
 
     this.filter_genes = function (args, _callback, _errorCallback) {
@@ -6816,7 +6816,7 @@ function CoExpression(url, auth, auth_cb) {
      * JSON call using jQuery method.
      */
     function json_call_ajax(method, params, numRets, callback, errorCallback) {
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
 
         if (typeof callback === 'function') {
            deferred.done(callback);
@@ -6826,15 +6826,15 @@ function CoExpression(url, auth, auth_cb) {
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
             id: String(Math.random()).slice(2),
         };
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -6842,7 +6842,7 @@ function CoExpression(url, auth, auth_cb) {
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: _url,
             dataType: "text",
             type: 'POST',
@@ -6850,9 +6850,9 @@ function CoExpression(url, auth, auth_cb) {
             data: JSON.stringify(rpc),
             beforeSend: beforeSend,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -6866,10 +6866,10 @@ function CoExpression(url, auth, auth_cb) {
                 deferred.resolve(result);
             },
             error: function (xhr, textStatus, errorThrown) {
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -6884,7 +6884,7 @@ function CoExpression(url, auth, auth_cb) {
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }
@@ -6897,8 +6897,8 @@ function CoExpression(url, auth, auth_cb) {
 function CompressionBasedDistance(url, auth, auth_cb) {
 
     this.url = url;
-    var _url = url;
-    var deprecationWarningSent = false;
+    const _url = url;
+    let deprecationWarningSent = false;
 
     function deprecationWarning() {
         if (!deprecationWarningSent) {
@@ -6911,8 +6911,8 @@ function CompressionBasedDistance(url, auth, auth_cb) {
         }
     }
 
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
 
     this.build_matrix = function (input, _callback, _errorCallback) {
@@ -6930,7 +6930,7 @@ function CompressionBasedDistance(url, auth, auth_cb) {
      * JSON call using jQuery method.
      */
     function json_call_ajax(method, params, numRets, callback, errorCallback) {
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
 
         if (typeof callback === 'function') {
            deferred.done(callback);
@@ -6940,15 +6940,15 @@ function CompressionBasedDistance(url, auth, auth_cb) {
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
             id: String(Math.random()).slice(2),
         };
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -6956,7 +6956,7 @@ function CompressionBasedDistance(url, auth, auth_cb) {
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: _url,
             dataType: "text",
             type: 'POST',
@@ -6964,9 +6964,9 @@ function CompressionBasedDistance(url, auth, auth_cb) {
             data: JSON.stringify(rpc),
             beforeSend: beforeSend,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -6980,10 +6980,10 @@ function CompressionBasedDistance(url, auth, auth_cb) {
                 deferred.resolve(result);
             },
             error: function (xhr, textStatus, errorThrown) {
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -6998,7 +6998,7 @@ function CompressionBasedDistance(url, auth, auth_cb) {
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }
@@ -7011,8 +7011,8 @@ function CompressionBasedDistance(url, auth, auth_cb) {
 function ERDB_Service(url, auth, auth_cb) {
 
     this.url = url;
-    var _url = url;
-    var deprecationWarningSent = false;
+    let _url = url;
+    let deprecationWarningSent = false;
 
     function deprecationWarning() {
         if (!deprecationWarningSent) {
@@ -7028,8 +7028,8 @@ function ERDB_Service(url, auth, auth_cb) {
     if (typeof(_url) != "string" || _url.length == 0) {
         _url = "http://kbase.us/services/erdb_service";
     }
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
 
     this.GetAll = function (objectNames, filterClause, parameters, fields, count, _callback, _errorCallback) {
@@ -7057,7 +7057,7 @@ function ERDB_Service(url, auth, auth_cb) {
      * JSON call using jQuery method.
      */
     function json_call_ajax(method, params, numRets, callback, errorCallback) {
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
 
         if (typeof callback === 'function') {
            deferred.done(callback);
@@ -7067,15 +7067,15 @@ function ERDB_Service(url, auth, auth_cb) {
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
             id: String(Math.random()).slice(2),
         };
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -7083,7 +7083,7 @@ function ERDB_Service(url, auth, auth_cb) {
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: _url,
             dataType: "text",
             type: 'POST',
@@ -7091,9 +7091,9 @@ function ERDB_Service(url, auth, auth_cb) {
             data: JSON.stringify(rpc),
             beforeSend: beforeSend,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -7107,10 +7107,10 @@ function ERDB_Service(url, auth, auth_cb) {
                 deferred.resolve(result);
             },
             error: function (xhr, textStatus, errorThrown) {
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -7125,7 +7125,7 @@ function ERDB_Service(url, auth, auth_cb) {
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }
@@ -7137,14 +7137,14 @@ function ERDB_Service(url, auth, auth_cb) {
 
 function ExpressionServices(url,auth) {
 
-    var _url = url;
-    var _auth = auth ? auth : { 'token' : '',
+    const _url = url;
+    const _auth = auth ? auth : { 'token' : '',
                                 'user_id' : ''};
 
 
     this.get_expression_samples_data = function(sampleIds)
     {
-        var resp = json_call_ajax_sync("ExpressionServices.get_expression_samples_data", [sampleIds]);
+        const resp = json_call_ajax_sync("ExpressionServices.get_expression_samples_data", [sampleIds]);
         return resp[0];
     }
 
@@ -7155,7 +7155,7 @@ function ExpressionServices(url,auth) {
 
     this.get_expression_samples_data_by_series_ids = function(seriesIds)
     {
-        var resp = json_call_ajax_sync("ExpressionServices.get_expression_samples_data_by_series_ids", [seriesIds]);
+        const resp = json_call_ajax_sync("ExpressionServices.get_expression_samples_data_by_series_ids", [seriesIds]);
         return resp[0];
     }
 
@@ -7166,7 +7166,7 @@ function ExpressionServices(url,auth) {
 
     this.get_expression_samples_data_by_experimental_unit_ids = function(experimentalUnitIDs)
     {
-        var resp = json_call_ajax_sync("ExpressionServices.get_expression_samples_data_by_experimental_unit_ids", [experimentalUnitIDs]);
+        const resp = json_call_ajax_sync("ExpressionServices.get_expression_samples_data_by_experimental_unit_ids", [experimentalUnitIDs]);
         return resp[0];
     }
 
@@ -7177,7 +7177,7 @@ function ExpressionServices(url,auth) {
 
     this.get_expression_experimental_unit_samples_data_by_experiment_meta_ids = function(experimentMetaIDs)
     {
-        var resp = json_call_ajax_sync("ExpressionServices.get_expression_experimental_unit_samples_data_by_experiment_meta_ids", [experimentMetaIDs]);
+        const resp = json_call_ajax_sync("ExpressionServices.get_expression_experimental_unit_samples_data_by_experiment_meta_ids", [experimentMetaIDs]);
         return resp[0];
     }
 
@@ -7188,7 +7188,7 @@ function ExpressionServices(url,auth) {
 
     this.get_expression_samples_data_by_strain_ids = function(strainIDs, sampleType)
     {
-        var resp = json_call_ajax_sync("ExpressionServices.get_expression_samples_data_by_strain_ids", [strainIDs, sampleType]);
+        const resp = json_call_ajax_sync("ExpressionServices.get_expression_samples_data_by_strain_ids", [strainIDs, sampleType]);
         return resp[0];
     }
 
@@ -7199,7 +7199,7 @@ function ExpressionServices(url,auth) {
 
     this.get_expression_samples_data_by_genome_ids = function(genomeIDs, sampleType, wildTypeOnly)
     {
-        var resp = json_call_ajax_sync("ExpressionServices.get_expression_samples_data_by_genome_ids", [genomeIDs, sampleType, wildTypeOnly]);
+        const resp = json_call_ajax_sync("ExpressionServices.get_expression_samples_data_by_genome_ids", [genomeIDs, sampleType, wildTypeOnly]);
         return resp[0];
     }
 
@@ -7210,7 +7210,7 @@ function ExpressionServices(url,auth) {
 
     this.get_expression_data_by_feature_ids = function(featureIds, sampleType, wildTypeOnly)
     {
-        var resp = json_call_ajax_sync("ExpressionServices.get_expression_data_by_feature_ids", [featureIds, sampleType, wildTypeOnly]);
+        const resp = json_call_ajax_sync("ExpressionServices.get_expression_data_by_feature_ids", [featureIds, sampleType, wildTypeOnly]);
         return resp[0];
     }
 
@@ -7221,15 +7221,15 @@ function ExpressionServices(url,auth) {
 
     function _json_call_prepare(url, method, params, async_flag)
     {
-        var rpc = { 'params' : params,
+        const rpc = { 'params' : params,
                     'method' : method,
                     'version': "1.1",
                     'id': String(Math.random()).slice(2),
         };
 
-        var body = JSON.stringify(rpc);
+        const body = JSON.stringify(rpc);
 
-        var http = new XMLHttpRequest();
+        const http = new XMLHttpRequest();
 
         http.open("POST", url, async_flag);
 
@@ -7244,17 +7244,17 @@ function ExpressionServices(url,auth) {
 
     function json_call_ajax_sync(method, params)
     {
-        var rpc = { 'params' : params,
+        const rpc = { 'params' : params,
                     'method' : method,
                     'version': "1.1",
                     'id': String(Math.random()).slice(2),
         };
 
-        var body = JSON.stringify(rpc);
-        var resp_txt;
-        var code;
+        const body = JSON.stringify(rpc);
+        let resp_txt;
+        let code;
 
-        var x = jQuery.ajax({       "async": false,
+        const x = jQuery.ajax({       "async": false,
                                     dataType: "text",
                                     url: _url,
                                     beforeSend: function (xhr){
@@ -7267,11 +7267,11 @@ function ExpressionServices(url,auth) {
                                     type: 'POST',
                                     });
 
-        var result;
+        let result;
 
         if (resp_txt)
         {
-            var resp = JSON.parse(resp_txt);
+            const resp = JSON.parse(resp_txt);
 
             if (code >= 500)
             {
@@ -7290,17 +7290,17 @@ function ExpressionServices(url,auth) {
 
     function json_call_ajax_async(method, params, num_rets, callback, error_callback)
     {
-        var rpc = { 'params' : params,
+        const rpc = { 'params' : params,
                     'method' : method,
                     'version': "1.1",
                     'id': String(Math.random()).slice(2),
         };
 
-        var body = JSON.stringify(rpc);
-        var resp_txt;
-        var code;
+        const body = JSON.stringify(rpc);
+        let resp_txt;
+        let code;
 
-        var x = jQuery.ajax({       "async": true,
+        const x = jQuery.ajax({       "async": true,
                                     dataType: "text",
                                     url: _url,
                                     beforeSend: function (xhr){
@@ -7309,7 +7309,7 @@ function ExpressionServices(url,auth) {
                                     success: function (data, status, xhr)
                                 {
                                     resp = JSON.parse(data);
-                                    var result = resp["result"];
+                                    const result = resp["result"];
                                     if (num_rets == 1)
                                     {
                                         callback(result[0]);
@@ -7344,15 +7344,15 @@ function ExpressionServices(url,auth) {
 
     function json_call_async(method, params, num_rets, callback)
     {
-        var tup = _json_call_prepare(_url, method, params, true);
-        var http = tup[0];
-        var body = tup[1];
+        const tup = _json_call_prepare(_url, method, params, true);
+        const http = tup[0];
+        const body = tup[1];
 
         http.onreadystatechange = function() {
             if (http.readyState == 4 && http.status == 200) {
-                var resp_txt = http.responseText;
-                var resp = JSON.parse(resp_txt);
-                var result = resp["result"];
+                const resp_txt = http.responseText;
+                const resp = JSON.parse(resp_txt);
+                const result = resp["result"];
                 if (num_rets == 1)
                 {
                     callback(result[0]);
@@ -7370,16 +7370,16 @@ function ExpressionServices(url,auth) {
 
     function json_call_sync(method, params)
     {
-        var tup = _json_call_prepare(url, method, params, false);
-        var http = tup[0];
-        var body = tup[1];
+        const tup = _json_call_prepare(url, method, params, false);
+        const http = tup[0];
+        const body = tup[1];
 
         http.send(body);
 
-        var resp_txt = http.responseText;
+        const resp_txt = http.responseText;
 
-        var resp = JSON.parse(resp_txt);
-        var result = resp["result"];
+        const resp = JSON.parse(resp_txt);
+        const result = resp["result"];
 
         return result;
     }
@@ -7392,8 +7392,8 @@ function ExpressionServices(url,auth) {
 function GWAS(url, auth, auth_cb) {
 
     this.url = url;
-    var _url = url;
-    var deprecationWarningSent = false;
+    const _url = url;
+    let deprecationWarningSent = false;
 
     function deprecationWarning() {
         if (!deprecationWarningSent) {
@@ -7406,8 +7406,8 @@ function GWAS(url, auth, auth_cb) {
         }
     }
 
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
 
     this.prepare_variation = function (args, _callback, _errorCallback) {
@@ -7475,7 +7475,7 @@ function GWAS(url, auth, auth_cb) {
      * JSON call using jQuery method.
      */
     function json_call_ajax(method, params, numRets, callback, errorCallback) {
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
 
         if (typeof callback === 'function') {
            deferred.done(callback);
@@ -7485,15 +7485,15 @@ function GWAS(url, auth, auth_cb) {
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
             id: String(Math.random()).slice(2),
         };
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -7501,7 +7501,7 @@ function GWAS(url, auth, auth_cb) {
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: _url,
             dataType: "text",
             type: 'POST',
@@ -7509,9 +7509,9 @@ function GWAS(url, auth, auth_cb) {
             data: JSON.stringify(rpc),
             beforeSend: beforeSend,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -7525,10 +7525,10 @@ function GWAS(url, auth, auth_cb) {
                 deferred.resolve(result);
             },
             error: function (xhr, textStatus, errorThrown) {
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -7543,7 +7543,7 @@ function GWAS(url, auth, auth_cb) {
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }
@@ -7556,8 +7556,8 @@ function GWAS(url, auth, auth_cb) {
 function GenomeAnnotation(url, auth, auth_cb) {
 
     this.url = url;
-    var _url = url;
-    var deprecationWarningSent = false;
+    let _url = url;
+    let deprecationWarningSent = false;
 
     function deprecationWarning() {
         if (!deprecationWarningSent) {
@@ -7573,8 +7573,8 @@ function GenomeAnnotation(url, auth, auth_cb) {
     if (typeof(_url) != "string" || _url.length == 0) {
         _url = "https://kbase.us/services/genome_annotation";
     }
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
 
     this.genome_ids_to_genomes = function (ids, _callback, _errorCallback) {
@@ -8172,7 +8172,7 @@ function GenomeAnnotation(url, auth, auth_cb) {
      * JSON call using jQuery method.
      */
     function json_call_ajax(method, params, numRets, callback, errorCallback) {
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
 
         if (typeof callback === 'function') {
            deferred.done(callback);
@@ -8182,15 +8182,15 @@ function GenomeAnnotation(url, auth, auth_cb) {
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
             id: String(Math.random()).slice(2),
         };
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -8198,7 +8198,7 @@ function GenomeAnnotation(url, auth, auth_cb) {
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: _url,
             dataType: "text",
             type: 'POST',
@@ -8206,9 +8206,9 @@ function GenomeAnnotation(url, auth, auth_cb) {
             data: JSON.stringify(rpc),
             beforeSend: beforeSend,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -8222,10 +8222,10 @@ function GenomeAnnotation(url, auth, auth_cb) {
                 deferred.resolve(result);
             },
             error: function (xhr, textStatus, errorThrown) {
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -8240,7 +8240,7 @@ function GenomeAnnotation(url, auth, auth_cb) {
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }
@@ -8253,8 +8253,8 @@ function GenomeAnnotation(url, auth, auth_cb) {
 function GenomeComparison(url, auth, auth_cb) {
 
     this.url = url;
-    var _url = url;
-    var deprecationWarningSent = false;
+    const _url = url;
+    let deprecationWarningSent = false;
 
     function deprecationWarning() {
         if (!deprecationWarningSent) {
@@ -8267,8 +8267,8 @@ function GenomeComparison(url, auth, auth_cb) {
         }
     }
 
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
 
     this.blast_proteomes = function (input, _callback, _errorCallback) {
@@ -8316,7 +8316,7 @@ function GenomeComparison(url, auth, auth_cb) {
      * JSON call using jQuery method.
      */
     function json_call_ajax(method, params, numRets, callback, errorCallback) {
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
 
         if (typeof callback === 'function') {
            deferred.done(callback);
@@ -8326,15 +8326,15 @@ function GenomeComparison(url, auth, auth_cb) {
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
             id: String(Math.random()).slice(2),
         };
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -8342,7 +8342,7 @@ function GenomeComparison(url, auth, auth_cb) {
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: _url,
             dataType: "text",
             type: 'POST',
@@ -8350,9 +8350,9 @@ function GenomeComparison(url, auth, auth_cb) {
             data: JSON.stringify(rpc),
             beforeSend: beforeSend,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -8366,10 +8366,10 @@ function GenomeComparison(url, auth, auth_cb) {
                 deferred.resolve(result);
             },
             error: function (xhr, textStatus, errorThrown) {
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -8384,7 +8384,7 @@ function GenomeComparison(url, auth, auth_cb) {
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }
@@ -8397,8 +8397,8 @@ function GenomeComparison(url, auth, auth_cb) {
 function HandleMngr(url, auth, auth_cb) {
 
     this.url = url;
-    var _url = url;
-    var deprecationWarningSent = false;
+    const _url = url;
+    let deprecationWarningSent = false;
 
     function deprecationWarning() {
         if (!deprecationWarningSent) {
@@ -8411,8 +8411,8 @@ function HandleMngr(url, auth, auth_cb) {
         }
     }
 
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
 
     this.is_readable = function (token, nodeurl, _callback, _errorCallback) {
@@ -8440,7 +8440,7 @@ function HandleMngr(url, auth, auth_cb) {
      * JSON call using jQuery method.
      */
     function json_call_ajax(method, params, numRets, callback, errorCallback) {
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
 
         if (typeof callback === 'function') {
            deferred.done(callback);
@@ -8450,15 +8450,15 @@ function HandleMngr(url, auth, auth_cb) {
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
             id: String(Math.random()).slice(2),
         };
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -8466,7 +8466,7 @@ function HandleMngr(url, auth, auth_cb) {
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: _url,
             dataType: "text",
             type: 'POST',
@@ -8474,9 +8474,9 @@ function HandleMngr(url, auth, auth_cb) {
             data: JSON.stringify(rpc),
             beforeSend: beforeSend,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -8490,10 +8490,10 @@ function HandleMngr(url, auth, auth_cb) {
                 deferred.resolve(result);
             },
             error: function (xhr, textStatus, errorThrown) {
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -8508,7 +8508,7 @@ function HandleMngr(url, auth, auth_cb) {
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }
@@ -8521,8 +8521,8 @@ function HandleMngr(url, auth, auth_cb) {
 function IDServerAPI(url, auth, auth_cb) {
 
     this.url = url;
-    var _url = url;
-    var deprecationWarningSent = false;
+    let _url = url;
+    let deprecationWarningSent = false;
 
     function deprecationWarning() {
         if (!deprecationWarningSent) {
@@ -8538,8 +8538,8 @@ function IDServerAPI(url, auth, auth_cb) {
     if (typeof(_url) != "string" || _url.length == 0) {
         _url = "http://localhost:7031";
     }
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
 
     this.kbase_ids_to_external_ids = function (ids, _callback, _errorCallback) {
@@ -8607,7 +8607,7 @@ function IDServerAPI(url, auth, auth_cb) {
      * JSON call using jQuery method.
      */
     function json_call_ajax(method, params, numRets, callback, errorCallback) {
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
 
         if (typeof callback === 'function') {
            deferred.done(callback);
@@ -8617,15 +8617,15 @@ function IDServerAPI(url, auth, auth_cb) {
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
             id: String(Math.random()).slice(2),
         };
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -8633,7 +8633,7 @@ function IDServerAPI(url, auth, auth_cb) {
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: _url,
             dataType: "text",
             type: 'POST',
@@ -8641,9 +8641,9 @@ function IDServerAPI(url, auth, auth_cb) {
             data: JSON.stringify(rpc),
             beforeSend: beforeSend,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -8657,10 +8657,10 @@ function IDServerAPI(url, auth, auth_cb) {
                 deferred.resolve(result);
             },
             error: function (xhr, textStatus, errorThrown) {
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -8675,7 +8675,7 @@ function IDServerAPI(url, auth, auth_cb) {
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }
@@ -8688,8 +8688,8 @@ function IDServerAPI(url, auth, auth_cb) {
 function KBaseDataImport(url, auth, auth_cb) {
 
     this.url = url;
-    var _url = url;
-    var deprecationWarningSent = false;
+    let _url = url;
+    let deprecationWarningSent = false;
 
     function deprecationWarning() {
         if (!deprecationWarningSent) {
@@ -8705,8 +8705,8 @@ function KBaseDataImport(url, auth, auth_cb) {
     if (typeof(_url) != "string" || _url.length == 0) {
         _url = "https://kbase.us/services/kbase_data_import/rpc";
     }
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
 
     this.ver = function (_callback, _errorCallback) {
@@ -8744,7 +8744,7 @@ function KBaseDataImport(url, auth, auth_cb) {
      * JSON call using jQuery method.
      */
     function json_call_ajax(method, params, numRets, callback, errorCallback) {
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
 
         if (typeof callback === 'function') {
            deferred.done(callback);
@@ -8754,15 +8754,15 @@ function KBaseDataImport(url, auth, auth_cb) {
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
             id: String(Math.random()).slice(2),
         };
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -8770,7 +8770,7 @@ function KBaseDataImport(url, auth, auth_cb) {
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: _url,
             dataType: "text",
             type: 'POST',
@@ -8778,9 +8778,9 @@ function KBaseDataImport(url, auth, auth_cb) {
             data: JSON.stringify(rpc),
             beforeSend: beforeSend,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -8794,10 +8794,10 @@ function KBaseDataImport(url, auth, auth_cb) {
                 deferred.resolve(result);
             },
             error: function (xhr, textStatus, errorThrown) {
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -8812,7 +8812,7 @@ function KBaseDataImport(url, auth, auth_cb) {
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }
@@ -8825,8 +8825,8 @@ function KBaseDataImport(url, auth, auth_cb) {
 function KBaseExpression(url, auth, auth_cb) {
 
     this.url = url;
-    var _url = url;
-    var deprecationWarningSent = false;
+    const _url = url;
+    let deprecationWarningSent = false;
 
     function deprecationWarning() {
         if (!deprecationWarningSent) {
@@ -8839,8 +8839,8 @@ function KBaseExpression(url, auth, auth_cb) {
         }
     }
 
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
 
     this.get_expression_samples_data = function (sample_ids, _callback, _errorCallback) {
@@ -9208,7 +9208,7 @@ function KBaseExpression(url, auth, auth_cb) {
      * JSON call using jQuery method.
      */
     function json_call_ajax(method, params, numRets, callback, errorCallback) {
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
 
         if (typeof callback === 'function') {
            deferred.done(callback);
@@ -9218,15 +9218,15 @@ function KBaseExpression(url, auth, auth_cb) {
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
             id: String(Math.random()).slice(2),
         };
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -9234,7 +9234,7 @@ function KBaseExpression(url, auth, auth_cb) {
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: _url,
             dataType: "text",
             type: 'POST',
@@ -9242,9 +9242,9 @@ function KBaseExpression(url, auth, auth_cb) {
             data: JSON.stringify(rpc),
             beforeSend: beforeSend,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -9258,10 +9258,10 @@ function KBaseExpression(url, auth, auth_cb) {
                 deferred.resolve(result);
             },
             error: function (xhr, textStatus, errorThrown) {
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -9276,7 +9276,7 @@ function KBaseExpression(url, auth, auth_cb) {
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }
@@ -9289,8 +9289,8 @@ function KBaseExpression(url, auth, auth_cb) {
 function KBaseGeneFamilies(url, auth, auth_cb) {
 
     this.url = url;
-    var _url = url;
-    var deprecationWarningSent = false;
+    let _url = url;
+    let deprecationWarningSent = false;
 
     function deprecationWarning() {
         if (!deprecationWarningSent) {
@@ -9306,8 +9306,8 @@ function KBaseGeneFamilies(url, auth, auth_cb) {
     if (typeof(_url) != "string" || _url.length == 0) {
         _url = "https://kbase.us/services/gene_families";
     }
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
 
     this.search_domains = function (params, _callback, _errorCallback) {
@@ -9335,7 +9335,7 @@ function KBaseGeneFamilies(url, auth, auth_cb) {
      * JSON call using jQuery method.
      */
     function json_call_ajax(method, params, numRets, callback, errorCallback) {
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
 
         if (typeof callback === 'function') {
            deferred.done(callback);
@@ -9345,15 +9345,15 @@ function KBaseGeneFamilies(url, auth, auth_cb) {
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
             id: String(Math.random()).slice(2),
         };
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -9361,7 +9361,7 @@ function KBaseGeneFamilies(url, auth, auth_cb) {
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: _url,
             dataType: "text",
             type: 'POST',
@@ -9369,9 +9369,9 @@ function KBaseGeneFamilies(url, auth, auth_cb) {
             data: JSON.stringify(rpc),
             beforeSend: beforeSend,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -9385,10 +9385,10 @@ function KBaseGeneFamilies(url, auth, auth_cb) {
                 deferred.resolve(result);
             },
             error: function (xhr, textStatus, errorThrown) {
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -9403,7 +9403,7 @@ function KBaseGeneFamilies(url, auth, auth_cb) {
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }
@@ -9416,8 +9416,8 @@ function KBaseGeneFamilies(url, auth, auth_cb) {
 function KBaseNetworks(url, auth, auth_cb) {
 
     this.url = url;
-    var _url = url;
-    var deprecationWarningSent = false;
+    const _url = url;
+    let deprecationWarningSent = false;
 
     function deprecationWarning() {
         if (!deprecationWarningSent) {
@@ -9430,8 +9430,8 @@ function KBaseNetworks(url, auth, auth_cb) {
         }
     }
 
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
 
     this.all_datasets = function (_callback, _errorCallback) {
@@ -9549,7 +9549,7 @@ function KBaseNetworks(url, auth, auth_cb) {
      * JSON call using jQuery method.
      */
     function json_call_ajax(method, params, numRets, callback, errorCallback) {
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
 
         if (typeof callback === 'function') {
            deferred.done(callback);
@@ -9559,15 +9559,15 @@ function KBaseNetworks(url, auth, auth_cb) {
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
             id: String(Math.random()).slice(2),
         };
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -9575,7 +9575,7 @@ function KBaseNetworks(url, auth, auth_cb) {
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: _url,
             dataType: "text",
             type: 'POST',
@@ -9583,9 +9583,9 @@ function KBaseNetworks(url, auth, auth_cb) {
             data: JSON.stringify(rpc),
             beforeSend: beforeSend,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -9599,10 +9599,10 @@ function KBaseNetworks(url, auth, auth_cb) {
                 deferred.resolve(result);
             },
             error: function (xhr, textStatus, errorThrown) {
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -9617,7 +9617,7 @@ function KBaseNetworks(url, auth, auth_cb) {
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }
@@ -9630,8 +9630,8 @@ function KBaseNetworks(url, auth, auth_cb) {
 function KBaseProteinStructure(url, auth, auth_cb) {
 
     this.url = url;
-    var _url = url;
-    var deprecationWarningSent = false;
+    const _url = url;
+    let deprecationWarningSent = false;
 
     function deprecationWarning() {
         if (!deprecationWarningSent) {
@@ -9644,8 +9644,8 @@ function KBaseProteinStructure(url, auth, auth_cb) {
         }
     }
 
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
 
     this.lookup_pdb_by_md5 = function (input_ids, _callback, _errorCallback) {
@@ -9673,7 +9673,7 @@ function KBaseProteinStructure(url, auth, auth_cb) {
      * JSON call using jQuery method.
      */
     function json_call_ajax(method, params, numRets, callback, errorCallback) {
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
 
         if (typeof callback === 'function') {
            deferred.done(callback);
@@ -9683,15 +9683,15 @@ function KBaseProteinStructure(url, auth, auth_cb) {
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
             id: String(Math.random()).slice(2),
         };
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -9699,7 +9699,7 @@ function KBaseProteinStructure(url, auth, auth_cb) {
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: _url,
             dataType: "text",
             type: 'POST',
@@ -9707,9 +9707,9 @@ function KBaseProteinStructure(url, auth, auth_cb) {
             data: JSON.stringify(rpc),
             beforeSend: beforeSend,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -9723,10 +9723,10 @@ function KBaseProteinStructure(url, auth, auth_cb) {
                 deferred.resolve(result);
             },
             error: function (xhr, textStatus, errorThrown) {
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -9741,7 +9741,7 @@ function KBaseProteinStructure(url, auth, auth_cb) {
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }
@@ -9754,8 +9754,8 @@ function KBaseProteinStructure(url, auth, auth_cb) {
 function KBaseTrees(url, auth, auth_cb) {
 
     this.url = url;
-    var _url = url;
-    var deprecationWarningSent = false;
+    let _url = url;
+    let deprecationWarningSent = false;
 
     function deprecationWarning() {
         if (!deprecationWarningSent) {
@@ -9771,8 +9771,8 @@ function KBaseTrees(url, auth, auth_cb) {
     if (typeof(_url) != "string" || _url.length == 0) {
         _url = "https://kbase.us/services/trees";
     }
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
 
     this.replace_node_names = function (tree, replacements, _callback, _errorCallback) {
@@ -10060,7 +10060,7 @@ function KBaseTrees(url, auth, auth_cb) {
      * JSON call using jQuery method.
      */
     function json_call_ajax(method, params, numRets, callback, errorCallback) {
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
 
         if (typeof callback === 'function') {
            deferred.done(callback);
@@ -10070,15 +10070,15 @@ function KBaseTrees(url, auth, auth_cb) {
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
             id: String(Math.random()).slice(2),
         };
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -10086,7 +10086,7 @@ function KBaseTrees(url, auth, auth_cb) {
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: _url,
             dataType: "text",
             type: 'POST',
@@ -10094,9 +10094,9 @@ function KBaseTrees(url, auth, auth_cb) {
             data: JSON.stringify(rpc),
             beforeSend: beforeSend,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -10110,10 +10110,10 @@ function KBaseTrees(url, auth, auth_cb) {
                 deferred.resolve(result);
             },
             error: function (xhr, textStatus, errorThrown) {
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -10128,7 +10128,7 @@ function KBaseTrees(url, auth, auth_cb) {
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }
@@ -10141,8 +10141,8 @@ function KBaseTrees(url, auth, auth_cb) {
 function KmerAnnotationByFigfam(url, auth, auth_cb) {
 
     this.url = url;
-    var _url = url;
-    var deprecationWarningSent = false;
+    let _url = url;
+    let deprecationWarningSent = false;
 
     function deprecationWarning() {
         if (!deprecationWarningSent) {
@@ -10158,8 +10158,8 @@ function KmerAnnotationByFigfam(url, auth, auth_cb) {
     if (typeof(_url) != "string" || _url.length == 0) {
         _url = "http://10.0.16.184:7105";
     }
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
 
     this.get_dataset_names = function (_callback, _errorCallback) {
@@ -10227,7 +10227,7 @@ function KmerAnnotationByFigfam(url, auth, auth_cb) {
      * JSON call using jQuery method.
      */
     function json_call_ajax(method, params, numRets, callback, errorCallback) {
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
 
         if (typeof callback === 'function') {
            deferred.done(callback);
@@ -10237,15 +10237,15 @@ function KmerAnnotationByFigfam(url, auth, auth_cb) {
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
             id: String(Math.random()).slice(2),
         };
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -10253,7 +10253,7 @@ function KmerAnnotationByFigfam(url, auth, auth_cb) {
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: _url,
             dataType: "text",
             type: 'POST',
@@ -10261,9 +10261,9 @@ function KmerAnnotationByFigfam(url, auth, auth_cb) {
             data: JSON.stringify(rpc),
             beforeSend: beforeSend,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -10277,10 +10277,10 @@ function KmerAnnotationByFigfam(url, auth, auth_cb) {
                 deferred.resolve(result);
             },
             error: function (xhr, textStatus, errorThrown) {
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -10295,7 +10295,7 @@ function KmerAnnotationByFigfam(url, auth, auth_cb) {
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }
@@ -10308,8 +10308,8 @@ function KmerAnnotationByFigfam(url, auth, auth_cb) {
 function NarrativeJobService(url, auth, auth_cb) {
 
     this.url = url;
-    var _url = url;
-    var deprecationWarningSent = false;
+    let _url = url;
+    let deprecationWarningSent = false;
 
     function deprecationWarning() {
         if (!deprecationWarningSent) {
@@ -10325,8 +10325,8 @@ function NarrativeJobService(url, auth, auth_cb) {
     if (typeof(_url) != "string" || _url.length == 0) {
         _url = "http://localhost:7080";
     }
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
 
     this.run_app = function (app, _callback, _errorCallback) {
@@ -10404,7 +10404,7 @@ function NarrativeJobService(url, auth, auth_cb) {
      * JSON call using jQuery method.
      */
     function json_call_ajax(method, params, numRets, callback, errorCallback) {
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
 
         if (typeof callback === 'function') {
            deferred.done(callback);
@@ -10414,15 +10414,15 @@ function NarrativeJobService(url, auth, auth_cb) {
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
             id: String(Math.random()).slice(2),
         };
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -10430,7 +10430,7 @@ function NarrativeJobService(url, auth, auth_cb) {
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: _url,
             dataType: "text",
             type: 'POST',
@@ -10438,9 +10438,9 @@ function NarrativeJobService(url, auth, auth_cb) {
             data: JSON.stringify(rpc),
             beforeSend: beforeSend,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -10454,10 +10454,10 @@ function NarrativeJobService(url, auth, auth_cb) {
                 deferred.resolve(result);
             },
             error: function (xhr, textStatus, errorThrown) {
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -10472,7 +10472,7 @@ function NarrativeJobService(url, auth, auth_cb) {
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }
@@ -10485,8 +10485,8 @@ function NarrativeJobService(url, auth, auth_cb) {
 function NarrativeMethodStore(url, auth, auth_cb) {
 
     this.url = url;
-    var _url = url;
-    var deprecationWarningSent = false;
+    let _url = url;
+    let deprecationWarningSent = false;
 
     function deprecationWarning() {
         if (!deprecationWarningSent) {
@@ -10502,8 +10502,8 @@ function NarrativeMethodStore(url, auth, auth_cb) {
     if (typeof(_url) != "string" || _url.length == 0) {
         _url = "https://kbase.us/services/narrative_method_store/rpc";
     }
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
 
     this.ver = function (_callback, _errorCallback) {
@@ -10711,7 +10711,7 @@ function NarrativeMethodStore(url, auth, auth_cb) {
      * JSON call using jQuery method.
      */
     function json_call_ajax(method, params, numRets, callback, errorCallback) {
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
 
         if (typeof callback === 'function') {
            deferred.done(callback);
@@ -10721,15 +10721,15 @@ function NarrativeMethodStore(url, auth, auth_cb) {
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
             id: String(Math.random()).slice(2),
         };
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -10737,7 +10737,7 @@ function NarrativeMethodStore(url, auth, auth_cb) {
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: _url,
             dataType: "text",
             type: 'POST',
@@ -10745,9 +10745,9 @@ function NarrativeMethodStore(url, auth, auth_cb) {
             data: JSON.stringify(rpc),
             beforeSend: beforeSend,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -10761,10 +10761,10 @@ function NarrativeMethodStore(url, auth, auth_cb) {
                 deferred.resolve(result);
             },
             error: function (xhr, textStatus, errorThrown) {
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -10779,7 +10779,7 @@ function NarrativeMethodStore(url, auth, auth_cb) {
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }
@@ -10790,13 +10790,13 @@ function NarrativeMethodStore(url, auth, auth_cb) {
 
 
 function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_version) {
-    var self = this;
+    const self = this;
 
     this.url = url;
-    var _url = url;
+    let _url = url;
 
     this.timeout = timeout;
-    var _timeout = timeout;
+    const _timeout = timeout;
 
     this.async_job_check_time_ms = async_job_check_time_ms;
     if (!this.async_job_check_time_ms)
@@ -10810,8 +10810,8 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
     if (typeof(_url) != "string" || _url.length == 0) {
         _url = "https://kbase.us/services/service_wizard";
     }
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
      this.get_reads_set_v1 = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
@@ -10822,13 +10822,13 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
         json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "SetAPI",
-                'version' : self.service_version}], 1, function(service_status_ret) {
+                'version' : self.service_version}], 1, (service_status_ret) => {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "SetAPI.get_reads_set_v1",
                 [params], 1, _callback, _errorCallback, null, deferred);
-        }, function(err) {
+        }, (err) => {
             if (_errorCallback) {
                 _errorCallback(err);
             } else {
@@ -10850,13 +10850,13 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
         json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "SetAPI",
-                'version' : self.service_version}], 1, function(service_status_ret) {
+                'version' : self.service_version}], 1, (service_status_ret) => {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "SetAPI.save_reads_set_v1",
                 [params], 1, _callback, _errorCallback, null, deferred);
-        }, function(err) {
+        }, (err) => {
             if (_errorCallback) {
                 _errorCallback(err);
             } else {
@@ -10878,13 +10878,13 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
         json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "SetAPI",
-                'version' : self.service_version}], 1, function(service_status_ret) {
+                'version' : self.service_version}], 1, (service_status_ret) => {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "SetAPI.list_sets",
                 [params], 1, _callback, _errorCallback, null, deferred);
-        }, function(err) {
+        }, (err) => {
             if (_errorCallback) {
                 _errorCallback(err);
             } else {
@@ -10906,13 +10906,13 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
         json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "SetAPI",
-                'version' : self.service_version}], 1, function(service_status_ret) {
+                'version' : self.service_version}], 1, (service_status_ret) => {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "SetAPI.get_set_items",
                 [params], 1, _callback, _errorCallback, null, deferred);
-        }, function(err) {
+        }, (err) => {
             if (_errorCallback) {
                 _errorCallback(err);
             } else {
@@ -10932,13 +10932,13 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 2)
             throw 'Too many arguments ('+arguments.length+' instead of 2)';
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
         json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "SetAPI",
-                'version' : self.service_version}], 1, function(service_status_ret) {
+                'version' : self.service_version}], 1, (service_status_ret) => {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "SetAPI.status",
                 [], 1, _callback, _errorCallback, null, deferred);
-        }, function(err) {
+        }, (err) => {
             if (_errorCallback) {
                 _errorCallback(err);
             } else {
@@ -10967,7 +10967,7 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
@@ -10976,8 +10976,8 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
         if (json_rpc_context)
             rpc['context'] = json_rpc_context;
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -10985,7 +10985,7 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: srv_url,
             dataType: "text",
             type: 'POST',
@@ -10994,9 +10994,9 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
             beforeSend: beforeSend,
             timeout: _timeout,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -11010,10 +11010,10 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
                 deferred.resolve(result);
             },
             error: function (xhr, textStatus, errorThrown) {
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -11028,7 +11028,7 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }
@@ -11041,8 +11041,8 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
 function Transform(url, auth, auth_cb) {
 
     this.url = url;
-    var _url = url;
-    var deprecationWarningSent = false;
+    const _url = url;
+    let deprecationWarningSent = false;
 
     function deprecationWarning() {
         if (!deprecationWarningSent) {
@@ -11055,8 +11055,8 @@ function Transform(url, auth, auth_cb) {
         }
     }
 
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
 
     this.version = function (_callback, _errorCallback) {
@@ -11114,7 +11114,7 @@ function Transform(url, auth, auth_cb) {
      * JSON call using jQuery method.
      */
     function json_call_ajax(method, params, numRets, callback, errorCallback) {
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
 
         if (typeof callback === 'function') {
            deferred.done(callback);
@@ -11124,15 +11124,15 @@ function Transform(url, auth, auth_cb) {
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
             id: String(Math.random()).slice(2),
         };
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -11140,7 +11140,7 @@ function Transform(url, auth, auth_cb) {
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: _url,
             dataType: "text",
             type: 'POST',
@@ -11148,9 +11148,9 @@ function Transform(url, auth, auth_cb) {
             data: JSON.stringify(rpc),
             beforeSend: beforeSend,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -11164,10 +11164,10 @@ function Transform(url, auth, auth_cb) {
                 deferred.resolve(result);
             },
             error: function (xhr, textStatus, errorThrown) {
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -11182,7 +11182,7 @@ function Transform(url, auth, auth_cb) {
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }
@@ -11195,8 +11195,8 @@ function Transform(url, auth, auth_cb) {
 function UserProfile(url, auth, auth_cb) {
 
     this.url = url;
-    var _url = url;
-    var deprecationWarningSent = false;
+    let _url = url;
+    let deprecationWarningSent = false;
 
     function deprecationWarning() {
         if (!deprecationWarningSent) {
@@ -11212,8 +11212,8 @@ function UserProfile(url, auth, auth_cb) {
     if (typeof(_url) != "string" || _url.length == 0) {
         _url = "https://kbase.us/services/user_profile/rpc";
     }
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
 
     this.ver = function (_callback, _errorCallback) {
@@ -11281,7 +11281,7 @@ function UserProfile(url, auth, auth_cb) {
      * JSON call using jQuery method.
      */
     function json_call_ajax(method, params, numRets, callback, errorCallback) {
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
 
         if (typeof callback === 'function') {
            deferred.done(callback);
@@ -11291,15 +11291,15 @@ function UserProfile(url, auth, auth_cb) {
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
             id: String(Math.random()).slice(2),
         };
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -11307,7 +11307,7 @@ function UserProfile(url, auth, auth_cb) {
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: _url,
             dataType: "text",
             type: 'POST',
@@ -11315,9 +11315,9 @@ function UserProfile(url, auth, auth_cb) {
             data: JSON.stringify(rpc),
             beforeSend: beforeSend,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -11331,10 +11331,10 @@ function UserProfile(url, auth, auth_cb) {
                 deferred.resolve(result);
             },
             error: function (xhr, textStatus, errorThrown) {
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -11349,7 +11349,7 @@ function UserProfile(url, auth, auth_cb) {
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }
@@ -11363,7 +11363,7 @@ function UserProfile(url, auth, auth_cb) {
 */
 function AweClient(params) {
 
-    var self = this;
+    const self = this;
 
     self.url = "https://kbase.us/services/awe-api/";
     self.auth_header = {};
@@ -11373,11 +11373,11 @@ function AweClient(params) {
 		self.auth_header = {'Authorization': 'OAuth '+params.token};
 
     self.get_job = function (jobId, ret, errorCallback) {
-    	var url = self.url+'/job/'+jobId
-    	var promise = jQuery.Deferred();
+    	const url = self.url+'/job/'+jobId
+    	const promise = jQuery.Deferred();
     	jQuery.ajax(url, {
     		success: function (data) {
-    			var unknownError = false;
+    			let unknownError = false;
     			if (data) {
     			    if (data.error) {
     			    	if (errorCallback)
@@ -11411,8 +11411,8 @@ function AweClient(params) {
 function fbaModelServices(url, auth, auth_cb) {
 
     this.url = url;
-    var _url = url;
-    var deprecationWarningSent = false;
+    const _url = url;
+    let deprecationWarningSent = false;
 
     function deprecationWarning() {
         if (!deprecationWarningSent) {
@@ -11425,8 +11425,8 @@ function fbaModelServices(url, auth, auth_cb) {
         }
     }
 
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
 
     this.get_models = function (input, _callback, _errorCallback) {
@@ -12384,7 +12384,7 @@ function fbaModelServices(url, auth, auth_cb) {
      * JSON call using jQuery method.
      */
     function json_call_ajax(method, params, numRets, callback, errorCallback) {
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
 
         if (typeof callback === 'function') {
            deferred.done(callback);
@@ -12394,15 +12394,15 @@ function fbaModelServices(url, auth, auth_cb) {
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
             id: String(Math.random()).slice(2),
         };
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -12410,7 +12410,7 @@ function fbaModelServices(url, auth, auth_cb) {
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: _url,
             dataType: "text",
             type: 'POST',
@@ -12418,9 +12418,9 @@ function fbaModelServices(url, auth, auth_cb) {
             data: JSON.stringify(rpc),
             beforeSend: beforeSend,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -12434,10 +12434,10 @@ function fbaModelServices(url, auth, auth_cb) {
                 deferred.resolve(result);
             },
             error: function (xhr, textStatus, errorThrown) {
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -12452,7 +12452,7 @@ function fbaModelServices(url, auth, auth_cb) {
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }
@@ -12465,8 +12465,8 @@ function fbaModelServices(url, auth, auth_cb) {
 function MEME(url, auth, auth_cb) {
 
     this.url = url;
-    var _url = url;
-    var deprecationWarningSent = false;
+    const _url = url;
+    let deprecationWarningSent = false;
 
     function deprecationWarning() {
         if (!deprecationWarningSent) {
@@ -12479,8 +12479,8 @@ function MEME(url, auth, auth_cb) {
         }
     }
 
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
 
     this.find_motifs_with_meme = function (sequenceSet, params, _callback, _errorCallback) {
@@ -12628,7 +12628,7 @@ function MEME(url, auth, auth_cb) {
      * JSON call using jQuery method.
      */
     function json_call_ajax(method, params, numRets, callback, errorCallback) {
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
 
         if (typeof callback === 'function') {
            deferred.done(callback);
@@ -12638,15 +12638,15 @@ function MEME(url, auth, auth_cb) {
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
             id: String(Math.random()).slice(2),
         };
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -12654,7 +12654,7 @@ function MEME(url, auth, auth_cb) {
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: _url,
             dataType: "text",
             type: 'POST',
@@ -12662,9 +12662,9 @@ function MEME(url, auth, auth_cb) {
             data: JSON.stringify(rpc),
             beforeSend: beforeSend,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -12678,10 +12678,10 @@ function MEME(url, auth, auth_cb) {
                 deferred.resolve(result);
             },
             error: function (xhr, textStatus, errorThrown) {
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -12696,7 +12696,7 @@ function MEME(url, auth, auth_cb) {
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }
@@ -12709,8 +12709,8 @@ function MEME(url, auth, auth_cb) {
 function ProbabilisticAnnotation(url, auth, auth_cb) {
 
     this.url = url;
-    var _url = url;
-    var deprecationWarningSent = false;
+    const _url = url;
+    let deprecationWarningSent = false;
 
     function deprecationWarning() {
         if (!deprecationWarningSent) {
@@ -12723,8 +12723,8 @@ function ProbabilisticAnnotation(url, auth, auth_cb) {
         }
     }
 
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
 
     this.version = function (_callback, _errorCallback) {
@@ -12782,7 +12782,7 @@ function ProbabilisticAnnotation(url, auth, auth_cb) {
      * JSON call using jQuery method.
      */
     function json_call_ajax(method, params, numRets, callback, errorCallback) {
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
 
         if (typeof callback === 'function') {
            deferred.done(callback);
@@ -12792,15 +12792,15 @@ function ProbabilisticAnnotation(url, auth, auth_cb) {
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
             id: String(Math.random()).slice(2),
         };
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -12808,7 +12808,7 @@ function ProbabilisticAnnotation(url, auth, auth_cb) {
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: _url,
             dataType: "text",
             type: 'POST',
@@ -12816,9 +12816,9 @@ function ProbabilisticAnnotation(url, auth, auth_cb) {
             data: JSON.stringify(rpc),
             beforeSend: beforeSend,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -12832,10 +12832,10 @@ function ProbabilisticAnnotation(url, auth, auth_cb) {
                 deferred.resolve(result);
             },
             error: function (xhr, textStatus, errorThrown) {
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -12850,7 +12850,7 @@ function ProbabilisticAnnotation(url, auth, auth_cb) {
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }
@@ -12893,7 +12893,7 @@ function ProbabilisticAnnotation(url, auth, auth_cb) {
 */
 function ShockClient(params) {
 
-    var self = this;
+    const self = this;
 
     self.url = "https://kbase.us/services/shock-api/";
     self.auth_header = {};
@@ -12909,12 +12909,12 @@ function ShockClient(params) {
 		self.chunkSize = params.chunkSize;
 
     self.get_node = function (node, ret, errorCallback) {
-    	var url = self.url+'/node/'+node
-    	var promise = jQuery.Deferred();
+    	const url = self.url+'/node/'+node
+    	const promise = jQuery.Deferred();
 
     	jQuery.ajax(url, {
     		success: function (data) {
-    			var retval = null;
+    			const retval = null;
     			if (data != null && data.hasOwnProperty('data')) {
     			    if (data.error != null) {
     			    	if (errorCallback)
@@ -12941,17 +12941,17 @@ function ShockClient(params) {
     };
 
     self.get_nodes = function (filters, ret, errorCallback) {
-    	var url = self.url+'/node';
+    	let url = self.url+'/node';
     	if (filters) {
     		url += "?query";
-    		for (var key in filters) {
+    		for (const key in filters) {
     			url += "&" + encodeURIComponent(key) + "=" + encodeURIComponent(filters[key]);
     		}
     	}
-    	var promise = jQuery.Deferred();
+    	const promise = jQuery.Deferred();
     	jQuery.ajax(url, {
     		success: function(data) {
-    			var retval = null;
+    			const retval = null;
     			if (data != null && data.hasOwnProperty('data')) {
     				if (data.error != null) {
         				if (errorCallback)
@@ -12977,8 +12977,8 @@ function ShockClient(params) {
     };
 
     self.get_node_acls = function (id, ret, errorCallback) {
-    	var url = self.url+'/node/' + id + "/acl/";
-    	var promise = jQuery.Deferred();
+    	const url = self.url+'/node/' + id + "/acl/";
+    	const promise = jQuery.Deferred();
     	jQuery.ajax(url, {
     		success: function(data) {
     			if (data.data) {
@@ -13001,8 +13001,8 @@ function ShockClient(params) {
     };
 
     self.delete_node = function (id, ret, errorCallback) {
-    	var url = self.url+'/node';
-    	var promise = jQuery.Deferred();
+    	const url = self.url+'/node';
+    	const promise = jQuery.Deferred();
     	jQuery.ajax(url + "/" + id, {
     		success: function (data) {
     			ret(true);
@@ -13020,11 +13020,11 @@ function ShockClient(params) {
     };
 
     self.update_node = function (node, attr, ret, errorCallback) {
-    	var url = self.url+'/node';
-    	var promise = jQuery.Deferred();
-	    var aFileParts = [ JSON.stringify(attr) ];
-	    var oMyBlob = new Blob(aFileParts, { "type" : "text\/json" });
-	    var fd = new FormData();
+    	const url = self.url+'/node';
+    	const promise = jQuery.Deferred();
+	    const aFileParts = [ JSON.stringify(attr) ];
+	    const oMyBlob = new Blob(aFileParts, { "type" : "text\/json" });
+	    const fd = new FormData();
 	    fd.append('attributes', oMyBlob);
 	    jQuery.ajax(url +  "/" + node, {
 	    	contentType: false,
@@ -13056,14 +13056,14 @@ function ShockClient(params) {
     };
 
     self.check_file = function(file, ret, errorCallback) {
-    	var promise = jQuery.Deferred();
-	    var fsize = file.size;
-	    var ftime = self.getFileLastModificationTime(file);
-	    var filters = {'file_size': fsize, 'file_time': ftime, 'file_name': file.name, 'limit': 1};
-	    self.get_nodes(filters, function (data) {
+    	const promise = jQuery.Deferred();
+	    const fsize = file.size;
+	    const ftime = self.getFileLastModificationTime(file);
+	    const filters = {'file_size': fsize, 'file_time': ftime, 'file_name': file.name, 'limit': 1};
+	    self.get_nodes(filters, (data) => {
 	    	ret(data.length == 0 ? null : data[0]);
 	    	promise.resolve();
-	    }, function(error) {
+	    }, (error) => {
 	    	if (errorCallback)
 	    		errorCallback(error);
 	    	promise.resolve();
@@ -13079,28 +13079,28 @@ function ShockClient(params) {
     	    return;
 	}
 
-	var start = currentChunk * chunkSize;
-	var blob;
+	const start = currentChunk * chunkSize;
+	let blob;
 	if (start < file.size) {
-	    var end = (start + chunkSize >= file.size) ? file.size : start + chunkSize;
-	    var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
+	    const end = (start + chunkSize >= file.size) ? file.size : start + chunkSize;
+	    const blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
 	    blob = blobSlice.call(file, start, end);
 	} else {
 	    ret({file_size: file.size, uploaded_size: file.size, node_id: incompleteId});
 	    return;
 	}
-	var fd = new FormData();
+	const fd = new FormData();
 	fd.append(currentChunk+1, blob);
-	var lastChunk = (currentChunk + 1) * chunkSize >= file.size;
-	var incomplete_attr = {
+	const lastChunk = (currentChunk + 1) * chunkSize >= file.size;
+	const incomplete_attr = {
 	    "incomplete": (lastChunk ? "0" : "1"),
 	    "file_size": "" + file.size,
 	    "file_name": file.name,
 	    "file_time": String(self.getFileLastModificationTime(file)),
 	    "chunks": "" + (currentChunk+1),
 	    "chunk_size": "" + chunkSize};
-	var aFileParts = [ JSON.stringify(incomplete_attr) ];
-	var oMyBlob2 = new Blob(aFileParts, { "type" : "text\/json" });
+	const aFileParts = [ JSON.stringify(incomplete_attr) ];
+	const oMyBlob2 = new Blob(aFileParts, { "type" : "text\/json" });
 	fd.append('attributes', oMyBlob2);
 	console.log(Date.now() + " chunk " + currentChunk);
 	jQuery.ajax(url, {
@@ -13115,7 +13115,7 @@ function ShockClient(params) {
     		    return;
 		}
 		currentChunk++;
-		var uploaded_size = Math.min(file.size, currentChunk * chunkSize);
+		const uploaded_size = Math.min(file.size, currentChunk * chunkSize);
 		ret({file_size: file.size, uploaded_size: uploaded_size, node_id: incompleteId});
 		if ((currentChunk * chunkSize) >= file.size) {
 		    promise.resolve();
@@ -13135,23 +13135,23 @@ function ShockClient(params) {
     self.loadNextOrig = function (file, url, promise, currentChunk, chunks, incompleteId, chunkSize, ret, errorCallback, cancelCallback) {
 		if (cancelCallback && cancelCallback())
 			return;
-	    var fileReader = new FileReader();
+	    const fileReader = new FileReader();
 	    fileReader.onload = function(e) {
     		if (cancelCallback && cancelCallback())
     			return;
-		    var fd = new FormData();
-		    var oMyBlob = new Blob([e.target.result], { "type" : file.type });
+		    const fd = new FormData();
+		    const oMyBlob = new Blob([e.target.result], { "type" : file.type });
 		    fd.append(currentChunk+1, oMyBlob);
-		    var lastChunk = (currentChunk + 1) * chunkSize >= file.size;
-		    var incomplete_attr = {
+		    const lastChunk = (currentChunk + 1) * chunkSize >= file.size;
+		    const incomplete_attr = {
 		    		"incomplete": (lastChunk ? "0" : "1"),
 		    		"file_size": "" + file.size,
 		    		"file_name": file.name,
 		    		"file_time": String(self.getFileLastModificationTime(file)),
 		    		"chunks": "" + (currentChunk+1),
 		    		"chunk_size": "" + chunkSize};
-		    var aFileParts = [ JSON.stringify(incomplete_attr) ];
-		    var oMyBlob2 = new Blob(aFileParts, { "type" : "text\/json" });
+		    const aFileParts = [ JSON.stringify(incomplete_attr) ];
+		    const oMyBlob2 = new Blob(aFileParts, { "type" : "text\/json" });
 		    fd.append('attributes', oMyBlob2);
 		    jQuery.ajax(url, {
 		    	contentType: false,
@@ -13161,7 +13161,7 @@ function ShockClient(params) {
 		    		if (cancelCallback && cancelCallback())
 		    			return;
 		    		currentChunk++;
-					var uploaded_size = Math.min(file.size, currentChunk * chunkSize);
+					const uploaded_size = Math.min(file.size, currentChunk * chunkSize);
 				    ret({file_size: file.size, uploaded_size: uploaded_size, node_id: incompleteId});
 				    if ((currentChunk * chunkSize) >= file.size) {
 			    		promise.resolve();
@@ -13183,10 +13183,10 @@ function ShockClient(params) {
     			errorCallback("error during upload at chunk "+currentChunk+".");
 		    promise.resolve();
 		};
-	    var start = currentChunk * chunkSize;
+	    const start = currentChunk * chunkSize;
 	    if (start < file.size) {
-	    	var end = (start + chunkSize >= file.size) ? file.size : start + chunkSize;
-	    	var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
+	    	const end = (start + chunkSize >= file.size) ? file.size : start + chunkSize;
+	    	const blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
 	    	fileReader.readAsArrayBuffer(blobSlice.call(file, start, end));
 	    } else {
 		    ret({file_size: file.size, uploaded_size: file.size, node_id: incompleteId});
@@ -13199,17 +13199,17 @@ function ShockClient(params) {
      * you can resume faster.
      */
     self.upload_node = function (file, shockNodeId, searchToResume, ret, errorCallback, cancelCallback) {
-    	var url = self.url+'/node';
-    	var promise = jQuery.Deferred();
+    	let url = self.url+'/node';
+    	const promise = jQuery.Deferred();
 	    // if this is a chunked upload, check if it needs to be resumed
 
     	function searchForIncomplete() {
     		if (searchToResume) {
-    			self.check_file(file, function (incomplete) {
+    			self.check_file(file, (incomplete) => {
     				if (cancelCallback && cancelCallback())
     					return;
     				processNode(incomplete);
-    			}, function(error){
+    			}, (error)=> {
     				if (errorCallback)
     					errorCallback(error);
     				promise.resolve();
@@ -13221,9 +13221,9 @@ function ShockClient(params) {
 
     	function processNode(incomplete) {
     	    if (incomplete != null) {
-    		var incompleteId = incomplete["id"];
+    		const incompleteId = incomplete["id"];
     		url += "/" + incomplete["id"];
-    		var currentChunk = 0;
+    		let currentChunk = 0;
     		if (incomplete["attributes"]["incomplete_chunks"]) {
     		    currentChunk = parseInt(incomplete["attributes"]["incomplete_chunks"]);
     		} else if (incomplete["attributes"]["chunks"]) {
@@ -13232,17 +13232,17 @@ function ShockClient(params) {
     		var chunkSize = self.chunkSize;
     		if (incomplete["attributes"]["chunk_size"])
     		    chunkSize = parseInt(incomplete["attributes"]["chunk_size"]);
-    		var uploadedSize = Math.min(file.size, currentChunk * chunkSize);
+    		const uploadedSize = Math.min(file.size, currentChunk * chunkSize);
     		ret({file_size: file.size, uploaded_size: uploadedSize, node_id: incompleteId});
     		self.loadNext(file, url, promise, currentChunk, chunks, incompleteId, chunkSize, ret, errorCallback, cancelCallback);
     	    } else {
     		var chunkSize = self.chunkSize;
     		var chunks = Math.ceil(file.size / chunkSize);
-    		var incomplete_attr = { "incomplete": "1", "file_size": "" + file.size, "file_name": file.name,
+    		const incomplete_attr = { "incomplete": "1", "file_size": "" + file.size, "file_name": file.name,
     					"file_time": String(self.getFileLastModificationTime(file)), "chunk_size": "" + chunkSize};
-    		var aFileParts = [ JSON.stringify(incomplete_attr) ];
-    		var oMyBlob = new Blob(aFileParts, { "type" : "text\/json" });
-    		var fd = new FormData();
+    		const aFileParts = [ JSON.stringify(incomplete_attr) ];
+    		const oMyBlob = new Blob(aFileParts, { "type" : "text\/json" });
+    		const fd = new FormData();
     		fd.append('attributes', oMyBlob);
     		fd.append('parts', chunks);
     		jQuery.ajax(url, {
@@ -13256,8 +13256,8 @@ function ShockClient(params) {
 				errorCallback("cancelled");
     		    	    return;
 			}
-    			var incompleteId = data.data.id;
-    			var uploaded_size = 0;
+    			const incompleteId = data.data.id;
+    			const uploaded_size = 0;
     			ret({file_size: file.size, uploaded_size: uploaded_size, node_id: incompleteId});
     			url += "/" + data.data.id;
     			self.loadNext(file, url, promise, 0, chunks, incompleteId, chunkSize, ret, errorCallback, cancelCallback);
@@ -13274,7 +13274,7 @@ function ShockClient(params) {
     	}
 
     	if (shockNodeId) {
-    	    self.get_node(shockNodeId, function(data) {
+    	    self.get_node(shockNodeId, (data) => {
     		if (cancelCallback && cancelCallback())
 		{
 		    if (errorCallback)
@@ -13290,7 +13290,7 @@ function ShockClient(params) {
 		} else {
 		    searchForIncomplete();
 		}
-    	    }, function(error) {
+    	    }, (error) => {
 		searchForIncomplete();
     	    });
     	} else {
@@ -13304,9 +13304,9 @@ function ShockClient(params) {
      * Changes file.name prop indide shock node. Use this func at the end of chunk upload.
      */
     self.change_node_file_name = function (shockNodeId, fileName, ret, errorCallback) {
-    	var url = self.url+'/node/' + shockNodeId;
-    	var promise = jQuery.Deferred();
-    	var fd = new FormData();
+    	const url = self.url+'/node/' + shockNodeId;
+    	const promise = jQuery.Deferred();
+    	const fd = new FormData();
     	fd.append('file_name', fileName);
     	jQuery.ajax(url, {
     		contentType: false,
@@ -13332,8 +13332,8 @@ function ShockClient(params) {
 function UserAndJobState(url, auth, auth_cb) {
 
     this.url = url;
-    var _url = url;
-    var deprecationWarningSent = false;
+    let _url = url;
+    let deprecationWarningSent = false;
 
     function deprecationWarning() {
         if (!deprecationWarningSent) {
@@ -13349,8 +13349,8 @@ function UserAndJobState(url, auth, auth_cb) {
     if (typeof(_url) != "string" || _url.length == 0) {
         _url = "https://kbase.us/services/userandjobstate/";
     }
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
 
     this.ver = function (_callback, _errorCallback) {
@@ -13648,7 +13648,7 @@ function UserAndJobState(url, auth, auth_cb) {
      * JSON call using jQuery method.
      */
     function json_call_ajax(method, params, numRets, callback, errorCallback) {
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
 
         if (typeof callback === 'function') {
            deferred.done(callback);
@@ -13658,15 +13658,15 @@ function UserAndJobState(url, auth, auth_cb) {
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
             id: String(Math.random()).slice(2),
         };
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -13674,7 +13674,7 @@ function UserAndJobState(url, auth, auth_cb) {
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: _url,
             dataType: "text",
             type: 'POST',
@@ -13682,9 +13682,9 @@ function UserAndJobState(url, auth, auth_cb) {
             data: JSON.stringify(rpc),
             beforeSend: beforeSend,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -13698,10 +13698,10 @@ function UserAndJobState(url, auth, auth_cb) {
                 deferred.resolve(result);
             },
             error: function (xhr, textStatus, errorThrown) {
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -13716,7 +13716,7 @@ function UserAndJobState(url, auth, auth_cb) {
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }
@@ -13729,13 +13729,13 @@ function UserAndJobState(url, auth, auth_cb) {
 
 
 function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, service_version) {
-    var self = this;
+    const self = this;
 
     this.url = url;
-    var _url = url;
+    let _url = url;
 
     this.timeout = timeout;
-    var _timeout = timeout;
+    const _timeout = timeout;
 
     this.async_job_check_time_ms = async_job_check_time_ms;
     if (!this.async_job_check_time_ms)
@@ -13747,8 +13747,8 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, service
     if (typeof(_url) != "string" || _url.length == 0) {
         _url = "https://kbase.us/services/ws/";
     }
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
      this.ver = function (_callback, _errorCallback) {
         if (_callback && typeof _callback !== 'function')
@@ -14570,7 +14570,7 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, service
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
@@ -14579,8 +14579,8 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, service
         if (json_rpc_context)
             rpc['context'] = json_rpc_context;
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -14588,7 +14588,7 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, service
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: srv_url,
             dataType: "text",
             type: 'POST',
@@ -14597,9 +14597,9 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, service
             beforeSend: beforeSend,
             timeout: _timeout,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -14613,10 +14613,10 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, service
                 deferred.resolve(result);
             },
             error: function (xhr, textStatus, errorThrown) {
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -14631,7 +14631,7 @@ function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, service
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }

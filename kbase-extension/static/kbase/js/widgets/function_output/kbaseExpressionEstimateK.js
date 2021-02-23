@@ -12,14 +12,14 @@ define (
         'narrativeConfig',
 		'kbaseAuthenticatedWidget',
 		'kbaseLinechart'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
         Config,
 		kbaseAuthenticatedWidget,
 		kbaseLinechart
-	) {
+	) => {
 	return KBWidget({
 		name: 'kbaseExpressionEstimateK',
 		parent : kbaseAuthenticatedWidget,
@@ -62,18 +62,18 @@ define (
 
 
         loadAndRender: function(){
-            var self = this;
+            const self = this;
             self.loading(true);
-            var ref = self.buildObjectIdentity(this.options.workspaceID, this.options.estimateKResultID);
+            const ref = self.buildObjectIdentity(this.options.workspaceID, this.options.estimateKResultID);
 
             self.ws.get_objects(
                 [ref],
-                function(data){
+                (data)=> {
                     self.data = data[0].data;
                     self.render();
                     self.loading(false);
                 },
-                function(error){
+                (error)=> {
                     self.clientError(error);
                 }
             );
@@ -83,22 +83,22 @@ define (
         $avgWindowRefreshBtn:null,
 
 		render: function(){
-		    var self = this;
-            var data = this.data;
+		    const self = this;
+            const data = this.data;
 
             $("<div>").html('Estimated K (based on highest quality score) = ' + data.best_k).appendTo(this.$elem);
-            var $kDistributionDiv = $("<div>");
+            const $kDistributionDiv = $("<div>");
 
             self.$avgWindowTextField = $("<input type='text' size='6'/>");
             self.$avgWindowRefreshBtn = $('<button class="btn btn-default">Refresh</button>')
-            var $sliderDiv = $("<div/>");
+            const $sliderDiv = $("<div/>");
             $sliderDiv.append('<br>Moving Average Window Size:&nbsp;&nbsp;');
             $sliderDiv.append(self.$avgWindowTextField);
             $sliderDiv.append('&nbsp;&nbsp;');
             $sliderDiv.append(self.$avgWindowRefreshBtn);
             this.$elem.append($sliderDiv);
-            self.$avgWindowRefreshBtn.click(function() {
-                var avgWindow = parseInt(self.$avgWindowTextField.val());
+            self.$avgWindowRefreshBtn.click(() => {
+                let avgWindow = parseInt(self.$avgWindowTextField.val());
                 if (!avgWindow)
                     avgWindow = null;
                 if(avgWindow<0)
@@ -108,7 +108,7 @@ define (
                 self.options.avgWindow = avgWindow;
                 self.buildKDistributionPlot($kDistributionDiv);
             });
-            self.$avgWindowTextField.keyup(function(event) {
+            self.$avgWindowTextField.keyup((event) => {
                 if(event.keyCode == 13) {
                     $sliderButton.click();
                 }
@@ -119,7 +119,7 @@ define (
             this.$elem.append($kDistributionDiv);
             this.buildKDistributionPlot($kDistributionDiv);
 
-            var $help = $('<div>').append(
+            const $help = $('<div>').append(
                 "The quality of a K-means clustering result for a specific value of <i>k</i> "+
                 "can be approximated by the Average Silhouette Width. Silhouette Width "+
                 "is calculated for each point and results in a value in the range " +
@@ -137,14 +137,14 @@ define (
 		},
 
         getState: function() {
-            var self = this;
+            const self = this;
             return {avgWindow:self.options.avgWindow};
         },
 
         loadState: function(state) {
             // TODO: only output widgets load/save state, not viewers!!
-            var self = this;
-            var needsReload = false;
+            const self = this;
+            let needsReload = false;
             if(state.avgWindow !== self.options.avgWindow) {
                 self.options.avgWindow = state.avgWindow;
                 needsReload = true;
@@ -157,17 +157,17 @@ define (
 
         buildKDistributionPlot: function($containerDiv){
             $containerDiv.empty();
-            var avgWindow = this.options.avgWindow;
-            var data = this.data;
-            var values = [];
-            for(var i = 0; i < data.estimate_cluster_sizes.length; i++){
-                var val = data.estimate_cluster_sizes[i];
-                var valY = val[1];
+            const avgWindow = this.options.avgWindow;
+            const data = this.data;
+            const values = [];
+            for(let i = 0; i < data.estimate_cluster_sizes.length; i++){
+                const val = data.estimate_cluster_sizes[i];
+                let valY = val[1];
                 if (avgWindow) {
                     valY = 0;
-                    var minPos = Math.max(0, i - Math.round(avgWindow / 2 - 0.5));
-                    var maxPos = Math.min(data.estimate_cluster_sizes.length, minPos + avgWindow);
-                    for (var pos = minPos; pos < maxPos; pos++)
+                    const minPos = Math.max(0, i - Math.round(avgWindow / 2 - 0.5));
+                    const maxPos = Math.min(data.estimate_cluster_sizes.length, minPos + avgWindow);
+                    for (let pos = minPos; pos < maxPos; pos++)
                         valY += data.estimate_cluster_sizes[pos][1];
                     valY /= (maxPos - minPos);
                 }
@@ -221,7 +221,7 @@ define (
 		},
 
 		showMessage: function(message) {
-			var span = $("<span/>").append(message);
+			const span = $("<span/>").append(message);
 
 			this.$messagePane.append(span);
 			this.$messagePane.show();
@@ -234,14 +234,14 @@ define (
 
 		uuid: function() {
 			return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
-				function(c) {
-					var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+				(c) => {
+					const r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
 					return v.toString(16);
 				});
 		},
 
 		buildObjectIdentity: function(workspaceID, objectID, objectVer, wsRef) {
-			var obj = {};
+			const obj = {};
 			if (wsRef) {
 				obj['ref'] = wsRef;
 			} else {

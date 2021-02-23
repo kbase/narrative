@@ -7,7 +7,7 @@ define (
 		'kbaseGrowthParametersAbstract',
 		'kbaseTabs',
 		'jquery-dataTables'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -15,7 +15,7 @@ define (
 		kbaseGrowthParametersAbstract,
 		kbaseTabs,
 		jquery_dataTables
-	) {
+	) => {
     return KBWidget({
         name: 'kbaseGrowthParamsPlot',
         parent : kbaseGrowthParametersAbstract,
@@ -26,50 +26,50 @@ define (
         },
 
         render: function(){
-            var sampleParams = this.buildSamplesWithParameters();
-            var seriesParams = this.groupSamplesWithParametersIntoSeries(sampleParams);
+            const sampleParams = this.buildSamplesWithParameters();
+            const seriesParams = this.groupSamplesWithParametersIntoSeries(sampleParams);
 
             this.loading(false);
-            var $vizContainer = $("<div/>");
+            const $vizContainer = $("<div/>");
             this.$elem.append( $vizContainer );
             this.buildWidget( $vizContainer , seriesParams);
         },
 
         buildWidget: function($containerDiv, seriesParams){
-            var growthParamNames = {
+            const growthParamNames = {
                 "growth_rate": "Growth rate",
                 "max_growth": "Max growth",
                 "lag_phase":  "Lag phase",
                 "area_under_curve": "Area under curve"
             };
 
-            var growthParamType = this.options.growthParam;
-            var growthParamName = growthParamNames[growthParamType];
-            var conditionParamX = this.options.conditionParam;
+            const growthParamType = this.options.growthParam;
+            const growthParamName = growthParamNames[growthParamType];
+            const conditionParamX = this.options.conditionParam;
 
             this.buildPlot($containerDiv, growthParamType, growthParamName, seriesParams, conditionParamX);
         },
 
         buildPlot: function($containerDiv, growthParamType, growthParamName, seriesParams, conditionParamX){
-            var self = this;
+            const self = this;
 
-            var xyeValues = [];
-            var conditionParamXUnit;
+            const xyeValues = [];
+            let conditionParamXUnit;
 
-            var filters = self.options.conditionFilter;
+            const filters = self.options.conditionFilter;
 
             // iterate over all series
             for(var i in seriesParams){
-                var seriesParam = seriesParams[i];
-                var samples = seriesParam.samples;
+                const seriesParam = seriesParams[i];
+                const samples = seriesParam.samples;
 
                 // Check all properties
-                var filterPassed = true;
+                let filterPassed = true;
                 var value = null;
-                var unit = null;
+                let unit = null;
 
-                for(var conditionName in seriesParam.conditionHash){
-                    var pv = seriesParam.conditionHash[conditionName];
+                for(const conditionName in seriesParam.conditionHash){
+                    const pv = seriesParam.conditionHash[conditionName];
                     if(conditionName == conditionParamX){
                         value = pv.property_value;
                         unit = pv.property_unit;
@@ -102,16 +102,16 @@ define (
             // Sort by xvalues
             if(conditionParamXUnit != null && conditionParamXUnit != ""){
                 // If unit is provided we expect that it x values are numeric
-                xyeValues.sort(function(a, b) { return a.x - b.x;});
+                xyeValues.sort((a, b) => { return a.x - b.x;});
             } else{
-                xyeValues.sort(function(a, b) { return a.x > b.x ? 1 : -1});
+                xyeValues.sort((a, b) => { return a.x > b.x ? 1 : -1});
             }
 
 
             // Build xValue and yValues arrays
-            var xValues = [];
-            var yValues = [];
-            var yErrors = [];
+            const xValues = [];
+            const yValues = [];
+            const yErrors = [];
             for(var i in xyeValues){
                 xValues.push(xyeValues[i].x);
                 yValues.push(xyeValues[i].y);
@@ -120,7 +120,7 @@ define (
 
 
             // Build track
-            var data = [];
+            const data = [];
             data.push({
                     x : xValues,
                     y : yValues,
@@ -137,11 +137,11 @@ define (
             });
 
             // Build title
-            var title = growthParamName;
+            let title = growthParamName;
             if(filters && Object.keys(filters).length > 0){
                 title += '<br><span style="font-size:0.8em; font-style: italic">constrained parameteres: ';
                 var i = 0;
-                for(var param in filters){
+                for(const param in filters){
                     var value = filters[param];
                     if(i > 0){
                         title += ', ';
@@ -152,7 +152,7 @@ define (
                 title += "</span>";
             }
 
-            var layout = {
+            const layout = {
                 autosize: true,
                 margin: {
                     l: 50,

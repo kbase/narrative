@@ -38,7 +38,7 @@
 */
 
 define(['kbwidget', 'jquery', 'bootstrap'],
-function(KBWidget, $, bootstrap) {
+(KBWidget, $, bootstrap) => {
 
     return KBWidget({
         name: "kbaseTabTableTabs",
@@ -47,11 +47,11 @@ function(KBWidget, $, bootstrap) {
 
             this._super(options);
             if (!options) options = {};
-            var container = this.$elem;
-            var self = this;
+            const container = this.$elem;
+            const self = this;
 
-            var tabs = $('<ul class="nav nav-'+(options.pills ? 'pills' : 'tabs')+'">');
-            var tab_contents = $('<div class="tab-content">');
+            const tabs = $('<ul class="nav nav-'+(options.pills ? 'pills' : 'tabs')+'">');
+            const tab_contents = $('<div class="tab-content">');
             container.append(tabs, tab_contents);
 
             // adds a single tab and content
@@ -60,8 +60,8 @@ function(KBWidget, $, bootstrap) {
                 if ( tabs.find('a[data-id="'+p.name+'"]').length > 0)
                     return;
 
-                var tab = $('<li class="'+(p.active ? 'active' :'')+'">');
-                var tab_link = $('<a data-toggle="tab" data-id="'+p.name+'">'+p.name+'</a>');
+                const tab = $('<li class="'+(p.active ? 'active' :'')+'">');
+                const tab_link = $('<a data-toggle="tab" data-id="'+p.name+'">'+p.name+'</a>');
 
                 // animate by sliding tab up
                 if (p.animate === false) {
@@ -75,23 +75,23 @@ function(KBWidget, $, bootstrap) {
 
                 // add close button if needed
                 if (p.removable || options.removable) {
-                    var rm_btn = $('<span class="glyphicon glyphicon-remove">');
+                    const rm_btn = $('<span class="glyphicon glyphicon-remove">');
                     tab_link.append(rm_btn);
 
-                    rm_btn.click(function(e) {
+                    rm_btn.click((e) => {
                         self.rmTab(p.name)
                     })
                 }
 
                 // add content pane
-                var c = $('<div class="tab-pane '+(p.active ? 'active' :'')+'" data-id="'+p.name+'">')
+                const c = $('<div class="tab-pane '+(p.active ? 'active' :'')+'" data-id="'+p.name+'">')
                 c.append((p.content ? p.content : ''))
                 tab_contents.append(c);
 
                 tab.click(function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    var id = $(this).find('a').data('id');
+                    const id = $(this).find('a').data('id');
                     self.showTab(id);
                 })
 
@@ -100,8 +100,8 @@ function(KBWidget, $, bootstrap) {
 
             // remove tab and tab content
             this.rmTab = function(name) {
-                var tab = tabs.find('a[data-id="'+name+'"]').parent('li');
-                var tab_content = tab_contents.children('[data-id="'+name+'"]')
+                const tab = tabs.find('a[data-id="'+name+'"]').parent('li');
+                const tab_content = tab_contents.children('[data-id="'+name+'"]')
 
                 // get previous or next tab
                 if (tab.next().length > 0)
@@ -129,7 +129,7 @@ function(KBWidget, $, bootstrap) {
 
             // adds content to existing tab pane; useful for ajax
             this.addContent = function(p) {
-                var c = tab_contents.children('[data-id="'+p.name+'"]')
+                const c = tab_contents.children('[data-id="'+p.name+'"]')
                 c.append((p.content ? p.content : ''));
 
                 return c;
@@ -151,8 +151,8 @@ function(KBWidget, $, bootstrap) {
             // if tabs are supplied, add them
             // don't animate intial tabs
             if ('tabs' in options) {
-                for (var i in options.tabs) {
-                    var p = $.extend(options.tabs[i], {animate: false})
+                for (const i in options.tabs) {
+                    const p = $.extend(options.tabs[i], {animate: false})
                     this.addTab(p)
                 }
             }

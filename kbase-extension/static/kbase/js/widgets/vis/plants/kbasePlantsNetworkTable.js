@@ -10,13 +10,13 @@ define (
 		'jquery',
 		'kbaseIrisWidget',
 		'kbaseTable'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		kbaseIrisWidget,
 		kbaseTable
-	) {
+	) => {
         return KBWidget(
         {
 
@@ -46,21 +46,21 @@ define (
 
                 $elem.empty();
 
-                var $self = this;
+                const $self = this;
 
                 if (this.input() == undefined) {
                     this.setError("Cannot use network table widget w/o input file");
                 }
                 else {
-                    var input = this.input();
+                    const input = this.input();
 
                     if (input.length > 0) {
 
-                        var $checkbox = $.jqElem('input')
+                        const $checkbox = $.jqElem('input')
                             .attr('type', 'checkbox')
                         ;
 
-                        var data = {
+                        const data = {
                             structure : {
                                 header      : [
                                     {
@@ -113,15 +113,15 @@ define (
                             row_callback : function (cell, header, row, $kb) {
 
                                 if (header == 'description') {
-                                    var def = $kb.default_row_callback(cell, header, row, $kb);
+                                    const def = $kb.default_row_callback(cell, header, row, $kb);
 
                                     if (def.length < 12) {
                                         return def;
                                     }
 
-                                    var max = '18px';
+                                    const max = '18px';
 
-                                    var $div = $.jqElem('div')
+                                    const $div = $.jqElem('div')
                                         .css({'max-height' : max, 'overflow' : 'hidden', display : 'inline-block'})
                                         .attr('class', 'truncated')
                                         .append(def);
@@ -152,13 +152,13 @@ define (
                         ];*/
 
 
-                        var colorCats = d3.scale.category20();
+                        const colorCats = d3.scale.category20();
 
                         $.each(
                             input,
-                            function (ridx, row) {
+                            (ridx, row) => {
 
-                                var checkbox = {
+                                const checkbox = {
                                     externalSortValue : true,
                                     value : $checkbox.clone(),
                                     sortValue : false,
@@ -167,7 +167,7 @@ define (
                                             $checkbox.on('click',
                                                 function(e) {
 
-                                                    var $check = this;
+                                                    const $check = this;
                                                     //not that we should be able to be here w/o a graph, but just in case.
                                                     if ($self.networkGraph == undefined) {
                                                         return;
@@ -175,7 +175,7 @@ define (
 
                                                     cell.sortValue = $check.checked;
 
-                                                    var dataset = $self.networkGraph().dataset();
+                                                    let dataset = $self.networkGraph().dataset();
 
                                                     if (dataset == undefined) {
                                                         dataset = {
@@ -184,20 +184,20 @@ define (
                                                         };
                                                     }
 
-                                                    var newDataset = {
+                                                    const newDataset = {
                                                         nodes : [],
                                                         edges : []
                                                     };
 
-                                                    var activeNodes = {};
-                                                    var activeEdges = {};
+                                                    const activeNodes = {};
+                                                    const activeEdges = {};
 
                                                     //first thing we do is pull over all the existing nodes/edges
                                                     //only copy from our network if we're checked (not really possible)
                                                     //otherwise, copy all the other networks.
                                                     $.each(
                                                         dataset.nodes,
-                                                        function(idx, node) {
+                                                        (idx, node) => {
                                                             if (node.activeDatasets[row.datasetID] && ! $check.checked) {
                                                                 delete node.activeDatasets[row.datasetID];
                                                             }
@@ -211,7 +211,7 @@ define (
 
                                                     $.each(
                                                         dataset.edges,
-                                                        function(idx, edge) {
+                                                        (idx, edge) => {
                                                             if (edge.activeDatasets[row.datasetID] && ! $check.checked) {
                                                                 delete edge.activeDatasets[row.datasetID];
                                                             }
@@ -229,7 +229,7 @@ define (
 
                                                         $.each(
                                                             row.nodes,
-                                                            function (idx, node) {
+                                                            (idx, node) => {
                                                                 node.activeDatasets[row.datasetID] = 1;
                                                                 if (! activeNodes[node.name]) {
                                                                     newDataset.nodes.push(node);
@@ -242,11 +242,11 @@ define (
                                                             }
                                                         );
 
-                                                        var color = colorCats(ridx % 20);
+                                                        const color = colorCats(ridx % 20);
 
                                                         $.each(
                                                             row.edges,
-                                                            function (idx, edge) {
+                                                            (idx, edge) => {
                                                                 edge.activeDatasets[row.datasetID] = 1;
                                                                 edge.color = color;
                                                                 if (! activeEdges[edge.name]) {
@@ -259,7 +259,7 @@ define (
 
                                                     $.each(
                                                         newDataset.nodes,
-                                                        function (idx, node) {
+                                                        (idx, node) => {
                                                             node.label = '<b>' + node.name + '</b>'
                                                                 + '<hr>' + node.func
                                                                 + '<hr>'
@@ -272,7 +272,7 @@ define (
 
                                                     $.each(
                                                         newDataset.edges,
-                                                        function (idx, edge) {
+                                                        (idx, edge) => {
                                                             //edge.label = '<b>' + edge.description + '</b>'
                                                             //    + '<hr>'
                                                             edge.label = '<b>Dataset source for this edge:</b><br>'
@@ -317,11 +317,11 @@ define (
                             }
                         );
 
-                        var $tbl = $.jqElem('div').kbaseTable(data);
+                        const $tbl = $.jqElem('div').kbaseTable(data);
                         $tbl.sort('num_nodes', -1);
                         $tbl.$elem.css('font-size' , '85%');
 
-                        var max = '18px';
+                        const max = '18px';
                         $tbl.$elem.find('tr')
                             .on('mouseover', function(e) {
                                 $(this).find('.truncated').css('max-height', '');

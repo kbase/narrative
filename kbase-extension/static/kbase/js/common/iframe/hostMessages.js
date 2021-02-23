@@ -1,13 +1,13 @@
 define([
     'bluebird',
     'uuid'
-], function (
+], (
     Promise,
     Uuid
-) {
+) => {
     'use strict';
     function factoryHost(config) {
-        var awaitingResponse = {},
+        let awaitingResponse = {},
             listeners = {},
             lastId = 0,  
             sentCount = 0,
@@ -15,7 +15,7 @@ define([
             root = config.root,
             name = config.name;
 
-        var serviceId = new Uuid(4).format();
+        const serviceId = new Uuid(4).format();
 
 
         function genId() {
@@ -23,7 +23,7 @@ define([
             return 'msg_' + String(lastId);
         }
         
-        var partners = {};
+        const partners = {};
         function addPartner(config) {
             partners[config.name] = config;
         }
@@ -36,7 +36,7 @@ define([
         }
 
         function receiveMessage(event) {
-            var origin = event.origin || event.originalEvent.origin,
+            let origin = event.origin || event.originalEvent.origin,
                 message = event.data,
                 listener, response;
 
@@ -62,7 +62,7 @@ define([
             }
 
             if (listeners[message.name]) {
-                listeners[message.name].forEach(function (listener) {
+                listeners[message.name].forEach((listener) => {
                     try {
                         listener.handler(message, event);
                         return;
@@ -75,7 +75,7 @@ define([
         }
         
         function getPartner(name) {
-            var partner = partners[name];
+            const partner = partners[name];
             if (!partner) {
                 throw new Error('Partner ' + name + ' not registered');
             }
@@ -83,7 +83,7 @@ define([
         }
 
         function sendMessage(partnerName, message) {
-            var partner = getPartner(partnerName);
+            const partner = getPartner(partnerName);
             message.from = name;
             message.address = {
                 to: partner.serviceId,
@@ -93,7 +93,7 @@ define([
         }
 
         function sendRequest(partnerName, message, handler) {
-            var id = genId();
+            const id = genId();
             message.id = id;
             awaitingResponse[id] = {
                 started: new Date(),
@@ -103,8 +103,8 @@ define([
         }
         
         function request(partnerName, message) {
-            return new Promise(function (resolve, reject) {
-                sendRequest(partnerName, message, function (response) {
+            return new Promise((resolve, reject) => {
+                sendRequest(partnerName, message, (response) => {
                     resolve(response);
                 });
             });

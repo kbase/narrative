@@ -11,7 +11,7 @@ define (
 		'kbaseNarrativeInput',
 		'kbaseNarrativeParameterTextInput',
 		'kbase-client-api'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -21,7 +21,7 @@ define (
 		kbaseNarrativeInput,
 		kbaseNarrativeParameterTextInput,
 		kbase_client_api
-	) {
+	) => {
     'use strict';
     return KBWidget({
         name: 'kbaseInputTest',
@@ -39,7 +39,7 @@ define (
         render: function (options) {
             this.wsClient = new Workspace(Config.url('workspace'), { token:this.authToken() });
 
-            var $mediaChooserPanel = $('<div>');
+            const $mediaChooserPanel = $('<div>');
             this.$mediaDisplayPanel = $('<div>');
 
              this.$elem.append($mediaChooserPanel)
@@ -61,10 +61,10 @@ define (
             // Simple listener that just plops the input value in this panel.
             // Listener gets triggered whenever anything in the chooser widget
             // changes.
-            this.mediaChooserWidget.addInputListener(function() {
-                var mediaName = this.mediaChooserWidget.getParameterValue();
+            this.mediaChooserWidget.addInputListener(() => {
+                const mediaName = this.mediaChooserWidget.getParameterValue();
                 this.updateDisplayPanel(mediaName);
-            }.bind(this));
+            });
         },
 
         /**
@@ -92,10 +92,10 @@ define (
                     workspace: Jupyter.narrative.getWorkspaceName(),  // sneaky fetch code I put in last week. look in the kbaseNarrative.js module for more
                     name: mediaObject
                 }]))
-                .then(function(objects) {
+                .then((objects) => {
                     console.log(objects);
                 })
-                .catch(function(error) {
+                .catch((error) => {
                     console.error(error);
                 });
             }
@@ -177,11 +177,11 @@ define (
          * red (see kbaseNarrativeMethodInput for default styles).
          */
         isValid: function() {
-            var isValidRet = { isValid:true, errormssgs: [] };
-            var paramStatus = this.mediaChooserWidget.isValid();
+            const isValidRet = { isValid:true, errormssgs: [] };
+            const paramStatus = this.mediaChooserWidget.isValid();
             if (!paramStatus.isValid()) {
                 isValidRet.isValid = false;
-                for (var i=0; i<paramStatus.errormssgs.length; i++) {
+                for (let i=0; i<paramStatus.errormssgs.length; i++) {
                     isValidRet.errormssgs.push(paramStatus.errormssgs[i]);
                 }
             }

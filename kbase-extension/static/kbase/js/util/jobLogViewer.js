@@ -16,7 +16,7 @@ define([
     'common/fsm',
     'kb_common/html',
     'css!kbase/css/kbaseJobLog.css'
-], function(
+], (
     Promise,
     Runtime,
     Props,
@@ -24,7 +24,7 @@ define([
     Events,
     Fsm,
     html
-) {
+) => {
     'use strict';
 
     let t = html.tag,
@@ -381,7 +381,7 @@ define([
             if (looping || stopped) {
                 return;
             }
-            var state = fsm.getCurrentState().state;
+            const state = fsm.getCurrentState().state;
             if (state.mode === 'active' && state.auto) {
                 looping = true;
                 fsm.newState({ mode: 'active', auto: true });
@@ -441,7 +441,7 @@ define([
             // only while job is running
             // load numLines at a time
             // otherwise load entire log
-            let autoState = fsm.getCurrentState().state.auto;
+            const autoState = fsm.getCurrentState().state.auto;
             scrollToEndOnNext = true;
             awaitingLog = true;
             ui.showElement('spinner');
@@ -684,7 +684,7 @@ define([
         function handleJobStatusUpdate(message) {
             // if the job is finished, we don't want to reflect
             // this in the ui, and disable play/stop controls.
-            var jobStatus = message.jobState.status,
+            let jobStatus = message.jobState.status,
                 mode = fsm.getCurrentState().state.mode,
                 newState;
             switch (mode) {
@@ -834,10 +834,10 @@ define([
             fsm.newState({ mode: 'job-not-found' });
         }
 
-        var externalEventListeners = [];
+        const externalEventListeners = [];
 
         function startEventListeners() {
-            var ev;
+            let ev;
 
             ev = runtime.bus().listen({
                 channel: {
@@ -872,7 +872,7 @@ define([
                     awaitingLog = false;
 
                     if (message.logs.lines.length !== 0) {
-                        const viewLines = message.logs.lines.map(function(line, index) {
+                        const viewLines = message.logs.lines.map((line, index) => {
                             return {
                                 text: line.line,
                                 isError: (line.is_error === 1 ? true : false),
@@ -938,7 +938,7 @@ define([
 
         function stopEventListeners() {
             if (externalEventListeners) {
-                externalEventListeners.forEach(function(ev) {
+                externalEventListeners.forEach((ev) => {
                     runtime.bus().removeListener(ev);
                 });
             }
@@ -946,24 +946,24 @@ define([
 
         // LIFECYCLE API
         function renderFSM() {
-            var state = fsm.getCurrentState();
+            const state = fsm.getCurrentState();
 
             // Button state
             if (state.ui.buttons) {
-                state.ui.buttons.enabled.forEach(function(button) {
+                state.ui.buttons.enabled.forEach((button) => {
                     ui.enableButton(button);
                 });
-                state.ui.buttons.disabled.forEach(function(button) {
+                state.ui.buttons.disabled.forEach((button) => {
                     ui.disableButton(button);
                 });
             }
 
             // Element state
             if (state.ui.elements) {
-                state.ui.elements.show.forEach(function(element) {
+                state.ui.elements.show.forEach((element) => {
                     ui.showElement(element);
                 });
-                state.ui.elements.hide.forEach(function(element) {
+                state.ui.elements.hide.forEach((element) => {
                     ui.hideElement(element);
                 });
             }
@@ -1002,26 +1002,26 @@ define([
                 }
             });
             fsm.start();
-            fsm.bus.on('on-active', function() {
+            fsm.bus.on('on-active', () => {
                 startAutoFetch();
             });
-            fsm.bus.on('exit-active', function() {
+            fsm.bus.on('exit-active', () => {
                 stopAutoFetch();
             });
-            fsm.bus.on('on-canceled', function() {
+            fsm.bus.on('on-canceled', () => {
                 requestLatestJobLog();
                 stopJobUpdates();
             });
-            fsm.bus.on('exit-canceled', function() {
+            fsm.bus.on('exit-canceled', () => {
                 //  nothing to do?
             });
-            fsm.bus.on('on-queued', function(message) {
+            fsm.bus.on('on-queued', (message) => {
                 doOnQueued(message);
             });
-            fsm.bus.on('exit-queued', function(message) {
+            fsm.bus.on('exit-queued', (message) => {
                 doExitQueued(message);
             });
-            fsm.bus.on('on-job-not-found', function(message) {
+            fsm.bus.on('on-job-not-found', (message) => {
                 doJobNotFound(message);
             });
         }
@@ -1049,7 +1049,7 @@ define([
          */
         function start(arg) {
             detach();  // if we're alive, remove ourselves before restarting
-            var hostNode = arg.node;
+            const hostNode = arg.node;
             if (!hostNode) {
                 throw new Error('Requires a node to start');
             }
@@ -1061,7 +1061,7 @@ define([
             container = hostNode.appendChild(document.createElement('div'));
             ui = UI.make({ node: container });
 
-            var layout = renderLayout();
+            const layout = renderLayout();
             container.innerHTML = layout.content;
             layout.events.attachEvents(container);
 

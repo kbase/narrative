@@ -1,10 +1,10 @@
 /*global define */
 /*jslint white:true,browser:true*/
-define(['jquery', 'bluebird', './exceptions'], function ($, Promise, exceptions) {
+define(['jquery', 'bluebird', './exceptions'], ($, Promise, exceptions) => {
     'use strict';
 
     function request(url, method, params, numRets, options) {
-        var rpc = {
+        let rpc = {
             params: params,
             method: method,
             version: '1.1',
@@ -22,7 +22,7 @@ define(['jquery', 'bluebird', './exceptions'], function ($, Promise, exceptions)
             };
         }
         
-        return new Promise(function (resolve, reject) {
+        return new Promise((resolve, reject) => {
             $.ajax({
                 url: url,
                 dataType: 'text',
@@ -33,7 +33,7 @@ define(['jquery', 'bluebird', './exceptions'], function ($, Promise, exceptions)
                 timeout: options.timeout,
                 success: function (data) {
                     try {
-                        var resp = JSON.parse(data);
+                        const resp = JSON.parse(data);
                         // Is this a good idea?
                         if (numRets === 1) {
                             resolve(resp.result[0]);
@@ -47,7 +47,7 @@ define(['jquery', 'bluebird', './exceptions'], function ($, Promise, exceptions)
                 error: function (xhr, textStatus) {
                     if (xhr.responseText) {
                         try {
-                            var resp = JSON.parse(xhr.responseText);
+                            const resp = JSON.parse(xhr.responseText);
                             // error = resp.error;
                             // This is an error response with a valid error json response.
                             // TODO: this should really never occur. A valid jsonrpc error

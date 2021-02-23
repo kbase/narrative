@@ -61,39 +61,39 @@ define ([
         },
 
         loadData: function() {
-            var self = this;
+            const self = this;
             self.ws.get_objects2({objects: [{ref: self.options.obj_ref}]},
-                function(ret) {
+                (ret) => {
                     self.parseObj(ret.data[0].data);
                 },
-                function(error) {
+                (error) => {
                     self.loading(true);
                     self.renderError(error);
 
                 });
         },
         parseObj: function(ws_obj) {
-            var self = this;
-            var cols = [{title: 'ID'}];
-            var rows;
+            const self = this;
+            const cols = [{title: 'ID'}];
+            let rows;
             // Back compatible with ConditionSets
             if (typeof ws_obj.factors !== 'undefined') {
-                ws_obj.factors.forEach(function(factor){
+                ws_obj.factors.forEach((factor)=> {
                     cols.push({title: factor.factor});
                 });
             } else if (typeof ws_obj.attributes !== 'undefined') {
-                ws_obj.attributes.forEach(function(attributes){
+                ws_obj.attributes.forEach((attributes)=> {
                     cols.push({title: attributes.attribute});
                 });
             }
 
             // Back compatible with ConditionSets
             if (typeof ws_obj.conditions !== 'undefined') {
-                rows = Object.keys(ws_obj.conditions).map(function (_id) {
+                rows = Object.keys(ws_obj.conditions).map((_id) => {
                     return [_id].concat(ws_obj.conditions[_id]);
                 });
             } else if (typeof ws_obj.instances !== 'undefined') {
-                rows = Object.keys(ws_obj.instances).map(function (_id) {
+                rows = Object.keys(ws_obj.instances).map((_id) => {
                     return [_id].concat(ws_obj.instances[_id]);
                 });
             }
@@ -104,7 +104,7 @@ define ([
 
         $tableDiv : null,
         renderTable: function(rows, cols) {
-            var self = this;
+            const self = this;
 
             if(!self.$tableDiv) {
                 self.$tableDiv = $('<div>').css({'margin':'5px'});
@@ -113,10 +113,10 @@ define ([
 
             self.$tableDiv.empty();
 
-            var $tbl = $('<table>').addClass('table table-bordered table-striped');
+            const $tbl = $('<table>').addClass('table table-bordered table-striped');
             self.$tableDiv.append($tbl);
 
-            var tblSettings = {
+            const tblSettings = {
                 scrollX: true,
                 scrollCollapse: true,
                 paging: true,
@@ -126,18 +126,18 @@ define ([
                 columns: cols,
                 data: rows
             };
-            var ConditionsTable = $tbl.DataTable(tblSettings);
+            const ConditionsTable = $tbl.DataTable(tblSettings);
             //ConditionsTable.draw();
         },
 
         renderError: function(error) {
-            var errString = 'Sorry, an unknown error occurred';
+            let errString = 'Sorry, an unknown error occurred';
             if (typeof error === 'string')
                 errString = error;
             else if (error.error && error.error.message)
                 errString = error.error.message;
 
-            var $errorDiv = $('<div>')
+            const $errorDiv = $('<div>')
                 .addClass('alert alert-danger')
                 .append('<b>Error:</b>')
                 .append('<br>' + errString);
@@ -153,7 +153,7 @@ define ([
         },
 
         showMessage: function(message) {
-            var span = $('<span/>').append(message);
+            const span = $('<span/>').append(message);
 
             this.$messagePane.append(span);
             this.$messagePane.show();

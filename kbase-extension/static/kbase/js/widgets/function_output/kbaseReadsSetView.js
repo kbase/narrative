@@ -9,7 +9,7 @@ define ([
     'narrativeConfig',
     'bluebird',
     'numeral',
-], function(
+], (
     KBWidget,
     $,
     SetAPI_client_api,
@@ -20,7 +20,7 @@ define ([
     Config,
     Promise,
     Numeral
-) {
+) => {
     'use strict';
 
     return KBWidget({
@@ -30,7 +30,7 @@ define ([
         options: {},
         loadingImage: Config.get('loading_gif'),
         init: function (options) {
-            var $self = this;
+            const $self = this;
             $self._super(options);
 
             /* Setup default data for the overview tab */
@@ -70,39 +70,39 @@ define ([
                 'ref': $self.obj_ref,
                 'include_item_info': 1
             }))
-                .then(function (results) {
-                    var info = results.info;
-                    var items = results.data.items;
+                .then((results) => {
+                    const info = results.info;
+                    const items = results.data.items;
                     $self.update_overview_info_from_ws_info(info);
 
                     $self.set_items = [];
 
                     /* return null if not an int */
-                    var asInt = function(string_number) {
+                    const asInt = function(string_number) {
                         if (string_number === null)
                             return null;
-                        var value = string_number.toString().match(/^\d+$/);
+                        let value = string_number.toString().match(/^\d+$/);
                         if (value) {
                             value = parseInt(value[0]);
                         }
                         return value;
                     };
 
-                    var total_reads = 0;
+                    let total_reads = 0;
 
                     // pull all reads objects to calculate summary stats
                     // and individual browse row contents
-                    for (var i = 0; i < items.length; i++) {
-                        var lib = items[i];
+                    for (let i = 0; i < items.length; i++) {
+                        const lib = items[i];
 
-                        var readLibData = {
+                        const readLibData = {
                             'ref': lib['ref'],
                             'label': lib['label'],
                             'n_reads': ''
                         };
                         readLibData['name'] = '<a href="/#dataview/' +lib['ref'] + '" target="_blank">' +
                                                 lib['info'][1] + '</a>';
-                        var readMetadata = lib['info'][10];
+                        const readMetadata = lib['info'][10];
                         if (readMetadata['read_count']) {
                             if (asInt(readMetadata['read_count'])) {
                                 readLibData['n_reads'] = readMetadata['read_count'];
@@ -122,9 +122,9 @@ define ([
 
                     $self.render();
                 })
-                .catch(function (error) {
+                .catch((error) => {
                     console.error("READSSET VIEWER Render Function Error : ", error);
-                    var errorMssg = '';
+                    let errorMssg = '';
                     if (error && typeof error === 'object'){
                         if(error.error) {
                             errorMssg = JSON.stringify(error.error);
@@ -146,11 +146,11 @@ define ([
         /* the narrative provides info differently from WS, so we need two functions.
         these could be combined for cleaner code */
         update_overview_info_from_nar_info: function(info) {
-            var $self = this;
+            const $self = this;
             $self.set_overview.link_ref = info['ws_id'] + '/' + info['name'] + '/' + info['version'];
             $self.set_overview.name = info['name'];
 
-            var metadata = info['meta'];
+            const metadata = info['meta'];
             if(metadata) {
                 if(metadata['description']) {
                     $self.set_overview.description = metadata['description'];
@@ -162,11 +162,11 @@ define ([
         },
 
         update_overview_info_from_ws_info: function(info) {
-            var $self = this;
+            const $self = this;
             $self.set_overview.link_ref = info[6] + '/' + info[1] + '/' + info[4];
             $self.set_overview.name = info[1];
 
-            var metadata = info[10];
+            const metadata = info[10];
             if(metadata) {
                 if(metadata['description']) {
                     $self.set_overview.description = metadata['description'];
@@ -179,7 +179,7 @@ define ([
 
 
         render: function () {
-            var $self = this,
+            const $self = this,
                 $container = this.$elem,
                 tab_ids = {
                     'overview': 'reads-set-overview-' + $self.get_uuid4(),
@@ -193,7 +193,7 @@ define ([
                 row = {'read_count': null, 'read_size': null, 'insert_size_mean': null};
 
             $container.empty();
-            var $overviewTable = $('<table>')
+            const $overviewTable = $('<table>')
                                         .addClass('table table-striped table-bordered table-hover')
                                         .css({'margin-left':'auto', 'margin-right':'auto'})
                                         .css({'word-wrap':'break-word', 'table-layout':'fixed'})
@@ -224,7 +224,7 @@ define ([
                          .append($('<div>').css('margin-top','15px')
                             .append($overviewTable)));
 
-            var $browseTable = $('<table>')
+            const $browseTable = $('<table>')
                                         .addClass('table table-striped table-bordered table-hover')
                                         .css({'margin-left':'auto', 'margin-right':'auto', 'width':'100%', 'border': '1px solid #ddd'})
                                         .css({'word-wrap':'break-word'});
@@ -233,13 +233,13 @@ define ([
                          .append($('<div>').css({'margin-top':'15px', 'margin-bottom':'20px'})
                             .append($browseTable)));
 
-            var libsPerPage = 10;
-            var sDom = 'lft<ip>';
+            const libsPerPage = 10;
+            let sDom = 'lft<ip>';
             if($self.set_items.length<libsPerPage) {
                 sDom = 'fti';
             }
 
-            var browseTableSettings = {
+            const browseTableSettings = {
                     "bFilter": true,
                     "sPaginationType": "full_numbers",
                     "iDisplayLength": 10,
@@ -267,8 +267,8 @@ define ([
             $container.append($divs);
         },
         get_uuid4: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                 var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+                 const r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                  return v.toString(16);
             });
         }

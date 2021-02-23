@@ -80,8 +80,8 @@
       The number of miliseconds in between keystrokes the navigation callback method will wait for new keystrokes before sending the full request. Default is 1000 (one second).
 */
 (function () {
-    var root = this;
-    var standaloneListselect = root.standaloneListselect = {
+    const root = this;
+    const standaloneListselect = root.standaloneListselect = {
 	about: {
 	    name: "listselect",
 	    title: "List Select",
@@ -125,11 +125,11 @@
         },
 
 	create: function (params) {
-	    var renderer = this;
+	    const renderer = this;
 	    if (! window.hasOwnProperty('rendererListselect')) {
 		window.rendererListselect = [];
 	    }
-	    var instance = { settings: {},
+	    const instance = { settings: {},
 			     index: params.index };
 	    jQuery.extend(true, instance, renderer);
 	    jQuery.extend(true, instance.settings, renderer.about.defaults, params);
@@ -139,15 +139,15 @@
 	},
 
 	render: function (index) {
-	    var renderer = rendererListselect[index];
+	    const renderer = rendererListselect[index];
 	    
 	    if (renderer.settings.navigation_url) {
 		renderer.settings.navigation_callback = renderer.update_data;
 	    }
 
 	    // get the target div
-	    var target = renderer.settings.target;
-	    var tstyle = 'background-image: linear-gradient(to bottom, #FAFAFA, #F2F2F2); background-repeat: repeat-x; border: 1px solid #D4D4D4; border-radius: 4px 4px 4px 4px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.067); padding-left: 10px; padding-top: 10px; width: ';
+	    const target = renderer.settings.target;
+	    let tstyle = 'background-image: linear-gradient(to bottom, #FAFAFA, #F2F2F2); background-repeat: repeat-x; border: 1px solid #D4D4D4; border-radius: 4px 4px 4px 4px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.067); padding-left: 10px; padding-top: 10px; width: ';
 	    if (renderer.settings.multiple) {
 		tstyle += renderer.settings.extra_wide ? '1010px;' : '600px;';
 	    } else if (renderer.settings.no_button) {
@@ -164,9 +164,9 @@
 	    }
 
 	    // get the selection list
-	    var selection_list = document.createElement('select');
+	    const selection_list = document.createElement('select');
 	    if (typeof renderer.settings.navigation_callback == "function") {
-		selection_list.addEventListener('scroll', function(event) {
+		selection_list.addEventListener('scroll', (event) => {
 		    event = event || window.event;
 		    if (event.target.scrollTop == event.target.scrollTopMax) {
 			rendererListselect[index].settings.scroll_position = event.target.scrollTop;
@@ -184,15 +184,15 @@
 	    renderer.redrawSelection(selection_list, index);
 
 	    // create a filter box
-	    var filter = document.createElement('div');
-	    var filter_grp = document.createElement('div');
+	    const filter = document.createElement('div');
+	    const filter_grp = document.createElement('div');
 	    filter_grp.setAttribute('class', 'input-append');
-	    var filter_input = document.createElement('input');
+	    const filter_input = document.createElement('input');
 	    filter_input.setAttribute('type', 'text');
 	    filter_input.setAttribute('style', renderer.settings.extra_wide ? 'width: 205px;' : 'width: 122px;');
 	    filter_input.setAttribute('placeholder', 'Enter filter');
 	    filter_input.setAttribute('value', renderer.settings.filter_value);
-	    filter_input.addEventListener('keyup', function (event) {
+	    filter_input.addEventListener('keyup', (event) => {
 		if (event.keyCode == 13) {
 		    rendererListselect[index].addBreadcrumb(index);
 		    return;
@@ -207,17 +207,17 @@
 		    }
 		}
 	    });
-	    var filter_surround = document.createElement('div');
+	    const filter_surround = document.createElement('div');
 	    filter_surround.setAttribute('class', 'btn-group');
-	    var filter_select = document.createElement('button');
+	    const filter_select = document.createElement('button');
 	    filter_select.setAttribute('class', 'btn dropdown-toggle');
 	    filter_select.setAttribute('style', (renderer.settings.extra_wide ? 'width: 210px;' : 'width: 85px;') + ' text-align: right;');
 	    filter_select.setAttribute('data-toggle', 'dropdown');
 	    filter_select.innerHTML = renderer.settings.filter_attribute + ' <span class="caret"></span>';
-	    var filter_list = document.createElement('ul');
+	    const filter_list = document.createElement('ul');
 	    filter_list.setAttribute('class', 'dropdown-menu');
 	    filter_list.setAttribute('style', renderer.settings.extra_wide ? 'max-height: 200px; overflow: auto;' : 'max-height: 200px; overflow: auto;');
-	    var filter_string = '';
+	    let filter_string = '';
 	    for (var i=0; i<renderer.settings.filter.length; i++) {
 		filter_string += '<li><a onclick="rendererListselect['+renderer.index+'].settings.filter_value=\'\';rendererListselect['+renderer.index+'].settings.filter_attribute=this.innerHTML.slice(0, -1);rendererListselect['+renderer.index+'].render('+renderer.index+');" style="cursor: pointer;">'+renderer.settings.filter[i]+' </a></li>';
 	    }
@@ -229,10 +229,10 @@
 	    filter.appendChild(filter_grp);
 
 	    // create the filter breadcrumbs
-	    var filter_breadcrumbs = document.createElement('div');
+	    const filter_breadcrumbs = document.createElement('div');
 	    filter_breadcrumbs.setAttribute('style', 'font-size: 9px; position: relative; top: -5px;');
 	    for (var i=0;i<renderer.settings.filter_breadcrumbs.length;i++) {
-		var bc_button = document.createElement('button');
+		const bc_button = document.createElement('button');
 		bc_button.setAttribute('class', "btn btn-mini");
 		bc_button.setAttribute('style', "margin-right: 3px;");
 		bc_button.setAttribute('title', "remove filter");
@@ -259,14 +259,14 @@
 		// create the action buttons
 		var button_span = document.createElement('span');
 		button_span.setAttribute('style', "position: relative; bottom: 100px;");
-		var button_left = document.createElement('a');
+		const button_left = document.createElement('a');
 		button_left.setAttribute('class', 'btn btn-small btn-default');
 		button_left.setAttribute('style', 'position: relative; left: 36px; top: 40px;');
 		button_left.innerHTML = '<i class="fa fa-chevron-left"></i>';
-		button_left.addEventListener('click', function () {
-		    for (var x=0; x<result_list.options.length; x++) {
+		button_left.addEventListener('click', () => {
+		    for (let x=0; x<result_list.options.length; x++) {
 			if (result_list.options[x].selected) {
-			    for (var y=0;y<rendererListselect[index].settings.selection_data.length;y++) {
+			    for (let y=0;y<rendererListselect[index].settings.selection_data.length;y++) {
 				if (rendererListselect[index].settings.selection_data[y][rendererListselect[index].settings.value] == result_list.options[x].value) {
 				    rendererListselect[index].settings.selection_data.splice(y,1);
 				    break;
@@ -279,15 +279,15 @@
 		    rendererListselect[index].redrawResultlist(result_list, index);
 		    rendererListselect[index].redrawSelection(selection_list, index);
 		});
-		var button_right = document.createElement('a');
+		const button_right = document.createElement('a');
 		button_right.setAttribute('class', 'btn btn-small btn-default');
 		button_right.setAttribute('style', 'position: relative; right: 36px; bottom: 40px;');
 		button_right.innerHTML = '<i class="fa fa-chevron-right"></i>';
-		button_right.addEventListener('click', function () {
-		    for (var x=0; x<selection_list.options.length; x++) {
+		button_right.addEventListener('click', () => {
+		    for (let x=0; x<selection_list.options.length; x++) {
 			if (selection_list.options[x].selected) {
 			    rendererListselect[index].settings.selection[selection_list.options[x].value] = 1;
-			    for (var y=0;y<rendererListselect[index].settings.data.length;y++) {
+			    for (let y=0;y<rendererListselect[index].settings.data.length;y++) {
 				if (rendererListselect[index].settings.data[y][rendererListselect[index].settings.value] == selection_list.options[x].value) {
 				    rendererListselect[index].settings.selection_data.push(rendererListselect[index].settings.data[y]);
 				    break;
@@ -298,10 +298,10 @@
 		    rendererListselect[index].redrawResultlist(result_list, index);
 		    rendererListselect[index].redrawSelection(selection_list, index);
 		});
-		var button_x = document.createElement('a');
+		const button_x = document.createElement('a');
 		button_x.setAttribute('class', 'btn btn-small btn-default');
 		button_x.innerHTML = '<i class="fa fa-times"></i>';
-		button_x.addEventListener('click', function () {
+		button_x.addEventListener('click', () => {
 		    rendererListselect[index].settings.selection = {};
 		    rendererListselect[index].settings.selection_data = [];
 		    rendererListselect[index].redrawResultlist(result_list, index);
@@ -313,7 +313,7 @@
 
 		// check for a result field
 		if (renderer.settings.result_field) {
-		    var resultField = document.createElement('input');
+		    const resultField = document.createElement('input');
 		    resultField.setAttribute('type', 'text');
 		    resultField.setAttribute('placeholder', renderer.settings.result_field_placeholder);
 		    resultField.value = renderer.settings.result_field_default;
@@ -324,7 +324,7 @@
 	    }
 
 	    // create the submit button
-	    var submit_button = document.createElement('a');
+	    const submit_button = document.createElement('a');
 	    submit_button.setAttribute('class', (renderer.settings.button && renderer.settings.button.class) ? renderer.settings.button.class : 'btn btn-small btn-success');
 	    submit_button.setAttribute('id', 'listselect_submit_button'+index);
 	    submit_button.setAttribute('style', (renderer.settings.button && renderer.settings.button.style) ? renderer.settings.button.style : 'margin-left: 8px; margin-bottom: 8px;');
@@ -332,11 +332,11 @@
 	    if (typeof(renderer.settings.callback) == 'function') {
 	        var index = renderer.index;
 		if (renderer.settings.multiple) {
-		    submit_button.addEventListener('click', function () {
-			var selection_result = [];
+		    submit_button.addEventListener('click', () => {
+			const selection_result = [];
 			if (renderer.settings.return_object) {
 			    for (var x=0; x<result_list.options.length; x++) {
-			        for (var y=0; y<renderer.settings.data.length; y++) {
+			        for (let y=0; y<renderer.settings.data.length; y++) {
                                     if (result_list.options[x].value == renderer.settings.data[y][renderer.settings.value]) {
 					selection_result.push(renderer.settings.data[y]);
 					break;
@@ -348,14 +348,14 @@
 				selection_result.push(result_list.options[x].value);
 		            }
 			}
-			var selection_name = document.getElementById('listselect'+index+'selectionname') ? document.getElementById('listselect'+index+'selectionname').value : "";
+			const selection_name = document.getElementById('listselect'+index+'selectionname') ? document.getElementById('listselect'+index+'selectionname').value : "";
 			rendererListselect[index].settings.callback(selection_result, selection_name);
 		    });
 		} else if (renderer.settings.no_button) {
-		    selection_list.addEventListener('change', function () {
-		        var selection_result;
+		    selection_list.addEventListener('change', () => {
+		        let selection_result;
 		        if (renderer.settings.return_object) {
-			    for (var x=0; x<renderer.settings.data.length; x++) {
+			    for (let x=0; x<renderer.settings.data.length; x++) {
 				if (selection_list.options[selection_list.selectedIndex].value == renderer.settings.data[x][renderer.settings.value]) {
 				    selection_result = renderer.settings.data[x];
 				    break;
@@ -364,14 +364,14 @@
 	                } else {
 			    selection_result = selection_list.options[selection_list.selectedIndex].value;
 	                }
-			var selection_name = document.getElementById('listselect'+index+'selectionname') ? document.getElementById('listselect'+index+'selectionname').value : "";
+			const selection_name = document.getElementById('listselect'+index+'selectionname') ? document.getElementById('listselect'+index+'selectionname').value : "";
 			rendererListselect[index].settings.callback(selection_result, selection_name);
 		    });
 		} else {
-		    submit_button.addEventListener('click', function () {
-			var selection_result;
+		    submit_button.addEventListener('click', () => {
+			let selection_result;
 		        if (renderer.settings.return_object) {
-			    for (var x=0; x<renderer.settings.data.length; x++) {
+			    for (let x=0; x<renderer.settings.data.length; x++) {
 				if (selection_list.options[selection_list.selectedIndex].value == renderer.settings.data[x][renderer.settings.value]) {
 				    selection_result = renderer.settings.data[x];
 				    break;
@@ -380,7 +380,7 @@
 	                } else {
 			    selection_result = selection_list.options[selection_list.selectedIndex].value;
 	                }
-			var selection_name = document.getElementById('listselect'+index+'selectionname') ? document.getElementById('listselect'+index+'selectionname').value : "";
+			const selection_name = document.getElementById('listselect'+index+'selectionname') ? document.getElementById('listselect'+index+'selectionname').value : "";
 	                rendererListselect[index].settings.callback(selection_result, selection_name);
 		    });
 	        }
@@ -408,7 +408,7 @@
 	},
 	// add a breadcrumb to the list
 	addBreadcrumb: function (index) {
-	    var renderer = rendererListselect[index];
+	    const renderer = rendererListselect[index];
 	    if (renderer.settings.filter_value != "") {
 		renderer.settings.filter_breadcrumbs.push([renderer.settings.filter_attribute, renderer.settings.filter_value]);
 		renderer.settings.filter_value = "";
@@ -421,7 +421,7 @@
 	},
 	// remove a breadcrumb from the list
 	removeBreadcrumb: function (button, index) {
-	    var renderer = rendererListselect[index];
+	    const renderer = rendererListselect[index];
 	    renderer.settings.filter_breadcrumbs.splice(button.name, 1);
 	    renderer.settings.filter_value = '';
 	    if (renderer.settings.synchronous) {
@@ -432,15 +432,15 @@
 	},
 	// redraw the result list (right)
 	redrawResultlist: function (result_list, index) {  
-	    var renderer = rendererListselect[index];
-	    var result_list_array = [];
+	    const renderer = rendererListselect[index];
+	    const result_list_array = [];
 	    for (var i=0; i<renderer.settings.selection_data.length; i++) {
 		result_list_array.push( [ renderer.settings.selection_data[i][renderer.settings.value], '<option value="'+renderer.settings.selection_data[i][renderer.settings.value]+'" title="'+renderer.settings.selection_data[i][renderer.settings.filter_attribute]+'">'+renderer.settings.selection_data[i][renderer.settings.filter_attribute]+'</option>'] );
 	    }
 	    if (renderer.settings.sort) {
 		result_list_array.sort(renderer.listsort);
 	    }
-	    var result_list_string = "";
+	    let result_list_string = "";
 	    for (var i=0; i<result_list_array.length; i++) {
 		result_list_string += result_list_array[i][1];
 	    }
@@ -448,7 +448,7 @@
 	},
 	// redraw the selection list (left)
 	redrawSelection: function (selection_list, index) {
-	    var renderer = rendererListselect[index];
+	    const renderer = rendererListselect[index];
 
 	    // initialize the filter
 	    renderer.settings.filtered_data = renderer.settings.data;
@@ -467,7 +467,7 @@
 	    }
 	    
 	    // create the selection list
-	    var settings_string = "";
+	    let settings_string = "";
 	    for (var i=0; i<renderer.settings.filtered_data.length; i++) {
 		if (! renderer.settings.selection[renderer.settings.filtered_data[i][renderer.settings.value]]) {
 		    settings_string += '<option value="'+renderer.settings.filtered_data[i][renderer.settings.value]+'" title="'+renderer.settings.filtered_data[i][renderer.settings.filter_attribute]+'">'+renderer.settings.filtered_data[i][renderer.settings.filter_attribute]+'</option>';
@@ -479,16 +479,16 @@
 	},
 
 	check_threshold: function(index) {
-	    var threshold = new Date().getTime();
+	    const threshold = new Date().getTime();
 	    if (rendererListselect[index].typing + rendererListselect[index].settings.asynch_keystroke_threshold < threshold) {
 		rendererListselect[index].update(index);
 	    }		
 	},
 
 	update: function (index) {
-	    var renderer = rendererListselect[index];
-	    var query = [];
-	    for (var i=0; i<renderer.settings.filter_breadcrumbs.length; i++) {
+	    const renderer = rendererListselect[index];
+	    const query = [];
+	    for (let i=0; i<renderer.settings.filter_breadcrumbs.length; i++) {
 		query.push( { "field": renderer.settings.filter_breadcrumbs[i][0],
 			      "searchword": renderer.settings.filter_breadcrumbs[i][1] } );
 	    }
@@ -501,9 +501,9 @@
 
 	// filter the data according to all breadcrumbs and the current filter
 	filter: function(settings, index) {
-	    var renderer = rendererListselect[index];
-	    var results = [];
-	    for (var x=0;x<settings.data.length;x++) {
+	    const renderer = rendererListselect[index];
+	    const results = [];
+	    for (let x=0;x<settings.data.length;x++) {
 		if (typeof(renderer.settings.selection[x]) == 'undefined') {
 		    if (settings.data[x].hasOwnProperty(settings.attribute) && typeof(settings.data[x][settings.attribute]) == 'string') {
 			if (settings.type == 'substring') {
@@ -541,7 +541,7 @@
 	    }
 	},
 	update_data: function (params, index) {
-	    var renderer = rendererListselect[index];
+	    const renderer = rendererListselect[index];
 
 	    if (typeof params == 'string' && params == 'more') {
 		renderer.settings.offset = renderer.settings.data.length;
@@ -578,19 +578,19 @@
 	        }
 	    }
 
-	    var query = "";
-	    for (var i in renderer.settings.query) {
+	    let query = "";
+	    for (const i in renderer.settings.query) {
 	        if (renderer.settings.query.hasOwnProperty(i) && renderer.settings.query[i].searchword.length) {
 		    query +=  "&" + renderer.settings.query[i].field + '=*' + renderer.settings.query[i].searchword + '*';
 	        }
 	    }
 
-	    var url = renderer.settings.navigation_url + query + "&limit=" + renderer.settings.asynch_limit + "&offset=" + (renderer.settings.offset || 0) + "&order=" +renderer.settings.asynch_filter_attribute;
+	    const url = renderer.settings.navigation_url + query + "&limit=" + renderer.settings.asynch_limit + "&offset=" + (renderer.settings.offset || 0) + "&order=" +renderer.settings.asynch_filter_attribute;
 
-	    var headers = renderer.Authentication ? {'AUTH': renderer.Authentication} : {};
+	    const headers = renderer.Authentication ? {'AUTH': renderer.Authentication} : {};
 	
 	    jQuery.ajax({ url: url, headers: headers, dataType: "json", success: function(data) {
-		var renderer =  rendererListselect[index];
+		const renderer =  rendererListselect[index];
 		renderer.settings.total_count = data.total_count;
 		if (typeof params == 'string' && params == "more") {
 		    renderer.settings.data = renderer.settings.data.concat(data.data);

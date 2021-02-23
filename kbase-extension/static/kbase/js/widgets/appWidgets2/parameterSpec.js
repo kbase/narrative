@@ -2,11 +2,11 @@
 /*jstlint white:true,browser:true,single:true*/
 
 define([
-], function () {
+], () => {
     'use strict';
 
     function factory(config) {
-        var spec = config.parameterSpec,
+        const spec = config.parameterSpec,
             multiple = spec.allow_multiple ? true : false,
             _required = spec.optional ? false : true,
             isOutputName = spec.text_options && spec.text_options.is_output_name;
@@ -125,7 +125,7 @@ define([
                 }
                 return 'string';
             }
-            var validateAs = spec.text_options.validate_as;
+            const validateAs = spec.text_options.validate_as;
             if (validateAs) {
                 if (spec.allow_multiple) {
                     return '[]' + validateAs;
@@ -206,7 +206,7 @@ define([
             if (!value) {
                 return 0;
             }
-            var intValue = parseInt(value);
+            const intValue = parseInt(value);
             if (!isNaN(intValue)) {
                 if (value > 0) {
                     return 1;
@@ -233,7 +233,7 @@ define([
         }
 
         function defaultValue() {
-            var defaultValues = spec.default_values || [];
+            const defaultValues = spec.default_values || [];
             // No default value and not required? null value
 
             // special special cases.
@@ -274,7 +274,7 @@ define([
             if (!multipleItems()) {
                 return defaultToNative(defaultValues[0]);
             } else {
-                return defaultValues.map(function (defaultValue) {
+                return defaultValues.map((defaultValue) => {
                     return defaultToNative(defaultValue);
                 });
             }
@@ -311,7 +311,7 @@ define([
         }
 
         function getConstraints() {
-            var fieldType = spec.field_type;
+            const fieldType = spec.field_type;
 
             // NOTE:
             // field_type is text or dropdown, but does not always correspond to the
@@ -449,14 +449,14 @@ define([
                                 };
                             },
                             during: function (values, state) {
-                                values.forEach(function (value) {
+                                values.forEach((value) => {
                                     if (value.entity === 'Condition') {
                                         state.collected[value.property_name] = true;
                                     }
                                 });
                             },
                             after: function (state) {
-                                return Object.keys(state.collected).map(function (key) {
+                                return Object.keys(state.collected).map((key) => {
                                     return {
                                         id: key,
                                         desc: key
@@ -474,10 +474,10 @@ define([
                         subdataPath: 'metadata.column_metadata',
                         // custom function to collect
                         map: function (subdata) {
-                            var collected = {};
-                            Object.keys(subdata).forEach(function (key) {
-                                    var id, name, column = subdata[key];
-                                    column.forEach(function (value) {
+                            const collected = {};
+                            Object.keys(subdata).forEach((key) => {
+                                    let id, name, column = subdata[key];
+                                    column.forEach((value) => {
                                         if (value.category === 'DataSeries' && value.property_name === 'SeriesID') {
                                             id = value.property_value;
                                         } else if (value.category === 'Property' && value.property_name === 'Name') {
@@ -488,13 +488,13 @@ define([
                                         }
                                     });
                                 });
-                                return Object.keys(collected).map(function (key) {
+                                return Object.keys(collected).map((key) => {
                                     return {
                                         id: key,
                                         desc: collected[key]
                                     };
                                 })
-                                    .sort(function (a, b) {
+                                    .sort((a, b) => {
                                         if (a.desc < b.desc) {
                                             return -1;
                                         } else if (a.desc > b.desc) {
@@ -557,14 +557,14 @@ define([
          * This method both determines the class and ensures that the param
          * is set up in a manner consistent with the class.
          */
-        var attributes = {
+        const attributes = {
             paramClass: null
         };
         function setupParamClass() {
             // The primary flag for the param class is the ui_class property.
             // Perhaps not the best name for this property.
 
-            var paramClassName = spec.ui_class;
+            let paramClassName = spec.ui_class;
             if (!paramClassName) {
                 throw new Error('Parameter ' + spec.id + ' has no ui_class set');
             }

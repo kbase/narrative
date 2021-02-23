@@ -13,7 +13,7 @@ define([
     '../subdataMethods/manager',
     'bootstrap',
     'css!font-awesome'
-], function(
+], (
     $,
     Promise,
     html,
@@ -24,7 +24,7 @@ define([
     Props,
     Jupyter,
     SubdataMethods
-) {
+) => {
     'use strict';
 
     /*
@@ -43,7 +43,7 @@ define([
      */
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         p = t('p'),
         span = t('span'),
@@ -52,7 +52,7 @@ define([
         button = t('button');
 
     function factory(config) {
-        var spec = config.parameterSpec,
+        let spec = config.parameterSpec,
             appSpec = config.appSpec,
             runtime = Runtime.make(),
             workspaceId = runtime.getEnv('workspaceId'),
@@ -70,14 +70,14 @@ define([
         subdataMethods = SubdataMethods.make();
 
         function buildOptions() {
-            var availableValues = model.getItem('availableValues'),
+            const availableValues = model.getItem('availableValues'),
                 value = model.getItem('value') || [],
                 selectOptions = [option({ value: '' }, '')];
             if (!availableValues) {
                 return selectOptions;
             }
-            return selectOptions.concat(availableValues.map(function(availableValue) {
-                var selected = false,
+            return selectOptions.concat(availableValues.map((availableValue) => {
+                let selected = false,
                     optionLabel = availableValue.id,
                     optionValue = availableValue.id;
                 // TODO: pull the value out of the object
@@ -92,7 +92,7 @@ define([
         }
 
         function buildCount() {
-            var availableValues = model.getItem('availableValues') || [],
+            const availableValues = model.getItem('availableValues') || [],
                 value = model.getItem('value') || [];
 
             return String(value.length) + ' / ' + String(availableValues.length) + ' items';
@@ -102,8 +102,8 @@ define([
             if (!filter) {
                 return items;
             }
-            var re = new RegExp(filter);
-            return items.filter(function(item) {
+            const re = new RegExp(filter);
+            return items.filter((item) => {
                 if (item.text && item.text.match(re, 'i')) {
                     return true;
                 }
@@ -112,7 +112,7 @@ define([
         }
 
         function doFilterItems() {
-            var items = model.getItem('availableValues', []),
+            const items = model.getItem('availableValues', []),
                 filteredItems = filterItems(items, model.getItem('filter'));
 
 
@@ -124,7 +124,7 @@ define([
 
         function didChange() {
             validate()
-                .then(function(result) {
+                .then((result) => {
                     if (result.isValid) {
                         model.setItem('value', result.value);
                         updateInputControl('value');
@@ -146,18 +146,18 @@ define([
         }
 
         function doAddItem(itemId) {
-            var selectedItems = model.getItem('selectedItems', []);
+            const selectedItems = model.getItem('selectedItems', []);
             selectedItems.push(itemId);
             model.setItem('selectedItems', selectedItems);
             didChange();
         }
 
         function doRemoveSelectedItem(indexOfitemToRemove) {
-            var selectedItems = model.getItem('selectedItems', []),
+            const selectedItems = model.getItem('selectedItems', []),
                 prevAllowSelection = spec.ui.multiSelection || selectedItems.length === 0;
             selectedItems.splice(indexOfitemToRemove, 1);
 
-            var newAllowSelection = spec.ui.multiSelection || selectedItems.length === 0;
+            const newAllowSelection = spec.ui.multiSelection || selectedItems.length === 0;
             if (newAllowSelection && !prevAllowSelection) {
                 // update text areas to have md-col-7 (from md-col-10)
                 $(ui.getElement('input-container')).find('.row > .col-md-10').switchClass('col-md-10', 'col-md-7');
@@ -170,9 +170,9 @@ define([
         }
 
         function doRemoveSelectedAvailableItem(idToRemove) {
-            var selectedItems = model.getItem('selectedItems', []);
+            const selectedItems = model.getItem('selectedItems', []);
 
-            model.setItem('selectedItems', selectedItems.filter(function(id) {
+            model.setItem('selectedItems', selectedItems.filter((id) => {
                 if (idToRemove === id) {
                     return false;
                 }
@@ -182,7 +182,7 @@ define([
         }
 
         function renderAvailableItems() {
-            var selected = model.getItem('selectedItems', []),
+            let selected = model.getItem('selectedItems', []),
                 allowSelection = (spec.ui.multiSelection || selected.length === 0),
                 items = model.getItem('filteredAvailableItems', []),
                 from = model.getItem('showFrom'),
@@ -194,8 +194,8 @@ define([
             if (itemsToShow.length === 0) {
                 content = div({ style: { textAlign: 'center' } }, 'no available values');
             } else {
-                content = itemsToShow.map(function(item, index) {
-                        var isSelected = selected.some(function(id) {
+                content = itemsToShow.map((item, index) => {
+                        const isSelected = selected.some((id) => {
                                 return (item.id === id);
                             }),
                             disabled = isSelected;
@@ -292,7 +292,7 @@ define([
         }
 
         function renderSelectedItems() {
-            var selectedItems = model.getItem('selectedItems', []),
+            let selectedItems = model.getItem('selectedItems', []),
                 valuesMap = model.getItem('availableValuesMap', {}),
                 events = Events.make({ node: container }),
                 content;
@@ -300,8 +300,8 @@ define([
             if (selectedItems.length === 0) {
                 content = div({ style: { textAlign: 'center' } }, 'no selected values');
             } else {
-                content = selectedItems.map(function(itemId, index) {
-                    var item = valuesMap[itemId];
+                content = selectedItems.map((itemId, index) => {
+                    let item = valuesMap[itemId];
                     if (item === undefined || item === null) {
                         item = {
                             text: itemId
@@ -366,7 +366,7 @@ define([
         }
 
         function renderSearchBox() {
-            var items = model.getItem('availableValues', []),
+            let items = model.getItem('availableValues', []),
                 events = Events.make({ node: container }),
                 content;
 
@@ -414,7 +414,7 @@ define([
         }
 
         function renderStats() {
-            var availableItems = model.getItem('availableValues', []),
+            let availableItems = model.getItem('availableValues', []),
                 filteredItems = model.getItem('filteredAvailableItems', []),
                 content;
 
@@ -437,7 +437,7 @@ define([
         }
 
         function renderToolbar() {
-            var items = model.getItem('filteredAvailableItems', []),
+            let items = model.getItem('filteredAvailableItems', []),
                 events = Events.make({ node: container }),
                 content;
 
@@ -497,7 +497,7 @@ define([
         }
 
         function setPageStart(newFrom) {
-            var from = model.getItem('showFrom'),
+            let from = model.getItem('showFrom'),
                 to = model.getItem('to'),
                 newTo,
                 total = model.getItem('filteredAvailableItems', []).length,
@@ -560,7 +560,7 @@ define([
         function makeInputControl(events) {
             // There is an input control, and a dropdown,
             // TODO select2 after we get a handle on this...
-            var availableValues = model.getItem('availableValues');
+            const availableValues = model.getItem('availableValues');
 
             if (!availableValues) {
                 return p({
@@ -681,8 +681,8 @@ define([
         }
 
         function validate() {
-            return Promise.try(function() {
-                var rawValue = getInputValue(),
+            return Promise.try(() => {
+                const rawValue = getInputValue(),
                     validationOptions = {
                         required: spec.data.constraints.required
                     };
@@ -691,10 +691,10 @@ define([
             })
         }
 
-        var subdataInfo = subdataMethods.getSubdataInfo(appSpec, spec);
+        const subdataInfo = subdataMethods.getSubdataInfo(appSpec, spec);
 
         function fetchData() {
-            var referenceObjectName = model.getItem('referenceObjectName'),
+            const referenceObjectName = model.getItem('referenceObjectName'),
                 referenceObjectRef = workspaceId + '/' + referenceObjectName,
                 params = model.getItem('required-params');
 
@@ -712,7 +712,7 @@ define([
         }
 
         function fetchDatax() {
-            var referenceObjectName = model.getItem('referenceObjectName'),
+            let referenceObjectName = model.getItem('referenceObjectName'),
                 referenceObjectRef = spec.data.constraints.subdataSelection.constant_ref;
 
             if (!referenceObjectRef) {
@@ -729,10 +729,10 @@ define([
         }
 
         function syncAvailableValues() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                     return fetchData();
                 })
-                .then(function(data) {
+                .then((data) => {
                     if (!data) {
                         return " no data? ";
                     }
@@ -742,9 +742,9 @@ define([
                     // We use the raw default values here since we are not really using
                     // it as the default value, but as a set of additional items
                     // to select.
-                    var defaultValues = spec.defaultValue;
+                    const defaultValues = spec.defaultValue;
                     if (defaultValues && (defaultValues instanceof Array) && (defaultValues.length > 0)) {
-                        defaultValues.forEach(function(itemId) {
+                        defaultValues.forEach((itemId) => {
                             if (itemId && itemId.trim().length > 0) {
                                 data.unshift({
                                     id: itemId,
@@ -764,8 +764,8 @@ define([
                     model.setItem('availableValues', data);
 
                     // TODO: generate all of this in the fetchData -- it will be a bit faster.
-                    var map = {};
-                    data.forEach(function(datum) {
+                    const map = {};
+                    data.forEach((datum) => {
                         map[datum.id] = datum;
                     });
 
@@ -781,7 +781,7 @@ define([
 
         function autoValidate() {
             return validate()
-                .then(function(result) {
+                .then((result) => {
                     channel.emit('validation', {
                         errorMessage: result.errorMessage,
                         diagnosis: result.diagnosis
@@ -796,9 +796,9 @@ define([
          * Hooks up event listeners
          */
         function render() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                     // check to see if we have to render inputControl.
-                    var events = Events.make({ node: container }),
+                    const events = Events.make({ node: container }),
                         inputControl = makeInputControl(events),
                         content = div({
                             class: 'input-group',
@@ -816,10 +816,10 @@ define([
 
                     events.attachEvents();
                 })
-                .then(function() {
+                .then(() => {
                     return autoValidate();
                 })
-                .catch(function(err) {
+                .catch((err) => {
                     console.error('ERROR in render', err);
                 });
         }
@@ -830,7 +830,7 @@ define([
          * For the objectInput, there is only ever one control.
          */
         function layout(events) {
-            var content = div({
+            const content = div({
                 dataElement: 'main-panel'
             }, [
                 div({
@@ -844,7 +844,7 @@ define([
         }
 
         function updateParam(paramId, value) {
-            var newValue;
+            let newValue;
             if (value === '') {
                 newValue = null;
             } else {
@@ -861,7 +861,7 @@ define([
             // If any of the required parameters are missing, we need to reset the
             // primary value.
             // TODO: we need to get this via the message bus!!!
-            if (subdataInfo.params.dependencies.some(function(paramId) {
+            if (subdataInfo.params.dependencies.some((paramId) => {
                     return (model.getItem(['required-params', paramId], null) === null);
                 })) {
                 resetModelValue();
@@ -880,7 +880,7 @@ define([
              * Issued when thre is a need to have all params reset to their
              * default value.
              */
-            channel.on('reset-to-defaults', function(message) {
+            channel.on('reset-to-defaults', (message) => {
                 resetModelValue();
                 // model.reset();
                 // TODO: this should really be set when the linked field is reset...
@@ -901,7 +901,7 @@ define([
             /*
              * Issued when there is an update for this param.
              */
-            channel.on('update', function(message) {
+            channel.on('update', (message) => {
                 model.setItem('value', message.value);
                 updateInputControl('value');
             });
@@ -936,7 +936,7 @@ define([
             // });
 
             if (subdataInfo.params.dependencies) {
-                subdataInfo.params.dependencies.forEach(function(paramId) {
+                subdataInfo.params.dependencies.forEach((paramId) => {
                     channel.listen({
                         key: {
                             type: 'parameter-changed',
@@ -963,10 +963,10 @@ define([
                                 type: 'get-parameter'
                             }
                         })
-                        .then(function(message) {
+                        .then((message) => {
                             updateParam(paramId, message.value);
                         })
-                        .catch(function(err) {
+                        .catch((err) => {
                             console.log('ERROR getting parameter', err);
                         });
                 });
@@ -1036,7 +1036,7 @@ define([
                         type: 'get-parameter'
                     }
                 })
-                .then(function(message) {
+                .then((message) => {
                     // console.log('Now i got it again', message);
                 });
 
@@ -1068,14 +1068,14 @@ define([
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({
                     node: container
                 });
 
-                var events = Events.make(),
+                const events = Events.make(),
                     theLayout = layout(events);
 
                 container.innerHTML = theLayout.content;
@@ -1097,7 +1097,7 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (parent && container) {
                     parent.removeChild(container);
                 }

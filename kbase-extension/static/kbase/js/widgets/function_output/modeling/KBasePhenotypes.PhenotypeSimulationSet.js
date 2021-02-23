@@ -1,5 +1,5 @@
 function KBasePhenotypes_PhenotypeSimulationSet(tabwidget) {
-    var self = this;
+    const self = this;
     this.tabwidget = tabwidget;
 
     this.setMetadata = function (data) {
@@ -22,12 +22,12 @@ function KBasePhenotypes_PhenotypeSimulationSet(tabwidget) {
 
 	this.setData = function (indata) {
         self.data = indata;
-        var p = self.tabwidget.kbapi('ws', 'get_objects', [{ref: indata.phenotypeset_ref}]).then(function(data){
-			var kbModeling = new KBModeling();
+        const p = self.tabwidget.kbapi('ws', 'get_objects', [{ref: indata.phenotypeset_ref}]).then((data)=> {
+			const kbModeling = new KBModeling();
 			self.phenoset = new kbModeling["KBasePhenotypes_PhenotypeSet"](self.tabwidget);
 			self.phenoset.setMetadata(data[0].info);
 			return self.phenoset.setData(data[0].data);
- 		}).then (function() {
+ 		}).then (() => {
   			self.formatObject();
 		});
         return p;
@@ -35,8 +35,8 @@ function KBasePhenotypes_PhenotypeSimulationSet(tabwidget) {
 
 	this.formatObject = function() {
 		self.phenotypes = self.phenoset.phenotypes;
-		for (var i=0; i < self.phenotypes.length; i++) {
-			var pheno = self.phenotypes[i];
+		for (let i=0; i < self.phenotypes.length; i++) {
+			const pheno = self.phenotypes[i];
 			pheno.simulatedGrowth = self.data.phenotypeSimulations[i].simulatedGrowthFraction;
 			pheno.phenoclass = self.data.phenotypeSimulations[i].phenoclass;
 		}

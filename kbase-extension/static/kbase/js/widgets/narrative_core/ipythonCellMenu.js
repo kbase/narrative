@@ -10,17 +10,17 @@ define([
     'kb_common/html',
     // 'kbaseNarrativeCellMenu',
     'kbaseCellToolbarMenu'
-], function (
+], (
     $,
     celltoolbar,
     Jupyter,
     html,
     // KBaseNarrativeCellMenu,
     KBaseMenu
-) {
+) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         span = t('span');
 
     /*
@@ -37,23 +37,23 @@ define([
     }
 
     function makeKBaseMenu($toolbarNode, cell) {
-        var kbaseMenu = KBaseMenu.make();
+        const kbaseMenu = KBaseMenu.make();
         kbaseMenu.register_callback($toolbarNode, cell);
     }
 
     function status(toolbarDiv, cell) {
-        var status = getMeta(cell, 'attributes', 'status'),
+        const status = getMeta(cell, 'attributes', 'status'),
             content = span({ style: { fontWeight: 'bold' } }, status);
         toolbarDiv.append(span({ style: { padding: '4px' } }, content));
     }
 
     function jobStatus(toolbarDiv, cell) {
-        var jobStatus = getMeta(cell, 'attributes', 'jobStatus'),
+        const jobStatus = getMeta(cell, 'attributes', 'jobStatus'),
             content = span({ style: { fontWeight: 'bold' } }, jobStatus);
         $(toolbarDiv).append(span({ style: { padding: '4px' } }, content));
     }
 
-    var register = function (notebook) {
+    const register = function (notebook) {
         celltoolbar.CellToolbar.register_callback('kbase-status', status);
         celltoolbar.CellToolbar.register_callback('kbase-job-status', jobStatus);
         celltoolbar.CellToolbar.register_callback('kbase-menu', makeKBaseMenu);

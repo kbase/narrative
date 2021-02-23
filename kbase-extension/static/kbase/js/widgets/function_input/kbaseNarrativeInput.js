@@ -12,13 +12,13 @@ define (
 		'jquery',
 		'narrativeConfig',
 		'kbaseAuthenticatedWidget'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		Config,
 		kbaseAuthenticatedWidget
-	) {
+	) => {
     'use strict';
     return KBWidget({
         name: "kbaseNarrativeInput",

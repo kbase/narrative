@@ -12,22 +12,22 @@ return KBWidget({
     
     init: function(options) {
         this._super(options);
-        var self = this;        
-        var fbas = options.ids;
-        var workspaces = options.workspaces;
+        const self = this;        
+        const fbas = options.ids;
+        const workspaces = options.workspaces;
         
         if ('fbaData' in options) {
             return render(options);
         } else {
-            var container = this.$elem;
+            const container = this.$elem;
             container.append("<div id=\"fbatabs-loading\"><img src=\""+this.loadingImage+"\">&nbsp&nbsploading fba results...</div>");
             
-            var fba = new fbaModelServices(this.fbaURL);
-            fba.get_fbas({auth: self.authToken(), workspaces:workspaces, fbas:fbas }, function(data) {
+            const fba = new fbaModelServices(this.fbaURL);
+            fba.get_fbas({auth: self.authToken(), workspaces:workspaces, fbas:fbas }, (data) => {
                     self.$elem.find("#fbatabs-loading").remove();
                     options.fbaData = data;
                     self.render(options);
-                }, function(data) {
+                }, (data) => {
                     self.$elem.find("#fbatabs-loading").remove();
                     container.append("<div>Error loading FBA results.</div>");
                     console.error("Error loading FBA results!");
@@ -40,14 +40,14 @@ return KBWidget({
     
     render: function(options) {
         
-        var data = options.fbaData;
-        var fbas = options.ids;
-        var workspaces = options.workspaces;
+        const data = options.fbaData;
+        const fbas = options.ids;
+        const workspaces = options.workspaces;
 
-        var randId = this._uuidgen();
+        const randId = this._uuidgen();
 
 
-        var container = this.$elem;
+        const container = this.$elem;
         
         container.append("<h4 style=\"display:inline\">"+fbas[0]+"</h4>");
         if (data[0].objective < 0.001) {
@@ -58,11 +58,11 @@ return KBWidget({
             container.append("&nbsp&nbsp Objective: <span class=\"label label-success\">" + data[0].objective + "</span>");
         }
 
-        var tables = ['Reactions', 'Compounds'];
-        var tableIds = [randId+'reaction', randId+'compound'];
+        const tables = ['Reactions', 'Compounds'];
+        const tableIds = [randId+'reaction', randId+'compound'];
 
         // build tabs
-        var tabs = $('<ul id="' + randId + 'table-tabs" class="nav nav-tabs"> \
+        const tabs = $('<ul id="' + randId + 'table-tabs" class="nav nav-tabs"> \
                         <li class="active" > \
                         <a href="#'+tableIds[0]+'" data-toggle="tab" >'+tables[0]+'</a> \
                       </li></ul>')
@@ -73,7 +73,7 @@ return KBWidget({
         // add tabs
         container.append(tabs);
 
-        var tab_pane = $('<div id="tab-content" class="tab-content">')
+        const tab_pane = $('<div id="tab-content" class="tab-content">')
         // add table views (don't hide first one)
         tab_pane.append('<div class="tab-pane in active" id="'+tableIds[0]+'"> \
                             <table cellpadding="0" cellspacing="0" border="0" id="'+tableIds[0]+'-table" \
@@ -81,7 +81,7 @@ return KBWidget({
                         </div>');
 
         for (var i=1; i<tableIds.length; i++) {
-            var tableDiv = $('<div class="tab-pane in" id="'+tableIds[i]+'"> ');
+            const tableDiv = $('<div class="tab-pane in" id="'+tableIds[i]+'"> ');
             var table = $('<table cellpadding="0" cellspacing="0" border="0" id="'+tableIds[i]+'-table" \
                             class="table table-bordered table-striped" style="width: 100%; margin:0">');
             tableDiv.append(table);
@@ -96,7 +96,7 @@ return KBWidget({
             $(this).tab('show');
         })
 
-        var tableSettings = {
+        const tableSettings = {
             "sPaginationType": "full_numbers",
             "iDisplayLength": 5,
             "aaData":[],
@@ -106,13 +106,13 @@ return KBWidget({
             }
         }
 
-        var fba = data[0];
+        const fba = data[0];
 
         // rxn flux table
         var dataDict = formatObjs(fba.reactionFluxes);
         var labels = ["Id (compartment)","Reaction Equation", "Flux", "upper", "lower", "max", "min", "type"];
         var cols = getColumnsByLabelRxn(labels);
-        var rxnTableSettings = $.extend({}, tableSettings, {fnDrawCallback: events});               
+        const rxnTableSettings = $.extend({}, tableSettings, {fnDrawCallback: events});               
         rxnTableSettings.aoColumns = cols;
         //rxnTableSettings.aaData = dataDict;
         //container.append('<table id="' + randId + 'reaction-table" class="table table-striped table-bordered" style:"margin:0"></table>');           
@@ -123,7 +123,7 @@ return KBWidget({
         var dataDict = formatCmpds(fba.compoundFluxes);
         var labels = ["Id (compartment)","Compound Name", "Uptake Flux", "upper", "lower", "max", "min"];
         var cols = getColumnsByLabel(labels);
-        var cpdTableSettings = $.extend({}, tableSettings, {fnDrawCallback: events});
+        const cpdTableSettings = $.extend({}, tableSettings, {fnDrawCallback: events});
         cpdTableSettings.aoColumns = cols;
         //cpdTableSettings.aaData = dataDict;
         //container.append('<table id="' + randId + 'compound-table" class="table table-striped table-bordered" style:"margin:0"></table>');
@@ -135,11 +135,11 @@ return KBWidget({
         
  
         function formatObjs(objs) {
-            var fluxes = []
-            for (var i in objs) {
-                var obj = objs[i];
-                var rxn = obj[0].split('_')[0]
-                var compart = obj[0].split('_')[1]
+            const fluxes = []
+            for (const i in objs) {
+                const obj = objs[i];
+                const rxn = obj[0].split('_')[0]
+                const compart = obj[0].split('_')[1]
                 //obj[0] = '<a class="' + randId + 'rxn-click" data-rxn="'+rxn+'">'
                 //            +rxn+'</a> ('+compart+')';
                 obj[0] = obj.pop();
@@ -149,12 +149,12 @@ return KBWidget({
             return fluxes;
         }
         function formatCmpds(objs) {
-            var fluxes = []
-            for (var i in objs) {
-                var obj = objs[i];
-                var cmpdid = obj[0].split('_')[0]
-                var compart = obj[0].split('_')[1]
-                var cmpd_name = obj[7].split('_')[0]
+            const fluxes = []
+            for (const i in objs) {
+                const obj = objs[i];
+                const cmpdid = obj[0].split('_')[0]
+                const compart = obj[0].split('_')[1]
+                const cmpd_name = obj[7].split('_')[0]
                 //obj[0] = '<a class="' + randId + 'rxn-click" data-rxn="'+rxn+'">'
                 //            +rxn+'</a> ('+compart+')';
                 obj[0] = cmpd_name;
@@ -165,8 +165,8 @@ return KBWidget({
         }
 
         function getColumnsByLabelRxn(labels) {
-            var cols = [];
-            for (var i in labels) {
+            const cols = [];
+            for (const i in labels) {
                 if (parseInt(i)===0) {
                     cols.push({sTitle: labels[i], sWidth:"15%"})
                 } else{
@@ -176,8 +176,8 @@ return KBWidget({
             return cols;
         }
         function getColumnsByLabel(labels) {
-            var cols = [];
-            for (var i in labels) {
+            const cols = [];
+            for (const i in labels) {
                 cols.push({sTitle: labels[i]})
             }
             return cols;
@@ -201,8 +201,8 @@ return KBWidget({
      * @private
      */
      _uuidgen: function() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-            var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+            const r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
             return v.toString(16);});
      },
 

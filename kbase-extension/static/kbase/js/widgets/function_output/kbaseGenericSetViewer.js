@@ -14,7 +14,7 @@ define (
 		'bluebird',
 		'kbase-generic-client-api',
 		'kbaseTable',
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -27,7 +27,7 @@ define (
 		Promise,
 		GenericClient,
 		KBaseTable
-	) {
+	) => {
 
     'use strict';
 
@@ -51,7 +51,7 @@ define (
         init : function init(options) {
           this._super(options);
 
-          var $self = this;
+          const $self = this;
           if (options._obj_info) {
             $self.obj_info = options._obj_info;
             $self.obj_ref = $self.obj_info.ws_id + '/' +
@@ -73,16 +73,16 @@ define (
                               Config.url('service_wizard'),
                               {'token': this.authToken()});
 
-          var bare_type = this.options._obj_info.bare_type[0];
-          var method = this.methodMap[bare_type];
+          const bare_type = this.options._obj_info.bare_type[0];
+          const method = this.methodMap[bare_type];
 
           //this.setAPI[method]({ 'ref' : $self.obj_ref, include_item_info : 1 })
           this.genericClient.sync_call('SetAPI.' + method, [{ 'ref' : $self.obj_ref, include_item_info : 1 }])
-            .then(function(results) {
+            .then((results) => {
               results = results[0].data;
 
-              var $tableElem = $.jqElem('div');
-              var $table = new KBaseTable($tableElem,
+              const $tableElem = $.jqElem('div');
+              const $table = new KBaseTable($tableElem,
                 {
                   structure : {
                     keys : ['Description', 'Items'],
@@ -91,12 +91,12 @@ define (
                       Items :
                         $.jqElem('ul')
                           .append(
-                            results.items.map( function(i) {
+                            results.items.map( (i) => {
                               return $.jqElem('li')
                                 .append(
                                   $.jqElem('a')
                                     .append(i.info[1])
-                                    .on('click', function(e) {
+                                    .on('click', (e) => {
                                       alert("Will add in the viewer for this object...when it's available")
                                     })
                                 )
@@ -111,7 +111,7 @@ define (
               $self.$elem.append($tableElem);
 
             })
-            .catch(function(e) {
+            .catch((e) => {
               $self.$elem.empty();
               $self.$elem
                 .addClass('alert alert-danger')

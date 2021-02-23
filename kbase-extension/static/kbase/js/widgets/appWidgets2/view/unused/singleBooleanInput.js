@@ -9,17 +9,17 @@ define([
     'common/events',
     'bootstrap',
     'css!font-awesome'
-], function(Promise, $, Jupyter, html, Validation, Events) {
+], (Promise, $, Jupyter, html, Validation, Events) => {
     'use strict';
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         select = t('select'),
         option = t('option');
 
     function factory(config) {
-        var options = {},
+        let options = {},
             spec = config.parameterSpec,
             parent,
             container,
@@ -47,7 +47,7 @@ define([
          */
 
         function getInputValue() {
-            var checkbox = container.querySelector('[data-element="input-container"] [data-element="input"]');
+            const checkbox = container.querySelector('[data-element="input-container"] [data-element="input"]');
             if (checkbox.checked) {
                 return valueChecked;
             }
@@ -65,15 +65,15 @@ define([
          */
 
         function copyProps(from, props) {
-            var newObj = {};
-            props.forEach(function(prop) {
+            const newObj = {};
+            props.forEach((prop) => {
                 newObj[prop] = from[prop];
             });
             return newObj;
         }
 
         function validate() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (!options.enabled) {
                     return {
                         isValid: true,
@@ -82,7 +82,7 @@ define([
                     };
                 }
 
-                var rawValue = getInputValue(),
+                let rawValue = getInputValue(),
                     // TODO should actually create the set of checkbox values and
                     // make this a validation option, although not specified as 
                     // such in the spec.
@@ -113,7 +113,7 @@ define([
          */
 
         function makeInputControl(currentValue, data, events, bus) {
-            var selectOptions = [
+            const selectOptions = [
                 option({
                     value: 'yes',
                     selected: (currentValue === 'yes' ? true : false)
@@ -130,7 +130,7 @@ define([
                     type: 'change',
                     handler: function(e) {
                         validate()
-                            .then(function(result) {
+                            .then((result) => {
                                 if (result.isValid) {
                                     bus.send({
                                         type: 'changed',
@@ -151,7 +151,7 @@ define([
         }
 
         function render(params) {
-            var events = Events.make(),
+            const events = Events.make(),
                 inputControl = makeInputControl(params.value || config.initialValue, events, bus);
 
             $container.find('[data-element="input-container"]').html(inputControl);
@@ -159,7 +159,7 @@ define([
         }
 
         function layout(events) {
-            var content = div({
+            const content = div({
                 dataElement: 'main-panel'
             }, [
                 div({ dataElement: 'input-container' })
@@ -172,7 +172,7 @@ define([
 
         function autoValidate() {
             return validate()
-                .then(function(result) {
+                .then((result) => {
                     bus.send({
                         type: 'validation',
                         errorMessage: result.errorMessage,
@@ -186,12 +186,12 @@ define([
         function init() {}
 
         function attach(node) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 parent = node;
                 container = node.appendChild(document.createElement('div'));
                 $container = $(container);
 
-                var events = Events.make(),
+                const events = Events.make(),
                     theLayout = layout(events);
 
                 container.innerHTML = theLayout.content;
@@ -200,14 +200,14 @@ define([
         }
 
         function start() {
-            return Promise.try(function() {});
+            return Promise.try(() => {});
         }
 
         function run(params) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                     return render(params);
                 })
-                .then(function() {
+                .then(() => {
                     return autoValidate();
                 });
         }

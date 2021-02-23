@@ -9,13 +9,13 @@ define (
 		'jquery',
 		'd3',
 		'kbasePiechart'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		d3,
 		kbasePiechart
-	) {
+	) => {
 
     return KBWidget({
 
@@ -37,8 +37,8 @@ define (
 
                 if ($pie.colorScale == undefined) {
 
-                    var domain = [0,1];
-                    var range = [$pie.options.gbgColor || $pie.options.pieColor, $pie.options.gfgColor];
+                    const domain = [0,1];
+                    const range = [$pie.options.gbgColor || $pie.options.pieColor, $pie.options.gfgColor];
                     if ($pie.options.gmidColor) {
                         range.splice(1,0,$pie.options.gmidColor);
                         domain.splice(1,0,0.5);
@@ -75,17 +75,17 @@ define (
 
         setDatasets : function (newDatasets) {
 
-            var $me = this;
-            var _super = $me._super;
-            var sd = function() {
-                var standardLength = newDatasets.length ? newDatasets[0] : 0;
+            const $me = this;
+            const _super = $me._super;
+            const sd = function() {
+                const standardLength = newDatasets.length ? newDatasets[0] : 0;
 
-                for (var i = 0; i < newDatasets.length; i++) {
+                for (let i = 0; i < newDatasets.length; i++) {
                     if (newDatasets[i].length != standardLength.length) {
                         throw "Cannot set datasets! Non-standard lengths of circles!";
                     }
 
-                    for (var j = 0; j < newDatasets[i].length; j++) {
+                    for (let j = 0; j < newDatasets[i].length; j++) {
                         newDatasets[i][j].value = 1 / newDatasets[i].length;
                     }
                 }
@@ -106,7 +106,7 @@ define (
 
         sliceAction : function($pie) {
 
-            var radius = $pie.outerRadius();
+            const radius = $pie.outerRadius();
 
             return function() {
 
@@ -116,7 +116,7 @@ define (
                         return;
                     }
 
-                    var highlightColor = $pie.options.highlightColor;
+                    const highlightColor = $pie.options.highlightColor;
 
                     if (highlightColor == undefined) {
                         //xxx. Doesn't automatically invert the gfgColor yet
@@ -124,10 +124,10 @@ define (
 
                     d3.select(this).attr('fill', highlightColor);
 
-                    var coordinates = [0, 0];
+                    let coordinates = [0, 0];
                     coordinates = d3.mouse(this);
-                    var x = coordinates[0];
-                    var y = coordinates[1];
+                    const x = coordinates[0];
+                    const y = coordinates[1];
 
                     if ($pie.options.tooltips) {
                         $pie.showToolTip(
@@ -152,9 +152,9 @@ define (
                         $pie.hideToolTip();
                     }
 
-                    d3.select(this).attr('fill', function (d2, idx) { return d.data.color || $pie.options.colorScale(idx, d.data, $pie) })
+                    d3.select(this).attr('fill', (d2, idx) => { return d.data.color || $pie.options.colorScale(idx, d.data, $pie) })
                 })
-                .on('dblclick', function(d) {
+                .on('dblclick', (d) => {
 
                     if (d.data.gap) {
                         return;

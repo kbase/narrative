@@ -10,7 +10,7 @@ define (
 		'RGBColor',
 		'kbStandaloneTable',
 		'kbStandaloneGraph'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -18,7 +18,7 @@ define (
 		RGBColor,
 		kbStandaloneTable,
 		kbStandaloneGraph
-	) {
+	) => {
     return KBWidget({
         name: 'AbundanceDataView',
         parent : kbaseAuthenticatedWidget,
@@ -38,10 +38,10 @@ define (
         },
 	
         render: function() {
-	        var self = this;
-	        var pref = this.uuidv4();
+	        const self = this;
+	        const pref = this.uuidv4();
 
-	        var container = this.$elem;
+	        const container = this.$elem;
 	        container.empty();
             if (self.token == null) {
                 container.append("<div>[Error] You're not logged in</div>");
@@ -49,18 +49,18 @@ define (
             }
             container.append("<div><img src=\""+self.loading_image+"\">&nbsp;&nbsp;loading data...</div>");
 
-	        var kbws = new Workspace(self.ws_url, {'token': self.token});
-	        kbws.get_objects([{ref: self.options.ws+"/"+self.options.id}], function(data) {
+	        const kbws = new Workspace(self.ws_url, {'token': self.token});
+	        kbws.get_objects([{ref: self.options.ws+"/"+self.options.id}], (data) => {
 	            container.empty();
 		        // parse data
 		        if (data.length == 0) {
-		            var msg = "[Error] Object "+self.options.id+" does not exist in workspace "+self.options.ws;
+		            const msg = "[Error] Object "+self.options.id+" does not exist in workspace "+self.options.ws;
 		            container.append('<div><p>'+msg+'>/p></div>');
 		        } else {
-		            var biom = data[0]['data'];
-		            var matrix = [];
-		            var colnum = biom['columns'].length;
-		            var rownum = biom['rows'].length;
+		            const biom = data[0]['data'];
+		            let matrix = [];
+		            const colnum = biom['columns'].length;
+		            const rownum = biom['rows'].length;
 		            var tdata = [];
 		            // get matrix
 		            if (biom['matrix_type'] == 'sparse') {
@@ -70,10 +70,10 @@ define (
 		            }
 		            // get column names
 		            // build graph data
-		            var divdata = new Array(colnum);
-		            var colors = GooglePalette(colnum);
-		            var clength = colnum + 1;
-		            var cnames = new Array(clength)
+		            const divdata = new Array(colnum);
+		            const colors = GooglePalette(colnum);
+		            const clength = colnum + 1;
+		            const cnames = new Array(clength)
 		            cnames[0] = "Annotation";
 		            for (var c = 0; c < colnum; c++) {
 		                if (self.options.name == 0) {
@@ -90,15 +90,15 @@ define (
 		                }
 		            }
 		            // add values
-		            var maxval = 0;
+		            let maxval = 0;
 		            var tdata = new Array(rownum);
-		            for (var r = 0; r < rownum; r++) {
+		            for (let r = 0; r < rownum; r++) {
 			            tdata[r] = new Array(clength);
 			            tdata[r][0] = biom['rows'][r]['id'];
 			            for (var c = 0; c < colnum; c++) {
                             maxval = Math.max(maxval, matrix[r][c]);
                             divdata[c]['data'].push(matrix[r][c]);
-			                var value = Math.round(matrix[r][c] * 1000) / 1000;
+			                let value = Math.round(matrix[r][c] * 1000) / 1000;
 			                if (! value) {
 				                value = "0";
 			                }
@@ -106,38 +106,38 @@ define (
 			            }
 		            }
 		            // set tabs
-		            var tlen = 0;
+		            let tlen = 0;
 	    		    if (window.hasOwnProperty('rendererTable') && rendererTable.length) {
 				        tlen = rendererTable.length;
 			        }
-			        var glen = 0;
+			        let glen = 0;
                     if (window.hasOwnProperty('rendererGraph') && rendererGraph.length) {
                         glen = rendererGraph.length;
                     }
-		            var tabs = "<ul class='nav nav-tabs'>"+
+		            const tabs = "<ul class='nav nav-tabs'>"+
 		                       "<li class='active'><a data-toggle='tab' href='#outputGraph"+glen+"'>BoxPlots</a></li>"+
 		                       "<li><a data-toggle='tab' href='#outputTable"+tlen+"'>Abundance Table</a></li></ul>";
-		            var divs = "<div class='tab-content'>"+
+		            const divs = "<div class='tab-content'>"+
 		                       "<div class='tab-pane active' id='outputGraph"+glen+"' style='width: 95%;'></div>"+
 		                       "<div class='tab-pane' id='outputTable"+tlen+"' style='width: 95%;'></div></div>";
 		            container.append(tabs+divs);
 			        // TABLE
-	   		        var tableTest = standaloneTable.create({index: tlen});
+	   		        const tableTest = standaloneTable.create({index: tlen});
 	  		        tableTest.settings.target = document.getElementById("outputTable"+tlen);
 	    		    tableTest.settings.data = { header: cnames, data: tdata };
 			        tableTest.settings.filter = { 0: { type: "text" } };
-			        var mw = [ 120 ];
-			        for (var i=1; i<cnames.length; i++) {
+			        const mw = [ 120 ];
+			        for (let i=1; i<cnames.length; i++) {
 				        mw.push(130);
 			        }
 			        tableTest.settings.minwidths = mw;
 			        tableTest.render(tlen);
 			        // DEVIATION PLOT
-			        var ab_type = 'normalized';
+			        let ab_type = 'normalized';
 			        if (maxval > 1) {
 			            ab_type = 'raw';
 			        }
-                    var devTest = standaloneGraph.create({index: glen});
+                    const devTest = standaloneGraph.create({index: glen});
 			        devTest.settings.target = document.getElementById("outputGraph"+glen);
                     devTest.settings.data = divdata;
                     devTest.settings.y_title = ab_type+' abundance';
@@ -147,9 +147,9 @@ define (
                     devTest.settings.type = "deviation";
                     devTest.render(glen);
 		        }
-	        }, function(data) {
+	        }, (data) => {
 		        container.empty();
-		        var main = $('<div>');
+		        const main = $('<div>');
 		        main.append($('<p>')
 		            .css({'padding': '10px 20px'})
 		            .text('[Error] '+data.error.message));
@@ -171,7 +171,7 @@ define (
         },
 
 	    sparse2dense: function(sparse, rmax, cmax) {
-	        var dense = new Array(rmax);
+	        const dense = new Array(rmax);
 	        for (var i = 0; i < rmax; i++) {
 		        dense[i] = Array.apply(null, new Array(cmax)).map(Number.prototype.valueOf, 0);
 	        }

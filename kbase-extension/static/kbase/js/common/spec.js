@@ -12,11 +12,11 @@ define([
     'common/sdk',
     'common/specValidation',
     'widgets/appWidgets2/validators/resolver'
-], function(require, Promise, lang, sdk, Validation, validationResolver) {
+], (require, Promise, lang, sdk, Validation, validationResolver) => {
     'use strict';
 
     function factory(config) {
-        var spec;
+        let spec;
 
         if (config.spec) {
             spec = config.spec;
@@ -36,8 +36,8 @@ define([
          * Effectively this means that only the top level is represented, since
          */
         function makeEmptyModel() {
-            var model = {};
-            spec.parameters.layout.forEach(function(id) {
+            const model = {};
+            spec.parameters.layout.forEach((id) => {
                 model[id] = spec.parameters.specs[id].data.defaultValue || spec.parameters.specs[id].data.nullValue;
             });
             return model;
@@ -53,10 +53,10 @@ define([
         One exception is that if a parameter is a
         */
         function makeDefaultedModel() {
-            var model = {};
-            spec.parameters.layout.forEach(function(id) {
-                var paramSpec = spec.parameters.specs[id];
-                var modelValue;
+            const model = {};
+            spec.parameters.layout.forEach((id) => {
+                const paramSpec = spec.parameters.specs[id];
+                let modelValue;
                 if (paramSpec.data.type === 'struct') {
                     if (paramSpec.data.constraints.required) {
                         modelValue = lang.copy(paramSpec.data.defaultValue);
@@ -71,7 +71,7 @@ define([
             return model;
         }
 
-        var typeToValidatorModule = {
+        const typeToValidatorModule = {
             string: 'text',
             int: 'int',
             float: 'float',
@@ -80,7 +80,7 @@ define([
         }
 
         function getValidatorModule(fieldSpec) {
-            var moduleName = typeToValidatorModule[fieldSpec.data.type];
+            const moduleName = typeToValidatorModule[fieldSpec.data.type];
             if (!moduleName) {
                 throw new Error('No validator for type: ' + fieldSpec.data.type);
             }
@@ -90,10 +90,10 @@ define([
         function validateModel(model) {
             // TODO: spec at the top level should be a struct...
             // return;
-            var validationMap = {};
-            spec.parameters.layout.forEach(function(id) {
-                var fieldValue = model[id];
-                var fieldSpec = spec.parameters.specs[id];
+            const validationMap = {};
+            spec.parameters.layout.forEach((id) => {
+                const fieldValue = model[id];
+                const fieldSpec = spec.parameters.specs[id];
                 validationMap[id] = validationResolver.validate(fieldValue, fieldSpec);
             });
             return Promise.props(validationMap);

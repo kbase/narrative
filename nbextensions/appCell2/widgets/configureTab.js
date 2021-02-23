@@ -4,13 +4,13 @@
 define([
     'bluebird',
     'common/runtime'
-], function(Promise, runtime) {
+], (Promise, runtime) => {
 
     function loadParamsWidget(arg) {
-        return new Promise(function(resolve, reject) {
-            require(['./appParamsWidget'], function(Widget) {
+        return new Promise((resolve, reject) => {
+            require(['./appParamsWidget'], (Widget) => {
                 // TODO: widget should make own bus.
-                var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' }),
+                const bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' }),
                     widget = Widget.make({
                         bus: bus,
                         workspaceInfo: arg.workspaceInfo
@@ -21,8 +21,8 @@ define([
                     parameters: arg.parameters
                 });
 
-                bus.on('sync-params', function(message) {
-                    message.parameters.forEach(function(paramId) {
+                bus.on('sync-params', (message) => {
+                    message.parameters.forEach((paramId) => {
                         bus.send({
                             parameter: paramId,
                             value: arg.model.getItem(['params', message.parameter])
@@ -35,8 +35,8 @@ define([
                     });
                 });
 
-                bus.on('parameter-sync', function(message) {
-                    var value = arg.model.getItem(['params', message.parameter]);
+                bus.on('parameter-sync', (message) => {
+                    const value = arg.model.getItem(['params', message.parameter]);
                     bus.send({
                         //                            parameter: message.parameter,
                         value: value
@@ -60,19 +60,19 @@ define([
                     }
                 });
 
-                bus.on('parameter-changed', function(message) {
+                bus.on('parameter-changed', (message) => {
                     arg.model.setItem(['params', message.parameter], message.newValue);
                     evaluateAppState();
                 });
 
                 return widget.start()
-                    .then(function() {
+                    .then(() => {
                         resolve({
                             bus: bus,
                             instance: widget
                         });
                     });
-            }, function(err) {
+            }, (err) => {
                 console.log('ERROR', err);
                 reject(err);
             });
@@ -81,7 +81,7 @@ define([
 
 
     function factory(config) {
-        var container,
+        let container,
             widget,
             workspaceInfo;
 
@@ -96,14 +96,14 @@ define([
                     parameters: arg.parameters
 
                 })
-                .then(function(result) {
+                .then((result) => {
                     widget = result;
                 });
 
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (widget) {
                     return widget.instance.stop();
                 }

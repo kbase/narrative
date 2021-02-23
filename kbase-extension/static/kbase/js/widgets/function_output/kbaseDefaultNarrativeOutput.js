@@ -31,11 +31,11 @@ define (
 		'kbwidget',
 		'bootstrap',
 		'jquery'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$
-	) {
+	) => {
     return KBWidget({
         /* 
          * (required) Your widget should be named in CamelCase.
@@ -95,13 +95,13 @@ define (
          * that's just a style thing. You can do whatever the widget requires.
          */
         render: function() {
-            var s = this.options.data;
+            let s = this.options.data;
             if (typeof s != 'string') {
                 s = JSON.stringify(s, undefined, 2);
                 s = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                 s = s.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, 
-                    function (match) {
-                        var cls = 'number';
+                    (match) => {
+                        let cls = 'number';
                         if (/^"/.test(match)) {
                             if (/:$/.test(match)) {
                                 cls = 'key';

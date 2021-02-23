@@ -1,6 +1,6 @@
 define([
     './messages'
-], function (IFrameMessages) {
+], (IFrameMessages) => {
 
 
 // interface ConstructorParams {
@@ -11,19 +11,19 @@ define([
 
     function factory(config) {
 
-        var resizeCheckInterval = config.interval;
-        var messageManager = config.messageManager;
-        var nodeGetter = config.nodeGetter;
+        const resizeCheckInterval = config.interval;
+        const messageManager = config.messageManager;
+        const nodeGetter = config.nodeGetter;
 
-        var lastHeight; //: number;
-        var intervalId; //: number;
+        let lastHeight; //: number;
+        let intervalId; //: number;
 
         function getHeight() {
             var node = node || (nodeGetter && nodeGetter());
             if (!node) {
                 return;
             }
-            var rect = node.getBoundingClientRect();
+            const rect = node.getBoundingClientRect();
             return rect.height;
         }
 
@@ -36,8 +36,8 @@ define([
 
         function listenForResize() {
             lastHeight = getHeight();
-            intervalId = window.setInterval(function () {
-                var currentHeight = getHeight();
+            intervalId = window.setInterval(() => {
+                const currentHeight = getHeight();
                 if (!currentHeight) {
                     return;
                 }

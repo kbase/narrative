@@ -12,7 +12,7 @@ define (
 		'geometry_rectangle',
 		'geometry_point',
 		'geometry_size'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -21,7 +21,7 @@ define (
 		geometry_rectangle,
 		geometry_point,
 		geometry_size
-	) {
+	) => {
 
         return KBWidget({
             name: "kbaseVisWidget",
@@ -152,17 +152,17 @@ define (
                 this.render('yAxis');
             },
             createIDMapForDomain : function createIDMapForDomain (domain) {
-                var map = {};
+                const map = {};
                 $.each(
                     domain,
-                    function (idx, val) {
+                    (idx, val) => {
                         map[idx] = val;
                     }
                 );
                 return map;
             },
             setXScaleDomain : function setXScaleDomain (domain, scaleType) {
-                var xScale = this.xScale();
+                let xScale = this.xScale();
 
                 if (xScale == undefined) {
                     if (scaleType == undefined) {
@@ -193,7 +193,7 @@ define (
                 return xScale;
             },
             setYScaleDomain : function setYScaleDomain (domain, scaleType) {
-                var yScale = this.yScale();
+                let yScale = this.yScale();
 
                 if (yScale == undefined) {
                     if (scaleType == undefined) {
@@ -327,17 +327,17 @@ define (
 
             fitTextToWidth : function fitTextToWidth (text, width) {
 
-                var fakeText = this.D3svg()
+                const fakeText = this.D3svg()
                     .append('text')
                     .attr('opacity', 0)
                     .attr('font-size', this.options.legendSize)
                     .text(text);
 
-                var box = fakeText[0][0].getBBox();
+                let box = fakeText[0][0].getBBox();
 
-                var truncatedText = text;
-                var truncated = false;
-                var originalWidth = box.width;
+                let truncatedText = text;
+                let truncated = false;
+                const originalWidth = box.width;
 
                 while (box.width + this.options.legendTextXOffset > width && truncatedText.length) {
                     truncatedText = truncatedText.substring(0, truncatedText.length - 1);
@@ -366,9 +366,9 @@ define (
                     return;
                 }
 
-                var $vis = this;
+                const $vis = this;
 
-                var shapeArea = {
+                const shapeArea = {
                     circle : 81,
                     square : 81,
                     'triangle-up' : 49,
@@ -377,17 +377,17 @@ define (
                     cross : 49,
                 }
 
-                var legendRectSize = 8;
+                const legendRectSize = 8;
 
-                var legendRegionBounds = this[this.options.legendRegion + 'Bounds']();
+                const legendRegionBounds = this[this.options.legendRegion + 'Bounds']();
 
-                var legendWidth = Math.min(this.options.legendWidth || 1000000000, legendRegionBounds.size.width);
+                const legendWidth = Math.min(this.options.legendWidth || 1000000000, legendRegionBounds.size.width);
 
-                var legendX = 0;
-                var legendY = 0;
+                let legendX = 0;
+                let legendY = 0;
 
-                var textXOffset = $vis.options.legendTextXOffset;
-                var textYOffset = $vis.options.legendTextYOffset;
+                const textXOffset = $vis.options.legendTextXOffset;
+                const textYOffset = $vis.options.legendTextYOffset;
 
                 if (this.options.legendAlignment.match(/B/)) {
                     legendY = legendRegionBounds.size.height - $vis.options.legendLineHeight * this.legend().length;
@@ -395,9 +395,9 @@ define (
 
                 if (this.options.legendAlignment.match(/R/)) {
 
-                    var actualWidth = 0;
-                    this.legend().forEach(function (item, i) {
-                        var trunc = $vis.fitTextToWidth(item.label, legendWidth);
+                    let actualWidth = 0;
+                    this.legend().forEach((item, i) => {
+                        const trunc = $vis.fitTextToWidth(item.label, legendWidth);
                         actualWidth = Math.max(actualWidth, trunc.width);
                     });
 
@@ -406,7 +406,7 @@ define (
 
                 }
 
-                var uniqueKey = function(d) { return d.label };
+                const uniqueKey = function(d) { return d.label };
 
                 this.D3svg().select(this.region(this.options.legendRegion)).selectAll('.legend')
                     .data([0])
@@ -414,11 +414,11 @@ define (
                     .append('g')
                     .attr('class', 'legend')
 
-                var legend = this.D3svg().select(this.region(this.options.legendRegion)).selectAll('.legend').selectAll('g').data(this.legend(), uniqueKey);
+                const legend = this.D3svg().select(this.region(this.options.legendRegion)).selectAll('.legend').selectAll('g').data(this.legend(), uniqueKey);
 
-                var gTransform = function (b,j,i) {
-                    var horz = 6 + legendX + $vis.options.legendOffset[0];
-                    var vert = 6 + i * $vis.options.legendLineHeight + legendY + $vis.options.legendOffset[1];
+                const gTransform = function (b,j,i) {
+                    const horz = 6 + legendX + $vis.options.legendOffset[0];
+                    const vert = 6 + i * $vis.options.legendLineHeight + legendY + $vis.options.legendOffset[1];
                     return 'translate(' + horz + ',' + vert + ')';
                 };
 
@@ -427,9 +427,9 @@ define (
                     .append('g')
                     .each(function (d,i) {
 
-                        var g = d3.select(this);
+                        const g = d3.select(this);
 
-                        g.attr('transform', function (b,j) {return gTransform(b,j,i)})
+                        g.attr('transform', (b,j) => {return gTransform(b,j,i)})
 
                         g
                             .append('path')
@@ -442,22 +442,22 @@ define (
                     })
                 ;
 
-                var time = this.drawnLegend ? this.options.transitionTime : 0;
+                const time = this.drawnLegend ? this.options.transitionTime : 0;
 
                 legend
                     .each(function (d,i) {
 
-                        var g = d3.select(this);
+                        const g = d3.select(this);
 
-                        g.transition().duration(time).attr('transform', function (b,j) {return gTransform(b,j,i)})
+                        g.transition().duration(time).attr('transform', (b,j) => {return gTransform(b,j,i)})
 
-                        var truncationObj = $vis.fitTextToWidth(d.label, legendWidth);
+                        const truncationObj = $vis.fitTextToWidth(d.label, legendWidth);
 
                         g.selectAll('path')
                             .transition().duration(time)
-                                .attr('d', function (b) {return d3.svg.symbol().type(d.shape || 'square').size(shapeArea[d.shape] || 81)() } )
-                                .style('fill', function (b, j) { return d.color })
-                                .style('stroke', function (b, j) { return d.color })
+                                .attr('d', (b) => {return d3.svg.symbol().type(d.shape || 'square').size(shapeArea[d.shape] || 81)() } )
+                                .style('fill', (b, j) => { return d.color })
+                                .style('stroke', (b, j) => { return d.color })
                                 .attr('opacity', 1)
 
                         ;
@@ -468,12 +468,12 @@ define (
                                 .attr('y', textYOffset)
                                 .attr('font-size', $vis.options.legendSize)
                                 .style('cursor', 'pointer')
-                                .text(function () { return truncationObj.truncatedText })
+                                .text(() => { return truncationObj.truncatedText })
                                 .attr('opacity', 1)
                         ;
 
                         g.selectAll('text')
-                            .on('mouseover', function(d) {
+                            .on('mouseover', (d) => {
                                 if (truncationObj.truncated) {
                                     $vis.showToolTip({label : truncationObj.text})
                                 }
@@ -482,7 +482,7 @@ define (
                                     $vis.legendOver(d.represents);
                                 }
                             })
-                            .on('mouseout', function(d) {
+                            .on('mouseout', (d) => {
                                 if (truncationObj.truncated) {
                                     $vis.hideToolTip();
                                 }
@@ -497,7 +497,7 @@ define (
                     .exit()
                     .each(function (d,i) {
 
-                        var g = d3.select(this);
+                        const g = d3.select(this);
 
                         g.selectAll('path')
                             .transition().duration(time)
@@ -521,14 +521,14 @@ define (
 
             renderULCorner : function renderULCorner () {
 
-                var ulBounds = this.ULBounds();
+                const ulBounds = this.ULBounds();
 
-                var imgSize = new Size(
+                const imgSize = new Size(
                     ulBounds.size.width,
                     ulBounds.size.height
                     );
 
-                var inset = 5;
+                const inset = 5;
 
                 imgSize.width -= inset;
                 imgSize.height -= inset;
@@ -543,10 +543,10 @@ define (
                     return;
                 }
 
-                var ulDataset = [this.options.ulIcon];
+                const ulDataset = [this.options.ulIcon];
 
                 if (this.options.ulIcon) {
-                    var ulLabel = this.D3svg().select(this.region('UL')).selectAll('.ULLabel');
+                    const ulLabel = this.D3svg().select(this.region('UL')).selectAll('.ULLabel');
 
                     ulLabel
                         .data(ulDataset)
@@ -556,7 +556,7 @@ define (
                         .attr('y', inset / 2)
                         .attr('width', imgSize.width)
                         .attr('height', imgSize.height)
-                        .attr('xlink:href', function (d) {
+                        .attr('xlink:href', (d) => {
                             return d
                         })
                 }
@@ -576,9 +576,9 @@ define (
             extractLegend : function extractLegend (dataset) { /* no op in the super class */ },
 
             setJSONDataset : function (json_url) {
-                var $vis = this;
+                const $vis = this;
 
-                $.ajax(json_url, {dataType : 'json'}).then(function(d) {
+                $.ajax(json_url, {dataType : 'json'}).then((d) => {
 
                     if (d.data && ! d.dataset) {
                         d.dataset = d.data;
@@ -598,7 +598,7 @@ define (
                     else {
                         $vis.setDataset(d);
                     }
-                }).fail(function(d) {
+                }).fail((d) => {
                     $vis.$elem.empty();
                     $vis.$elem
                         .addClass('alert alert-danger')
@@ -640,12 +640,12 @@ define (
                 }
 
                 //first, peel off our dataset
-                var myDataset = newDatasets.shift();
+                const myDataset = newDatasets.shift();
 
-                var $me = this;
+                const $me = this;
 
                 //the remaining children are datasets of this vis.
-                var initKids = function () {
+                const initKids = function () {
 
                     $me.setDataset(myDataset);
 
@@ -656,7 +656,7 @@ define (
                             child = $me.children()[i];
                             child.reenter(i, newDatasets[i], $me);
                         } else {
-                            var childOptions = $me.childOptions($me.children().length, newDatasets[i]);
+                            const childOptions = $me.childOptions($me.children().length, newDatasets[i]);
                             childOptions.parent = $me;
 
                             child = new $me.constructor($.jqElem('div'), childOptions);
@@ -687,13 +687,13 @@ define (
                 return [0, 100];
             },
             renderXLabel : function renderXLabel () {
-                var labelRegionBounds = this[this.options.xLabelRegion + 'Bounds']();
+                const labelRegionBounds = this[this.options.xLabelRegion + 'Bounds']();
 
 
-                var xLabeldataset = [this.xLabel()];
-                var yOffset = this.options.xLabelOffset;
+                const xLabeldataset = [this.xLabel()];
+                const yOffset = this.options.xLabelOffset;
 
-                var xLabel = this.D3svg().select(this.region(this.options.xLabelRegion)).selectAll('.xLabel');
+                const xLabel = this.D3svg().select(this.region(this.options.xLabelRegion)).selectAll('.xLabel');
                 xLabel
                     .data(xLabeldataset)
                     .text(this.xLabel())
@@ -713,14 +713,14 @@ define (
             },
             renderYLabel : function renderYLabel () {
 
-                var labelRegionBounds = this[this.options.yLabelRegion + 'Bounds']();
+                const labelRegionBounds = this[this.options.yLabelRegion + 'Bounds']();
 
-                var yLabeldataset = [this.yLabel()];
+                const yLabeldataset = [this.yLabel()];
 
-                var rotation = this.options.yLabelRegion == 'xPadding' ? -90 : 90;
-                var xOffset = this.options.yLabelOffset;
+                const rotation = this.options.yLabelRegion == 'xPadding' ? -90 : 90;
+                const xOffset = this.options.yLabelOffset;
 
-                var yLabel = this.D3svg().select(this.region(this.options.yLabelRegion)).selectAll('.yLabel');
+                const yLabel = this.D3svg().select(this.region(this.options.yLabelRegion)).selectAll('.yLabel');
                 yLabel
                     .data(yLabeldataset)
                     .text(this.yLabel())
@@ -750,7 +750,7 @@ define (
             },
             renderXAxis : function renderXAxis () {
 
-                var $self = this;
+                const $self = this;
 
                 if (! this.options.shouldRenderXAxis) {
                     return;
@@ -760,7 +760,7 @@ define (
                     return;
                 }
 
-                var axisTransform = this.options.xAxisRegion == 'yGutter' ? axisRegionBounds.size.height : 0;
+                let axisTransform = this.options.xAxisRegion == 'yGutter' ? axisRegionBounds.size.height : 0;
 
                 if (this.options.xAxisTransform) {
                     axisTransform = this.options.xAxisTransform;
@@ -768,24 +768,24 @@ define (
 
                 var axisRegionBounds = this[this.options.xAxisRegion + 'Bounds']();
 
-                var xAxisOrientation = this.options.xAxisOrientation;
+                let xAxisOrientation = this.options.xAxisOrientation;
 
                 if (xAxisOrientation == 'bottom' && axisTransform > axisRegionBounds.size.height - 30) {
                     xAxisOrientation = 'top';
                 }
 
-                var xAxis =
+                const xAxis =
                     d3.svg.axis()
                     .scale(this.xScale())
                     .orient(xAxisOrientation);
 
-                var ticks = this.xTickValues();
+                const ticks = this.xTickValues();
 
                 if (ticks != undefined) {
                     xAxis
                         .tickValues(ticks)
                         .tickSubdivide(0)
-                        .tickFormat(function (d) {
+                        .tickFormat((d) => {
                             return $self.xTickLabel.call($self, d)
                         })
                         ;
@@ -795,7 +795,7 @@ define (
                     xAxis.tickFormat('');
                 }
 
-                var gxAxis = this.D3svg().select(this.region(this.options.xAxisRegion)).select('.xAxis');
+                let gxAxis = this.D3svg().select(this.region(this.options.xAxisRegion)).select('.xAxis');
 
                 if (gxAxis[0][0] == undefined) {
                     gxAxis = this.D3svg().select(this.region(this.options.xAxisRegion))
@@ -814,9 +814,9 @@ define (
                         .selectAll("text")
                             .attr("transform", function (d, i) {
                                 try {
-                                    var bounds = $self.yGutterBounds();
+                                    const bounds = $self.yGutterBounds();
 
-                                    var textBounds = this.getBBox();
+                                    const textBounds = this.getBBox();
                                     //bullshit magic numbers. Moving it over by 2/3rds of the width seems to line it up nicely, and down by the height.
                                     return "rotate(90) translate(" + (textBounds.width * 2/3) + ",-" + textBounds.height + ")";
                                 }
@@ -828,7 +828,7 @@ define (
                     ;
                 }
 
-                var transitionTime = this.renderedXAxis
+                const transitionTime = this.renderedXAxis
                     ? this.options.transitionTime
                     : 0;
 
@@ -837,7 +837,7 @@ define (
 
             },
             svg2HTML : function svg2HTML () {
-                var $container = $.jqElem('div')
+                const $container = $.jqElem('div')
                     .append(this.data('$svg'));
 
                 return $container.html();
@@ -852,7 +852,7 @@ define (
                     return;
                 }
 
-                var yAxis =
+                const yAxis =
                     d3.svg.axis()
                     .scale(this.yScale())
                     .orient(this.options.yAxisOrientation);
@@ -861,10 +861,10 @@ define (
                     yAxis.tickFormat('');
                 }
 
-                var gyAxis = this.D3svg().select(this.region(this.options.yAxisRegion)).select('.yAxis');
+                let gyAxis = this.D3svg().select(this.region(this.options.yAxisRegion)).select('.yAxis');
 
-                var axisRegionBounds = this[this.options.yAxisRegion + 'Bounds']();
-                var axisTransform = this.options.yAxisRegion == 'xPadding' ? axisRegionBounds.size.width : 0;
+                const axisRegionBounds = this[this.options.yAxisRegion + 'Bounds']();
+                const axisTransform = this.options.yAxisRegion == 'xPadding' ? axisRegionBounds.size.width : 0;
 
                 if (gyAxis[0][0] == undefined) {
                     gyAxis = this.D3svg().select(this.region(this.options.yAxisRegion))
@@ -874,7 +874,7 @@ define (
                         .attr("transform", "translate(" + axisTransform + ",0)")
                 }
 
-                var transitionTime = this.renderedYAxis
+                const transitionTime = this.renderedYAxis
                     ? this.options.transitionTime
                     : 0;
 
@@ -905,14 +905,14 @@ define (
 
             appendUI : function appendUI ($elem) {
 
-                var $vis = this;
+                const $vis = this;
 
-                var chartBounds = this.chartBounds();
+                const chartBounds = this.chartBounds();
                 if (chartBounds.size.width != chartBounds.size.height && this.options.aspectRatio != 'default') {
 
-                    var diff        = Math.abs(chartBounds.size.width - chartBounds.size.height);
-                    var newHeight   = $elem.height();
-                    var newWidth    = $elem.width();
+                    const diff        = Math.abs(chartBounds.size.width - chartBounds.size.height);
+                    let newHeight   = $elem.height();
+                    let newWidth    = $elem.width();
 
                     if (this.options.aspectRatio == 'minSquare') {
 
@@ -944,7 +944,7 @@ define (
 
                 }
 
-                var D3svg;
+                let D3svg;
 
                 if (!this.options.parent) {
                     $elem.append(
@@ -958,7 +958,7 @@ define (
                         .attr('xmlns', "http://www.w3.org/2000/svg")
                         .attr('style', 'width : ' + this.options.width + '; height : ' + this.options.height)
 
-                    var tooltip = d3.select('body').selectAll('.visToolTip')
+                    const tooltip = d3.select('body').selectAll('.visToolTip')
                         .data([0])
                         .enter()
                         .append('div')
@@ -999,26 +999,26 @@ define (
                 }
 
                 if (this.options.rootRegion) {
-                    var rootRegion = $vis.region('root', true);
-                    D3svg = D3svg.selectAll('.' + rootRegion).data([{region : rootRegion}], function(d) { return d.region });
+                    const rootRegion = $vis.region('root', true);
+                    D3svg = D3svg.selectAll('.' + rootRegion).data([{region : rootRegion}], (d) => { return d.region });
                     D3svg
                         .enter()
                         .append('g')
-                        .attr('class', function (d) {return d.region })
-                        .attr('transform', $.proxy(function(region) {
+                        .attr('class', (d) => {return d.region })
+                        .attr('transform', $.proxy((region) => {
                             return $vis.buildTransformation($vis.options.rootRegion);
                         }, this));
                 }
 
 
-                var regions = [
+                const regions = [
                     'chart', //add the chart first, because we want it to be at the lowest level.
                     'UL', 'UR', 'LL', 'LR', //corners are low priority
                     'yGutter', 'xGutter', 'yPadding', 'xPadding'   //labels win
                 ];
 
                 //used when debug is on.
-                var colors = [
+                const colors = [
                     'red', 'green', 'blue',
                     'cyan', 'magenta', 'yellow',
                     'purple', 'orange', 'gray'
@@ -1026,35 +1026,35 @@ define (
 
                 D3svg.selectAll('defs').data([null]).enter().append('defs').attr('class', 'definitions');
 
-                var regionG = D3svg.selectAll('g')
-                    .data(regions, function (d) {
+                const regionG = D3svg.selectAll('g')
+                    .data(regions, (d) => {
                         return d
                     })
                     .enter()
                     .append('g')
-                    .attr('class', function (region) {
+                    .attr('class', (region) => {
                         return region
                     })
                     .attr('data-x', $.proxy(function (region) {
-                        var bounds = this[region + 'Bounds']();
+                        const bounds = this[region + 'Bounds']();
                         return bounds.origin.x
                     }, this))
                     .attr('data-y', $.proxy(function (region) {
-                        var bounds = this[region + 'Bounds']();
+                        const bounds = this[region + 'Bounds']();
                         return bounds.origin.y
                     }, this))
                     .attr('data-width', $.proxy(function (region) {
-                        var bounds = this[region + 'Bounds']();
+                        const bounds = this[region + 'Bounds']();
                         return bounds.size.width
                     }, this))
                     .attr('data-height', $.proxy(function (region) {
-                        var bounds = this[region + 'Bounds']();
+                        const bounds = this[region + 'Bounds']();
                         return bounds.size.height
                     }, this))
                     .attr('transform',
                         $.proxy(
                             function (region) {
-                                var bounds = this[region + 'Bounds']();
+                                const bounds = this[region + 'Bounds']();
                                 return 'translate(' + bounds.origin.x + ',' + bounds.origin.y + ')';
                             }, this)
                         );
@@ -1064,31 +1064,31 @@ define (
                     .attr('x', 0)
                     .attr('y', 0)
                     .attr('width', $.proxy(function (region) {
-                        var bounds = this[region + 'Bounds']();
+                        const bounds = this[region + 'Bounds']();
                         return bounds.size.width
                     }, this))
                     .attr('height', $.proxy(function (region) {
-                        var bounds = this[region + 'Bounds']();
+                        const bounds = this[region + 'Bounds']();
                         return bounds.size.height
                     }, this))
-                    .attr('fill', function (d) {
+                    .attr('fill', (d) => {
                         return $vis.options.debug ? colors.shift() : $vis.options.bgColor
                     })
                     .attr('class', 'background');
 
                 $.each(
                     regions,
-                    function (idx, region) {
+                    (idx, region) => {
 
-                        D3svg.selectAll('.' + region).selectAll('g').data([{region: $vis.region(region, true), r: region}], function (d) {
+                        D3svg.selectAll('.' + region).selectAll('g').data([{region: $vis.region(region, true), r: region}], (d) => {
                             return d.region
                         })
                             .enter()
                             .append('g')
-                            .attr('class', function (d) {
+                            .attr('class', (d) => {
                                 return d.region
                             })
-                            .attr('transform', function (d) {
+                            .attr('transform', (d) => {
                                 return $vis.buildTransformation($vis.options.transformations[d.r] || $vis.options.transformations.global);
                             })
                     }
@@ -1097,7 +1097,7 @@ define (
             },
 
             buildTransformation : function buildTransformation(transformation) {
-                var transform = $.extend(true, {translate: {x: 0, y: 0}, scale: {width: 1, height: 1}}, transformation);
+                const transform = $.extend(true, {translate: {x: 0, y: 0}, scale: {width: 1, height: 1}}, transformation);
 
                 return 'translate(' + transform.translate.x + ',' + transform.translate.y + ')'
                     + ' scale(' + transform.scale.width + ',' + transform.scale.height + ')';
@@ -1112,7 +1112,7 @@ define (
             },
             region : function _region (region, asName) {
 
-                var dot = '';
+                let dot = '';
 
                 if (!asName) {
                     dot = '.';
@@ -1175,10 +1175,10 @@ define (
 
             chartBounds : function chartBounds () {
 
-                var widgetWidth = this.$elem.width();
-                var widgetHeight = this.$elem.height();
+                const widgetWidth = this.$elem.width();
+                const widgetHeight = this.$elem.height();
 
-                var chart = new Rectangle(
+                const chart = new Rectangle(
                     new Point(this.xPadding(), this.yGutter()),
                     new Size(
                         widgetWidth - this.xPadding() - this.xGutter(),
@@ -1227,7 +1227,7 @@ define (
                     grad
                     );
 
-                var gradKey = [grad.cx, grad.cy, grad.r, grad.startColor, grad.stopColor].join(',');
+                const gradKey = [grad.cx, grad.cy, grad.r, grad.startColor, grad.stopColor].join(',');
 
                 if (this.radialGradients()[gradKey] != undefined && grad.id == undefined) {
                     grad.id = this.radialGradients()[gradKey];
@@ -1241,10 +1241,10 @@ define (
                 //I'd prefer to .select('.definitions').selectAll('radialGradient') and then just let
                 //d3 figure out the one that appropriately maps to my given grad value...but I couldn't
                 //get that to work for some inexplicable reason.
-                var gradient = this.D3svg().select('.definitions').selectAll('#' + grad.id)
+                const gradient = this.D3svg().select('.definitions').selectAll('#' + grad.id)
                     .data([grad]);
 
-                var newGrad = false;
+                let newGrad = false;
 
                 gradient
                     .enter()
@@ -1255,54 +1255,54 @@ define (
                                 //a global flag (well, enclosing context flag) to say that this is a newly created gradient
                                     //so down below we don't use any transition time to set the values. There's gotta be a better
                                         //way to do this, but I couldn't figure it out.
-                                            function (d) {
+                                            (d) => {
                                                 newGrad = true;
                                                 return d.id
                                             }
                                         )
                                             .attr('gradientUnits', 'userSpaceOnUse')
-                                            .attr('cx', function (d) {
+                                            .attr('cx', (d) => {
                                                 return d.cx
                                             })
-                                            .attr('cy', function (d) {
+                                            .attr('cy', (d) => {
                                                 return d.cy
                                             })
-                                            .attr('r', function (d) {
+                                            .attr('r', (d) => {
                                                 return 2.5 * d.r
                                             })
                                             .attr('spreadMethod', 'pad')
                                             ;
 
-                                        var transitionTime = newGrad
+                                        const transitionTime = newGrad
                                             ? 0
                                             : this.options.transitionTime;
 
-                                        var stop0 = gradient.selectAll('stop[offset="0%"]').data([grad]);
+                                        const stop0 = gradient.selectAll('stop[offset="0%"]').data([grad]);
                                         stop0.enter()
                                             .append('stop')
                                             .attr('offset', '0%');
                                         stop0.transition().duration(transitionTime)
-                                            .attr('stop-color', function (d) {
+                                            .attr('stop-color', (d) => {
                                                 return d.startColor
                                             });
 
-                                        var stop30 = gradient.selectAll('stop[offset="30%"]').data([grad]);
+                                        const stop30 = gradient.selectAll('stop[offset="30%"]').data([grad]);
                                         stop30.enter()
                                             .append('stop')
                                             .attr('offset', '30%')
                                             .attr('stop-opacity', 1)
                                         stop30.transition().duration(transitionTime)
-                                            .attr('stop-color', function (d) {
+                                            .attr('stop-color', (d) => {
                                                 return d.startColor
                                             });
 
-                                        var stop70 = gradient.selectAll('stop[offset="70%"]').data([grad]);
+                                        const stop70 = gradient.selectAll('stop[offset="70%"]').data([grad]);
                                         stop70.enter()
                                             .append('stop')
                                             .attr('stop-opacity', 1)
                                             .attr('offset', '70%');
                                         stop70.transition().duration(transitionTime)
-                                            .attr('stop-color', function (d) {
+                                            .attr('stop-color', (d) => {
                                                 return d.stopColor
                                             });
 
@@ -1311,7 +1311,7 @@ define (
                                     },
                                 linearGradient : function linearGradient (grad) {
 
-                                    var chartBounds = this.chartBounds();
+                                    const chartBounds = this.chartBounds();
 
                                     grad = $.extend(
                                         true,
@@ -1326,7 +1326,7 @@ define (
                                         grad
                                         );
 
-                                    var gradKey = [grad.x1, grad.x2, grad.y1, grad.y2, grad.width, grad.height, grad.startColor, grad.stopColor].join(',');
+                                    const gradKey = [grad.x1, grad.x2, grad.y1, grad.y2, grad.width, grad.height, grad.startColor, grad.stopColor].join(',');
 
                                     if (this.linearGradients()[gradKey] != undefined && grad.id == undefined) {
                                         grad.id = this.linearGradients()[gradKey];
@@ -1340,10 +1340,10 @@ define (
                                     //I'd prefer to .select('.definitions').selectAll('linearGradient') and then just let
                                     //d3 figure out the one that appropriately maps to my given grad value...but I couldn't
                                     //get that to work for some inexplicable reason.
-                                    var gradient = this.D3svg().select('.definitions').selectAll('#' + grad.id)
+                                    const gradient = this.D3svg().select('.definitions').selectAll('#' + grad.id)
                                         .data([grad]);
 
-                                    var newGrad = false;
+                                    let newGrad = false;
 
                                     gradient
                                         .enter()
@@ -1354,32 +1354,32 @@ define (
                                                     //a global flag (well, enclosing context flag) to say that this is a newly created gradient
                                                         //so down below we don't use any transition time to set the values. There's gotta be a better
                                                             //way to do this, but I couldn't figure it out.
-                                                                function (d) {
+                                                                (d) => {
                                                                     newGrad = true;
                                                                     return d.id
                                                                 }
                                                             )
                                                                 .attr('gradientUnits', 'userSpaceOnUse')
-                                                                .attr('x1', function (d) {
+                                                                .attr('x1', (d) => {
                                                                     return d.x1
                                                                 })
-                                                                .attr('x2', function (d) {
+                                                                .attr('x2', (d) => {
                                                                     return d.x2
                                                                 })
-                                                                .attr('y1', function (d) {
+                                                                .attr('y1', (d) => {
                                                                     return d.y1
                                                                 })
-                                                                .attr('y2', function (d) {
+                                                                .attr('y2', (d) => {
                                                                     return d.y2
                                                                 })
                                                                 .attr('spreadMethod', 'pad')
                                                                 ;
 
-                                                            var transitionTime = newGrad
+                                                            const transitionTime = newGrad
                                                                 ? 0
                                                                 : this.options.transitionTime;
 
-                                                            var gradStops = gradient.selectAll('stop').data(grad.colors);
+                                                            const gradStops = gradient.selectAll('stop').data(grad.colors);
 
                                                             gradStops
                                                                 .enter()
@@ -1388,13 +1388,13 @@ define (
 
                                                             gradStops
                                                                 .transition().duration(transitionTime)
-                                                                .attr('offset', function (d, i) {
+                                                                .attr('offset', (d, i) => {
                                                                     if (grad.gradStops) {
                                                                         return grad.gradStops[i];
                                                                     }
                                                                     else {
 
-                                                                        var num = 0;
+                                                                        let num = 0;
                                                                         if (i == grad.colors.length - 1) {
                                                                             num = 1;
                                                                         } else if (i > 0) {
@@ -1404,7 +1404,7 @@ define (
                                                                         return (Math.round(10000 * num) / 100) + '%'
                                                                     }
                                                                 })
-                                                                .attr('stop-color', function (d) {
+                                                                .attr('stop-color', (d) => {
                                                                     return d
                                                                 })
 
@@ -1423,7 +1423,7 @@ define (
 
 
                                                         text.each(function () {
-                                                            var text = d3.select(this),
+                                                            let text = d3.select(this),
                                                                 words = text.text().split(/\s+/).reverse(),
                                                                 word,
                                                                 line = [],
@@ -1458,15 +1458,15 @@ define (
                                                     },
                                                     absPos : function absPos (obj) {
 
-                                                        var box = obj.getBBox();
-                                                        var matrix = obj.getScreenCTM();
+                                                        const box = obj.getBBox();
+                                                        const matrix = obj.getScreenCTM();
 
                                                         return {x: box.x + matrix.e, y: box.y + matrix.f};
                                                     },
                                                     endall : function endall (transition, callback) {
-                                                        var n = 0;
+                                                        let n = 0;
                                                         transition
-                                                            .each(function () {
+                                                            .each(() => {
                                                                 ++n;
                                                             })
                                                             .each("end", function () {

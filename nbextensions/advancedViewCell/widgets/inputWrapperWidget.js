@@ -1,14 +1,14 @@
 define([
     'kb_common/html'
-], function (
+], (
     html
-) {
+) => {
     'use strict';
-    var t = html.tag,
+    const t = html.tag,
         div = t('div');
 
     function factory(config) {
-        var container,
+        let container,
             wrappedWidget = config.widget,
             wrappedId = html.genId();
 

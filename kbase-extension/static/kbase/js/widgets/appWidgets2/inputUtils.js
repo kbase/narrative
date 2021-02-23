@@ -5,14 +5,14 @@ define([
     'kb_common/html',
     'common/events',
     'common/ui'
-], function (
+], (
     html,
     Events,
     UI
-    ) {
+    ) => {
     'use strict';
     
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'), span = t('span'), button = t('button'),
         ui = UI.make({node: document.body});
         
@@ -25,7 +25,7 @@ define([
         
 
     function buildMessageAlert(messageDef) {
-        var events = Events.make({node: document.body}),
+        const events = Events.make({node: document.body}),
             content = div({
                 class: 'alert alert-' + messageDef.type,
                 role: 'alert'

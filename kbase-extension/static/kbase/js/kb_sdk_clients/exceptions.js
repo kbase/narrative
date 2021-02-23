@@ -1,6 +1,6 @@
 /*global define */
 /*jslint white:true,browser:true*/
-define([], function () {
+define([], () => {
     'use strict';
     
     function ClientException(code, message, xhr) {

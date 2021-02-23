@@ -15,7 +15,7 @@ function bpColors()
 // return array of colors, length is inputed number (base_colors repeats)
 function GooglePalette(num)
 {
-    var base_colors = [
+    const base_colors = [
 	"#3366cc",
 	"#dc3912",
 	"#ff9900",
@@ -53,9 +53,9 @@ function GooglePalette(num)
 	return base_colors;
     }
 
-    var num_colors = [];
-    for (var i=0; i<num; i++) {
-	var c_index = i % base_colors.length;
+    const num_colors = [];
+    for (let i=0; i<num; i++) {
+	const c_index = i % base_colors.length;
 	num_colors.push( base_colors[c_index] );
     }
     return num_colors;
@@ -75,7 +75,7 @@ function RGBColor(color_string)
 
     // before getting into regexps, try simple matches
     // and overwrite the input
-    var simple_colors = {
+    const simple_colors = {
         aliceblue: 'f0f8ff',
         antiquewhite: 'faebd7',
         aqua: '00ffff',
@@ -220,7 +220,7 @@ function RGBColor(color_string)
         yellow: 'ffff00',
         yellowgreen: '9acd32'
     };
-    for (var key in simple_colors) {
+    for (const key in simple_colors) {
         if (color_string == key) {
             color_string = simple_colors[key];
         }
@@ -228,7 +228,7 @@ function RGBColor(color_string)
     // emd of simple type-in colors
 
     // array of color definition objects
-    var color_defs = [
+    const color_defs = [
         {
             re: /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/,
             example: ['rgb(123, 234, 45)', 'rgb(255,234,245)'],
@@ -265,12 +265,12 @@ function RGBColor(color_string)
     ];
 
     // search through the definitions to find a match
-    for (var i = 0; i < color_defs.length; i++) {
-        var re = color_defs[i].re;
-        var processor = color_defs[i].process;
-        var bits = re.exec(color_string);
+    for (let i = 0; i < color_defs.length; i++) {
+        const re = color_defs[i].re;
+        const processor = color_defs[i].process;
+        const bits = re.exec(color_string);
         if (bits) {
-            var channels = processor(bits);
+            const channels = processor(bits);
             this.r = channels[0];
             this.g = channels[1];
             this.b = channels[2];
@@ -289,9 +289,9 @@ function RGBColor(color_string)
         return 'rgb(' + this.r + ', ' + this.g + ', ' + this.b + ')';
     };
     this.toHex = function () {
-        var r = this.r.toString(16);
-        var g = this.g.toString(16);
-        var b = this.b.toString(16);
+        let r = this.r.toString(16);
+        let g = this.g.toString(16);
+        let b = this.b.toString(16);
         if (r.length == 1) r = '0' + r;
         if (g.length == 1) g = '0' + g;
         if (b.length == 1) b = '0' + b;
@@ -301,26 +301,26 @@ function RGBColor(color_string)
     // help
     this.getHelpXML = function () {
 
-        var examples = new Array();
+        const examples = new Array();
         // add regexps
         for (var i = 0; i < color_defs.length; i++) {
-            var example = color_defs[i].example;
-            for (var j = 0; j < example.length; j++) {
+            const example = color_defs[i].example;
+            for (let j = 0; j < example.length; j++) {
                 examples[examples.length] = example[j];
             }
         }
         // add type-in colors
-        for (var sc in simple_colors) {
+        for (const sc in simple_colors) {
             examples[examples.length] = sc;
         }
 
-        var xml = document.createElement('ul');
+        const xml = document.createElement('ul');
         xml.setAttribute('id', 'rgbcolor-examples');
         for (var i = 0; i < examples.length; i++) {
             try {
-                var list_item = document.createElement('li');
-                var list_color = new RGBColor(examples[i]);
-                var example_div = document.createElement('div');
+                const list_item = document.createElement('li');
+                const list_color = new RGBColor(examples[i]);
+                const example_div = document.createElement('div');
                 example_div.style.cssText =
                         'margin: 3px; '
                         + 'border: 1px solid black; '
@@ -328,7 +328,7 @@ function RGBColor(color_string)
                         + 'color:' + list_color.toHex()
                 ;
                 example_div.appendChild(document.createTextNode('test'));
-                var list_item_value = document.createTextNode(
+                const list_item_value = document.createTextNode(
                     ' ' + examples[i] + ' -> ' + list_color.toRGB() + ' -> ' + list_color.toHex()
                 );
                 list_item.appendChild(example_div);

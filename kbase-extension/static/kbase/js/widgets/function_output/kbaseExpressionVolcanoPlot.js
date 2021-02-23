@@ -16,7 +16,7 @@ define([
     'bootstrap-slider',
     'tipsy',
   ],
-  function (
+  (
     KBWidget,
     $,
     d3,
@@ -28,7 +28,7 @@ define([
 		Runtime,
 		Workspace,
 		Jupyter
-  ) {
+  ) => {
     return KBWidget({
       name          : "kbaseExpressionVolcanoPlot",
       parent        : KBaseAuthenticatedWidget,
@@ -61,16 +61,16 @@ define([
       },
 
      render: function () {
-        var self = this;
+        const self = this;
         //login related error
-        var $container = this.$elem;
+        const $container = this.$elem;
         $container.empty();
         if (!self.token) {
           $container.append("<div>[Error] You're not logged in</div>");
           return;
         }
 
-        var kbws = new Workspace(self.wsUrl, {'token': self.token});
+        const kbws = new Workspace(self.wsUrl, {'token': self.token});
 
         $container.empty();
         $container.append(
@@ -85,7 +85,7 @@ define([
         if (this.options.diffExprMatrixSet_ref) {
 
           // we need to hand in a name to create feature set, not a ref. Fun times.
-          kbws.get_object_info_new({objects: [{'ref':this.options.diffExprMatrixSet_ref}], includeMetadata:1}, function(info) {
+          kbws.get_object_info_new({objects: [{'ref':this.options.diffExprMatrixSet_ref}], includeMetadata:1}, (info) => {
             self.diffExprMatrixSet_name = info[0][1];
           });
 
@@ -96,9 +96,9 @@ define([
           this.genericClient.sync_call('ExpressionAPI.get_differentialExpressionMatrixSet', [{
             'diffExprMatrixSet_ref' : this.options.diffExprMatrixSet_ref,
           }])
-          .then(function(results) {
+          .then((results) => {
 
-            var volcano_data = results[0].volcano_plot_data[0];
+            const volcano_data = results[0].volcano_plot_data[0];
 
             self.renderPlot({
               unique_conditions : [volcano_data.condition_1, volcano_data.condition_2],
@@ -110,15 +110,15 @@ define([
             });
 
           })
-          .catch(function(e) {
+          .catch((e) => {
             self.$elem.empty();
             self.$elem.append("ERROR : " + e);
           });
         }
         else {
-          kbws.get_objects([{ref: self.ws_name + "/" + self.ws_id}], function (text) {
+          kbws.get_objects([{ref: self.ws_name + "/" + self.ws_id}], (text) => {
             self.renderPlot(text[0].data)
-          }, function (text) {
+          }, (text) => {
             $container.empty();
             $container.append('<p>[Error] ' + data.error.message + '</p>');
           });
@@ -129,8 +129,8 @@ define([
 
       colorx : function (d, pv, fc) {
 
-        var x = d.log2fc_f
-        var y = d.log_q_value
+        const x = d.log2fc_f
+        const y = d.log_q_value
 
         if ( Math.abs(x) > fc && Math.abs(y) > pv ) {
           if (true || d.significant  === 'yes'){
@@ -142,16 +142,16 @@ define([
 
       renderPlot : function(text) {
 
-        var self = this;
+        const self = this;
 
-        var $container = this.$elem;
+        const $container = this.$elem;
 
         $container.empty();
 
-        var $tabPane = $.jqElem('div');
+        const $tabPane = $.jqElem('div');
         $container.append($tabPane);
 
-        var overviewTable = self.data('overview-table');
+        const overviewTable = self.data('overview-table');
 
 
         self.counter=0;
@@ -233,7 +233,7 @@ define([
                     $.jqElem('input')
                       .attr('id', 'minY')
                       .addClass('form-control')
-                      .on('change', function(e) {
+                      .on('change', (e) => {
                         self.options.ymin = parseFloat(e.target.value);
                         self.renderSVG();
                       })
@@ -243,7 +243,7 @@ define([
                     $.jqElem('input')
                       .addClass('form-control')
                       .attr('id', 'maxY')
-                      .on('change', function(e) {
+                      .on('change', (e) => {
                         self.options.ymax = parseFloat(e.target.value);
                         self.renderSVG();
                       })
@@ -253,7 +253,7 @@ define([
                     $.jqElem('input')
                       .attr('id', 'minX')
                       .addClass('form-control')
-                      .on('change', function(e) {
+                      .on('change', (e) => {
                         self.options.xmin = parseFloat(e.target.value);
                         self.renderSVG();
                       })
@@ -263,7 +263,7 @@ define([
                     $.jqElem('input')
                       .attr('id', 'maxX')
                       .addClass('form-control')
-                      .on('change', function(e) {
+                      .on('change', (e) => {
                         self.options.xmax = parseFloat(e.target.value);
                         self.renderSVG();
                       })
@@ -299,9 +299,9 @@ define([
             .append(
               $.jqElem('button')
                 .addClass('btn btn-primary')
-                .on('click', function(e) {
-                  var fc = self.data('fc').val() || 0;
-                  var log_q_value = self.data('log_q_value').val() || 0;
+                .on('click', (e) => {
+                  const fc = self.data('fc').val() || 0;
+                  const log_q_value = self.data('log_q_value').val() || 0;
 
                   Jupyter.narrative.addAndPopulateApp('FeatureSetUtils/upload_featureset_from_diff_expr', 'dev',
                     {
@@ -353,14 +353,14 @@ define([
 
         this._rewireIds($tabPane, this);
 
-        var pv,fc;
+        let pv,fc;
 
-        var dtable = self.data("voltable").DataTable();
+        const dtable = self.data("voltable").DataTable();
 
         this.data("voltable").hide();
 
         // Function to show selected genes, trigger for button
-        self.data("showselectedgenes").click(function() {
+        self.data("showselectedgenes").click(() => {
           dtable.clear().draw();
           self.data("voltable").show();
           dtable.rows.add(self.redRows).draw();
@@ -372,7 +372,7 @@ define([
         self.svgHeight = 350;
         self.padding   = 100;
 
-        var svg = self.svg = d3.select(self.data('chart')[0])
+        const svg = self.svg = d3.select(self.data('chart')[0])
           .append("svg")
           .attr("width", self.svgWidth)
           .attr("height", self.svgHeight);
@@ -405,20 +405,20 @@ define([
 
     renderSVG : function() {
 
-        var self = this;
-        var text = self.text;
-        var counter = self.counter;
-        var padding = self.padding;
+        const self = this;
+        const text = self.text;
+        const counter = self.counter;
+        const padding = self.padding;
 
-        var svg = self.svg
+        const svg = self.svg
 
-        var highlightElement = null;
+        let highlightElement = null;
 
         // function to show info callouts
-        var info = function(d) {
+        const info = function(d) {
           //self.data("gene_name").html(d.gene);
 
-          var element = d3.select(this);
+          const element = d3.select(this);
           element.transition().duration(100)
             .attr("stroke", element.attr("fill"))
             .attr("stroke-width", 5);
@@ -432,11 +432,11 @@ define([
         };
 
 
-        var data = text.condition_pairs[counter].voldata;
+        let data = text.condition_pairs[counter].voldata;
 
         // add in the -log_q_values.
-        var min_log_q_value = Number.MAX_VALUE;
-        data.forEach( function(d) {
+        let min_log_q_value = Number.MAX_VALUE;
+        data.forEach( (d) => {
           if (d.q_value === 0) {
             d.log_q_value = 'MIN';
           }
@@ -447,12 +447,12 @@ define([
             }
           }
 
-          if (!!d.log2fc_f) {
+          if (d.log2fc_f) {
             d.log2fc_f = d.log2fc_f.toFixed(2);
           }
         });
 
-        data.forEach( function(d) {
+        data.forEach( (d) => {
           if (d.log_q_value === 'MIN') {
             d.log_q_value = min_log_q_value;
           }
@@ -479,11 +479,11 @@ define([
         // Range slider
 
 
-        var xmin = this.options.xmin || d3.min(data, function(d) { return parseFloat(d.log2fc_f); });
-        var xmax = this.options.xmax || d3.max(data, function(d) { return parseFloat(d.log2fc_f); });
+        const xmin = this.options.xmin || d3.min(data, (d) => { return parseFloat(d.log2fc_f); });
+        const xmax = this.options.xmax || d3.max(data, (d) => { return parseFloat(d.log2fc_f); });
 
-        var ymin = this.options.ymin || d3.min(data, function(d) { return parseFloat(d.log_q_value); });
-        var ymax = this.options.ymax || d3.max(data, function(d) { return parseFloat(d.log_q_value); });
+        const ymin = this.options.ymin || d3.min(data, (d) => { return parseFloat(d.log_q_value); });
+        const ymax = this.options.ymax || d3.max(data, (d) => { return parseFloat(d.log_q_value); });
 
         self.data('minX').val(xmin);
         self.data('maxX').val(xmax);
@@ -491,7 +491,7 @@ define([
         self.data('maxY').val(ymax);
 
 
-        data = data.filter( function(d) {
+        data = data.filter( (d) => {
           if (    !Number.isNaN(parseFloat(d.log2fc_f)) && !Number.isNaN(parseFloat(d.log_q_value))
                && d.log2fc_f    >= xmin && d.log2fc_f    <= xmax
                && d.log_q_value >= ymin && d.log_q_value <= ymax ) {
@@ -505,7 +505,7 @@ define([
         //$("#fc").slider({tooltip_position:'bottom', step: 0.01, min :xmin, max:xmax, value: [xmin.toFixed(2),xmax.toFixed(2)]});
         //$("#pvalue").slider({tooltip_position:'bottom', step:0.01, min :ymin, max:ymax, value: [ymin.toFixed(2),ymax.toFixed(2)]});
         //
-        var fcmax = xmax;
+        let fcmax = xmax;
         if (Math.abs(xmin) > xmax ) {
           fcmax = Math.abs(xmin)
         }
@@ -515,17 +515,17 @@ define([
         self.data( "pv1").text((ymin).toFixed(2));
         self.data( "pv2").text((ymax).toFixed(2));
 
-        var sliderUpdate = _.debounce(function() {
+        const sliderUpdate = _.debounce(() => {
           fc = self.data( "fc").val();
 
           self.data('selfc').text(parseFloat(fc).toFixed(2));
-          var numCircles = svg.selectAll("circle").size();
-          var seenCircles = 0;
+          const numCircles = svg.selectAll("circle").size();
+          let seenCircles = 0;
           self.redRows = [];
           svg.selectAll("circle")
             .transition()
-            .attr("fill", function(d) {
-              var cc = self.colorx(d, pv, fc);
+            .attr("fill", (d) => {
+              const cc = self.colorx(d, pv, fc);
               if ( cc  ===  "red" ) {
                 cnt = cnt + 1;
                 self.redRows.push([
@@ -538,7 +538,7 @@ define([
                 ]);
               }
               return cc;
-            }).each('end', function() {
+            }).each('end', () => {
               seenCircles++;
               if (numCircles  ===  seenCircles) {
                 updateCnt()
@@ -555,17 +555,17 @@ define([
           cnt = 0;
         }
 
-        var slider2Update = _.debounce(function(){
+        const slider2Update = _.debounce(()=> {
           pv = self.data( 'log_q_value').val();
           self.data('selpval').text(parseFloat(pv).toFixed(2));
 
-          var numCircles = svg.selectAll("circle").size();
-          var seenCircles = 0;
+          const numCircles = svg.selectAll("circle").size();
+          let seenCircles = 0;
           self.redRows = [];
           svg.selectAll("circle")
             .transition()
-            .attr("fill", function(d) {
-              var cc = self.colorx(d, pv, fc);
+            .attr("fill", (d) => {
+              const cc = self.colorx(d, pv, fc);
               if ( cc  ===  "red" ) {
                 cnt = cnt + 1;
                 self.redRows.push([
@@ -578,7 +578,7 @@ define([
                 ]);
               }
               return cc;
-            }).each('end', function() {
+            }).each('end', () => {
               seenCircles++;
               if (numCircles  ===  seenCircles) {
                 updateCnt();
@@ -596,11 +596,11 @@ define([
         pv = self.data( 'log_q_value').slider('getValue');
         fc = self.data( "fc").slider('getValue');
 
-        var xScale = d3.scale.linear()
+        const xScale = d3.scale.linear()
           .domain([xmin,xmax])
           .range([padding, self.svgWidth - padding]);
 
-        var yScale = d3.scale.linear()
+        const yScale = d3.scale.linear()
           .domain([ymin, ymax])
           .range([self.svgHeight - padding, 10]);
 
@@ -610,14 +610,14 @@ define([
           .append("svg:circle");
         svg.selectAll("circle")
           .data(data)
-          .attr("cx", function(d) {
+          .attr("cx", (d) => {
             return xScale(parseFloat(d.log2fc_f));
           })
-        .attr("cy", function(d) {
+        .attr("cy", (d) => {
           return yScale(parseFloat(d.log_q_value));
         })
         .attr("r", 3)
-          .attr("fill", function(d) { return self.colorx(d, pv, fc); })
+          .attr("fill", (d) => { return self.colorx(d, pv, fc); })
           .on("mouseover", function() {
             d3.select(this)
               .transition().duration(100)
@@ -629,7 +629,7 @@ define([
             .attr("r", 3);
         })
         .on("click", info)
-          .attr("id", function(d) { return d.significant; });
+          .attr("id", (d) => { return d.significant; });
 
         svg.selectAll("circle")
           .data(data)
@@ -648,12 +648,12 @@ define([
           },
         });*/
 
-        var xAxis = d3.svg.axis()
+        const xAxis = d3.svg.axis()
           .scale(xScale)
           .orient("bottom")
           .ticks(10);  //Set rough # of ticks
 
-        var yAxis = d3.svg.axis()
+        const yAxis = d3.svg.axis()
           .scale(yScale)
           .orient("left")
           .ticks(10);

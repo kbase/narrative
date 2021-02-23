@@ -6,9 +6,9 @@
 define([
     'kb_common/html',
     'bootstrap'
-], function (html) {
+], (html) => {
     'use strict';
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'), span = t('span');
     
     function factoryFactory(factoryConfig) {

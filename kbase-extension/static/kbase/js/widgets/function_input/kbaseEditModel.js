@@ -23,7 +23,7 @@ define(
         
         'kbase-client-api',        
         'bootstrap'
-    ], function (
+    ], (
     KBWidget,
     $,
     Config,
@@ -34,7 +34,7 @@ define(
     KBaseNarrativeParameterTextInput,
     Jupyter,
     Workspace
-    ) {
+    ) => {
     'use strict';
     return KBWidget({
         name: 'kbaseEditModel',
@@ -80,10 +80,10 @@ define(
             // Simple listener that just plops the input value in this panel.
             // Listener gets triggered whenever anything in the chooser widget
             // changes.
-            this.modelChooserWidget.addInputListener(function () {
+            this.modelChooserWidget.addInputListener(() => {
                 this.modelName = this.modelChooserWidget.getParameterValue();
                 this.updateDisplayPanel(this.modelName);
-            }.bind(this));
+            });
         },
         /**
          * adds model widget (and a horizontal line above it)
@@ -93,9 +93,9 @@ define(
 
             if (modelName) {
                 this.$modelDisplayPanel = $('<div>');
-                var modelWidget = $('<div>');
+                const modelWidget = $('<div>');
 
-                var self = this;
+                const self = this;
                 new KBaseModelEditor(modelWidget, {
                     ws: Jupyter.narrative.getWorkspaceName(),
                     obj: modelName,
@@ -179,11 +179,11 @@ define(
          * red (see kbaseNarrativeMethodInput for default styles).
          */
         isValid: function () {
-            var isValidRet = {isValid: true, errormssgs: []};
-            var paramStatus = this.modelChooserWidget.isValid();
+            const isValidRet = {isValid: true, errormssgs: []};
+            const paramStatus = this.modelChooserWidget.isValid();
             if (!paramStatus.isValid()) {
                 isValidRet.isValid = false;
-                for (var i = 0; i < paramStatus.errormssgs.length; i++) {
+                for (let i = 0; i < paramStatus.errormssgs.length; i++) {
                     isValidRet.errormssgs.push(paramStatus.errormssgs[i]);
                 }
             }

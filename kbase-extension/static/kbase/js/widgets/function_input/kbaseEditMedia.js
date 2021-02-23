@@ -21,7 +21,7 @@ define([
     'kb_service/client/workspace',
     'base/js/namespace',
     'bootstrap'
-], function (
+], (
     KBWidget,
     $,
     Config,
@@ -31,7 +31,7 @@ define([
     kbaseNarrativeParameterTextInput,
     Workspace,
     Jupyter
-    ) {
+    ) => {
     'use strict';
     return KBWidget({
         name: 'kbaseEditMedia',
@@ -83,11 +83,11 @@ define([
             // Listener gets triggered whenever anything in the chooser widget
             // changes.
 
-            this.mediaChooserWidget.addInputListener(function () {
+            this.mediaChooserWidget.addInputListener(() => {
                 // Jupyter.keyboard_manager.disable();
                 this.mediaName = this.mediaChooserWidget.getParameterValue();
                 this.updateDisplayPanel(this.mediaName);
-            }.bind(this));
+            });
         },
         /**
          * adds media widget (and a horizontal line above it)
@@ -97,9 +97,9 @@ define([
 
             if (mediaName) {
                 this.$mediaDisplayPanel = $('<div>');
-                var mediaWidget = $('<div>');
+                const mediaWidget = $('<div>');
 
-                var self = this;
+                const self = this;
                 new kbaseMediaEditor(mediaWidget, {
                     ws: this.options.workspaceName,
                     obj: mediaName,
@@ -183,11 +183,11 @@ define([
          * red (see kbaseNarrativeMethodInput for default styles).
          */
         isValid: function () {
-            var isValidRet = {isValid: true, errormssgs: []};
-            var paramStatus = this.mediaChooserWidget.isValid();
+            const isValidRet = {isValid: true, errormssgs: []};
+            const paramStatus = this.mediaChooserWidget.isValid();
             if (!paramStatus.isValid()) {
                 isValidRet.isValid = false;
-                for (var i = 0; i < paramStatus.errormssgs.length; i++) {
+                for (let i = 0; i < paramStatus.errormssgs.length; i++) {
                     isValidRet.errormssgs.push(paramStatus.errormssgs[i]);
                 }
             }

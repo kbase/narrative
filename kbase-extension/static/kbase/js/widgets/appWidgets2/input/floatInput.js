@@ -12,7 +12,7 @@ define([
 
     'bootstrap',
     'css!font-awesome'
-], function(
+], (
     Promise,
     html,
     Events,
@@ -21,16 +21,16 @@ define([
     Runtime,
     inputUtils,
     Validation
-) {
+) => {
     'use strict';
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         input = t('input');
 
     function factory(config) {
-        var spec = config.parameterSpec,
+        let spec = config.parameterSpec,
             runtime = Runtime.make(),
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(config.channelName),
@@ -46,7 +46,7 @@ define([
         }
 
         function setControlValue(value) {
-            var stringValue;
+            let stringValue;
             if (value === null) {
                 stringValue = '';
             } else {
@@ -83,13 +83,13 @@ define([
         // VALIDATION
 
         function validate(value) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 return Validation.validate(value, spec);
             });
         }
 
         function importControlValue() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 return Validation.importString(getControlValue());
             });
         }
@@ -100,7 +100,7 @@ define([
          * Hooks up event listeners
          */
 
-        var autoChangeTimer;
+        let autoChangeTimer;
 
         function cancelTouched() {
             if (autoChangeTimer) {
@@ -110,13 +110,13 @@ define([
         }
 
         function handleTouched(interval) {
-            var editPauseInterval = interval || 100;
+            const editPauseInterval = interval || 100;
             return {
                 type: 'keyup',
                 handler: function(e) {
                     channel.emit('touched');
                     cancelTouched();
-                    autoChangeTimer = window.setTimeout(function() {
+                    autoChangeTimer = window.setTimeout(() => {
                         autoChangeTimer = null;
                         e.target.dispatchEvent(new Event('change'));
                     }, editPauseInterval);
@@ -130,14 +130,14 @@ define([
                 handler: function() {
                     cancelTouched();
                     importControlValue()
-                        .then(function(value) {
+                        .then((value) => {
                             model.setItem('value', value);
                             channel.emit('changed', {
                                 newValue: value
                             });
                             return validate(value);
                         })
-                        .then(function(result) {
+                        .then((result) => {
                             if (result.isValid) {
                                 if (config.showOwnMessages) {
                                     ui.setContent('input-container.message', '');
@@ -147,7 +147,7 @@ define([
                             } else {
                                 if (config.showOwnMessages) {
                                     // show error message -- new!
-                                    var message = inputUtils.buildMessageAlert({
+                                    const message = inputUtils.buildMessageAlert({
                                         title: 'ERROR',
                                         type: 'danger',
                                         id: result.messageId,
@@ -159,7 +159,7 @@ define([
                             }
                             channel.emit('validation', result);
                         })
-                        .catch(function(err) {
+                        .catch((err) => {
                             channel.emit('validation', {
                                 isValid: false,
                                 diagnosis: 'invalid',
@@ -172,7 +172,7 @@ define([
 
         function makeInputControl(currentValue, events) {
             // CONTROL
-            var initialControlValue,
+            let initialControlValue,
                 min = spec.data.constraints.min,
                 max = spec.data.constraints.max;
 
@@ -202,8 +202,8 @@ define([
         }
 
         function render() {
-            return Promise.try(function() {
-                var events = Events.make(),
+            return Promise.try(() => {
+                const events = Events.make(),
                     inputControl = makeInputControl(model.getItem('value'), events);
 
                 ui.setContent('input-container', inputControl);
@@ -212,7 +212,7 @@ define([
         }
 
         function layout(events) {
-            var content = div({
+            const content = div({
                 dataElement: 'main-panel'
             }, [
                 div({ dataElement: 'input-container' })
@@ -225,7 +225,7 @@ define([
 
         function autoValidate() {
             return validate(model.getItem('value'))
-                .then(function(result) {
+                .then((result) => {
                     channel.emit('validation', result);
                 });
         }
@@ -233,35 +233,35 @@ define([
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
-                var events = Events.make(),
+                const events = Events.make(),
                     theLayout = layout(events);
 
                 container.innerHTML = theLayout.content;
                 events.attachEvents(container);
                 // model.setItem('value', arg.value);
 
-                channel.on('reset-to-defaults', function() {
+                channel.on('reset-to-defaults', () => {
                     resetModelValue();
                 });
-                channel.on('update', function(message) {
+                channel.on('update', (message) => {
                     model.setItem('value', message.value);
                 });
                 // bus.emit('sync');
 
                 return render()
-                    .then(function() {
+                    .then(() => {
                         return autoValidate();
                     })
             });
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (container) {
                     parent.removeChild(container);
                 }

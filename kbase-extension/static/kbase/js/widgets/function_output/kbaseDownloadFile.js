@@ -15,18 +15,18 @@
         },
         render: function() {
             // creater main comtainer
-            var main = $('<div>');
+            const main = $('<div>');
             // add download button
             if ((this.options.data !== null) && (this.options.name !== null)) {
-                var filedata = this.options.data;
-                var filename = this.options.name;
-                var downloadFn = function (data, filename) {
+                const filedata = this.options.data;
+                const filename = this.options.name;
+                const downloadFn = function (data, filename) {
                     try {
                         data = window.btoa(data);
                     } catch (err) {
-                    	var utftext = "";
-                    	for (var n=0; n<data.length; n++) {
-                            var c=data.charCodeAt(n);
+                    	let utftext = "";
+                    	for (let n=0; n<data.length; n++) {
+                            const c=data.charCodeAt(n);
                     	    if (c<128) {
                     		    utftext += String.fromCharCode(c);
                             } else if ((c>127) && (c<2048)) {
@@ -41,7 +41,7 @@
                     	data = window.btoa(utftext);
                     }
                     data = 'data:application/octet-stream;base64,'+data;
-                    var anchor = document.createElement('a');
+                    const anchor = document.createElement('a');
                     anchor.setAttribute('download', filename);
                     anchor.setAttribute('href', data);
                     document.body.appendChild(anchor);
@@ -51,7 +51,7 @@
                 main.append($('<button>')
                     .addClass('btn btn-link')
                     .text(filename)
-                    .on('click', function () {
+                    .on('click', () => {
                         downloadFn(filedata, filename);
                     })
                 );

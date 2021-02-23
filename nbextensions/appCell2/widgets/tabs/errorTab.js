@@ -6,7 +6,7 @@ define([
     'uuid',
     'common/ui',
     'kb_common/html'
-], function(Promise, Uuid, UI, html) {
+], (Promise, Uuid, UI, html) => {
     'use strict';
 
     var t = html.tag,
@@ -17,7 +17,7 @@ define([
         pre = t('pre');
 
     function convertJobError(errorInfo) {
-        var errorId = new Uuid(4).format(),
+        let errorId = new Uuid(4).format(),
             errorType, errorMessage, errorDetail;
         if (errorInfo.error) {
             // Classic KBase rpc error message
@@ -49,7 +49,7 @@ define([
             location: 'app cell',
             type: errorInfo.title,
             message: errorInfo.message,
-            advice: ul({ style: { paddingLeft: '1.2em' } }, errorInfo.advice.map(function(adv) {
+            advice: ul({ style: { paddingLeft: '1.2em' } }, errorInfo.advice.map((adv) => {
                 return li(adv);
             })),
             detail: errorInfo.detail
@@ -91,10 +91,10 @@ define([
     }
 
     function factory(config) {
-        var container, ui, model = config.model;
+        let container, ui, model = config.model;
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 container = arg.node;
 
                 // Very simple for now, just render the results json in a prettier than normal fashion.
@@ -103,7 +103,7 @@ define([
 
                 ui = UI.make({ node: container });
 
-                var viewModel;
+                let viewModel;
                 if (model.hasItem('exec.jobState.error')) {
                     viewModel = convertJobError(model.getItem('exec.jobState.error'));
                 } else if (model.hasItem('internalError')) {
@@ -123,7 +123,7 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 container.innerHTML = 'Bye from error';
             });
         }

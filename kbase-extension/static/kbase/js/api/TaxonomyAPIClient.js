@@ -1,13 +1,13 @@
 
 
 function taxonomy_service(url, auth, auth_cb, timeout, async_job_check_time_ms, service_version) {
-    var self = this;
+    const self = this;
 
     this.url = url;
-    var _url = url;
+    const _url = url;
 
     this.timeout = timeout;
-    var _timeout = timeout;
+    const _timeout = timeout;
 
     this.async_job_check_time_ms = async_job_check_time_ms;
     if (!this.async_job_check_time_ms)
@@ -16,8 +16,8 @@ function taxonomy_service(url, auth, auth_cb, timeout, async_job_check_time_ms, 
     this.async_job_check_max_time_ms = 300000;  // 5 minutes
     this.service_version = service_version;
 
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
      this.search_taxonomy = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
@@ -111,7 +111,7 @@ function taxonomy_service(url, auth, auth_cb, timeout, async_job_check_time_ms, 
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
@@ -120,8 +120,8 @@ function taxonomy_service(url, auth, auth_cb, timeout, async_job_check_time_ms, 
         if (json_rpc_context)
             rpc['context'] = json_rpc_context;
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -129,7 +129,7 @@ function taxonomy_service(url, auth, auth_cb, timeout, async_job_check_time_ms, 
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: srv_url,
             dataType: "text",
             type: 'POST',
@@ -138,10 +138,10 @@ function taxonomy_service(url, auth, auth_cb, timeout, async_job_check_time_ms, 
             beforeSend: beforeSend,
             timeout: _timeout,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
                 console.log("SUCCESSFUL RETURN OF ", data, status, xhr);
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -156,10 +156,10 @@ function taxonomy_service(url, auth, auth_cb, timeout, async_job_check_time_ms, 
             },
             error: function (xhr, textStatus, errorThrown) {
             console.log("DEAD RETURN OF ", xhr, textStatus, errorThrown);
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -174,7 +174,7 @@ function taxonomy_service(url, auth, auth_cb, timeout, async_job_check_time_ms, 
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }

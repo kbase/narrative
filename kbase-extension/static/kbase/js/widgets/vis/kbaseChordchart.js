@@ -14,7 +14,7 @@ define (
 		'geometry_point',
 		'geometry_size',
 		'kbasePiechart'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -25,7 +25,7 @@ define (
 		geometry_point,
 		geometry_size,
 		kbasePiechart
-	) {
+	) => {
 
     return KBWidget({
 
@@ -107,7 +107,7 @@ define (
 
         sliceAction : function($chord) {
 
-            var superMethod = this.parent.prototype.sliceAction;
+            let superMethod = this.parent.prototype.sliceAction;
 
             superMethod = superMethod.call(this, $chord);
 
@@ -121,17 +121,17 @@ define (
 
         renderChart : function() {
 
-            var bounds = this.chartBounds();
-            var $chord  = this;
+            const bounds = this.chartBounds();
+            const $chord  = this;
 
-            var chordLayout = d3.layout.chord()
+            const chordLayout = d3.layout.chord()
                 .padding( this.options.chordPadding )
                 .sortGroups(this.options.sortGroups)
                 .sortSubgroups(this.options.sortSubgroups)
                 .matrix( $chord.dataset() );
 
-            var chordGroups = chordLayout.groups();
-            var newChordGroups = [];
+            const chordGroups = chordLayout.groups();
+            const newChordGroups = [];
 
             //Oh, god. This is going to suck. The results will be awesome, but this is going to suck.
             //iterate through the chord groups and chop each piece up into constituent arcs. This way
@@ -139,51 +139,51 @@ define (
 
             $.each(
                 chordGroups,
-                function (idx, val) {
+                (idx, val) => {
                     //chord layout cannot accept start/end angles. So we have to fudge it.
                     val.startAngle += $chord.options.startAngle;
                     val.endAngle += $chord.options.startAngle;
 
-                    var valLength = val.endAngle - val.startAngle;
+                    const valLength = val.endAngle - val.startAngle;
 
                     val.data = {};
 
                     if ($chord.options.choppedGroups) {
 
-                        var startAngle = val.startAngle;
+                        let startAngle = val.startAngle;
 
-                        var row = $chord.dataset()[idx].slice();
+                        const row = $chord.dataset()[idx].slice();
 
-                        var total = 0;
+                        let total = 0;
 
                         row.forEach(
-                            function(d) {
+                            (d) => {
                                 total += d;
                             }
                         );
 
-                        var color = val.data.color || $chord.options.chordColorScale(idx, val.data, $chord);
+                        const color = val.data.color || $chord.options.chordColorScale(idx, val.data, $chord);
 
-                        var rgbColor = d3.rgb(color);
+                        const rgbColor = d3.rgb(color);
 
-                        var colorSpread = .15;
+                        const colorSpread = .15;
 
-                        var darkColor = rgbColor.darker(colorSpread);
-                        var lightColor = rgbColor.brighter(colorSpread);
+                        const darkColor = rgbColor.darker(colorSpread);
+                        const lightColor = rgbColor.brighter(colorSpread);
 
-                        var rowColorScale = d3.scale.linear()
+                        const rowColorScale = d3.scale.linear()
                             .domain([0,1])
                             .range([darkColor, lightColor]);
 
-                        var colorScale = $chord.options.colorScale;
+                        const colorScale = $chord.options.colorScale;
 
                         row.sort($chord.options.sortSubgroups).forEach(
-                            function(d, idx2) {
+                            (d, idx2) => {
 
-                                var distance = valLength * d / total;
-                                var endAngle = startAngle + distance;
+                                const distance = valLength * d / total;
+                                const endAngle = startAngle + distance;
 
-                                var newData = $.extend(true, {}, val.data);
+                                const newData = $.extend(true, {}, val.data);
                                 newData.color = rowColorScale(idx2);
 
                                 newChordGroups.push(
@@ -224,13 +224,13 @@ define (
                 this._super();
             }
 
-            var fillScale = d3.scale.ordinal()
+            const fillScale = d3.scale.ordinal()
                 .domain(d3.range(4))
                 .range(["#000000", "#FFDD89", "#957244", "#F26223"]);
 
                 if (this.options.drawChords) {
 
-                var chordG = this.data('D3svg').select( this.region('chart') ).selectAll('.chords').data([0]);
+                const chordG = this.data('D3svg').select( this.region('chart') ).selectAll('.chords').data([0]);
                 chordG.enter().insert('g', '.labelG')
                     .attr('class', 'chords')
                     .attr('transform',
@@ -241,19 +241,19 @@ define (
                             + ')'
                     );
 
-                var innerRadius = this.innerRadius();
+                const innerRadius = this.innerRadius();
                 var outerRadius = this.outerRadius();
 
-                var arcMaker = d3.svg.arc()
+                const arcMaker = d3.svg.arc()
                     .innerRadius( innerRadius )
                     .outerRadius( outerRadius );
 
-                var newChords = [];
+                const newChords = [];
                 //$.each(
                 //    chordLayout.chords(),
 
                 chordLayout.chords().forEach(
-                    function(val, idx) {
+                    (val, idx) => {
                     //function (idx, val) {
 
                         newVal = $.extend(true, {}, val);
@@ -267,7 +267,7 @@ define (
 
                         newChords.push( newVal );
 
-                        var colorIdx = newVal.source.index;
+                        let colorIdx = newVal.source.index;
 
                         if (newVal.target.value > newVal.source.value) {
                             colorIdx = newVal.target.index;
@@ -278,10 +278,10 @@ define (
                 );
 
 
-                var funkyTown = function() {
+                const funkyTown = function() {
                     this
                         .attr('fill-opacity', .67)
-                        .attr("fill", function(d, idx) { return d.data.color || $chord.options.colorScale(d.data.colorIdx, d.data, $chord) })
+                        .attr("fill", (d, idx) => { return d.data.color || $chord.options.colorScale(d.data.colorIdx, d.data, $chord) })
                         .attr('stroke', 'black')
                         .attr('stroke-width', .5)
     //                    .attr("d", d3.svg.chord().radius(innerRadius))
@@ -298,11 +298,11 @@ define (
                                     this._current = $chord.startingChordPosition(d, idx);
                                 }
 
-                                var interpolate = d3.interpolate(this._current, d);
+                                const interpolate = d3.interpolate(this._current, d);
 
                                 this._current = interpolate(0);
                                 return function(t) {
-                                    var chord = d3.svg.chord().radius(innerRadius)(interpolate(t));
+                                    const chord = d3.svg.chord().radius(innerRadius)(interpolate(t));
                                     return chord;
                                 };
                             })
@@ -316,7 +316,7 @@ define (
                     ? this.options.transitionTime
                     : 0;
 
-                var chords = chordG
+                const chords = chordG
                 //.append("g")
                   //  .attr("class", "chord")
                     .selectAll("path")
@@ -324,13 +324,13 @@ define (
                 chords
                     .enter()
                         .append("path")
-                            .attr("fill", function(d) { return fillScale(d.target.index); })
+                            .attr("fill", (d) => { return fillScale(d.target.index); })
                 ;
 
                 chords
                     .transition().duration(transitionTime)
                     .call(funkyTown)
-                    .call($chord.endall, function() {
+                    .call($chord.endall, () => {
                         $chord.lastChordData = chordLayout.chords;
                     });
                 ;
@@ -343,7 +343,7 @@ define (
             //now we add these MOTHERFUCKING TICK MARKS.
 
             //all ticks and labels go into a single group. Set that up.
-            var tickG = this.data('D3svg').select( this.region('chart') ).selectAll('.ticks').data([0]);
+            const tickG = this.data('D3svg').select( this.region('chart') ).selectAll('.ticks').data([0]);
             tickG.enter().insert('g', '.labelG')
                 .attr('class', 'ticks')
             tickG
@@ -355,7 +355,7 @@ define (
                         + ')'
                 );
 
-            var tickArcs = tickG
+            const tickArcs = tickG
                 .selectAll('.tickArcs')
                 .data( chordLayout.groups )
             ;
@@ -371,8 +371,8 @@ define (
             ;
             //.remove();
 
-            var tickGs = tickArcs.selectAll('g').data(groupTicks);
-            var tickGEnter = tickGs.enter().append('g').attr('opacity', 1);
+            const tickGs = tickArcs.selectAll('g').data(groupTicks);
+            const tickGEnter = tickGs.enter().append('g').attr('opacity', 1);
             tickGEnter.append('line');
             tickGEnter.append('text');
 
@@ -396,10 +396,10 @@ define (
                         this._current = $chord.startingChordPosition(d,idx);
                     }
 
-                    var interpolate = d3.interpolate(this._current, d);
+                    const interpolate = d3.interpolate(this._current, d);
                     this._current = interpolate(0);
                     return function(t) {
-                        var d2 = interpolate(t);
+                        const d2 = interpolate(t);
                         return "rotate(" + (d2.angle * 180 / Math.PI - 90) + ")"
                             + "translate(" + outerRadius + ",0)";
                     }
@@ -417,17 +417,17 @@ define (
             tickGs.select('text')
                 .attr("x", 8)
                 .attr("dy", ".35em")
-                .attr("transform", function(d) { return (d.angle % (2 * Math.PI)) > Math.PI ? "rotate(180)translate(-16)" : null; })
-                .style("text-anchor", function(d) { return (d.angle % (2 * Math.PI))  > Math.PI ? "end" : null; })
-                .text(function(d) { return d.label; })
+                .attr("transform", (d) => { return (d.angle % (2 * Math.PI)) > Math.PI ? "rotate(180)translate(-16)" : null; })
+                .style("text-anchor", (d) => { return (d.angle % (2 * Math.PI))  > Math.PI ? "end" : null; })
+                .text((d) => { return d.label; })
                 .attr('opacity', function (d) { return d3.select(this).attr('opacity') || 0 });
             tickGs.select('text').transition().duration(transitionTime).attr('opacity', 1);
 
 
 
 function groupTicks(d) {
-  var k = (d.endAngle - d.startAngle) / d.value;
-  return d3.range(0, d.value, 1000).map(function(v, i) {
+  const k = (d.endAngle - d.startAngle) / d.value;
+  return d3.range(0, d.value, 1000).map((v, i) => {
     return {
       angle: v * k + d.startAngle,
       label: i % 5 ? null : v / 1000 + "k"
@@ -438,7 +438,7 @@ function groupTicks(d) {
 function fade(opacity) {
   return function(g, i) {
         chord.selectAll(".chord path")
-        .filter(function(d) { return d.source.index != i && d.target.index != i; })
+        .filter((d) => { return d.source.index != i && d.target.index != i; })
       .transition()
         .style("opacity", opacity);
   };

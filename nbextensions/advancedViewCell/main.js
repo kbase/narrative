@@ -37,7 +37,7 @@ define([
     'css!kbase/css/advancedViewCell.css',
     'bootstrap',
     'custom/custom'
-], function(
+], (
     $,
     Promise,
     Uuid,
@@ -54,9 +54,9 @@ define([
     Spec,
     serviceUtils,
     Workspace
-) {
+) => {
     'use strict';
-    var t = html.tag,
+    let t = html.tag,
         div = t('div'),
         workspaceInfo,
         runtime = Runtime.make();
@@ -67,9 +67,9 @@ define([
      *
      */
     function upgradeToViewCell(cell, appSpec, appTag) {
-        return Promise.try(function() {
+        return Promise.try(() => {
                 // Create base app cell
-                var meta = cell.metadata;
+                const meta = cell.metadata;
                 meta.kbase = {
                     type: 'advancedView',
                     attributes: {
@@ -102,18 +102,18 @@ define([
                 };
                 cell.metadata = meta;
             })
-            .then(function() {
+            .then(() => {
                 // Add the params
-                var spec = Spec.make({
+                const spec = Spec.make({
                     appSpec: appSpec
                 });
                 utils.setCellMeta(cell, 'kbase.viewCell.params', spec.makeDefaultedModel());
             })
-            .then(function() {
+            .then(() => {
                 // Complete the cell setup.
                 return setupCell(cell);
             })
-            .then(function(cellStuff) {
+            .then((cellStuff) => {
                 // Initialize the cell to its default state.
                 cellStuff.bus.emit('reset-to-defaults');
             });
@@ -121,7 +121,7 @@ define([
 
     function specializeCell(cell) {
         cell.minimize = function() {
-            var inputArea = this.input.find('.input_area'),
+            const inputArea = this.input.find('.input_area'),
                 outputArea = this.element.find('.output_wrapper'),
                 viewInputArea = this.element.find('[data-subarea-type="view-cell-input"]'),
                 showCode = utils.getCellMeta(cell, 'kbase.viewCell.user-settings.showCodeInputArea');
@@ -134,7 +134,7 @@ define([
         };
 
         cell.maximize = function() {
-            var inputArea = this.input.find('.input_area'),
+            const inputArea = this.input.find('.input_area'),
                 outputArea = this.element.find('.output_wrapper'),
                 viewInputArea = this.element.find('[data-subarea-type="view-cell-input"]'),
                 showCode = utils.getCellMeta(cell, 'kbase.viewCell.user-settings.showCodeInputArea');
@@ -148,7 +148,7 @@ define([
             viewInputArea.removeClass('hidden');
         };
         cell.renderIcon = function() {
-            var inputPrompt = this.element[0].querySelector('[data-element="prompt"]');
+            const inputPrompt = this.element[0].querySelector('[data-element="prompt"]');
 
             if (inputPrompt) {
                 inputPrompt.innerHTML = div({
@@ -159,13 +159,13 @@ define([
             }
         };
         cell.getIcon = function() {
-            var icon = AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.viewCell.app.spec'));
+            const icon = AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.viewCell.app.spec'));
             return icon;
         };
     }
 
     function checkAndRepairCell(cell) {
-        var spec = utils.getCellMeta(cell, 'kbase.viewCell.app.spec');
+        let spec = utils.getCellMeta(cell, 'kbase.viewCell.app.spec');
         if (!spec) {
             spec = utils.getCellMeta(cell, 'kbase.viewCell.app.appSpec');
             if (!spec) {
@@ -178,7 +178,7 @@ define([
     }
 
     function setupCell(cell) {
-        return Promise.try(function() {
+        return Promise.try(() => {
             if (cell.cell_type !== 'code') {
                 return;
             }
@@ -207,7 +207,7 @@ define([
 
             // TODO: the code cell input widget should instantiate its state
             // from the cell!!!!
-            var cellBus = runtime.bus().makeChannelBus({ description: 'Parent comm for The Cell Bus' }),
+            const cellBus = runtime.bus().makeChannelBus({ description: 'Parent comm for The Cell Bus' }),
                 appId = utils.getMeta(cell, 'viewCell', 'app').id,
                 appTag = utils.getMeta(cell, 'viewCell', 'app').tag,
                 viewCellWidget = ViewCellWidget.make({
@@ -229,20 +229,20 @@ define([
             jupyter.disableKeyListenersForCell(cell);
 
             return viewCellWidget.init()
-                .then(function() {
+                .then(() => {
                     return viewCellWidget.attach(kbaseNode);
                 })
-                .then(function() {
+                .then(() => {
                     return viewCellWidget.start();
                 })
-                .then(function() {
+                .then(() => {
                     return viewCellWidget.run({
                         appId: appId,
                         appTag: appTag,
                         authToken: runtime.authToken()
                     });
                 })
-                .then(function() {
+                .then(() => {
                     cell.renderMinMax();
                     return {
                         widget: viewCellWidget,
@@ -253,13 +253,13 @@ define([
     }
 
     function setupNotebook() {
-        return Promise.all(jupyter.getCells().map(function(cell) {
+        return Promise.all(jupyter.getCells().map((cell) => {
             return setupCell(cell);
         }));
     }
 
     function setupWorkspace(workspaceUrl) {
-        var workspaceRef = { id: runtime.workspaceId() },
+        const workspaceRef = { id: runtime.workspaceId() },
             workspace = new Workspace(workspaceUrl, {
                 token: runtime.authToken()
             });
@@ -283,29 +283,29 @@ define([
         // triggers that the ws has changed, not the worst.
 
         setupWorkspace(runtime.config('services.workspace.url'))
-            .then(function(wsInfo) {
+            .then((wsInfo) => {
                 workspaceInfo = serviceUtils.workspaceInfoToObject(wsInfo);
                 return workspaceInfo;
             })
-            .then(function() {
+            .then(() => {
                 return setupNotebook();
             })
-            .then(function() {
+            .then(() => {
                 // insertedAtIndex.Cell issued after insert_at_index with
                 // the following message:
                 // cell - cell object created
                 // type - jupyter cell type ('code', 'markdown')
                 // index - index at which cell was inserted
                 // data - kbase cell setup data.
-                jupyter.onEvent('insertedAtIndex.Cell', function(event, payload) {
-                    var cell = payload.cell;
-                    var setupData = payload.data;
-                    var jupyterCellType = payload.type;
+                jupyter.onEvent('insertedAtIndex.Cell', (event, payload) => {
+                    const cell = payload.cell;
+                    const setupData = payload.data;
+                    const jupyterCellType = payload.type;
                     if (setupData &&
                         jupyterCellType === 'code' &&
                         setupData.type === 'advancedView') {
                         upgradeToViewCell(cell, setupData.appSpec, setupData.appTag)
-                            .catch(function(err) {
+                            .catch((err) => {
                                 console.error('ERROR creating cell', err);
                                 jupyter.deleteCell(cell);
                                 // TODO proper error dialog
@@ -314,7 +314,7 @@ define([
                     }
                 });
             })
-            .catch(function(err) {
+            .catch((err) => {
                 console.error('ERROR setting up notebook', err);
             });
     }
@@ -326,7 +326,7 @@ define([
             initializeExtension();
         }
         else {
-            $([Jupyter.events]).one('notebook_loaded.Notebook', function () {
+            $([Jupyter.events]).one('notebook_loaded.Notebook', () => {
                 initializeExtension();
             });
         }
@@ -335,7 +335,7 @@ define([
     return {
         load_ipython_extension: load
     };
-}, function(err) {
+}, (err) => {
     // TODO: use the error reporting mechanism from the app cell
     console.error('ERROR loading viewCell main', err);
 });

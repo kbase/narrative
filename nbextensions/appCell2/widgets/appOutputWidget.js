@@ -7,16 +7,16 @@ define([
     'common/ui',
     'kb_common/html',
     'base/js/namespace'
-], function(
+], (
     Runtime,
     Events,
     UI,
     html,
     Jupyter
-) {
+) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         button = t('button'),
         table = t('table'),
@@ -28,7 +28,7 @@ define([
         li = t('li');
 
     function factory(config) {
-        var runtime = Runtime.make(),
+        let runtime = Runtime.make(),
             bus = runtime.bus().makeChannelBus({ description: 'Output Widget Bus' }),
             cellId = config.cellId,
             root, container, ui,
@@ -39,7 +39,7 @@ define([
             api;
 
         function findCellForId(id) {
-            var matchingCells = Jupyter.notebook.get_cells().filter(function(cell) {
+            const matchingCells = Jupyter.notebook.get_cells().filter((cell) => {
                 // console.log('REMOVING', JSON.parse(JSON.stringify(cell.metadata)));
                 if (cell.metadata && cell.metadata.kbase && cell.metadata.kbase.attributes) {
                     return (cell.metadata.kbase.attributes.id === id);
@@ -56,7 +56,7 @@ define([
         }
 
         function doRemoveOutputCell(index) {
-            var output = model.outputs[index],
+            let output = model.outputs[index],
                 currentOutput, content;
 
             if (model.currentJobState && output.jobId === model.currentJobState.job_id) {
@@ -90,12 +90,12 @@ define([
                 ]);
             }
             ui.showConfirmDialog({ title: 'Confirm Deletion of Cell Output', body: content })
-                .then(function(answer) {
+                .then((answer) => {
                     if (!answer) {
                         return;
                     }
                     // remove the output cell
-                    var output = model.outputs[index],
+                    let output = model.outputs[index],
                         outputCell = findCellForId(output.cellId),
                         cellIndex;
 
@@ -120,14 +120,14 @@ define([
         }
 
         function render() {
-            var events = Events.make(),
+            let events = Events.make(),
                 content;
 
             if (!model.outputs || model.outputs.length === 0) {
                 content = 'No output yet!';
             } else {
                 content = model.outputs
-                    .sort(function(b, a) {
+                    .sort((b, a) => {
                         if (a.createdTime < b.createdTime) {
                             return -1;
                         }
@@ -136,8 +136,8 @@ define([
                         }
                         return 0;
                     })
-                    .map(function(output, index) {
-                        var rowStyle = {
+                    .map((output, index) => {
+                        let rowStyle = {
                                 border: '1px silver solid',
                                 padding: '3px'
                             },
@@ -186,9 +186,9 @@ define([
         }
 
         function importModel(outputs) {
-            var output;
+            let output;
             if (outputs.byJob) {
-                model.outputs = Object.keys(outputs.byJob).map(function(jobId) {
+                model.outputs = Object.keys(outputs.byJob).map((jobId) => {
                     output = outputs.byJob[jobId];
                     // console.log(output);
                     return {
@@ -201,7 +201,7 @@ define([
         }
 
         function start() {
-            bus.on('run', function(message) {
+            bus.on('run', (message) => {
                 root = message.node;
                 if (root) {
                     container = root.appendChild(document.createElement('div'));
@@ -213,13 +213,13 @@ define([
                     render();
                 }
 
-                bus.on('update', function(message) {
+                bus.on('update', (message) => {
                     model.currentJobState = message.jobState;
                     importModel(message.output);
                     render();
                 });
             });
-            runtime.bus().on('read-only-changed', function(msg) {
+            runtime.bus().on('read-only-changed', (msg) => {
                 toggleReadOnly(msg.readOnly);
             });
         }

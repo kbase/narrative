@@ -3,14 +3,14 @@
 define([
     'bluebird',
     './exceptions'
-], function (Promise, exceptions) {
+], (Promise, exceptions) => {
     'use strict';
 
     function post(options) {
-        var timeout = options.timeout || 60000,
+        const timeout = options.timeout || 60000,
             startTime = new Date();
-        return new Promise(function (resolve, reject) {
-            var xhr = new XMLHttpRequest();
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
             xhr.onload = function () {
                 if (xhr.status >= 400 && xhr.status < 500) {
                     reject(new exceptions.ClientException(xhr.status, 'Client Error', xhr));
@@ -28,7 +28,7 @@ define([
             };
             
             xhr.ontimeout = function () {
-                var elapsed = (new Date()) - startTime;
+                const elapsed = (new Date()) - startTime;
                 reject(new exceptions.TimeoutException(timeout, elapsed, 'Request timeout', xhr));
             };
             xhr.onerror = function () {
@@ -48,7 +48,7 @@ define([
 
             try {                
                 if (options.header) {
-                    Object.keys(options.header).forEach(function (key) {
+                    Object.keys(options.header).forEach((key) => {
                         xhr.setRequestHeader(key, options.header[key]);
                     });
                 }
@@ -72,10 +72,10 @@ define([
     }
     
     function get(options) {
-        var timeout = options.timeout || 60000,
+        const timeout = options.timeout || 60000,
             startTime = new Date();
-        return new Promise(function (resolve, reject) {
-            var xhr = new XMLHttpRequest();
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
             xhr.onload = function (e) {
                 if (xhr.status >= 400 && xhr.status < 500) {
                     reject(new exceptions.ClientException(xhr.status, 'Client Error', xhr));
@@ -93,7 +93,7 @@ define([
             };
             
             xhr.ontimeout = function () {
-                var elapsed = (new Date()) - startTime;
+                const elapsed = (new Date()) - startTime;
                 reject(new exceptions.TimeoutException(timeout, elapsed, 'Request timeout', xhr));
             };
             xhr.onerror = function () {
@@ -113,7 +113,7 @@ define([
             try {
                 
                 if (options.header) {
-                    Object.keys(options.header).forEach(function (key) {
+                    Object.keys(options.header).forEach((key) => {
                         xhr.setRequestHeader(key, options.header[key]);
                     });
                 }

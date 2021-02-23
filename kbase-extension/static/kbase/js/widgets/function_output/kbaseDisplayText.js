@@ -18,7 +18,7 @@
         },
         render: function() {
             // creater main comtainer
-            var main = $('<div>').css({'max-height': '600px', 'overflow-y': 'scroll'});
+            const main = $('<div>').css({'max-height': '600px', 'overflow-y': 'scroll'});
             // add header
             if (this.options.header !== '') {
                 main.append($('<div>')

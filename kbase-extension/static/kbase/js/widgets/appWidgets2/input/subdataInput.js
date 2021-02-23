@@ -13,7 +13,7 @@ define([
     '../subdataMethods/manager',
     'bootstrap',
     'css!font-awesome'
-], function (
+], (
     $,
     Promise,
     html,
@@ -24,7 +24,7 @@ define([
     Props,
     Jupyter,
     SubdataMethods
-) {
+) => {
     'use strict';
 
     /*
@@ -43,7 +43,7 @@ define([
      */
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         p = t('p'),
         span = t('span'),
@@ -52,7 +52,7 @@ define([
         button = t('button');
 
     function factory(config) {
-        var spec = config.parameterSpec,
+        let spec = config.parameterSpec,
             runtime = Runtime.make(),
             workspaceId = runtime.getEnv('workspaceId'),
             busConnection = runtime.bus().connect(),
@@ -69,14 +69,14 @@ define([
         subdataMethods = SubdataMethods.make();
 
         function buildOptions() {
-            var availableValues = model.getItem('availableValues'),
+            const availableValues = model.getItem('availableValues'),
                 value = model.getItem('value') || [],
                 selectOptions = [option({ value: '' }, '')];
             if (!availableValues) {
                 return selectOptions;
             }
-            return selectOptions.concat(availableValues.map(function (availableValue) {
-                var selected = false,
+            return selectOptions.concat(availableValues.map((availableValue) => {
+                let selected = false,
                     optionLabel = availableValue.id,
                     optionValue = availableValue.id;
                 // TODO: pull the value out of the object
@@ -91,7 +91,7 @@ define([
         }
 
         function buildCount() {
-            var availableValues = model.getItem('availableValues') || [],
+            const availableValues = model.getItem('availableValues') || [],
                 value = model.getItem('value') || [];
 
             return String(value.length) + ' / ' + String(availableValues.length) + ' items';
@@ -101,8 +101,8 @@ define([
             if (!filter) {
                 return items;
             }
-            var re = new RegExp(filter, 'i');
-            return items.filter(function (item) {
+            const re = new RegExp(filter, 'i');
+            return items.filter((item) => {
                 if (item.text && item.text.match(re)) {
                     return true;
                 }
@@ -111,7 +111,7 @@ define([
         }
 
         function doFilterItems() {
-            var items = model.getItem('availableValues', []),
+            const items = model.getItem('availableValues', []),
                 filteredItems = filterItems(items, model.getItem('filter'));
 
 
@@ -123,7 +123,7 @@ define([
 
         function didChange() {
             validate()
-                .then(function (result) {
+                .then((result) => {
                     if (result.isValid) {
                         model.setItem('value', result.value);
                         updateInputControl('value');
@@ -145,18 +145,18 @@ define([
         }
 
         function doAddItem(itemId) {
-            var selectedItems = model.getItem('selectedItems', []);
+            const selectedItems = model.getItem('selectedItems', []);
             selectedItems.push(itemId);
             model.setItem('selectedItems', selectedItems);
             didChange();
         }
 
         function doRemoveSelectedItem(indexOfitemToRemove) {
-            var selectedItems = model.getItem('selectedItems', []),
+            const selectedItems = model.getItem('selectedItems', []),
                 prevAllowSelection = spec.ui.multiSelection || selectedItems.length === 0;
             selectedItems.splice(indexOfitemToRemove, 1);
 
-            var newAllowSelection = spec.ui.multiSelection || selectedItems.length === 0;
+            const newAllowSelection = spec.ui.multiSelection || selectedItems.length === 0;
             if (newAllowSelection && !prevAllowSelection) {
                 // update text areas to have md-col-7 (from md-col-10)
                 $(ui.getElement('input-container')).find('.row > .col-md-10').switchClass('col-md-10', 'col-md-7');
@@ -169,9 +169,9 @@ define([
         }
 
         function doRemoveSelectedAvailableItem(idToRemove) {
-            var selectedItems = model.getItem('selectedItems', []);
+            const selectedItems = model.getItem('selectedItems', []);
 
-            model.setItem('selectedItems', selectedItems.filter(function (id) {
+            model.setItem('selectedItems', selectedItems.filter((id) => {
                 if (idToRemove === id) {
                     return false;
                 }
@@ -181,7 +181,7 @@ define([
         }
 
         function renderAvailableItems() {
-            var selected = model.getItem('selectedItems', []),
+            let selected = model.getItem('selectedItems', []),
                 allowSelection = (spec.ui.multiSelection || selected.length === 0),
                 items = model.getItem('filteredAvailableItems', []),
                 from = model.getItem('showFrom'),
@@ -195,9 +195,9 @@ define([
             } else if (itemsToShow.length === 0) {
                 content = div({ style: { textAlign: 'center' } }, 'no available values');
             } else {
-                content = itemsToShow.map(function (item, index) {
+                content = itemsToShow.map((item, index) => {
                     item.isAdding = false;
-                    var isSelected = selected.some(function (id) {
+                    const isSelected = selected.some((id) => {
                             return (item.id === id);
                         }),
                         disabled = isSelected;
@@ -297,7 +297,7 @@ define([
         }
 
         function renderSelectedItems() {
-            var selectedItems = model.getItem('selectedItems', []),
+            let selectedItems = model.getItem('selectedItems', []),
                 valuesMap = model.getItem('availableValuesMap', {}),
                 events = Events.make({ node: container }),
                 content;
@@ -305,8 +305,8 @@ define([
             if (selectedItems.length === 0) {
                 content = div({ style: { textAlign: 'center' } }, 'no selected values');
             } else {
-                content = selectedItems.map(function (itemId, index) {
-                    var item = valuesMap[itemId];
+                content = selectedItems.map((itemId, index) => {
+                    let item = valuesMap[itemId];
                     if (item === undefined || item === null) {
                         item = {
                             text: itemId
@@ -376,7 +376,7 @@ define([
         }
 
         function renderSearchBox() {
-            var events = Events.make({ node: container }),
+            let events = Events.make({ node: container }),
                 content;
 
             content = input({
@@ -419,7 +419,7 @@ define([
         }
 
         function renderSearchMessage() {
-            var content = span({
+            const content = span({
                 dataElement: 'message'
             });
 
@@ -431,7 +431,7 @@ define([
         }
 
         function renderStats() {
-            var availableItems = model.getItem('availableValues', []),
+            let availableItems = model.getItem('availableValues', []),
                 filteredItems = model.getItem('filteredAvailableItems', []),
                 content;
             if (!isAvailableValuesInitialized) {
@@ -462,7 +462,7 @@ define([
         }
 
         function renderToolbar() {
-            var items = model.getItem('filteredAvailableItems', []),
+            let items = model.getItem('filteredAvailableItems', []),
                 events = Events.make({ node: container }),
                 content;
 
@@ -522,7 +522,7 @@ define([
         }
 
         function setPageStart(newFrom) {
-            var from = model.getItem('showFrom'),
+            let from = model.getItem('showFrom'),
                 to = model.getItem('to'),
                 newTo,
                 total = model.getItem('filteredAvailableItems', []).length,
@@ -571,7 +571,7 @@ define([
         }
 
         function doSearchKeyUp(e) {
-            var filterLength = e.target.value.length;
+            const filterLength = e.target.value.length;
             if (filterLength >= minimumFilterLength) {
                 model.setItem('filter', e.target.value);
                 doFilterItems();
@@ -594,7 +594,7 @@ define([
         function makeInputControl() {
             // There is an input control, and a dropdown,
             // TODO select2 after we get a handle on this...
-            var availableValues = model.getItem('availableValues');
+            const availableValues = model.getItem('availableValues');
 
             if (!availableValues) {
                 return p({
@@ -711,8 +711,8 @@ define([
         }
 
         function validate() {
-            return Promise.try(function () {
-                var rawValue = getInputValue(),
+            return Promise.try(() => {
+                const rawValue = getInputValue(),
                     validationOptions = {
                         required: spec.data.constraints.required
                     };
@@ -722,7 +722,7 @@ define([
         }
 
         function fetchData() {
-            var referenceObjectName = model.getItem('referenceObjectName'),
+            let referenceObjectName = model.getItem('referenceObjectName'),
                 referenceObjectRef = spec.data.constraints.subdataSelection.constant_ref;
 
             if (!referenceObjectName) {
@@ -742,16 +742,16 @@ define([
                 referenceObjectRef: referenceObjectRef,
                 spec: spec
             })
-                .then(function (values) {
+                .then((values) => {
                     return [true, values];
                 });
         }
 
         function syncAvailableValues() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 return fetchData();
             })
-                .spread(function (haveRefData, data) {
+                .spread((haveRefData, data) => {
                     isAvailableValuesInitialized = true;
 
                     // If default values have been provided, prepend them to the data.
@@ -759,13 +759,13 @@ define([
                     // We use the raw default values here since we are not really using
                     // it as the default value, but as a set of additional items
                     // to select.
-                    var defaultValues = spec.data.defaultValue;
-                    var newAvailableValues = data || [];
+                    const defaultValues = spec.data.defaultValue;
+                    const newAvailableValues = data || [];
                     if (defaultValues && (defaultValues instanceof Array) && (defaultValues.length > 0)) {
-                        defaultValues.forEach(function (itemId) {
+                        defaultValues.forEach((itemId) => {
                             if (itemId && itemId.trim().length > 0) {
                                 // Add the item to the available data
-                                var newItem = {
+                                const newItem = {
                                     id: itemId,
                                     text: itemId
                                 };
@@ -790,15 +790,15 @@ define([
                     }
 
                     // TODO: generate all of this in the fetchData -- it will be a bit faster.
-                    var map = {};
-                    newAvailableValues.forEach(function (datum) {
+                    const map = {};
+                    newAvailableValues.forEach((datum) => {
                         map[datum.id] = datum;
                     });
 
                     model.setItem('availableValuesMap', map);
 
                     // Ensure that selectedValues not in the new available values are removed.
-                    var selectedValues = model.getItem('selectedItems', []).filter(function (value) {
+                    const selectedValues = model.getItem('selectedItems', []).filter((value) => {
                         return map[value];
                     });
                     model.setItem('selectedItems', selectedValues);
@@ -809,7 +809,7 @@ define([
 
         function autoValidate() {
             return validate()
-                .then(function (result) {
+                .then((result) => {
                     channel.emit('validation', {
                         errorMessage: result.errorMessage,
                         diagnosis: result.diagnosis
@@ -823,9 +823,9 @@ define([
          * Hooks up event listeners
          */
         function render() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 // check to see if we have to render inputControl.
-                var events = Events.make({ node: container }),
+                const events = Events.make({ node: container }),
                     inputControl = makeInputControl(events),
                     content = div({
                         class: 'input-group',
@@ -844,10 +844,10 @@ define([
 
                 events.attachEvents();
             })
-                .then(function () {
+                .then(() => {
                     return autoValidate();
                 })
-                .catch(function (err) {
+                .catch((err) => {
                     console.error('ERROR in render', err);
                 });
         }
@@ -858,7 +858,7 @@ define([
          * For the objectInput, there is only ever one control.
          */
         function layout(events) {
-            var content = div({
+            const content = div({
                 dataElement: 'main-panel'
             }, [
                 div({
@@ -876,7 +876,7 @@ define([
              * Issued when thre is a need to have all params reset to their
              * default value.
              */
-            channel.on('reset-to-defaults', function () {
+            channel.on('reset-to-defaults', () => {
                 resetModelValue();
                 // TODO: this should really be set when the linked field is reset...
                 model.setItem('availableValues', []);
@@ -888,7 +888,7 @@ define([
             /*
              * Issued when there is an update for this param.
              */
-            channel.on('update', function (message) {
+            channel.on('update', (message) => {
                 model.setItem('value', message.value);
                 updateInputControl('value');
             });
@@ -906,7 +906,7 @@ define([
                         parameter: spec.data.constraints.subdataSelection.constant_ref
                     },
                     handle: function (message) {
-                        var newValue = message.newValue;
+                        let newValue = message.newValue;
                         if (message.newValue === '') {
                             newValue = null;
                         }
@@ -914,10 +914,10 @@ define([
                         model.reset();
                         model.setItem('referenceObjectName', newValue);
                         syncAvailableValues()
-                            .then(function () {
+                            .then(() => {
                                 updateInputControl('availableValues');
                             })
-                            .catch(function (err) {
+                            .catch((err) => {
                                 console.error('ERROR syncing available values', err);
                             });
                     }
@@ -931,20 +931,20 @@ define([
                         parameter: spec.data.constraints.subdataSelection.parameter_id
                     },
                     handle: function (message) {
-                        var newValue = message.newValue;
+                        let newValue = message.newValue;
                         if (message.newValue === '') {
                             newValue = null;
                         }
                         // reset the entire model.
-                        var selectedItems = model.getItem('selectedItems');
+                        const selectedItems = model.getItem('selectedItems');
                         model.reset();
                         model.setItem('selectedItems', selectedItems);
                         model.setItem('referenceObjectName', newValue);
                         syncAvailableValues()
-                            .then(function () {
+                            .then(() => {
                                 updateInputControl('availableValues');
                             })
-                            .catch(function (err) {
+                            .catch((err) => {
                                 console.error('ERROR syncing available values', err);
                             });
                     }
@@ -958,17 +958,17 @@ define([
                         parameter: spec.data.constraints.subdataSelection.parameter_id
                     },
                     handle: function (message) {
-                        var newValue = message.newValue;
+                        let newValue = message.newValue;
                         if (message.newValue === '') {
                             newValue = null;
                         }
                         model.reset();
                         model.setItem('referenceObjectName', newValue);
                         syncAvailableValues()
-                            .then(function () {
+                            .then(() => {
                                 updateInputControl('availableValues');
                             })
-                            .catch(function (err) {
+                            .catch((err) => {
                                 console.error('ERROR syncing available values', err);
                             });
                     }
@@ -994,7 +994,7 @@ define([
                     type: 'get-parameter'
                 }
             })
-                .then(function () {
+                .then(() => {
                     // console.log('Now i got it again', message);
                 });
 
@@ -1023,14 +1023,14 @@ define([
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({
                     node: container
                 });
 
-                var events = Events.make(),
+                const events = Events.make(),
                     theLayout = layout(events);
 
                 container.innerHTML = theLayout.content;
@@ -1052,11 +1052,11 @@ define([
                         }
                     })
                 ])
-                    .spread(function (referencedParamValue) {
+                    .spread((referencedParamValue) => {
                         if (!config.initialValue) {
                             model.setItem('selectedItems', []);
                         } else {
-                            var selectedItems = config.initialValue;
+                            let selectedItems = config.initialValue;
                             if (!(selectedItems instanceof Array)) {
                                 selectedItems = [selectedItems];
                             }
@@ -1068,22 +1068,22 @@ define([
                             model.setItem('referenceObjectName', referencedParamValue.value);
                         }
                         return syncAvailableValues()
-                            .then(function () {
+                            .then(() => {
                                 updateInputControl('availableValues');
                                 return autoValidate();
                             })
-                            .catch(function (err) {
+                            .catch((err) => {
                                 console.error('ERROR syncing available values', err);
                             });
                     })
-                    .catch(function (err) {
+                    .catch((err) => {
                         console.error('ERROR fetching initial data', err);
                     });
             });
         }
 
         function stop() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 if (parent && container) {
                     parent.removeChild(container);
                 }

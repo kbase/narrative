@@ -9,13 +9,13 @@ define (
 		'jquery',
 		'd3',
 		'kbaseVisWidget'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		d3,
 		kbaseVisWidget
-	) {
+	) => {
 
     return KBWidget({
 
@@ -36,14 +36,14 @@ define (
 
             colorScale : function(idx) {
 
-                var c1 = d3.scale.category20();
-                var c2 = d3.scale.category20b();
-                var c3 = d3.scale.category20c();
+                const c1 = d3.scale.category20();
+                const c2 = d3.scale.category20b();
+                const c3 = d3.scale.category20c();
 
                 return function(idx) {
 
                     if (idx < 20 || idx >= 60) {
-                        var color = c1(idx % 20)
+                        const color = c1(idx % 20)
                         return color;
                     }
                     else if (idx < 40) {
@@ -68,10 +68,10 @@ define (
 
         binColorScale : function(data, maxColor) {
 
-            var max = 0;
+            let max = 0;
 
             data.forEach(
-                function (bin, idx) {
+                (bin, idx) => {
                     if (bin.results) {
                         if (bin.results.count > max) {
                             max = bin.results.count;
@@ -90,10 +90,10 @@ define (
 
         domain : function(data) {
 
-            var start =  1000000;
-            var end   = -1000000;
+            let start =  1000000;
+            let end   = -1000000;
 
-            for (var i = 0; i < data.length; i++) {
+            for (let i = 0; i < data.length; i++) {
 
                 if (data[i].end > end) {
                     end = data[i].end
@@ -111,10 +111,10 @@ define (
 
         regionDomain : function(data) {
 
-            var length = 0;
-            var lastVal = {end : 0}
+            let length = 0;
+            let lastVal = {end : 0}
             data.forEach(
-                function (val, idx) {
+                (val, idx) => {
                     length += val.size;
                     val.start = lastVal.end;
                     val.end = val.start + val.size;
@@ -130,18 +130,18 @@ define (
             if (this.dataset() == undefined) {
                 return;
             }
-            var bounds = this.chartBounds();
+            const bounds = this.chartBounds();
 
-            var regionDomain = this.regionDomain( this.dataset() );
+            const regionDomain = this.regionDomain( this.dataset() );
 
-            var scale = d3.scale.linear()
+            const scale = d3.scale.linear()
                 .domain(regionDomain)
                 .range([0, bounds.size.width]);
 
-            var $gd = this;
+            const $gd = this;
 
-            var mouseAction = function(d, i) {
-                this.on('mouseover', function(b, j) {
+            const mouseAction = function(d, i) {
+                this.on('mouseover', (b, j) => {
                     if ($gd.options.tooltip) {
                         $gd.options.tooltip(b);
                     }
@@ -152,18 +152,18 @@ define (
                         }
                     }
                 })
-                .on('mouseout', function(b,j) {
+                .on('mouseout', (b,j) => {
                     $gd.hideToolTip()
                 });
                 return this;
             }
 
-            var bins = [];
+            const bins = [];
 
             this.dataset().forEach(
-                function(region, idx) {
+                (region, idx) => {
                     region._bins.forEach(
-                        function(bin, idx) {
+                        (bin, idx) => {
                             bin.regionObj = region;
                             bins.push(bin);
                         }
@@ -172,14 +172,14 @@ define (
             );
 
 
-            var transitionTime = this.initialized
+            const transitionTime = this.initialized
                 ? this.options.transitionTime
                 : 0;
 
-            var regionsSelection = this.D3svg().select( this.region('chart') ).selectAll('.regions').data([0]);
+            const regionsSelection = this.D3svg().select( this.region('chart') ).selectAll('.regions').data([0]);
             regionsSelection.enter().append('g').attr('class', 'regions');
 
-            var regionSelection = regionsSelection.selectAll('.region').data(this.dataset(), function(d) { return d.name} );
+            const regionSelection = regionsSelection.selectAll('.region').data(this.dataset(), (d) => { return d.name} );
 
             regionSelection
                 .enter()
@@ -198,10 +198,10 @@ define (
                 .transition()
                 .duration(transitionTime)
                     .attr('opacity', 1)
-                    .attr('x', function(d) {return scale(d.start) })
-                    .attr('width', function(d) { return scale( (d.size) ) } )
-                    .attr('fill', function(d, i) {
-                        var colorScale = d3.scale.linear().domain([0,1]).range(['#FFFFFF', $gd.colorForRegion(d.name)])
+                    .attr('x', (d) => {return scale(d.start) })
+                    .attr('width', (d) => { return scale( (d.size) ) } )
+                    .attr('fill', (d, i) => {
+                        const colorScale = d3.scale.linear().domain([0,1]).range(['#FFFFFF', $gd.colorForRegion(d.name)])
                         return colorScale(0.25);
                      })
 
@@ -214,10 +214,10 @@ define (
                         .attr('width', 0)
                         .each('end', function(d) { d3.select(this).remove() })
 
-            var binsSelection = this.D3svg().select( this.region('chart') ).selectAll('.bins').data([0]);
+            const binsSelection = this.D3svg().select( this.region('chart') ).selectAll('.bins').data([0]);
             binsSelection.enter().append('g').attr('class', 'bins');
 
-            var binSelection = binsSelection.selectAll('.bin').data(bins);
+            const binSelection = binsSelection.selectAll('.bin').data(bins);
 
             binSelection
                 .enter()
@@ -233,10 +233,10 @@ define (
                 .call(function(d) { return mouseAction.call(this, d) } )
                 .transition()
                 .duration(transitionTime)
-                    .attr('opacity', function(d) { return d.results ? 1 : 0} )
-                   .attr('x', function(d) { return scale(d.start + d.regionObj.start) })
-                    .attr('width', function(d) { return scale( (d.end - d.start) ) } )
-                    .attr('fill', function(d, i) { return $gd.colorForRegion(d.region) })
+                    .attr('opacity', (d) => { return d.results ? 1 : 0} )
+                   .attr('x', (d) => { return scale(d.start + d.regionObj.start) })
+                    .attr('width', (d) => { return scale( (d.end - d.start) ) } )
+                    .attr('fill', (d, i) => { return $gd.colorForRegion(d.region) })
 
             binSelection
                 .exit()
@@ -252,7 +252,7 @@ define (
         },
 
         colorForRegion : function(region, colorScale) {
-            var map = this.regionColors;
+            let map = this.regionColors;
             if (map == undefined) {
                 map = this.regionColors = {colorScale : this.options.colorScale()};
             }

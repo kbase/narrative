@@ -20,7 +20,7 @@ define ([
     'datatables.net-buttons-bs',
     'datatables.net-buttons-html5',
     'datatables.net-buttons-print'
-], function(
+], (
     Uuid,
     $,
     KBWidget,
@@ -29,7 +29,7 @@ define ([
     Config,
     GenericClient,
     Promise
-) {
+) => {
     'use strict';
 
     return KBWidget({
@@ -86,13 +86,13 @@ define ([
         },
 
         loadAndRender: function(){
-            var self = this;
+            const self = this;
 
             self.loading(true);
-            var expressionMatrixRef = this.options.upas.expressionMatrixID;
+            const expressionMatrixRef = this.options.upas.expressionMatrixID;
 
             // this is the "old" method that loads up the Conditions table and some of the values in the Overview table
-            var get_matrix_stat_promise = self.genericClient.sync_call('KBaseFeatureValues.get_matrix_stat', [{
+            const get_matrix_stat_promise = self.genericClient.sync_call('KBaseFeatureValues.get_matrix_stat', [{
                 input_data: expressionMatrixRef
             }]);
 
@@ -103,13 +103,13 @@ define ([
             //
             // so there are a couple of bandaids in here to fall back on the old table data if this widget is deployed and the expression api
             // service goes down.
-            var enhancedFilter_promise = self.genericClient.sync_call('ExpressionAPI.get_enhancedFilteredExpressionMatrix', [{
+            const enhancedFilter_promise = self.genericClient.sync_call('ExpressionAPI.get_enhancedFilteredExpressionMatrix', [{
               fem_object_ref: expressionMatrixRef
             }] );
 
             // first thing we do is our old get_matrix_stat call, which we need for the conditions table.
             get_matrix_stat_promise
-              .then( function (res) {
+              .then( (res) => {
 
                 self.matrixStat     = res[0];
                 // the number of features was defined in the old method call.
@@ -119,38 +119,38 @@ define ([
                 // now we see if our expression api enhanced filter call works. If it did, then we keep a
                 // record of that object and update our numFeatures. That number *should* always be the same, but better
                 // safe than sorry
-                enhancedFilter_promise.then(function(res) {
+                enhancedFilter_promise.then((res) => {
                   self.enhancedFeatures = res[0].enhanced_FEM.data;
                   self.numFeatures      = self.enhancedFeatures.values.length;
                 })
                 // once we've checked that enhancedFilter_promise, then no matter what we render our widget and flag that we're no longer loading
-                .finally( function() {
+                .finally( () => {
                   self.render();
                   self.loading(false);
                 })
               })
-              .catch(function(error){
+              .catch((error)=> {
                 self.clientError(error);
               });
         },
 
         render: function() {
-            var self = this;
-            var pref = this.pref;
-            var container = this.$elem;
-            var matrixStat = this.matrixStat;
-            var enhancedFeatures = this.enhancedFeatures;
+            const self = this;
+            const pref = this.pref;
+            const container = this.$elem;
+            const matrixStat = this.matrixStat;
+            const enhancedFeatures = this.enhancedFeatures;
 
             ///////////////////////////////////// Instantiating Tabs ////////////////////////////////////////////
             container.empty();
-            var tabPane = $('<div id="'+pref+'tab-content">');
+            const tabPane = $('<div id="'+pref+'tab-content">');
             container.append(tabPane);
 
-            var tabWidget = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
+            const tabWidget = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
             ///////////////////////////////////// Overview table ////////////////////////////////////////////
-            var tabOverview = $('<div/>');
+            const tabOverview = $('<div/>');
             tabWidget.addTab({tab: 'Overview', content: tabOverview, canDelete : false, show: true});
-            var tableOver = $('<table class="table table-striped table-bordered" '+
+            const tableOver = $('<table class="table table-striped table-bordered" '+
                 'style="width: 100%; margin-left: 0px; margin-right: 0px;" id="'+pref+'overview-table"/>');
             tabOverview.append(tableOver);
             tableOver
@@ -165,7 +165,7 @@ define ([
 
             /////////////////////////////////// Conditions tab ////////////////////////////////////////////
 
-            var $tabConditions = $('<div/>');
+            const $tabConditions = $('<div/>');
             tabWidget.addTab({tab: 'Conditions', content: $tabConditions, canDelete : false, show: false});
 
             ///////////////////////////////////// Conditions table ////////////////////////////////////////////
@@ -197,7 +197,7 @@ define ([
                 } );
 
             ///////////////////////////////////// Genes tab ////////////////////////////////////////////
-            var $tabGenes = $('<div/>');
+            const $tabGenes = $('<div/>');
             tabWidget.addTab({tab: 'Features', content: $tabGenes, canDelete : false, show: false});
 
             ///////////////////////////////////// Genes table ////////////////////////////////////////////
@@ -213,7 +213,7 @@ define ([
                      the new columns from the new method. Then a smidge later, we look to see if we have an enhancedFeatures object. If we do, then we use
                      the new columns, and if not then we fall back to the old columns, since we're using the old method.
             */
-            var oldFeatureTableColumns =
+            const oldFeatureTableColumns =
               [
                   { sTitle: 'Feature ID', mData: 'id'},
                   { sTitle: 'Function', mData: 'function'},
@@ -227,7 +227,7 @@ define ([
               ]
             ;
 
-            var newFeatureTableColumns =
+            const newFeatureTableColumns =
               [
                   { sTitle: 'Feature ID', mData: 'id'},
                   { sTitle: 'Function', mData: 'description'},
@@ -241,7 +241,7 @@ define ([
               ]
             ;
 
-            var featureTableColumns = self.enhancedFeatures
+            const featureTableColumns = self.enhancedFeatures
               ? newFeatureTableColumns
               : oldFeatureTableColumns;
 
@@ -260,11 +260,11 @@ define ([
         },
 
         buildConditionsTableData: function(){
-            var matrixStat = this.matrixStat;
-            var tableData = [];
-            for(var i = 0; i < matrixStat.column_descriptors.length; i++){
-                var desc = matrixStat.column_descriptors[i];
-                var stat = matrixStat.column_stats[i];
+            const matrixStat = this.matrixStat;
+            const tableData = [];
+            for(let i = 0; i < matrixStat.column_descriptors.length; i++){
+                const desc = matrixStat.column_descriptors[i];
+                const stat = matrixStat.column_stats[i];
                 tableData.push({
                     index: desc.index,
                     id: desc.id,
@@ -281,7 +281,7 @@ define ([
 
         buildGenesTableData: function(){
 
-            var enhancedFeatures = this.enhancedFeatures;
+            const enhancedFeatures = this.enhancedFeatures;
 
             /* XXX - finally in here, we look to see if we have our enhancedFeatures object. If we don't then we're going to bow out
                      and fall back to 'oldBuildGenesTableData', which was the old method accessing the old data, just renamed. If we
@@ -291,20 +291,20 @@ define ([
               return this.oldBuildGenesTableData();
             }
 
-            var tableData = [];
+            const tableData = [];
 
-            var key_to_idx_map = [];
+            const key_to_idx_map = [];
             for (var i = 0; i < enhancedFeatures.col_ids.length; i++) {
               key_to_idx_map[ enhancedFeatures.col_ids[i] ] = i;
             }
 
             for (var i = 0; i < enhancedFeatures.values.length; i++) {
 
-              var fold_change = enhancedFeatures.values[i][ key_to_idx_map['fold-change'] ];
+              let fold_change = enhancedFeatures.values[i][ key_to_idx_map['fold-change'] ];
               if ($.isNumeric(fold_change)) {
                 fold_change = fold_change.toFixed(2);
               }
-              var q_value = enhancedFeatures.values[i][ key_to_idx_map['q-value'] ];
+              let q_value = enhancedFeatures.values[i][ key_to_idx_map['q-value'] ];
               if ($.isNumeric(q_value)) {
                 q_value = q_value.toFixed(2);
               }
@@ -329,12 +329,12 @@ define ([
         },
 
         oldBuildGenesTableData: function(){
-            var matrixStat = this.matrixStat;
-            var tableData = [];
+            const matrixStat = this.matrixStat;
+            const tableData = [];
 
-            for(var i = 0; i < matrixStat.row_descriptors.length; i++){
-                var desc = matrixStat.row_descriptors[i];
-                var stat = matrixStat.row_stats[i];
+            for(let i = 0; i < matrixStat.row_descriptors.length; i++){
+                const desc = matrixStat.row_descriptors[i];
+                const stat = matrixStat.row_stats[i];
 
                 tableData.push(
                     {
@@ -356,7 +356,7 @@ define ([
         },
 
         makeRow: function(name, value) {
-            var $row = $('<tr/>')
+            const $row = $('<tr/>')
                 .append($('<th />').css('width','20%').append(name))
                 .append($('<td />').append(value));
             return $row;
@@ -380,7 +380,7 @@ define ([
         },
 
         showMessage: function(message) {
-            var span = $('<span/>').append(message);
+            const span = $('<span/>').append(message);
 
             this.$messagePane.append(span);
             this.$messagePane.show();
@@ -396,7 +396,7 @@ define ([
         },
 
         buildObjectIdentity: function(workspaceID, objectID, objectVer, wsRef) {
-            var obj = {};
+            const obj = {};
             if (wsRef) {
                 obj.ref = wsRef;
             } else {

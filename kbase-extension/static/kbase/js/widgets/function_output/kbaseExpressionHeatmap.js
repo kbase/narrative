@@ -12,14 +12,14 @@ define ([
     'd3',
     'jquery-dataTables',
     'kbaseExpressionGenesetBaseWidget'
-], function(
+], (
     KBWidget,
     bootstrap,
     $,
     d3,
     jquery_dataTables,
     kbaseExpressionGenesetBaseWidget
-) {
+) => {
     'use strict';
     
     return KBWidget({
@@ -31,7 +31,7 @@ define ([
 
         // To be overriden to specify additional parameters
         getSubmtrixParams: function(){
-            var self = this;
+            const self = this;
             // self.setTestParameters();
 
             // check options
@@ -46,7 +46,7 @@ define ([
             }
 
 
-            var features = [];
+            let features = [];
             if(self.options.geneIds) { features = $.map(self.options.geneIds.split(','), $.trim); }
 
             return{
@@ -62,7 +62,7 @@ define ([
 
 
         buildWidget: function($containerDiv){
-            var self = this;
+            const self = this;
 
             self.updateColorGenerator();
             $containerDiv.append(
@@ -89,31 +89,31 @@ define ([
             self.redrawTable();
 
 
-            var minCell = $('<div>')
+            const minCell = $('<div>')
                 .addClass('heat_cell')
                 .css('float','right')
                 .css('padding','4px')
                 .css('background',self.colorGenerator(self.minColorValue));
 
-            var maxCell = $('<div>')
+            const maxCell = $('<div>')
                 .addClass('heat_cell')
                 .css('float','right')
                 .css('padding','4px')
                 .css('background',self.colorGenerator(self.maxColorValue));
 
             $containerDiv.append('<br><br><br>');
-            var padding = '2px';
-            var $rangeController = $('<div class="row">');
-            var $minInput = $('<input id="min" type="text" size="6">').val(self.minColorValue);
-            var $maxInput = $('<input id="max" type="text" size="6">').val(self.maxColorValue);
-            var $btn = $('<button>').addClass('btn btn-default btn-sm').append('Update')
-                .on('click', function() {
-                    var min = parseFloat($minInput.val());
+            const padding = '2px';
+            const $rangeController = $('<div class="row">');
+            const $minInput = $('<input id="min" type="text" size="6">').val(self.minColorValue);
+            const $maxInput = $('<input id="max" type="text" size="6">').val(self.maxColorValue);
+            const $btn = $('<button>').addClass('btn btn-default btn-sm').append('Update')
+                .on('click', () => {
+                    const min = parseFloat($minInput.val());
                     if(min && !isNaN(min)) {
                         self.minColorValue = min;
                     }
                     $minInput.val(self.minColorValue);
-                    var max = parseFloat($maxInput.val());
+                    const max = parseFloat($maxInput.val());
                     if(max && !isNaN(max)) {
                         self.maxColorValue = max;
                     }
@@ -132,12 +132,12 @@ define ([
                     .append($maxInput))
                 .append($('<div class="form-group col-xs-1 text-right">').css('padding',padding)
                     .append($btn));
-            $minInput.keyup(function(event) {
+            $minInput.keyup((event) => {
                 if(event.keyCode == 13) {
                     $btn.click();
                 }
             });
-            $maxInput.keyup(function(event) {
+            $maxInput.keyup((event) => {
                 if(event.keyCode == 13) {
                     $btn.click();
                 }
@@ -146,13 +146,13 @@ define ([
         },
 
         getState: function() {
-            var self = this;
+            const self = this;
             return {minColor:self.minColorValue, maxColor:self.maxColorValue};
         },
 
         loadState: function(state) {
-            var self = this;
-            var needsReload = false;
+            const self = this;
+            let needsReload = false;
             if(state.minColor !== self.minColorValue) {
                 self.minColorValue = state.minColor;
                 needsReload = true;
@@ -167,7 +167,7 @@ define ([
         },
 
         redrawTable: function() {
-            var self = this;
+            const self = this;
 
             self.updateColorGenerator();
 
@@ -189,10 +189,10 @@ define ([
                         { sTitle: 'Std. Dev.', mData:'std'},
                         { sTitle: 'Expression Values', mData: 'values',
                             mRender: function ( values ) {
-                                var $heatRow = $('<div class="heat_row"/>');
+                                const $heatRow = $('<div class="heat_row"/>');
 
-                                for(var i = 0 ; i < values.length; i++){
-                                    var heatCell = $('<div/>')
+                                for(let i = 0 ; i < values.length; i++){
+                                    const heatCell = $('<div/>')
                                         .addClass('heat_cell')
                                         .css('background',self.colorGenerator(values[i]))
                                         .attr('title',
@@ -208,18 +208,18 @@ define ([
                 });
         },
         buildConditionsTableData: function(){
-            var tableData = [];
+            const tableData = [];
 
-            var submatrixStat = this.submatrixStat;
-            var columnDescriptors = submatrixStat.column_descriptors;
-            var rowDescriptors = submatrixStat.row_descriptors;
-            var stat = submatrixStat.column_set_stat;
-            var values = submatrixStat.values;
-            for(var ci = 0; ci < columnDescriptors.length; ci++){
-                var desc = columnDescriptors[ci];
+            const submatrixStat = this.submatrixStat;
+            const columnDescriptors = submatrixStat.column_descriptors;
+            const rowDescriptors = submatrixStat.row_descriptors;
+            const stat = submatrixStat.column_set_stat;
+            const values = submatrixStat.values;
+            for(let ci = 0; ci < columnDescriptors.length; ci++){
+                const desc = columnDescriptors[ci];
 
-                var columnValues = [];
-                for(var ri = 0; ri < rowDescriptors.length; ri++){
+                const columnValues = [];
+                for(let ri = 0; ri < rowDescriptors.length; ri++){
                     columnValues.push(values[ri][ci]);
                 }
 
@@ -242,9 +242,9 @@ define ([
         maxColorValue:null,
 
         updateColorGenerator: function(){
-            var self = this;
-            var min = this.minColorValue;
-            var max = this.maxColorValue;
+            const self = this;
+            const min = this.minColorValue;
+            const max = this.maxColorValue;
             self.colorGenerator = d3.scale.linear()
                 .domain([min,(max+min)/2, max])
                 .range(['#FFA500', '#FFFFFF', '#0066AA']);

@@ -8,15 +8,15 @@ define([
     'common/dom',
     'bootstrap',
     'css!font-awesome'
-], function (Promise, html, Validation, Events, Dom) {
+], (Promise, html, Validation, Events, Dom) => {
     'use strict';
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'), select = t('select'), option = t('option');
 
     function factory(config) {
-        var options = {},
+        let options = {},
             spec = config.parameterSpec,
             parent,
             dom,
@@ -45,7 +45,7 @@ define([
          */
 
         function getInputValue() {
-            var control = dom.getElement('input-container.input'),
+            const control = dom.getElement('input-container.input'),
                 selected = control.selectedOptions;
             
             if (selected.length === 0) {
@@ -68,7 +68,7 @@ define([
          */
 
         function validate() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 if (!options.enabled) {
                     return {
                         isValid: true,
@@ -77,7 +77,7 @@ define([
                     };
                 }
 
-                var rawValue = getInputValue(),
+                const rawValue = getInputValue(),
                     validationResult = Validation.validateTextString(rawValue, {
                         required: options.required
                     });
@@ -87,8 +87,8 @@ define([
         }
 
         function makeInputControl(events) {
-            var selected,
-                selectOptions = model.availableValues.map(function (item) {
+            let selected,
+                selectOptions = model.availableValues.map((item) => {
                     selected = false;
                     if (item.value === model.value) {
                         selected = true;
@@ -104,7 +104,7 @@ define([
             return select({
                 id: events.addEvent({type: 'change', handler: function () {
                         validate()
-                            .then(function (result) {
+                            .then((result) => {
                                 if (result.isValid) {
                                     bus.emit('changed', {
                                         newValue: result.value
@@ -122,20 +122,20 @@ define([
         }
 
         function render(input) {
-            Promise.try(function () {
-                var events = Events.make(),
+            Promise.try(() => {
+                const events = Events.make(),
                     inputControl = makeInputControl(events);
                     
                 dom.setContent('input-container', inputControl);
                 events.attachEvents(container);
             })
-                .then(function () {
+                .then(() => {
                     autoValidate();
                 });
         }
 
         function layout(events) {
-            var content = div({
+            const content = div({
                 dataElement: 'main-panel'
             }, [
                 div({dataElement: 'input-container'})
@@ -148,7 +148,7 @@ define([
 
         function autoValidate() {
             validate()
-                .then(function (result) {
+                .then((result) => {
                     bus.emit('validation', {
                         errorMessage: result.errorMessage,
                         diagnosis: result.diagnosis
@@ -157,23 +157,23 @@ define([
         }
 
         function setModelValue(value) {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 if (model.value !== value) {
                     model.value = value;
                     return true;
                 }
                 return false;
             })
-                .then(function (changed) {
+                .then((changed) => {
                     render();
                 });
         }
 
         function unsetModelValue() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 model.value = undefined;
             })
-                .then(function (changed) {
+                .then((changed) => {
                     render();
                 });
         }
@@ -190,22 +190,22 @@ define([
         // LIFECYCLE API
 
         function start() {
-            return Promise.try(function () {
-                bus.on('run', function (message) {
+            return Promise.try(() => {
+                bus.on('run', (message) => {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
                     dom = Dom.make({node: container});
 
-                    var events = Events.make(),
+                    const events = Events.make(),
                         theLayout = layout(events);
 
                     container.innerHTML = theLayout.content;
                     events.attachEvents(container);
 
-                    bus.on('reset-to-defaults', function () {
+                    bus.on('reset-to-defaults', () => {
                         resetModelValue();
                     });
-                    bus.on('update', function (message) {
+                    bus.on('update', (message) => {
                         setModelValue(message.value);
                     });
                     bus.emit('sync');

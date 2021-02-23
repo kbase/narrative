@@ -10,19 +10,19 @@ return KBWidget({
     },
     init: function(options) {
         this._super(options);
-        var self = this;
-        var token = options.auth;
-        var media = options.id;
-        var ws = options.ws;
-        var viewOnly = this.options.viewOnly;
-        var editOnly = this.options.editOnly;
+        const self = this;
+        const token = options.auth;
+        let media = options.id;
+        const ws = options.ws;
+        const viewOnly = this.options.viewOnly;
+        const editOnly = this.options.editOnly;
 
-        var fba = new fbaModelServices(window.kbconfig.urls.fba);
-        var kbws = new workspaceService(window.kbconfig.urls.workspace);
+        const fba = new fbaModelServices(window.kbconfig.urls.fba);
+        const kbws = new workspaceService(window.kbconfig.urls.workspace);
 
 //      var panel =  new kbasePanel(self.$elem, {title: 'Media Info', subText: media})
 
-        var container = $("<div>"); //panel.body();
+        const container = $("<div>"); //panel.body();
         self.$elem.append(container);
 
         container.append('<p class="muted loader-rxn"> \
@@ -37,7 +37,7 @@ return KBWidget({
         // var $viewToggleBtn = $('<button/>')
         //                      .addClass('btn btn-default pull-right>');
 
-        var randId = self._genRandId();
+        const randId = self._genRandId();
 
 
         var mediaData = [];
@@ -64,8 +64,8 @@ return KBWidget({
 
 
 
-            var mediaAJAX = fba.get_media({medias: [media], workspaces: [ws], auth: token});
-            $.when(mediaAJAX).done(function(data){
+            const mediaAJAX = fba.get_media({medias: [media], workspaces: [ws], auth: token});
+            $.when(mediaAJAX).done((data)=> {
                 media = data[0]; // only 1 media right now
                 if (editOnly)
                     media_view_editable(container, media);
@@ -92,10 +92,10 @@ return KBWidget({
             container.append('<b>Name: </b>'+data.id+'&nbsp;&nbsp;&nbsp;<b>pH: </b>'+data.pH);
             container.append('<br><br>');
 
-            var table = $('<table class="table table-striped table-bordered" style="margin-left:auto; margin-right:auto">')
+            const table = $('<table class="table table-striped table-bordered" style="margin-left:auto; margin-right:auto">')
            
             table.append('<tr><th>Compound</th><th>Concentration</th><th>min_flux</th><th>max_flux</th></tr>')
-            for (var i in data.media_compounds) {
+            for (const i in data.media_compounds) {
                 table.append('<tr><td>'+data.media_compounds[i].name+'</td>\
                     <td>'+data.media_compounds[i].concentration+'</td>\
                     <td>'+data.media_compounds[i].min_flux+'</td>\
@@ -109,16 +109,16 @@ return KBWidget({
             $('.loader-rxn').remove();
 
 
-            var nameInput = "<input type='text' id='" + randId + "media-name' " + (data.id ? "value='" + data.id + "'" : "") + "/>";
-            var pHInput = "<input type='text' id='" + randId + "media-ph' " + (data.pH ? "value='" + data.pH + "'" : "") + "/>";
+            const nameInput = "<input type='text' id='" + randId + "media-name' " + (data.id ? "value='" + data.id + "'" : "") + "/>";
+            const pHInput = "<input type='text' id='" + randId + "media-ph' " + (data.pH ? "value='" + data.pH + "'" : "") + "/>";
 
             container.append('<b>Name: </b>'+nameInput+' <b>pH: </b>'+pHInput);
             container.append('<br><br>');
 
-            var table = $('<table class="table table-striped table-bordered" style="margin-left:auto; margin-right:auto">')
+            const table = $('<table class="table table-striped table-bordered" style="margin-left:auto; margin-right:auto">')
            
             table.append('<tr><th>Compound</th><th>Concentration</th><th>min_flux</th><th>max_flux</th><th>Delete/Add</th></tr>')
-            for (var i in data.media_compounds) {
+            for (const i in data.media_compounds) {
                 table.append('<tr><td><input id="' + randId + 'cmpds'+i+'" class="form-control" value='+data.media_compounds[i].name+'></input></td>\
                     <td><input id="' + randId + 'conc'+i+'" class="form-control" value='+data.media_compounds[i].concentration+'></input></td>\
                     <td><input id="' + randId + 'minflux'+i+'" class="form-control" value='+data.media_compounds[i].min_flux+'></input></td>\
@@ -139,13 +139,13 @@ return KBWidget({
                 e.preventDefault();
 
                 //var table = $('<table class="table table-striped table-bordered">')
-                var newCmpd = $('#' + randId + 'addCmpds').val();
-                var newConc = $('#' + randId + 'addConc').val();
-                var newMinflux = $('#' + randId + 'addMinflux').val();
-                var newMaxflux = $('#' + randId + 'addMaxflux').val();
-                var last = $('[id^=' + randId + 'cmpds]').length
+                const newCmpd = $('#' + randId + 'addCmpds').val();
+                const newConc = $('#' + randId + 'addConc').val();
+                const newMinflux = $('#' + randId + 'addMinflux').val();
+                const newMaxflux = $('#' + randId + 'addMaxflux').val();
+                const last = $('[id^=' + randId + 'cmpds]').length
                 //alert ();
-                var rowToAdd = '<tr><td><input id="' + randId + 'cmpds'+last+'" class="form-control" value="'+newCmpd+'"></input></td>\
+                const rowToAdd = '<tr><td><input id="' + randId + 'cmpds'+last+'" class="form-control" value="'+newCmpd+'"></input></td>\
                         <td><input id="' + randId + 'conc'+last+'" class="form-control" value="'+newConc+'"></input></td>\
                         <td><input id="' + randId + 'minflux'+last+'" class="form-control" value="'+newMinflux+'"></input></td>\
                         <td><input id="' + randId + 'maxflux'+last+'" class="form-control" value="'+newMaxflux+'"></input></td>\
@@ -153,24 +153,24 @@ return KBWidget({
 
                  table.append(rowToAdd)
 
-                var row = $(this).closest('tr');
+                const row = $(this).closest('tr');
                 row.next().after(row);
 
 
             });
     
-            var $errorPanel = $("<div/>")
+            const $errorPanel = $("<div/>")
                               .addClass("alert alert-danger")
                               .css({"display" : "none"});
 
-            var $savePanel = $("<div/>")
+            const $savePanel = $("<div/>")
                              .addClass("alert alert-warning")
                              .css({"display": "none"});
 
-            var $saveButton = $("<button>")
+            const $saveButton = $("<button>")
                               .addClass("btn btn-primary")
                               .append("Save media")
-                              .click(function(event) {
+                              .click((event) => {
                                   saveEditedMedia(ws, $errorPanel, $savePanel);
                               });
 
@@ -188,12 +188,12 @@ return KBWidget({
             $errorPanel.css({"display" : "none"});
             $errorPanel.html("");
 
-            var mediaName = $("#" + randId + "media-name").val().trim().replace(/\s+/g, "_");
-            var mediaPH = $("#" + randId + "media-ph").val().trim().replace(/\s+/g, "_");
+            const mediaName = $("#" + randId + "media-name").val().trim().replace(/\s+/g, "_");
+            const mediaPH = $("#" + randId + "media-ph").val().trim().replace(/\s+/g, "_");
 
             console.log("name: " + mediaName + " pH: " + mediaPH);
 
-            var errorText = "";
+            let errorText = "";
             if (!mediaName) {
                 errorText += "Please give your media a name."; 
             }
@@ -206,29 +206,29 @@ return KBWidget({
             }
 
             else {
-                var cmpdDivs = $('[id^=' + randId + 'cmpds]');
-                var concDivs = $('[id^=' + randId + 'conc]');
-                var minfluxDivs = $('[id^=' + randId + 'minflux]');
-                var maxfluxDivs = $('[id^=' + randId + 'maxflux]');
+                const cmpdDivs = $('[id^=' + randId + 'cmpds]');
+                const concDivs = $('[id^=' + randId + 'conc]');
+                const minfluxDivs = $('[id^=' + randId + 'minflux]');
+                const maxfluxDivs = $('[id^=' + randId + 'maxflux]');
 
                 // console.log(cmpdDivs);
                 // console.log(concDivs);
                 // console.log(minfluxDivs);
                 // console.log(maxfluxDivs);
 
-                var cmpds = [];
-                var conc = [];
-                var minflux = [];
-                var maxflux = [];
+                const cmpds = [];
+                const conc = [];
+                const minflux = [];
+                const maxflux = [];
 
-                for (var i=0; i<cmpdDivs.length; i++) {
+                for (let i=0; i<cmpdDivs.length; i++) {
                     cmpds[i] = $(cmpdDivs[i]).val();
                     conc[i] = $(concDivs[i]).val();
                     minflux[i] = $(minfluxDivs[i]).val();
                     maxflux[i] = $(maxfluxDivs[i]).val();
                 }
 
-                var plusCpd = $("#" + randId + "addCmpds").val();
+                const plusCpd = $("#" + randId + "addCmpds").val();
                 if (plusCpd) {
                     cmpds.push(plusCpd);
                     conc.push($("#" + randId + "addConc").val());
@@ -250,7 +250,7 @@ return KBWidget({
                 //     bool overwrite;
                 //     string auth;
                 // } addmedia_params;
-                var newMedia = {
+                const newMedia = {
                     media: mediaName,
                     workspace: workspace,
                     name: mediaName,
@@ -270,10 +270,10 @@ return KBWidget({
                 $savePanel.css({"display":"inline"});
 
                 fba.addmedia_async(newMedia,
-                    function(metadata) {
+                    (metadata) => {
                         $savePanel.html("Done!");
                     },
-                    function(error) {
+                    (error) => {
                         $savePanel.css({"display":"none"});
                         $errorPanel.html("Error while saving.");
                         $errorPanel.css({"display":"inline"});
@@ -299,14 +299,14 @@ return KBWidget({
         function events() {
 
             $('.save-to-ws-btn').unbind('click');
-            $('.save-to-ws-btn').click(function() {
+            $('.save-to-ws-btn').click(() => {
                 //var media_id=data.id;
                 //var name=data.id;
-                var cmpds = $('[id^=' + randId + 'cmpds]');
-                var conc = $('[id^=' + randId + 'conc]');
-                var minflux = $('[id^=' + randId + 'minflux]');
-                var maxflux = $('[id^=' + randId + 'maxflux]');
-                var newmedia = {
+                const cmpds = $('[id^=' + randId + 'cmpds]');
+                const conc = $('[id^=' + randId + 'conc]');
+                const minflux = $('[id^=' + randId + 'minflux]');
+                const maxflux = $('[id^=' + randId + 'maxflux]');
+                const newmedia = {
                     media: 'testSave',
                     workspace: 'jko',
                     name: 'testSave',
@@ -320,7 +320,7 @@ return KBWidget({
 
                 };
                 container.append('<div id="save-to-ws"></div>')
-                var test =  new kbaseSimpleWSSelect($('#save-to-ws'), {defaultWS:ws, auth: token});
+                const test =  new kbaseSimpleWSSelect($('#save-to-ws'), {defaultWS:ws, auth: token});
                 test.show();
 
 
@@ -413,7 +413,7 @@ return KBWidget({
         }*/
   
         function get_genome_id(ws_id) {
-            var pos = ws_id.indexOf('.');
+            const pos = ws_id.indexOf('.');
             var ws_id = ws_id.slice(0, ws_id.indexOf('.', pos+1));
             return ws_id;
         }
@@ -427,8 +427,8 @@ return KBWidget({
     },  //end init
 
     _genRandId: function() {
-        var randId = "";
-        for (var i=0; i<15; i++) {
+        let randId = "";
+        for (let i=0; i<15; i++) {
             randId += Math.floor(Math.random()*10);
         }
         return randId;

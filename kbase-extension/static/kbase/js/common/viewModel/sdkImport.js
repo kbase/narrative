@@ -3,16 +3,16 @@
 
 define([
     'common/props'
-], function (
+], (
     Props
-) {
+) => {
     'use strict';
 
     function coerceToBoolean(value) {
         if (!value) {
             return false;
         }
-        var intValue = parseInt(value);
+        const intValue = parseInt(value);
         if (!isNaN(intValue)) {
             if (value > 0) {
                 return 1;
@@ -46,7 +46,7 @@ define([
         if (converted.multipleItems) {
             return [];
         }
-        var nullValue = (function () {
+        const nullValue = (function () {
             switch (converted.data.type) {
             case 'string':
                 return '';
@@ -93,7 +93,7 @@ define([
     }
 
     function defaultValue(converted, spec) {
-        var defaultValues = spec.default_values || [];
+        const defaultValues = spec.default_values || [];
         // No default value and not required? null value
 
         // special special cases.
@@ -135,7 +135,7 @@ define([
         if (!spec.allow_multiple) {
             return defaultToNative(converted, defaultValues[0]);
         }
-        return defaultValues.map(function (defaultValue) {
+        return defaultValues.map((defaultValue) => {
             return defaultToNative(converted, defaultValue);
         });
     }
@@ -198,7 +198,7 @@ define([
             //}
             return 'string';
         } else {
-            var validateAs = spec.text_options.validate_as;
+            const validateAs = spec.text_options.validate_as;
             if (validateAs) {
                 // For int and float, "validateAs" overrides the type.
                 if (validateAs === 'int' || validateAs === 'float') {
@@ -240,10 +240,10 @@ define([
      * These need to be really fleshed out...
      */
     function updateConstraints(converted, spec) {
-        var dataType = converted.data.type;
-        var fieldType = converted.ui.type;
-        var paramClass = converted.ui.class;
-        var constraints;
+        const dataType = converted.data.type;
+        const fieldType = converted.ui.type;
+        const paramClass = converted.ui.class;
+        let constraints;
 
         // NOTE:
         // field_type is text or dropdown, but does not always correspond to the
@@ -466,7 +466,7 @@ define([
             throw new Error('Unknown data type');
         }
         if (constraints) {
-            Object.keys(constraints).forEach(function (key) {
+            Object.keys(constraints).forEach((key) => {
                 converted.data.constraints[key] = constraints[key];
             });
         }
@@ -478,11 +478,11 @@ define([
     // now with grouped params 
 
     function convertParameter(spec) {
-        var dataType = grokDataType(spec);
-        var multiple = (spec.allow_multiple ? true : false);
-        var required = (spec.optional ? false : true);
+        const dataType = grokDataType(spec);
+        const multiple = (spec.allow_multiple ? true : false);
+        const required = (spec.optional ? false : true);
 
-        var paramSpec = {
+        const paramSpec = {
             ui: {
                 label: spec.ui_name,
                 hint: spec.short_hint,
@@ -530,9 +530,9 @@ define([
     }
 
     function convertGroupList(group, params) {
-        var defaultValue = [];
-        var nullValue = [];
-        var structSpec = {
+        const defaultValue = [];
+        const nullValue = [];
+        const structSpec = {
             id: group.id,
             multipleItems: true,
             ui: {
@@ -571,28 +571,28 @@ define([
 
     function convertGroupToStruct(group, params) {
         // Collect params into group and remove from original params collection.
-        var groupParams = {};
-        group.parameter_ids.forEach(function (id) {
+        const groupParams = {};
+        group.parameter_ids.forEach((id) => {
             groupParams[id] = params[id];
             delete params[id];
         });
-        var defaultValue = {};
-        var nullValue = {};
+        const defaultValue = {};
+        const nullValue = {};
         // Default value is a struct of default values of the
         // struct members. Note that this is fundamentally different
         // from a list of structs/ groups.
-        Object.keys(groupParams).forEach(function (id) {
+        Object.keys(groupParams).forEach((id) => {
             // console.log('STRUCT DEF', id, groupParams)
             defaultValue[id] = groupParams[id].spec.data.defaultValue;
             nullValue[id] = groupParams[id].spec.data.nullValue;
         });
-        var required;
+        let required;
         if (group.optional === 1) {
             required = false;
         } else {
             required = true;
         }
-        var structSpec = {
+        const structSpec = {
             ui: {
                 label: group.ui_name,
                 description: group.description,
@@ -622,11 +622,11 @@ define([
     }
 
     function convertGroup(group, params) {
-        var structSpec = convertGroupToStruct(group, params);
+        const structSpec = convertGroupToStruct(group, params);
         if (group.allow_multiple === 1) {
             // wrap in a list
             console.log('GROUP', group);
-            var listSpec = {
+            const listSpec = {
                 spec: {
                     ui: {
                         label: group.ui_name,
@@ -658,11 +658,11 @@ define([
 
         /// console.log('SDK APP SPEC', sdkAppSpec);
 
-        var parameterSpecs = {},
+        let parameterSpecs = {},
             parameterLayout;
 
         // First convert all parameters
-        sdkAppSpec.parameters.forEach(function (parameter) {
+        sdkAppSpec.parameters.forEach((parameter) => {
             parameterSpecs[parameter.id] = convertParameter(parameter);
         });
 
@@ -671,8 +671,8 @@ define([
         // and populate it with the specified parameters, removing them from
         // the top level of parameters.
 
-        var groups = sdkAppSpec.parameter_groups || [];
-        groups.forEach(function (group) {
+        const groups = sdkAppSpec.parameter_groups || [];
+        groups.forEach((group) => {
             convertGroup(group, parameterSpecs);
             // don't know how the group is ordered in the spec ... so just append it later.            
         });
@@ -680,16 +680,16 @@ define([
         // first filter out the paramters which have been moved into groups,
         // and then add the groups in.
         parameterLayout = sdkAppSpec.parameters
-            .filter(function (parameter) {
+            .filter((parameter) => {
                 if (parameterSpecs[parameter.id]) {
                     return true;
                 }
                 return false;
             })
-            .map(function (parameter) {
+            .map((parameter) => {
                 return parameter.id;
             })
-            .concat(groups.map(function (group) {
+            .concat(groups.map((group) => {
                 return group.id;
             }));
 

@@ -19,7 +19,7 @@ define([
     'kbase-generic-client-api',
     'util/timeFormat',
     'api/auth'
-], function (
+], (
     $,
     Jupyter,
     Config,
@@ -33,7 +33,7 @@ define([
     GenericClient,
     TimeFormat,
     Auth
-) {
+) => {
     'use strict';
     return new KBWidget({
         name: 'kbaseNarrativeManagePanel',
@@ -77,9 +77,9 @@ define([
             this.ws_name = Jupyter.narrative.getWorkspaceName();
 
             $([Jupyter.events]).on(
-                'notebook_saved.Notebook', function () {
+                'notebook_saved.Notebook', () => {
                     this.refresh();
-                }.bind(this)
+                }
             );
 
             // doesn't need a title, so just hide it to avoid padding.
@@ -130,7 +130,7 @@ define([
             this.showLoading();
             this.narData = null;
             // look up all Narratives this user has access to.
-            let proms = [
+            const proms = [
                 Promise.resolve(this.serviceClient.sync_call('NarrativeService.list_narratives', [{type: 'mine'}])),
                 Promise.resolve(this.serviceClient.sync_call('NarrativeService.list_narratives', [{type: 'shared'}]))
             ];
@@ -147,14 +147,14 @@ define([
                         ...this.narData.mine.map(info => { return {id: info.ws[0]} }),
                         ...this.narData.shared.map(info => { return {id: info.ws[0]} })
                     ];
-                    let newProms = [];
+                    const newProms = [];
                     for (let i=0; i<permsToLookup.length; i+=1000) {
                         newProms.push(Promise.resolve(this.ws.get_permissions_mass({workspaces: permsToLookup.slice(i, i+1000)})));
                     }
                     return Promise.all(newProms);
                 })
                 .then((permsData) => {
-                    let perms = permsData.reduce((accumulator, cur) => {
+                    const perms = permsData.reduce((accumulator, cur) => {
                         return accumulator.concat(cur.perms);
                     }, []);
                     this.wsPerms = {};
@@ -164,9 +164,9 @@ define([
                 })
                 .then(() => {
                     // get the names of all ws owners
-                    let owners = {};
+                    const owners = {};
                     this.narData.shared.map(info => owners[info.ws[2]] = 1);
-                    let auth = Auth.make({url: Config.url('auth')});
+                    const auth = Auth.make({url: Config.url('auth')});
                     return auth.getUserNames(auth.getAuthToken(), Object.keys(owners));
                 })
                 .then((users) => {
@@ -188,8 +188,8 @@ define([
             if (this.$mainPanel) {
                 this.$mainPanel.empty();
 
-                var $msgPanel = $('<div>').css({'margin': '10px', 'text-align': 'center'});
-                var $newNarrPanel = $('<div>').css({'margin': '10px', 'text-align': 'center'});
+                const $msgPanel = $('<div>').css({'margin': '10px', 'text-align': 'center'});
+                const $newNarrPanel = $('<div>').css({'margin': '10px', 'text-align': 'center'});
                 this.$copyThisNarrBtn = this.makeCopyThisNarrativeBtn($msgPanel);
                 this.$mainPanel.append(
                     $('<div>')
@@ -219,7 +219,7 @@ define([
         },
 
         renderPanel: function () {
-            var self = this,
+            let self = this,
                 k,
                 divider = '<hr class="kb-data-list-row-hr">';
 
@@ -252,7 +252,7 @@ define([
             }
         },
         setInteractionError: function ($interactionPanel, errorMessage) {
-            var $error = $('<span>')
+            const $error = $('<span>')
                 .css({'color': '#F44336'})
                 .append(errorMessage);
             this.setInteractionPanel($interactionPanel, 'Error', $error);
@@ -265,7 +265,7 @@ define([
 
         toggleInteractionPanel: function ($interactionPanel, mode) {
             // If same mode, then strip down and hide the panel.
-            var currentMode = $interactionPanel.data('mode');
+            const currentMode = $interactionPanel.data('mode');
             if (currentMode === mode) {
                 $interactionPanel.find('[data-element="title"]').empty();
                 $interactionPanel.find('[data-element="body"]').empty();
@@ -290,18 +290,18 @@ define([
             return true;
         },
         addDataControls: function (object_info, $interactionPanel, ws_info, isError) {
-            var self = this;
-            var $btnToolbarGroup = $('<div>')
+            const self = this;
+            const $btnToolbarGroup = $('<div>')
                 .addClass('btn-group pull-right')
                 .attr('role', 'group');
-            var $btnToolbar = $('<span>')
+            const $btnToolbar = $('<span>')
                 .addClass('btn-toolbar')
                 .attr('role', 'toolbar')
                 .append($btnToolbarGroup);
 
-            var btnClasses = 'btn btn-subtle btn-default';
+            const btnClasses = 'btn btn-subtle btn-default';
 
-            var $openHistory = $('<button>');
+            const $openHistory = $('<button>');
             if (!isError) {
                 $openHistory
                     .addClass(btnClasses)
@@ -312,57 +312,57 @@ define([
                         $('<span>')
                             .addClass('fa fa-history')
                     )
-                    .click(function (e) {
+                    .click((e) => {
                         e.stopPropagation();
 
-                        var opened = self.toggleInteractionPanel($interactionPanel, 'history');
+                        const opened = self.toggleInteractionPanel($interactionPanel, 'history');
                         if (!opened) {
                             return;
                         }
 
                         if (self.ws_name && self.ws) {
                             self.ws.get_object_history({ref: object_info[6] + '/' + object_info[0]},
-                                function (history) {
+                                (history) => {
                                     history.reverse();
-                                    var isCurrent = false;
+                                    let isCurrent = false;
                                     if (self.ws_name === ws_info[1]) {
                                         isCurrent = true;
                                     }
-                                    var $tbl = $('<table>').css({'width': '100%'});
-                                    for (var k = 0; k < history.length; k++) {
+                                    const $tbl = $('<table>').css({'width': '100%'});
+                                    for (let k = 0; k < history.length; k++) {
                                         var $revertBtn = $('<button>').append('v' + history[k][4]).addClass('kb-data-list-btn');
                                         if (k === 0) {
                                             $revertBtn.tooltip({title: 'Current Version', 'container': 'body', placement: 'bottom'});
                                         } else if (history[k][4] === 1) {
                                             $revertBtn.tooltip({title: 'Cannot revert to first unsaved version', 'container': 'body', placement: 'bottom'});
                                         } else {
-                                            var revertRef = {wsid: history[k][6], objid: history[k][0], ver: history[k][4]};
+                                            const revertRef = {wsid: history[k][6], objid: history[k][0], ver: history[k][4]};
                                             (function (revertRefLocal) {
                                                 $revertBtn
                                                     .tooltip({title: 'Revert to this version?', placement: 'bottom'})
-                                                    .click(function () {
+                                                    .click(() => {
                                                         self.ws.revert_object(revertRefLocal,
-                                                            function (reverted_obj_info) {
+                                                            (reverted_obj_info) => {
                                                                 // update the workspace info with the specified name
                                                                 self.ws.alter_workspace_metadata({
                                                                     wsi: {id: ws_info[0]},
                                                                     new : {'narrative_nice_name': reverted_obj_info[10].name}},
-                                                                function () {
+                                                                () => {
                                                                     if (isCurrent) {
                                                                         window.location.reload();
                                                                     } else {
                                                                         self.refresh();
                                                                     }
                                                                 },
-                                                                function (error) {
-                                                                    var errorMessage = 'Narrative reverted, but a minor data update error occured.' + error.error.message;
+                                                                (error) => {
+                                                                    const errorMessage = 'Narrative reverted, but a minor data update error occured.' + error.error.message;
                                                                     console.error(errorMessage, error);
                                                                     self.setInteractionError($interactionPanel, errorMessage);
 
                                                                 });
                                                             },
-                                                            function (error) {
-                                                                var errorMessage = 'Error! ' + error.error.message;
+                                                            (error) => {
+                                                                const errorMessage = 'Error! ' + error.error.message;
                                                                 console.error(errorMessage, error);
                                                                 self.setInteractionError($interactionPanel, errorMessage);
                                                             }
@@ -370,7 +370,7 @@ define([
                                                     });
                                             })(revertRef);
                                         }
-                                        var summary = self.getNarSummary(history[k]);
+                                        let summary = self.getNarSummary(history[k]);
                                         if (summary) {
                                             summary = '<br>' + summary;
                                         }
@@ -383,12 +383,12 @@ define([
                                     }
                                     self.setInteractionPanel($interactionPanel, 'Version History', $tbl);
                                 },
-                                function (error) {
-                                    var msg = 'An unknown error occurred';
+                                (error) => {
+                                    let msg = 'An unknown error occurred';
                                     if (error.error && error.error.message) {
                                         msg = error.error.message;
                                     }
-                                    var errorMessage = 'Error! ' + msg;
+                                    const errorMessage = 'Error! ' + msg;
                                     console.error(errorMessage, error);
                                     self.setInteractionError($interactionPanel, errorMessage);
                                 });
@@ -396,7 +396,7 @@ define([
                     });
             }
 
-            var $copy = $('<button>');
+            const $copy = $('<button>');
             if (!isError) {
                 $copy
                     .addClass(btnClasses)
@@ -406,25 +406,25 @@ define([
                         $('<span>')
                             .addClass('fa fa-copy')
                     )
-                    .click(function (e) {
+                    .click((e) => {
                         e.stopPropagation();
 
-                        var opened = self.toggleInteractionPanel($interactionPanel, 'copy');
+                        const opened = self.toggleInteractionPanel($interactionPanel, 'copy');
                         if (!opened) {
                             return;
                         }
 
-                        var $newNameInput = $('<input type="text">')
+                        const $newNameInput = $('<input type="text">')
                             .addClass('form-control')
                             .val(ws_info[8].narrative_nice_name + ' - Copy')
-                            .on('focus', function () {
+                            .on('focus', () => {
                                 Jupyter.narrative.disableKeyboardManager();
                             })
-                            .on('blur', function () {
+                            .on('blur', () => {
                                 Jupyter.narrative.enableKeyboardManager();
                             });
 
-                        var $copyDiv = $('<div>')
+                        const $copyDiv = $('<div>')
                             .append(
                                 $('<div>')
                                     .append($('<div>').append('Enter a name for the new Narrative'))
@@ -435,17 +435,17 @@ define([
                                         .click(function () {
                                             $(this).prop('disabled', true);
                                             self.copyNarrative(object_info[6] + '/' + object_info[0], $newNameInput.val())
-                                                .then(function() {
+                                                .then(() => {
                                                     self.refresh();
                                                 })
-                                                .catch(function(error) {
+                                                .catch((error) => {
                                                     self.setInteractionError($interactionPanel, 'Sorry, an error occurred while copying!');
                                                     console.error(error);
                                                 });
                                         }))
                                     .append($('<button>').addClass('kb-data-list-cancel-btn')
                                         .append('Cancel')
-                                        .click(function () {
+                                        .click(() => {
                                             self.toggleInteractionPanel($interactionPanel, 'copy');
                                         }))
                             );
@@ -453,45 +453,45 @@ define([
                     });
             }
 
-            var $delete = $('<button>');
+            const $delete = $('<button>');
             if (!isError) {
                 $delete
                     .addClass(btnClasses)
                     .attr('data-button', 'delete')
                     .tooltip({title: 'Delete Narrative', 'container': 'body'})
                     .append($('<span>').addClass('fa fa-trash-o'))
-                    .click(function (e) {
+                    .click((e) => {
                         e.stopPropagation();
 
-                        var opened = self.toggleInteractionPanel($interactionPanel, 'delete');
+                        const opened = self.toggleInteractionPanel($interactionPanel, 'delete');
                         if (!opened) {
                             return;
                         }
 
-                        var warningMsg = 'Are you sure?';
-                        var isCurrent = false;
+                        let warningMsg = 'Are you sure?';
+                        let isCurrent = false;
                         if (self.ws_name === ws_info[1]) {
                             isCurrent = true;
                             warningMsg = 'Warning - you are currently viewing this Narrative!<br>You will be redirected to another Narrative if deleted.  Are you sure?';
                         }
 
-                        var $deleteDiv = $('<div>')
+                        const $deleteDiv = $('<div>')
                             .append($('<div>').append(warningMsg))
                             .append($('<button>')
                                 .addClass('kb-data-list-btn')
                                 .append('Delete')
-                                .click(function () {
+                                .click(() => {
                                     if (self.ws_name && self.ws) {
                                         self.ws.delete_workspace({id: ws_info[0]},
-                                            function () {
+                                            () => {
                                                 if (isCurrent) {
                                                     window.location.replace('/#narrativemanager/start');
                                                 } else {
                                                     self.refresh();
                                                 }
                                             },
-                                            function (error) {
-                                                var errorMessage = 'Error! ' + error.error.message;
+                                            (error) => {
+                                                const errorMessage = 'Error! ' + error.error.message;
                                                 console.error(error);
                                                 self.setInteractionError($interactionPanel, errorMessage);
                                             });
@@ -499,7 +499,7 @@ define([
                                 }))
                             .append($('<button>').addClass('kb-data-list-cancel-btn')
                                 .append('Cancel')
-                                .click(function () {
+                                .click(() => {
                                     self.toggleInteractionPanel($interactionPanel, 'delete');
                                 }));
                         self.setInteractionPanel($interactionPanel, 'Delete Narrative', $deleteDiv);
@@ -522,19 +522,19 @@ define([
                }
              */
 
-            var self = this,
+            let self = this,
                 isError = false;
 
-            var isCurrent = false;
+            let isCurrent = false;
             if (this.ws_name === data.ws[1]) {
                 isCurrent = true;
             }
 
-            var $narDiv = $('<div>').addClass('kb-data-list-obj-row');
+            const $narDiv = $('<div>').addClass('kb-data-list-obj-row');
 
-            var $dataCol = $('<td>').css({'text-align': 'left', 'vertical-align': 'top'});
-            var $ctrCol = $('<td>').css({'text-align': 'right', 'vertical-align': 'top', 'width': '80px'});
-            var $ctrContent = $('<div>').css({'min-height': '60px'});
+            const $dataCol = $('<td>').css({'text-align': 'left', 'vertical-align': 'top'});
+            const $ctrCol = $('<td>').css({'text-align': 'right', 'vertical-align': 'top', 'width': '80px'});
+            const $ctrContent = $('<div>').css({'min-height': '60px'});
             $ctrCol.append($ctrContent);
 
             var $interactionPanel = $('<div>')
@@ -553,7 +553,7 @@ define([
                                 .addClass('close pull-right')
                                 .attr('aria-label', 'Close')
                                 .append($('<span>').attr('aria-hidden', 'true').html('&times;'))
-                                .on('click', function () {
+                                .on('click', () => {
                                     self.toggleInteractionPanel($interactionPanel, $interactionPanel.data('mode'));
                                 })
                         )
@@ -566,24 +566,24 @@ define([
                 .data('mode', 'inactive')
                 .hide();
 
-            var narRef = 'ws.' + data.ws[0] + '.obj.' + data.ws[8].narrative;
-            var nameText = narRef;
-            var version = '';
+            const narRef = 'ws.' + data.ws[0] + '.obj.' + data.ws[8].narrative;
+            let nameText = narRef;
+            let version = '';
             if (data.nar && data.nar[10].name) {
                 nameText = data.nar[10].name;
                 version = ' v' + data.nar[4];
             } else if (data.error && data.ws[8].narrative_nice_name) {
                 nameText = data.ws[8].narrative_nice_name + ' (' + nameText + ')';
             }
-            var $version = $('<span>').addClass('kb-data-list-version').append(version);
-            var $priv = $('<span>').css({'color': '#999', 'margin-left': '8px'}).prop('data-toggle', 'tooltip').prop('data-placement', 'right');
+            const $version = $('<span>').addClass('kb-data-list-version').append(version);
+            const $priv = $('<span>').css({'color': '#999', 'margin-left': '8px'}).prop('data-toggle', 'tooltip').prop('data-placement', 'right');
             if (data.ws[5] === 'r') {
                 $priv.addClass('fa fa-lock').prop('title', 'read-only');
             } else if (data.ws[5] === 'w' || data.ws[5] === 'a') {
                 $priv.addClass('fa fa-pencil').prop('title', 'you can edit');
             }
 
-            var $nameLink = $('<a href="' + narRef + '" target="_blank">');
+            const $nameLink = $('<a href="' + narRef + '" target="_blank">');
             if (isCurrent) {
                 $nameLink.append($('<span>').addClass('fa fa-circle').css({'margin-right': '3px', 'color': '#4BB856'})
                     .tooltip({title: 'You are viewing this Narrative now'}));
@@ -596,12 +596,12 @@ define([
 
             // only display the rest if there was no error
             if (!data.error) {
-                var $usrNameSpan = $('<span>').addClass('kb-data-list-type').append(data.ws[2]);
+                const $usrNameSpan = $('<span>').addClass('kb-data-list-type').append(data.ws[2]);
                 if (data.ws[2] !== this._attributes.auth.user_id) {
                     $dataCol.append($usrNameSpan).append('<br>');
                     DisplayUtil.displayRealName(data.ws[2], $usrNameSpan, this.narData.owners[data.ws[2]]);
                 }
-                var summary = this.getNarSummary(data.nar);
+                const summary = this.getNarSummary(data.nar);
                 if (summary) {
                     $dataCol.append($('<span>')
                         .addClass('kb-data-list-narinfo')
@@ -616,18 +616,18 @@ define([
                 // var $shareContainer = $('<div>').hide();
 
                 /* this is so gross */
-                var $shareToolbarGroup = $('<div>')
+                const $shareToolbarGroup = $('<div>')
                     .addClass('btn-group pull-right')
                     .attr('role', 'group');
-                var $shareToolbar = $('<span>')
+                const $shareToolbar = $('<span>')
                     .addClass('btn-toolbar')
                     .attr('role', 'toolbar')
                     .append($shareToolbarGroup);
                 $ctrContent.append($shareToolbar);
 
-                var shareCount = -1;  // our user is always going to be included, but will bump the count, since it's not "shared"
-                let perms = this.wsPerms[data.ws[0]];
-                for (var usr in perms) {
+                let shareCount = -1;  // our user is always going to be included, but will bump the count, since it's not "shared"
+                const perms = this.wsPerms[data.ws[0]];
+                for (const usr in perms) {
                     if (perms.hasOwnProperty(usr)) {
                         if (usr === '*') {
                             continue;
@@ -645,12 +645,12 @@ define([
                         .append($('<span>')
                             .addClass('fa fa-share-alt'))
                         .append(' ' + shareCount)
-                        .on('click', function () {
+                        .on('click', () => {
                             if (!self.toggleInteractionPanel($interactionPanel, 'share')) {
                                 return;
                             }
 
-                            var $sharingDiv = $('<div>');
+                            const $sharingDiv = $('<div>');
                             self.setInteractionPanel($interactionPanel, 'Share Settings', $sharingDiv);
                             new kbaseNarrativeSharePanel($sharingDiv, {
                                 ws_name_or_id: data.ws[0],
@@ -661,7 +661,7 @@ define([
                 );
             } else if (data.error) {
                 isError = true;
-                var errorMessage;
+                let errorMessage;
                 if (data.error_msg) {
                     errorMessage = 'This Narrative has been corrupted: ' + data.error_msg;
                 } else {
@@ -672,16 +672,16 @@ define([
                         .addClass('kb-data-list-narrative-error')
                         .append(errorMessage));
             }
-            var $btnToolbar = self.addDataControls(data.nar, $interactionPanel, data.ws, isError);
+            const $btnToolbar = self.addDataControls(data.nar, $interactionPanel, data.ws, isError);
 
             if (!isError) {
                 // Set up basic interactivity -- hide and show controls with mouseover.
                 $ctrContent.append($btnToolbar.hide());
                 $narDiv
-                    .mouseenter(function () {
+                    .mouseenter(() => {
                         $btnToolbar.show();
                     })
-                    .mouseleave(function () {
+                    .mouseleave(() => {
                         if ($interactionPanel.data('mode') === 'inactive') {
                             $btnToolbar.hide();
                         }
@@ -696,7 +696,7 @@ define([
                         .append($ctrCol)))
                 .append($interactionPanel);
 
-            var $narDivContainer = $('<div>')
+            const $narDivContainer = $('<div>')
                 .append($narDiv);
 
             return $narDivContainer;
@@ -715,7 +715,7 @@ define([
              * 7. Click "Cancel" - same as success.
              */
 
-            var setButtonWorking = function(isWorking) {
+            const setButtonWorking = function(isWorking) {
                 if (isWorking) {
                     $initCopyBtn.prop('disabled', true)
                         .empty()
@@ -734,7 +734,7 @@ define([
              */
             var $initCopyBtn = $('<button>')
                 .addClass('kb-primary-btn')
-                .click(function() {
+                .click(() => {
                     setButtonWorking(true);
                     $newNameInput.val(Jupyter.notebook.get_notebook_name() + ' - Copy');
                     $alertContainer.slideDown();
@@ -752,14 +752,14 @@ define([
                     placement: 'right',
                     trigger: 'manual'
                 })
-                .on('focus', function () {
+                .on('focus', () => {
                     Jupyter.narrative.disableKeyboardManager();
                 })
-                .on('blur', function () {
+                .on('blur', () => {
                     Jupyter.narrative.enableKeyboardManager();
                 })
-                .on('input', function() {
-                    var v = $newNameInput.val();
+                .on('input', () => {
+                    const v = $newNameInput.val();
                     if (!v) {
                         $newNameInput.tooltip('show');
                         $doCopyBtn.prop('disabled', true);
@@ -770,7 +770,7 @@ define([
                     }
                 });
 
-            var $errorMessage = $('<div>').css({'color': '#F44336'});
+            const $errorMessage = $('<div>').css({'color': '#F44336'});
 
             /*
              * Does the actual copy and displays the error if that happens.
@@ -778,7 +778,7 @@ define([
             var $doCopyBtn = $('<button>')
                 .addClass('kb-primary-btn')
                 .append('Copy')
-                .click(function() {
+                .click(() => {
                     $errorMessage.empty();
                     $doCopyBtn.prop('disabled', true);
                     $cancelBtn.prop('disabled', true);
@@ -786,12 +786,12 @@ define([
                         .then((narrativeRef) => {
                             return this.copyNarrative(narrativeRef, $newNameInput.val());
                         })
-                        .then(function() {
+                        .then(() => {
                             $alertContainer.hide();
                             setButtonWorking(false);
                             this.refresh();
-                        }.bind(this))
-                        .catch(function(error) {
+                        })
+                        .catch((error) => {
                             if (error && error.error && error.error.message) {
                                 $errorMessage.append(error.error.message);
                             }
@@ -801,12 +801,12 @@ define([
                             $doCopyBtn.prop('disabled', false);
                             $cancelBtn.prop('disabled', false);
                         });
-                }.bind(this));
+                });
 
             var $cancelBtn = $('<button>')
                 .addClass('kb-default-btn')
                 .append('Cancel')
-                .click(function () {
+                .click(() => {
                     $doCopyBtn.prop('disabled', false);
                     $alertContainer.slideUp();
                     $newNameInput.tooltip('hide');
@@ -841,7 +841,7 @@ define([
          * 4. Update the new workspace's metadata so it references the new Narrative.
          */
         copyNarrative: function (workspaceRef, newName) {
-            var preCheckError = null;
+            let preCheckError = null;
             if (!this.ws) {
                 preCheckError = 'Cannot copy - please sign in again.';
             }
@@ -860,7 +860,7 @@ define([
                     newName: newName
                 }]
             ))
-                .then(function(result) {
+                .then((result) => {
                     result = result[0];
                     return {
                         status: 'success',
@@ -876,13 +876,13 @@ define([
         },
 
         makeNewNarrativeBtn: function ($msgPanel) {
-            var activeStr = '<span class="fa fa-plus"></span> New Narrative',
+            const activeStr = '<span class="fa fa-plus"></span> New Narrative',
                 workingStr = 'Building...',
                 doneStr = 'Link below',
                 errorStr = 'Error!';
             var $btn =
                 $('<button>').addClass('kb-primary-btn').append(activeStr)
-                    .on('click', function () {
+                    .on('click', () => {
                         $btn.prop('disabled', true)
                             .empty()
                             .append(workingStr);
@@ -890,29 +890,29 @@ define([
                             'NarrativeService.create_new_narrative',
                             [{ includeIntroCell: 1 }]
                         ))
-                            .then(function(results) {
+                            .then((results) => {
                                 $btn.empty().append(doneStr);
-                                var url = '/narrative/' + results[0].narrativeInfo.obj_id;
-                                var $newNarrLink = $('<a>')
+                                const url = '/narrative/' + results[0].narrativeInfo.obj_id;
+                                const $newNarrLink = $('<a>')
                                     .attr('href', url)
                                     .attr('target', '_blank')
                                     .append('Click here to open your new temporary Narrative.')
-                                    .click(function() {
+                                    .click(() => {
                                         $msgPanel.slideUp();
                                         $btn.empty().append(activeStr).prop('disabled', false);
-                                    }.bind(this));
+                                    });
                                 $msgPanel.empty()
                                     .append($newNarrLink)
                                     .slideDown();
-                            }.bind(this))
-                            .catch(function(error) {
+                            })
+                            .catch((error) => {
                                 console.error(error);
-                                var $errorAlert = $('<div>')
+                                const $errorAlert = $('<div>')
                                     .addClass('alert alert-danger')
                                     .attr('role', 'alert');
-                                var $dismissBtn = $('<button type="button" class="close" aria-label="Close">')
+                                const $dismissBtn = $('<button type="button" class="close" aria-label="Close">')
                                     .append('<span aria-hidden="true">&times;</span>')
-                                    .click(function() {
+                                    .click(() => {
                                         $errorAlert.remove();
                                         $msgPanel.slideUp();
                                         $btn.empty().append(activeStr).prop('disabled', false);
@@ -922,12 +922,12 @@ define([
                                 $btn.empty().append(errorStr);
                                 $msgPanel.empty().append($errorAlert).slideDown();
                             });
-                    }.bind(this));
+                    });
             return $btn;
         },
 
         getNarSummary: function (nar_info) {
-            let summary = [],
+            const summary = [],
                 counts = {
                     apps: 0,
                     md: 0,
@@ -935,7 +935,7 @@ define([
                     viewers: 0
                 };
             if (nar_info[10].methods) {
-                var content = JSON.parse(nar_info[10].methods);
+                const content = JSON.parse(nar_info[10].methods);
                 Object.keys(content.app).forEach(a => counts.apps++);
                 Object.keys(content.method).forEach(m => counts.apps++);
                 counts.viewers += content.output;

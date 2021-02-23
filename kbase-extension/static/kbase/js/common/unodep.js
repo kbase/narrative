@@ -2,7 +2,7 @@
 /*jslint white:true,browser:true*/
 
 define([
-], function () {
+], () => {
     'use strict';
 
     /*
@@ -15,7 +15,7 @@ define([
         if (typeof string === 'number') {
             string = String(string);
         }
-        var padLen = width - string.length,
+        let padLen = width - string.length,
             padding = '', i;
         if (padLen <= 0) {
             return string;
@@ -32,10 +32,10 @@ define([
         if (!value) {
             return defaultValue;
         }
-        var temp = value;
+        let temp = value;
 
-        var units = [1000, 60, 60, 24].map(function (unit) {
-            var unitValue = temp % unit;
+        const units = [1000, 60, 60, 24].map((unit) => {
+            const unitValue = temp % unit;
             temp = (temp - unitValue) / unit;
             return unitValue;
         });
@@ -48,10 +48,10 @@ define([
         }
     }
     function isEqual(v1, v2) {
-        var path = [];
+        const path = [];
         function iseq(v1, v2) {
-            var t1 = typeof v1;
-            var t2 = typeof v2;
+            const t1 = typeof v1;
+            const t2 = typeof v2;
             if (t1 !== t2) {
                 return false;
             }
@@ -88,8 +88,8 @@ define([
                     } else if (v2 === null) {
                         return false;
                     } else {
-                        var k1 = Object.keys(v1);
-                        var k2 = Object.keys(v2);
+                        const k1 = Object.keys(v1);
+                        const k2 = Object.keys(v2);
                         if (k1.length !== k2.length) {
                             return false;
                         }

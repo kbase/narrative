@@ -6,15 +6,15 @@ define([
     'common/props',
     'bootstrap',
     'css!font-awesome'
-], function (Promise, html, Props) {
+], (Promise, html, Props) => {
     'use strict';
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div');
 
     function factory(config) {
-        var options = {},
+        let options = {},
             spec = config.parameterSpec,
             container,
             bus = config.bus,
@@ -38,14 +38,14 @@ define([
         }
 
         function attach(node) {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 container = node;
             });
         }
 
         function start() {
-            return Promise.try(function () {
-                bus.on('update', function (message) {
+            return Promise.try(() => {
+                bus.on('update', (message) => {
                     model.setItem('value', message.value);
                 });
                 bus.emit('sync');
@@ -53,7 +53,7 @@ define([
         }
 
         function run(params) {
-            return Promise.try(function () {
+            return Promise.try(() => {
 //                model.value = params.value;
 //                var result = render();
 //                container.innerHTML = result.content;

@@ -12,7 +12,7 @@ define (
 		'kbaseNarrativeParameterDropdownInput',
 		'kbaseNarrativeParameterCheckboxInput',
 		'kbaseNarrativeParameterCustomTextSubdataInput'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -21,10 +21,10 @@ define (
 		kbaseNarrativeParameterDropdownInput,
 		kbaseNarrativeParameterCheckboxInput,
 		kbaseNarrativeParameterCustomTextSubdataInput
-	) {
+	) => {
     
-    var workspaceUrl = Config.url('workspace');
-    var loadingImage = Config.get('loading_gif');
+    const workspaceUrl = Config.url('workspace');
+    const loadingImage = Config.get('loading_gif');
     
     return KBWidget({
         name: "kbaseGrowthCurvesInput",
@@ -44,7 +44,7 @@ define (
         state: 0,
         ws : null,
         initWsClient: function() {
-            var self = this;
+            const self = this;
 
             if(this.authToken){
                 this.ws = new Workspace(workspaceUrl, {token: this.authToken()});
@@ -55,16 +55,16 @@ define (
         
         
         render: function(){
-            var self = this;
+            const self = this;
             self.initWsClient();
             
             this.parameters = [];
             this.parameterIdLookup = {};
-            var $inputParameterContainer = $('<div>');
-            var $optionsDiv = $('<div>');
+            const $inputParameterContainer = $('<div>');
+            const $optionsDiv = $('<div>');
             
-            var method = this.options.method;
-            var params = method.parameters;
+            const method = this.options.method;
+            const params = method.parameters;
                         
             this.addParameterDiv(params[0], "kbaseNarrativeParameterTextInput", $optionsDiv);
             this.addParameterDiv(params[1], "kbaseNarrativeParameterDropdownInput", $optionsDiv, self);
@@ -74,14 +74,14 @@ define (
             this.addParameterDiv(params[4], "kbaseNarrativeParameterCheckboxInput", $optionsDiv);
             
             
-            self.parameterIdLookup['input_growth_matrix'].addInputListener(function(){
+            self.parameterIdLookup['input_growth_matrix'].addInputListener(()=> {
                 if(!self.inRefreshState){
                     self.state = self.STATE_NONE;
                     self.parameterIdLookup['input_condition_ids'].setParameterValue('');
                 }
             });            
             
-            self.parameterIdLookup['input_value_type'].addInputListener(function(){
+            self.parameterIdLookup['input_value_type'].addInputListener(()=> {
                 if(!self.inRefreshState){
                     self.state = self.STATE_NONE;
                     self.parameterIdLookup['input_condition_ids'].setParameterValue('');
@@ -94,9 +94,9 @@ define (
         },
                 
         addParameterDiv: function(paramSpec, widgetName, $optionsDiv, $dataModel){
-            var self = this;
-            var $stepDiv = $('<div>');
-            var $widget = $stepDiv[widgetName](
+            const self = this;
+            const $stepDiv = $('<div>');
+            const $widget = $stepDiv[widgetName](
                 {
                     loadingImage: loadingImage, 
                     parsedParameterSpec: paramSpec, 
@@ -112,45 +112,45 @@ define (
         },
                         
         fetchData: function(doneCallback){
-            var self = this;
+            const self = this;
             console.log('fetchData.self', self);
             if(self.state == self.STATE_NONE){
                 $(document).trigger('workspaceQuery.Narrative', 
-                    function(ws_name) {
-                        var matrixId = self.getParameterValue( 'input_growth_matrix' );
+                    (ws_name) => {
+                        const matrixId = self.getParameterValue( 'input_growth_matrix' );
                         if(!matrixId) return;
                     
-                        var query = [];
+                        const query = [];
                         query.push( {ref:ws_name+'/'+matrixId, included: ["metadata/column_metadata"]} );
 
 
                         self.state = self.STATE_FETCHING;                    
                         self.ws.get_object_subset(query,
-                            function(result) {
+                            (result) => {
                                 self.sampleSeriesIds = [];
-                                var valueType = self.getParameterValue( 'input_value_type' );
+                                const valueType = self.getParameterValue( 'input_value_type' );
                                 
-                                var samples = self.buildSamples(result[0].data.metadata.column_metadata)
+                                const samples = self.buildSamples(result[0].data.metadata.column_metadata)
                                 if(valueType == 'Samples'){
                                     for(var i in samples){
-                                        var sample = samples[i];
+                                        const sample = samples[i];
                                         self.sampleSeriesIds.push({id: sample.sampleId, text:  sample.sampleId + ' - ' + sample.label });
                                     }
                                 } else if (valueType == 'Series'){
-                                    var seriesList = self.groupSamplesIntoSeries(samples);
+                                    const seriesList = self.groupSamplesIntoSeries(samples);
                                     for(var i in seriesList){
-                                        var series = seriesList[i];
+                                        const series = seriesList[i];
                                         self.sampleSeriesIds.push({id: series.seriesId, text: series.seriesId + ' - ' + series.label});
                                     }
                                 }
                             
-                                self.sampleSeriesIds.sort(function(a,b){ return a.text > b.text ? 1 : (a.text < b.text ? -1 :0 ); })
+                                self.sampleSeriesIds.sort((a,b)=> { return a.text > b.text ? 1 : (a.text < b.text ? -1 :0 ); })
 
 
                                 self.state = self.STATE_READY;
                                 if(doneCallback) { doneCallback(self.sampleSeriesIds); }
                             },
-                            function(error) {
+                            (error) => {
                                 console.error(error);
                             }
                         );                        
@@ -163,24 +163,24 @@ define (
         
         
         buildSamples: function(columnsMetadata){
-            var samples = [];
+            const samples = [];
             
-            for(var columnId in columnsMetadata){
-                var columnMetadata = columnsMetadata[columnId];
-                var seriesId = null;
-                var conditions = [];
-                for(var i in columnMetadata){
-                    var pv = columnMetadata[i];
+            for(const columnId in columnsMetadata){
+                const columnMetadata = columnsMetadata[columnId];
+                let seriesId = null;
+                const conditions = [];
+                for(const i in columnMetadata){
+                    const pv = columnMetadata[i];
                     if(pv.category == 'Condition'){
                         conditions.push(pv);
                     } else if (pv.category == 'DataSeries' && pv.property_name == 'SeriesID'){
                         seriesId = pv.property_value;
                     }
                 }
-                conditions.sort(function(a,b){ return a.property_name > b.property_name ? 1 : (a.property_name < b.property_name ? -1 :0 ); });
-                var sampleLabel = this.propertiesToString(conditions);
+                conditions.sort((a,b)=> { return a.property_name > b.property_name ? 1 : (a.property_name < b.property_name ? -1 :0 ); });
+                const sampleLabel = this.propertiesToString(conditions);
                 
-                var sample = {
+                const sample = {
                     sampleId: columnId,
                     seriesId: seriesId,                        
                     label: sampleLabel
@@ -194,17 +194,17 @@ define (
         },            
         
         groupSamplesIntoSeries: function(samples){
-            var seriesHash = {};
-            for(var i in samples){
-                var sample = samples[i];
+            const seriesHash = {};
+            for(const i in samples){
+                const sample = samples[i];
                 seriesHash[sample.seriesId] = {
                     seriesId: sample.seriesId,
                     label: sample.label
                 };
             }
                     
-            var seriesList = [];
-            for(var seriesId in seriesHash){
+            const seriesList = [];
+            for(const seriesId in seriesHash){
                 seriesList.push(seriesHash[seriesId]);
             }
                     
@@ -218,9 +218,9 @@ define (
             string
         */
         propertiesToString: function(properties){
-            var str = "";
-            for(var i in properties){
-                var pv  = properties[i];
+            let str = "";
+            for(const i in properties){
+                const pv  = properties[i];
                 if(str){
                     str += "; ";
                 }
@@ -243,7 +243,7 @@ define (
         refresh: function() {
             this.inRefreshState = true;
             if (this.parameters) {
-                for(var i=0; i<this.parameters.length; i++) {
+                for(let i=0; i<this.parameters.length; i++) {
                     this.parameters[i].widget.refresh();
                 }
             }

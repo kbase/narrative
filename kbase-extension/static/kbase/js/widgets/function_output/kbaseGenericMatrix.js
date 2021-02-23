@@ -20,7 +20,7 @@ define ([
     'datatables.net-buttons-html5',
     'datatables.net-buttons-print',
     'datatables.net-buttons-colvis',
-], function(
+], (
     Uuid,
     $,
     KBWidget,
@@ -28,7 +28,7 @@ define ([
     kbaseTabs,
     Config,
     GenericClient
-) {
+) => {
     'use strict';
 
     return KBWidget({
@@ -88,10 +88,10 @@ define ([
         },
 
         loadAndRender: function(){
-            let self = this;
+            const self = this;
             const matrixRef = this.options.upas.matrixID;
 
-            let get_matrix_stat_promise = self.genericClient.sync_call('KBaseFeatureValues.get_matrix_stat', [{
+            const get_matrix_stat_promise = self.genericClient.sync_call('KBaseFeatureValues.get_matrix_stat', [{
                 input_data: matrixRef
             }]);
             self.wsClient.get_objects2({
@@ -101,9 +101,9 @@ define ([
                     'col_mapping',
                     'row_mapping',
                 ]}],
-            }).then(function (res) {
+            }).then((res) => {
                 let col_attribute_prom, row_attribute_prom;
-                let data = res.data[0].data;
+                const data = res.data[0].data;
                 if (data.col_attributemapping_ref) {
                     col_attribute_prom = self.wsClient.get_objects2(
                         {'objects': [{ref: data.col_attributemapping_ref}]})
@@ -115,38 +115,38 @@ define ([
                 self.colMapping = data.col_mapping;
                 self.rowMapping = data.row_mapping;
                 Promise.all([get_matrix_stat_promise, col_attribute_prom, row_attribute_prom]).then(
-                    function (res2) {
+                    (res2) => {
                         self.matrixStat = res2[0][0];
                         self.colAttributeData = res2[1] ? res2[1].data[0].data : null;
                         self.rowAttributeData = res2[2] ? res2[2].data[0].data : null;
                         self.render();
                         self.loading(false);
               });
-            }).catch(function(error){
+            }).catch((error)=> {
                 self.clientError(error);
             });
         },
 
         render: function() {
-            let self = this;
-            let pref = this.pref;
-            let container = this.$elem;
-            let matrixStat = this.matrixStat;
-            let jqueryTblConfig = {
+            const self = this;
+            const pref = this.pref;
+            const container = this.$elem;
+            const matrixStat = this.matrixStat;
+            const jqueryTblConfig = {
                     'dom': "<'row'<'col-sm-6'B><'col-sm-6'f>>t<'row'<'col-sm-4'i><'col-sm-8'lp>>",
                     'buttons': ['copy', 'csv', 'print', 'colvis'],
                 };
 
             ///////////////////////////////////// Instantiating Tabs ////////////////////////////////////////////
             container.empty();
-            let tabPane = $('<div id="'+pref+'tab-content">');
+            const tabPane = $('<div id="'+pref+'tab-content">');
             container.append(tabPane);
 
-            let tabWidget = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
+            const tabWidget = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
             ///////////////////////////////////// Overview table ////////////////////////////////////////////
-            let tabOverview = $('<div/>');
+            const tabOverview = $('<div/>');
             tabWidget.addTab({tab: 'Overview', content: tabOverview, canDelete : false, show: true});
-            let tableOver = $('<table class="table table-striped table-bordered" '+
+            const tableOver = $('<table class="table table-striped table-bordered" '+
                 'style="width: 100%; margin-left: 0px; margin-right: 0px;" id="'+pref+'overview-table"/>');
             tabOverview.append(tableOver);
             tableOver
@@ -161,7 +161,7 @@ define ([
 
             /////////////////////////////////// Column tab ////////////////////////////////////////////
 
-            let $tabColumns = $('<div/>');
+            const $tabColumns = $('<div/>');
             tabWidget.addTab({tab: 'Columns', content: $tabColumns, canDelete : false, show: false});
 
             ///////////////////////////////////// Column table ////////////////////////////////////////////
@@ -177,7 +177,7 @@ define ([
                 .dataTable(Object.assign(self.buildColumnTableData(), jqueryTblConfig));
 
             ///////////////////////////////////// Rows tab ////////////////////////////////////////////
-            let $tabRows = $('<div/>');
+            const $tabRows = $('<div/>');
             tabWidget.addTab({tab: 'Rows', content: $tabRows, canDelete : false, show: false});
 
             ///////////////////////////////////// Rows table ////////////////////////////////////////////
@@ -194,17 +194,17 @@ define ([
         },
 
         buildColumnTableData: function(){
-            let matrixStat = this.matrixStat;
-            let tableData = [];
-            let tableColumns = [{ title: 'Column ID'}];
+            const matrixStat = this.matrixStat;
+            const tableData = [];
+            const tableColumns = [{ title: 'Column ID'}];
             if (this.colAttributeData) {
                 this.colAttributeData.attributes.forEach(
                     attr => {tableColumns.push({'title': attr.attribute})})
             };
 
             for(let i = 0; i < matrixStat.column_descriptors.length; i++){
-                let desc = matrixStat.column_descriptors[i];
-                let stat = matrixStat.column_stats[i];
+                const desc = matrixStat.column_descriptors[i];
+                const stat = matrixStat.column_stats[i];
                 let tableRow = [desc.id];
                 if (this.colAttributeData) {
                     if (this.colMapping) {
@@ -235,17 +235,17 @@ define ([
         },
 
         buildRowTableData: function(){
-            let matrixStat = this.matrixStat;
-            let tableData = [];
-            let tableColumns = [{ title: 'Row ID'}];
+            const matrixStat = this.matrixStat;
+            const tableData = [];
+            const tableColumns = [{ title: 'Row ID'}];
             if (this.rowAttributeData) {
                 this.rowAttributeData.attributes.forEach(
                     attr => {tableColumns.push({'title': attr.attribute})})
             };
 
             for(let i = 0; i < matrixStat.row_descriptors.length; i++){
-                let desc = matrixStat.row_descriptors[i];
-                let stat = matrixStat.row_stats[i];
+                const desc = matrixStat.row_descriptors[i];
+                const stat = matrixStat.row_stats[i];
                 let tableRow = [desc.id];
                 if (this.rowAttributeData) {
                     if (this.rowMapping) {
@@ -276,7 +276,7 @@ define ([
         },
 
         makeRow: function(name, value) {
-            let $row = $('<tr/>')
+            const $row = $('<tr/>')
                 .append($('<th />').css('width','20%').append(name))
                 .append($('<td />').append(value));
             return $row;
@@ -291,7 +291,7 @@ define ([
         },
 
         showMessage: function(message) {
-            let span = $('<span/>').append(message);
+            const span = $('<span/>').append(message);
 
             this.$messagePane.append(span);
             this.$messagePane.show();

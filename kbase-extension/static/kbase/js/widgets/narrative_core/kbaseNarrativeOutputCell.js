@@ -9,7 +9,7 @@ define([
     'narrativeConfig',
     'kbase/js/widgets/narrative_core/objectCellHeader',
     'api/upa'
-], function (
+], (
     $,
     Promise,
     KBWidget,
@@ -18,7 +18,7 @@ define([
     Config,
     ObjectCellHeader,
     UpaApi
-) {
+) => {
     'use strict';
     return KBWidget({
         name: 'kbaseNarrativeOutputCell',
@@ -38,7 +38,7 @@ define([
         headerShown: false,
 
         initMetadata: function () {
-            var baseMeta = {
+            const baseMeta = {
                 kbase: {
                     dataCell: {}
                 }
@@ -47,7 +47,7 @@ define([
                 return baseMeta;
             }
             else {
-                var metadata = this.cell.metadata;
+                let metadata = this.cell.metadata;
                 if (!metadata || !metadata.kbase) {
                     metadata = baseMeta;
                     this.cell.metadata = metadata;
@@ -73,7 +73,7 @@ define([
             if (this.options.cellId) {
                 this.cell = Jupyter.narrative.getCellByKbaseId(this.options.cellId);
                 if (!this.cell) {
-                    var cellElem = $('#' + this.options.cellId).parents('.cell').data();
+                    const cellElem = $('#' + this.options.cellId).parents('.cell').data();
                     if (cellElem) {
                         this.cell = cellElem.cell;
                     }
@@ -99,7 +99,7 @@ define([
              * too heavy-weight a check once there are 100+ elements to worry about.
              */
             if (Config.get('features').lazyWidgetRender) {
-                var $nbContainer = $('#notebook-container');
+                const $nbContainer = $('#notebook-container');
                 this.visibleSettings = {
                     container: $nbContainer,
                     threshold: 100
@@ -157,7 +157,7 @@ define([
 
         // Possibly render lazily not-yet-rendered cell
         lazyRender: function (event) {
-            var self = event.data;
+            const self = event.data;
             if (self.isRendered) {
                 // Note: We could also see if a cell that is rendered, is now
                 // no longer visible, and somehow free its resources.
@@ -183,16 +183,16 @@ define([
             // set up the widget line
             // todo find cell and trigger icon setting.
 
-            var methodName = this.options.title ? this.options.title : 'Unknown App';
-            var title = methodName;
+            const methodName = this.options.title ? this.options.title : 'Unknown App';
+            const title = methodName;
 
-            var upaTest = this.testUpas();
+            const upaTest = this.testUpas();
             if (upaTest.error) {
                 this.renderError(upaTest.error);
             }
 
             if (this.cell) {
-                var meta = this.cell.metadata;
+                const meta = this.cell.metadata;
                 if (!meta.kbase) {
                     meta.kbase = {};
                 }
@@ -230,16 +230,16 @@ define([
                 if (this.$body) {
                     this.$body.remove();
                 }
-                var $headController = $('<div>').hide();
+                const $headController = $('<div>').hide();
                 this.headerWidget = new ObjectCellHeader($headController, {
                     upas: this.options.upas,
                     versionCallback: this.displayVersionChange.bind(this),
                 });
-                var $headerBtn = $('<button>')
+                const $headerBtn = $('<button>')
                     .addClass('btn btn-default kb-data-obj')
                     .attr('type', 'button')
                     .text('Details...')
-                    .click(function() {
+                    .click(() => {
                         if (this.headerShown) {
                             $headController.hide();
                             this.headerShown = false;
@@ -247,7 +247,7 @@ define([
                             $headController.show();
                             this.headerShown = true;
                         }
-                    }.bind(this));
+                    });
                 this.$body = $('<div class="kb-cell-output-content">')
                     .append($headController)
                     .append($headerBtn);
@@ -255,15 +255,15 @@ define([
             }
 
             return this.renderBody()
-                .then(function() {
+                .then(() => {
                     this.isRendered = true;
-                }.bind(this));
+                });
         },
 
         renderBody: function() {
-            var self = this;
-            return new Promise(function(resolve) {
-                var widget = self.options.widget,
+            const self = this;
+            return new Promise((resolve) => {
+                let widget = self.options.widget,
                     widgetData = self.options.data;
                 if (widget === 'kbaseDefaultNarrativeOutput') {
                     widgetData = { data: self.options.data };
@@ -271,7 +271,7 @@ define([
                 widgetData.upas = self.options.upas;
 
                 require([widget],
-                    function (W) {
+                    (W) => {
                         if (self.$widgetBody) {
                             self.$widgetBody.remove();
                         }
@@ -282,7 +282,7 @@ define([
                     },
                     // TODO: No, should reject the promise, or handle here and resolve,
                     // otherwise on error the promise will dangle.
-                    function (err) {
+                    (err) => {
                         return self.renderError(err);
                     }
                 );
@@ -294,7 +294,7 @@ define([
              * Serialize.
              * re-render all the things.
              */
-            var newUpa = this.upaApi.changeUpaVersion(this.options.upas[upaId], newVersion);
+            const newUpa = this.upaApi.changeUpaVersion(this.options.upas[upaId], newVersion);
             this.options.upas[upaId] = newUpa;
             this.handleUpas(true);
             this.render();
@@ -317,7 +317,7 @@ define([
         },
 
         getState: function () {
-            var state = null;
+            let state = null;
             if (this.$outWidget && this.$outWidget.getState) {
                 state = this.$outWidget.getState();
             }
@@ -346,7 +346,7 @@ define([
             if (!element || !settings) {
                 return true;
             }
-            var fold = settings.container.offset().top + settings.container.height(),
+            const fold = settings.container.offset().top + settings.container.height(),
                 elementTop = $(element).offset().top - settings.threshold;
             return elementTop <= fold; // test if it is "above the fold"
         }

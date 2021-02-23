@@ -21,7 +21,7 @@ define([
     'common/events',
 
     'jquery-dataTables'
-], function(
+], (
     bootstrap,
     $,
     Jupyter,
@@ -37,7 +37,7 @@ define([
     UI,
     HostMessages,
     Events
-) {
+) => {
     'use strict';
     return KBWidget({
         name: 'kbaseReportView',
@@ -88,42 +88,42 @@ define([
         // TODO: update to put the auth token into the url... should be working in CI already.
         // TODO: NO HARDCODING OF URLS!!!
         importExportLink: function(shock_url, name) {
-            var m = shock_url.match(/\/node\/(.+)$/);
+            const m = shock_url.match(/\/node\/(.+)$/);
             if (m) {
-                var shock_id = m[1];
-                var query = {
+                const shock_id = m[1];
+                const query = {
                     id: shock_id,
                     wszip: 0,
                     name: name
                 };
-                var queryString = Object.keys(query)
-                    .map(function(key) {
+                const queryString = Object.keys(query)
+                    .map((key) => {
                         return [key, query[key]]
                             .map(encodeURIComponent)
                             .join('=');
                     })
                     .join('&');
-                var url = Config.get('urls').data_import_export + '/download?' + queryString;
+                const url = Config.get('urls').data_import_export + '/download?' + queryString;
                 return url;
             }
         },
 
         loadAndRender: function() {
-            var self = this;
+            const self = this;
             self.loading(true);
 
             self.objIdentity = self.buildObjectIdentity(this.options.workspace_name, this.options.report_name, null, this.options.report_ref);
 
             self.ws.get_objects([self.objIdentity])
-                .then(function(result) {
+                .then((result) => {
                     self.reportData = result[0].data;
                     return self.getLinks(self.reportData);
                 })
-                .then(function(links) {
+                .then((links) => {
                     self.reportLinks = links;
                     return self.render();
                 })
-                .catch(function(err) {
+                .catch((err) => {
                     self.clientError(err);
                 });
         },
@@ -133,7 +133,7 @@ define([
                 console.warn('Html document inserted into iframe');
                 return content;
             }
-            var t = html.tag,
+            const t = html.tag,
                 htmlTag = t('html'),
                 head = t('head'),
                 body = t('body');
@@ -152,12 +152,12 @@ define([
         },
 
         makeIframe: function(arg) {
-            var t = html.tag,
+            const t = html.tag,
                 div = t('div'),
                 script = t('script'),
                 iframe = t('iframe');
 
-            var iframeId = 'frame_' + html.genId(),
+            const iframeId = 'frame_' + html.genId(),
                 iframeOrigin = document.location.origin,
                 iframeMessages = HostMessages.makeHost({
                     root: window,
@@ -166,9 +166,9 @@ define([
 
             // The iframe content needs requirejs amd.
 
-            var narrativeBase = window.location.origin + '/narrative';
+            const narrativeBase = window.location.origin + '/narrative';
 
-            var requireConfig = {
+            const requireConfig = {
                     baseUrl: narrativeBase + '/static/',
                     paths: {
                         bluebird: 'ext_components/bluebird/js/browser/bluebird.min',
@@ -233,14 +233,14 @@ define([
         },
 
         makeIframeSrcDataPlain: function(arg) {
-            var t = html.tag,
+            const t = html.tag,
                 iframe = t('iframe');
 
-            var iframeId = 'frame_' + html.genId();
+            const iframeId = 'frame_' + html.genId();
 
             // The iframe content needs requirejs amd.
 
-            var width = arg.width || '100%',
+            const width = arg.width || '100%',
                 iframeContent = arg.content,
                 iframeHtml = iframe({
                     style: {
@@ -263,12 +263,12 @@ define([
         },
 
         makeIframeSrc: function(arg) {
-            var t = html.tag,
+            const t = html.tag,
                 iframe = t('iframe');
 
-            var iframeId = 'frame_' + html.genId();
+            const iframeId = 'frame_' + html.genId();
 
-            var width = arg.width || '100%',
+            const width = arg.width || '100%',
                 maxHeight = arg.maxHeight || 'auto',
                 iframeHtml = iframe({
                     style: {
@@ -295,7 +295,7 @@ define([
             if (typeof string !== 'string') {
                 return;
             }
-            var entityMap = {
+            const entityMap = {
                 '&': '&amp;',
                 '<': '&lt;',
                 '>': '&gt;',
@@ -305,25 +305,25 @@ define([
                 '`': '&#x60;',
                 '=': '&#x3D;'
             };
-            return String(string).replace(/[&<>"'`=\/]/g, function fromEntityMap(s) {
+            return String(string).replace(/[&<>"'`=\/]/g, (s) => {
                 return entityMap[s];
             });
         },
 
         getLinks: function(report) {
             // NOTE: this returns a promise -- we must look up the html file set service url first.
-            var _this = this;
+            const _this = this;
 
-            var client = new GenericClient({
+            const client = new GenericClient({
                 url: Config.url('service_wizard'),
                 token: this.authToken(),
                 module: 'HTMLFileSetServ'
             });
             return client.lookupModule()
-                .spread(function(serviceStatus) {
-                    var htmlServiceURL = serviceStatus.url;
+                .spread((serviceStatus) => {
+                    const htmlServiceURL = serviceStatus.url;
                     if (report.html_links && report.html_links.length) {
-                        return report.html_links.map(function(item, index) {
+                        return report.html_links.map((item, index) => {
                             return {
                                 name: item.name,
                                 // If label is not provided, name must be.
@@ -339,12 +339,12 @@ define([
         },
 
         makeIframeSrcUrl: function(arg) {
-            var t = html.tag,
+            const t = html.tag,
                 iframe = t('iframe');
 
-            var iframeId = 'frame_' + html.genId();
+            const iframeId = 'frame_' + html.genId();
 
-            var width = arg.width || '100%',
+            const width = arg.width || '100%',
                 // maxHeight = arg.maxHeight || 'auto',
                 iframeHtml = iframe({
                     style: {
@@ -370,7 +370,7 @@ define([
 
         setupHostComm: function(iframe, container) {
             iframe.messages.start();
-            var _this = this;
+            const _this = this;
 
             iframe.messages.listen({
                 name: 'ready',
@@ -405,7 +405,7 @@ define([
             iframe.messages.listen({
                 name: 'rendered',
                 handler: function(message) {
-                    var height = message.height,
+                    const height = message.height,
                         iframeNode = _this.$mainPanel[0].querySelector('[data-frame="' + iframe.id + '"]');
 
                     iframeNode.style.height = height + 'px';
@@ -427,26 +427,26 @@ define([
         },
 
         render: function() {
-            var self = this;
-            var _this = this;
-            var t = html.tag,
+            const self = this;
+            const _this = this;
+            const t = html.tag,
                 div = t('div'),
                 a = t('a');
-            var ui = UI.make({ node: self.$mainPanel.get(0) });
-            var report = self.reportData;
-            var events = Events.make({
+            const ui = UI.make({ node: self.$mainPanel.get(0) });
+            const report = self.reportData;
+            const events = Events.make({
                 node: self.$mainPanel.get(0)
             });
 
             // Handle warnings?
             if (report.warnings) {
                 if (report.warnings.length > 0) {
-                    var $warningPanel = $('<div style="max-height:100px;overflow-y:auto;margin:0px 5px 5px 10px;">');
-                    var warnings = report.warnings;
+                    const $warningPanel = $('<div style="max-height:100px;overflow-y:auto;margin:0px 5px 5px 10px;">');
+                    const warnings = report.warnings;
                     if (warnings.length >= 5) {
                         $warningPanel.append($('<div>').css('margin', '5px').append('[' + warnings.length + 'Warnings]'));
                     }
-                    for (var k = 0; k < warnings.length; k++) {
+                    for (let k = 0; k < warnings.length; k++) {
                         $warningPanel.append(
                             $('<div>').css('margin', '0px 5px 5px 10px').append(
                                 $('<span>').addClass('label label-warning')
@@ -457,23 +457,23 @@ define([
             }
 
             if (self.options.showCreatedObjects) {
-                var someDiv = div({ dataElement: 'created-objects' });
+                const someDiv = div({ dataElement: 'created-objects' });
                 self.$mainPanel.append(someDiv);
                 if (report.objects_created) {
                     if (report.objects_created.length > 0) {
 
-                        var objsCreated = report.objects_created;
+                        const objsCreated = report.objects_created;
 
-                        var objIds = [];
-                        for (var i = 0; i < objsCreated.length; i++) {
+                        const objIds = [];
+                        for (let i = 0; i < objsCreated.length; i++) {
                             objIds.push({ 'ref': objsCreated[i].ref });
                         }
                         self.ws.get_object_info_new({ 'objects': objIds })
                             .then(
-                                function(objInfo) {
-                                    var pref = StringUtil.uuid();
-                                    var displayData = [];
-                                    var dataNameToInfo = {};
+                                (objInfo) => {
+                                    const pref = StringUtil.uuid();
+                                    const displayData = [];
+                                    const dataNameToInfo = {};
                                     for (var k = 0; k < objInfo.length; k++) {
                                         displayData.push({
                                             'name': '<a href="#" style="cursor: pointer;" class="report_row_' + pref + '" data-objname="' + objInfo[k][1] + '">' + objInfo[k][1] + '</a>',
@@ -490,13 +490,13 @@ define([
                                         $('.report_row_' + pref).click(function(e) {
                                             e.stopPropagation();
                                             e.preventDefault();
-                                            var objName = [$(this).data('objname')];
+                                            const objName = [$(this).data('objname')];
                                             Jupyter.narrative.addViewerCell(dataNameToInfo[objName]);
                                         });
                                     }
 
-                                    var numPerPage = 5;
-                                    var objTableId = self.uuid();
+                                    const numPerPage = 5;
+                                    const objTableId = self.uuid();
 
                                     ui.setContent('created-objects',
                                         ui.buildCollapsiblePanel({
@@ -509,15 +509,15 @@ define([
                                         })
                                     );
 
-                                    var $tblDiv = $('#' + objTableId);
+                                    const $tblDiv = $('#' + objTableId);
 
                                     if (displayData.length <= numPerPage) {
-                                        var $objTable = $('<table class="table table-striped table-bordered" style="margin-left: auto; margin-right: auto;">');
+                                        const $objTable = $('<table class="table table-striped table-bordered" style="margin-left: auto; margin-right: auto;">');
 
-                                        displayData.sort(function(a, b) {
+                                        displayData.sort((a, b) => {
                                             return a.name < b.name;
                                         });
-                                        var color = '#555';
+                                        const color = '#555';
                                         $objTable.append($('<tr>')
                                             .append('<th style="width:30%;color:' + color + ';"><b>Created Object Name</b></th>')
                                             .append('<th style="width:20%;color:' + color + ';"><b>Type</b></th>')
@@ -531,11 +531,11 @@ define([
                                         $tblDiv.append($objTable);
                                         reportRowEvents();
                                     } else {
-                                        var $tbl = $('<table cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin-left: 0px; margin-right: 0px;">')
+                                        const $tbl = $('<table cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin-left: 0px; margin-right: 0px;">')
                                             .addClass('table table-bordered table-striped');
                                         $tblDiv.append($tbl);
 
-                                        var tblSettings = {
+                                        const tblSettings = {
                                             'paginationType': 'full_numbers',
                                             'displayLength': numPerPage,
                                             'dom': 'ft<ip>',
@@ -553,17 +553,17 @@ define([
                                                 'emptyTable': 'No created objects.'
                                             }
                                         };
-                                        var objTable = $tbl.dataTable(tblSettings);
+                                        const objTable = $tbl.dataTable(tblSettings);
                                         objTable.fnAddData(displayData);
                                         reportRowEvents();
-                                        objTable.on( 'draw.dt',  function() {reportRowEvents()});
+                                        objTable.on( 'draw.dt',  () => {reportRowEvents()});
 
                                     }
 
                                 }
                             )
                             .catch(
-                                function(error) {
+                                (error) => {
                                     console.error(error);
                                 }
                             );
@@ -571,7 +571,7 @@ define([
                 }
             }
 
-            var showingReport = false;
+            let showingReport = false;
             if (this.options.showReportText) {
 
                 // REPORT SECTION
@@ -582,8 +582,8 @@ define([
                 content within an iframe. Generally the app developer should use either method, not both
                  */
 
-                var hasDirectHtml = false;
-                var hasDirectHtmlIndex = false;
+                let hasDirectHtml = false;
+                let hasDirectHtmlIndex = false;
                 if (report.direct_html && report.direct_html.length > 0) {
                     hasDirectHtml = true;
                 }
@@ -596,11 +596,11 @@ define([
                     (function() {
                         showingReport = true;
                         // an iframe to hold the contents of the report.
-                        var iframe;
+                        let iframe;
                         // a link to view the report (url, name, desc)
-                        var reportLink;
+                        let reportLink;
                         // button to open the report in an external window.
-                        var reportButton;
+                        let reportButton;
                         if (hasDirectHtmlIndex) {
                             reportLink = _this.reportLinks[report.direct_html_link_index];
                             if (reportLink) {
@@ -671,7 +671,7 @@ define([
 
                 if (report.text_message && report.text_message.length > 0) {
                     self.$mainPanel.append(div({ dataElement: 'summary-section' }));
-                    var reportSummary = div({
+                    const reportSummary = div({
                         style: {
                             width: '100%',
                             fontFamily: 'Monaco,monospace',
@@ -705,9 +705,9 @@ define([
             if (self.options.showHTML) {
                 if (self.reportLinks && self.reportLinks.length) {
                     var $ul = $.jqElem('ul');
-                    self.reportLinks.forEach(function(reportLink) {
-                        var link_id = StringUtil.uuid();
-                        var $linkItem = $.jqElem('li')
+                    self.reportLinks.forEach((reportLink) => {
+                        const link_id = StringUtil.uuid();
+                        const $linkItem = $.jqElem('li')
                             .append(
                                 $.jqElem('a')
                                 .attr('href', reportLink.url)
@@ -743,13 +743,13 @@ define([
                 if (report.file_links && report.file_links.length) {
                     self.$mainPanel.append(div({ dataElement: 'downloadable-files' }));
 
-                    var iframe_id = StringUtil.uuid();
+                    const iframe_id = StringUtil.uuid();
 
                     var $ul = $.jqElem('ul');
                     $.each(
                         report.file_links,
-                        function(i, v) {
-                            var link_id = StringUtil.uuid();
+                        (i, v) => {
+                            const link_id = StringUtil.uuid();
                             $ul.append(
                                 $.jqElem('li')
                                 .append(
@@ -762,8 +762,8 @@ define([
                                 )
                             );
 
-                            setTimeout(function() {
-                                $('#' + link_id).on('click', function(e) {
+                            setTimeout(() => {
+                                $('#' + link_id).on('click', (e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
                                     $('#' + iframe_id).attr('src', self.importExportLink(v.URL, v.name || 'download-' + i));
@@ -772,7 +772,7 @@ define([
                         }
                     );
 
-                    var $iframe = $.jqElem('iframe')
+                    const $iframe = $.jqElem('iframe')
                         .attr('id', iframe_id)
                         .css('display', 'none');
 
@@ -803,7 +803,7 @@ define([
             }
         },
         showMessage: function(message) {
-            var span = $('<span/>').append(message);
+            const span = $('<span/>').append(message);
             this.$messagePane.append(span);
             this.$messagePane.show();
         },
@@ -813,7 +813,7 @@ define([
         },
         clientError: function(error) {
             this.loading(false);
-            var errString = 'Unknown error.';
+            let errString = 'Unknown error.';
             console.error(error);
             if (typeof error === 'string')
                 errString = error;
@@ -823,7 +823,7 @@ define([
                 errString = error.error.error;
             }
 
-            var $errorDiv = $('<div>')
+            const $errorDiv = $('<div>')
                 .addClass('alert alert-danger')
                 .append('<b>Error:</b>')
                 .append('<br>' + errString);
@@ -831,7 +831,7 @@ define([
             this.$elem.append($errorDiv);
         },
         buildObjectIdentity: function(workspaceID, objectID, objectVer, wsRef) {
-            var obj = {};
+            const obj = {};
             if (wsRef) {
                 obj['ref'] = wsRef;
             } else {

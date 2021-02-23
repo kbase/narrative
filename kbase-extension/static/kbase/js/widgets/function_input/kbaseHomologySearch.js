@@ -13,14 +13,14 @@ define (
 		'narrativeConfig',
 		'kbaseNarrativeMethodInput',
 		'kbaseNarrativeParameterAjaxTextSubdataInput'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		Config,
 		kbaseNarrativeMethodInput,
 		kbaseNarrativeParameterAjaxTextSubdataInput
-	) {
+	) => {
     'use strict';
     return KBWidget({
         name: "kbaseHomologySearch",
@@ -68,8 +68,8 @@ define (
                 },
                 processResults: function (data, params) {
                     //console.log('processingResults:', data, params);
-                    var genomeNames = [];
-                    data.items.map(function (genome) {
+                    const genomeNames = [];
+                    data.items.map((genome) => {
                         genomeNames.push({
                             text: genome.scientific_name + ' (' + genome.genome_id + ')',
                             id: genome.genome_id
@@ -88,8 +88,8 @@ define (
         },
 
         getFastaSequenceType: function (sequence) {
-            var patternFastaHeader = /^>.*\n/gi;
-            var patternDnaSequence = /[atcgn\n\s]/gi;
+            const patternFastaHeader = /^>.*\n/gi;
+            const patternDnaSequence = /[atcgn\n\s]/gi;
 
             if (sequence.replace(patternFastaHeader, '').replace(patternDnaSequence, '').length === 0) {
                 return this.constSequenceNA;
@@ -99,7 +99,7 @@ define (
         },
 
         validateDatabaseProgramWithSequenceType: function (sequence_type, database, program) {
-            var isValid = false;
+            let isValid = false;
             switch (program) {
                 case "blastn":
                     // Search a nucleotide database using a nucleotide query
@@ -128,7 +128,7 @@ define (
         },
 
         validateSearchForProgramWithSequenceType: function (sequence_type, search_for, program) {
-            var isValid = false;
+            let isValid = false;
             switch (program) {
                 case "blastn":
                 case "tblastx":
@@ -149,8 +149,8 @@ define (
         },
 
         validateSearchFor: function (sequence_type, search_for, program) {
-            var isValid = this.validateSearchForProgramWithSequenceType(sequence_type, search_for, program)
-            var isInValidGenomicSequence = false;
+            const isValid = this.validateSearchForProgramWithSequenceType(sequence_type, search_for, program)
+            let isInValidGenomicSequence = false;
             switch (program) {
                 case "blastp":
                 case "blastx":
@@ -165,12 +165,12 @@ define (
         },
 
         onSequenceChange: function (event) {
-            var self = event.data.self;
-            var sequence = this.value;
+            const self = event.data.self;
+            const sequence = this.value;
             if (sequence === undefined) return;
             console.log(self);
 
-            var sequence_type = self.getFastaSequenceType(sequence);
+            const sequence_type = self.getFastaSequenceType(sequence);
             //console.log("onSequenceChange, seq_type:", sequence_type, sequence);
             if (sequence_type === self.constSequenceNA) {
                 self.parameterIdLookup.database.setParameterValue('kbase_nr.ffn');
@@ -182,8 +182,8 @@ define (
         },
 
         onDatabaseChange: function (event) {
-            var self = event.data.self;
-            var database = this.value;
+            const self = event.data.self;
+            const database = this.value;
             //console.log('onDatabaseChange: ', database);
             if (database === self.constDatabaseEmpty) {
                 self.$advancedOptionsDiv.show();
@@ -196,12 +196,12 @@ define (
         },
 
         onProgramChange: function (event) {
-            var self = event.data.self;
-            var program = this.value;
-            var database = self.parameterIdLookup.database.getParameterValue();
+            const self = event.data.self;
+            const program = this.value;
+            const database = self.parameterIdLookup.database.getParameterValue();
             if (database != self.constDatabaseEmpty && ['tblastn', 'tblastx'].indexOf(program) > -1) {
                 // not supported. display as error with proper message
-                var msg = self.parameterIdLookup.program.rowDivs[0];
+                const msg = self.parameterIdLookup.program.rowDivs[0];
 
                 msg.$row.addClass("kb-method-parameter-row-error");
                 msg.$error.html('tblastx and tblastn are supported only against select genome(s).');
@@ -232,18 +232,18 @@ define (
          */
         isValid: function () {
 
-            var errorDetected = false;
-            var errorMessages = [];
+            let errorDetected = false;
+            const errorMessages = [];
 
             // collect sequence, database, and program and check whether input combination is valid
-            var sequence = this.parameterIdLookup.sequence.getParameterValue();
-            var sequence_type = this.getFastaSequenceType(sequence);
-            var database = this.parameterIdLookup.database.getParameterValue();
-            var program = this.parameterIdLookup.program.getParameterValue();
+            const sequence = this.parameterIdLookup.sequence.getParameterValue();
+            const sequence_type = this.getFastaSequenceType(sequence);
+            const database = this.parameterIdLookup.database.getParameterValue();
+            const program = this.parameterIdLookup.program.getParameterValue();
 
             if (database === this.constDatabaseEmpty) {
                 // use selected genome to search
-                var search_for = this.parameterIdLookup.search_type.getParameterValue();
+                const search_for = this.parameterIdLookup.search_type.getParameterValue();
 
                 if (this.validateSearchFor(sequence_type, search_for, program)) {
                     // pass
@@ -272,7 +272,7 @@ define (
 
             } else {
                 // user database
-                var validCombo = this.validateDatabaseProgramWithSequenceType(sequence_type, database, program);
+                const validCombo = this.validateDatabaseProgramWithSequenceType(sequence_type, database, program);
 
                 if (!validCombo) {
                     //this.$advancedOptionsDiv.show();

@@ -16,7 +16,7 @@ define([
     'bluebird',
     'runtimeManager',
     'narrativeConfig'
-], function (Promise, RuntimeManager, NarrativeConfig) {
+], (Promise, RuntimeManager, NarrativeConfig) => {
     'use strict';
     function factory(config) {
         var packageName = config.package,
@@ -32,9 +32,9 @@ define([
         }
 
         function runWidget(objectRefs, options) {
-            return new Promise(function (resolve, reject) {
+            return new Promise((resolve, reject) => {
                 try {
-                    var runtimeManager = RuntimeManager.make({
+                    const runtimeManager = RuntimeManager.make({
                         cdnUrl: config.services.cdn.url
                     }),
 
@@ -51,36 +51,36 @@ define([
                         'kb_common/session',
                         'kb_common/html'
                     ],
-                        function (WidgetManager, Props, Session, Html) {
+                        (WidgetManager, Props, Session, Html) => {
                             // just a little synchronous auth token business for now
                             function getAuthToken() {
-                                var session = Session.make({cookieName: 'kbase_session'});
+                                const session = Session.make({cookieName: 'kbase_session'});
                                 return session.getAuthToken();
                             }
                             function makeWidgetHostAdapter(objectRefs, options) {
-                                var configProps = Props.make({data: NarrativeConfig.getConfig()});
+                                const configProps = Props.make({data: NarrativeConfig.getConfig()});
                                 return function (bus) {
-                                    bus.subscribe('ready', function () {
+                                    bus.subscribe('ready', () => {
                                         bus.publish('start', {
                                             objectRefs: objectRefs,
                                             options: options
                                         });
                                     });
 
-                                    bus.subscribe('config', function (data) {
+                                    bus.subscribe('config', (data) => {
                                         return {
                                             value: configProps.getItem(data.property, data.defaultValue)
                                         };
                                     });
 
-                                    bus.subscribe('authToken', function () {
-                                        var token = getAuthToken();
+                                    bus.subscribe('authToken', () => {
+                                        const token = getAuthToken();
                                         return {
                                             value: token
                                         };
                                     });
 
-                                    bus.subscribe('error', function (data) {
+                                    bus.subscribe('error', (data) => {
                                         showErrorMessage(data.message);
 
                                     });
@@ -107,11 +107,11 @@ define([
                              * This function creates a function which, given a pubsub bus object, creates
                              * the necessary hooks for implementing the interface.
                              */
-                            var widgetManager = WidgetManager.make({
+                            const widgetManager = WidgetManager.make({
                                 widgetServiceUrl: config.services.widget.url,
                                 cdnUrl: config.services.cdn.url
                             });
-                            var widgetDiv = widgetManager.addWidget({
+                            const widgetDiv = widgetManager.addWidget({
                                 package: packageName,
                                 version: packageVersion,
                                 widget: widgetName,
@@ -125,10 +125,10 @@ define([
 
                             // After the widget wrapper is placed into the dom, we can launch the widget.
                             widgetManager.loadWidgets(makeWidgetHostAdapter(objectRefs, options))
-                                .then(function () {
+                                .then(() => {
                                     resolve();
                                 })
-                                .catch(function (err) {
+                                .catch((err) => {
                                     console.error('load widgets error', err);
                                     reject(err);
                                 });

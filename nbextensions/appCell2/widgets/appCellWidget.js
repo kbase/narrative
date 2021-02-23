@@ -35,7 +35,7 @@ define([
     './runClock',
     'css!google-code-prettify/prettify.css',
     'css!font-awesome.css'
-], function(
+], (
     require,
     $,
     Promise,
@@ -70,10 +70,10 @@ define([
     errorTabWidget,
     infoTabWidget,
     RunClock
-) {
+) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         span = t('span'),
         a = t('a'),
@@ -85,7 +85,7 @@ define([
 
 
     function factory(config) {
-        var hostNode,
+        let hostNode,
             container, ui,
             workspaceInfo = config.workspaceInfo,
             runtime = Runtime.make(),
@@ -158,10 +158,10 @@ define([
         // NEW - TABS
 
         function pRequire(module) {
-            return new Promise(function(resolve, reject) {
+            return new Promise((resolve, reject) => {
                 require(module, function() {
                     resolve(arguments);
-                }, function(err) {
+                }, (err) => {
                     reject(err);
                 });
             });
@@ -169,17 +169,17 @@ define([
 
         function loadParamsWidget(arg) {
             return pRequire(['./appParamsWidget'])
-                .spread(function(Widget) {
+                .spread((Widget) => {
                     // TODO: widget should make own bus.
-                    var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' }),
+                    const bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' }),
                         widget = Widget.make({
                             bus: bus,
                             workspaceInfo: workspaceInfo,
                             initialParams: model.getItem('params')
                         });
 
-                    bus.on('sync-params', function(message) {
-                        message.parameters.forEach(function(paramId) {
+                    bus.on('sync-params', (message) => {
+                        message.parameters.forEach((paramId) => {
                             bus.send({
                                 parameter: paramId,
                                 value: model.getItem(['params', message.parameter])
@@ -192,8 +192,8 @@ define([
                         });
                     });
 
-                    bus.on('parameter-sync', function(message) {
-                        var value = model.getItem(['params', message.parameter]);
+                    bus.on('parameter-sync', (message) => {
+                        const value = model.getItem(['params', message.parameter]);
                         bus.send({
                             value: value
                         }, {
@@ -205,11 +205,11 @@ define([
                         });
                     });
 
-                    bus.on('set-param-state', function(message) {
+                    bus.on('set-param-state', (message) => {
                         model.setItem('paramState', message.id, message.state);
                     });
 
-                    bus.on('toggle-batch-mode', function(message) {
+                    bus.on('toggle-batch-mode', (message) => {
                         toggleBatchMode();
                     });
 
@@ -218,7 +218,7 @@ define([
                             type: 'get-batch-mode'
                         },
                         handle: function() {
-                            var canDoBatch = Config.get('features').batchAppMode;
+                            const canDoBatch = Config.get('features').batchAppMode;
                             return canDoBatch && (model.getItem('user-settings.batchMode') || false);
                         }
                     });
@@ -245,11 +245,11 @@ define([
                         }
                     });
 
-                    bus.on('parameter-changed', function(message) {
+                    bus.on('parameter-changed', (message) => {
                         // TODO: should never get these in the following states....
 
-                        let state = fsm.getCurrentState().state;
-                        let isError = Boolean(message.isError);
+                        const state = fsm.getCurrentState().state;
+                        const isError = Boolean(message.isError);
                         if (state.mode === 'editing') {
                             model.setItem(['params', message.parameter], message.newValue);
                             evaluateAppState(isError);
@@ -263,7 +263,7 @@ define([
                         appSpec: model.getItem('app.spec'),
                         parameters: spec.getSpec().parameters
                     })
-                        .then(function() {
+                        .then(() => {
                             return {
                                 bus: bus,
                                 instance: widget
@@ -274,17 +274,17 @@ define([
 
         function loadViewParamsWidget(arg) {
             return pRequire(['./appParamsViewWidget'])
-                .spread(function(Widget) {
+                .spread((Widget) => {
                     // TODO: widget should make own bus.
-                    var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' }),
+                    const bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' }),
                         widget = Widget.make({
                             bus: bus,
                             workspaceInfo: workspaceInfo,
                             initialParams: model.getItem('params')
                         });
 
-                    bus.on('sync-params', function(message) {
-                        message.parameters.forEach(function(paramId) {
+                    bus.on('sync-params', (message) => {
+                        message.parameters.forEach((paramId) => {
                             bus.send({
                                 parameter: paramId,
                                 value: model.getItem(['params', message.parameter])
@@ -297,8 +297,8 @@ define([
                         });
                     });
 
-                    bus.on('parameter-sync', function(message) {
-                        var value = model.getItem(['params', message.parameter]);
+                    bus.on('parameter-sync', (message) => {
+                        const value = model.getItem(['params', message.parameter]);
                         bus.send({
                             value: value
                         }, {
@@ -310,7 +310,7 @@ define([
                         });
                     });
 
-                    bus.on('set-param-state', function(message) {
+                    bus.on('set-param-state', (message) => {
                         model.setItem('paramState', message.id, message.state);
                     });
 
@@ -341,15 +341,15 @@ define([
                             type: 'get-batch-mode'
                         },
                         handle: function() {
-                            var canDoBatch = Config.get('features').batchAppMode;
+                            const canDoBatch = Config.get('features').batchAppMode;
                             return canDoBatch && (model.getItem('user-settings.batchMode') || false);
                         }
                     });
 
-                    bus.on('parameter-changed', function(message) {
+                    bus.on('parameter-changed', (message) => {
                         // TODO: should never get these in the following states....
 
-                        var state = fsm.getCurrentState().state;
+                        const state = fsm.getCurrentState().state;
                         if (state.mode === 'editing') {
                             model.setItem(['params', message.parameter], message.newValue);
                             evaluateAppState();
@@ -363,7 +363,7 @@ define([
                         appSpec: model.getItem('app.spec'),
                         parameters: spec.getSpec().parameters
                     })
-                        .then(function() {
+                        .then(() => {
                             return {
                                 bus: bus,
                                 instance: widget
@@ -374,14 +374,14 @@ define([
 
         function batchConfigureWidget() {
             function factory() {
-                var container,
+                let container,
                     widget;
 
                 function start(arg) {
                     container = arg.node;
                     return loadBatchParamsWidget({
                         node: container
-                    }).then(function(result) {
+                    }).then((result) => {
                         widget = result;
                     });
                 }
@@ -403,14 +403,14 @@ define([
 
         function viewBatchConfigureWidget() {
             function factory() {
-                var container,
+                let container,
                     widget;
 
                 function start(arg) {
                     container = arg.node;
                     return loadViewBatchParamsWidget({
                         node: container
-                    }).then(function(result) {
+                    }).then((result) => {
                         widget = result;
                     });
                 }
@@ -432,7 +432,7 @@ define([
 
         function configureWidget() {
             function factory() {
-                var container,
+                let container,
                     widget;
 
                 function start(arg) {
@@ -440,13 +440,13 @@ define([
                     return loadParamsWidget({
                         node: container
                     })
-                        .then(function(result) {
+                        .then((result) => {
                             widget = result;
                         });
                 }
 
                 function stop() {
-                    return Promise.try(function() {
+                    return Promise.try(() => {
                         if (widget) {
                             return widget.instance.stop();
                         }
@@ -468,7 +468,7 @@ define([
 
         function viewConfigureWidget() {
             function factory() {
-                var container,
+                let container,
                     widget;
 
                 function start(arg) {
@@ -476,13 +476,13 @@ define([
                     return loadViewParamsWidget({
                         node: container
                     })
-                        .then(function(result) {
+                        .then((result) => {
                             widget = result;
                         });
                 }
 
                 function stop() {
-                    return Promise.try(function() {
+                    return Promise.try(() => {
                         if (widget) {
                             return widget.instance.stop();
                         }
@@ -503,20 +503,20 @@ define([
         }
 
         function loadWidget(name) {
-            return new Promise(function(resolve, reject) {
-                require('./tabs/' + name, function(Widget) {
+            return new Promise((resolve, reject) => {
+                require('./tabs/' + name, (Widget) => {
                     resolve(Widget);
-                }, function(err) {
+                }, (err) => {
                     reject(err);
                 });
             });
         }
 
         function startTab(tabId) {
-            var selectedTab = controlBarTabs.tabs[tabId];
+            const selectedTab = controlBarTabs.tabs[tabId];
             if (selectedTab.widgetModule) {
                 return loadWidget(selectedTab.widgetModule)
-                    .then(function(Widget) {
+                    .then((Widget) => {
                         controlBarTabs.selectedTab = {
                             id: tabId,
                             widget: Widget.make()
@@ -524,7 +524,7 @@ define([
 
                         ui.activateButton(controlBarTabs.selectedTab.id);
 
-                        var node = document.createElement('div');
+                        const node = document.createElement('div');
                         ui.getElement('run-control-panel.tab-pane.widget').appendChild(node);
                         return controlBarTabs.selectedTab.widget.start({
                             node: node,
@@ -544,7 +544,7 @@ define([
 
             ui.activateButton(controlBarTabs.selectedTab.id);
 
-            var node = document.createElement('div');
+            const node = document.createElement('div');
             ui.getElement('run-control-panel.tab-pane.widget').appendChild(node);
 
             return controlBarTabs.selectedTab.widget.start({
@@ -559,12 +559,12 @@ define([
                 selectedJobId = controlBarTabs.selectedTab.widget.getSelectedJobId();
             }
             return controlBarTabs.selectedTab.widget.stop()
-                .catch(function(err) {
+                .catch((err) => {
                     console.error('ERROR stopping', err);
                 })
-                .finally(function() {
+                .finally(() => {
                     config;
-                    var widgetNode = ui.getElement('run-control-panel.tab-pane.widget');
+                    const widgetNode = ui.getElement('run-control-panel.tab-pane.widget');
                     if (widgetNode.firstChild) {
                         widgetNode.removeChild(widgetNode.firstChild);
                     }
@@ -578,7 +578,7 @@ define([
                     return;
                 }
                 return stopTab()
-                    .then(function() {
+                    .then(() => {
                         return startTab(tabId);
                     });
             }
@@ -593,8 +593,8 @@ define([
         }
 
         function hidePane() {
-            return Promise.try(function() {
-                var paneNode = ui.getElement('run-control-panel.tab-pane');
+            return Promise.try(() => {
+                const paneNode = ui.getElement('run-control-panel.tab-pane');
                 if (paneNode) {
                     paneNode.classList.add('hidden');
                 }
@@ -602,8 +602,8 @@ define([
         }
 
         function showPane() {
-            return Promise.try(function() {
-                var paneNode = ui.getElement('run-control-panel.tab-pane');
+            return Promise.try(() => {
+                const paneNode = ui.getElement('run-control-panel.tab-pane');
                 if (paneNode) {
                     paneNode.classList.remove('hidden');
                 }
@@ -621,7 +621,7 @@ define([
             if (!Config.get('features').batchAppMode) {
                 return;
             }
-            var curBatchState = model.getItem('user-settings.batchMode'),
+            const curBatchState = model.getItem('user-settings.batchMode'),
                 newBatchMode = !curBatchState,
                 currentTabId = selectedTabId(),
                 runState = fsm.getCurrentState();
@@ -646,34 +646,34 @@ define([
          */
         // Track whether the user has selected a tab.
         // This is reset when the user closes a tab.
-        var userSelectedTab = false;
+        let userSelectedTab = false;
 
         function toggleTab(tabId) {
             if (controlBarTabs.selectedTab) {
                 if (controlBarTabs.selectedTab.id === tabId) {
                     return stopTab()
-                        .then(function() {
+                        .then(() => {
                             // hide the pane, since we just closed the only open
                             //tab.
                             return hidePane();
                         })
-                        .then(function() {
+                        .then(() => {
                             userSelectedTab = false;
                         });
                 }
                 return stopTab()
-                    .then(function() {
+                    .then(() => {
                         return startTab(tabId);
                     })
-                    .then(function() {
+                    .then(() => {
                         userSelectedTab = true;
                     });
             }
             return showPane()
-                .then(function() {
+                .then(() => {
                     startTab(tabId);
                 })
-                .then(function() {
+                .then(() => {
                     userSelectedTab = true;
                 });
         }
@@ -720,7 +720,7 @@ define([
         // DATA API
 
         function getAppRef() {
-            var app = model.getItem('app');
+            const app = model.getItem('app');
 
             // Make sure the app info stored in the model is valid.
             if (!app || !app.spec || !app.spec.info) {
@@ -766,7 +766,7 @@ define([
         }
 
         function getAppSpec() {
-            var appRef = getAppRef(),
+            const appRef = getAppRef(),
                 nms = new NarrativeMethodStore(runtime.config('services.narrative_method_store.url'), {
                     token: runtime.authToken()
                 });
@@ -778,7 +778,7 @@ define([
                 ),
                 nms.get_method_spec(appRef),
                 catalog.get_exec_aggr_stats({ full_app_ids: [appId] }),
-            ]).then(function ([methodFullInfo, methodSpecData, execAggrStatsData]) {
+            ]).then(([methodFullInfo, methodSpecData, execAggrStatsData]) => {
                 model.setItem('app.spec.full_info', methodFullInfo[0]);
                 model.setItem('executionStats', execAggrStatsData[0]);
                 if (!methodSpecData[0]) {
@@ -795,8 +795,8 @@ define([
         }
 
         function showFsmBar() {
-            var currentState = fsm.getCurrentState(),
-                content = Object.keys(currentState.state).map(function(key) {
+            const currentState = fsm.getCurrentState(),
+                content = Object.keys(currentState.state).map((key) => {
                     return span([
                         span({ style: { fontStyle: 'italic' } }, key),
                         ' : ',
@@ -808,7 +808,7 @@ define([
         }
 
         function showAboutApp() {
-            var appSpec = model.getItem('app.spec');
+            const appSpec = model.getItem('app.spec');
             ui.setContent('about-app.name', appSpec.info.name);
             ui.setContent('about-app.module', appSpec.info.namespace || ui.na());
             ui.setContent('about-app.id', appSpec.info.id);
@@ -821,7 +821,7 @@ define([
                 }
                 return ui.na();
             }()));
-            var appRef = [appSpec.info.id, model.getItem('app').tag].filter(toBoolean).join('/'),
+            const appRef = [appSpec.info.id, model.getItem('app').tag].filter(toBoolean).join('/'),
                 link = a({ href: '/#appcatalog/app/' + appRef, target: '_blank' }, 'Catalog Page');
             ui.setContent('about-app.catalog-link', link);
         }
@@ -830,7 +830,7 @@ define([
             if (!model.getItem('app.spec')) {
                 return;
             }
-            var specText = JSON.stringify(model.getItem('app.spec'), false, 3),
+            const specText = JSON.stringify(model.getItem('app.spec'), false, 3),
                 fixedText = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;'),
                 content = pre({ class: 'prettyprint lang-json', style: { fontSize: '80%' } }, fixedText);
             ui.setContent('about-app.spec', content);
@@ -856,11 +856,11 @@ define([
         }
 
         function buildRunControlPanelRunButtons(events) {
-            var style = {
+            const style = {
                 padding: '6px'
             };
-            var buttonList = Object.keys(actionButtons.availableButtons).map(function(key) {
-                var button = actionButtons.availableButtons[key],
+            const buttonList = Object.keys(actionButtons.availableButtons).map((key) => {
+                let button = actionButtons.availableButtons[key],
                     classes = [].concat(button.classes),
                     icon;
                 if (button.icon) {
@@ -891,7 +891,7 @@ define([
                 });
             });
 
-            var buttonDiv = div({
+            const buttonDiv = div({
                 class: 'btn-group',
                 style: style
             }, buttonList);
@@ -899,8 +899,8 @@ define([
         }
 
         function buildRunControlPanelDisplayButtons(events) {
-            var buttons = Object.keys(controlBarTabs.tabs).map(function(key) {
-                var tab = controlBarTabs.tabs[key],
+            const buttons = Object.keys(controlBarTabs.tabs).map((key) => {
+                let tab = controlBarTabs.tabs[key],
                     icon;
                 if (!tab) {
                     console.warn('Tab not defined: ' + key);
@@ -932,15 +932,15 @@ define([
                     },
                     icon: icon
                 });
-            }).filter(function(x) {
+            }).filter((x) => {
                 return x ? true : false;
             });
-            bus.on('control-panel-tab', function(message) {
-                var tab = message.data.tab;
+            bus.on('control-panel-tab', (message) => {
+                const tab = message.data.tab;
                 toggleTab(tab);
             });
 
-            var outdatedBtn = a({
+            const outdatedBtn = a({
                 tabindex: '0',
                 type: 'button',
                 class: 'btn hidden',
@@ -1042,7 +1042,7 @@ define([
         }
 
         function renderLayout() {
-            var events = Events.make(),
+            const events = Events.make(),
                 content = div({ class: 'kbase-extension kb-app-cell', style: { display: 'flex', alignItems: 'stretch' } }, [
                     div({ class: 'prompt', dataElement: 'prompt', style: { display: 'flex', alignItems: 'stretch', flexDirection: 'column' } }, [
                         div({ dataElement: 'status' })
@@ -1097,7 +1097,7 @@ define([
         }
 
         function buildPython(cell, cellId, app, params) {
-            var runId = new Uuid(4).format(),
+            let runId = new Uuid(4).format(),
                 fixedApp = fixApp(app),
                 code;
             if (model.getItem('user-settings.batchMode') && Config.get('features').batchAppMode) {
@@ -1115,7 +1115,7 @@ define([
         }
 
         function initializeFSM() {
-            var currentState = model.getItem('fsm.currentState');
+            let currentState = model.getItem('fsm.currentState');
             if (!currentState) {
                 // TODO: evaluate the state of things to try to guess the state?
                 // Or is this just an error unless it is a new cell?
@@ -1132,68 +1132,68 @@ define([
                 }
             });
             // fsm events
-            fsm.bus.on('disconnected', function() {
+            fsm.bus.on('disconnected', () => {
                 ui.setContent('run-control-panel.status.execMessage', 'Disconnected. Unable to communicate with server.');
             });
 
-            fsm.bus.on('on-execute-requested', function() {
+            fsm.bus.on('on-execute-requested', () => {
                 ui.setContent('run-control-panel.status.execMessage', 'Sending...');
             });
-            fsm.bus.on('exit-execute-requested', function() {
+            fsm.bus.on('exit-execute-requested', () => {
                 ui.setContent('run-control-panel.status.execMessage', '');
             });
-            fsm.bus.on('on-launched', function() {
+            fsm.bus.on('on-launched', () => {
                 ui.setContent('run-control-panel.status.execMessage', 'Launching...');
             });
-            fsm.bus.on('exit-launched', function() {
+            fsm.bus.on('exit-launched', () => {
                 ui.setContent('run-control-panel.status.execMessage', '');
             });
 
-            fsm.bus.on('start-queueing', function() {
+            fsm.bus.on('start-queueing', () => {
                 doStartQueueing();
             });
-            fsm.bus.on('stop-queueing', function() {
+            fsm.bus.on('stop-queueing', () => {
                 doStopQueueing();
             });
 
-            fsm.bus.on('start-running', function() {
+            fsm.bus.on('start-running', () => {
                 doStartRunning();
             });
-            fsm.bus.on('stop-running', function() {
+            fsm.bus.on('stop-running', () => {
                 doStopRunning();
             });
 
-            fsm.bus.on('on-success', function() {
+            fsm.bus.on('on-success', () => {
                 doOnSuccess();
             });
 
-            fsm.bus.on('resume-success', function() {
+            fsm.bus.on('resume-success', () => {
                 doResumeSuccess(true);
             });
 
-            fsm.bus.on('exit-success', function() {
+            fsm.bus.on('exit-success', () => {
                 doExitSuccess();
             });
 
-            fsm.bus.on('on-error', function() {
+            fsm.bus.on('on-error', () => {
                 doOnError();
             });
 
-            fsm.bus.on('exit-error', function() {
+            fsm.bus.on('exit-error', () => {
                 doExitError();
             });
-            fsm.bus.on('on-cancelling', function() {
+            fsm.bus.on('on-cancelling', () => {
                 doOnCancelling();
             });
 
-            fsm.bus.on('exit-cancelling', function() {
+            fsm.bus.on('exit-cancelling', () => {
                 doExitCancelling();
             });
-            fsm.bus.on('on-cancelled', function() {
+            fsm.bus.on('on-cancelled', () => {
                 doOnCancelled();
             });
 
-            fsm.bus.on('exit-cancelled', function() {
+            fsm.bus.on('exit-cancelled', () => {
                 doExitCancelled();
             });
 
@@ -1231,7 +1231,7 @@ define([
         }
 
         function showCodeInputArea() {
-            var codeInputArea = cell.input.find('.input_area').get(0);
+            const codeInputArea = cell.input.find('.input_area').get(0);
             if (model.getItem('user-settings.showCodeInputArea')) {
                 if (!codeInputArea.classList.contains('-show')) {
                     codeInputArea.classList.add('-show');
@@ -1260,9 +1260,9 @@ define([
          */
         function renderUI() {
             showFsmBar();
-            var state = fsm.getCurrentState();
+            const state = fsm.getCurrentState();
             if (!viewOnly && model.getItem('outdated')) {
-                var outdatedBtn = ui.getElement('outdated');
+                const outdatedBtn = ui.getElement('outdated');
                 outdatedBtn.setAttribute('data-content',
                     'This app has a newer version available! ' +
                     'There\'s probably nothing wrong with this version, ' +
@@ -1271,8 +1271,8 @@ define([
                     '" app cell for the update.');
             }
 
-            var indicatorNode = ui.getElement('run-control-panel.status.indicator');
-            var iconNode = ui.getElement('run-control-panel.status.indicator.icon');
+            const indicatorNode = ui.getElement('run-control-panel.status.indicator');
+            const iconNode = ui.getElement('run-control-panel.status.indicator.icon');
             if (iconNode) {
                 // clear the classes
                 indicatorNode.className = state.ui.appStatus.classes.join(' ');
@@ -1289,17 +1289,17 @@ define([
             // If current tab is not enabled in this state, then forget that the user
             // made a selection.
 
-            var userStateTab = state.ui.tabs[selectedTabId()];
+            const userStateTab = state.ui.tabs[selectedTabId()];
             if (!userStateTab || !userStateTab.enabled || userStateTab.hidden) {
                 userSelectedTab = false;
             }
 
-            var tabSelected = false;
-            Object.keys(state.ui.tabs).forEach(function(tabId) {
-                var tab = state.ui.tabs[tabId];
-                var tabConfig;
+            let tabSelected = false;
+            Object.keys(state.ui.tabs).forEach((tabId) => {
+                const tab = state.ui.tabs[tabId];
+                let tabConfig;
                 if (tab instanceof Array) {
-                    tabConfig = tab.filter(function(mode) {
+                    tabConfig = tab.filter((mode) => {
                         if (mode.selector.viewOnly && viewOnly) {
                             return true;
                         }
@@ -1339,7 +1339,7 @@ define([
                 if (actionButtons.current.name) {
                     ui.hideButton(actionButtons.current.name);
                 }
-                var name = state.ui.actionButton.name;
+                const name = state.ui.actionButton.name;
                 ui.showButton(name);
                 actionButtons.current.name = name;
                 if (state.ui.actionButton.disabled) {
@@ -1373,7 +1373,7 @@ define([
             kernelReady = newState;
         }
 
-        var saveTimer = null;
+        let saveTimer = null;
 
         function saveNarrative() {
             if (saveTimer) {
@@ -1383,7 +1383,7 @@ define([
                 console.warn('cannot save narrative in read-only mode; save request ignored');
                 return;
             }
-            saveTimer = window.setTimeout(function() {
+            saveTimer = window.setTimeout(() => {
                 saveTimer = null;
                 Narrative.saveNotebook();
             }, saveMaxFrequency);
@@ -1430,13 +1430,13 @@ define([
         }
 
         function doRerun() {
-            var confirmationMessage = div([
+            const confirmationMessage = div([
                 p('This action will clear the Results and re-enable the Configure tab for editing. You may then change inputs and run the app again.'),
                 p('Any output you have already produced will be left intact in the Narrative and Data Panel'),
                 p('Proceed to Reset and resume editing?')
             ]);
             ui.showConfirmDialog({ title: 'Reset and resume editing?', body: confirmationMessage })
-                .then(function(confirmed) {
+                .then((confirmed) => {
                     if (!confirmed) {
                         return;
                     }
@@ -1447,12 +1447,12 @@ define([
         }
 
         function doResetApp() {
-            var confirmationMessage = div([
+            const confirmationMessage = div([
                 p('This action will clear all parameters, run statistics, and logs and place the app into Edit mode.'),
                 p('Proceed to Reset the app and Resume Editing?')
             ]);
             ui.showConfirmDialog({ title: 'Reset App?', body: confirmationMessage })
-                .then(function(confirmed) {
+                .then((confirmed) => {
                     if (!confirmed) {
                         return;
                     }
@@ -1467,7 +1467,7 @@ define([
          *
          */
         function doCancel() {
-            var confirmationMessage = div([
+            const confirmationMessage = div([
                 p([
                     'Canceling the job will halt the job processing.',
                     'Any output objects already created will remain in your narrative and can be removed from the Data panel.'
@@ -1475,12 +1475,12 @@ define([
                 p('Continue to Cancel the running job?')
             ]);
             ui.showConfirmDialog({ title: 'Cancel Job?', body: confirmationMessage })
-                .then(function(confirmed) {
+                .then((confirmed) => {
                     if (!confirmed) {
                         return;
                     }
 
-                    var jobState = model.getItem('exec.jobState');
+                    const jobState = model.getItem('exec.jobState');
                     if (jobState) {
                         cancelJob(jobState.job_id);
 
@@ -1505,7 +1505,7 @@ define([
             // sent once from the narrative back end.
 
             // Update FSM
-            var newFsmState = (function() {
+            const newFsmState = (function() {
                 switch (message.event) {
                 case 'launched_job':
                     // NEW: start listening for jobs.
@@ -1522,7 +1522,7 @@ define([
         }
 
         function updateFromJobState(jobState, forceRender) {
-            var newFsmState = (function() {
+            const newFsmState = (function() {
                 switch (jobState.status) {
                 case 'created':
                     return { mode: 'processing', stage: 'queued' };
@@ -1531,7 +1531,7 @@ define([
                 case 'running':
                     // see if any subjobs are done, if so, set the stage to 'partial-complete'
                     if (jobState.child_jobs && jobState.child_jobs.length) {
-                        let childDone = jobState.child_jobs.some((childState) => {
+                        const childDone = jobState.child_jobs.some((childState) => {
                             return ['completed', 'terminated', 'error'].indexOf(childState.status) !== -1;
                         });
                         if (childDone) {
@@ -1599,7 +1599,7 @@ define([
         // LIFECYCLE API
 
         function init() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 initializeFSM();
                 initCodeInputArea();
 
@@ -1612,7 +1612,7 @@ define([
         }
 
         function attach(node) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 hostNode = node;
                 container = hostNode.appendChild(document.createElement('div'));
                 ui = UI.make({
@@ -1620,7 +1620,7 @@ define([
                     bus: bus
                 });
 
-                var layout = renderLayout();
+                const layout = renderLayout();
                 container.innerHTML = layout.content;
                 layout.events.attachEvents(container);
                 $(container).find('[data-toggle="popover"]').popover();
@@ -1629,17 +1629,17 @@ define([
         }
 
         function detach() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (hostNode && container) {
                     hostNode.removeChild(container);
                 }
             });
         }
 
-        var jobListeners = [];
+        let jobListeners = [];
 
         function startListeningForJobMessages(jobId) {
-            var ev;
+            let ev;
 
             ev = runtime.bus().listen({
                 channel: {
@@ -1649,7 +1649,7 @@ define([
                     type: 'job-status'
                 },
                 handle: function(message) {
-                    var existingState = model.getItem('exec.jobState'),
+                    const existingState = model.getItem('exec.jobState'),
                         newJobState = message.jobState,
                         outputWidgetInfo = message.outputWidgetInfo,
                         forceRender = !Jobs.isValidJobState(existingState) &&
@@ -1689,7 +1689,7 @@ define([
                 },
                 handle: function() {
                     //  reset the cell into edit mode
-                    var state = fsm.getCurrentState();
+                    const state = fsm.getCurrentState();
                     if (state.state.mode === 'editing') {
                         console.warn('in edit mode, so not resetting ui');
                         return;
@@ -1708,7 +1708,7 @@ define([
                 },
                 handle: function() {
                     //  reset the cell into edit mode
-                    var state = fsm.getCurrentState();
+                    const state = fsm.getCurrentState();
                     if (state.state.mode === 'editing') {
                         console.warn('in edit mode, so not resetting ui');
                         return;
@@ -1725,12 +1725,12 @@ define([
         }
 
         function stopListeningForJobMessages() {
-            jobListeners.forEach(function(listener) {
+            jobListeners.forEach((listener) => {
                 runtime.bus().removeListener(listener);
             });
             jobListeners = [];
 
-            var jobId = model.getItem('exec.jobState.job_id');
+            const jobId = model.getItem('exec.jobState.job_id');
             if (jobId) {
                 runtime.bus().emit('request-job-completion', {
                     jobId: jobId
@@ -1739,7 +1739,7 @@ define([
         }
 
         function createOutputCell(jobId) {
-            var cellId = utils.getMeta(cell, 'attributes', 'id'),
+            const cellId = utils.getMeta(cell, 'attributes', 'id'),
                 cellIndex = Jupyter.notebook.find_cell_index(cell),
                 newCellId = new Uuid(4).format(),
                 setupData = {
@@ -1755,7 +1755,7 @@ define([
         }
 
         function clearOutput() {
-            var cellNode = cell.element.get(0),
+            const cellNode = cell.element.get(0),
                 textNode = cellNode.querySelector('.output_area.output_text');
 
             if (textNode) {
@@ -1766,13 +1766,13 @@ define([
         // FSM state change events
 
         function doStartRunning() {
-            var jobState = model.getItem('exec.jobState');
+            const jobState = model.getItem('exec.jobState');
             if (!jobState) {
                 console.warn('What, no job state?');
                 return;
             }
 
-            var message = span([
+            const message = span([
                 ui.loading({ size: null, color: 'green' }),
                 ' Running - ',
                 span({ dataElement: 'clock' })
@@ -1783,13 +1783,13 @@ define([
                 prefix: 'started ',
                 suffix: ' ago'
             });
-            var exec_start_time = jobState.running;
+            const exec_start_time = jobState.running;
 
             widgets.runClock.start({
                 node: ui.getElement('run-control-panel.status.execMessage.clock'),
                 startTime: exec_start_time
             })
-                .catch(function(err) {
+                .catch((err) => {
                     ui.setContent('run-control-panel.status.execMessage.clock', 'ERROR:' + err.message);
                 });
         }
@@ -1801,13 +1801,13 @@ define([
         }
 
         function doStartQueueing() {
-            var jobState = model.getItem('exec.jobState');
+            const jobState = model.getItem('exec.jobState');
             if (!jobState) {
                 console.warn('What, no job state?');
                 return;
             }
 
-            var message = span([
+            const message = span([
                 ui.loading({ color: 'green' }),
                 ' Waiting - in Queue ',
                 span({ dataElement: 'clock' })
@@ -1817,12 +1817,12 @@ define([
             widgets.runClock = RunClock.make({
                 prefix: 'for '
             });
-            var creation_time = jobState.created;
+            const creation_time = jobState.created;
             widgets.runClock.start({
                 node: ui.getElement('run-control-panel.status.execMessage.clock'),
                 startTime: creation_time
             })
-                .catch(function(err) {
+                .catch((err) => {
                     ui.setContent('run-control-panel.status.execMessage.clock', 'ERROR:' + err.message);
                 });
         }
@@ -1841,8 +1841,8 @@ define([
         }
 
         function niceState(jobState) {
-            var label;
-            var color;
+            let label;
+            let color;
             switch (jobState) {
             case 'completed':
                 label = 'success';
@@ -1871,11 +1871,11 @@ define([
 
         function doOnSuccess() {
             // have we created output yet?
-            var jobState = model.getItem('exec.jobState'),
+            const jobState = model.getItem('exec.jobState'),
                 jobId = model.getItem('exec.jobState.job_id');
 
             // show either the clock, if < 24 hours, or the timestamp.
-            var message = span([
+            const message = span([
                 'Finished with ',
                 niceState(jobState.status),
                 ' ',
@@ -1887,10 +1887,10 @@ define([
             widgets.runClock = RunClock.make({
                 on: {
                     tick: function(elapsed) {
-                        var clock;
-                        var day = 1000 * 60 * 60 * 24;
+                        let clock;
+                        const day = 1000 * 60 * 60 * 24;
                         if (elapsed > day) {
-                            var finish_time = jobState.finished;
+                            const finish_time = jobState.finished;
                             clock = span([
                                 ' on ',
                                 format.niceTime(finish_time)
@@ -1908,12 +1908,12 @@ define([
                     }
                 }
             });
-            var finish_time = jobState.finished;
+            const finish_time = jobState.finished;
             widgets.runClock.start({
                 node: ui.getElement('run-control-panel.status.execMessage.clock'),
                 startTime: finish_time
             })
-                .catch(function(err) {
+                .catch((err) => {
                     ui.setContent('run-control-panel.status.execMessage.clock', 'ERROR:' + err.message);
                 });
 
@@ -1927,7 +1927,7 @@ define([
 
 
             // If so, is the cell still there?
-            var outputCellId = model.getItem(['output', 'byJob', jobId, 'cell', 'id']);
+            let outputCellId = model.getItem(['output', 'byJob', jobId, 'cell', 'id']);
 
             // If the output cell is already recorded in the app cell, and it it is in the
             // narrative, do not try to inserted it.
@@ -1942,8 +1942,8 @@ define([
              skip the output cell creation.
              */
             // widgets named 'no-display' are a trigger to skip the output cell process.
-            var skipOutputCell = model.getItem('exec.outputWidgetInfo.name') === 'no-display';
-            var cellInfo;
+            const skipOutputCell = model.getItem('exec.outputWidgetInfo.name') === 'no-display';
+            let cellInfo;
             if (skipOutputCell) {
                 cellInfo = {
                     created: false
@@ -1971,10 +1971,10 @@ define([
         }
 
         function doResumeSuccess() {
-            var jobState = model.getItem('exec.jobState');
+            const jobState = model.getItem('exec.jobState');
 
             // show either the clock, if < 24 hours, or the timestamp.
-            var message = span([
+            const message = span([
                 'Finished with ',
                 niceState(jobState.status),
                 ' ',
@@ -1986,10 +1986,10 @@ define([
             widgets.runClock = RunClock.make({
                 on: {
                     tick: function(elapsed) {
-                        var clock;
-                        var day = 1000 * 60 * 60 * 24;
+                        let clock;
+                        const day = 1000 * 60 * 60 * 24;
                         if (elapsed > day) {
-                            var finish_time = jobState.finished;
+                            const finish_time = jobState.finished;
                             clock = span([
                                 ' on ',
                                 format.niceTime(finish_time)
@@ -2007,21 +2007,21 @@ define([
                     }
                 }
             });
-            var finish_time = jobState.finished;
+            const finish_time = jobState.finished;
             widgets.runClock.start({
                 node: ui.getElement('run-control-panel.status.execMessage.clock'),
                 startTime: finish_time
             })
-                .catch(function(err) {
+                .catch((err) => {
                     ui.setContent('run-control-panel.status.execMessage.clock', 'ERROR:' + err.message);
                 });
 
         }
 
         function doOnError() {
-            var jobState = model.getItem('exec.jobState');
-            var finish_time = jobState.finished;
-            var message = span([
+            const jobState = model.getItem('exec.jobState');
+            const finish_time = jobState.finished;
+            const message = span([
                 'Finished with ',
                 niceState(jobState.status),
                 ' on ',
@@ -2041,7 +2041,7 @@ define([
                 node: ui.getElement('run-control-panel.status.execMessage.clock'),
                 startTime: finish_time
             })
-                .catch(function(err) {
+                .catch((err) => {
                     ui.setContent('run-control-panel.status.execMessage.clock', 'ERROR:' + err.message);
                 });
         }
@@ -2062,10 +2062,10 @@ define([
         }
 
         function doOnCancelled() {
-            var jobState = model.getItem('exec.jobState');
-            var finish_time = jobState.finished;
+            const jobState = model.getItem('exec.jobState');
+            const finish_time = jobState.finished;
 
-            var message = span([
+            const message = span([
                 span({ style: { color: 'orange' } }, 'Canceled'),
                 ' on ',
                 format.niceTime(finish_time),
@@ -2084,7 +2084,7 @@ define([
                 node: ui.getElement('run-control-panel.status.execMessage.clock'),
                 startTime: finish_time
             })
-                .catch(function(err) {
+                .catch((err) => {
                     ui.setContent('run-control-panel.status.execMessage.clock', 'ERROR:' + err.message);
                 });
         }
@@ -2097,11 +2097,11 @@ define([
         }
 
         function doRemove() {
-            var confirmationMessage = div([
+            const confirmationMessage = div([
                 p('Continue to remove this app cell?')
             ]);
             ui.showConfirmDialog({ title: 'Remove Cell?', body: confirmationMessage })
-                .then(function(confirmed) {
+                .then((confirmed) => {
                     if (!confirmed) {
                         return;
                     }
@@ -2110,7 +2110,7 @@ define([
         }
 
         function doDeleteCell() {
-            var content = div([
+            const content = div([
                 p([
                     'Deleting this cell will not remove any output cells or data objects it may have created. ',
                     'Any input parameters or other configuration of this cell will be lost.'
@@ -2124,21 +2124,21 @@ define([
                 p('Continue to delete this app cell?')
             ]);
             ui.showConfirmDialog({ title: 'Confirm Cell Deletion', body: content })
-                .then(function(confirmed) {
+                .then((confirmed) => {
                     if (!confirmed) {
                         return;
                     }
 
-                    var jobState = model.getItem('exec.jobState');
+                    const jobState = model.getItem('exec.jobState');
                     if (jobState) {
                         cancelJob(jobState.job_id);
                     }
 
                     // tear down all the sub widgets.
                     // TODO: make all widget behavior consistent. Either message or promise.
-                    Object.keys(widgets).forEach(function(widgetId) {
+                    Object.keys(widgets).forEach((widgetId) => {
                         try {
-                            var widget = widgets[widgetId];
+                            const widget = widgets[widgetId];
                             if (widget.stop) {
                                 widget.stop();
                             } else {
@@ -2151,13 +2151,13 @@ define([
 
                     stop();
 
-                    var cellIndex = Jupyter.notebook.find_cell_index(cell);
+                    const cellIndex = Jupyter.notebook.find_cell_index(cell);
                     Jupyter.notebook.delete_cell(cellIndex);
                 });
         }
 
         function start() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 // Initial ui tweaks
 
                 // Honor the code input area show/hide.
@@ -2170,50 +2170,50 @@ define([
                     ui.hideElement('outdated');
                 }
             })
-                .then(function() {
+                .then(() => {
                     return Semaphore.make().when('comm', 'ready', Config.get('comm_wait_timeout'));
                 })
-                .then(function() {
+                .then(() => {
                     /*
                      * listeners for the local input cell message bus
                      */
 
                     // DOM EVENTS
-                    cell.element.on('toggleCodeArea.cell', function() {
+                    cell.element.on('toggleCodeArea.cell', () => {
                         toggleCodeInputArea(cell);
                     });
 
                     // APP CELL EVENTS
 
-                    busEventManager.add(bus.on('toggle-code-view', function() {
-                        var showing = toggleCodeInputArea(),
+                    busEventManager.add(bus.on('toggle-code-view', () => {
+                        const showing = toggleCodeInputArea(),
                             label = showing ? 'Hide Code' : 'Show Code';
                         ui.setButtonLabel('toggle-code-view', label);
                     }));
-                    busEventManager.add(bus.on('edit-cell-metadata', function() {
+                    busEventManager.add(bus.on('edit-cell-metadata', () => {
                         doEditCellMetadata();
                     }));
-                    busEventManager.add(bus.on('edit-notebook-metadata', function() {
+                    busEventManager.add(bus.on('edit-notebook-metadata', () => {
                         doEditNotebookMetadata();
                     }));
 
-                    busEventManager.add(bus.on('actionButton', function(message) {
+                    busEventManager.add(bus.on('actionButton', (message) => {
                         doActionButton(message.data);
                     }));
-                    busEventManager.add(bus.on('run-app', function() {
+                    busEventManager.add(bus.on('run-app', () => {
                         doRun();
                     }));
-                    busEventManager.add(bus.on('re-run-app', function() {
+                    busEventManager.add(bus.on('re-run-app', () => {
                         doRerun();
                     }));
-                    busEventManager.add(bus.on('cancel', function() {
+                    busEventManager.add(bus.on('cancel', () => {
                         doCancel();
                     }));
-                    busEventManager.add(bus.on('remove', function() {
+                    busEventManager.add(bus.on('remove', () => {
                         doRemove();
                     }));
 
-                    busEventManager.add(parentBus.on('reset-to-defaults', function() {
+                    busEventManager.add(parentBus.on('reset-to-defaults', () => {
                         bus.emit('reset-to-defaults');
                     }));
 
@@ -2222,7 +2222,7 @@ define([
                     }));
 
                     // TODO: only turn this on when we need it!
-                    busEventManager.add(cellBus.on('run-status', function(message) {
+                    busEventManager.add(cellBus.on('run-status', (message) => {
                         updateFromLaunchEvent(message);
 
                         model.setItem('exec.launchState', message);
@@ -2234,12 +2234,12 @@ define([
                         });
                     }));
 
-                    busEventManager.add(cellBus.on('delete-cell', function() {
+                    busEventManager.add(cellBus.on('delete-cell', () => {
                         doDeleteCell();
                     }));
 
-                    busEventManager.add(cellBus.on('output-cell-removed', function(message) {
-                        var output = model.getItem('output');
+                    busEventManager.add(cellBus.on('output-cell-removed', (message) => {
+                        const output = model.getItem('output');
 
                         if (!output.byJob[message.jobId]) {
                             return;
@@ -2249,12 +2249,12 @@ define([
                         model.setItem('output', output);
                     }));
 
-                    busEventManager.add(runtime.bus().on('read-only-changed', function(msg) {
+                    busEventManager.add(runtime.bus().on('read-only-changed', (msg) => {
                         toggleViewOnlyMode(msg.readOnly);
                         renderUI();
                     }));
 
-                    busEventManager.add(runtime.bus().on('kernel-state-changed', function(msg) {
+                    busEventManager.add(runtime.bus().on('kernel-state-changed', (msg) => {
                         toggleKernelState(msg.isReady);
                         renderUI();
                     }));
@@ -2263,7 +2263,7 @@ define([
 
                     return null;
                 })
-                .catch(function(err) {
+                .catch((err) => {
                     if (err.message.indexOf('semaphore') !== -1) {
                         throw new Error(
                             'A network timeout occurred while trying to build a communication ' +
@@ -2276,18 +2276,18 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 busEventManager.removeAll();
             });
         }
 
         function exportParams() {
-            var params = model.getItem('params'),
+            const params = model.getItem('params'),
                 paramsToExport = {},
                 parameters = spec.getSpec().parameters;
 
-            Object.keys(params).forEach(function(key) {
-                var value = params[key],
+            Object.keys(params).forEach((key) => {
+                let value = params[key],
                     paramSpec = parameters.specs[key];
 
                 if (!paramSpec) {
@@ -2310,11 +2310,11 @@ define([
 
         // just a quick hack since we are not truly recursive yet..,
         function gatherValidationMessages(validationResult) {
-            var messages = [];
+            const messages = [];
 
             function harvestErrors(validations) {
                 if (validations instanceof Array) {
-                    validations.forEach(function(result, index) {
+                    validations.forEach((result, index) => {
                         if (!result.isValid) {
                             messages.push(String(index) + ':' + result.errorMessage);
                         }
@@ -2323,8 +2323,8 @@ define([
                         }
                     });
                 } else {
-                    Object.keys(validations).forEach(function(id) {
-                        var result = validations[id];
+                    Object.keys(validations).forEach((id) => {
+                        const result = validations[id];
                         if (!result.isValid) {
                             messages.push(id + ':' + result.errorMessage);
                         }
@@ -2352,10 +2352,10 @@ define([
          */
         function evaluateAppState(isError) {
             validateModel()
-                .then(function(result) {
+                .then((result) => {
                     // we have a tree of validations, so we need to walk the tree to see if anything
                     // does not validate.
-                    var messages = gatherValidationMessages(result);
+                    const messages = gatherValidationMessages(result);
 
                     if (messages.length === 0 && !isError) {
                         buildPython(cell, utils.getMeta(cell, 'attributes').id, model.getItem('app'), exportParams());
@@ -2366,14 +2366,14 @@ define([
                     }
                     renderUI();
                 })
-                .catch(function(err) {
+                .catch((err) => {
                     alert('internal error'),
                     console.error('INTERNAL ERROR', err);
                 });
         }
 
         function checkSpec(appSpec) {
-            var cellAppSpec = model.getItem('app.spec');
+            const cellAppSpec = model.getItem('app.spec');
 
             if (!cellAppSpec) {
                 throw new ToErr.KBError({
@@ -2421,16 +2421,16 @@ define([
             // with the parameters returned.
             // If the app has been run before...
             // The app reference is already in the app cell metadata.
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (utils.getCellMeta(cell, 'kbase.type') !== 'devapp') {
                     return getAppSpec();
                 }
                 return {};
             })
-                .then(function(appSpec) {
+                .then((appSpec) => {
                     // Ensure that the current app spec matches our existing one.
                     if (appSpec && utils.getCellMeta(cell, 'kbase.type') !== 'devapp') {
-                        var warning = checkSpec(appSpec);
+                        const warning = checkSpec(appSpec);
                         if (warning && warning.severity === 'warning') {
                             if (warning.type === 'app-spec-mismatched-commit') {
                                 model.setItem('outdated', true);
@@ -2439,14 +2439,14 @@ define([
                         }
                     }
 
-                    var appRef = [model.getItem('app.id'), model.getItem('app.tag')].filter(toBoolean).join('/'),
+                    const appRef = [model.getItem('app.id'), model.getItem('app.tag')].filter(toBoolean).join('/'),
                         url = '/#appcatalog/app/' + appRef;
                     utils.setCellMeta(cell, 'kbase.attributes.title', model.getItem('app.spec.info.name'));
                     utils.setCellMeta(cell, 'kbase.attributes.subtitle', model.getItem('app.spec.info.subtitle'));
                     utils.setCellMeta(cell, 'kbase.attributes.info.url', url);
                     utils.setCellMeta(cell, 'kbase.attributes.info.label', 'more...');
                 })
-                .then(function() {
+                .then(() => {
                     // this will not change, so we can just render it here.
                     showAboutApp();
                     showAppSpec();
@@ -2463,7 +2463,7 @@ define([
                      * Should also pause rendering until we get it?
                      * Or render some intermediate state?
                      */
-                    let curState = model.getItem('exec.jobState');
+                    const curState = model.getItem('exec.jobState');
                     if (curState && !Jobs.isValidJobState(curState)) {  // use the 'created' key to see if it's an updated jobState
                         startListeningForJobMessages(curState.job_id);
                         requestJobStatus(curState.job_id);
@@ -2488,8 +2488,8 @@ define([
                             break;
                     }
                 })
-                .catch(function(err) {
-                    var error = ToErr.grokError(err);
+                .catch((err) => {
+                    const error = ToErr.grokError(err);
                     console.error('ERROR loading main widgets', error);
 
                     model.setItem('fatalError', {
@@ -2533,6 +2533,6 @@ define([
             return factory(config);
         }
     };
-}, function(err) {
+}, (err) => {
     console.error('ERROR loading appCell appCellWidget', err);
 });

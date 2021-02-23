@@ -2,15 +2,15 @@
 /*jslint white:true,browser:true*/
 define([
     
-], function () {
+], () => {
     'use strict';
     
     function factory(config) {
-         var url = config.url,
+         const url = config.url,
             cdnUrl = config.cdn;
         // NB: For prototyping we supply this widget db in code.
         // This is modeling a service which provides widget lookup.
-        var widgetPackages = [
+        const widgetPackages = [
             {
                 name: 'widgets',
                 versions: [
@@ -108,26 +108,26 @@ define([
             }
         ];
         
-        var widgetDb = {};
-        widgetPackages.forEach(function (widgetPackage) {
+        const widgetDb = {};
+        widgetPackages.forEach((widgetPackage) => {
             widgetDb[widgetPackage.name] = {};
-            widgetPackage.versions.forEach(function(version) {
+            widgetPackage.versions.forEach((version) => {
                 widgetDb[widgetPackage.name][version.version] = {
                     config: version.config,
                     widgets: {}
                 };
-                version.widgets.forEach(function (widget) {
+                version.widgets.forEach((widget) => {
                     widgetDb[widgetPackage.name][version.version].widgets[widget.widgetName] = widget;
                 });
             });
         });
 
         function findPackage(packageName, version) {
-            var widgetPackage = widgetDb[packageName];
+            const widgetPackage = widgetDb[packageName];
             if (!widgetPackage) {
                 throw new Error('Cannot locate package ' + packageName);
             }
-            var versionedPackage = widgetPackage[version];
+            const versionedPackage = widgetPackage[version];
             if (!versionedPackage) {
                 throw new Error('Cannot locate version ' + version + ' for package ' + packageName);
             }
@@ -139,7 +139,7 @@ define([
          * Get a specific widget
          */
         function getWidget(packageName, version, widgetName) {
-            var versionedPackage = findPackage(packageName, version),
+            const versionedPackage = findPackage(packageName, version),
                 widget = versionedPackage.widgets[widgetName];
             
             if (!widget) {
@@ -158,7 +158,7 @@ define([
          * Currently finds the most recent widget
          */
         function findWidget(findWidgetName) {
-            var i, j, k, widgetPackage, version, widget;
+            let i, j, k, widgetPackage, version, widget;
             for (i = 0; i < widgetPackages.length; i += 1) {
                 widgetPackage = widgetPackages[i];
                 for (j = 0; j < widgetPackage.versions.length; j += 1) {

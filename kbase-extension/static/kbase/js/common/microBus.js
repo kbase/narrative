@@ -22,16 +22,16 @@
  *
  */
 define([
-], function () {
+], () => {
     'use strict';
-    var instanceId = 0;
+    let instanceId = 0;
     function newInstance() {
         instanceId += 1;
         return instanceId;
     }
     
     function factory(config) {
-        var listeners = [],
+        let listeners = [],
             queue = [],
             interval = 0,
             timer,
@@ -54,11 +54,11 @@ define([
             }
         }
         function processPending() {
-            var processing = queue;
+            const processing = queue;
             queue = [];
-            processing.forEach(function (item) {
+            processing.forEach((item) => {
                 //console.log('processing ' + item.message.type, instanceId, item);
-                listeners.forEach(function (listener) {
+                listeners.forEach((listener) => {
                     if (testListener(item.message, listener.test)) {
                         //console.log('handling ' + item.message.type, instanceId, item);
                         letListenerHandle(item.message, listener.handle);
@@ -75,7 +75,7 @@ define([
             if (timer) {
                 return;
             }
-            timer = window.setTimeout(function () {
+            timer = window.setTimeout(() => {
                 timer = null;
                 try {
                     processPending();

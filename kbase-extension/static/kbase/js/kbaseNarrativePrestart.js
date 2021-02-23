@@ -10,22 +10,22 @@ define(
         'common/runtime',
         'api/auth'
     ],
-    function(
+    (
         KBWidget,
         bootstrap,
         $,
         Config,
         Runtime,
         Auth
-    ) {
+    ) => {
         'use strict';
 
         function loadDomEvents() {
 
             // bind menubar buttons
-            $('#kb-save-btn').click(function() {
+            $('#kb-save-btn').click(() => {
                 if (Jupyter && Jupyter.notebook) {
-                    var narrName = Jupyter.notebook.notebook_name;
+                    const narrName = Jupyter.notebook.notebook_name;
                     // we do not allow users to leave their narratives untitled
                     if (narrName.trim().toLowerCase() === 'untitled' || narrName.trim().length === 0) {
                         Jupyter.save_widget.rename_notebook({ notebook: Jupyter.notebook }); //"Please name your Narrative before saving.", false);
@@ -34,22 +34,22 @@ define(
                     }
                 }
             });
-            $('#kb-kernel-int-btn').click(function() {
+            $('#kb-kernel-int-btn').click(() => {
                 if (Jupyter && Jupyter.notebook && Jupyter.notebook.kernel) {
                     Jupyter.notebook.kernel.interrupt();
                 }
             });
-            $('#kb-kernel-ref-btn').click(function() {
+            $('#kb-kernel-ref-btn').click(() => {
                 if (Jupyter && Jupyter.notebook && Jupyter.notebook.kernel) {
                     Jupyter.notebook.kernel.restart();
                 }
             });
-            $('#kb-kernel-rec-btn').click(function() {
+            $('#kb-kernel-rec-btn').click(() => {
                 if (Jupyter && Jupyter.notebook && Jupyter.notebook.kernel) {
                     Jupyter.notebook.kernel.reconnect();
                 }
             });
-            $('#kb-del-btn').click(function() {
+            $('#kb-del-btn').click(() => {
                 if (Jupyter && Jupyter.notebook) {
                     Jupyter.notebook.delete_cell();
                 }
@@ -57,8 +57,8 @@ define(
             $('#kb-jira-btn').attr('href', Config.url('submit_jira_ticket') + '%20' + Config.get('version'));
             $('#kb-status-btn').attr('href', Config.url('status_page'));
 
-            $('#kb-add-code-cell').click(function() {
-                    var data = {
+            $('#kb-add-code-cell').click(() => {
+                    const data = {
                         type: 'code',
                         language: 'python'
                     };
@@ -71,7 +71,7 @@ define(
                     }
                 });
 
-            $('#kb-add-md-cell').click(function() {
+            $('#kb-add-md-cell').click(() => {
                     Jupyter.narrative.insertAndSelectCellBelow('markdown');
                 })
                 .tooltip({
@@ -81,7 +81,7 @@ define(
                     }
                 });
 
-            $('#kb-side-toggle-in').click(function() {
+            $('#kb-side-toggle-in').click(() => {
                 Jupyter.narrative.toggleSidePanel();
             });
         }
@@ -101,7 +101,7 @@ define(
                 if (!Jupyter || !Jupyter.notebook || !Jupyter.notebook.kernel) {
                     return false;
                 }
-                var code = "";
+                let code = "";
                 if (window._kb_failed_once === false) {
                     code += "from biokbase.narrative.common import kblogging\n";
                     window._kb_failed_once = true;
@@ -147,11 +147,11 @@ define(
              * @param what  (string) What happened
              */
             window.KBFatal = function(where, what) {
-                var res = KBFail(true, where, what);
+                const res = KBFail(true, where, what);
 
-                var version = Config.get('version') || 'unknown';
-                var hash = Config.get('git_commit_hash') || 'unknown';
-                var full_version = 'unknown';
+                const version = Config.get('version') || 'unknown';
+                const hash = Config.get('git_commit_hash') || 'unknown';
+                let full_version = 'unknown';
                 if (version !== 'unknown') {
                     if (hash === 'unknown') {
                         full_version = version;
@@ -203,7 +203,7 @@ define(
                                         .text("Note: the Narrative may not work properly until this error is fixed"))
                                     .append($('<button type="button" data-dismiss="modal">')
                                         .addClass('btn btn-default')
-                                        .append('Close').click(function() {
+                                        .append('Close').click(() => {
                                             $fatal.modal('close');
                                         })
                                     )))));
@@ -217,8 +217,8 @@ define(
 
         function loadJupyterEvents() {
             // Kickstart the Narrative loading routine once the notebook is loaded.
-            $([Jupyter.events]).on('app_initialized.NotebookApp', function () {
-                require(['kbaseNarrative'], function (Narrative) {
+            $([Jupyter.events]).on('app_initialized.NotebookApp', () => {
+                require(['kbaseNarrative'], (Narrative) => {
 
                     Jupyter.narrative = new Narrative();
                     Jupyter.narrative.init();
@@ -239,8 +239,8 @@ define(
                      */
                     Jupyter.keyboard_manager.actions.register({
                         handler: function (env, event) {
-                            var index = env.notebook.get_selected_index();
-                            var cell = env.notebook.get_cell(index);
+                            const index = env.notebook.get_selected_index();
+                            const cell = env.notebook.get_cell(index);
                             if (cell.at_bottom() && index !== (env.notebook.ncells() - 1)) {
                                 if (event) {
                                     event.preventDefault();
@@ -249,7 +249,7 @@ define(
                                 env.notebook.select_next(true);
                                 if (!env.notebook.get_selected_cell().metadata['kb-cell']) {
                                     env.notebook.edit_mode();
-                                    var cm = env.notebook.get_selected_cell().code_mirror;
+                                    const cm = env.notebook.get_selected_cell().code_mirror;
                                     cm.setCursor(0, 0);
                                 }
                             }
@@ -261,7 +261,7 @@ define(
 
                     Jupyter.keyboard_manager.actions.register({
                         handler: function (env, event) {
-                            var index = env.notebook.get_selected_index(),
+                            let index = env.notebook.get_selected_index(),
                                 cell = env.notebook.get_cell(index),
                                 cm = env.notebook.get_selected_cell().code_mirror,
                                 cur = cm.getCursor();
@@ -285,8 +285,8 @@ define(
                 });
             });
 
-            $([Jupyter.events]).on('kernel_ready.Kernel', function () {
-                let auth = Auth.make({url: Config.url('auth')});
+            $([Jupyter.events]).on('kernel_ready.Kernel', () => {
+                const auth = Auth.make({url: Config.url('auth')});
                 Jupyter.notebook.kernel.execute(
                     'import os;' +
                     'os.environ["KB_AUTH_TOKEN"]="' + auth.getAuthToken() + '";' +
@@ -296,7 +296,7 @@ define(
         }
 
         function initializeRuntime() {
-            var runtime = Runtime.make();
+            const runtime = Runtime.make();
             runtime.setEnv('workspaceId', Config.get('workspaceId'));
         }
 

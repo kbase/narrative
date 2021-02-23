@@ -13,18 +13,18 @@
 
         init: function(options) {
             this._super(options);
-            var self = this;
-            var ws = options.ws;
-            var ids = options.ids;            
+            const self = this;
+            const ws = options.ws;
+            const ids = options.ids;            
 
-            var container = this.$elem;
+            const container = this.$elem;
 
             container.loading();
-            var p = kb.ws.get_objects([{workspace: ws, name: ids[0]},{workspace: ws, name: ids[1]}]);
-            $.when(p).done(function(data){
+            const p = kb.ws.get_objects([{workspace: ws, name: ids[0]},{workspace: ws, name: ids[1]}]);
+            $.when(p).done((data)=> {
                     container.rmLoading();
                     buildTable(data)
-            }).fail(function(e){
+            }).fail((e)=> {
                 container.rmLoading();
                 container.append('<div class="alert alert-danger">'+
                                 e.error.message+'</div>')
@@ -33,18 +33,18 @@
 
             function buildTable(data) {
                 // setup tabs
-                var pcTable = $('<table class="table table-bordered table-striped" style="width: 100%;">');
+                const pcTable = $('<table class="table table-bordered table-striped" style="width: 100%;">');
 		container.append(pcTable);
 
-		var rxnmap = {};
+		const rxnmap = {};
 
-                var rxnlist1 = data[0].data.FBAReactionVariables;
+                const rxnlist1 = data[0].data.FBAReactionVariables;
 		for (var i = 0; i < rxnlist1.length; i++) {
 		    var rxnstuff = rxnlist1[i].modelreaction_ref.split("/");
 		    rxnmap[rxnstuff[5]] = [rxnlist1[i].value,undefined];
 		}
 
-                var rxnlist2 = data[1].data.FBAReactionVariables;
+                const rxnlist2 = data[1].data.FBAReactionVariables;
 		for (var i = 0; i < rxnlist2.length; i++) {
 		    var rxnstuff = rxnlist2[i].modelreaction_ref.split("/");
 		    if (rxnstuff[5] in rxnmap) {
@@ -54,13 +54,13 @@
 		    }
 		}
 
-		var pcdata = [];
+		const pcdata = [];
 
-		for (var rxn in rxnmap) {
+		for (const rxn in rxnmap) {
 		    pcdata.push([rxn, rxnmap[rxn][0], rxnmap[rxn][1], Math.abs(rxnmap[rxn][0] - rxnmap[rxn][1])]);
 		}
 
-                var tableSettings = {
+                const tableSettings = {
                      "sPaginationType": "bootstrap",
                      "iDisplayLength": 10,
                      "aaData": pcdata,
@@ -76,7 +76,7 @@
                          "sSearch": "Search: "
                      }
                 }
-                var table = pcTable.dataTable(tableSettings);
+                const table = pcTable.dataTable(tableSettings);
 
 	    }
     

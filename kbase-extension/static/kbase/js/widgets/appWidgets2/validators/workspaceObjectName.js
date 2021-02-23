@@ -2,11 +2,11 @@ define([
     'bluebird',
     'kb_service/utils',
     'kb_service/client/workspace'
-], function(Promise, serviceUtils, Workspace) {
+], (Promise, serviceUtils, Workspace) => {
     'use strict';
 
     function getObjectInfo(workspaceId, objectName, authToken, serviceUrl) {
-        var workspace = new Workspace(serviceUrl, {
+        const workspace = new Workspace(serviceUrl, {
             token: authToken
         });
 
@@ -14,7 +14,7 @@ define([
             objects: [{ wsid: workspaceId, name: objectName }],
             ignoreErrors: 1
         })
-            .then(function(data) {
+            .then((data) => {
                 if (data[0]) {
                     return serviceUtils.objectInfoToObject(data[0]);
                 }
@@ -26,9 +26,9 @@ define([
     }
 
     function validateWorkspaceObjectName(value, constraints, options) {
-        var messageId, shortMessage, errorMessage, diagnosis = 'valid';
+        let messageId, shortMessage, errorMessage, diagnosis = 'valid';
 
-        return Promise.try(function() {
+        return Promise.try(() => {
             if (!value) {
                 if (constraints.required) {
                     messageId = 'required-missing';
@@ -55,10 +55,10 @@ define([
                 errorMessage = 'an object name may not exceed 255 characters in length';
             } else if (constraints.shouldNotExist) {
                 return getObjectInfo(options.workspaceId, value, options.authToken, options.workspaceServiceUrl)
-                    .then(function(objectInfo) {
+                    .then((objectInfo) => {
                         if (objectInfo) {
-                            var type = objectInfo.typeModule + '.' + objectInfo.typeName,
-                                matchingType = constraints.types.some(function(typeId) {
+                            const type = objectInfo.typeModule + '.' + objectInfo.typeName,
+                                matchingType = constraints.types.some((typeId) => {
                                     if (typeId === type) {
                                         return true;
                                     }
@@ -77,7 +77,7 @@ define([
                     });
             }
         })
-            .then(function() {
+            .then(() => {
                 return {
                     isValid: errorMessage ? false : true,
                     messageId: messageId,

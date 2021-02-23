@@ -11,26 +11,26 @@
 define([
     './unodep',
     'common/runtime'
-], function(
+], (
     utils,
     Runtime
-) {
+) => {
     'use strict';
 
 
     function factory(config) {
-        var allStates = config.states,
+        let allStates = config.states,
             initialState = config.initialState,
             fallbackState = config.fallbackState,
             currentState,
             api,
             timer, newStateHandler = config.onNewState;
 
-        var runtime = Runtime.make();
+        const runtime = Runtime.make();
 
         // We get our own bus for emitting state-change events
         // on. This lets us cleanly disengage when we are done.
-        var busConnection = runtime.bus().connect(),
+        const busConnection = runtime.bus().connect(),
             bus = busConnection.channel(null);
 
         /*
@@ -49,7 +49,7 @@ define([
             if (timer) {
                 return;
             }
-            timer = window.setTimeout(function() {
+            timer = window.setTimeout(() => {
                 try {
                     timer = null;
                     newStateHandler(api);
@@ -60,7 +60,7 @@ define([
         }
 
         function findState(stateToFind) {
-            var foundStates = allStates.filter(function(stateDef) {
+            const foundStates = allStates.filter((stateDef) => {
                 return utils.isEqual(stateToFind, stateDef.state);
             });
             if (foundStates.length === 1) {
@@ -74,10 +74,10 @@ define([
         }
 
         function doMessages(changeType) {
-            var state = currentState;
+            const state = currentState;
             if (state.on && state.on[changeType]) {
                 if (state.on[changeType].messages) {
-                    state.on[changeType].messages.forEach(function(msg) {
+                    state.on[changeType].messages.forEach((msg) => {
                         if (msg.emit) {
                             bus.emit(msg.emit, msg.message);
                         } else if (msg.send) {
@@ -101,7 +101,7 @@ define([
         }
 
         function findNextState(stateList, stateToFind) {
-            var foundStates = stateList.filter(function(state) {
+            const foundStates = stateList.filter((state) => {
                 if (utils.isEqual(state, stateToFind)) {
                     return true;
                 }
@@ -120,13 +120,13 @@ define([
                 // to transition. Or someone is missing something.
                 return;
             }
-            var state = findNextState(currentState.next, nextState);
+            const state = findNextState(currentState.next, nextState);
             if (!state) {
                 console.error('Cannot not find new state', nextState, currentState);
                 throw new Error('Cannot find the new state');
             }
 
-            var newState = findState(state);
+            const newState = findState(state);
             if (!newState) {
                 throw new Error('Next state found, but that state does not exist');
             }
@@ -147,8 +147,8 @@ define([
         }
 
         function updateState(nextState) {
-            var updatedState = JSON.parse(JSON.stringify(currentState.state));
-            Object.keys(nextState).forEach(function(key) {
+            const updatedState = JSON.parse(JSON.stringify(currentState.state));
+            Object.keys(nextState).forEach((key) => {
                 updatedState[key] = nextState[key];
             });
             newState(updatedState);
@@ -165,7 +165,7 @@ define([
             if (!startingState) {
                 startingState = initialState;
             }
-            var state = findState(startingState);
+            const state = findState(startingState);
             if (!state) {
                 console.error('FSM: initial state could not be found', startingState);
                 throw new Error('Cannot find initial state');

@@ -38,7 +38,7 @@ define (
 		'geometry_rectangle',
 		'geometry_point',
 		'geometry_size'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -48,7 +48,7 @@ define (
 		geometry_rectangle,
 		geometry_point,
 		geometry_size
-	) {
+	) => {
 
     'use strict';
 
@@ -78,7 +78,7 @@ define (
                 return [0,0];
             }
 
-            return this.dataset().map(function(d) { return d.bar });
+            return this.dataset().map((d) => { return d.bar });
         },
 
         defaultYDomain : function defaultYDomain () {
@@ -87,9 +87,9 @@ define (
                 return [0,0];
             }
 
-            var min = 0.9 * d3.min(
+            let min = 0.9 * d3.min(
                     this.dataset().map(
-                        function(d) {
+                        (d) => {
                             if ($.isArray(d.value)) {
                                 if (d.stacked) {
                                     return d3.sum(d.value);
@@ -113,7 +113,7 @@ define (
                 min,
                 1.1 * d3.max(
                     this.dataset().map(
-                        function(d) {
+                        (d) => {
                             if ($.isArray(d.value)) {
                                 if (d.stacked) {
                                     return d3.sum(d.value);
@@ -133,9 +133,9 @@ define (
 
         extractLegend : function extractLegend (dataset) {
 
-            var legend = [];
+            const legend = [];
             dataset.forEach(
-                function(bar, idx) {
+                (bar, idx) => {
                     if (! $.isArray(bar.color) ) {
                         legend.push(
                             {
@@ -157,22 +157,22 @@ define (
                 return;
             }
 
-            var bounds = this.chartBounds();
-            var $bar = this;
+            const bounds = this.chartBounds();
+            const $bar = this;
 
-            var transitionTime = this.initialized
+            const transitionTime = this.initialized
                 ? this.options.transitionTime
                 : 0;
 
-            var funkyTown = function(barScale, d, i, init) {
+            const funkyTown = function(barScale, d, i, init) {
 
                 if (init) {
                     this
                         //.attr('width', 0)
                         //.attr('height', 0)
                         //.attr('x', bounds.origin.x + bounds.size.width)
-                        .attr('x', function(b, j) {
-                            var xId = d.bar;
+                        .attr('x', (b, j) => {
+                            let xId = d.bar;
                             if ($bar.options.useIDMapping) {
                                 xId = $bar.xIDMap()[xId];
                             }
@@ -186,9 +186,9 @@ define (
                 else {
 
                     this
-                        .attr('x', function (b, j) {
+                        .attr('x', (b, j) => {
 
-                            var xId = d.bar;
+                            let xId = d.bar;
                             if ($bar.options.useIDMapping) {
                                 xId = $bar.xIDMap()[xId];
                             }
@@ -196,16 +196,16 @@ define (
                             return $bar.xScale()(xId) + barScale(d.stacked ? 0 : j);
                         } )
                         .attr('opacity', 1)
-                        .attr('y', function (b, bi) {
+                        .attr('y', (b, bi) => {
 
-                            var barHeight = b;
+                            let barHeight = b;
                             if (d.stacked && $.isArray(d.value)) {
                                 barHeight = d3.sum(d.value.slice(0,bi+1));
                             }
 
                             return $bar.yScale()(Math.max(0,barHeight));
                         } )
-                        .attr('height', function(b, bi) {
+                        .attr('height', (b, bi) => {
                             return Math.abs($bar.yScale()(0) - $bar.yScale()(b))
                         })
                 }
@@ -213,19 +213,19 @@ define (
                 this
 
                     .attr('width', barScale.rangeBand())
-                    .attr('fill', function(b,j) { return d.color[ j % d.color.length ] })
-                    .attr('stroke', function(b,j) { return d.stroke ? d.stroke[ j % d.stroke.length ] : 'none' })
-                    .attr('stroke-width', function(b,j) { return d.strokeWidth || $bar.options.strokeWidth })
-                    .attr('data-fill', function(b,j) { return d.color[ j % d.color.length ] });
+                    .attr('fill', (b,j) => { return d.color[ j % d.color.length ] })
+                    .attr('stroke', (b,j) => { return d.stroke ? d.stroke[ j % d.stroke.length ] : 'none' })
+                    .attr('stroke-width', (b,j) => { return d.strokeWidth || $bar.options.strokeWidth })
+                    .attr('data-fill', (b,j) => { return d.color[ j % d.color.length ] });
 
                 return this;
             };
 
-            var mouseAction = function(d,i) {
+            const mouseAction = function(d,i) {
 
                 this.on('mouseover', function(b,j) {
 
-                    var xId = d.bar;
+                    let xId = d.bar;
                     if ($bar.options.useIDMapping) {
                         xId = $bar.xIDMap()[xId];
                     }
@@ -249,16 +249,16 @@ define (
                                 }
                         );
 
-                        var xIdLabel = xId;
+                        let xIdLabel = xId;
                         if (d.value.length > 1) {
                             xIdLabel += '[' + (j + 1) + ']';
                         }
 
-                        var label = d.label != undefined
+                        const label = d.label != undefined
                             ? d.label[j % d.label.length]
                             : xIdLabel + ' is ' + d.value[j % d.value.length];//'pop up information!';
 
-                        var tooltip = d.tooltip
+                        const tooltip = d.tooltip
                             ? d.tooltip[j % d.tooltip.length]
                             : label;
 
@@ -275,8 +275,8 @@ define (
                     if ($bar.options.overColor) {
                         d3.select(this)
                             .transition()
-                            .attr('stroke', function(c) {return d.stroke ? d.stroke[ j % d.stroke.length ] : 'none' })
-                            .attr('stroke-width', function(c) { return d.strokeWidth || $bar.options.strokeWidth })
+                            .attr('stroke', (c) => {return d.stroke ? d.stroke[ j % d.stroke.length ] : 'none' })
+                            .attr('stroke-width', (c) => { return d.strokeWidth || $bar.options.strokeWidth })
 
                         $bar.data('D3svg').select('.yPadding').selectAll('g g text')
                             .attr("fill",
@@ -297,7 +297,7 @@ define (
                 return this;
             };
 
-            var groupAction = function() {
+            const groupAction = function() {
                 this.each(function (d, i) {
 
                     if (d.value != undefined && ! $.isArray(d.value)) {
@@ -325,22 +325,22 @@ define (
                     //    barDomain = [d3.sum(d.value)];
                     //}
 
-                    var barDomain = [0];
+                    const barDomain = [0];
                     if (! d.stacked) {
-                        var idx = 0;
+                        let idx = 0;
 
                         for (idx = 0; idx < d.value.length; idx++) {
                             barDomain.push(idx);
                         }
                     }
 
-                    var barScale = d3.scale.ordinal()
+                    const barScale = d3.scale.ordinal()
                         .domain(barDomain)
                         //.range([0,$bar.xScale().rangeBand()])
                         .rangeBands([0,$bar.xScale().rangeBand()], 0.05)
                     ;
 
-                    var barScale2 = d3.scale.ordinal()
+                    const barScale2 = d3.scale.ordinal()
                         .domain(barDomain)
                         //.range([85])
                         .rangeBands([0,85], 0.05)
@@ -373,7 +373,7 @@ define (
             }
 
             if (this.options.hGrid && this.yScale) {
-                var yAxis =
+                const yAxis =
                     d3.svg.axis()
                     .scale(this.yScale())
                     .orient('left')
@@ -381,7 +381,7 @@ define (
                     .outerTickSize(0)
                     .tickFormat('');
 
-                var gyAxis = this.D3svg().select(this.region('chart')).select('.yAxis');
+                let gyAxis = this.D3svg().select(this.region('chart')).select('.yAxis');
 
                 if (gyAxis[0][0] == undefined) {
                     gyAxis = this.D3svg().select(this.region('chart'))
@@ -394,7 +394,7 @@ define (
                 gyAxis.selectAll('line').style('stroke', 'lightgray');
             }
 
-            var chart = this.D3svg().select( this.region('chart') ).selectAll('.barGroup');
+            const chart = this.D3svg().select( this.region('chart') ).selectAll('.barGroup');
 
             chart
                 .data(this.dataset(), $bar.uniqueness() )
@@ -419,7 +419,7 @@ define (
                                 d3.select(this).selectAll('.barcharBar')
                                     .transition()
                                     .duration(transitionTime)
-                                        .attr('y', function (d) {
+                                        .attr('y', (d) => {
                                             /*var x = d3.select(this).attr('x');
                                             var xDest = x < bounds.origin.x + bounds.size.width / 2
                                                 ? bounds.origin.x
@@ -436,7 +436,7 @@ define (
             if (this.options.zeroLine) {
 
 
-                var zeroLine = this.D3svg().select( this.region('chart') ).selectAll('.zeroLine');
+                const zeroLine = this.D3svg().select( this.region('chart') ).selectAll('.zeroLine');
 
                 zeroLine
                     .data([0])

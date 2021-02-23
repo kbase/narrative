@@ -1,11 +1,11 @@
 /*global define */
 /*jslint white:true,browser:true*/
-define(['./ajax', './exceptions'], function (ajax, exceptions) {
+define(['./ajax', './exceptions'], (ajax, exceptions) => {
     'use strict';
 
     function request(url, module, func, params, numRets, options) {
         // Argh -- a poor man's json rpc.
-        var rpc = {
+        const rpc = {
             params: params,
             method: module + '.' + func,
             version: '1.1',
@@ -27,16 +27,16 @@ define(['./ajax', './exceptions'], function (ajax, exceptions) {
             data: JSON.stringify(rpc),
             header: header
         })
-            .then(function (response) {
-                var data = JSON.parse(response);
+            .then((response) => {
+                const data = JSON.parse(response);
                 if (numRets === 1) {
                     return data.result[0];
                 }
                 return data.result;
             })
-            .catch(function (err) {
+            .catch((err) => {
                 if (err.xhr && err.xhr.responseText) {
-                    var data;
+                    let data;
                     try {
                         data = JSON.parse(err.xhr.responseText);
                         // follows a weird convention. In any case, let us throw
@@ -51,7 +51,7 @@ define(['./ajax', './exceptions'], function (ajax, exceptions) {
                     // It is assumbed to be a newline separated list of strings
                     // the penultimate one of which is a simple string expressing
                     // the exception.
-                    var maybeStackTrace,
+                    let maybeStackTrace,
                         maybeErrorName;
                         
                     if (data.error && data.error.error && typeof data.error.error === 'string') {                    

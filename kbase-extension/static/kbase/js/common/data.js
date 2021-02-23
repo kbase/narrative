@@ -2,16 +2,16 @@ define([
     'kb_service/client/workspace',
     'kb_service/utils',
     'common/runtime'
-], function(Workspace, ServiceUtils, Runtime) {
+], (Workspace, ServiceUtils, Runtime) => {
 
     function filterObjectInfoByType(objects, types) {
-        return objects.map(function(objectInfo) {
-                var type = objectInfo.typeModule + '.' + objectInfo.typeName;
+        return objects.map((objectInfo) => {
+                const type = objectInfo.typeModule + '.' + objectInfo.typeName;
                 if (types.indexOf(type) >= 0 || types.indexOf(objectInfo.typeModule) >= 0) {
                     return objectInfo;
                 }
             })
-            .filter(function(item) {
+            .filter((item) => {
                 return item !== undefined;
             });
     }
@@ -37,12 +37,12 @@ define([
     // }
 
     function getObjectsByTypes(types, connection, onUpdated) {
-        var listener = connection.channel('data').plisten({
+        const listener = connection.channel('data').plisten({
             key: {
                 type: 'workspace-data-updated'
             },
             handle: function(message) {
-                var result = {
+                const result = {
                     data: filterObjectInfoByType(message.objectInfo, types),
                     timestamp: message.timestamp
                 }
@@ -50,8 +50,8 @@ define([
             }
         });
         return listener.promise
-            .then(function(message) {
-                var result = {
+            .then((message) => {
+                const result = {
                     data: filterObjectInfoByType(message.objectInfo, types),
                     timestamp: message.timestamp
                 }
@@ -64,7 +64,7 @@ define([
      * structure.
      */
     function getObjectsByRef(refs) {
-        var runtime = Runtime.make(),
+        const runtime = Runtime.make(),
             authToken = runtime.authToken(),
             workspaceServiceUrl = runtime.config('services.workspace.url'),
             workspace = new Workspace(workspaceServiceUrl, {
@@ -72,15 +72,15 @@ define([
             });
 
         // assume (for now) that the refs are valid and not random strings or numbers or objects.
-        var refList = [];
-        refs.forEach(function(ref) {
+        const refList = [];
+        refs.forEach((ref) => {
             refList.push({'ref': ref});
         });
         return workspace.get_object_info_new({'objects': refList})
-            .then(function(infos) {
-                var objInfos = {};
-                infos.forEach(function(obj) {
-                    var infoObj = ServiceUtils.objectInfoToObject(obj);
+            .then((infos) => {
+                const objInfos = {};
+                infos.forEach((obj) => {
+                    const infoObj = ServiceUtils.objectInfoToObject(obj);
                     // For the purpose of testing, add a data palette ref here.
                     // Just make it its own ref.
                     infoObj.dataPaletteRef = infoObj.ref;

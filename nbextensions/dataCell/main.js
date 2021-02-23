@@ -16,7 +16,7 @@ define([
     'kb_common/html',
     './widgets/dataCell',
     'custom/custom'
-], function(
+], (
     Promise,
     $,
     Uuid,
@@ -30,15 +30,15 @@ define([
     jupyter,
     html,
     DataCell
-) {
+) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div');
 
     function specializeCell(cell) {
         cell.minimize = function() {
-            var inputArea = this.input.find('.input_area').get(0),
+            const inputArea = this.input.find('.input_area').get(0),
                 outputArea = this.element.find('.output_wrapper'),
                 showCode = utils.getCellMeta(cell, 'kbase.dataCell.user-settings.showCodeInputArea');
 
@@ -49,7 +49,7 @@ define([
         };
 
         cell.maximize = function() {
-            var inputArea = this.input.find('.input_area').get(0),
+            const inputArea = this.input.find('.input_area').get(0),
                 outputArea = this.element.find('.output_wrapper'),
                 showCode = utils.getCellMeta(cell, 'kbase.dataCell.user-settings.showCodeInputArea');
 
@@ -67,7 +67,7 @@ define([
          * narrative configuration.
          */
         cell.renderIcon = function() {
-            var inputPrompt = this.element[0].querySelector('[data-element="icon"]'),
+            const inputPrompt = this.element[0].querySelector('[data-element="icon"]'),
                 type = Props.getDataItem(cell.metadata, 'kbase.dataCell.objectInfo.type');
 
             if (inputPrompt) {
@@ -80,13 +80,13 @@ define([
         };
 
         cell.getIcon = function() {
-            var type = Props.getDataItem(cell.metadata, 'kbase.dataCell.objectInfo.type'),
+            const type = Props.getDataItem(cell.metadata, 'kbase.dataCell.objectInfo.type'),
                 icon = AppUtils.makeToolbarTypeIcon(type);
             return icon;
         };
 
         cell.toggleCodeInputArea = function() {
-            var codeInputArea = this.input.find('.input_area')[0];
+            const codeInputArea = this.input.find('.input_area')[0];
             if (codeInputArea) {
                 codeInputArea.classList.toggle('-show');
                 utils.setCellMeta(cell, 'kbase.dataCell.user-settings.showCodeInputArea', this.isCodeShowing(), true);
@@ -121,7 +121,7 @@ define([
         utils.setCellMeta(cell, 'kbase.dataCell.user-settings.showCodeInputArea', false);
 
         // Create our own input area for interaction with the user.
-        var cellInputNode = cell.input[0],
+        let cellInputNode = cell.input[0],
             kbaseNode,
             ui = UI.make({ node: cellInputNode });
 
@@ -131,7 +131,7 @@ define([
 
         cellInputNode.appendChild(kbaseNode);
 
-        var dataCell = DataCell.make({
+        const dataCell = DataCell.make({
             cell: cell
         });
         dataCell.bus.emit('run', {
@@ -148,8 +148,8 @@ define([
     }
 
     function upgradeCell(cell, setupData) {
-        return Promise.try(function() {
-            var meta = cell.metadata,
+        return Promise.try(() => {
+            const meta = cell.metadata,
                 cellId = setupData.cellId || (new Uuid(4).format());
 
             // Set the initial metadata for the output cell.
@@ -173,18 +173,18 @@ define([
             // We just need to generate, set, and execute the output
             // the first time (for now).
 
-            var tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag;
+            let tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag;
             if (!tag) {
                 tag = 'release';
             }
-            var objInfo = setupData.objectInfo;
-            var ref = objInfo.ref_path;
-            var wsId = objInfo.ws_id || objInfo.wsid;
+            const objInfo = setupData.objectInfo;
+            let ref = objInfo.ref_path;
+            const wsId = objInfo.ws_id || objInfo.wsid;
             if (!ref) {
                 ref = wsId + '/' + objInfo.id + '/' + objInfo.version;
             }
-            var title = (objInfo && objInfo.name) ? objInfo.name : 'Data Viewer';
-            var cellText = PythonInterop.buildDataWidgetRunner(ref, cellId, title, tag);
+            const title = (objInfo && objInfo.name) ? objInfo.name : 'Data Viewer';
+            const cellText = PythonInterop.buildDataWidgetRunner(ref, cellId, title, tag);
 
             cell.set_text(cellText);
             cell.execute();
@@ -193,7 +193,7 @@ define([
             utils.setCellMeta(cell, 'kbase.dataCell.user-settings.showCodeInputArea', false);
 
             utils.setCellMeta(cell, 'kbase.attributes.title', setupData.objectInfo.name);
-            var subtitle = 'v' + String(setupData.objectInfo.version) + ' - ' + setupData.objectInfo.type;
+            const subtitle = 'v' + String(setupData.objectInfo.version) + ' - ' + setupData.objectInfo.type;
             utils.setCellMeta(cell, 'kbase.attributes.subtitle', subtitle, true);
 
             setupCell(cell);
@@ -201,16 +201,16 @@ define([
     }
 
     function initializeExtension() {
-        $([Jupyter.events]).on('insertedAtIndex.Cell', function(event, payload) {
-            var cell = payload.cell;
-            var setupData = payload.data;
-            var jupyterCellType = payload.type;
+        $([Jupyter.events]).on('insertedAtIndex.Cell', (event, payload) => {
+            const cell = payload.cell;
+            const setupData = payload.data;
+            const jupyterCellType = payload.type;
 
             if (jupyterCellType === 'code' &&
                 setupData &&
                 setupData.type === 'data') {
                 upgradeCell(cell, setupData)
-                    .catch(function(err) {
+                    .catch((err) => {
                         console.error('ERROR creating cell', err);
                         // delete cell.
                         $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
@@ -220,7 +220,7 @@ define([
             }
         });
 
-        Jupyter.notebook.get_cells().forEach(function(cell) {
+        Jupyter.notebook.get_cells().forEach((cell) => {
             try {
                 setupCell(cell);
             } catch (ex) {
@@ -234,7 +234,7 @@ define([
         if (Jupyter.notebook._fully_loaded) {
             initializeExtension();
         } else {
-            $([Jupyter.events]).one('notebook_loaded.Notebook', function () {
+            $([Jupyter.events]).one('notebook_loaded.Notebook', () => {
                 initializeExtension();
             });
         }
@@ -244,7 +244,7 @@ define([
         // This is the sole ipython/jupyter api call
         load_ipython_extension: load
     };
-}, function(err) {
+}, (err) => {
     'use strict';
     // NB we should probably not be handling individual loading errors. If the 
     // data cell couldn't load it is not recoverable -- the user should either reload the

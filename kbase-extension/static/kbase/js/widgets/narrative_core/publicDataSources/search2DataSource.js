@@ -96,8 +96,8 @@ define([
         }
 
         referenceGenomeSearch({source, query, page, pageSize}) {
-            var offset = page * pageSize;
-            var limit = pageSize;
+            const offset = page * pageSize;
+            const limit = pageSize;
             return Promise.all([
                 this.referenceGenomeTotal({source}),
                 this.referenceGenomeDataSearch({source, query, offset, limit})
@@ -168,7 +168,7 @@ define([
                     }
 
                     // Prepare page number
-                    var page;
+                    let page;
                     if (query.page) {
                         page = query.page - 1;
                     } else {
@@ -177,8 +177,8 @@ define([
                     this.page = page;
 
                     // Prepare search input
-                    var queryInput = query.input;
-                    var newQuery;
+                    const queryInput = query.input;
+                    let newQuery;
                     if (!queryInput) {
                         newQuery = null;
                     } else if (queryInput === '*') {
@@ -187,7 +187,7 @@ define([
                         // strip off "*" suffix if it was added by the code which 
                         // calls this method.
                         newQuery = queryInput.split(/[ ]+/)
-                            .map(function (term) {
+                            .map((term) => {
                                 if (term.charAt(term.length-1) === '*') {
                                     return term.slice(0, -1);
                                 } else {
@@ -198,9 +198,9 @@ define([
                     this.queryExpression = newQuery;
 
                     // Create state for this specific search
-                    var now = new Date().getTime();
+                    const now = new Date().getTime();
 
-                    var queryState = {
+                    const queryState = {
                         query: query,
                         page: page,
                         started: now,
@@ -226,10 +226,10 @@ define([
                             this.availableData = result.result.hits.map((item) => {
                                 // This call gives us a normalized genome result object.
                                 // In porting this over, we are preserving the field names.
-                                var genomeRecord = parseGenomeSearchResultItem(item);
+                                const genomeRecord = parseGenomeSearchResultItem(item);
     
-                                var name = this.titleTemplate(genomeRecord);
-                                var metadata = common.applyMetadataTemplates(this.metadataTemplates, genomeRecord);
+                                const name = this.titleTemplate(genomeRecord);
+                                const metadata = common.applyMetadataTemplates(this.metadataTemplates, genomeRecord);
                                 return {
                                     info: null,
                                     id: genomeRecord.genome_id,
@@ -257,9 +257,9 @@ define([
 
                     return queryState.promise;
                 })
-                    .finally(function () {
+                    .finally(() => {
                         this.searchState.currentQueryState = null;      
-                    }.bind(this));
+                    });
             }
         },
         setQuery: {
@@ -281,10 +281,10 @@ define([
                         this.availableData = result.result.objects.map(function (item) {
                             // This call gives us a normalized genome result object.
                             // In porting this over, we are preserving the field names.
-                            var genomeRecord = parseGenomeSearchResultItem(item);
+                            const genomeRecord = parseGenomeSearchResultItem(item);
 
-                            var name = this.titleTemplate(genomeRecord);
-                            var metadata = common.applyMetadataTemplates(this.metadataTemplates, genomeRecord);
+                            const name = this.titleTemplate(genomeRecord);
+                            const metadata = common.applyMetadataTemplates(this.metadataTemplates, genomeRecord);
                             return {
                                 info: null,
                                 id: genomeRecord.genome_id,

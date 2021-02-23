@@ -115,7 +115,7 @@ define([
 
     'components/requirejs/require',
     'narrative_paths'
-], function (
+], (
     $,
     Handlebars,
     numeral,
@@ -136,18 +136,18 @@ define([
     utils,
     NarrativeRuntime,
     html
-) {
+) => {
     'use strict';
 
     // Handlebars global configuration. Since these changes affect all usage of handlebars
     // in this app, they should be performed just once.
-    Handlebars.registerHelper('numeral', function(value, format, defaultValue, options) {
+    Handlebars.registerHelper('numeral', (value, format, defaultValue, options) => {
         // This bit is required since Handlebars sends 'options' as the final argument.
         if (!options) {
             options = defaultValue;
             defaultValue = undefined;
         }
-        var missing = false;
+        let missing = false;
         if (typeof value === 'string') {
             if (value.trim().length === 0) {
                 missing = true;
@@ -155,7 +155,7 @@ define([
         } else if (typeof value !== 'number') {
             missing = true;
         }
-        var numeralValue = numeral(value);
+        const numeralValue = numeral(value);
         if (isNaN(numeralValue)) {
             missing = true;
         }
@@ -169,21 +169,21 @@ define([
         }
     });
 
-    Handlebars.registerHelper('lineage', function(value, startAt, startAfter) {
+    Handlebars.registerHelper('lineage', (value, startAt, startAfter) => {
         if (!value || value.length === 0) {
             return 'n/a';
         }
-        var delimiter;
+        let delimiter;
         if (value.indexOf(';') >= 0) {
             delimiter = ';';
         } else {
             delimiter = ',';
         }
-        var lineage = value.split(delimiter)
-            .map(function (item) {
+        let lineage = value.split(delimiter)
+            .map((item) => {
                 return item.trim();
             });
-        var start;
+        let start;
         if (startAt) {
             start = lineage.indexOf(startAt);
             if (start >= 0) {
@@ -196,14 +196,14 @@ define([
             }
         }
         return new Handlebars.SafeString(lineage
-            .map(function (item) {
+            .map((item) => {
                 return Handlebars.Utils.escapeExpression(item.trim());
             })
             .join(' <span style="color: #AAA"> &gt; </span>'));
     });
 
 
-    var t = html.tag,
+    const t = html.tag,
         span = t('span');
 
     /*
@@ -250,7 +250,7 @@ define([
             return;
         }
 
-        var type = cell.metadata &&
+        const type = cell.metadata &&
             cell.metadata['kb-cell'] &&
             cell.metadata['kb-cell']['type'];
 
@@ -282,13 +282,13 @@ define([
     // CELL
 
     (function () {
-        var p = cell.Cell.prototype;
+        const p = cell.Cell.prototype;
 
         // This is how we extend methods.
         (function () {
-            var originalMethod = p.select;
+            const originalMethod = p.select;
             p.select = function () {
-                var wasSelected = originalMethod.apply(this);
+                const wasSelected = originalMethod.apply(this);
                 if (wasSelected) {
                     $(this.element).trigger('selected.cell');
                 }
@@ -298,16 +298,16 @@ define([
 
         // Extend
         (function () {
-            var originalMethod = cell.Cell.prototype.unselect;
+            const originalMethod = cell.Cell.prototype.unselect;
             cell.Cell.prototype.unselect = function (leave_selected) {
-                var wasSelected = originalMethod.apply(this, [leave_selected]);
+                const wasSelected = originalMethod.apply(this, [leave_selected]);
                 $(this.element).trigger('unselected.cell');
                 return wasSelected;
             };
         }());
 
         p.renderMinMax = function () {
-            var $cellNode = $(this.element),
+            let $cellNode = $(this.element),
                 metaToggleMode = utils.getCellMeta(this, 'kbase.cellState.toggleMinMax'),
                 toggleMode = $cellNode.data('toggleMinMax');
 
@@ -341,7 +341,7 @@ define([
         };
 
         p.toggleMinMax = function () {
-            var $cellNode = $(this.element),
+            let $cellNode = $(this.element),
                 toggleMode = $cellNode.data('toggleMinMax') || 'maximized';
 
             switch (toggleMode) {
@@ -368,9 +368,9 @@ define([
         };
 
         (function () {
-            var originalMethod = p.bind_events;
+            const originalMethod = p.bind_events;
             p.bind_events = function () {
-                var $el = $(this.element);
+                const $el = $(this.element);
                 originalMethod.apply(this);
 
                 //                $el.on('toggle.cell', function () {
@@ -383,9 +383,9 @@ define([
                 //                });
 
                 // Universal invocation of cell min max
-                $el.on('toggleMinMax.cell', function () {
+                $el.on('toggleMinMax.cell', () => {
                     this.toggleMinMax();
-                }.bind(this));
+                });
 
                 // This is triggered by the installation of the 'KBase' cell toolbar. Before this event we
                 // cannot safely rely upon the cell toolbar, which provides the min-max ui.
@@ -398,11 +398,11 @@ define([
                 // the notebeook_loaded event and also after setting up
                 // the basic narrController with some info needed by the
                 // cell toolbar (readonly, e.g.)
-                this.events.on('preset_activated.CellToolbar', function (e, data) {
+                this.events.on('preset_activated.CellToolbar', (e, data) => {
                     if (data.name === 'KBase') {
                         this.renderMinMax();
                     }
-                }.bind(this));
+                });
             };
         }());
     }());
@@ -410,17 +410,17 @@ define([
     // RAW CELL
 
     (function () {
-        var p = textCell.RawCell.prototype;
+        const p = textCell.RawCell.prototype;
 
         p.minimize = function () {
-            var $cellNode = $(this.element);
+            const $cellNode = $(this.element);
             $cellNode.find('.inner_cell > div:nth-child(2)').addClass('hidden');
             $cellNode.find('.inner_cell > div:nth-child(3)').addClass('hidden');
             utils.setCellMeta(this, 'kbase.cellState.showTitle', true);
         };
 
         p.maximize = function () {
-            var $cellNode = $(this.element);
+            const $cellNode = $(this.element);
             $cellNode.find('.inner_cell > div:nth-child(2)').removeClass('hidden');
             $cellNode.find('.inner_cell > div:nth-child(3)').removeClass('hidden');
             utils.setCellMeta(this, 'kbase.cellState.showTitle', false);
@@ -429,7 +429,7 @@ define([
         // We need this method because the layout of each type of cell and
         // interactions with min/max can be complex.
         p.renderPrompt = function () {
-            var prompt = this.element[0].querySelector('.input_prompt');
+            const prompt = this.element[0].querySelector('.input_prompt');
             if (!prompt) {
                 return;
             }
@@ -440,7 +440,7 @@ define([
         p.bind_events = function () {
             textCell.TextCell.prototype.bind_events.apply(this);
 
-            var cell = this,
+            const cell = this,
                 $cellNode = $(this.element);
 
             /*
@@ -450,33 +450,33 @@ define([
              * look at the containing cell to see if it has been set yet, and if
              * so will use that (of course listening for these events too.)
              */
-            $cellNode.on('set-title.cell', function (e, title) {
+            $cellNode.on('set-title.cell', (e, title) => {
                 if (title === undefined) {
                     return;
                 }
                 // cell.setCellState('title', title);
                 utils.setCellMeta(cell, 'kbase.cellState.title', title);
-                var $menu = $(cell.celltoolbar.element).find('.button_container');
+                const $menu = $(cell.celltoolbar.element).find('.button_container');
                 $menu.trigger('set-title.toolbar', [title || '']);
                 if (cellType(cell) !== undefined) {
                     $(cell.element).trigger('show-title.cell');
                 }
             });
 
-            $cellNode.on('hide-title.cell', function (e) {
-                var $menu = $(cell.celltoolbar.element).find('.button_container');
+            $cellNode.on('hide-title.cell', (e) => {
+                const $menu = $(cell.celltoolbar.element).find('.button_container');
                 $menu.trigger('hide-title.toolbar');
             });
 
-            $cellNode.on('show-title.cell', function (e) {
-                var $menu = $(cell.celltoolbar.element).find('.button_container');
+            $cellNode.on('show-title.cell', (e) => {
+                const $menu = $(cell.celltoolbar.element).find('.button_container');
                 $menu.trigger('show-title.toolbar');
             });
 
-            $cellNode.on('set-icon.cell', function (e, icon) {
+            $cellNode.on('set-icon.cell', (e, icon) => {
                 // cell.setCellState('icon', icon);
                 utils.setCellMeta(cell, 'kbase.cellState.icon', icon);
-                var $menu = $(cell.celltoolbar.element).find('.button_container');
+                const $menu = $(cell.celltoolbar.element).find('.button_container');
                 $menu.trigger('set-icon.toolbar', [icon]);
             });
 
@@ -490,16 +490,16 @@ define([
              *   to control inside the celltoolbar
              */
             // this.events
-            $cellNode.on('unselected.cell', function () {
-                var $menu = $(cell.celltoolbar.element).find('.button_container');
+            $cellNode.on('unselected.cell', () => {
+                const $menu = $(cell.celltoolbar.element).find('.button_container');
                 // cell.setCellState('selected', false);
                 utils.setCellMeta(cell, 'kbase.cellState.selected', false);
                 $menu.trigger('unselected.toolbar');
             });
 
             // this.events
-            $cellNode.on('selected.cell', function () {
-                var $menu = $(cell.celltoolbar.element).find('.button_container');
+            $cellNode.on('selected.cell', () => {
+                const $menu = $(cell.celltoolbar.element).find('.button_container');
                 utils.setCellMeta(cell, 'kbase.cellState.selected', true);
                 // cell.setCellState('selected', true);
                 $menu.trigger('selected.toolbar');
@@ -510,7 +510,7 @@ define([
             // presets on the celltoobar are loaded via event calls,
             // so are not part of the synchronous process
             // which builds the UI.
-            this.events.on('preset_activated.CellToolbar', function (e, data) {
+            this.events.on('preset_activated.CellToolbar', (e, data) => {
                 if (data.name === 'KBase') {
                     // ensure the icon is set?
                     utils.setCellMeta(this, 'kbase.attributes.icon', 'font');
@@ -524,17 +524,17 @@ define([
                     // TODO: re-enable!
                     // cell.renderToggleState();
                 }
-            }.bind(this));
+            });
         };
     }());
 
     // MARKDOWN CELL
 
     (function () {
-        var p = textCell.MarkdownCell.prototype;
+        const p = textCell.MarkdownCell.prototype;
 
         p.minimize = function () {
-            var $cellNode = $(this.element);
+            const $cellNode = $(this.element);
             $cellNode.find('.inner_cell > div:nth-child(2)').addClass('hidden');
             $cellNode.find('.inner_cell > div:nth-child(3)').addClass('hidden');
             utils.setCellMeta(this, 'kbase.cellState.showTitle', true);
@@ -542,7 +542,7 @@ define([
         };
 
         p.maximize = function () {
-            var $cellNode = $(this.element);
+            const $cellNode = $(this.element);
             $cellNode.find('.inner_cell > div:nth-child(2)').removeClass('hidden');
             $cellNode.find('.inner_cell > div:nth-child(3)').removeClass('hidden');
             utils.setCellMeta(this, 'kbase.cellState.showTitle', false);
@@ -559,7 +559,7 @@ define([
         // We need this method because the layout of each type of cell and
         // interactions with min/max can be complex.
         p.renderPrompt = function () {
-            var prompt = this.element[0].querySelector('.input_prompt');
+            const prompt = this.element[0].querySelector('.input_prompt');
             if (!prompt) {
                 return;
             }
@@ -567,7 +567,7 @@ define([
         };
 
         p.getIcon = function () {
-            var iconColor = 'silver';
+            const iconColor = 'silver';
 
             return span({ style: '' }, [
                 span({ class: 'fa-stack fa-2x', style: { textAlign: 'center', color: iconColor } }, [
@@ -581,20 +581,20 @@ define([
         // NOTE: We need to completely replace the markdown cell bind_events because we
         // need to disable the double-click to edit if in view mode. We would need to unregister
         // the original dbclick event handler, and we can't do that without
-        var originalBindEvents = p.bind_events;
+        const originalBindEvents = p.bind_events;
         p.bind_events = function () {
             originalBindEvents.apply(this);
 
-            var cell = this,
+            const cell = this,
                 $cellNode = $(this.element);
 
             this.element.off('dblclick');
 
-            this.element.on('dblclick', '.text_cell_render', function () {
+            this.element.on('dblclick', '.text_cell_render', () => {
                 if (!NarrativeRuntime.canEdit()) {
                     return;
                 }
-                var cont = cell.unrender();
+                const cont = cell.unrender();
                 if (cont) {
 
                     cell.focus_editor();
@@ -605,7 +605,7 @@ define([
             //  * This is the trick to get the markdown to render, and the edit area
             //  * to disappear, when the user clicks out of the edit area.
             //  */
-            this.code_mirror.on('blur', function () {
+            this.code_mirror.on('blur', () => {
 
                 cell.render();
             });
@@ -617,38 +617,38 @@ define([
              * look at the containing cell to see if it has been set yet, and if
              * so will use that (of course listening for these events too.)
              */
-            $cellNode.on('set-title.cell', function (e, title) {
+            $cellNode.on('set-title.cell', (e, title) => {
                 if (title === undefined) {
                     return;
                 }
                 // cell.setCellState('title', title);
                 utils.setCellMeta(cell, 'kbase.cellState.title', title);
-                var $menu = $(cell.celltoolbar.element).find('.button_container');
+                const $menu = $(cell.celltoolbar.element).find('.button_container');
                 $menu.trigger('set-title.toolbar', [title || '']);
                 if (cellType(cell) !== undefined) {
                     $(cell.element).trigger('show-title.cell');
                 }
             });
 
-            $cellNode.on('hide-title.cell', function (e) {
-                var $menu = $(cell.celltoolbar.element).find('.button_container');
+            $cellNode.on('hide-title.cell', (e) => {
+                const $menu = $(cell.celltoolbar.element).find('.button_container');
                 $menu.trigger('hide-title.toolbar');
             });
 
-            $cellNode.on('show-title.cell', function (e) {
-                var $menu = $(cell.celltoolbar.element).find('.button_container');
+            $cellNode.on('show-title.cell', (e) => {
+                const $menu = $(cell.celltoolbar.element).find('.button_container');
                 $menu.trigger('show-title.toolbar');
             });
 
-            $cellNode.on('set-icon.cell', function (e, icon) {
+            $cellNode.on('set-icon.cell', (e, icon) => {
                 // cell.setCellState('icon', icon);
                 utils.setCellMeta(cell, 'kbase.cellState.icon', icon);
-                var $menu = $(cell.celltoolbar.element).find('.button_container');
+                const $menu = $(cell.celltoolbar.element).find('.button_container');
                 $menu.trigger('set-icon.toolbar', [icon]);
             });
 
-            $cellNode.on('job-state.cell', function (e, data) {
-                var $menu = $(cell.celltoolbar.element).find('.button_container');
+            $cellNode.on('job-state.cell', (e, data) => {
+                const $menu = $(cell.celltoolbar.element).find('.button_container');
                 $menu.trigger('job-state.toolbar', data);
             });
 
@@ -663,22 +663,22 @@ define([
              *   to control inside the celltoolbar
              */
             // this.events
-            $cellNode.on('unselected.cell', function () {
-                var $menu = $(cell.celltoolbar.element).find('.button_container');
+            $cellNode.on('unselected.cell', () => {
+                const $menu = $(cell.celltoolbar.element).find('.button_container');
                 // cell.setCellState('selected', false);
                 utils.setCellMeta(cell, 'kbase.cellState.selected', false);
                 $menu.trigger('unselected.toolbar');
             });
 
             // this.events
-            $cellNode.on('selected.cell', function () {
-                var $menu = $(cell.celltoolbar.element).find('.button_container');
+            $cellNode.on('selected.cell', () => {
+                const $menu = $(cell.celltoolbar.element).find('.button_container');
                 utils.setCellMeta(cell, 'kbase.cellState.selected', true);
                 // cell.setCellState('selected', true);
                 $menu.trigger('selected.toolbar');
             });
 
-            this.events.on('rendered.MarkdownCell', function (e, data) {
+            this.events.on('rendered.MarkdownCell', (e, data) => {
                 // cell.setCellState('icon', 'paragraph');
                 utils.setCellMeta(cell, 'kbase.attributes.icon', 'paragraph');
 
@@ -687,7 +687,7 @@ define([
                 // cell.renderToggleState();
 
                 // get the h1 if it exists.
-                var title,
+                let title,
                     renderedContent = cell.element.find('.rendered_html'),
                     h1 = renderedContent.find('h1');
                 if (h1.length > 0) {
@@ -702,12 +702,12 @@ define([
                         title = title.substr(0, 50) + '...';
                     }
                     // trim down to the 'paragraph' char - signifies the end of a header element
-                    var paraIdx = title.indexOf('¶');
+                    const paraIdx = title.indexOf('¶');
                     if (paraIdx !== -1) {
                         title = title.substr(0, paraIdx);
                     }
                     // trim down to the end of the first newline - a linebreak should be a title
-                    var newLineIdx = title.indexOf('\n');
+                    const newLineIdx = title.indexOf('\n');
                     if (newLineIdx !== -1) {
                         title = title.substr(0, newLineIdx);
                     }
@@ -716,19 +716,19 @@ define([
                 }
 
                 utils.setCellMeta(cell, 'kbase.attributes.title', title, true);
-            }.bind(this));
+            });
 
             // Note - this event needs to be subscribed to in each cell interested.
             // This is really the kick-off for the narrative, since the
             // presets on the celltoobar are loaded via event calls,
             // so are not part of the synchronous process
             // which builds the UI.
-            this.events.on('preset_activated.CellToolbar', function (e, data) {
+            this.events.on('preset_activated.CellToolbar', (e, data) => {
                 if (data.name === 'KBase') {
                     // ensure the icon is set?
                     utils.setCellMeta(this, 'kbase.attributes.icon', 'paragraph');
                 }
-            }.bind(this));
+            });
         };
     }());
 
@@ -778,10 +778,10 @@ define([
      *
      */
     (function () {
-        var p = codeCell.CodeCell.prototype;
+        const p = codeCell.CodeCell.prototype;
 
         p.minimize = function () {
-            var inputArea = this.input.find('.input_area').get(0),
+            const inputArea = this.input.find('.input_area').get(0),
                 outputArea = this.element.find('.output_wrapper');
 
             inputArea.classList.remove('-show');
@@ -789,7 +789,7 @@ define([
         };
 
         p.maximize = function () {
-            var inputArea = this.input.find('.input_area').get(0),
+            const inputArea = this.input.find('.input_area').get(0),
                 outputArea = this.element.find('.output_wrapper');
 
             outputArea.removeClass('hidden');
@@ -798,7 +798,7 @@ define([
         // We need this method because the layout of each type of cell and
         // interactions with min/max can be complex.
         p.renderIcon = function () {
-            var prompt = this.element.querySelector('.input_prompt');
+            const prompt = this.element.querySelector('.input_prompt');
 
             if (!prompt) {
                 return;
@@ -808,8 +808,8 @@ define([
         };
 
         p.getIcon = function () {
-            var iconColor = 'silver';
-            var icon;
+            const iconColor = 'silver';
+            let icon;
             icon = span({ class: 'fa fa-inverse fa-stack-1x fa-spinner fa-pulse fa-fw' });
 
             return span({ style: '' }, [
@@ -820,41 +820,41 @@ define([
             ]);
         };
 
-        var originalBindEvents = codeCell.CodeCell.prototype.bind_events;
+        const originalBindEvents = codeCell.CodeCell.prototype.bind_events;
         p.bind_events = function () {
             originalBindEvents.apply(this);
-            var $cellNode = $(this.element),
+            const $cellNode = $(this.element),
                 thisCell = this;
 
             // TODO: toggle state on the cell object so we can be sure about this.
 
-            $cellNode.on('unselected.cell', function () {
-                var $menu = $(thisCell.celltoolbar.element).find('.button_container');
+            $cellNode.on('unselected.cell', () => {
+                const $menu = $(thisCell.celltoolbar.element).find('.button_container');
                 utils.setCellMeta(cell, 'kbase.cellState.selected', false);
                 $menu.trigger('unselected.toolbar');
             });
 
             // this.events
-            $cellNode.on('selected.cell', function () {
-                var $menu = $(thisCell.celltoolbar.element).find('.button_container');
+            $cellNode.on('selected.cell', () => {
+                const $menu = $(thisCell.celltoolbar.element).find('.button_container');
                 utils.setCellMeta(cell, 'kbase.cellState.selected', true);
                 $menu.trigger('selected.toolbar');
             });
 
-            $cellNode.on('toggleCodeArea.cell', function () {
+            $cellNode.on('toggleCodeArea.cell', () => {
                 thisCell.toggleCodeInputArea();
             });
 
-            $cellNode.on('hideCodeArea.cell', function () {
+            $cellNode.on('hideCodeArea.cell', () => {
                 thisCell.hideCodeInputArea();
             });
 
             if (this.code_mirror) {
-                this.code_mirror.on('change', function (cm, change) {
-                    var lineCount = cm.lineCount(),
+                this.code_mirror.on('change', (cm, change) => {
+                    const lineCount = cm.lineCount(),
                         commentRe = /^\.*?\#\s*(.*)$/;
-                    for (var i = 0; i < lineCount; i += 1) {
-                        var line = cm.getLine(i),
+                    for (let i = 0; i < lineCount; i += 1) {
+                        const line = cm.getLine(i),
                             m = commentRe.exec(line);
                         if (m) {
                             utils.setCellMeta(thisCell, 'kbase.attributes.title', m[1], true);
@@ -866,14 +866,14 @@ define([
         };
 
         p.hideCodeInputArea = function () {
-            var codeInputArea = this.input.find('.input_area')[0];
+            const codeInputArea = this.input.find('.input_area')[0];
             if (codeInputArea) {
                 codeInputArea.classList.remove('-show');
             }
         };
 
         p.isCodeShowing = function () {
-            var codeInputArea = this.input.find('.input_area')[0];
+            const codeInputArea = this.input.find('.input_area')[0];
             if (codeInputArea) {
                 return codeInputArea.classList.contains('-show');
             }
@@ -881,7 +881,7 @@ define([
         };
 
         p.toggleCodeInputArea = function () {
-            var codeInputArea = this.input.find('.input_area')[0];
+            const codeInputArea = this.input.find('.input_area')[0];
             if (codeInputArea) {
                 codeInputArea.classList.toggle('-show');
                 this.metadata = this.metadata;
@@ -893,7 +893,7 @@ define([
         // because the back-end code may make modifications to the Narrative.
         // However, perhaps we should allow code execution as a
         // capability, and just block Narrative modifications?
-        var originalExecute = codeCell.CodeCell.prototype.execute;
+        const originalExecute = codeCell.CodeCell.prototype.execute;
         p.execute = function () {
             if (Jupyter.narrative.readonly) {
                 alert('Read only mode - execute prohibited');
@@ -913,11 +913,11 @@ define([
 
     // Patch the Notebook to not wedge a file extension on a new Narrative name
     notebook.Notebook.prototype.rename = function (new_name) {
-        var that = this;
-        var parent = nbUtils.url_path_split(this.notebook_path)[0];
-        var new_path = nbUtils.url_path_join(parent, new_name);
+        const that = this;
+        const parent = nbUtils.url_path_split(this.notebook_path)[0];
+        const new_path = nbUtils.url_path_join(parent, new_name);
         return this.contents.rename(this.notebook_path, new_path).then(
-            function (json) {
+            (json) => {
                 that.notebook_name = json.name;
                 that.notebook_path = json.path;
                 that.last_modified = new Date(json.last_modified);
@@ -929,9 +929,9 @@ define([
 
     // Extend methods.
     (function () {
-        var p = notebook.Notebook.prototype;
+        const p = notebook.Notebook.prototype;
 
-        var sidecarData = null;
+        let sidecarData = null;
 
         // insert_cell_at_index wrapper
         // Adds a third argument, "data", which is passed in the
@@ -950,10 +950,10 @@ define([
         // Also note that this works because ... js is single threaded and there
         // is no possibility that another call will bump into this value.
         (function () {
-            var originalMethod = p.insert_cell_at_index;
+            const originalMethod = p.insert_cell_at_index;
             p.insert_cell_at_index = function (type, index, data) {
-                var cell = originalMethod.apply(this, arguments);
-                var dataToSend = data || sidecarData;
+                const cell = originalMethod.apply(this, arguments);
+                const dataToSend = data || sidecarData;
                 sidecarData = null;
                 this.events.trigger('insertedAtIndex.Cell', {
                     type: type || 'code',
@@ -973,18 +973,18 @@ define([
         // actual cell insertion, so is a reliable method of passing this
         // extra argument.
         (function () {
-            var originalMethod = p.insert_cell_below;
+            const originalMethod = p.insert_cell_below;
             p.insert_cell_below = function (type, index, data) {
                 sidecarData = data;
-                var cell = originalMethod.apply(this, arguments);
+                const cell = originalMethod.apply(this, arguments);
                 return cell;
             };
         }());
         (function () {
-            var originalMethod = p.insert_cell_above;
+            const originalMethod = p.insert_cell_above;
             p.insert_cell_above = function (type, index, data) {
                 sidecarData = data;
-                var cell = originalMethod.apply(this, arguments);
+                const cell = originalMethod.apply(this, arguments);
                 return cell;
             };
         }());
@@ -993,9 +993,9 @@ define([
     // Patch the save widget to skip the 'notebooks' part of the URL when updating
     // after a notebook rename.
     saveWidget.SaveWidget.prototype.update_address_bar = function () {
-        var base_url = this.notebook.base_url;
-        var path = this.notebook.notebook_path;
-        var state = { path: path };
+        const base_url = this.notebook.base_url;
+        const path = this.notebook.notebook_path;
+        const state = { path: path };
         window.history.replaceState(state, '', nbUtils.url_path_join(
             base_url,
             nbUtils.encode_uri_components(path)));
@@ -1004,7 +1004,7 @@ define([
     // Patch the save widget to change the "Jupyter Notebook" part of the title to
     // "KBase Narrative".
     saveWidget.SaveWidget.prototype.update_document_title = function () {
-        var nbname = this.notebook.get_notebook_name();
+        const nbname = this.notebook.get_notebook_name();
         document.title = nbname + ' - KBase Narrative';
     }
 
@@ -1012,9 +1012,9 @@ define([
     saveWidget.SaveWidget.prototype.rename_notebook = function (options) {
         Jupyter.narrative.getUserPermissions()
         .then((perm) => {
-            let canChangeName = perm === 'a' && !Jupyter.narrative.readonly;
+            const canChangeName = perm === 'a' && !Jupyter.narrative.readonly;
             options = options || {};
-            var that = this,
+            let that = this,
                 dialogBody,
                 buttons;
             if (canChangeName) {
@@ -1031,11 +1031,11 @@ define([
                     'OK': {
                         class: 'btn-primary',
                         click: function () {
-                            var new_name = d.find('input').val();
+                            const new_name = d.find('input').val();
                             d.find('.rename-message').text('Renaming and saving...');
                             d.find('input[type="text"]').prop('disabled', true);
                             that.notebook.rename(new_name).then(
-                                function () {
+                                () => {
                                     d.modal('hide');
                                     that.notebook.metadata.name = new_name;
                                     that.element.find('span.filename').text(new_name);
@@ -1044,7 +1044,7 @@ define([
                                         options.callback();
                                     }
                                 },
-                                function (error) {
+                                (error) => {
                                     d.find('.rename-message').text(error.message || 'Unknown error');
                                     d.find('input[type="text"]').prop('disabled', false).focus().select();
                                 }
@@ -1079,7 +1079,7 @@ define([
                         /**
                          * Upon ENTER, click the OK button.
                          */
-                        d.find('input[type="text"]').keydown(function (event) {
+                        d.find('input[type="text"]').keydown((event) => {
                             if (event.which === keyboard.keycodes.enter) {
                                 d.find('.btn-primary').first().click();
                                 return false;

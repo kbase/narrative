@@ -13,13 +13,13 @@ define (
 		'jquery',
 		'narrativeConfig',
 		'kbaseNarrativeInput'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		Config,
 		kbaseNarrativeInput
-	) {
+	) => {
     return KBWidget({
         name: "NcbiGenomeImportInput",
         parent : kbaseNarrativeInput,
@@ -39,25 +39,25 @@ define (
         useSelect2: true,
 
         render: function() {
-            var $inputDiv = $('<div>')
+            const $inputDiv = $('<div>')
                             .addClass('kb-cell-params');
-            var $inputGenome = $('<input>')
+            const $inputGenome = $('<input>')
                                .addClass('form-control')
                                .css({'width' : '95%'})
                                .attr('name', 'param0')
                                .attr('placeholder', 'Select an NCBI Genome')
                                .attr('type', 'text');
-            var $outputGenome = $('<input>')
+            const $outputGenome = $('<input>')
                                .addClass('form-control')
                                .css({'width' : '95%'})
                                .attr('name', 'param1')
                                .attr('placeholder', 'Select an output genome')
                                .attr('type', 'text');
 
-            var cellCss = { 'border' : 'none', 'vertical-align' : 'middle' };
-            var thCss = {'font-family' : '"OxygenBold", sans-serif', 'font-weight': 'bold'};
-            var inputCss = {'width' : '40%'};
-            var descCss = {'color' : '#777'};
+            const cellCss = { 'border' : 'none', 'vertical-align' : 'middle' };
+            const thCss = {'font-family' : '"OxygenBold", sans-serif', 'font-weight': 'bold'};
+            const inputCss = {'width' : '40%'};
+            const descCss = {'color' : '#777'};
             $inputDiv.append($('<table>')
                              .addClass('table')
                              .append($('<tr>')
@@ -97,9 +97,9 @@ define (
          * @public
          */
         getParameters: function() {
-            var paramList = [];
+            const paramList = [];
 
-            $(this.$elem).find("[name^=param]").filter(":input").each(function(key, field) {
+            $(this.$elem).find("[name^=param]").filter(":input").each((key, field) => {
                 paramList.push(field.value.trim());
             });
 
@@ -116,9 +116,9 @@ define (
          * with one key/value for each parameter in the defined method.
          */
         getState: function() {
-            var state = {};
+            const state = {};
 
-            $(this.$elem).find("[name^=param]").filter(":input").each(function(key, field) {
+            $(this.$elem).find("[name^=param]").filter(":input").each((key, field) => {
                 state[field.name] = field.value;
             });
 
@@ -134,9 +134,9 @@ define (
             if (!state)
                 return;
 
-            $(this.$elem).find("[name^=param]").filter(":input").each(function(key, field) {
-                var $field = $(field);
-                var fieldName = $field.attr("name");
+            $(this.$elem).find("[name^=param]").filter(":input").each((key, field) => {
+                const $field = $(field);
+                const fieldName = $field.attr("name");
 
                 // If it's a text field, just dump the value in there.
                 if ($field.is("input") && $field.attr("type") === "text") {
@@ -153,18 +153,18 @@ define (
 
         refresh: function() {
             this.fixGenomeNames();
-            var type = 'KBaseGenomes.Genome';
+            const type = 'KBaseGenomes.Genome';
             this.trigger('dataLoadedQuery.Narrative', [type, this.IGNORE_VERSION, $.proxy(
                 function(objects) {
-                    var $input = $($(this.$elem).find('[name=param1]'));
-                    var objList = [];
+                    const $input = $($(this.$elem).find('[name=param1]'));
+                    let objList = [];
 
                     if (objects[type] && objects[type].length > 0) {
                         objList = objects[type];
                         /*
                          * Sorting - by date, then alphabetically within dates.
                          */
-                        objList.sort(function(a, b) {
+                        objList.sort((a, b) => {
                             if (a[3] > b[3]) return -1;
                             if (a[3] < b[3]) return 1;
                             if (a[1] < b[1]) return -1;
@@ -186,7 +186,7 @@ define (
                     // case 1 - no data, input is unchanged
 
                     // case 2 - no data, need to clear input
-                    var datalistID = $input.attr('list');
+                    let datalistID = $input.attr('list');
                     if (objList.length == 0 && datalistID) {
                         $(this.$elem.find("#" + datalistID)).remove();
                         $input.removeAttr('list');
@@ -196,7 +196,7 @@ define (
                     // case 3 - data, need new datalist
                     // case 4 - data, need to update existing datalist
                     else if (objList.length > 0) {
-                        var $datalist;
+                        let $datalist;
                         if (!datalistID) {
                             datalistID = this.genUUID();
                             $input.attr('list', datalistID);
@@ -208,7 +208,7 @@ define (
                             $datalist = $(this.$elem.find("#" + datalistID));
                         }
                         $datalist.empty();
-                        for (var j=0; j<objList.length; j++) {
+                        for (let j=0; j<objList.length; j++) {
                             $datalist.append($('<option>')
                                              .attr('value', objList[j][1])
                                              .append(objList[j][1]));
@@ -219,19 +219,19 @@ define (
         },
 
         fixGenomeNames: function() {
-            var pid = 'param0';
-            var $input = $($(this.$elem).find("[name=" + pid + "]"));
-            var self = this;
+            const pid = 'param0';
+            const $input = $($(this.$elem).find("[name=" + pid + "]"));
+            const self = this;
             
-            var request = $.getJSON('static/kbase/js/widgets/function_input/ncbi_genome2ftp.json');            
+            const request = $.getJSON('static/kbase/js/widgets/function_input/ncbi_genome2ftp.json');            
             
             //kbws.list_referencing_objects([objectIdentity], function(data) {
-            $.when(request).done(function(data) {
-                var objList = [];
-                for (var key in data)
+            $.when(request).done((data) => {
+                const objList = [];
+                for (const key in data)
                     objList.push(key);
-                var datalistID = $input.attr('list');
-                var $datalist;
+                let datalistID = $input.attr('list');
+                let $datalist;
                 if (!datalistID) {
                     datalistID = self.genUUID();
                     $input.attr('list', datalistID);
@@ -241,18 +241,18 @@ define (
                     $datalist = $(self.$elem.find("#" + datalistID));
                 }
                 $datalist.empty();
-                for (var j=0; j<objList.length; j++) {
+                for (let j=0; j<objList.length; j++) {
                     $datalist.append($('<option>').attr('value', objList[j]).append(objList[j]));
                 }
-            }).fail(function(err){
+            }).fail((err)=> {
                 console.error("Error loading ncbi genome names from JSON resource file:");
                 console.error(err);
             });
         },
         
         genUUID: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+                const r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                 return v.toString(16);
             });
         }

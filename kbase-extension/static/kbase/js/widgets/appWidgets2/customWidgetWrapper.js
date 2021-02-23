@@ -6,19 +6,19 @@ define([
     'kb_common/html',
     'base/js/namespace',
     'common/runtime'
-], function (
+], (
     Promise,
     html,
     Jupyter,
     Runtime
-    ) {
+    ) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'), pre = t('pre');
 
     function factory(config) {
-        var parent, container,
+        let parent, container,
             cellId = config.cellId,
             cellBus,
             runtime = Runtime.make(),
@@ -42,16 +42,16 @@ define([
         }
 
         function runCustomWidget() {
-            var widgetDef = findWidget(appSpec.widgets.input);
+            const widgetDef = findWidget(appSpec.widgets.input);
             require([
                 widgetDef.modulePath
-            ], function (Widget) {
+            ], (Widget) => {
                 wrappedWidget = new Widget($(container), {
                     appSpec: appSpec,
                     workspaceName: Jupyter.narrative.getWorkspaceName()
                 });
-                appSpec.parameters.forEach(function (parameter) {
-                    wrappedWidget.addInputListener(parameter.id, function (data) {
+                appSpec.parameters.forEach((parameter) => {
+                    wrappedWidget.addInputListener(parameter.id, (data) => {
                         runtime.bus().send({
                             id: parameter.id,
                             value: data.val
@@ -73,8 +73,8 @@ define([
         }
 
         function start(params) {
-            return Promise.try(function () {
-                var parent = params.root;
+            return Promise.try(() => {
+                const parent = params.root;
 
                 container = parent.appendChild(document.createElement('div'));
 
@@ -102,7 +102,7 @@ define([
                     }                    
                 })
                 
-                runtime.bus().on('workspace-changed', function () {
+                runtime.bus().on('workspace-changed', () => {
                     wrappedWidget.refresh();
                 });
             });

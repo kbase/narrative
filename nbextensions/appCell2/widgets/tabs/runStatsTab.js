@@ -7,10 +7,10 @@ define([
     'common/ui',
     'common/format',
     'kb_common/html'
-], function (Promise, Runtime, UI, format, html) {
+], (Promise, Runtime, UI, format, html) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'), span = t('span');
 
     function updateRunStats(ui, jobState, lastUpdated) {
@@ -18,7 +18,7 @@ define([
             return;
         }
 
-        var viewModel = {
+        const viewModel = {
             lastUpdated: {
                 elapsed: null,
                 time: null
@@ -82,7 +82,7 @@ define([
     }
 
     function renderRunStats() {
-        var labelStyle = {
+        const labelStyle = {
             textAlign: 'right',
             border: '1px transparent solid',
             padding: '4px'
@@ -121,21 +121,21 @@ define([
     }
 
     function factory(config) {
-        var container, ui, listeners = [],
+        let container, ui, listeners = [],
             model = config.model, runtime = Runtime.make();
         function start(arg) {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 container = arg.node;
                 ui = UI.make({node: container});
 
-                var jobState = model.getItem('exec.jobState');
-                var lastUpdated = model.getItem('exec.jobStateUpdated');
+                const jobState = model.getItem('exec.jobState');
+                const lastUpdated = model.getItem('exec.jobStateUpdated');
 
                 container.innerHTML = renderRunStats();
 
                 updateRunStats(ui, jobState, lastUpdated);
 
-                listeners.push(runtime.bus().on('clock-tick', function () {
+                listeners.push(runtime.bus().on('clock-tick', () => {
                     updateRunStats(ui, model.getItem('exec.jobState'), model.getItem('exec.jobStateUpdated'));
                 }));
 
@@ -143,7 +143,7 @@ define([
         }
 
         function stop() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 runtime.bus().removeListeners(listeners);
             });
         }

@@ -14,13 +14,13 @@ define (
 		'knhx',
 		'widgetMaxWidthCorrection',
         'GenomeSearchUtil-client-api'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		Config,
 		kbaseAuthenticatedWidget
-	) {
+	) => {
     return KBWidget({
         name: 'kbaseFeatureSet',
         parent : kbaseAuthenticatedWidget,
@@ -39,7 +39,7 @@ define (
             this.$elem.append(this.$messagePane);
 
             if (options.workspaceids && options.workspaceids.length > 0) {
-                var id = options.workspaceids[0].split('/');
+                const id = options.workspaceids[0].split('/');
                 this.options.treeID = id[1];
                 this.options.workspaceID = id[0];
             }
@@ -74,22 +74,22 @@ define (
         features: null, // genomeId : [{fid: x, data: x}]
 
         loadFeatureSet: function() {
-            var self = this;
+            const self = this;
             self.features = {};
             self.ws.get_objects([{ref:self.options.workspaceName+"/"+self.options.featureset_name}],
-                function(data) {
-                    var fs = data[0].data;
+                (data) => {
+                    const fs = data[0].data;
                     if(fs.description) {
                         self.$mainPanel.append($('<div>')
                             .append("<i>Description</i> - ")
                             .append(fs.description));
                     }
 
-                    for (var fid in fs.elements) {
+                    for (const fid in fs.elements) {
                         if (fs.elements.hasOwnProperty(fid)) {
 
-                            for (var k=0; k<fs.elements[fid].length; k++) {
-                                var gid = fs.elements[fid][k];
+                            for (let k=0; k<fs.elements[fid].length; k++) {
+                                const gid = fs.elements[fid][k];
                                 if(self.features.hasOwnProperty(gid)) {
                                     self.features[gid].push(fid);
                                 } else {
@@ -101,7 +101,7 @@ define (
                     self.getGenomeData();
                     self.$mainPanel.show();
                 },
-                function(error) {
+                (error) => {
                     self.loading(true);
                     self.renderError(error);
 
@@ -124,16 +124,16 @@ define (
         featureTableData: null, // list for datatables
 
         getGenomeData: function() {
-            var self = this;
+            const self = this;
             self.genomeLookupTable = {};
             self.genomeObjectInfo = {};
             self.featureTableData = [];
             for(var gid in self.features) {
-                var query = {"feature_id": self.features[gid]}
+                const query = {"feature_id": self.features[gid]}
                 self.search(gid, {"feature_id": self.features[gid]}, self.features[gid].length)
-                    .then(function(results) {
-                        for (var f in results.features) {
-                            var feature = results.features[f];
+                    .then((results) => {
+                        for (const f in results.features) {
+                            const feature = results.features[f];
                             self.featureTableData.push(
                                 {
                                     fid: '<a href="/#dataview/'+gid+
@@ -151,7 +151,7 @@ define (
                         self.renderFeatureTable(); // just rerender each time
                         self.loading(true);
                     })
-                    .fail(function(e) {
+                    .fail((e) => {
                         console.error(e);
                     });
             }
@@ -163,7 +163,7 @@ define (
 
         $featureTableDiv : null,
         renderFeatureTable: function() {
-            var self = this;
+            const self = this;
 
             if(!self.$featureTableDiv) {
                 self.$featureTableDiv = $('<div>').css({'margin':'5px'});
@@ -172,14 +172,14 @@ define (
 
             self.$featureTableDiv.empty();
 
-            var $tbl = $('<table cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin-left: 0px; margin-right: 0px;">')
+            const $tbl = $('<table cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin-left: 0px; margin-right: 0px;">')
                             .addClass("table table-bordered table-striped");
             self.$featureTableDiv.append($tbl);
 
-            var sDom = "ft<ip>";
+            let sDom = "ft<ip>";
             if(self.featureTableData.length<=10) sDom = "ft<i>";
 
-            var tblSettings = {
+            const tblSettings = {
                 "sPaginationType": "full_numbers",
                 "iDisplayLength": 10,
                 "sDom": sDom,
@@ -197,18 +197,18 @@ define (
                                           "sEmptyTable": "This FeatureSet is empty"
                                       }
                 };
-            var featuresTable = $tbl.dataTable(tblSettings);
+            const featuresTable = $tbl.dataTable(tblSettings);
             featuresTable.fnAddData(self.featureTableData);
         },
 
         renderError: function(error) {
-            var errString = "Sorry, an unknown error occurred";
+            let errString = "Sorry, an unknown error occurred";
             if (typeof error === "string")
                 errString = error;
             else if (error.error && error.error.message)
                 errString = error.error.message;
 
-            var $errorDiv = $("<div>")
+            const $errorDiv = $("<div>")
                             .addClass("alert alert-danger")
                             .append("<b>Error:</b>")
                             .append("<br>" + errString);
@@ -217,7 +217,7 @@ define (
         },
 
         buildObjectIdentity: function(workspaceID, objectID, objectVer, wsRef) {
-            var obj = {};
+            const obj = {};
             if (wsRef) {
                 obj['ref'] = wsRef;
             } else {
@@ -246,7 +246,7 @@ define (
         },
 
         showMessage: function(message) {
-            var span = $("<span/>").append(message);
+            const span = $("<span/>").append(message);
 
             this.$messagePane.append(span);
             this.$messagePane.show();

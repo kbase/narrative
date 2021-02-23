@@ -2,10 +2,10 @@
 define([
     'common/format',
     'common/utils',
-], function(
+], (
     format,
     utils
-) {
+) => {
     'use strict';
 
     const toBoolean = utils.toBoolean;
@@ -30,14 +30,14 @@ define([
     };
 
     const appendChildren = function(node, children) {
-        children.forEach(function(child) { node.appendChild(child); });
+        children.forEach((child) => { node.appendChild(child); });
     };
 
     const listLinks = function(links) {
         const out = [];
         const separator = document.createTextNode(', ');
         const conjunction = document.createTextNode(' and ');
-        links.forEach(function(link, ix) {
+        links.forEach((link, ix) => {
             out.push(link);
             if(ix < links.length - 2) {
                 out.push(separator.cloneNode());
@@ -85,12 +85,12 @@ define([
 
             // LIST OF PARAMETERS
             const parametersList = document.createElement('ul');
-            appSpec.parameters.forEach(function(param) {
+            appSpec.parameters.forEach((param) => {
                 const textOptions = param.text_options;
                 let types = [];
                 if(textOptions && Array.isArray(textOptions.valid_ws_types)) {
                     const typesArray = (textOptions.valid_ws_types
-                        .map(function(type) {
+                        .map((type) => {
                             const linkType = DOMTagA(type, {
                                 class: 'cm-em',
                                 href: '/#spec/type/' + type,
@@ -123,7 +123,7 @@ define([
             const authors = appSpec.info.authors;
             let authorsListItem = document.createTextNode('');
             if(authors.length) {
-                const authorsArray = authors.map(function(author) {
+                const authorsArray = authors.map((author) => {
                     return DOMTagA(author, {
                         href: '/#people/' + author,
                         target: '_blank'

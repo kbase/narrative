@@ -19,7 +19,7 @@ define (
 		'kbaseJSONReflector',
 		'GeneDistribution',
 		'kbaseVisMatrix'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		kbaseBarchart,
@@ -39,7 +39,7 @@ define (
 		kbaseJSONReflector,
 		GeneDistribution,
 		kbaseVisMatrix
-	) {
+	) => {
 
     }
 );

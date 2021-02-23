@@ -49,7 +49,7 @@ define (
 		'geometry_rectangle',
 		'geometry_point',
 		'geometry_size'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -59,7 +59,7 @@ define (
 		geometry_rectangle,
 		geometry_point,
 		geometry_size
-	) {
+	) => {
 
     'use strict';
 
@@ -110,9 +110,9 @@ define (
 
             this._super(newDataset);
 
-            var colorScaleDomain = this.colorScale().nice().domain();
+            const colorScaleDomain = this.colorScale().nice().domain();
 
-            var zeroPercent = 100 * Math.abs(colorScaleDomain[0]) / (Math.abs(colorScaleDomain[0]) + Math.abs(colorScaleDomain[2]));
+            const zeroPercent = 100 * Math.abs(colorScaleDomain[0]) / (Math.abs(colorScaleDomain[0]) + Math.abs(colorScaleDomain[2]));
 
             this.callAfterInit(
               $.proxy(function() {
@@ -184,7 +184,7 @@ define (
                 return;
             }
 
-            var xAxis =
+            const xAxis =
                 d3.svg.axis()
                     .scale(this.xScale())
                     .orient('top');
@@ -196,7 +196,7 @@ define (
                 return d;
             });*/
 
-            var gxAxis = this.D3svg().select('.yGutter').select('.xAxis');
+            let gxAxis = this.D3svg().select('.yGutter').select('.xAxis');
 
             if (gxAxis[0][0] == undefined) {
                 gxAxis = this.D3svg().select('.yGutter')
@@ -205,7 +205,7 @@ define (
                         .attr("transform", "translate(0," + this.yGutterBounds().size.height + ")")
             }
 
-            var $hm = this;
+            const $hm = this;
 
             gxAxis
                 .transition()
@@ -244,28 +244,28 @@ define (
 
             gxAxis.selectAll('text').each(function(d,i) {
 
-                var label = d3.select(this).text();
+                const label = d3.select(this).text();
                 if (label.length > 15) {
                     d3.select(this).text(label.substring(0,12) + '...');
                 }
 
-                var label_idx = $hm.dataset().column_labels.indexOf(label);
+                const label_idx = $hm.dataset().column_labels.indexOf(label);
 
                 d3.select(this).attr('data-id', $hm.dataset().column_ids[label_idx]);
                 d3.select(this)
                     .attr("transform", function (d, i) {
-                        var bounds = $hm.yGutterBounds();
+                        const bounds = $hm.yGutterBounds();
                         //bullshit hardwired magic numbers. The xAxis is "known"(?) to position @ (0,-9)
                         //arbitrarily rotate around -12 because it looks right. I got nothin'.
                         //then we move it 5 pixels to the right, which in our rotate coordinate system is
                         //5 pixels up. Whee!
 
-                        var width = d3.select(this).node().getComputedTextLength();
+                        const width = d3.select(this).node().getComputedTextLength();
                         return "rotate(-45,0,0) translate(" + (width / 2 + 5) + ",5)";// translate(2,3)";
                     })
                     .on('mouseover', function(d) {
                         d3.select(this).attr('fill', $hm.options.overColor);
-                        var d3this = d3.select(this);
+                        const d3this = d3.select(this);
 
                         if ($hm.options.labelOver) {
                             $hm.options.labelOver.call(this, d);
@@ -293,11 +293,11 @@ define (
         },
 
         renderXLabel : function() {
-            var yGutterBounds = this.yGutterBounds();
+            const yGutterBounds = this.yGutterBounds();
 
-            var xLabeldataset = [this.xLabel()];
+            const xLabeldataset = [this.xLabel()];
 
-            var xLabel = this.D3svg().select('.yPadding').selectAll('.xLabel');
+            const xLabel = this.D3svg().select('.yPadding').selectAll('.xLabel');
             xLabel
                 .data(xLabeldataset)
                     .text( this.xLabel() )
@@ -316,9 +316,9 @@ define (
         },
 
         renderYLabel : function() {
-            var xGutterBounds = this.xGutterBounds();
+            const xGutterBounds = this.xGutterBounds();
 
-            var yLabel = this.D3svg().select( this.region('xGutter') ).selectAll('.yLabel').data([0]);
+            const yLabel = this.D3svg().select( this.region('xGutter') ).selectAll('.yLabel').data([0]);
 
             yLabel.enter()
                 .append('rect')
@@ -332,26 +332,26 @@ define (
                     .attr('fill', 'url(#' + this.options.gradientID + ')')
             ;
 
-            var colorScale = this.colorScale();
+            const colorScale = this.colorScale();
 
-            var domain = [ colorScale.domain()[colorScale.domain().length - 1], colorScale.domain()[0] ];
+            const domain = [ colorScale.domain()[colorScale.domain().length - 1], colorScale.domain()[0] ];
 
-            var tempScale =
+            const tempScale =
                 d3.scale.linear()
                     .domain( domain )
                     .range( [0, xGutterBounds.size.height] )
                     .nice();
 
-            var tempAxis =
+            const tempAxis =
                 d3.svg.axis()
                     .scale(tempScale)
                     .orient('right')
             ;
 
 
-            var gtempAxis = this.D3svg().select( this.region('xGutter') ).select('.tempAxis');
+            let gtempAxis = this.D3svg().select( this.region('xGutter') ).select('.tempAxis');
 
-            var $hm = this;
+            const $hm = this;
 
             if (gtempAxis[0][0] == undefined) {
                 gtempAxis = this.D3svg().select( this.region('xGutter') )
@@ -380,14 +380,14 @@ define (
             if (this.yScale() == undefined) {
                 return;
             }
-            var yAxis =
+            const yAxis =
                 d3.svg.axis()
                     .scale(this.yScale())
                     .orient('left');
 
-            var gyAxis = this.D3svg().select( this.region('xPadding') ).select('.yAxis');
+            let gyAxis = this.D3svg().select( this.region('xPadding') ).select('.yAxis');
 
-            var $hm = this;
+            const $hm = this;
 
             if (gyAxis[0][0] == undefined) {
                 gyAxis = this.D3svg().select( this.region('xPadding') )
@@ -411,18 +411,18 @@ define (
 
             gyAxis.selectAll('text').each(function(d,i) {
 
-                var label = d3.select(this).text();
+                const label = d3.select(this).text();
                 if (label.length > 23) {
                     d3.select(this).text(label.substring(0,18) + '...');
                 }
 
-                var label_idx = $hm.dataset().row_labels.indexOf(label);
+                const label_idx = $hm.dataset().row_labels.indexOf(label);
 
                 d3.select(this).attr('data-id', $hm.dataset().row_ids[label_idx]);
                 d3.select(this)
                     .on('mouseover', function(d) {
                         d3.select(this).attr('fill', $hm.options.overColor);
-                        var d3this = d3.select(this);
+                        const d3this = d3.select(this);
 
                         if ($hm.options.labelOver) {
                             $hm.options.labelOver.call(this, d);
@@ -450,19 +450,19 @@ define (
 
         colorScale : function() {
 
-            var colorScale = this.options.colorScale;
+            let colorScale = this.options.colorScale;
 
             if (colorScale == undefined) {
 
-                var max = this.options.maxValue;
-                var min = this.options.minValue;
+                let max = this.options.maxValue;
+                let min = this.options.minValue;
                 if (this.dataset() != undefined) {
                     if (max == undefined || min == undefined) {
                         max = 0;
                         min = 0;
-                        for (var i = 0; i < this.dataset().data.length; i++) {
-                            var row = this.dataset().data[i];
-                            for (var j = 0; j < row.length; j++) {
+                        for (let i = 0; i < this.dataset().data.length; i++) {
+                            const row = this.dataset().data[i];
+                            for (let j = 0; j < row.length; j++) {
                                 if (row[j] > max) {
                                     max = row[j];
                                 }
@@ -475,7 +475,7 @@ define (
                 }
 
                 //var domain = d3.range(min, max, (max - min) / this.options.colors.length);
-                var domain = [min, 0, max];
+                const domain = [min, 0, max];
                 domain[0] = min;
                 domain[domain.length - 1] = max;
 
@@ -493,42 +493,42 @@ define (
 
         renderChart : function() {
 
-            var $hm = this;
-            var bounds = this.chartBounds();
+            const $hm = this;
+            const bounds = this.chartBounds();
 
             if (this.dataset() == undefined) {
                 return;
             }
 
 
-        var yIdScale = this.yScale().copy();
+        const yIdScale = this.yScale().copy();
         yIdScale.domain(this.dataset().row_ids);
 
-        var xIdScale = this.xScale().copy();
+        const xIdScale = this.xScale().copy();
         xIdScale.domain(this.dataset().column_ids);
 
-        var funkyTown = function() {
+        const funkyTown = function() {
             this
                 .attr('x',
-                    function (d) {
-                        var xId = d.x;
+                    (d) => {
+                        let xId = d.x;
                         if ($hm.options.useIDMapping) {
                             xId = $hm.xIDMap()[xId];
                         }
 
-                        var scaled = xIdScale(xId) + 1;
+                        const scaled = xIdScale(xId) + 1;
                         return scaled;//$hm.xScale()(xId) + 1
                     }
                 )
                 .attr('y',
-                    function (d) {
+                    (d) => {
 
-                        var yId = d.y;
+                        let yId = d.y;
                         if ($hm.options.useIDMapping) {
                             yId = $hm.yIDMap()[yId];
                         }
 
-                        var scaled = yIdScale(yId) + 1;
+                        const scaled = yIdScale(yId) + 1;
                         return scaled;//$hm.yScale()(yId) + 1
                     }
                 )
@@ -539,7 +539,7 @@ define (
                 .attr('rx', $hm.options.rx)
                 .attr('ry', $hm.options.ry)
                 .attr('fill',
-                    function(d) {
+                    (d) => {
 
                         /*var colorScale = d3.scale.linear()
                             .domain([0,1])
@@ -554,7 +554,7 @@ define (
             return this;
         }
 
-            var mouseAction = function() {
+            const mouseAction = function() {
                 this.on('mouseover', function(d) {
                     if ($hm.options.overColor) {
                         d3.select(this)
@@ -566,7 +566,7 @@ define (
                         $hm.D3svg().select('.yGutter').selectAll('g g text')
                             .attr("fill",
                                 function(r,ri){
-                                    var xId = d.x;
+                                    let xId = d.x;
                                     if ($hm.options.useIDMapping) {
                                         xId = $hm.xIDMap()[xId];
                                     }
@@ -580,7 +580,7 @@ define (
                         $hm.D3svg().select('.xPadding').selectAll('g g text')
                             .attr("fill",
                                 function(r,ri){
-                                    var yId = d.y;
+                                    let yId = d.y;
                                     if ($hm.options.useIDMapping) {
                                         yId = $hm.yIDMap()[yId];
                                     }
@@ -590,11 +590,11 @@ define (
                                 }
                         );
 
-                        var xId = d.x;
+                        let xId = d.x;
                         if ($hm.options.useIDMapping) {
                             xId = $hm.xIDMap()[xId];
                         }
-                        var yId = d.y;
+                        let yId = d.y;
                         if ($hm.options.useIDMapping) {
                             yId = $hm.yIDMap()[yId];
                         }
@@ -617,14 +617,14 @@ define (
 
                         $hm.D3svg().select('.yGutter').selectAll('g g text')
                             .attr("fill",
-                                function(r,ri){
+                                (r,ri)=> {
                                    return 'black';
                                 }
                         );
 
                         $hm.D3svg().select('.xPadding').selectAll('g g text')
                             .attr("fill",
-                                function(r,ri){
+                                (r,ri)=> {
                                    return 'black';
                                 }
                         );
@@ -633,7 +633,7 @@ define (
 
                     }
                 })
-                .on('click', function(d) {
+                .on('click', (d) => {
                     if ($hm.options.clickCallback) {
                         $hm.options.clickCallback(d, $hm);
                     }
@@ -641,11 +641,11 @@ define (
                 return this;
             };
 
-            var transitionTime = this.initialized
+            const transitionTime = this.initialized
                 ? this.options.transitionTime
                 : 0;
 
-            var heatmap = this.D3svg().select( this.region('chart') ).selectAll('.hmBG').data([0]);
+            const heatmap = this.D3svg().select( this.region('chart') ).selectAll('.hmBG').data([0]);
 
             heatmap
                 .enter()
@@ -658,13 +658,13 @@ define (
                         .attr('class', 'hmBG');
 
 
-            var oldStyleDataset = [];
+            const oldStyleDataset = [];
 
-            var colorScale = this.colorScale();
+            const colorScale = this.colorScale();
 
-            for (var i = 0; i < this.dataset().data.length; i++) {
-                var row = this.dataset().data[i];
-                for (var j = 0; j < row.length; j++) {
+            for (let i = 0; i < this.dataset().data.length; i++) {
+                const row = this.dataset().data[i];
+                for (let j = 0; j < row.length; j++) {
                     oldStyleDataset.push(
                         {
                             x : this.dataset().column_ids[j],
@@ -679,7 +679,7 @@ define (
             }
 
 
-            var chart = this.D3svg().select( this.region('chart') ).selectAll('.davis-cell').data(oldStyleDataset);
+            const chart = this.D3svg().select( this.region('chart') ).selectAll('.davis-cell').data(oldStyleDataset);
             chart
                 .enter()
                     .append('rect')
@@ -691,7 +691,7 @@ define (
                 .transition()
                 .duration(transitionTime)
                 .call(funkyTown)
-                .call($hm.endall, function() {
+                .call($hm.endall, () => {
                     $hm.initialized = true;
                 });
             ;

@@ -1,6 +1,6 @@
 define([
     'bluebird'
-], function(Promise) {
+], (Promise) => {
 
 
 
@@ -22,7 +22,7 @@ define([
     }
 
     function importString(value) {
-        var plainValue,
+        let plainValue,
             parsedValue;
 
         if (value === undefined || value === null) {
@@ -97,7 +97,7 @@ define([
     }
 
     function applyConstraints(value, constraints) {
-        var messageId, errorMessage, diagnosis = 'valid';
+        let messageId, errorMessage, diagnosis = 'valid';
 
         if (value === null) {
             if (constraints.required) {
@@ -108,7 +108,7 @@ define([
                 diagnosis = 'optional-empty';
             }
         } else {
-            var error = validateInt(value, constraints.min, constraints.max);
+            const error = validateInt(value, constraints.min, constraints.max);
             if (error) {
                 errorMessage = error.message;
                 messageId = error.id;
@@ -127,7 +127,7 @@ define([
     }
 
     function validate(value, spec) {
-        return Promise.try(function() {
+        return Promise.try(() => {
             return applyConstraints(value, spec.data.constraints);
         });
     }

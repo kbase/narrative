@@ -6,15 +6,15 @@ define([
     'common/props',
     'common/runtime',
     'narrativeConfig'
-], function (html, Props, Runtime, narrativeConfig) {
+], (html, Props, Runtime, narrativeConfig) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         span = t('span'), img = t('img');
         
     function makeToolbarAppIcon(appSpec) {
         // icon is in the spec ...
-        var runtime = Runtime.make(),
+        const runtime = Runtime.make(),
             nmsBase = runtime.config('services.narrative_method_store_image.url'),
             iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
 
@@ -31,7 +31,7 @@ define([
     }
     
      function makeToolbarGenericIcon(fontAwesomeIconName, color) {
-        var iconColor = color || 'silver';
+        const iconColor = color || 'silver';
 
         return span({style: ''}, [
             span({class: 'fa-stack fa-2x', style: {verticalAlign: 'top', padding: '0', lineHeight: '56px'}}, [
@@ -43,7 +43,7 @@ define([
 
     function makeAppIcon(appSpec) {
         // icon is in the spec ...
-        var runtime = Runtime.make(),
+        const runtime = Runtime.make(),
             nmsBase = runtime.config('services.narrative_method_store_image.url'),
             iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
 
@@ -62,7 +62,7 @@ define([
     }
 
     function makeGenericIcon(fontAwesomeIconName, color) {
-        var iconColor = color || 'silver';
+        const iconColor = color || 'silver';
 
         return span({style: ''}, [
             span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: iconColor}}, [
@@ -86,7 +86,7 @@ define([
     }
 
     function makeTypeIcon(typeId) {
-        var type = parseType(typeId),
+        let type = parseType(typeId),
             iconSpec = narrativeConfig.get('icons'), 
             color, iconDef, icon;
         
@@ -114,7 +114,7 @@ define([
     }
     
     function makeToolbarTypeIcon(typeId) {
-        var type = parseType(typeId),
+        let type = parseType(typeId),
             iconSpec = narrativeConfig.get('icons'), 
             color, iconDef, icon;
         

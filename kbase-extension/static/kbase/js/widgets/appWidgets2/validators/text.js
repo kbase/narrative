@@ -1,7 +1,7 @@
 define([
     'bluebird',
     './common'
-], function(Promise, common) {
+], (Promise, common) => {
 
     function importString(value) {
         if (value === undefined || value === null) {
@@ -11,14 +11,14 @@ define([
     }
 
     function applyConstraints(value, constraints) {
-        var parsedValue,
+        let parsedValue,
             errorMessage, diagnosis = 'valid',
             minLength = constraints.min_length,
             maxLength = constraints.max_length,
             regexps;
             
         if (constraints.regexp) {
-            regexps = constraints.regexp.map(function (item) {
+            regexps = constraints.regexp.map((item) => {
                 return {
                     regexpText: item.regex,
                     regexp: new RegExp(item.regex),
@@ -48,9 +48,9 @@ define([
                 diagnosis = 'invalid';
                 errorMessage = 'the maximum length for this parameter is ' + maxLength;
             } else if (regexps) {
-                var regexpErrorMessages = [];
-                regexps.forEach(function (item) {
-                    var matches = item.regexp.test(parsedValue);
+                const regexpErrorMessages = [];
+                regexps.forEach((item) => {
+                    let matches = item.regexp.test(parsedValue);
                     if (item.invert) {
                         matches = !matches;
                     }
@@ -77,7 +77,7 @@ define([
     }
 
     function validate(value, spec) {
-        return Promise.try(function() {
+        return Promise.try(() => {
             return applyConstraints(value, spec.data.constraints);
         });
     }

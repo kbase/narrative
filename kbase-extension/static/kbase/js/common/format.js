@@ -1,6 +1,6 @@
 define([
     'kb_common/format'
-], function (format) {
+], (format) => {
     'use strict';
 
     function pad(string, width, char, right) {
@@ -10,7 +10,7 @@ define([
         if (typeof string === 'number') {
             string = String(string);
         }
-        var padLen = width - string.length,
+        let padLen = width - string.length,
             padding = '',
             i;
         if (padLen <= 0) {
@@ -29,18 +29,18 @@ define([
         if (!value) {
             return defaultValue;
         }
-        var temp = value,
+        let temp = value,
             minimized = [],
-            units = [1000, 60, 60, 24, 30].map(function (unit) {
-                var unitValue = temp % unit;
+            units = [1000, 60, 60, 24, 30].map((unit) => {
+                const unitValue = temp % unit;
                 temp = (temp - unitValue) / unit;
                 return unitValue;
             }).reverse();
 
         units.pop();
 
-        var keep = false;
-        for (var i = 0; i < units.length; i += 1) {
+        let keep = false;
+        for (let i = 0; i < units.length; i += 1) {
             if (!keep) {
                 if (units[i] > 0) {
                     keep = true;
@@ -54,7 +54,7 @@ define([
             }
         }
 
-        return minimized.map(function (value) {
+        return minimized.map((value) => {
             return pad(value, 2);
         })
         .join(':');
@@ -64,8 +64,8 @@ define([
         if (!value) {
             return defaultValue;
         }
-        var minimized = [];
-        var units = [{
+        const minimized = [];
+        const units = [{
             unit: 'millisecond',
             short: 'ms',
             single: 'm',
@@ -91,10 +91,10 @@ define([
             single: 'd',
             size: 30
         }];
-        var temp = value;
-        var parts = units
-            .map(function (unit) {
-                var unitValue = temp % unit.size;
+        let temp = value;
+        const parts = units
+            .map((unit) => {
+                const unitValue = temp % unit.size;
                 temp = (temp - unitValue) / unit.size;
                 return {
                     name: unit.single,
@@ -104,8 +104,8 @@ define([
 
         parts.pop();
 
-        var keep = false;
-        for (var i = 0; i < parts.length; i += 1) {
+        let keep = false;
+        for (let i = 0; i < parts.length; i += 1) {
             if (!keep) {
                 if (parts[i].value > 0) {
                     keep = true;
@@ -124,7 +124,7 @@ define([
             if (minimized.length > 2) {
                 minimized.pop();
             }
-            return minimized.map(function (item) {
+            return minimized.map((item) => {
                 return String(item.value) + item.name;
             })
             .join(' ');

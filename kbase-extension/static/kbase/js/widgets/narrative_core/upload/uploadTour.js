@@ -8,11 +8,11 @@ define([
     'handlebars',
     'text!kbase/templates/tour/tour_panel.html',
     'css!kbase/css/kbaseTour.css'
-], function($, Jupyter, Tour, Handlebars, TourTmpl) {
+], ($, Jupyter, Tour, Handlebars, TourTmpl) => {
     'use strict';
 
-    var UploadTour = function ($elem, useGlobus, tourStartFn, tourEndFn) {
-        var that = this;
+    const UploadTour = function ($elem, useGlobus, tourStartFn, tourEndFn) {
+        const that = this;
         this.$elem = $elem;
         this.step_duration = 0;
         this.template = Handlebars.compile(TourTmpl);

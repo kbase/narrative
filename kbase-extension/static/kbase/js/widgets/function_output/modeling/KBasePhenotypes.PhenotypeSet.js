@@ -1,5 +1,5 @@
 function KBasePhenotypes_PhenotypeSet(modeltabs) {
-    var self = this;
+    const self = this;
     this.modeltabs = modeltabs;
 
     this.setMetadata = function (data) {
@@ -23,29 +23,29 @@ function KBasePhenotypes_PhenotypeSet(modeltabs) {
     this.setData = function (indata) {
         this.data = indata;
         this.phenotypes = this.data.phenotypes;
-        var cpd_refs_hash = {};
-        for (var i=0; i< this.phenotypes.length; i++) {
-            var refs = this.phenotypes[i].additionalcompound_refs;
-            for (var j=0; j<refs.length; j++) {
+        const cpd_refs_hash = {};
+        for (let i=0; i< this.phenotypes.length; i++) {
+            const refs = this.phenotypes[i].additionalcompound_refs;
+            for (let j=0; j<refs.length; j++) {
                 cpd_refs_hash[refs[j]] = 1;
             }
         }
 
-        var cpd_refs = [];
+        const cpd_refs = [];
 
-        for (var key in cpd_refs_hash) {
+        for (const key in cpd_refs_hash) {
             cpd_refs.push(key);
         }
 
-        var promise = this.modeltabs.getBiochemCompounds(cpd_refs)
-                          .then(function(cpds){
-                             var addcpd_names_hash = {};
+        const promise = this.modeltabs.getBiochemCompounds(cpd_refs)
+                          .then((cpds)=> {
+                             const addcpd_names_hash = {};
                              for (var j=0; j<cpds.length; j++) {
                                      addcpd_names_hash[cpds[j].id] = cpds[j].name;
                                  }
-                             for (var i=0; i< self.phenotypes.length; i++) {
-                                 var refs = self.phenotypes[i].additionalcompound_refs;
-                                 var names = [];
+                             for (let i=0; i< self.phenotypes.length; i++) {
+                                 const refs = self.phenotypes[i].additionalcompound_refs;
+                                 const names = [];
                                  for (var j=0; j<refs.length; j++) {
                                      names.push(addcpd_names_hash[refs[j].split("/").pop()]);
                                  }

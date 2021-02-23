@@ -4,33 +4,33 @@
 define([
     'jquery',
     'bluebird'
-], function (
+], (
     $,
     Promise
-) {
+) => {
     'use strict';
 
-    var globalUrlLookupCache = {}; // "<module>:<version>" -> {'cached_url': <url>, 'last_refresh_time': <milliseconds>}
+    const globalUrlLookupCache = {}; // "<module>:<version>" -> {'cached_url': <url>, 'last_refresh_time': <milliseconds>}
 
     function GenericClient(url, auth, auth_cb, use_url_lookup, timeout, async_job_check_time_ms) {
         this.url = url;
-        var lookup_url = url;
+        const lookup_url = url;
         this.use_url_lookup = use_url_lookup;
-        var _use_url_lookup = (typeof use_url_lookup !== 'undefined') &&
+        const _use_url_lookup = (typeof use_url_lookup !== 'undefined') &&
             (use_url_lookup !== null) ? use_url_lookup : true;
 
         this.timeout = timeout;
-        var _timeout = timeout;
+        const _timeout = timeout;
 
         this.async_job_check_time_ms = async_job_check_time_ms;
         if (!this.async_job_check_time_ms) {
             this.async_job_check_time_ms = 5000;
         }
 
-        var _auth = auth ? auth : { 'token': '', 'user_id': '' };
-        var _auth_cb = auth_cb;
+        const _auth = auth ? auth : { 'token': '', 'user_id': '' };
+        const _auth_cb = auth_cb;
 
-        var refresh_cycle_ms = 300000;
+        const refresh_cycle_ms = 300000;
 
         this.sync_call = function (service_method, param_list, _callback, _errorCallback, service_version) {
             if (Object.prototype.toString.call(param_list) !== '[object Array]') {
@@ -45,39 +45,39 @@ define([
             if (typeof arguments === 'function' && arguments.length > 5) {
                 throw 'Too many arguments (' + arguments.length + ' instead of 5)';
             }
-            var _url = lookup_url;
+            let _url = lookup_url;
             if (_use_url_lookup) {
-                var deferred = $.Deferred();
+                const deferred = $.Deferred();
                 if (typeof _callback === 'function') {
                     deferred.done(_callback);
                 }
                 if (typeof _errorCallback === 'function') {
                     deferred.fail(_errorCallback);
                 }
-                var module_name = service_method.split('.')[0];
-                get_cached_url(module_name, service_version, function (service_status_ret) {
+                const module_name = service_method.split('.')[0];
+                get_cached_url(module_name, service_version, (service_status_ret) => {
                     _url = service_status_ret.url;
-                    var refreshed = service_status_ret.refreshed;
-                    json_call_ajax(_url, service_method, param_list, 0, function(result) {
+                    const refreshed = service_status_ret.refreshed;
+                    json_call_ajax(_url, service_method, param_list, 0, (result) => {
                         deferred.resolve(result);
-                    }, function (err) {
+                    }, (err) => {
                         if (refreshed) {
                             deferred.reject({status: 500, error: err});
                         } else {
                             // We need to refresh URL finally because we tried to use cached URL and failed.
-                            refresh_cached_url(module_name, service_version, function (service_status_ret2) {
+                            refresh_cached_url(module_name, service_version, (service_status_ret2) => {
                                 _url = service_status_ret2.url;
-                                json_call_ajax(_url, service_method, param_list, 0, function(result) {
+                                json_call_ajax(_url, service_method, param_list, 0, (result) => {
                                     deferred.resolve(result);
-                                }, function (err) {
+                                }, (err) => {
                                     deferred.reject({status: 500, error: err});
                                 });
-                            }, function (err) {
+                            }, (err) => {
                                 deferred.reject({status: 500, error: err});
                             });
                         }
                     });
-                }, function (err) {
+                }, (err) => {
                     deferred.reject({status: 500, error: err});
                 });
                 return Promise.resolve(deferred.promise());
@@ -87,10 +87,10 @@ define([
         };
 
         function get_cached_url(module_name, version, callback, errorCallback) {
-            var current_time_ms = +(new Date());
-            var cached = globalUrlLookupCache[module_name + ':' + (version ? version : '')];
+            const current_time_ms = +(new Date());
+            const cached = globalUrlLookupCache[module_name + ':' + (version ? version : '')];
             if (cached) {
-                var last_refresh_time = cached['last_refresh_time'];
+                const last_refresh_time = cached['last_refresh_time'];
                 if (last_refresh_time && last_refresh_time + refresh_cycle_ms > current_time_ms) {
                     callback({'url': cached['cached_url'], 'refreshed': false});
                     return;
@@ -103,15 +103,15 @@ define([
             json_call_ajax(lookup_url, 'ServiceWizard.get_service_status', [{
                 module_name: module_name,
                 version: version || null
-            }], 1, function (service_status_ret) {
-                var _url = service_status_ret.url;
-                var cached = globalUrlLookupCache[module_name + ':' + (version ? version : '')];
+            }], 1, (service_status_ret) => {
+                const _url = service_status_ret.url;
+                let cached = globalUrlLookupCache[module_name + ':' + (version ? version : '')];
                 if (!cached) {
                     cached = {};
                     globalUrlLookupCache[module_name + ':' + (version ? version : '')] = cached;
                 }
                 cached['cached_url'] = _url;
-                var end_time = +(new Date());
+                const end_time = +(new Date());
                 cached['last_refresh_time'] = end_time;
                 callback({'url': cached['cached_url'], 'refreshed': true});
             }, errorCallback);
@@ -133,15 +133,15 @@ define([
                 deferred.fail(errorCallback);
             }
 
-            var rpc = {
+            const rpc = {
                 params: params,
                 method: method,
                 version: "1.1",
                 id: String(Math.random()).slice(2)
             };
 
-            var beforeSend = null;
-            var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb() :
+            let beforeSend = null;
+            const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb() :
                 (_auth.token ? _auth.token : null);
             if (token !== null) {
                 beforeSend = function (xhr) {
@@ -149,7 +149,7 @@ define([
                 };
             }
 
-            var xhr = $.ajax({
+            const xhr = $.ajax({
                 url: _url,
                 dataType: "text",
                 type: 'POST',
@@ -158,9 +158,9 @@ define([
                 beforeSend: beforeSend,
                 timeout: _timeout,
                 success: function (data, status, xhr) {
-                    var result;
+                    let result;
                     try {
-                        var resp = JSON.parse(data);
+                        const resp = JSON.parse(data);
                         result = (numRets === 1 ? resp.result[0] : resp.result);
                     } catch (err) {
                         deferred.reject({
@@ -174,10 +174,10 @@ define([
                     deferred.resolve(result);
                 },
                 error: function (xhr, textStatus, errorThrown) {
-                    var error;
+                    let error;
                     if (xhr.responseText) {
                         try {
-                            var resp = JSON.parse(xhr.responseText);
+                            const resp = JSON.parse(xhr.responseText);
                             error = resp.error;
                         } catch (err) { // Not JSON
                             error = "Unknown error - " + xhr.responseText;
@@ -192,7 +192,7 @@ define([
                 }
             });
 
-            var promise = deferred.promise();
+            const promise = deferred.promise();
             promise.xhr = xhr;
             return Promise.resolve(promise);
         }

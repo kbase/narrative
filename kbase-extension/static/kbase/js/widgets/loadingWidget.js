@@ -6,10 +6,10 @@
  */
 define([
     'jquery'  // just for the handy fadeOut thing.
-], function ($) {
+], ($) => {
     'use strict';
 
-    var LoadingWidget = function (config) {
+    const LoadingWidget = function (config) {
         this.config = config;
         this.timeout = config.timeout ? config.timeout : 20000;
         this.container = config.node ? config.node.querySelector('.progress-container') : null;
@@ -31,9 +31,9 @@ define([
 
     LoadingWidget.prototype.initializeTimeout = function () {
         this.clearTimeout();
-        this.timer = setTimeout(function () {
+        this.timer = setTimeout(() => {
             this.showTimeoutWarning();
-        }.bind(this), this.timeout);
+        }, this.timeout);
     };
 
     LoadingWidget.prototype.showTimeoutWarning = function () {
@@ -45,12 +45,12 @@ define([
     };
 
     LoadingWidget.prototype.updateProgress = function(name, done, error) {
-        var text = '<i class="fa fa-check" aria-hidden="true" style="color:green"></i>';
+        let text = '<i class="fa fa-check" aria-hidden="true" style="color:green"></i>';
         if (error) {
             text = '<i class="fa fa-times" aria-hidden="true" style="color:red"></i> Error while loading.';
         }
         if (this.container) {
-            var prog = this.container.querySelector('[data-element="' + name + '"] .kb-progress-stage');
+            const prog = this.container.querySelector('[data-element="' + name + '"] .kb-progress-stage');
             if (prog) {
                 prog.innerHTML = text;
                 this.totalDone++;

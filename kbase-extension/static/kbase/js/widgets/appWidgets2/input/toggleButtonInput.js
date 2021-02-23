@@ -9,7 +9,7 @@ define([
 
     'bootstrap',
     'css!font-awesome'
-], function (Promise, html, Validation, Events, UI, Props) {
+], (Promise, html, Validation, Events, UI, Props) => {
     'use strict';
 
     // Constants
@@ -100,7 +100,7 @@ define([
          * Hooks up event listeners
          */
         function makeInputControl(events, bus) {
-            let value = model.getItem('value'),
+            const value = model.getItem('value'),
                 isChecked = (value ? true : false);
 
             return label([
@@ -151,7 +151,7 @@ define([
         }
 
         function layout(events) {
-            var content = div({
+            const content = div({
                 dataElement: 'main-panel'
             }, [
                 div({dataElement: 'input-container'})

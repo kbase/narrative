@@ -8,7 +8,7 @@ define (
 		'kbaseAuthenticatedWidget',
 		'kbaseTabs',
 		'jquery-dataTables'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -17,7 +17,7 @@ define (
 		kbaseAuthenticatedWidget,
 		kbaseTabs,
 		jquery_dataTables
-	) {
+	) => {
     return KBWidget({
         name: 'kbaseSamplePropertyMatrixAbstract',
         parent : kbaseMatrix2DAbstract,
@@ -34,15 +34,15 @@ define (
 
 
         buildConstrainedSampleProperties: function(columnIds, columnMetadata, seriesIds, sorted){
-            var series2Columns = this.groupCrowsByPropertyValue(columnIds,
+            const series2Columns = this.groupCrowsByPropertyValue(columnIds,
                     columnMetadata,
                     this.TERM_DATASERIES,
                     this.TERM_SERIES_ID);
 
-            var seriesColumns = [];
-            for(var i in seriesIds){
-                var seriesId = seriesIds[i];
-                var columns = series2Columns[seriesId];
+            const seriesColumns = [];
+            for(const i in seriesIds){
+                const seriesId = seriesIds[i];
+                const columns = series2Columns[seriesId];
                 if(columns != null){
                     seriesColumns.push({
                         seriesId: seriesId,
@@ -55,14 +55,14 @@ define (
         },
 
         buildSampleProperties: function(columnIds, columnMetadata){
-            var series2Columns = this.groupCrowsByPropertyValue(columnIds,
+            const series2Columns = this.groupCrowsByPropertyValue(columnIds,
                     columnMetadata,
                     this.TERM_DATASERIES,
                     this.TERM_SERIES_ID);
 
-            var seriesColumns = [];
-            for(var seriesId in series2Columns){
-                var columns = series2Columns[seriesId];
+            const seriesColumns = [];
+            for(const seriesId in series2Columns){
+                const columns = series2Columns[seriesId];
                 seriesColumns.push({
                     seriesId: seriesId,
                     columns: columns
@@ -75,21 +75,21 @@ define (
 
 
         buildSeriesSamplePorperties: function(seriesColumns, columnMetadata, sorted){
-            var sampleProperties = [];
+            const sampleProperties = [];
 
             for(var i  in seriesColumns){
-                var seriesId = seriesColumns[i].seriesId;
-                var columns = seriesColumns[i].columns;
+                const seriesId = seriesColumns[i].seriesId;
+                const columns = seriesColumns[i].columns;
 
                 // Build property name
-                var samplePropertyNames = {};
+                const samplePropertyNames = {};
                 for(var i in columns){
                     var val = this.getPropertyValue(columns[i].properties, this.TERM_PROPERTY, this.TERM_NAME);
                     if(val != null){
                         samplePropertyNames[val] = true;
                     }
                 }
-                var samplePropertyName = "";
+                let samplePropertyName = "";
                 for(var val in samplePropertyNames){
                     if(samplePropertyName != ""){
                         samplePropertyName += '; ';
@@ -98,14 +98,14 @@ define (
                 }
 
                 // Build property units
-                var samplePropertyUnits = {};
+                const samplePropertyUnits = {};
                 for(var i in columns){
-                    var pv = this.getProperty(columns[i].properties, this.TERM_PROPERTY, this.TERM_MEASUREMENT);
+                    const pv = this.getProperty(columns[i].properties, this.TERM_PROPERTY, this.TERM_MEASUREMENT);
                     if(pv != null){
                         samplePropertyUnits[pv.property_unit] = true;
                     }
                 }
-                var samplePropertyUnit = "";
+                let samplePropertyUnit = "";
                 for(var val in samplePropertyUnits){
                     if(val == null || val == '') continue;
                     if(samplePropertyUnit != ""){
@@ -124,18 +124,18 @@ define (
                 })
             }
             if(sorted){
-                sampleProperties.sort(function(a, b) { return a.name > b.name ? 1 :  (a.name < b.name) ? -1 : 0});
+                sampleProperties.sort((a, b) => { return a.name > b.name ? 1 :  (a.name < b.name) ? -1 : 0});
             }
 
             return sampleProperties;
         },
 
         buildSamples: function(rowIds, rowsMetadata){
-            var samples = [];
-            for(var rIndex in rowIds){
-                var rowId = rowIds[rIndex];
-                var rowMetadata = rowsMetadata[rowId];
-                var sampleName = this.getPropertyValue(rowMetadata, this.TERM_SAMPLE, this.TERM_NAME);
+            const samples = [];
+            for(const rIndex in rowIds){
+                const rowId = rowIds[rIndex];
+                const rowMetadata = rowsMetadata[rowId];
+                const sampleName = this.getPropertyValue(rowMetadata, this.TERM_SAMPLE, this.TERM_NAME);
                 if(sampleName != null){
                     samples.push({
                         name: sampleName,
@@ -149,13 +149,13 @@ define (
 
 
         buildConstrainedSamples: function(rowIds, rowsMetadata, sampleIds){
-            var samples = [];
-            for(var sIndex in sampleIds){
-                var sampleName = sampleIds[sIndex];
-                for(var rIndex in rowIds){
-                    var rowId = rowIds[rIndex];
-                    var rowMetadata = rowsMetadata[rowId];
-                    var val = this.getPropertyValue(rowMetadata, this.TERM_SAMPLE, this.TERM_NAME);
+            const samples = [];
+            for(const sIndex in sampleIds){
+                const sampleName = sampleIds[sIndex];
+                for(const rIndex in rowIds){
+                    const rowId = rowIds[rIndex];
+                    const rowMetadata = rowsMetadata[rowId];
+                    const val = this.getPropertyValue(rowMetadata, this.TERM_SAMPLE, this.TERM_NAME);
                     if(val != null && val == sampleName){
                         samples.push({
                             name: sampleName,
@@ -171,25 +171,25 @@ define (
         },
 
         buildSamplePropertyStat: function(matrix, samples, sampleProperties){
-            var samplePropertyStat = [];
+            const samplePropertyStat = [];
 
-            var values = matrix.data.values;
-            for(var i in sampleProperties){
-                var sampleProperty = sampleProperties[i];
-                var columns = sampleProperty.columns;
+            const values = matrix.data.values;
+            for(const i in sampleProperties){
+                const sampleProperty = sampleProperties[i];
+                const columns = sampleProperty.columns;
 
-                var n = samples.length;
-                var s1 = 0;
-                var s2 = 0;
+                const n = samples.length;
+                let s1 = 0;
+                let s2 = 0;
                 var se = 0;
-                var count = 0;
-                for(var j in samples){
-                    var sample = samples[j];
-                    var rIndex = sample.rIndex;
+                let count = 0;
+                for(const j in samples){
+                    const sample = samples[j];
+                    const rIndex = sample.rIndex;
 
-                    var value = 0;
-                    for(var k in columns){
-                        var cIndex = columns[k].index;
+                    let value = 0;
+                    for(const k in columns){
+                        const cIndex = columns[k].index;
                         value += values[rIndex][cIndex];
                     }
                     value /= columns.length;
@@ -200,8 +200,8 @@ define (
                 }
 
 
-                var avg = s1/n;
-                var std = n > 1 ? Math.sqrt( (s2*n - s1*s1)/(n-1)/n ): 0;
+                const avg = s1/n;
+                const std = n > 1 ? Math.sqrt( (s2*n - s1*s1)/(n-1)/n ): 0;
                 var se  = n > 1 ? Math.sqrt( (s2*n - s1*s1)/(n-1)/n/n ): 0;
 
                 samplePropertyStat.push({
@@ -219,27 +219,27 @@ define (
         },
 
         buildSamplesStat: function(matrix, samples, sampleProperties){
-            var samplesStat = [];
+            const samplesStat = [];
 
-            var values = matrix.data.values;
-            for(var i in samples){
-                var sample = samples[i];
-                var rIndex = sample.rIndex;
+            const values = matrix.data.values;
+            for(const i in samples){
+                const sample = samples[i];
+                const rIndex = sample.rIndex;
 
 
-                var maxValue = null;
-                var maxPropertyName = null;
-                var maxPrpopertyUnit = null;
-                var minValue = null;
-                var minPropertyName = null;
-                var minPrpopertyUnit = null;
+                let maxValue = null;
+                let maxPropertyName = null;
+                let maxPrpopertyUnit = null;
+                let minValue = null;
+                let minPropertyName = null;
+                let minPrpopertyUnit = null;
 
-                for(var j in sampleProperties){
-                    var sampleProperty = sampleProperties[j];
-                    var columns = sampleProperty.columns;
-                    var value = 0;
-                    for(var k in columns){
-                        var cIndex = columns[k].index;
+                for(const j in sampleProperties){
+                    const sampleProperty = sampleProperties[j];
+                    const columns = sampleProperty.columns;
+                    let value = 0;
+                    for(const k in columns){
+                        const cIndex = columns[k].index;
                         value += values[rIndex][cIndex];
                     }
                     value /= columns.length;

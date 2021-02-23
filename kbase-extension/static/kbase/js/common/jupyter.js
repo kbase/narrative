@@ -5,15 +5,15 @@ define([
     'jquery',
     'base/js/namespace',
     'base/js/dialog'
-], function(
+], (
     $,
     Jupyter,
     dialog
-) {
+) => {
     'use strict';
 
     function deleteCell(cellOrIndex) {
-        var cellIndex;
+        let cellIndex;
         if (typeof cellOrIndex === 'number') {
             cellIndex = cellOrIndex;
         } else {
@@ -54,9 +54,9 @@ define([
     }
 
     function getCell(kbaseId) {
-        var cells = getCells(),
+        let cells = getCells(),
             cell;
-        for (var i = 0; i < cells.length; i += 1) {
+        for (let i = 0; i < cells.length; i += 1) {
             cell = cells[i];
             if (cell.metadata.kbase &&
                 cell.metadata.kbase.attributes &&
@@ -92,13 +92,13 @@ define([
      * specific cells or cell types, and within specific areas.
      */
     function disableKeyListenersForCell(cell) {
-        cell.element[0].addEventListener('focus', function() {
+        cell.element[0].addEventListener('focus', () => {
             Jupyter.keyboard_manager.disable();
         }, true);
     }
 
     function onEvent(type, handler) {
-        $([Jupyter.events]).on(type, function(event, data) {
+        $([Jupyter.events]).on(type, (event, data) => {
             try {
                 handler(event, data);
             } catch (err) {

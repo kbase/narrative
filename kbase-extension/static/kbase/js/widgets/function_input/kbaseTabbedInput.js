@@ -12,13 +12,13 @@ define (
 		'jquery',
 		'kbaseTabs',
 		'kbaseNarrativeMethodInput'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		kbaseTabs,
 		kbaseNarrativeMethodInput
-	) {
+	) => {
     return KBWidget({
         name: "kbaseTabbedInput",
         parent : kbaseNarrativeMethodInput,
@@ -44,12 +44,12 @@ define (
 
         render: function() {
             // figure out all types from the method
-            var self = this;
-            var method = this.options.method;
-            var params = method.parameters;
-            var tabParamSpec = null;
-            for (var i=0; i<params.length; i++) {
-                var paramSpec = params[i];
+            const self = this;
+            const method = this.options.method;
+            const params = method.parameters;
+            let tabParamSpec = null;
+            for (let i=0; i<params.length; i++) {
+                const paramSpec = params[i];
                 // check what kind of parameter here.
                 if (paramSpec.field_type === "tab") {
                 	tabParamSpec = paramSpec;
@@ -60,16 +60,16 @@ define (
             if (tabParamSpec) {
             	//console.log(tabParamSpec);
             	self.paramIdToTab = {};
-            	var tabIdToParamCount = {};
+            	const tabIdToParamCount = {};
             	for (var tabId in tabParamSpec.tab_options.tab_id_to_param_ids) {
-            		var paramIds = tabParamSpec.tab_options.tab_id_to_param_ids[tabId];
+            		const paramIds = tabParamSpec.tab_options.tab_id_to_param_ids[tabId];
             		tabIdToParamCount[tabId] = paramIds.length;
-            		for (var paramPosInTab in paramIds) {
+            		for (const paramPosInTab in paramIds) {
             			paramId = paramIds[paramPosInTab];
             			self.paramIdToTab[paramId] = tabId;
             		}
             	}
-            	var tabNamesRaw = tabParamSpec.tab_options.tab_id_to_tab_name;
+            	const tabNamesRaw = tabParamSpec.tab_options.tab_id_to_tab_name;
             	if (this.options.isInSidePanel) {
                 	self.tabNames = {};
             		for (var tabId in tabNamesRaw) {
@@ -89,14 +89,14 @@ define (
             	}
             	self.tabs = {};
             	self.tabParamToSpec = {};
-            	var tabCount = 0;
-            	for (var tabPos in tabParamSpec.tab_options.tab_id_order) {
+            	let tabCount = 0;
+            	for (const tabPos in tabParamSpec.tab_options.tab_id_order) {
             		var tabId = tabParamSpec.tab_options.tab_id_order[tabPos];
-            		var tabName = self.tabNames[tabId];
+            		const tabName = self.tabNames[tabId];
             		if (!tabName)
             			continue;
             		tab = $('<div/>');
-            		var isShown = tabCount == 0;
+            		const isShown = tabCount == 0;
             		self.tabPaneWidget.addTab({tab: tabName, content: tab, canDelete : false, show: isShown});
             		tabCount++;
             		self.tabs[tabId] = tab;
@@ -107,20 +107,20 @@ define (
         },
 
         buildTabs: function(tabPane) {
-            var $header = $('<div>');
-            var $body = $('<div>');
-            var tabNameToIndex = {};
-            var tabCount = 0;
+            const $header = $('<div>');
+            const $body = $('<div>');
+            const tabNameToIndex = {};
+            let tabCount = 0;
             tabPane['kbaseTabs'] = function(funcName, params) {
             	if (funcName === 'addTab') {
             		tabNameToIndex[params.tab] = tabCount;
             		tabCount++;
-            		var tabHeader = $('<div>')
+            		const tabHeader = $('<div>')
                     	.addClass('kb-side-header')
                     	//.css('width', (100/tabs.length)+'%')
                     	.append(params.tab);
                     $header.append(tabHeader);
-                    var tabContent = $('<div>')
+                    const tabContent = $('<div>')
                     	.addClass('kb-side-tab2')
                     	.css("display", "none")
                     	.append(params.content);
@@ -129,12 +129,12 @@ define (
                         tabHeader.addClass('active');
                         tabContent.css('display', '');
                     }
-            		tabHeader.click($.proxy(function(event) {
+            		tabHeader.click($.proxy((event) => {
                         event.preventDefault();
                         event.stopPropagation();
-                        var $headerDiv = $(event.currentTarget);
+                        const $headerDiv = $(event.currentTarget);
                         if (!$headerDiv.hasClass('active')) {
-                            var idx = $headerDiv.index();
+                            const idx = $headerDiv.index();
                             $header.find('div').removeClass('active');
                             $headerDiv.addClass('active');
                             $body.find('div.kb-side-tab2').css('display', 'none');
@@ -147,7 +147,7 @@ define (
         },
 
         addParameterDiv: function(paramPos, paramSpec, $stepDiv, $optionsDiv, $advancedOptionsDiv, isAdvanced) {
-        	var tabId = this.paramIdToTab[paramSpec.id];
+        	const tabId = this.paramIdToTab[paramSpec.id];
         	if (tabId) {
         		this.putInTab(paramSpec, $stepDiv, $optionsDiv, tabId);
         	} else {
@@ -162,7 +162,7 @@ define (
             	$optionsDiv.append(this.tabPane);
             	this.tabPaneWasAdded = true;
             }
-            var tab = this.tabs[tabId];
+            const tab = this.tabs[tabId];
             if (tab.children().length == 0)
             	tab.css({"margin-top":"5px"});
             tab.append($stepDiv);
@@ -170,12 +170,12 @@ define (
         },
 
         getParameters: function() {
-        	var ret = [];
-            var selectedParameterTab = this.getSelectedTabId();
-            for(var i=0; i<this.parameters.length; i++) {
-            	var paramId = this.parameters[i].id;
-                var tabId = this.paramIdToTab[paramId];
-            	var value = ((!tabId) || tabId === selectedParameterTab) ?
+        	const ret = [];
+            const selectedParameterTab = this.getSelectedTabId();
+            for(let i=0; i<this.parameters.length; i++) {
+            	const paramId = this.parameters[i].id;
+                const tabId = this.paramIdToTab[paramId];
+            	const value = ((!tabId) || tabId === selectedParameterTab) ?
             			this.parameters[i].widget.getParameterValue() : "";
             	ret.push(value);
             }
@@ -184,16 +184,16 @@ define (
         },
 
         getState: function() {
-            var state = this._superMethod('getState');
-            var selectedParameterTab = this.getSelectedTabId();
+            const state = this._superMethod('getState');
+            const selectedParameterTab = this.getSelectedTabId();
             state['selectedParameterTab'] = selectedParameterTab;
             return state;
         },
 
         getSelectedTabId: function() {
-            var ret = null;
-            for (var tabId in this.tabs) {
-            	var tab = this.tabs[tabId];
+            let ret = null;
+            for (const tabId in this.tabs) {
+            	const tab = this.tabs[tabId];
             	if (tab.is(':visible'))
             		ret = tabId;
             }
@@ -204,24 +204,24 @@ define (
             if (!state)
                 return;
             this._superMethod('loadState', state);
-            var selectedParameterTab = state['selectedParameterTab'];
+            const selectedParameterTab = state['selectedParameterTab'];
             if (selectedParameterTab) {
             	this.tabPane.kbaseTabs('showTab', this.tabNames[selectedParameterTab]);
             }
         },
 
         isValid: function() {
-            var isValidRet = { isValid:true, errormssgs: [] };
-            var selectedParameterTab = this.getSelectedTabId();
+            const isValidRet = { isValid:true, errormssgs: [] };
+            const selectedParameterTab = this.getSelectedTabId();
             if (this.parameters) {
-                for (var i=0; i<this.parameters.length; i++) {
-                	var paramId = this.parameters[i].id;
-                    var tabId = this.paramIdToTab[paramId];
+                for (let i=0; i<this.parameters.length; i++) {
+                	const paramId = this.parameters[i].id;
+                    const tabId = this.paramIdToTab[paramId];
                     if ((!tabId) || tabId === selectedParameterTab) {
-                    	var parameterStatus = this.parameters[i].widget.isValid();
+                    	const parameterStatus = this.parameters[i].widget.isValid();
                     	if (!parameterStatus.isValid) {
                     		isValidRet.isValid = false;
-                    		for(var e = 0; e<parameterStatus.errormssgs.length; e++) {
+                    		for(let e = 0; e<parameterStatus.errormssgs.length; e++) {
                     			isValidRet.errormssgs.push(parameterStatus.errormssgs[e]);
                     		}
                     	}
@@ -232,17 +232,17 @@ define (
         },
 
         getAllParameterValues: function() {
-        	var ret = this._superMethod('getAllParameterValues');
+        	const ret = this._superMethod('getAllParameterValues');
         	ret.splice(this.tabParamPos, 0, {id:this.tabParamId, value:this.getSelectedTabId()});
         	return ret;
         },
 
         prepareDataBeforeRun: function() {
-            var selectedParameterTab = this.getSelectedTabId();
+            const selectedParameterTab = this.getSelectedTabId();
             if (this.parameters) {
-                for (var i = 0; i < this.parameters.length; i++) {
-                	var paramId = this.parameters[i].id;
-                    var tabId = this.paramIdToTab[paramId];
+                for (let i = 0; i < this.parameters.length; i++) {
+                	const paramId = this.parameters[i].id;
+                    const tabId = this.paramIdToTab[paramId];
                     if ((!tabId) || tabId === selectedParameterTab) {
                     	this.parameters[i].widget.prepareValueBeforeRun(this.options.method);
                     }

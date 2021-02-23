@@ -15,7 +15,7 @@ define ([
     'api/auth',
     'util/string',
     'select2'
-], function (
+], (
     Promise,
     KBWidget,
     bootstrap,
@@ -24,7 +24,7 @@ define ([
     kbaseAuthenticatedWidget,
     Auth,
     StringUtil
-) {
+) => {
     'use strict';
     return KBWidget({
         name: 'kbaseNarrativeSharePanel',
@@ -89,7 +89,7 @@ define ([
          * @param {string} token  authorization token
          */
         fetchOrgs: function(token) {
-            var groupUrl = this.options.groups_url+'/member';
+            const groupUrl = this.options.groups_url+'/member';
             return fetch(groupUrl, {
                 method: "GET",
                 mode: "cors",
@@ -114,7 +114,7 @@ define ([
          */
         fetchOrgLogoUrl: function(org, token, map) {
             map.set(org.id, [org.name])
-            var groupUrl = this.options.groups_url+"/group/"+org.id;
+            const groupUrl = this.options.groups_url+"/group/"+org.id;
             return fetch(groupUrl, {
                 method: "GET",
                 mode: "cors",
@@ -126,7 +126,7 @@ define ([
             })
             .then(response => response.json())
             .then(response => {
-                let arr = map.get(org.id);
+                const arr = map.get(org.id);
                 map.set(org.id, [arr, response.custom.logourl]);
                 this.narrativeOrgList = map;
             })
@@ -138,7 +138,7 @@ define ([
          * @param {string} token  authorization token
          */
         fetchNarrativeOrgs: function(wsID, token) {
-            var groupUrl = this.options.groups_url+'/group?resourcetype=workspace&resource='+wsID;
+            const groupUrl = this.options.groups_url+'/group?resourcetype=workspace&resource='+wsID;
             return fetch(groupUrl, {
                 method: "GET",
                 mode: "cors",
@@ -150,7 +150,7 @@ define ([
             })
             .then(response => response.json())
             .then(response => {
-                let orgInfoMap = new Map();
+                const orgInfoMap = new Map();
                 return Promise.all(response.map((org) => this.fetchOrgLogoUrl(org, token, orgInfoMap)));
             })
                 .catch(error => console.error('Error while fetching groups associated with the workspace:', error));
@@ -161,11 +161,11 @@ define ([
         user_data: {},
         all_users: null,
         getInfoAndRender: function () {
-            var self = this;
+            const self = this;
             if (!self.ws || !self.options.ws_name_or_id) {
                 return;
             }
-            var wsIdentity = {};
+            const wsIdentity = {};
             if (self.options.ws_name_or_id) {
                 if (/^[1-9]\d*$/.test(self.options.ws_name_or_id)) {
                     wsIdentity.id = parseInt(self.options.ws_name_or_id);
@@ -175,16 +175,16 @@ define ([
             }
 
             Promise.resolve(self.ws.get_workspace_info(wsIdentity))
-            .then(function (info) {
+            .then((info) => {
                 self.ws_info = info;
                 self.narrOwner = info[2];
                 return Promise.resolve(self.ws.get_permissions(wsIdentity));
             })
-            .then(function (perm) {
+            .then((perm) => {
                 self.ws_permissions = [];
                 self.user_data = {};
-                var usernameList = [ self.my_user_id ];
-                Object.keys(perm).forEach(function(u) {
+                const usernameList = [ self.my_user_id ];
+                Object.keys(perm).forEach((u) => {
                     if (u === '*') {
                         return;
                     }
@@ -193,14 +193,14 @@ define ([
                 });
                 return self.authClient.getUserNames(self.authClient.getAuthToken(), usernameList);
             })
-            .then(function (data) {
+            .then((data) => {
                 self.user_data = data;
             })
-            .catch(function(error) {
+            .catch((error) => {
                 console.error(error);
                 self.reportError(error);
             })
-            .finally(function() {
+            .finally(() => {
                 self.render();
             });
         },
@@ -222,14 +222,14 @@ define ([
 
         isPrivate: true, // set if this ws is private or public
         render: function () {
-            var self = this;
+            const self = this;
             if (!self.ws_info || !self.ws_permissions) {
                 return;
             }
             self.$mainPanel.empty();
 
-            var globalReadStatus = '<strong><span class="fa fa-lock" style="margin-right:10px"></span>Private</strong>';
-            var globalReadClass = 'alert alert-info';
+            let globalReadStatus = '<strong><span class="fa fa-lock" style="margin-right:10px"></span>Private</strong>';
+            let globalReadClass = 'alert alert-info';
             self.isPrivate = true;
             if (self.ws_info[6] === 'r') {
                 self.isPrivate = false;
@@ -237,7 +237,7 @@ define ([
                 globalReadStatus = '<strong><span class="fa fa-unlock" style="margin-right:10px"></span>Public</strong>';
             }
 
-            var $topDiv = $('<div>')
+            const $topDiv = $('<div>')
                 .addClass(globalReadClass)
                 .css({'text-align': 'center', 'padding': '10px', 'margin': '5px'})
                 .append(globalReadStatus);
@@ -247,10 +247,10 @@ define ([
             self.$mainPanel.append($togglePublicPrivate);
 
             // meDiv
-            var $meDiv = $('<div>').css({'margin': '5px', 'margin-top': '20px'});
-            var status = 'You do not have access to this Narrative.';
-            var isAdmin = false;
-            var isOwner = false;
+            const $meDiv = $('<div>').css({'margin': '5px', 'margin-top': '20px'});
+            let status = 'You do not have access to this Narrative.';
+            let isAdmin = false;
+            let isOwner = false;
             if (self.narrOwner === self.my_user_id) {
                 status = 'You can edit and share it with other users or request to add to an organization.';
                 isAdmin = true;
@@ -273,10 +273,10 @@ define ([
              *     - $tab1 for sharing user
              *     - $tab2 for sharing with org
              */
-            var $tabDiv = $('<div class="tabs">').css({'margin': '0px 5px'});
+            const $tabDiv = $('<div class="tabs">').css({'margin': '0px 5px'});
 
             // make divs for each tab.
-            var $tab1 = createTab('white', 'Users')
+            const $tab1 = createTab('white', 'Users')
             .css({'border-top-left-radius': '2px'});
 
             $tab1.click(function(){
@@ -315,7 +315,7 @@ define ([
              *     - share with user div /$shareWithUserDiv
              *     - share with org div /$shareWithOrgDiv
              */
-            var $tabContent = $('<div class="tab-content">')
+            const $tabContent = $('<div class="tab-content">')
             .css({'border': 'solid', 'border-width': '0px 1px 1px 1px', 'border-radius': '0px 0px 2px 2px', 'padding': '15px', 'margin': '0px 5px'});
 
             var $shareWithUserDiv = $('<div id="shareWUser" class="content">').css({'display': 'inherit'});
@@ -324,20 +324,20 @@ define ([
 
             // Content of Share with Org (Request to add to Org) Div
             if(isOwner) {
-                var $addOrgDiv = $('<div>').css({'margin-top': '10px'});
-                var $inputOrg = $('<select single data-placeholder="Associate with..." id="orgInput">')
+                const $addOrgDiv = $('<div>').css({'margin-top': '10px'});
+                const $inputOrg = $('<select single data-placeholder="Associate with..." id="orgInput">')
                     .addClass('form-control kb-share-select')
                     .css("display", "inline");
                 $inputOrg.append('<option></option>'); // option is needed for placeholder to work.
 
-                var $applyOrgBtn = $('<button>')
+                const $applyOrgBtn = $('<button>')
                 .addClass('btn btn-primary disabled')
                 .append('Apply')
                 .css("margin-left", "10px")
                 .click(function() {
                     if (!$(this).hasClass('disabled')) {
-                        var org = $inputOrg.select2('data');
-                        var orgID = org[0]["id"];
+                        const org = $inputOrg.select2('data');
+                        const orgID = org[0]["id"];
                         self.requestAddNarrative(self.authClient.getAuthToken(), orgID);
                     }
                 });
@@ -348,12 +348,12 @@ define ([
                 .append($inputOrg)
                 .append($applyOrgBtn);
 
-                $inputOrg.on('select2:select', function() {
+                $inputOrg.on('select2:select', () => {
                     if ($inputOrg.select2('data').length > 0) {
                         $applyOrgBtn.removeClass('disabled');
                     }
                 });
-                $inputOrg.on('select2:unselect', function() {
+                $inputOrg.on('select2:unselect', () => {
                     if ($inputOrg.select2('data').length === 0) {
                         $applyOrgBtn.addClass('disabled');
                     }
@@ -366,11 +366,11 @@ define ([
                 if(this.narrativeOrgList){
                     var $narrativeOrgsDiv = $('<table>').css({'border': '1px solid rgb(170, 170, 170)', 'border-radius': '4px', 'text-align': 'left', 'width': '51%', 'padding': '10px', 'margin': 'auto', 'margin-top': '10px'});                    
                     this.narrativeOrgList.forEach((value, key, map) => {
-                        let url = window.location.origin + "/#org/" + key;
-                        let $href = $('<a>').attr("href", url);
-                        let $logo = $('<img>').attr("src", value[1]).css({'width': '40', 'margin': '8px'});
+                        const url = window.location.origin + "/#org/" + key;
+                        const $href = $('<a>').attr("href", url);
+                        const $logo = $('<img>').attr("src", value[1]).css({'width': '40', 'margin': '8px'});
                         $href.append($logo).append(value[0]);
-                        let $tr = $('<tr>').css({'padding': '2px'}).append($href);
+                        const $tr = $('<tr>').css({'padding': '2px'}).append($href);
                         $narrativeOrgsDiv.append($tr);
                     })
                 }
@@ -383,11 +383,11 @@ define ([
 
             // content of share with user div
             if (isAdmin) {
-                var $addUsersDiv = $('<div>').css({'margin-top': '10px'});
-                var $input = $('<select multiple data-placeholder="Share with...">')
+                const $addUsersDiv = $('<div>').css({'margin-top': '10px'});
+                const $input = $('<select multiple data-placeholder="Share with...">')
                     .addClass('form-control kb-share-select');
 
-                var $permSelect =
+                const $permSelect =
                     $('<select>')
                         .css({'width': '25%', 'display': 'inline-block'})
                         // TODO: pull-right is deprecated, use dropdown-menu-right when bootstrap updates
@@ -395,13 +395,13 @@ define ([
                         .append($('<option value="w">').append('Edit and save'))
                         .append($('<option value="a">').append('Edit, save, and share'));
 
-                var $applyBtn = $('<button>')
+                const $applyBtn = $('<button>')
                                 .addClass('btn btn-primary disabled')
                                 .append('Apply')
                                 .click(function() {
                                     if (!$(this).hasClass('disabled')) {
-                                        var users = $input.select2('data');
-                                        var perm = $permSelect.val();
+                                        const users = $input.select2('data');
+                                        const perm = $permSelect.val();
                                         self.updateUserPermissions(users, perm);
                                     }
                                 });
@@ -415,12 +415,12 @@ define ([
                 $permSelect.select2({
                     minimumResultsForSearch: Infinity
                 });
-                $input.on('select2:select', function() {
+                $input.on('select2:select', () => {
                     if ($input.select2('data').length > 0) {
                         $applyBtn.removeClass('disabled');
                     }
                 });
-                $input.on('select2:unselect', function() {
+                $input.on('select2:unselect', () => {
                     if ($input.select2('data').length === 0) {
                         $applyBtn.addClass('disabled');
                     }
@@ -442,7 +442,7 @@ define ([
             // end of Tab content divs
 
             // div contains other users sharing the narrative
-            var $othersDiv = $('<div>').css({
+            const $othersDiv = $('<div>').css({
                 'margin-top': '15px',
                 'max-height': self.options.max_list_height,
                 'overflow-y': 'auto',
@@ -450,12 +450,12 @@ define ([
                 'display': 'flex',
                 'justify-content': 'center'
             });
-            var $tbl = $('<table>');
+            const $tbl = $('<table>');
             $othersDiv.append($tbl);
 
             // sort
-            self.ws_permissions.sort(function (a, b) {
-                var getPermLevel = function(perm) {
+            self.ws_permissions.sort((a, b) => {
+                const getPermLevel = function(perm) {
                     switch (perm) {
                         case 'a':
                         return 1;
@@ -478,13 +478,13 @@ define ([
             });
 
             // show all other users
-            for (var i = 0; i < self.ws_permissions.length; i++) {
+            for (let i = 0; i < self.ws_permissions.length; i++) {
                 if (self.ws_permissions[i][0] === self.my_user_id || self.ws_permissions[i][0] === '*') {
                     continue;
                 }
                 var $select;
-                var $removeBtn = null;
-                var thisUser = self.ws_permissions[i][0];
+                let $removeBtn = null;
+                const thisUser = self.ws_permissions[i][0];
                 if (isAdmin && thisUser !== self.narrOwner) {
                     $select = $('<select>')
                     .addClass('form-control kb-share-user-permissions-dropdown')
@@ -520,8 +520,8 @@ define ([
                         $select.append('can view');
                     }
                 }
-                var user_display = self.renderUserIconAndName(self.ws_permissions[i][0], null, true);
-                var $userRow =
+                const user_display = self.renderUserIconAndName(self.ws_permissions[i][0], null, true);
+                const $userRow =
                 $('<tr>')
                 .append($('<td style="text-align:left">')
                 .append(user_display[0]))
@@ -543,8 +543,8 @@ define ([
          */
 
         requestAddNarrative: function(token, orgID){
-            var ws_id = this.ws_info[0];
-            var groupResourceUrl = this.options.groups_url+"/group/"+orgID+"/resource/workspace/"+ws_id;
+            const ws_id = this.ws_info[0];
+            const groupResourceUrl = this.options.groups_url+"/group/"+orgID+"/resource/workspace/"+ws_id;
             fetch(groupResourceUrl, {
                 method: "POST",
                 mode: "cors",
@@ -578,8 +578,8 @@ define ([
          *          Gets applied to all users.
          */
         updateUserPermissions: function(userData, newPerm) {
-            var users = [];
-            for (var i = 0; i < userData.length; i++) {
+            const users = [];
+            for (let i = 0; i < userData.length; i++) {
                 if (userData[i].id.trim() !== '') {
                     users.push(userData[i].id.trim());
                 }
@@ -596,31 +596,31 @@ define ([
             .catch(function(error) {
                 this.reportError(error);
             })
-            .finally(function() {
+            .finally(() => {
                 this.refresh();
-            }.bind(this));
+            });
         },
 
         makePublicPrivateToggle: function () {
-            var commandStr = 'make public?';
-            var newPerm = 'r';
-            var self = this;
+            let commandStr = 'make public?';
+            let newPerm = 'r';
+            const self = this;
             if (!self.isPrivate) {
                 commandStr = 'make private?';
                 newPerm = 'n';
             }
             return $('<a href="#">' + commandStr + '</a>')
-                .click(function (e) {
+                .click((e) => {
                     e.preventDefault();
                     self.showWorking('updating permissions...');
                     Promise.resolve(self.ws.set_global_permission({
                         id: self.ws_info[0],
                         new_permission: newPerm
                     }))
-                    .catch(function(error) {
+                    .catch((error) => {
                         self.reportError(error);
                     })
-                    .finally(function() {
+                    .finally(() => {
                         self.refresh();
                     });
                 });
@@ -628,26 +628,26 @@ define ([
 
         /* private method - note: if placeholder is empty, then users cannot cancel a selection*/
         setupSelect2: function ($input) {
-            var self = this;
-            var noMatchesFoundStr = 'Search by Name or Username';
+            const self = this;
+            const noMatchesFoundStr = 'Search by Name or Username';
 
             $.fn.select2.amd.require([
                 'select2/data/array',
                 'select2/utils'
-            ], function(ArrayData, Utils) {
+            ], (ArrayData, Utils) => {
                 function CustomData ($element, options) {
                     CustomData.__super__.constructor.call(this, $element, options);
                 }
                 Utils.Extend(CustomData, ArrayData);
 
                 CustomData.prototype.query = function(params, callback) {
-                    var term = params.term || '';
+                    let term = params.term || '';
                     term = term.trim();
                     if (term.length >= 2) {
                         Promise.resolve(self.authClient.searchUserNames(null, term))
-                        .then(function(users) {
-                            var results = [];
-                            Object.keys(users).forEach(function(username) {
+                        .then((users) => {
+                            let results = [];
+                            Object.keys(users).forEach((username) => {
                                 if (username !== self.my_user_id) {
                                     results.push({
                                         id: username,
@@ -687,7 +687,7 @@ define ([
                     },
                     templateSelection: function (object) {
                         if (object.found) {
-                            var toShow = self.renderUserIconAndName(object.id, object.text);
+                            const toShow = self.renderUserIconAndName(object.id, object.text);
                             return $('<span>')
                                 .append(toShow[0])
                                 .append(toShow[1].css({'white-space': 'normal'}))
@@ -697,7 +697,7 @@ define ([
                     },
                     templateResult: function (object) {
                         if (object.found) {
-                            var toShow = self.renderUserIconAndName(object.id, object.text);
+                            const toShow = self.renderUserIconAndName(object.id, object.text);
                             return $('<span>').append(toShow[0]).append(toShow[1]);
                         }
                         return $('<b>' + object.text + '</b> (not found)');
@@ -708,15 +708,15 @@ define ([
         },
         // setting up Select2 for inputOrg
         orgSetupSelect2: function($inputOrg){
-            var self = this;
-            var orgList = self.orgList;
-            var orgData = [];
-            var noMatchedOrgFoundStr = 'Search by Organization name';
+            const self = this;
+            const orgList = self.orgList;
+            const orgData = [];
+            const noMatchedOrgFoundStr = 'Search by Organization name';
 
             $.fn.select2.amd.require([
                 'select2/data/array',
                 'select2/utils'
-            ], function (ArrayData, Utils) {
+            ], (ArrayData, Utils) => {
                 if(!orgList) return;
                 orgList.forEach(org=>{
                     orgData.push({"id": org.id, "text": org.name});
@@ -777,14 +777,14 @@ define ([
             '#607D8B'  //blue grey
         ],
         renderUserIconAndName: function (username, realName, turnOnLink) {
-            var code = 0;
-            for (var i = 0; i < username.length; i++) {
+            let code = 0;
+            for (let i = 0; i < username.length; i++) {
                 code += username.charCodeAt(i);
             }
-            var userColor = this.colors[ code % this.colors.length ];
-            var $span = $('<span>').addClass('fa fa-user').css({'color': userColor});
+            const userColor = this.colors[ code % this.colors.length ];
+            const $span = $('<span>').addClass('fa fa-user').css({'color': userColor});
 
-            var userString = username;
+            let userString = username;
             if (username === this.my_user_id) {
                 userString = ' Me (' + username + ')';
             } else if (realName) {
@@ -793,13 +793,13 @@ define ([
                 userString = ' ' + this.user_data[username] + ' (' + username + ')';
             }
 
-            var shortName = userString;
-            var isShortened = false;
+            let shortName = userString;
+            let isShortened = false;
             if (userString.length > this.options.max_name_length) {
                 shortName = shortName.substring(0, this.options.max_name_length - 3) + '...';
                 isShortened = true;
             }
-            var $name = $('<span>').css({'color': userColor, 'white-space': 'nowrap'}).append(StringUtil.escape(shortName));
+            let $name = $('<span>').css({'color': userColor, 'white-space': 'nowrap'}).append(StringUtil.escape(shortName));
             if (isShortened) {
                 $name.tooltip({title: userString, placement: 'bottom'});
             }

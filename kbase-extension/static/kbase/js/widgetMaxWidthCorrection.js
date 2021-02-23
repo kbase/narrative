@@ -1,7 +1,7 @@
-var components = {};
-var notebookContainer = null;
+const components = {};
+let notebookContainer = null;
 
-var prevNotebookContainerW = null;
+let prevNotebookContainerW = null;
 
 function getNotebookContainerWidth() {
 	if (!notebookContainer) {
@@ -20,11 +20,11 @@ function updateMaxWidth(componentId, w) {
 	//	componentId + ", parentNode=" + jqueryComponent.closest('html') + ")");
 }
 
-var windowResizeListener = function() {
-	var newW = notebookContainer.width();
+const windowResizeListener = function() {
+	const newW = notebookContainer.width();
 	if (prevNotebookContainerW != newW) {
 		prevNotebookContainerW = newW;
-		for (var componentId in components)
+		for (const componentId in components)
 			updateMaxWidth(componentId, newW);
 	}
 }

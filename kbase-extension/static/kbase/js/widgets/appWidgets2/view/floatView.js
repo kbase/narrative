@@ -10,22 +10,22 @@ define([
 
     'bootstrap',
     'css!font-awesome'
-], function(
+], (
     Promise,
     Jupyter,
     html,
     Events,
     UI,
-    Props) {
+    Props) => {
     'use strict';
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         input = t('input');
 
     function factory(config) {
-        var spec = config.parameterSpec,
+        let spec = config.parameterSpec,
             bus = config.bus,
             parent,
             container,
@@ -59,7 +59,7 @@ define([
 
         function makeViewControl(currentValue) {
             // CONTROL
-            var initialControlValue,
+            let initialControlValue,
                 min = spec.data.constraints.min,
                 max = spec.data.constraints.max;
             if (typeof currentValue === 'number') {
@@ -85,14 +85,14 @@ define([
         }
 
         function render() {
-            return Promise.try(function() {
-                var inputControl = makeViewControl(model.getItem('value'));
+            return Promise.try(() => {
+                const inputControl = makeViewControl(model.getItem('value'));
                 ui.setContent('input-container', inputControl);
             });
         }
 
         function layout() {
-            var content = div({
+            const content = div({
                 dataElement: 'main-panel'
             }, [
                 div({ dataElement: 'input-container' })
@@ -105,19 +105,19 @@ define([
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
-                var theLayout = layout();
+                const theLayout = layout();
 
                 container.innerHTML = theLayout.content;
 
-                bus.on('reset-to-defaults', function() {
+                bus.on('reset-to-defaults', () => {
                     resetModelValue();
                 });
-                bus.on('update', function(message) {
+                bus.on('update', (message) => {
                     model.setItem('value', message.value);
                 });
 
@@ -126,7 +126,7 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (container) {
                     parent.removeChild(container);
                 }

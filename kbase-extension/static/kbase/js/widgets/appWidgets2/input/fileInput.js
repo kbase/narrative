@@ -16,7 +16,7 @@ define([
 
     'bootstrap',
     'css!font-awesome'
-], function (
+], (
     Promise,
     $,
     Jupyter,
@@ -28,11 +28,11 @@ define([
     UJS,
     Shock,
     Validation
-) {
+) => {
     'use strict';
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         input = t('input'),
         span = t('span'),
@@ -46,7 +46,7 @@ define([
         maxFileStateTime = 7 * 24 * 3600000 // in milliseconds;
 
     function factory(config) {
-        var spec = config.parameterSpec,
+        let spec = config.parameterSpec,
             hostNode,
             container,
             runtime = Runtime.make(),
@@ -96,20 +96,20 @@ define([
         // VALIDATION
 
         function importControlValue() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 return Validation.importString(getControlValue());
             });
         }
 
         function validate(value) {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 return Validation.validate(value, spec);
             });
         }
 
         function autoValidate() {
             return validate(model.getItem('value'))
-                .then(function (result) {
+                .then((result) => {
                     channel.emit('validation', result);
                 });
         }
@@ -137,14 +137,14 @@ define([
 
         function doChange() {
             importControlValue()
-                .then(function (value) {
+                .then((value) => {
                     model.setItem('value', value);
                     channel.emit('changed', {
                         newValue: value
                     });
                     return validate(value);
                 })
-                .then(function (result) {
+                .then((result) => {
                     if (result.isValid) {
                         if (config.showOwnMessages) {
                             ui.setContent('input-container.message', '');
@@ -154,7 +154,7 @@ define([
                     } else {
                         if (config.showOwnMessages) {
                             // show error message -- new!
-                            var message = inputUtils.buildMessageAlert({
+                            const message = inputUtils.buildMessageAlert({
                                 title: 'ERROR',
                                 type: 'danger',
                                 id: result.messageId,
@@ -166,7 +166,7 @@ define([
                     }
                     channel.emit('validation', result);
                 })
-                .catch(function (err) {
+                .catch((err) => {
                     channel.emit('validation', {
                         isValid: false,
                         diagnosis: 'invalid',
@@ -193,7 +193,7 @@ define([
         }
 
         function updateProgressBar(partial, total) {
-            var percent = String(Math.floor(partial * 1000 / total) / 10);
+            let percent = String(Math.floor(partial * 1000 / total) / 10);
             if (percent.indexOf('.') < 0) {
                 percent += ".0";
             }
@@ -201,8 +201,8 @@ define([
         }
 
         function uploadToShock(file, existingShockNodeId) {
-            return new Promise(function (resolve, reject) {
-                var shockClient = new Shock({
+            return new Promise((resolve, reject) => {
+                let shockClient = new Shock({
                         url: runtime.config('services.shock.url'),
                         token: runtime.authToken()
                     }),
@@ -224,14 +224,14 @@ define([
                     // Detect upload completion
                     if (info.uploaded_size >= info.file_size) {
                         shockClient.change_node_file_name(info.node_id, file.name)
-                            .then(function (info2) {
+                            .then((info2) => {
                                 // RESOLUTION
                                 resolve({
                                     shockNodeId: shockNodeId,
                                     fileState: fileState
                                 });
                             })
-                            .catch(function (error) {
+                            .catch((error) => {
                                 console.error('Error changing file name for shock node', info);
                                 reject(error);
                             });
@@ -251,7 +251,7 @@ define([
         }
 
         function uploadFile(file) {
-            var currentValue = model.value,
+            const currentValue = model.value,
                 // The key used as an id for the uploaded file's shock node.
                 // Using the file size, time, name, and user id is a pretty 
                 // good unique and idempotent id for this file.                
@@ -265,14 +265,14 @@ define([
                 });
 
             return ujsClient.get_has_state(serviceNameInUJS, ujsKey, 0)
-                .then(function (ujsState) {
+                .then((ujsState) => {
                     /*
                      * If the file, as identified by the ujsKey above, exists use
                      * the shock node it contains, otherwise use the shock node
                      * we already have. Umm, not sure about this.
                      * Why would be use the existing shock node id for anything?
                      */
-                    var shockNode;
+                    let shockNode;
                     if (ujsState[0]) {
                         // This is how the shock node is stored in the ujs state for uploads...
                         shockNode = ujsState[1].split(' ')[0];
@@ -283,14 +283,14 @@ define([
                     // Uploads the file ... this can take a while.
                     return uploadToShock(file, shockNode);
                 })
-                .then(function (result) {
+                .then((result) => {
                     setModelValue(result.shockNodeId);
                     return ujsClient.set_state(serviceNameInUJS, ujsKey, result.fileState);
                 });
         }
 
         function handleFileInputChange(e) {
-            var files = e.target.files,
+            let files = e.target.files,
                 file;
 
             if (files.length === 0) {
@@ -300,20 +300,20 @@ define([
             file = files[0];
 
             uploadFile(file)
-                .then(function (info) {
+                .then((info) => {
                     // setModelValue(info.shockNodeId);
                     syncModelToControl();
                     ui.getElement('input-container.input').dispatchEvent(new Event('change'));
                     return doChange();
                 })
-                .catch(function (err) {
+                .catch((err) => {
                     console.error('ERROR UPLOADING', err);
                 });
         }
 
         function makeInputControl(currentValue, events) {
             // function render() {
-            var cellStyle = {
+            const cellStyle = {
                     border: 'none',
                     verticalAlign: 'middle'
                 },
@@ -393,7 +393,7 @@ define([
                                 editPauseTimer = null;
                             }
                             validate()
-                                .then(function (result) {
+                                .then((result) => {
                                     if (result.isValid) {
                                         bus.emit('changed', {
                                             newValue: result.value
@@ -419,14 +419,14 @@ define([
         }
 
         function render() {
-            Promise.try(function () {
-                    var events = Events.make(),
+            Promise.try(() => {
+                    const events = Events.make(),
                         inputControl = makeInputControl(model.value, events);
 
                     ui.setContent('input-container', inputControl);
                     events.attachEvents(container);
                 })
-                .then(function () {
+                .then(() => {
                     return autoValidate();
                 });
         }
@@ -436,7 +436,7 @@ define([
         }
 
         function layout(events) {
-            var content = div({
+            const content = div({
                 dataElement: 'main-panel'
             }, [
                 div({ dataElement: 'input-container' })
@@ -453,12 +453,12 @@ define([
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 hostNode = arg.node;
                 container = hostNode.appendChild(document.createElement('div'));
                 ui = UI.make({ node: arg.node });
 
-                var events = Events.make(),
+                const events = Events.make(),
                     theLayout = layout(events);
 
                 container.innerHTML = theLayout.content;
@@ -471,10 +471,10 @@ define([
                 syncModelToControl();
 
 
-                channel.on('reset-to-defaults', function (message) {
+                channel.on('reset-to-defaults', (message) => {
                     resetModelValue();
                 });
-                channel.on('update', function (message) {
+                channel.on('update', (message) => {
                     setModelValue(message.value);
                 });
                 // channel.emit('sync');
@@ -482,7 +482,7 @@ define([
         }
 
         function stop() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 if (container) {
                     hostNode.removeChild(container);
                 }

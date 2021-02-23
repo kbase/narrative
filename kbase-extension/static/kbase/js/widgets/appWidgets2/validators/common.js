@@ -1,4 +1,4 @@
-define([], function() {
+define([], () => {
     function isEmptyString(value) {
         if (value === null) {
             return true;

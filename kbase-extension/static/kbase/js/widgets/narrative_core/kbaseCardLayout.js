@@ -21,18 +21,18 @@ define ([
     'jquery',
 
     'bootstrap'
-], function(
+], (
     $
-) {
+) => {
     'use strict';
     function KbaseCardLayout(options) {
         //partitions
-        var $card = $('<div>').addClass('narrative-card-row');
-        var $mainContent = $('<div>').addClass('narrative-card-row-main');
-        var $moreContent = $('<div>').addClass('narrative-card-row-more').hide();
-        var $info = $('<div>').addClass('kb-data-list-info');
+        const $card = $('<div>').addClass('narrative-card-row');
+        const $mainContent = $('<div>').addClass('narrative-card-row-main');
+        const $moreContent = $('<div>').addClass('narrative-card-row-more').hide();
+        const $info = $('<div>').addClass('kb-data-list-info');
             
-        var $toggleAdvancedViewBtn =$('<div>');
+        const $toggleAdvancedViewBtn =$('<div>');
 
         //if have sub content, add toggle    
         if (options.moreContent) {
@@ -42,10 +42,10 @@ define ([
                 .html($('<button class="btn btn-xs btn-default pull-right" aria-hidden="true">')
                     .append('<span class="fa fa-ellipsis-h" style="color:#888" />'));
         }
-        var $actionButtonWrapper = $('<div>')
+        const $actionButtonWrapper = $('<div>')
             .addClass('narrative-card-action-button-wrapper');
 
-        var $actionButton = $('<button>')
+        const $actionButton = $('<button>')
             .addClass('kb-primary-btn')
             .addClass('narrative-card-action-button')
             .append($('<span>').addClass('fa fa-chevron-circle-left'))
@@ -53,9 +53,9 @@ define ([
                 
         $actionButtonWrapper.append($actionButton);
 
-        var $logo = options.logo.addClass('narrative-card-logo');
-        var $title = options.title;
-        var $subcontent = options.subcontent;
+        const $logo = options.logo.addClass('narrative-card-logo');
+        const $title = options.title;
+        const $subcontent = options.subcontent;
 
         $info.append($title)
             .append($subcontent);
@@ -71,16 +71,16 @@ define ([
             .append($info)
             .append($('<div>').addClass('narrative-card-ellipsis')
                 .append($toggleAdvancedViewBtn))
-            .mouseenter(function () {
+            .mouseenter(() => {
                 $toggleAdvancedViewBtn.show();
                 $actionButton.show();
             })
-            .mouseleave(function () {
+            .mouseleave(() => {
                 $toggleAdvancedViewBtn.hide();
                 $actionButton.hide();
 
             })
-            .click(function () {
+            .click(() => {
                 $moreContent.slideToggle('fast');
                 if (options.onOpen) {
                     try {

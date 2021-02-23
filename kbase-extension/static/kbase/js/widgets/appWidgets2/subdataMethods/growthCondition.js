@@ -2,7 +2,7 @@
 /*jslint white:true,browser:true*/
 
 define([
-], function () {
+], () => {
     'use strict';
 
     function factory(config) {
@@ -10,15 +10,15 @@ define([
 
         function getData(columnsMetadata) {
 
-            var conditions = {};
-            Object.keys(columnsMetadata).forEach(function (columnId) {
-                columnsMetadata[columnId].forEach(function (pv) {
+            const conditions = {};
+            Object.keys(columnsMetadata).forEach((columnId) => {
+                columnsMetadata[columnId].forEach((pv) => {
                     if (pv.category === 'Condition') {
                         conditions[pv.property_name] = true;
                     }
                 });
             });
-            return Object.keys(conditions).map(function (conditionParam) {
+            return Object.keys(conditions).map((conditionParam) => {
                 return {
                     id: conditionParam,
                     text: conditionParam
@@ -29,7 +29,7 @@ define([
         // PUBLIC
 
         function extractItems(result, params) {
-            var columnMetadata = result[0].data.metadata.column_metadata;
+            const columnMetadata = result[0].data.metadata.column_metadata;
 
             return getData(columnMetadata);
         }

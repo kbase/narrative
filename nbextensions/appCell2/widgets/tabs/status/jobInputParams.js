@@ -4,16 +4,16 @@ define([
     'common/ui',
     'common/format',
     'kb_common/html'
-], function(
+], (
     Promise,
     Runtime,
     UI,
     format,
     html
-) {
+) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         p = t('p'),
         span = t('span'),
@@ -32,7 +32,7 @@ define([
     }
 
     function factory() {
-        var container, ui,
+        let container, ui,
             params,
             paramsListener = null,
             jobId,
@@ -53,8 +53,8 @@ define([
             }
             else {
                 Object.keys(params).forEach((key) => {
-                    var selector = '[data-element-job-id="' + key + '"]';
-                    var row = container.querySelector(selector);
+                    const selector = '[data-element-job-id="' + key + '"]';
+                    let row = container.querySelector(selector);
                     if (row === null) {
                         row = document.createElement('tr');
                         row.setAttribute('data-element-job-id', key);
@@ -80,7 +80,7 @@ define([
         }
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (container) {    // delete existing stuff.
                     detach();
                 }

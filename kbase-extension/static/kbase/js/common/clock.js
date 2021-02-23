@@ -3,17 +3,17 @@
 
 define([
     
-], function () {
+], () => {
    
    function factory(config) {
-       var timer,
+       let timer,
            ticks,
            resolution = config.resolution,
            bus = config.bus;
        
        function start() {
            ticks = 0;
-           timer = window.setInterval(function () {
+           timer = window.setInterval(() => {
                ticks += 1;
                bus.emit('clock-tick', {
                    resolution: resolution,

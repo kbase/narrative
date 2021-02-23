@@ -5,11 +5,11 @@
 // This saves a request by service name, method, params, and promise
 // Todo: Make as module
 function Cache() {
-    var cache = [];
+    const cache = [];
 
     this.get = function(service, method, params) {
-        for (var i in cache) {
-            var obj = cache[i];
+        for (const i in cache) {
+            const obj = cache[i];
             if (service != obj['service']) continue;
             if (method != obj['method']) continue;
             if ( angular.equals(obj['params'], params) ) { return obj; }
@@ -18,7 +18,7 @@ function Cache() {
     }
 
     this.put = function(service, method, params, prom) {
-        var obj = {};
+        const obj = {};
         obj['service'] = service;
         obj['method'] = method;
         obj['prom'] = prom;
@@ -34,14 +34,14 @@ function WSCache() {
     // Todo: only retrieve and store by object ids.
 
     // cache object
-    var c = {};
+    const c = {};
 
     this.get = function(params) {
 
         if (params.ref) {
             return c[params.ref];
         } else {
-            var ws = params.ws,
+            const ws = params.ws,
                 type = params.type,
                 name = params.name;
 
@@ -63,7 +63,7 @@ function WSCache() {
 
         // else, use strings
         } else {
-            var ws = params.ws,
+            const ws = params.ws,
                 name = params.name,
                 type = params.type;
 
@@ -81,8 +81,8 @@ function WSCache() {
 
 
 function KBCacheClient(token) {
-    var self = this;
-    var auth = {};
+    const self = this;
+    const auth = {};
     auth.token = token;
 
     /*
@@ -110,11 +110,11 @@ function KBCacheClient(token) {
     // console.log('Workspace URL is:', ws_url);
     // console.log('User Job State URL is:', ujs_url);
 
-    var fba = new fbaModelServices(fba_url, auth);
-    var kbws = new Workspace(ws_url, auth);
-    var ujs = new UserAndJobState(ujs_url, auth);
+    const fba = new fbaModelServices(fba_url, auth);
+    const kbws = new Workspace(ws_url, auth);
+    const ujs = new UserAndJobState(ujs_url, auth);
 
-    var cache = new Cache();
+    const cache = new Cache();
 
     self.fba = fba;
     self.ws = kbws;
@@ -132,7 +132,7 @@ function KBCacheClient(token) {
         }
 
         // see if api call has already been made
-        var data = cache.get(service, method, params);
+        const data = cache.get(service, method, params);
 
         // return the promise ojbect if it has
         if (data) return data.prom;
@@ -164,18 +164,18 @@ function KBCacheClient(token) {
         //}
 
         // get all workspaces, filter by mine, shared, and public
-        var prom = kb.ws.list_workspace_info({});
-        var p = $.when(prom).then(function(workspaces) {
-            var my_list = [];
-            var shared_list = [];
-            var public_list = [];
+        const prom = kb.ws.list_workspace_info({});
+        const p = $.when(prom).then((workspaces) => {
+            const my_list = [];
+            const shared_list = [];
+            const public_list = [];
 
-            for (var i in workspaces) {
-                var a = workspaces[i];
-                var ws = a[1];
-                var owner = a[2];
-                var perm = a[5];
-                var global_perm = a[6]
+            for (const i in workspaces) {
+                const a = workspaces[i];
+                const ws = a[1];
+                const owner = a[2];
+                const perm = a[5];
+                const global_perm = a[6]
 
                 if (owner == USER_ID) {
                     my_list.push(ws)
@@ -246,29 +246,29 @@ function KBCacheClient(token) {
 
         // next get all narratives from these "project" workspaces
         // fixme: backend!
-        var last_prom = $.when(p).then(function(data) {
-            var mine_ws = data[0];
-            var shared_ws = data[1];
-            var public_ws = data[2];
+        const last_prom = $.when(p).then((data) => {
+            const mine_ws = data[0];
+            const shared_ws = data[1];
+            const public_ws = data[2];
 
-            var my_prom = kb.ws.list_objects({workspaces: mine_ws,
+            const my_prom = kb.ws.list_objects({workspaces: mine_ws,
                                               type: 'KBaseNarrative.Narrative',
                                               showHidden: 1});
 
-            var shared_prom = kb.ws.list_objects({workspaces: shared_ws,
+            const shared_prom = kb.ws.list_objects({workspaces: shared_ws,
                                                   type: 'KBaseNarrative.Narrative',
                                                   showHidden: 1});
 
-            var public_prom = kb.ws.list_objects({workspaces: public_ws,
+            const public_prom = kb.ws.list_objects({workspaces: public_ws,
                                                   type: 'KBaseNarrative.Narrative',
                                                   showHidden: 1});
 
             // get permissions on all workspaces if logged in
-            var perm_proms = [];
-            var all_ws = mine_ws.concat(shared_ws, public_ws);
+            const perm_proms = [];
+            const all_ws = mine_ws.concat(shared_ws, public_ws);
             if (USER_ID) {
                 for (var i in all_ws) {
-                    var prom =  kb.ws.get_permissions({workspace: all_ws[i]});
+                    const prom =  kb.ws.get_permissions({workspace: all_ws[i]});
                     perm_proms.push(prom);
                 }
             } else {
@@ -278,16 +278,16 @@ function KBCacheClient(token) {
             }
 
 
-            var all_proms = [my_prom, shared_prom, public_prom].concat(perm_proms)
+            const all_proms = [my_prom, shared_prom, public_prom].concat(perm_proms)
 
-            var p = $.when.apply($, all_proms).then(function() {
+            const p = $.when.apply($, all_proms).then(function() {
                 // fill counts now (since there's no api for this)
 
-                var mine = arguments[0];
-                var shared = arguments[1];
-                var pub = arguments[2];
+                const mine = arguments[0];
+                const shared = arguments[1];
+                const pub = arguments[2];
 
-                var perms = {};
+                const perms = {};
 
                 if (USER_ID) {
                     for (var i = 0; i<all_ws.length; i++) {
@@ -321,7 +321,7 @@ function KBCacheClient(token) {
     }
 
     // cached objects
-    var c = new WSCache();
+    const c = new WSCache();
     self.get_fba = function(ws, name) {
 
         // if reference, get by ref
@@ -341,23 +341,23 @@ function KBCacheClient(token) {
         }
 
         // get fba object
-        var prom =  $.when(p).then(function(f_obj) {
-            var model_ref = f_obj[0].data.fbamodel_ref;
+        const prom =  $.when(p).then((f_obj) => {
+            const model_ref = f_obj[0].data.fbamodel_ref;
 
             // get model object from ref in fba object
-            var modelAJAX = self.get_model(model_ref).then(function(m) {
-                var rxn_objs = m[0].data.modelreactions
-                var cpd_objs = m[0].data.modelcompounds
+            const modelAJAX = self.get_model(model_ref).then((m) => {
+                const rxn_objs = m[0].data.modelreactions
+                const cpd_objs = m[0].data.modelcompounds
 
                 // for each reaction, get reagents and
                 // create equation by using the model compound objects
-                var eqs = self.createEQs(cpd_objs, rxn_objs, 'modelReactionReagents')
+                const eqs = self.createEQs(cpd_objs, rxn_objs, 'modelReactionReagents')
 
                 // add equations to fba object
-                var rxn_vars = f_obj[0].data.FBAReactionVariables;
-                for (var i in rxn_vars) {
-                    var obj = rxn_vars[i];
-                    var id = obj.modelreaction_ref.split('/')[5];
+                const rxn_vars = f_obj[0].data.FBAReactionVariables;
+                for (const i in rxn_vars) {
+                    const obj = rxn_vars[i];
+                    const id = obj.modelreaction_ref.split('/')[5];
                     obj.eq = eqs[id]
                 }
 
@@ -387,24 +387,24 @@ function KBCacheClient(token) {
             //c.put({ws: ws, name:name, type:'Model', prom:p});
         }
 
-        var prom = $.when(p).then(function(m) {
-            var m_obj = m[0].data
-            var rxn_objs = m_obj.modelreactions;
-            var cpd_objs = m_obj.modelcompounds
+        const prom = $.when(p).then((m) => {
+            const m_obj = m[0].data
+            const rxn_objs = m_obj.modelreactions;
+            const cpd_objs = m_obj.modelcompounds
 
             // for each reaction, get reagents and
             // create equation by using the model compound objects
             var eqs = self.createEQs(cpd_objs, rxn_objs, 'modelReactionReagents')
 
             // add equations to modelreactions object
-            var rxn_vars = m_obj.modelreactions;
+            const rxn_vars = m_obj.modelreactions;
             for (var i in rxn_vars) {
                 var obj = rxn_vars[i];
                 obj.eq = eqs[obj.id];
             }
 
             // add equations to biomasses object
-            var biomass_objs = m_obj.biomasses;
+            const biomass_objs = m_obj.biomasses;
             var eqs = self.createEQs(cpd_objs, biomass_objs, 'biomasscompounds')
             for (var i in biomass_objs) {
                 var obj = biomass_objs[i];
@@ -420,27 +420,27 @@ function KBCacheClient(token) {
 
     self.createEQs = function(cpd_objs, rxn_objs, key) {
         // create a mapping of cpd ids to names
-        var mapping = {};
+        const mapping = {};
         for (var i in cpd_objs) {
             mapping[cpd_objs[i].id.split('_')[0]] = cpd_objs[i].name.split('_')[0];
         }
 
-        var eqs = {}
+        const eqs = {}
         for (var i in rxn_objs) {
-            var rxn_obj = rxn_objs[i];
-            var rxn_id = rxn_obj.id;
-            var rxnreagents = rxn_obj[key];
-            var direction = rxn_obj.direction;
+            const rxn_obj = rxn_objs[i];
+            const rxn_id = rxn_obj.id;
+            const rxnreagents = rxn_obj[key];
+            const direction = rxn_obj.direction;
 
-            var lhs = []
-            var rhs = []
-            for (var j in rxnreagents) {
-                var reagent = rxnreagents[j];
-                var coef = reagent.coefficient;
-                var ref = reagent.modelcompound_ref;
-                var cpd = ref.split('/')[3].split('_')[0]
-                var human_cpd = mapping[cpd];
-                var compart = ref.split('_')[1]
+            const lhs = []
+            const rhs = []
+            for (const j in rxnreagents) {
+                const reagent = rxnreagents[j];
+                const coef = reagent.coefficient;
+                const ref = reagent.modelcompound_ref;
+                const cpd = ref.split('/')[3].split('_')[0]
+                const human_cpd = mapping[cpd];
+                const compart = ref.split('_')[1]
 
                 if (coef < 0) {
                     lhs.push( (coef == -1 ? human_cpd+'['+compart+']'
@@ -458,7 +458,7 @@ function KBCacheClient(token) {
                 case '>': arrow = ' => ';
             }
 
-            var eq = lhs.join(' + ')+arrow+rhs.join(' + ');
+            const eq = lhs.join(' + ')+arrow+rhs.join(' + ');
             eqs[rxn_id] = eq
         }
         return eqs
@@ -472,18 +472,18 @@ function KBCacheClient(token) {
             var p = self.ws.list_workspace_info({perm: 'w'});
         }
 
-        var prom = $.when(p).then(function(workspaces){
+        const prom = $.when(p).then((workspaces)=> {
             var workspaces = workspaces.sort(compare)
 
             function compare(a,b) {
-                var t1 = Date.parse(b[3])
-                var t2 = Date.parse(a[3])
+                const t1 = Date.parse(b[3])
+                const t2 = Date.parse(a[3])
                 if (t1 < t2) return -1;
                 if (t1 > t2) return 1;
                 return 0;
             }
 
-            var wsSelect = $('<form class="form-horizontal" role="form">'+
+            const wsSelect = $('<form class="form-horizontal" role="form">'+
                                 '<div class="form-group">'+
                                     '<label class="col-sm-5 control-label">Destination Workspace</label>'+
                                     '<div class="input-group col-sm-5">'+
@@ -496,24 +496,24 @@ function KBCacheClient(token) {
                                     '</div>'+
                             '</div>');
 
-            var select = $('<ul class="dropdown-menu select-ws-dd" role="menu">');
-            for (var i in workspaces) {
+            const select = $('<ul class="dropdown-menu select-ws-dd" role="menu">');
+            for (const i in workspaces) {
                 select.append('<li><a>'+workspaces[i][1]+'</a></li>');
             }
 
             wsSelect.find('.input-group-btn').append(select);
 
-            var dd = wsSelect.find('.select-ws-dd');
-            var input = wsSelect.find('input');
+            const dd = wsSelect.find('.select-ws-dd');
+            const input = wsSelect.find('input');
 
-            var not_found = $('<li class="select-ws-dd-not-found"><a><b>Not Found</b></a></li>');
+            const not_found = $('<li class="select-ws-dd-not-found"><a><b>Not Found</b></a></li>');
             dd.append(not_found);
             input.keyup(function() {
                 dd.find('li').show();
 
                 wsSelect.find('.input-group-btn').addClass('open');
 
-                var input = $(this).val();
+                const input = $(this).val();
                 dd.find('li').each(function(){
                     if ($(this).text().toLowerCase().indexOf(input.toLowerCase()) != -1) {
                         return true;
@@ -535,7 +535,7 @@ function KBCacheClient(token) {
                 if (!$(this).hasClass('select-ws-dd-not-found')) {
                     $(this).addClass('active');
 
-                    var val = $(this).text();
+                    const val = $(this).text();
                     input.val(val);
                 }
             })
@@ -555,7 +555,7 @@ function UIUtils() {
     // in the app on the 'body' tag.  This is useful for api success/failure
     // notifications
     this.notify = function(text, type, keep) {
-        var ele = $('<div id="notification-container">'+
+        const ele = $('<div id="notification-container">'+
                         '<div id="notification" class="'+type+'">'+
                             (keep ? ' <small><div class="close">'+
                                         '<span class="glyphicon glyphicon-remove pull-right">'+
@@ -565,7 +565,7 @@ function UIUtils() {
                         '</div>'+
                     '</div>');
 
-        $(ele).find('.close').click(function() {
+        $(ele).find('.close').click(() => {
              $('#notification').animate({top: 0}, 200, 'linear');
         })
 
@@ -573,7 +573,7 @@ function UIUtils() {
         $('#notification')
               .delay(200)
               .animate({top: 50}, 400, 'linear',
-                        function() {
+                        () => {
                             if (!keep) {
                                 $('#notification').delay(2000)
                                                   .animate({top: 0}, 200, 'linear', function() {
@@ -586,29 +586,29 @@ function UIUtils() {
 
 
 
-    var msecPerMinute = 1000 * 60;
-    var msecPerHour = msecPerMinute * 60;
-    var msecPerDay = msecPerHour * 24;
-    var dayOfWeek = {0: 'Sun', 1: 'Mon', 2:'Tues',3:'Wed',
+    const msecPerMinute = 1000 * 60;
+    const msecPerHour = msecPerMinute * 60;
+    const msecPerDay = msecPerHour * 24;
+    const dayOfWeek = {0: 'Sun', 1: 'Mon', 2:'Tues',3:'Wed',
                      4:'Thurs', 5:'Fri', 6: 'Sat'};
-    var months = {0: 'Jan', 1: 'Feb', 2: 'March', 3: 'April', 4: 'May',
+    const months = {0: 'Jan', 1: 'Feb', 2: 'March', 3: 'April', 4: 'May',
                   5:'June', 6: 'July', 7: 'Aug', 8: 'Sept', 9: 'Oct',
                   10: 'Nov', 11: 'Dec'};
     this.relativeTime = function(timestamp) {
-        var date = new Date()
+        const date = new Date()
 
-        var interval =  date.getTime() - timestamp;
+        let interval =  date.getTime() - timestamp;
 
-        var days = Math.floor(interval / msecPerDay );
+        const days = Math.floor(interval / msecPerDay );
         interval = interval - (days * msecPerDay);
 
-        var hours = Math.floor(interval / msecPerHour);
+        const hours = Math.floor(interval / msecPerHour);
         interval = interval - (hours * msecPerHour);
 
-        var minutes = Math.floor(interval / msecPerMinute);
+        const minutes = Math.floor(interval / msecPerMinute);
         interval = interval - (minutes * msecPerMinute);
 
-        var seconds = Math.floor(interval / 1000);
+        const seconds = Math.floor(interval / 1000);
 
         if (days == 0 && hours == 0 && minutes == 0) {
             return seconds + " secs ago.";
@@ -624,7 +624,7 @@ function UIUtils() {
             return 'yesterday at ' + t[0]+':'+t[1]+' '+t[2].split(' ')[1]; //check
         } else if (days < 7) {
             var d = new Date(timestamp);
-            var day = dayOfWeek[d.getDay()]
+            const day = dayOfWeek[d.getDay()]
             var t = d.toLocaleTimeString().split(':');
             return day + " at " + t[0]+':'+t[1]+' '+t[2].split(' ')[1]; //check
         } else  {
@@ -635,14 +635,14 @@ function UIUtils() {
 
 
     this.objTable = function(table_id, obj, keys, labels) {
-        var table = $('<table class="table table-striped table-bordered" \
+        const table = $('<table class="table table-striped table-bordered" \
                               style="margin-left: auto; margin-right: auto;"></table>');
-        for (var i in keys) {
-            var key = keys[i];
-            var row = $('<tr>');
+        for (const i in keys) {
+            const key = keys[i];
+            const row = $('<tr>');
 
-            var label = $('<td>'+labels[i]+'</td>')
-            var value = $('<td>')
+            const label = $('<td>'+labels[i]+'</td>')
+            const value = $('<td>')
 
             if (key.type == 'bool') {
                 value.append((obj[key.key] == 1 ? 'True' : 'False'))
@@ -658,9 +658,9 @@ function UIUtils() {
     }
 
     this.listTable = function(table_id, array, labels, bold) {
-        var table = $('<table id="'+table_id+'" class="table table-striped table-bordered" \
+        const table = $('<table id="'+table_id+'" class="table table-striped table-bordered" \
                               style="margin-left: auto; margin-right: auto;"></table>');
-        for (var i in labels) {
+        for (const i in labels) {
             table.append('<tr><td>'+(bold ? '<b>'+labels[i]+'</b>' : labels[i])+'</td> \
                           <td>'+array[i]+'</td></tr>');
         }
@@ -671,21 +671,21 @@ function UIUtils() {
     // this takes a list of refs and creates <workspace_name>/<object_name>
     // if links is true, hrefs are returned as well
     this.translateRefs = function(reflist, links) {
-        var obj_refs = []
-        for (var i in reflist) {
+        const obj_refs = []
+        for (const i in reflist) {
             obj_refs.push({ref: reflist[i]})
         }
 
-        var prom = kb.ws.get_object_info(obj_refs)
-        var p = $.when(prom).then(function(refinfo) {
-            var refhash = {};
-            for (var i=0; i<refinfo.length; i++) {
-                var item = refinfo[i];
-                var full_type = item[2];
-                var module = full_type.split('.')[0];
-                var type = full_type.slice(full_type.indexOf('.')+1);
-                var kind = type.split('-')[0];
-                var label = item[7]+"/"+item[1];
+        const prom = kb.ws.get_object_info(obj_refs)
+        const p = $.when(prom).then((refinfo) => {
+            const refhash = {};
+            for (let i=0; i<refinfo.length; i++) {
+                const item = refinfo[i];
+                const full_type = item[2];
+                const module = full_type.split('.')[0];
+                const type = full_type.slice(full_type.indexOf('.')+1);
+                const kind = type.split('-')[0];
+                const label = item[7]+"/"+item[1];
 		var route;
 
                 switch (kind) {
@@ -709,7 +709,7 @@ function UIUtils() {
                         break;
                 }
 
-                var link = '<a href="#/'+route+label+'">'+label+'</a>'
+                const link = '<a href="#/'+route+label+'">'+label+'</a>'
                 refhash[reflist[i]] = {link: link, label: label};
             }
             return refhash
@@ -718,8 +718,8 @@ function UIUtils() {
     }
 
     this.formatUsers = function(perms, mine) {
-        var users = []
-        for (var user in perms) {
+        const users = []
+        for (const user in perms) {
             if (user == USER_ID && !mine && !('*' in perms)) {
                 users.push('You');
                 continue;
@@ -735,8 +735,8 @@ function UIUtils() {
         };
 
         // number of users to show before +x users link
-        var n = 3;
-        var share_str = ''
+        const n = 3;
+        let share_str = ''
         if (users.length > n) {
             /*if (users.slice(n).length == 1) {*/
                 share_str = users.slice(0, n).join(', ')+', '+
@@ -761,7 +761,7 @@ function UIUtils() {
     // code than using CSS classes.
     $.fn.loading = function(text, big) {
         $(this).rmLoading()
-        var gifImg = window.kbconfig.loading_gif;
+        const gifImg = window.kbconfig.loading_gif;
 
         if (big) {
             if (typeof text != 'undefined') {
@@ -797,11 +797,11 @@ function UIUtils() {
 
 
 function getBio(type, loaderDiv, callback) {
-    var fba = new fbaModelServices(window.kbconfig.urls.fba);
+    const fba = new fbaModelServices(window.kbconfig.urls.fba);
 //    var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
 //    var kbws = new workspaceService('http://140.221.84.209:7058');
 
-    var kbws = new Workspace(window.kbconfig.urls.workspace);
+    const kbws = new Workspace(window.kbconfig.urls.workspace);
 
     // This is not cached yet; waiting to compare performanced.
     loaderDiv.append('<div class="progress">\
@@ -809,31 +809,31 @@ function getBio(type, loaderDiv, callback) {
           </div>\
         </div>')
 
-    var bioAJAX = fba.get_biochemistry({});
+    const bioAJAX = fba.get_biochemistry({});
 
-    var chunk = 250;
+    const chunk = 250;
     k = 1;
-    $.when(bioAJAX).done(function(d){
+    $.when(bioAJAX).done((d)=> {
         if (type == 'cpds') {
             var objs = d.compounds;
         } else if (type == 'rxns') {
             var objs = d.reactions;
         }
-        var total = objs.length;
-        var iterations = parseInt(total / chunk);
-        var data = [];
-        for (var i=0; i<iterations; i++) {
-            var cpd_subset = objs.slice( i*chunk, (i+1)*chunk -1);
+        const total = objs.length;
+        const iterations = parseInt(total / chunk);
+        let data = [];
+        for (let i=0; i<iterations; i++) {
+            const cpd_subset = objs.slice( i*chunk, (i+1)*chunk -1);
             if (type == 'cpds') {
                 var prom = fba.get_compounds({compounds: cpd_subset });
             } else if (type == 'rxns') {
                 var prom = fba.get_reactions({reactions: cpd_subset });
             }
 
-            $.when(prom).done(function(obj_data){
+            $.when(prom).done((obj_data)=> {
                 k = k + 1;
                 data = data.concat(obj_data);
-                var percent = (data.length / total) * 100+'%';
+                const percent = (data.length / total) * 100+'%';
                 $('.progress-bar').css('width', percent);
 
                 if (k == iterations) {

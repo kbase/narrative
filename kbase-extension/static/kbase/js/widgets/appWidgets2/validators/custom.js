@@ -1,6 +1,6 @@
 define([
     'bluebird'
-], function(Promise) {
+], (Promise) => {
     'use strict';
 
     function importString(stringValue) {
@@ -8,7 +8,7 @@ define([
     }
 
     function validate() {
-        return Promise.try(function() {
+        return Promise.try(() => {
             return {
                 isValid: true,
                 errorMessage: null,

@@ -14,7 +14,7 @@ define (
 		'kbaseNarrative',
 		'kbaseNarrativeInput',
 		'kbStandaloneListSelect'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -22,7 +22,7 @@ define (
 		kbaseNarrative,
 		kbaseNarrativeInput,
 		kbStandaloneListSelect
-	) {
+	) => {
     'use strict';
     return KBWidget({
         name: "devVizSelector",
@@ -55,9 +55,9 @@ define (
             }
 
             $(document).on('setWorkspaceName.Narrative', 
-                function(e, info) {
+                (e, info) => {
                     this.options.ws = info.wsId;
-                }.bind(this)
+                }
             );
 
             this.render();
@@ -65,15 +65,15 @@ define (
         },
 
         render: function() {
-            var self = this;
+            const self = this;
 
-            var container = this.$elem;
-            var lslen = 0;
+            const container = this.$elem;
+            let lslen = 0;
             if (window.hasOwnProperty('rendererListselect') && rendererListselect.length) {
                 lslen = rendererListselect.length;
             }
             container.append("<div id='inputListselect"+lslen+"'><img src='" + this.loading_image + "'></div>");
-            var listSelect = standaloneListselect.create({index: lslen});
+            const listSelect = standaloneListselect.create({index: lslen});
             listSelect.settings.target = document.getElementById('inputListselect'+lslen);
             listSelect.settings.callback = this.metagenomesSelected;
             listSelect.settings.synchronous = true;
@@ -88,22 +88,22 @@ define (
             listSelect.settings.asynch_filter_attribute = 'name';
             listSelect.settings.value = "id";
             listSelect.settings.master = self;
-            var r = document.createElement('div');
+            const r = document.createElement('div');
             r.setAttribute('id', 'myResultDiv');
             container.append(r);
 
-            var kbws = self.kbws;
+            const kbws = self.kbws;
 
             // Get list of metagenome ids from workspace
-            var response = kbws.list_objects({ ids : [self.options.ws] , type : 'Communities.Metagenome'} , function(data) {
-                var idList = [];
-                for (var i=0; i<data.length; i++) {
+            const response = kbws.list_objects({ ids : [self.options.ws] , type : 'Communities.Metagenome'} , (data) => {
+                const idList = [];
+                for (let i=0; i<data.length; i++) {
                     idList.push({ref: self.options.ws+"/"+data[i][0] });
                 }
                 // get the metadata for the ids
-                kbws.get_objects(idList, function(resData) {
-                    var listSelectData = [];
-                    for (var i=0; i<resData.length; i++) {
+                kbws.get_objects(idList, (resData) => {
+                    const listSelectData = [];
+                    for (let i=0; i<resData.length; i++) {
                         listSelectData.push({
                             "wsid": resData[i].info[6],
                             "wsitem": resData[i].info[0],
@@ -135,20 +135,20 @@ define (
         },
 
         metagenomesSelected: function(items, listName) {
-            var self = this.master;
+            const self = this.master;
 
-            var d = document.getElementById("myResultDiv");
+            const d = document.getElementById("myResultDiv");
 
             // if data is selected create list and save it to ws
-            var collection = {
+            const collection = {
                 name: listName,
                 type: 'Metagenome',
                 created: 'no timestamp available',
                 members: []
             };
 
-            for (var i=0 ; i<items.length;i++){
-                var member = {
+            for (let i=0 ; i<items.length;i++){
+                const member = {
                     ID: items[i].wsitem,
                     URL: items[i].wsid
                 };
@@ -156,13 +156,13 @@ define (
                 collection.members.push(member);
             }
 
-            var object_data = {
+            const object_data = {
                 type: 'Communities.Metagenome',
                 data: collection,
                 name: listName,
             };
 
-            var save_params = {
+            const save_params = {
                 id: self.options.ws, //if only ws name is given change to workspace
                 objects: [object_data]
             };

@@ -11,7 +11,7 @@ define (
 		'kbase-client-api',
 		'kbaseTable',
 		'jquery-dataTables',
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -21,7 +21,7 @@ define (
 		kbase_client_api,
 		kbaseTable,
 		jquery_dataTables
-	) {
+	) => {
 
     'use strict';
 
@@ -53,25 +53,25 @@ define (
 
         setDataset : function setDataset(newDataset) {
 
-            var rows = [];
-            var barData = [];
+            const rows = [];
+            const barData = [];
 
-            var min = Number.MAX_VALUE;
-            var max = Number.MIN_VALUE;
+            let min = Number.MAX_VALUE;
+            let max = Number.MIN_VALUE;
 
-            var exprKeys = [];
+            let exprKeys = [];
             if (newDataset.expression_levels != undefined) {
               exprKeys = Object.keys(newDataset.expression_levels).sort();
 
               $.each(
                   exprKeys,
-                  function (i,k) {
+                  (i,k) => {
 
-                      var val = Math.round(newDataset.expression_levels[k] * 1000) / 1000;
+                      const val = Math.round(newDataset.expression_levels[k] * 1000) / 1000;
 
-                      var row = [k,val];
+                      const row = [k,val];
                       if (newDataset.tpm_expression_levels != undefined) {
-                        var tpm = Math.round(newDataset.tpm_expression_levels[k] * 1000) / 1000 || 0;
+                        const tpm = Math.round(newDataset.tpm_expression_levels[k] * 1000) / 1000 || 0;
                         row.push(tpm);
                       }
 
@@ -105,17 +105,17 @@ define (
                   );
                   this.hasTPMTab = true;
                 }
-                var tpm_min = Number.MAX_VALUE;
-                var tpm_max = Number.MIN_VALUE;
-                var tpmBarData = [];
+                let tpm_min = Number.MAX_VALUE;
+                let tpm_max = Number.MIN_VALUE;
+                const tpmBarData = [];
 
                 exprKeys = Object.keys(newDataset.tpm_expression_levels).sort();
 
                 $.each(
                     exprKeys,
-                    function (i,k) {
+                    (i,k) => {
 
-                        var val = Math.round(newDataset.tpm_expression_levels[k] * 1000) / 1000;
+                        const val = Math.round(newDataset.tpm_expression_levels[k] * 1000) / 1000;
 
                         //rows.push( [k, val] );
 
@@ -137,10 +137,10 @@ define (
               this.data('histogram').setDataset(barData);
               //this.renderHistogram(this.options.numBins);
 
-              var $dt = this.data('$dt');
+              let $dt = this.data('$dt');
               if ($dt == undefined) {
 
-                var columns = [
+                const columns = [
                     { title : 'Feature ID'},
                     { title : 'Feature Value : log2(FPKM + 1)'},
                 ];
@@ -176,19 +176,19 @@ define (
         },
 
         loadExpression : function(ref) {
-          var $sam = this;
+          const $sam = this;
           this.data('containerElem').hide();
           this.data('loader').show();
-          var ws = new Workspace(window.kbconfig.urls.workspace, {token : $sam.authToken()});
+          const ws = new Workspace(window.kbconfig.urls.workspace, {token : $sam.authToken()});
 
-          var ws_params = {
+          const ws_params = {
               ref : ref
           };
 
-          ws.get_objects([ws_params]).then(function (d) {
+          ws.get_objects([ws_params]).then((d) => {
               $sam.setDataset(d[0].data);
           })
-          .fail(function(d) {
+          .fail((d) => {
 
               $sam.$elem.empty();
               $sam.$elem
@@ -204,27 +204,27 @@ define (
 
             this._super(options);
 
-            var $self = this;
+            const $self = this;
 
-            var ws = new Workspace(window.kbconfig.urls.workspace, {token : $self.authToken()});
+            const ws = new Workspace(window.kbconfig.urls.workspace, {token : $self.authToken()});
             //var ws = new Workspace('https://ci.kbase.us/services/ws', {token : $self.authToken()});
 
-            var ws_params = {
+            const ws_params = {
                 workspace : this.options.workspace,
                 wsid : this.options.wsid,
                 name : this.options.output
             };
 
-            ws.get_objects([ws_params]).then(function (d) {
+            ws.get_objects([ws_params]).then((d) => {
 
-                var thing = d[0].data;
+                const thing = d[0].data;
                 if (thing.sample_expression_ids) {
                   $self.options.output = thing;
 
                   var promises = [];
                   $.each(
                     $self.options.output.sample_expression_ids,
-                    function (i,v) {
+                    (i,v) => {
                       promises.push(
                         ws.get_object_info([{ref : v}])
                       );
@@ -233,11 +233,11 @@ define (
 
                   $.when.apply($, promises).then(function () {
 
-                      var args = arguments;
+                      const args = arguments;
                       $self.options.output.sample_expression_names = [];
                       $.each(
                         arguments,
-                        function (i, v) {
+                        (i, v) => {
                           $self.options.output.sample_expression_names.push(v[0][1]);
                         }
                       );
@@ -249,7 +249,7 @@ define (
                       }
 
                   })
-                  .fail(function(d) {
+                  .fail((d) => {
 
                       $self.$elem.empty();
                       $self.$elem
@@ -267,7 +267,7 @@ define (
                   var promises = [];
                   $.each(
                     $self.options.output.items,
-                    function (i,v) {
+                    (i,v) => {
                       thing.sample_expression_ids.push(v.ref);
                       promises.push(
                         ws.get_object_info([{ref : v.ref}])
@@ -277,11 +277,11 @@ define (
 
                   $.when.apply($, promises).then(function () {
 
-                      var args = arguments;
+                      const args = arguments;
                       $self.options.output.sample_expression_names = [];
                       $.each(
                         arguments,
-                        function (i, v) {
+                        (i, v) => {
                           $self.options.output.sample_expression_names.push(v[0][1]);
                         }
                       );
@@ -293,7 +293,7 @@ define (
                       }
 
                   })
-                  .fail(function(d) {
+                  .fail((d) => {
 
                       $self.$elem.empty();
                       $self.$elem
@@ -305,7 +305,7 @@ define (
                   $self.appendUI($self.$elem);
                   $self.setDataset(d[0].data);
                 }
-            }).fail(function(d) {
+            }).fail((d) => {
 
                 $self.$elem.empty();
                 $self.$elem
@@ -318,19 +318,19 @@ define (
 
         appendUI : function appendUI($elem) {
 
-            var $me = this;
+            const $me = this;
 
             if (this.options.output.sample_expression_ids) {
 
               var $selector = $.jqElem('select').css('width', '500px')
-                .on('change', function(e) {
+                .on('change', (e) => {
                   $me.loadExpression( $selector.val() );
                 }
               );
 
               $.each(
                 this.options.output.sample_expression_ids,
-                function (i,v) {
+                (i,v) => {
                   $selector.append(
                     $.jqElem('option')
                       .attr('value', v)
@@ -345,7 +345,7 @@ define (
                 .append("<br><br>");
             }
 
-            var $tableElem = $.jqElem('table')
+            const $tableElem = $.jqElem('table')
                 .css('width', '95%')
                     .append(
                         $.jqElem('thead')
@@ -358,11 +358,11 @@ define (
                     )
             ;
 
-            var $histElem = $.jqElem('div').css({width : 800, height : 500});
+            const $histElem = $.jqElem('div').css({width : 800, height : 500});
 
-            var $containerElem = $.jqElem('div').attr('id', 'containerElem').css('display', 'none');
+            const $containerElem = $.jqElem('div').attr('id', 'containerElem').css('display', 'none');
 
-            var $container =  new kbaseTabs($containerElem, {
+            const $container =  new kbaseTabs($containerElem, {
                     tabs : [
                         {
                             tab : 'Overview',
@@ -381,11 +381,11 @@ define (
                 }
             )
 
-            var $tpmHistElem = $.jqElem('div').css({width : 800, height : 500});
+            const $tpmHistElem = $.jqElem('div').css({width : 800, height : 500});
 
-            $container.$elem.find('[data-tab=Histogram]').on('click', function(e) {
+            $container.$elem.find('[data-tab=Histogram]').on('click', (e) => {
                 $histogram.renderXAxis();
-                setTimeout(function() {$histogram.renderHistogram() }, 300);
+                setTimeout(() => {$histogram.renderHistogram() }, 300);
             });
 
             $elem
@@ -426,7 +426,7 @@ define (
                 )
             ;
 
-            var $tpmHistogram =
+            const $tpmHistogram =
                  new kbaseHistogram($tpmHistElem, {
                         scaleAxes   : true,
                         xPadding : 60,

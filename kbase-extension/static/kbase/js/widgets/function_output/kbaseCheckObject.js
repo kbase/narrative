@@ -19,19 +19,19 @@
         },
 	
         render: function() {
-	    var self = this;
-	    var container = this.$elem;
-	    var kbws = new Workspace(self.ws_url, {'token': self.options.auth});
+	    const self = this;
+	    const container = this.$elem;
+	    const kbws = new Workspace(self.ws_url, {'token': self.options.auth});
 
 	    container.empty();
 	    container.append("<div><img src=\""+self.loading_image+"\">&nbsp;&nbsp;loading data...</div>");
 	    console.log(self.options);
 
-	    kbws.get_object_info([{ref: self.options.ws+"/"+self.options.id}], 0, function(data) {
+	    kbws.get_object_info([{ref: self.options.ws+"/"+self.options.id}], 0, (data) => {
 	        container.empty();
 		console.log(data);
-		var main = $('<div>');
-		var msg = "";
+		const main = $('<div>');
+		let msg = "";
 		if (data.length > 0) {
 		    msg = "Object "+self.options.id+" sucessfully created in workspace "+self.options.ws;
 		} else {
@@ -41,9 +41,9 @@
 		    .css({'padding': '10px 20px'})
                     .text(msg));
 		container.append(main);
-	    }, function(data) {
+	    }, (data) => {
 		container.empty();
-		var main = $('<div>');
+		const main = $('<div>');
 		main.append($('<p>')
 		    .css({'padding': '10px 20px'})
 		    .text('[Error] '+data.error.message));

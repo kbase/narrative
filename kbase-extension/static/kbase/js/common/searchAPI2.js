@@ -7,9 +7,9 @@
 */
 define([
     './JSONRPC20'
-], function (
+], (
     JSONRPC20
-) {
+) => {
     'use strict';
 
     class SearchAPI2 extends JSONRPC20 {

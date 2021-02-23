@@ -35,7 +35,7 @@ define([
                         ver: '1.0.0',
                         subtitle: 'Run an app',
                         tooltip: 'Run an app',
-                        icon: {url: 'img?method_id=a_module/an_app&image_name=an_app.png&tag=release'},
+                        icon: { url: 'img?method_id=a_module/an_app&image_name=an_app.png&tag=release' },
                         categories: ['active', CATEGORY_A],
                         authors: [FAKE_USER],
                         input_types: [
@@ -58,7 +58,7 @@ define([
                         ver: '1.0.0',
                         subtitle: 'Run an app',
                         tooltip: 'Run an app',
-                        icon: {url: 'img?method_id=another_module/another_app&image_name=an_app.png&tag=release'},
+                        icon: { url: 'img?method_id=another_module/another_app&image_name=an_app.png&tag=release' },
                         categories: ['active', CATEGORY_B],
                         authors: [FAKE_USER],
                         input_types: [
@@ -75,7 +75,7 @@ define([
             }
         };
 
-    describe('Test the kbaseNarrativeAppPanel widget', function() {
+    describe('Test the kbaseNarrativeAppPanel widget', () => {
         beforeEach(() => {
             Jupyter.narrative = {
                 getAuthToken: () => FAKE_TOKEN,
@@ -88,7 +88,7 @@ define([
             // just a dummy mock so we don't see error messages. Don't actually need a kernel.
             Jupyter.notebook = {
                 kernel: {
-                    execute: () => {}
+                    execute: () => { }
                 }
             };
 
@@ -173,19 +173,19 @@ define([
 
         it('Should have a working filter menu', () => {
             // Should have a filter menu.
-            var dropdownSelector = '#kb-app-panel-filter';
+            const dropdownSelector = '#kb-app-panel-filter';
             expect($panel.find(dropdownSelector).length).not.toBe(0);
             // should have category, input types, output types, name a-z, name z-a
-            var filterList = ['category', 'input types', 'output types', 'name a-z', 'name z-a'];
+            const filterList = ['category', 'input types', 'output types', 'name a-z', 'name z-a'];
             $panel.find(dropdownSelector).parent().find('.dropdown-menu li').each((idx, item) => {
                 expect($(item).text().toLowerCase()).toEqual(filterList[idx]);
             });
             // should default to category
             expect($panel.find(dropdownSelector).find('span:first-child').text().toLowerCase()).toEqual('category');
-            var appListSel = '.kb-function-body > div:last-child > div > div';
+            const appListSel = '.kb-function-body > div:last-child > div > div';
             // spot check category list.
-            var categoryList = $panel.find(appListSel + '> div.row').toArray().map((elem) => {
-                var str = elem.innerText.toLowerCase();
+            let categoryList = $panel.find(appListSel + '> div.row').toArray().map((elem) => {
+                const str = elem.innerText.toLowerCase();
                 return str.substring(0, str.lastIndexOf(' '));
             });
             // no "my favorites" because we're not logged in
@@ -196,7 +196,7 @@ define([
             $panel.find(dropdownSelector).parent().find('.dropdown-menu li:nth-child(2) a').click();
             expect($panel.find(dropdownSelector).find('span:first-child').text().toLowerCase()).toEqual('input');
             categoryList = $panel.find(appListSel + '> div.row').toArray().map((elem) => {
-                var str = elem.innerText.toLowerCase();
+                const str = elem.innerText.toLowerCase();
                 return str.substring(0, str.lastIndexOf(' '));
             });
             expect(categoryList.indexOf('type1')).not.toBe(-1);
@@ -206,7 +206,7 @@ define([
             $panel.find(dropdownSelector).parent().find('.dropdown-menu li:nth-child(3) a').click();
             expect($panel.find(dropdownSelector).find('span:first-child').text().toLowerCase()).toEqual('output');
             categoryList = $panel.find(appListSel + '> div.row').toArray().map((elem) => {
-                var str = elem.innerText.toLowerCase();
+                const str = elem.innerText.toLowerCase();
                 return str.substring(0, str.lastIndexOf(' '));
             });
             expect(categoryList.indexOf('typeout')).not.toBe(-1);
@@ -217,7 +217,7 @@ define([
             // show alphabetical names of apps
             $panel.find(dropdownSelector).parent().find('.dropdown-menu li:nth-child(4) a').click();
             expect($panel.find(dropdownSelector).find('span:first-child').text().toLowerCase()).toEqual('a-z');
-            var appList = $panel.find(appListSel + ' div.kb-data-list-name').toArray().map((item) => {
+            let appList = $panel.find(appListSel + ' div.kb-data-list-name').toArray().map((item) => {
                 return item.innerText.toLowerCase();
             });
             // sort it, then compare to see if in same order. remember, we don't have favorites that pop to the top.
@@ -235,8 +235,8 @@ define([
         });
 
         it('Should have a working version toggle button', () => {
-            appPanel.$toggleVersionBtn.tooltip = () => {};  // to stop any jquery/bootstrap nonsense that happens in testing.
-            var toggleBtn = $panel.find('.btn-toolbar button:nth-child(4)');
+            appPanel.$toggleVersionBtn.tooltip = () => { };  // to stop any jquery/bootstrap nonsense that happens in testing.
+            const toggleBtn = $panel.find('.btn-toolbar button:nth-child(4)');
             expect(toggleBtn.length).toBe(1);
             spyOn(appPanel, 'refreshFromService');
             expect(toggleBtn.text()).toEqual('R');
@@ -252,13 +252,13 @@ define([
         });
 
         it('Should have a working refresh button', () => {
-            var refreshBtn = $panel.find('.btn-toolbar button:nth-child(3)');
+            const refreshBtn = $panel.find('.btn-toolbar button:nth-child(3)');
             spyOn(appPanel, 'refreshFromService');
             refreshBtn.click();
             expect(appPanel.refreshFromService).toHaveBeenCalled();
             expect(appPanel.refreshFromService).toHaveBeenCalledWith('release');
-            var toggleBtn = $panel.find('.btn-toolbar button:nth-child(4)');
-            appPanel.$toggleVersionBtn.tooltip = () => {};  // to stop any jquery/bootstrap nonsense that happens in testing.
+            const toggleBtn = $panel.find('.btn-toolbar button:nth-child(4)');
+            appPanel.$toggleVersionBtn.tooltip = () => { };  // to stop any jquery/bootstrap nonsense that happens in testing.
             toggleBtn.click();
             refreshBtn.click();
             expect(appPanel.refreshFromService).toHaveBeenCalledWith('beta');
@@ -301,7 +301,7 @@ define([
             };
             Mocks.mockJsonRpc1Call({
                 url: Config.url('narrative_method_store'),
-                response: {error: 'repository notAModule wasn\'t registered'},
+                response: { error: 'repository notAModule wasn\'t registered' },
                 statusCode: 500
             });
             $(document).trigger('getFunctionSpecs.Narrative', [appRequest, cb]);

@@ -1,4 +1,6 @@
-/*global describe, it, browser, expect, beforeEach $*/
+/* eslint {strict: ['error', 'global']} */
+/* global browser, $ */
+'use strict';
 const Utils = require('../wdioUtils');
 
 const env = process.env.ENV || 'ci';
@@ -8,7 +10,7 @@ const allTestCases = {
         CASE1: {
             narrativeId: 31932
         }
-        
+
     },
     'narrative-dev': {
         CASE1: {
@@ -20,8 +22,6 @@ const allTestCases = {
 const testCases = allTestCases[env];
 
 describe('Narrative tree page with login', () => {
-    'use strict';
-
     beforeEach(async () => await Utils.login());
 
     it('opens a narrative', async () => {

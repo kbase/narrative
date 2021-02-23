@@ -1,4 +1,3 @@
-/*global define*/
 /**
  * @author Harry Yoo <hsyoo@anl.gov>
  * @public

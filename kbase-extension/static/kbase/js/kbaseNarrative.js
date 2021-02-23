@@ -1,5 +1,4 @@
-/*global define,KBError,KBFatal,window,console,document*/
-
+/* global KBError, KBFatal */
 /**
  * This is the entry point for the Narrative's front-end. It initializes
  * the login session, fires up the data and function widgets, and creates

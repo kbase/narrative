@@ -1,5 +1,3 @@
-/*global define*/
-
 define([
     'jquery',
     'base/js/namespace',

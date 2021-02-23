@@ -8,7 +8,6 @@
  * @public
  */
 
-/*global define*/
 define([
     'kbwidget',
     'jquery',

@@ -1,5 +1,3 @@
-/*global define*/
-
 /*
  * fsm.js
  *

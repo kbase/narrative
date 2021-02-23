@@ -1,4 +1,3 @@
-/*global define */
 /*
  * MonoBus
  * One bus to rule them all...

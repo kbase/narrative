@@ -1,5 +1,3 @@
-/*global define*/
-
 define([
     'bluebird',
     'kb_common/html',

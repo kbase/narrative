@@ -1,4 +1,3 @@
-/*global define */
 define([
     './jsonRpc-native'
 ], (jsonRpc) => {

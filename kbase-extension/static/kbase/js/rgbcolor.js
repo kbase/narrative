@@ -1,4 +1,3 @@
-/*global console,document*/
 /**
  * A class to parse color values
  * @author Stoyan Stefanov <sstoo@gmail.com>

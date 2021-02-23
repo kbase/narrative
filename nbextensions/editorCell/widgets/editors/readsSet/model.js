@@ -1,5 +1,3 @@
-/*global define*/
-
 /*
  * Okay, I give in.
  * Lets just do MVC

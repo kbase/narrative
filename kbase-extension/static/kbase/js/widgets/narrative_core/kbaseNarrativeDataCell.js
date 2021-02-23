@@ -1,4 +1,3 @@
-/*global define*/
 /**
  * Narrative data cell.
  *
@@ -6,7 +5,6 @@
  *
  * @public
  */
-/*global define*/
 define ([
     'kbwidget',
     'bootstrap',

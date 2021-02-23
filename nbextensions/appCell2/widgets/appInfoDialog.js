@@ -1,4 +1,3 @@
-/*global define*/
 /**
  * Creates an informational panel for Apps, based on some general app info.
  * Needs the following keys in its config:

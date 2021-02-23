@@ -1,5 +1,3 @@
-/*global define*/ //eslint-disable-line no-redeclare
-
 define([
 ], () => {
     'use strict';

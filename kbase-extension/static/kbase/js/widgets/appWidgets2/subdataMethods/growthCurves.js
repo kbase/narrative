@@ -1,5 +1,3 @@
-/*global define*/
-
 define([
     'common/runtime',
     'kb_common/html'

@@ -1,4 +1,4 @@
-/*global define,Jupyter,window*/
+/* global Jupyter */
 // Bind all page buttons right at startup.
 define(
     [

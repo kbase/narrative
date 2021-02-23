@@ -6,8 +6,6 @@
  * - Addig
  */
 
-/*jshint sub:true*/
-/*global window:true,define:true, module:true*/
 (function(window) {
     "use strict";
     /* Make console logging a no-op where not defined */

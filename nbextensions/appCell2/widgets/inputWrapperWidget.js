@@ -1,4 +1,3 @@
-/*global define*/
 define([
     'kb_common/html'
 ], (html) => {

@@ -1,4 +1,3 @@
-/*global define*/
 /**
  * An input widget to handle building a media set.
  * This has the option of loading/modifying an existing media.

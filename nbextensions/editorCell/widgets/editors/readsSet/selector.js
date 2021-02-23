@@ -1,5 +1,3 @@
-/*global define*/
-
 /*
  Object selector
  The object selector's jobs is to provide access to existing editable objects of the

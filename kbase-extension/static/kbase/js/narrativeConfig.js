@@ -1,4 +1,3 @@
-/*global define,window,console,require*/
 /**
  * Loads the required narrative configuration files.
  * This returns a Promise that will eventually hold the results.

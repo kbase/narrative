@@ -6,7 +6,6 @@
  * @public
  */
 
-/*global define*/
 define(
     [
         'kbwidget',

@@ -1,4 +1,3 @@
-/*global define*/
 /**
  * KBase widget to upload file content into shock node.
  */

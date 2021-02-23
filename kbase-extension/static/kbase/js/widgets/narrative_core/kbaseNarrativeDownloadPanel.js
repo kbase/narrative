@@ -1,4 +1,3 @@
-/*global define*/
 /**
  * "Download" panel for each element in data list panel.
  * @author Roman Sutormin <rsutormin@lbl.gov>

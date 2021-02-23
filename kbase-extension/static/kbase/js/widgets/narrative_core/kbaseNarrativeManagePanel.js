@@ -1,4 +1,3 @@
-/* global define */
 /* eslint-env browser */
 /**
  * Widget for displaying a list of Narratives and basic narrative management (copy, delete, share)

@@ -1,5 +1,5 @@
-/*global describe, it, browser, expect, $, afterEach, beforeEach*/
 /* eslint {strict: ['error', 'global']} */
+/* global browser, $ */
 'use strict';
 
 const {login, openNarrative, sendString, clickWhenReady} = require('../wdioUtils.js');
@@ -324,7 +324,7 @@ async function openPublicData() {
     // Here we locate the public data tab, move the mouse cursor to it, and then
     // click on its container, which should open the public data panel.
     // The reason for this roundabout approach is that the click handler is on the
-    // container, not the individual tabs. 
+    // container, not the individual tabs.
     const panel = await $('[data-test-id="data-slideout-panel"]');
     await panel.waitForExist();
 
@@ -342,7 +342,7 @@ async function openPublicData() {
     // get rows
     // When using roles, we sometimes need to be very specific in our queries.
     // Maybe roles are not suitable for integration tests, then.
-    
+
     const rows = await waitForRows(publicPanel, 20);
     expect(rows.length).toEqual(20);
     return publicPanel;
@@ -376,9 +376,9 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
         // Confirm the metadata fields.
         for (const {id, label, value} of testCase.metadata) {
             await testField({
-                container: row, 
-                id, 
-                label, 
+                container: row,
+                id,
+                label,
                 value
             });
         }
@@ -402,9 +402,9 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
         // Confirm the metadata fields.
         for (const {id, label, value} of testCase.metadata) {
             await testField({
-                container: row, 
-                id, 
-                label, 
+                container: row,
+                id,
+                label,
                 value
             });
         }
@@ -443,9 +443,9 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
         // Confirm the metadata fields.
         for (const {id, label, value} of testCase.metadata) {
             await testField({
-                container: row, 
-                id, 
-                label, 
+                container: row,
+                id,
+                label,
                 value
             });
         }
@@ -466,7 +466,7 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
 
         await browser.waitUntil(async () => {
             const foundCountElement = await publicPanel.$('[data-test-id="found-count"]');
-            
+
             if (await foundCountElement.isDisplayed()) {
                 const text = await foundCountElement.getText();
                 return text === testCase.foundCount;
@@ -474,7 +474,7 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
                 return false;
             }
         });
-        
+
         const foundCount = await publicPanel.$('[data-test-id="found-count"]');
         expect(foundCount).toHaveText(testCase.foundCount);
     });
@@ -506,9 +506,9 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
         // Confirm the metadata fields.
         for (const {id, label, value} of testCase.metadata) {
             await testField({
-                container: row, 
-                id, 
-                label, 
+                container: row,
+                id,
+                label,
                 value
             });
         }

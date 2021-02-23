@@ -1,4 +1,3 @@
-/*global define*/
 /**
  * A few utility functions. These are kinda unrelated, but used in several places.
  *

@@ -1,5 +1,3 @@
-/*global define*/
-
 define([
     'common/runtime',
     'common/busEventManager',

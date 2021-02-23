@@ -1,4 +1,3 @@
-/*global define*/
 /*eslint-env browser*/
 
 define([

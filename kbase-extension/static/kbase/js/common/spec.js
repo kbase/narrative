@@ -1,5 +1,3 @@
-/*global define*/
-
 /*
  * Provides app spec functionality.
  */

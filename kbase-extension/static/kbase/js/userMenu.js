@@ -1,5 +1,3 @@
-/*global define,window*/
-
 define([
     'jquery',
     'narrativeConfig',

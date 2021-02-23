@@ -1,4 +1,3 @@
-/*global define*/
 /*jstlint white:true,browser:true,single:true*/
 
 define([
@@ -507,7 +506,7 @@ define([
                 case 'struct':
                     return {
                         required: required(),
-                        defaultValue: defaultValue()                        
+                        defaultValue: defaultValue()
                     };
                 case 'unspecified':
                     // a bunch of field types are untyped:

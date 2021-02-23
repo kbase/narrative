@@ -1,4 +1,3 @@
-/*global define */
 define(['jquery', 'bluebird', './exceptions'], ($, Promise, exceptions) => {
     'use strict';
 

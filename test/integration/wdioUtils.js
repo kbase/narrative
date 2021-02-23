@@ -1,6 +1,5 @@
-/* eslint strict: ["error", "global"] */
-/*global browser, $*/
-
+/* eslint {strict: ['error', 'global']} */
+/* global browser, $ */
 'use strict';
 
 const TOKEN = browser.config.kbaseToken;
@@ -16,14 +15,14 @@ function makeURL(path) {
 }
 
 /**
-* Set the KBase auth session cookie from the token 
+* Set the KBase auth session cookie from the token
 * configured in the global wdio "browser" object.
 * @returns {Promise} Promise value is ignored
 */
 async function login() {
-    // This just needs to be some small text file present in the narrative 
-    // site's document tree. 
-    // The wdio "browser" needs to load a url on the narrative site 
+    // This just needs to be some small text file present in the narrative
+    // site's document tree.
+    // The wdio "browser" needs to load a url on the narrative site
     // before it can set the session cookie on it.
     const url = makeURL('narrative/static/kbase/config/config.json');
     await browser.url(url);
@@ -39,7 +38,7 @@ async function login() {
 /**
 * "Types" a string into the wdio browser.
 * Webdriver simulates user keyboard input by individual key presses.
-* This function makes providing user keyboard easier by abstracting 
+* This function makes providing user keyboard easier by abstracting
 * input of a string.
 * Note that the keys are sent to the currently focused control in the browser.
 * @arg {string} stringToSend - the string to "type" into the browser
@@ -59,7 +58,7 @@ async function clickWhenReady(el) {
 }
 
 /**
-* Navigates the wdio browser to a workspace as given by its id, and waits until the 
+* Navigates the wdio browser to a workspace as given by its id, and waits until the
 * narrative container is visible.
 * @arg {number} The narrative's workspace id
 * @returns {Promise} The Promise value is ignored.
@@ -75,7 +74,7 @@ async function openNarrative(workspaceId) {
     await loadingBlocker.waitForDisplayed({
         timeout,
         timeoutMsg: `Timeout after waiting ${timeout}ms for loading blocker to appear`
-    }); 
+    });
 
     // And then the loading blocker should disappear!
     await loadingBlocker.waitForDisplayed({
@@ -89,7 +88,7 @@ async function openNarrative(workspaceId) {
     await loginButton.waitForDisplayed({
         timeout,
         timeoutMsg: `Timeout after waiting ${timeout}ms for login button to appear`
-    }); 
+    });
 
     await clickWhenReady(loginButton);
 
@@ -101,9 +100,9 @@ async function openNarrative(workspaceId) {
     const text = await userLabelElement.getText();
     console.warn(`Logged in as user ${text}`);
     await loginButton.click();
-    
+
     // Ensure narrative notebook has displayed
-    // TODO: more interesting waitUntil loop to signal the 
+    // TODO: more interesting waitUntil loop to signal the
     // failure reason (useful for debugging tests?)
     const container = await $('#notebook-container');
     await container.waitForDisplayed({

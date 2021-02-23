@@ -1,7 +1,6 @@
 /**
  * KBase preset wrapper for its cell menu.
  */
-/*global define*/
 define([
     'jquery',
     'notebook/js/celltoolbar',

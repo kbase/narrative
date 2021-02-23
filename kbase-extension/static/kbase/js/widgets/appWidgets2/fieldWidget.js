@@ -1,4 +1,3 @@
-/*global define*/
 /*
  * The Field Widget has two main jobs:
  * - render an input within within a layout

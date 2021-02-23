@@ -1,5 +1,3 @@
-/*global define*/
-
 define([
     'handlebars',
     'common/runtime',

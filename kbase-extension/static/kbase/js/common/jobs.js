@@ -1,5 +1,3 @@
-/*global define,console*/
-
 define([
     'bluebird',
     'base/js/namespace'

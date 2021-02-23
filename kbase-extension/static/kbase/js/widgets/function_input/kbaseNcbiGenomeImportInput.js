@@ -1,4 +1,3 @@
-/*global define*/
 /**
  * Input widget for import NCBI genomes into workspace.
  * @author Roman Sutormin <rsutormin@lbl.gov>

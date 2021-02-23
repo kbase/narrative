@@ -1,4 +1,3 @@
-/*global define*/
 /**
  * A little wrapper script for making sure that Narrative code
  * is injected at the right time before loading the Notebook running

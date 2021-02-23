@@ -1,4 +1,3 @@
-/*global define*/
 /**
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public

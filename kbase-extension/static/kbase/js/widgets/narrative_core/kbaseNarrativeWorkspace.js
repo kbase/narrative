@@ -1,6 +1,3 @@
-/*global define, document*/
-/*eslint-env browser*/
-
 /**
  * Top-level 'widget' for the workspace interaction with the KBase narrative.
  *

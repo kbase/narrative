@@ -1,4 +1,4 @@
-/*global define, Workspace*/
+/* global Workspace */
 /**
  * Widget for viewing and modifying narrative share settings
  * @author Michael Sneddon <mwsneddon@lbl.gov>, Bill Riehl <wjriehl@lbl.gov>

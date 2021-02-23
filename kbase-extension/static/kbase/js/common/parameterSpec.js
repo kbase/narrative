@@ -1,4 +1,3 @@
-/*global define*/
 /*jstlint white:true,browser:true*/
 
 define([

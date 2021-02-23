@@ -1,4 +1,3 @@
-/*global define */
 /*
  * MiniBus
  * A lightweight message bus implementation.

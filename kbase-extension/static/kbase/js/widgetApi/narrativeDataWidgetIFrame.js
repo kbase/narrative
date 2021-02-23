@@ -1,4 +1,3 @@
-/*global define,require*/
 /*
  * Narrative Data Widget
  *

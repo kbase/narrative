@@ -1,6 +1,3 @@
-/*global
- define
- */
 define ([
     'kbwidget',
     'bootstrap',

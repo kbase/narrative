@@ -1,4 +1,3 @@
-/*global define*/
 define([
     'jquery',
     'kb_common/html',

@@ -1,5 +1,5 @@
-/*global  browser, $ */
 /* eslint {strict: ['error', 'global']} */
+/* global browser, $ */
 'use strict';
 
 const { login, openNarrative, clickWhenReady } = require('../wdioUtils.js');
@@ -54,7 +54,7 @@ async function clickOverlayDimmer() {
     const dimmer = await $('.kb-overlay-dimmer');
     const slideoutPanel = await $('[data-test-id="data-slideout-panel"]');
 
-    // First just fetch all the dimensions 
+    // First just fetch all the dimensions
     const { x: spx, y: spy } = await slideoutPanel.getLocation();
     const { width: spw, height: sph } = await slideoutPanel.getSize();
 
@@ -69,7 +69,7 @@ async function clickOverlayDimmer() {
     const dRight = (dx + dw);
 
     // We'll try to click below the side panel or to the right.
-    // Note that the point of reference for "click" is the 
+    // Note that the point of reference for "click" is the
     // mid point of the element.
 
     if (dBottom > spBottom) {

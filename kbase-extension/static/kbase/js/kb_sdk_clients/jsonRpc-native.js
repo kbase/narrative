@@ -1,4 +1,3 @@
-/*global define */
 define(['./ajax', './exceptions'], (ajax, exceptions) => {
     'use strict';
 

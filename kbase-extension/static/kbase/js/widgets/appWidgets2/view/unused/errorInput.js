@@ -1,5 +1,3 @@
-/*global define*/
-
 /* This is a special widget, because it is a factory factory! */
 
 define([

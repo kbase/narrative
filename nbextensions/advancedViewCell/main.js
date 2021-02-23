@@ -1,4 +1,3 @@
-/*global define,console*/
 /*
  * KBase View Cell Extension
  *

@@ -1,4 +1,3 @@
-/*global define*/ // eslint-disable-line no-redeclare
 define([
     'common/format',
     'common/utils',
@@ -181,4 +180,3 @@ define([
         }
     };
 });
-

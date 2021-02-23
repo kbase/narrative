@@ -1,5 +1,3 @@
-/*global define*/
-
 define([
     'kb_common/html',
     'kb_common/format',

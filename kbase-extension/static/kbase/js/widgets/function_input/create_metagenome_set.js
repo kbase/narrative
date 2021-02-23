@@ -1,4 +1,3 @@
-/*global define*/
 /**
  * @author Andreas Wilke <wilke@anl.gov>
  * @public

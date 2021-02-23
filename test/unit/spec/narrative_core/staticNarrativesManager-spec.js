@@ -1,19 +1,10 @@
-/*global define*/
-/*global jasmine, describe, it, expect, spyOn, beforeEach, afterEach */
-/*jslint white: true*/
 define([
     'jquery',
     'base/js/namespace',
     'kbaseNarrative',
     'narrativeConfig',
-    'widgets/narrative_core/staticNarrativesManager'
-], (
-    $,
-    Jupyter,
-    Narrative,
-    Config,
-    StaticNarrativesManager
-) => {
+    'widgets/narrative_core/staticNarrativesManager',
+], ($, Jupyter, Narrative, Config, StaticNarrativesManager) => {
     'use strict';
     const staticNarrativeServiceUrl = 'https://ci.kbase.us/dynserv/blah.StaticNarrative';
 
@@ -31,28 +22,28 @@ define([
             wsId,
             'wjriehl:narrative_1564523505497',
             'cdf315ef72b24adf26c1229e98909f3d',
-            421216
+            421216,
         ],
-        staticInfo = [{
-            ws_id: wsId,
-            version: staticVer,
-            narrative_id: objId,
-            url: '/' + wsId + '/' + staticVer,
-            static_saved: 1574877642060,
-            narr_saved: 1572997477000
-        }],
-
+        staticInfo = [
+            {
+                ws_id: wsId,
+                version: staticVer,
+                narrative_id: objId,
+                url: '/' + wsId + '/' + staticVer,
+                static_saved: 1574877642060,
+                narr_saved: 1572997477000,
+            },
+        ],
         userId = 'narrativetest';
 
     function jsonRPCResponse(result, isError) {
-        let res = {
+        const res = {
             id: '12345',
-            version: '1.1'
+            version: '1.1',
         };
         if (isError) {
             res.error = result;
-        }
-        else {
+        } else {
             res.result = result;
         }
         return JSON.stringify(res);
@@ -63,7 +54,7 @@ define([
             status: 200,
             statusText: 'HTTP/1.1 200 OK',
             contentType: 'application/json',
-            responseText: jsonRPCResponse(result)
+            responseText: jsonRPCResponse(result),
         };
     }
 
@@ -72,7 +63,7 @@ define([
             status: 500,
             statusText: 'HTTP/1.1 500 Internal service error',
             contentType: 'application/json',
-            responseText: jsonRPCResponse(result, true)
+            responseText: jsonRPCResponse(result, true),
         };
     }
 
@@ -81,43 +72,48 @@ define([
      *
      */
     function mockGoodServiceWizard() {
-        const goodServWizResponse = [{
-            git_commit_hash: 'b5ccb7fbfa37a422a92158d108b8ad5245a79093',
-            hash: 'b5ccb7fbfa37a422a92158d108b8ad5245a79093',
-            status: 'active',
-            version: '0.0.2',
-            release_tags: ['dev'],
-            module_name: 'StaticNarrative',
-            health: 'healthy',
-            up: '1',
-            url: staticNarrativeServiceUrl
-        }];
-        jasmine.Ajax.stubRequest(Config.url('service_wizard'))
-            .andReturn(mockOkResponse(goodServWizResponse));
+        const goodServWizResponse = [
+            {
+                git_commit_hash: 'b5ccb7fbfa37a422a92158d108b8ad5245a79093',
+                hash: 'b5ccb7fbfa37a422a92158d108b8ad5245a79093',
+                status: 'active',
+                version: '0.0.2',
+                release_tags: ['dev'],
+                module_name: 'StaticNarrative',
+                health: 'healthy',
+                up: '1',
+                url: staticNarrativeServiceUrl,
+            },
+        ];
+        jasmine.Ajax.stubRequest(Config.url('service_wizard')).andReturn(
+            mockOkResponse(goodServWizResponse)
+        );
     }
 
     function mockPermissions(isAdmin, isPublic) {
-        let permsResponse = { '*': isPublic ? 'r' : 'n' };
+        const permsResponse = { '*': isPublic ? 'r' : 'n' };
         permsResponse[userId] = isAdmin ? 'a' : 'r';
-        jasmine.Ajax.stubRequest(Config.url('workspace'), /get_permissions_mass/)
-            .andReturn(mockOkResponse([{perms: [permsResponse]}]));
+        jasmine.Ajax.stubRequest(Config.url('workspace'), /get_permissions_mass/).andReturn(
+            mockOkResponse([{ perms: [permsResponse] }])
+        );
     }
 
     function mockGetStaticNarrativeInfo(withInfo, withError) {
         if (!withError) {
             const response = withInfo ? staticInfo : [{}];
-            jasmine.Ajax.stubRequest(staticNarrativeServiceUrl,
+            jasmine.Ajax.stubRequest(
+                staticNarrativeServiceUrl,
                 /get_static_narrative_info/
             ).andReturn(mockOkResponse(response));
-        }
-        else {
+        } else {
             const err = {
                 code: -32000,
                 name: 'Server error',
                 message: 'Cannot get static narrative info',
-                error: 'Traceback ...---...'
+                error: 'Traceback ...---...',
             };
-            jasmine.Ajax.stubRequest(staticNarrativeServiceUrl,
+            jasmine.Ajax.stubRequest(
+                staticNarrativeServiceUrl,
                 /get_static_narrative_info/
             ).andReturn(mockErrorResponse(err));
         }
@@ -136,19 +132,22 @@ define([
 
     function mockCreateStaticNarrative(withError) {
         if (!withError) {
-            jasmine.Ajax.stubRequest(staticNarrativeServiceUrl,
+            jasmine.Ajax.stubRequest(
+                staticNarrativeServiceUrl,
                 /create_static_narrative/
             ).andReturn(mockOkResponse([{}]));
-        }
-        else {
-            jasmine.Ajax.stubRequest(staticNarrativeServiceUrl,
+        } else {
+            jasmine.Ajax.stubRequest(
+                staticNarrativeServiceUrl,
                 /create_static_narrative/
-            ).andReturn(mockErrorResponse({
-                code: -123,
-                message: 'Cannot create new static narrative',
-                name: 'JSONRPCError',
-                error: 'Some traceback here'
-            }));
+            ).andReturn(
+                mockErrorResponse({
+                    code: -123,
+                    message: 'Cannot create new static narrative',
+                    name: 'JSONRPCError',
+                    error: 'Some traceback here',
+                })
+            );
         }
     }
 
@@ -165,7 +164,7 @@ define([
         expect(node.html()).toContain('Static Narrative Error');
     }
 
-    describe('Test the Static Narrative manager widget', () => {
+    describe('The Static Narrative manager widget', () => {
         beforeEach(() => {
             Jupyter.narrative = new Narrative();
             Jupyter.narrative.userId = userId;
@@ -184,7 +183,7 @@ define([
         });
 
         it('Should be instantiable', () => {
-            let widget = new StaticNarrativesManager(node);
+            const widget = new StaticNarrativesManager(node);
             expect(widget).toBeDefined();
             expect(widget.refresh).toBeDefined();
         });
@@ -193,33 +192,30 @@ define([
             mockGoodServiceWizard();
             mockGetStaticNarrativeInfo(false);
             mockPermissions(true, true);
-            let widget = new StaticNarrativesManager(node);
-            return widget.render()
-                .then(() => {
-                    validateHtmlNoStatic(node);
-                });
+            const widget = new StaticNarrativesManager(node);
+            return widget.render().then(() => {
+                validateHtmlNoStatic(node);
+            });
         });
 
         it('Should render when static info exists', () => {
             mockGoodServiceWizard();
             mockGetStaticNarrativeInfo(true);
             mockPermissions(true, true);
-            let widget = new StaticNarrativesManager(node);
-            return widget.render()
-                .then(() => {
-                    validateHtmlStatic(node);
-                });
+            const widget = new StaticNarrativesManager(node);
+            return widget.render().then(() => {
+                validateHtmlStatic(node);
+            });
         });
 
         it('Should refresh before a render', () => {
             mockGoodServiceWizard();
             mockGetStaticNarrativeInfo(false);
             mockPermissions(true, true);
-            let widget = new StaticNarrativesManager(node);
-            return widget.refresh()
-                .then(() => {
-                    validateHtmlNoStatic(node);
-                });
+            const widget = new StaticNarrativesManager(node);
+            return widget.refresh().then(() => {
+                validateHtmlNoStatic(node);
+            });
         });
 
         it('Should detach after rendering', () => {
@@ -227,8 +223,9 @@ define([
             mockGetStaticNarrativeInfo(false);
             mockPermissions(true, true);
             expect(node.html()).toBe('');
-            let widget = new StaticNarrativesManager(node);
-            return widget.render()
+            const widget = new StaticNarrativesManager(node);
+            return widget
+                .render()
                 .then(() => {
                     return widget.detach();
                 })
@@ -242,8 +239,9 @@ define([
             mockGetStaticNarrativeInfo(false);
             mockPermissions(true, true);
             expect(node.html()).toBe('');
-            let widget = new StaticNarrativesManager(node);
-            return widget.render()
+            const widget = new StaticNarrativesManager(node);
+            return widget
+                .render()
                 .then(() => widget.detach())
                 .then(() => widget.render())
                 .then(() => widget.detach())
@@ -259,13 +257,12 @@ define([
             mockGetStaticNarrativeInfo(true);
             mockPermissions(true, true);
             mockCreateStaticNarrative();
-            let widget = new StaticNarrativesManager(node);
+            const widget = new StaticNarrativesManager(node);
             spyOn(widget, 'saveStaticNarrative');
-            return widget.render()
-                .then(() => {
-                    node.find('button').click();
-                    expect(widget.saveStaticNarrative).toHaveBeenCalled();
-                });
+            return widget.render().then(() => {
+                node.find('button').click();
+                expect(widget.saveStaticNarrative).toHaveBeenCalled();
+            });
         });
 
         it('saveStaticNarrative should work in ok case and re-render', () => {
@@ -273,8 +270,9 @@ define([
             mockGetStaticNarrativeInfo(true);
             mockPermissions(true, true);
             mockCreateStaticNarrative();
-            let widget = new StaticNarrativesManager(node);
-            return widget.render()
+            const widget = new StaticNarrativesManager(node);
+            return widget
+                .render()
                 .then(() => {
                     return widget.saveStaticNarrative();
                 })
@@ -288,8 +286,9 @@ define([
             mockGetStaticNarrativeInfo(true);
             mockPermissions(true, true);
             mockCreateStaticNarrative(true);
-            let widget = new StaticNarrativesManager(node);
-            return widget.render()
+            const widget = new StaticNarrativesManager(node);
+            return widget
+                .render()
                 .then(() => {
                     return widget.saveStaticNarrative();
                 })
@@ -302,11 +301,10 @@ define([
             mockPermissions(true, true);
             mockGoodServiceWizard();
             mockGetStaticNarrativeInfo(true, true);
-            let widget = new StaticNarrativesManager(node);
-            return widget.render()
-                .then(() => {
-                    validateHtmlError(node);
-                });
+            const widget = new StaticNarrativesManager(node);
+            return widget.render().then(() => {
+                validateHtmlError(node);
+            });
         });
 
         it('render should create an error when narrative doc info is not available', () => {
@@ -314,50 +312,46 @@ define([
             mockGoodServiceWizard();
             mockGetStaticNarrativeInfo(true);
             Jupyter.narrative.documentVersionInfo = null;
-            let widget = new StaticNarrativesManager(node);
-            return widget.render()
-                .then(() => {
-                    validateHtmlError(node);
-                });
+            const widget = new StaticNarrativesManager(node);
+            return widget.render().then(() => {
+                validateHtmlError(node);
+            });
         });
 
         it('should render a warning if user is not an admin', () => {
             mockPermissions(false, true);
             mockGoodServiceWizard();
             mockGetStaticNarrativeInfo(true);
-            let widget = new StaticNarrativesManager(node);
-            return widget.render()
-                .then(() => {
-                    expect(node.html()).toContain('Not an admin');
-                    expect(node.html()).not.toContain('Not public');
-                    expect(node.html()).not.toContain('Create static narrative');
-                });
+            const widget = new StaticNarrativesManager(node);
+            return widget.render().then(() => {
+                expect(node.html()).toContain('Not an admin');
+                expect(node.html()).not.toContain('Not public');
+                expect(node.html()).not.toContain('Create static narrative');
+            });
         });
 
         it('should render a warning if narrative is not public', () => {
             mockPermissions(true, false);
             mockGoodServiceWizard();
             mockGetStaticNarrativeInfo(true);
-            let widget = new StaticNarrativesManager(node);
-            return widget.render()
-                .then(() => {
-                    expect(node.html()).not.toContain('Not an admin');
-                    expect(node.html()).toContain('Not public');
-                    expect(node.html()).not.toContain('Create static narrative');
-                });
+            const widget = new StaticNarrativesManager(node);
+            return widget.render().then(() => {
+                expect(node.html()).not.toContain('Not an admin');
+                expect(node.html()).toContain('Not public');
+                expect(node.html()).not.toContain('Create static narrative');
+            });
         });
 
         it('should render two warnings if user is not an admin and narrative is not public', () => {
             mockPermissions(false, false);
             mockGoodServiceWizard();
             mockGetStaticNarrativeInfo(true);
-            let widget = new StaticNarrativesManager(node);
-            return widget.render()
-                .then(() => {
-                    expect(node.html()).toContain('Not an admin');
-                    expect(node.html()).toContain('Not public');
-                    expect(node.html()).not.toContain('Create static narrative');
-                });
+            const widget = new StaticNarrativesManager(node);
+            return widget.render().then(() => {
+                expect(node.html()).toContain('Not an admin');
+                expect(node.html()).toContain('Not public');
+                expect(node.html()).not.toContain('Create static narrative');
+            });
         });
     });
 });

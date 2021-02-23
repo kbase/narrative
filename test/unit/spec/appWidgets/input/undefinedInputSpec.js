@@ -1,6 +1,4 @@
-define([
-    'widgets/appWidgets2/input/undefinedInput'
-], (UndefinedInput) => {
+define(['widgets/appWidgets2/input/undefinedInput'], (UndefinedInput) => {
     'use strict';
 
     describe('Undefined Input Widget test', () => {
@@ -9,10 +7,10 @@ define([
         });
 
         it('Should be instantiable and have an element', () => {
-            let widget = UndefinedInput.make({});
-            let node = document.createElement('div');
+            const widget = UndefinedInput.make({});
+            const node = document.createElement('div');
             widget.attach(node);
             expect(node.innerHTML).toContain('Undefined widget');
         });
-    })
-})
+    });
+});

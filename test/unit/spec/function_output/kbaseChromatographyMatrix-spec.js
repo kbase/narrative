@@ -1,14 +1,8 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-define([
-    'kbaseChromatographyMatrix'
-], function(Widget) {
-    describe('Test the kbaseChromatographyMatrix widget', function() {
-        it('Should do things', function() {
-
+define(['kbaseChromatographyMatrix'], (Widget) => {
+    'use strict';
+    describe('The kbaseChromatographyMatrix widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
         });
     });
 });

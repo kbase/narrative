@@ -1,10 +1,4 @@
-/* global describe, it, expect, jasmine, beforeEach, afterEach */
-define ([
-    'jquery',
-    'narrativeLogin',
-    'narrativeConfig',
-    'narrativeMocks'
-], (
+define(['jquery', 'narrativeLogin', 'narrativeConfig', 'narrativeMocks'], (
     $,
     Login,
     Config,
@@ -27,7 +21,7 @@ define ([
 
         it('Should instantiate and have expected functions', () => {
             expect(Login).toBeDefined();
-            ['init', 'sessionInfo', 'getAuthToken', 'clearTokenCheckTimers'].forEach(item => {
+            ['init', 'sessionInfo', 'getAuthToken', 'clearTokenCheckTimers'].forEach((item) => {
                 expect(Login[item]).toBeDefined();
             });
         });
@@ -43,7 +37,7 @@ define ([
                     id: 'some_uuid',
                     type: 'Login',
                     user: 'some_user',
-                    cachefor: 500000
+                    cachefor: 500000,
                 },
                 profileInfo = {
                     created: Date.now() - 10000,
@@ -54,8 +48,7 @@ define ([
                     user: fakeUser,
                     local: false,
                     email: `${fakeName}@kbase.us`,
-                    idents: []
-
+                    idents: [],
                 };
             // these should capture the happy path calls that Login.init should make
             // copying some boilerplate from specs/api/authSpec
@@ -66,9 +59,9 @@ define ([
             // required here.
             Mocks.mockJsonRpc1Call({
                 url: Config.url('user_profile'),
-                response: [{}]
+                response: [{}],
             });
-            return Login.init($node, true)  // true here means there's no kernel
+            return Login.init($node, true) // true here means there's no kernel
                 .finally(() => {
                     const request = jasmine.Ajax.requests.mostRecent();
                     expect(request.requestHeaders.Authorization).toEqual(FAKE_TOKEN);
@@ -83,9 +76,9 @@ define ([
 
         it('Should throw an error when instantiating with a bad token', () => {
             const $node = $('<div>');
-            Mocks.mockAuthRequest('token', {error: {}}, 401);
-            Mocks.mockAuthRequest('me', {error: {}}, 401);
-            return Login.init($node, true)  // true here means there's no kernel
+            Mocks.mockAuthRequest('token', { error: {} }, 401);
+            Mocks.mockAuthRequest('me', { error: {} }, 401);
+            return Login.init($node, true) // true here means there's no kernel
                 .then(() => {
                     const request = jasmine.Ajax.requests.mostRecent();
                     expect(request.requestHeaders.Authorization).toEqual(FAKE_TOKEN);

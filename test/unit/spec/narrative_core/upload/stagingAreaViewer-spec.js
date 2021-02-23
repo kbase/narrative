@@ -1,21 +1,14 @@
-/*jslint white: true*/
-
-define ([
+define([
     'jquery',
     'kbase/js/widgets/narrative_core/upload/stagingAreaViewer',
     'base/js/namespace',
-    'kbaseNarrative'
-], (
-    $,
-    StagingAreaViewer,
-    Jupyter
-) => {
+    'kbaseNarrative',
+], ($, StagingAreaViewer, Jupyter) => {
     'use strict';
 
-    describe('Test the staging area viewer widget', () => {
-        let stagingViewer,
-            $targetNode,
-            startingPath = '/',
+    describe('The staging area viewer widget', () => {
+        let stagingViewer, $targetNode;
+        const startingPath = '/',
             updatePathFn = () => {},
             fakeUser = 'notAUser';
 
@@ -32,26 +25,27 @@ define ([
                         path: fakeUser + '/test_folder',
                         mtime: 1532738637499,
                         size: 34,
-                        isFolder: true
-                    }, {
+                        isFolder: true,
+                    },
+                    {
                         name: 'file_list.txt',
                         path: fakeUser + '/test_folder/file_list.txt',
                         mtime: 1532738637555,
                         size: 49233,
-                        source: 'KBase upload'
-                    }
-                ])
+                        source: 'KBase upload',
+                    },
+                ]),
             });
             Jupyter.narrative = {
                 userId: fakeUser,
                 getAuthToken: () => 'fakeToken',
                 sidePanel: {
-                    '$dataWidget': {
-                        '$overlayPanel': {}
+                    $dataWidget: {
+                        $overlayPanel: {},
                     },
-                    '$methodsWidget': {
-                        currentTag: 'release'
-                    }
+                    $methodsWidget: {
+                        currentTag: 'release',
+                    },
                 },
                 showDataOverlay: () => {},
                 addAndPopulateApp: () => {},
@@ -63,8 +57,8 @@ define ([
                 updatePathFn: updatePathFn,
                 userInfo: {
                     user: fakeUser,
-                    globusLinked: false
-                }
+                    globusLinked: false,
+                },
             });
         });
 
@@ -84,28 +78,30 @@ define ([
         });
 
         it('Should render properly with a Globus linked account', async (done) => {
-            let $node = $('<div>'),
+            const $node = $('<div>'),
                 linkedStagingViewer = new StagingAreaViewer($node, {
                     path: startingPath,
                     updatePathFn: updatePathFn,
                     userInfo: {
                         user: fakeUser,
-                        globusLinked: true
-                    }
+                        globusLinked: true,
+                    },
                 });
-            await linkedStagingViewer.render()
-                .then(() => {
-                    var $globusButton = $node.find('#globusLinked');
-                    expect($globusButton).toBeDefined();
-                    expect($globusButton.html()).toContain('Upload with Globus');
-                    expect($globusButton.attr('href')).toEqual('https://app.globus.org/file-manager?destination_id=c3c0a65f-5827-4834-b6c9-388b0b19953a&destination_path=' + fakeUser);
-                    done();
-                });
+            await linkedStagingViewer.render().then(() => {
+                const $globusButton = $node.find('#globusLinked');
+                expect($globusButton).toBeDefined();
+                expect($globusButton.html()).toContain('Upload with Globus');
+                expect($globusButton.attr('href')).toEqual(
+                    'https://app.globus.org/file-manager?destination_id=c3c0a65f-5827-4834-b6c9-388b0b19953a&destination_path=' +
+                        fakeUser
+                );
+                done();
+            });
         });
 
         it('Should render properly without a Globus linked account', async () => {
             await stagingViewer.render();
-            var $globusButton = $targetNode.find('#globusNotLinked');
+            const $globusButton = $targetNode.find('#globusNotLinked');
             expect($globusButton).toBeDefined();
             expect($globusButton.html()).toContain('Upload with Globus');
             expect($globusButton.attr('href')).toEqual('https://docs.kbase.us/data/globus');
@@ -113,13 +109,12 @@ define ([
 
         it('Should render a url button', async () => {
             await stagingViewer.render();
-            var $urlButton = $targetNode.find('.web_upload_div');
+            const $urlButton = $targetNode.find('.web_upload_div');
             expect($urlButton).toBeDefined();
             expect($urlButton.html()).toContain('Upload with URL');
         });
 
-
-        it('Should start a help tour', function() {
+        it('Should start a help tour', () => {
             stagingViewer.render();
             stagingViewer.startTour();
             expect(stagingViewer.tour).not.toBeNull();
@@ -136,7 +131,7 @@ define ([
                 statusText: 'success',
                 contentType: 'text/plain',
                 responseHeaders: '',
-                responseText: errorText
+                responseText: errorText,
             });
 
             await stagingViewer.setPath('//foo');
@@ -149,7 +144,7 @@ define ([
                 statusText: 'success',
                 contentType: 'text/plain',
                 responseHeaders: '',
-                responseText: JSON.stringify([])
+                responseText: JSON.stringify([]),
             });
 
             await stagingViewer.setPath('//empty');
@@ -200,11 +195,11 @@ define ([
                 inputs = {
                     fastq_fwd_staging_file_name: fileName,
                     name: fileName + '_reads',
-                    import_type: 'FASTQ/FASTA'
+                    import_type: 'FASTQ/FASTA',
                 };
             spyOn(Jupyter.narrative, 'addAndPopulateApp');
             spyOn(Jupyter.narrative, 'hideOverlay');
-            stagingViewer.initImportApp(fileType, {name: fileName});
+            stagingViewer.initImportApp(fileType, { name: fileName });
             expect(Jupyter.narrative.addAndPopulateApp).toHaveBeenCalledWith(appId, tag, inputs);
             expect(Jupyter.narrative.hideOverlay).toHaveBeenCalled();
         });
@@ -219,10 +214,9 @@ define ([
 
         it('Creates a downloader iframe when requested', () => {
             stagingViewer.downloadFile('some_url');
-            let dlNode = document.getElementById('hiddenDownloader');
+            const dlNode = document.getElementById('hiddenDownloader');
             expect(dlNode).toBeDefined();
             expect(dlNode.getAttribute('src')).toEqual('some_url');
         });
-
     });
 });

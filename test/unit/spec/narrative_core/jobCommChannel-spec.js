@@ -47,14 +47,14 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime'], (
     }
 
     describe('The jobCommChannel widget', () => {
+        let testBus;
         beforeEach(() => {
-            this.bus = Runtime.make().bus();
+            testBus = Runtime.make().bus();
             Jupyter.notebook = makeMockNotebook();
         });
 
         afterEach(() => {
             window.kbaseRuntime = null;
-            document.body.innerHTML = '';
         });
 
         it('Should load properly', () => {
@@ -120,7 +120,7 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime'], (
                     .then(() => {
                         expect(comm.comm).not.toBeNull();
                         spyOn(comm.comm, 'send');
-                        this.bus.emit(testCase[0], testCase[1]);
+                        testBus.emit(testCase[0], testCase[1]);
                         return new Promise((resolve) => setTimeout(resolve, 100));
                     })
                     .then(() => {
@@ -175,11 +175,11 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime'], (
                 };
 
             const comm = new JobCommChannel();
-            spyOn(this.bus, 'send');
+            spyOn(testBus, 'send');
 
             return comm.initCommChannel().then(() => {
                 comm.handleCommMessages(msg);
-                expect(this.bus.send).toHaveBeenCalledWith(busMsg, {
+                expect(testBus.send).toHaveBeenCalledWith(busMsg, {
                     channel: { jobId: jobId },
                     key: { type: 'job-status' },
                 });
@@ -201,10 +201,10 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime'], (
             });
             const comm = new JobCommChannel();
             comm.jobStates['deletedJob'] = { state: { job_id: 'deletedJob' } };
-            spyOn(this.bus, 'send');
+            spyOn(testBus, 'send');
             return comm.initCommChannel().then(() => {
                 comm.handleCommMessages(msg);
-                expect(this.bus.send).toHaveBeenCalledTimes(3);
+                expect(testBus.send).toHaveBeenCalledTimes(3);
             });
         });
 
@@ -223,10 +223,10 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime'], (
                 msg = makeCommMsg('job_info', jobStateMsg);
 
             const comm = new JobCommChannel();
-            spyOn(this.bus, 'send');
+            spyOn(testBus, 'send');
             return comm.initCommChannel().then(() => {
                 comm.handleCommMessages(msg);
-                expect(this.bus.send).toHaveBeenCalledWith(busMsg, {
+                expect(testBus.send).toHaveBeenCalledWith(busMsg, {
                     channel: { jobId: jobId },
                     key: { type: 'job-info' },
                 });
@@ -242,10 +242,10 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime'], (
                 },
                 msg = makeCommMsg('run_status', busMsg);
             const comm = new JobCommChannel();
-            spyOn(this.bus, 'send');
+            spyOn(testBus, 'send');
             return comm.initCommChannel().then(() => {
                 comm.handleCommMessages(msg);
-                expect(this.bus.send).toHaveBeenCalledWith(busMsg, {
+                expect(testBus.send).toHaveBeenCalledWith(busMsg, {
                     channel: { cell: cellId },
                     key: { type: 'run-status' },
                 });
@@ -258,10 +258,10 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime'], (
                     job_id: jobId,
                 });
             const comm = new JobCommChannel();
-            spyOn(this.bus, 'send');
+            spyOn(testBus, 'send');
             return comm.initCommChannel().then(() => {
                 comm.handleCommMessages(msg);
-                expect(this.bus.send).toHaveBeenCalledWith(
+                expect(testBus.send).toHaveBeenCalledWith(
                     {
                         jobId: jobId,
                         via: 'job_canceled',
@@ -281,10 +281,10 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime'], (
                     source: 'someSource',
                 }),
                 comm = new JobCommChannel();
-            spyOn(this.bus, 'send');
+            spyOn(testBus, 'send');
             return comm.initCommChannel().then(() => {
                 comm.handleCommMessages(msg);
-                expect(this.bus.send).toHaveBeenCalledWith(
+                expect(testBus.send).toHaveBeenCalledWith(
                     {
                         jobId: jobId,
                         source: 'someSource',
@@ -305,10 +305,10 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime'], (
                     logs: [{}],
                 }),
                 comm = new JobCommChannel();
-            spyOn(this.bus, 'send');
+            spyOn(testBus, 'send');
             return comm.initCommChannel().then(() => {
                 comm.handleCommMessages(msg);
-                expect(this.bus.send).toHaveBeenCalledWith(
+                expect(testBus.send).toHaveBeenCalledWith(
                     {
                         jobId: jobId,
                         logs: msg.content.data.content,
@@ -339,10 +339,10 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime'], (
                         message: errMsg,
                     }),
                     comm = new JobCommChannel();
-                spyOn(this.bus, 'send');
+                spyOn(testBus, 'send');
                 return comm.initCommChannel().then(() => {
                     comm.handleCommMessages(msg);
-                    expect(this.bus.send).toHaveBeenCalledWith(
+                    expect(testBus.send).toHaveBeenCalledWith(
                         {
                             jobId: jobId,
                             message: errMsg,
@@ -367,10 +367,10 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime'], (
                 },
                 msg = makeCommMsg('job_comm_error', busMsg),
                 comm = new JobCommChannel();
-            spyOn(this.bus, 'send');
+            spyOn(testBus, 'send');
             return comm.initCommChannel().then(() => {
                 comm.handleCommMessages(msg);
-                expect(this.bus.send).toHaveBeenCalledWith(
+                expect(testBus.send).toHaveBeenCalledWith(
                     {
                         jobId: jobId,
                         message: errMsg,
@@ -393,23 +393,24 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime'], (
                         source: 'jobmanager',
                     }),
                     comm = new JobCommChannel();
-                jasmine.clock().install();
                 return comm
                     .initCommChannel()
                     .then(() => {
                         comm.handleCommMessages(msg);
+                        return new Promise((resolve) => { setTimeout(() => resolve(), 500)});
                     })
                     .then(() => {
-                        jasmine.clock().tick(5000);
                         expect(document.querySelector('.modal #kb-job-err-trace')).not.toBeNull();
                         // click the 'OK' button
                         document.querySelector('.modal a.btn.btn-default').click();
-                        jasmine.clock().tick(5000);
                         // expect it to be gone
+                        return new Promise((resolve) => { setTimeout(() => resolve(), 500)});
+                    })
+                    .then(() => {
                         expect(document.querySelector('.modal #kb-job-err-trace')).toBeNull();
                     })
                     .finally(() => {
-                        jasmine.clock().uninstall();
+                        document.body.innerHTML = '';
                     });
             });
         });
@@ -422,10 +423,10 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime'], (
                 },
                 msg = makeCommMsg('result', busMsg),
                 comm = new JobCommChannel();
-            spyOn(this.bus, 'send');
+            spyOn(testBus, 'send');
             return comm.initCommChannel().then(() => {
                 comm.handleCommMessages(msg);
-                expect(this.bus.send).toHaveBeenCalledWith(busMsg, {
+                expect(testBus.send).toHaveBeenCalledWith(busMsg, {
                     channel: { cell: cellId },
                     key: { type: 'result' },
                 });

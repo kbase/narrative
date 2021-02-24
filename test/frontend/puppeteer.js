@@ -15,7 +15,7 @@ const { promisify } = require('util');
 const readFile      = promisify(fs.readFile);
 const assert        = require('assert');
 
-var argv = minimist(process.argv.slice(2));
+const argv = minimist(process.argv.slice(2));
 
 if ( !argv.config ) {
   console.error('please provide a config file');
@@ -306,7 +306,7 @@ const check_widget_status = async(page, host, url, widget_config, token) => {
 
   console.info(`   Attempting to click on ${widget_config.dataSelector}`);
   const clickedOnIcon = await page.evaluate( dataSelector => {
-    var numCells = Jupyter.notebook.get_cells().length;
+    const numCells = Jupyter.notebook.get_cells().length;
     Jupyter.notebook.select(numCells - 1);
     if ( $(dataSelector).size() ) {
       $(dataSelector).click();
@@ -324,9 +324,9 @@ const check_widget_status = async(page, host, url, widget_config, token) => {
 
   console.info(`   Attempting to check type of widget. Should be ${widget_config.type}.`);
   const objType = await page.evaluate( (type) => {
-    var cellIdx = Jupyter.notebook.get_cells().length-1;
-    var cell = Jupyter.notebook.get_cell(cellIdx);
-    var dataType = cell.metadata.kbase.dataCell.objectInfo.type.toLowerCase();
+    const cellIdx = Jupyter.notebook.get_cells().length-1;
+    const cell = Jupyter.notebook.get_cell(cellIdx);
+    const dataType = cell.metadata.kbase.dataCell.objectInfo.type.toLowerCase();
     return dataType.indexOf(type) !== -1;
   }, widget_config.type);
 
@@ -476,7 +476,7 @@ const run_narrative_test = async ( config ) => {
     puppeteer.launch({headless : !argv.headed, ignoreHTTPSErrors : true }).then(async browser => {
 
       try {
-        let pages = await browser.pages()
+        const pages = await browser.pages()
         const page = await browser.newPage();
 
         const narrative1_widget_status = await check_widget_status(

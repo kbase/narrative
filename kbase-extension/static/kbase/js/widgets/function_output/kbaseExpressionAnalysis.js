@@ -18,14 +18,14 @@
 		'plotly',
 		'kbaseAuthenticatedWidget',
 		'KBModeling'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		Plotly,
 		kbaseAuthenticatedWidget
 		// KBModeling
-	) {
+	) => {
 
     return KBWidget({
         name: "kbaseExpressionAnalysis",
@@ -33,12 +33,12 @@
         version: "1.0.1",
         options: {},
         init: function(input) {
-            var self = this;
+            const self = this;
             this._super(input);
-            var container = this.$elem;
+            const container = this.$elem;
 
             // api helper
-            var api = new KBModeling( self.authToken() ).kbapi;
+            const api = new KBModeling( self.authToken() ).kbapi;
 
             // accept workspace/object ids or strings
             if (isNaN(input.ws) && isNaN(input.obj) )
@@ -49,8 +49,8 @@
 
             // get data, format, and render data
             api('ws', 'get_objects', [param])
-                .then(function(res) {
-                    var data = formatData(res[0].data);
+                .then((res) => {
+                    const data = formatData(res[0].data);
                     render(data.values, data.y);
                 })
 
@@ -58,10 +58,10 @@
             // takes KBaseFBA.FBAPathwayAnalysis data,
             // and returns data needed to render stacked bar chart
             function formatData(data) {
-                var pathways = data.pathways;
+                const pathways = data.pathways;
 
-                var y = [];
-                var values = {
+                const y = [];
+                const values = {
                     gpRxnsFluxP: [],
                     gsrFluxMExpM: [],
                     gsrFluxMExpP: [],
@@ -69,12 +69,12 @@
                     gsrFluxPExpP: []
                 }
 
-                var i = pathways.length;
+                let i = pathways.length;
                 while (i--) {
-                    var o = pathways[i];
+                    const o = pathways[i];
                     y.push(o.pathwayName + ' ('+o.totalModelReactions+')');
 
-                    var total = o.gpRxnsFluxP + o.gsrFluxMExpM + o.gsrFluxMExpP +
+                    const total = o.gpRxnsFluxP + o.gsrFluxMExpM + o.gsrFluxMExpP +
                                 o.gsrFluxPExpN + o.gsrFluxPExpP;
 
                     values.gpRxnsFluxP.push( o.gpRxnsFluxP / total * 100);
@@ -88,7 +88,7 @@
             }
 
             function render(values, y) {
-                var basopts = {
+                const basopts = {
                     x: null,
                     y: y,
                     name: null,
@@ -100,7 +100,7 @@
                     type: 'bar'
                 };
 
-                var trace1 = $.extend({}, basopts, {
+                const trace1 = $.extend({}, basopts, {
                     x: values.gsrFluxPExpP,
                     name: 'GAR Active flux and expression',
                     marker: {
@@ -108,7 +108,7 @@
                     }
                 });
 
-                var trace2 = $.extend({}, basopts, {
+                const trace2 = $.extend({}, basopts, {
                     x: values.gsrFluxMExpM,
                     name: 'GAR No flux or expression',
                     marker: {
@@ -116,7 +116,7 @@
                     }
                 });
 
-                var trace3 = $.extend({}, basopts, {
+                const trace3 = $.extend({}, basopts, {
                     x: values.gsrFluxMExpP,
                     name: 'GAR No flux, but active expression',
                     marker: {
@@ -124,7 +124,7 @@
                     }
                 });
 
-                var trace4 = $.extend({}, basopts, {
+                const trace4 = $.extend({}, basopts, {
                     x: values.gsrFluxPExpN,
                     name: 'Active flux, but no expression',
                     marker: {
@@ -132,7 +132,7 @@
                     }
                 });
 
-                var trace5 = $.extend({}, basopts, {
+                const trace5 = $.extend({}, basopts, {
                     x: values.gpRxnsFluxP,
                     name: 'Active gapfilled reactions',
                     marker: {
@@ -140,9 +140,9 @@
                     }
                 });
 
-                var data = [trace1, trace2, trace3, trace4, trace5]
+                const data = [trace1, trace2, trace3, trace4, trace5]
 
-                var layout = {
+                const layout = {
                     title: 'Flux Balance Analysis Against Gene Expression',
                     barmode: 'stack',
                     margin: {
@@ -158,9 +158,9 @@
                 };
 
                 // add container
-                var vizContainer = $('<div>').uniqueId();
+                const vizContainer = $('<div>').uniqueId();
                 container.append(vizContainer);
-                var id = vizContainer.attr('id');
+                const id = vizContainer.attr('id');
 
                 // render
                 Plotly.newPlot(id, data, layout);

@@ -11,7 +11,7 @@ define (
 		'kbaseTable',
 		'kbaseAuthenticatedWidget',
 		'kbaseTabs'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -21,7 +21,7 @@ define (
 		kbaseTable,
 		kbaseAuthenticatedWidget,
 		kbaseTabs
-	) {
+	) => {
 
     'use strict';
 
@@ -43,11 +43,11 @@ define (
 
         setDataset : function setDataset(newDataset) {
 
-            var bars = [];
+            const bars = [];
 
-            var i = 0;
+            let i = 0;
             while (newDataset.data[0].length) {
-                var xCoord = newDataset.data[0].shift();
+                const xCoord = newDataset.data[0].shift();
 
                 while (i < xCoord) {
                     bars.push(
@@ -83,20 +83,20 @@ define (
         init : function init(options) {
             this._super(options);
 
-            var $hist = this;
+            const $hist = this;
 
-            var ws = new Workspace(window.kbconfig.urls.workspace, {token : $hist.authToken()});
+            const ws = new Workspace(window.kbconfig.urls.workspace, {token : $hist.authToken()});
 
-            var ws_params = {
+            const ws_params = {
                 workspace : this.options.workspace,
                 //ws_id : ws_id_key != undefined ? $pie.options[ws_id] : undefined,
                 name : this.options.output
             };
 
-            ws.get_objects([ws_params]).then(function (d) {
+            ws.get_objects([ws_params]).then((d) => {
                 $hist.setDataset(d[0].data);
             })
-            .fail(function(d) {
+            .fail((d) => {
 
                 $hist.$elem.empty();
                 $hist.$elem
@@ -155,7 +155,7 @@ define (
                 )
             );
 
-            var $barchart = this.data('barchart');
+            const $barchart = this.data('barchart');
             $barchart.superRenderChart = $barchart.renderChart;
             $barchart.renderChart = function() {
                 $barchart.superRenderChart();
@@ -163,12 +163,12 @@ define (
                 this.D3svg()
                     .selectAll('.xAxis .tick text')
                     .data(this.dataset())
-                    .attr('fill', function (L, i) {
-                        var val = $barchart.dataset()[i].value;
+                    .attr('fill', (L, i) => {
+                        const val = $barchart.dataset()[i].value;
                         return val[0] === 0 ? undefined : 'blue';
                     })
-                    .on('mouseover', function(L, i) {
-                        var tip = $barchart.dataset()[i].value;
+                    .on('mouseover', (L, i) => {
+                        const tip = $barchart.dataset()[i].value;
                         if (tip[0]) {
                             $barchart.showToolTip(
                                 {
@@ -177,7 +177,7 @@ define (
                             );
                         }
                     })
-                    .on('mouseout', function(d) {
+                    .on('mouseout', (d) => {
                         $barchart.hideToolTip();
                     })
             };

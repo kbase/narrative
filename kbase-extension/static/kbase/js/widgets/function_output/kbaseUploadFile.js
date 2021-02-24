@@ -23,11 +23,11 @@
         },
         render: function() {
             // creater main comtainer
-            var params = this.params;
+            const params = this.params;
             params.div = document.createElement('div');
             
             // create a file upload button and hide it and store it
-            var realButton = document.createElement('input');
+            const realButton = document.createElement('input');
             realButton.setAttribute('type', 'file');
             realButton.setAttribute('style', 'display: none;');
             realButton.addEventListener('change', this.fileSelected);
@@ -36,7 +36,7 @@
             params.div.appendChild(realButton);
             
             // create the visible upload button
-            var fakeButton = document.createElement('button');
+            const fakeButton = document.createElement('button');
             fakeButton.setAttribute('class', 'btn btn-primary');
             fakeButton.innerHTML = params.buttonTitle;
             fakeButton.fb = realButton;
@@ -48,7 +48,7 @@
             // check if we want a progress bar
             if (params.showProgress) {
                 // aquire the target for the progress bar if it is external
-                var pdiv;
+                let pdiv;
                 if (params.externalProgressTarget) {
                     if (typeof params.externalProgressTarget == 'string') {
                         pdiv = document.getElementById(params.externalProgressTarget);
@@ -76,20 +76,20 @@
         },
         fileSelected: function () {
         	// get the selected file
-        	var file = this.files[0];
+        	const file = this.files[0];
         	
         	// get the filereader
-        	var fileReader = new FileReader();
+        	const fileReader = new FileReader();
         	fileReader.uploader = this.uploader;
         	fileReader.onerror = function (error) {
         		console.log(error);
         	};
             
             // we need the uploader
-        	var ul = this.uploader;
+        	const ul = this.uploader;
         	
             // done callback
-        	var done = function () {
+        	const done = function () {
         		ul.progressDiv.innerHTML = '\
 <div class="alert alert-success" style="margin-top: 10px;">\
     <button type="button" class="close" data-dismiss="alert">&times;</button>\
@@ -107,7 +107,7 @@
         	};
 
             // error callback
-        	var error = function (error) {
+        	const error = function (error) {
         		ul.progressDiv.innerHTML = '\
 <div class="alert alert-error" style="margin-top: 10px;">\
     <button type="button" class="close" data-dismiss="alert">&times;</button>\
@@ -126,7 +126,7 @@
 
         	// handle the file once loaded
         	fileReader.onload = function(e) {
-        	    var data = e.target.result;
+        	    const data = e.target.result;
         		InvocationService(this.uploader.params.url, this.uploader.params.auth);
         		put_file(null, file.name, data, "/", done, error);
         	};

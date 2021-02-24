@@ -1,4 +1,3 @@
-/*global define*/
 /*eslint-env browser*/
 
 define([
@@ -6,16 +5,16 @@ define([
     'bluebird',
     'handlebars',
     'text!kbase/templates/readsSetEditor/widgetTemplate.html'
-], function (
+], (
     $,
     Promise,
     Handlebars,
     Template
-) {
+) => {
     'use strict';
 
     function factory (config) {
-        var container,
+        let container,
             parentBus = config.bus,
             cellBus = config.cellBus,
             model,
@@ -23,7 +22,7 @@ define([
             setDescription = "";
 
         function updateModel () {
-            var stringInput = [
+            const stringInput = [
                 'name:' + setName,
                 'desc:' + setDescription
             ].join(', ');
@@ -40,8 +39,8 @@ define([
         }
 
         function bindEvents () {
-            $(container).find('input').change(function(event) {
-                var id = event.currentTarget.id,
+            $(container).find('input').change((event) => {
+                const id = event.currentTarget.id,
                     value = event.currentTarget.value;
                 if (id === 'set-name') {
                     setName = value;
@@ -54,7 +53,7 @@ define([
         }
 
         function renderEditor () {
-            var tmpl = Handlebars.compile(Template);
+            const tmpl = Handlebars.compile(Template);
             container.innerHTML = tmpl();
             bindEvents();
         }
@@ -62,13 +61,13 @@ define([
         function start(args) {
             container = args.node;
             model = args.model;
-            return Promise.try(function() {
+            return Promise.try(() => {
                 renderEditor();
             });
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
 
             });
         }

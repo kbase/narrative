@@ -43,19 +43,19 @@
          * Probably just a small table with a couple fields. name, date, etc.
          */
         renderMetadata: function(metadata) {
-            var id = metadata[0];
-            var timestamp = metadata[2];
-            var owner = metadata[5];
-            var workspace = metadata[7];
-            var mediaMeta = metadata[10];
-            var mediaName = metadata[1];
-            var numCompounds = mediaMeta['number_compounds'];
+            const id = metadata[0];
+            const timestamp = metadata[2];
+            const owner = metadata[5];
+            const workspace = metadata[7];
+            const mediaMeta = metadata[10];
+            const mediaName = metadata[1];
+            const numCompounds = mediaMeta['number_compounds'];
 
-            var tableRow = function(a, b) {
+            const tableRow = function(a, b) {
                 return "<tr><td><b>" + a + "</b></td><td>" + b + "</td></tr>";
             };
 
-            var $metaTable = $("<table>")
+            const $metaTable = $("<table>")
                              .addClass("table table-striped table-bordered")
                              .css({"margin-right": "auto", "margin-left": "auto"})
                              .append(tableRow("Name", mediaName))
@@ -74,7 +74,7 @@
          * Simple, eh?
          */
         renderMedia: function(media) {
-            var $mediaTable = $("<table>")
+            const $mediaTable = $("<table>")
                               .addClass("table table-striped table-bordered")
                               .css({"margin-right": "auto", "margin-left": "auto"})
                               .append($("<tr>")
@@ -87,10 +87,10 @@
                                       .append($("<th>")
                                               .append("<b>Max Flux</b>")));
 
-            for (var i=0; i<media.media_compounds.length; i++) {
-                var cpd = media.media_compounds[i];
+            for (let i=0; i<media.media_compounds.length; i++) {
+                const cpd = media.media_compounds[i];
 
-                var $newRow = $("<tr>")
+                const $newRow = $("<tr>")
                               .append($("<td>")
                                       .append(cpd.name))
                               .append($("<td>")
@@ -118,22 +118,22 @@
          * Builds controls to fetch a media set and populate the current list.
          */
         buildFetchMediaDiv: function(mediaList) {
-            var $fetchMediaDiv = $("<div>");
+            const $fetchMediaDiv = $("<div>");
             $fetchMediaDiv.append("Select an existing media to modify (optional): ");
 
-            var $mediaList = $("<select>");
-            for (var i=0; i<mediaList.length; i++) {
+            const $mediaList = $("<select>");
+            for (let i=0; i<mediaList.length; i++) {
                 $mediaList.append($("<option>").append(mediaList[i][0]));
             }
 
-            var $fetchButton = $("<button>")
+            const $fetchButton = $("<button>")
                                .attr("type", "button")
                                .attr("value", "Fetch")
                                .addClass("btn btn-primary")
                                .append("Fetch")
                                .click($.proxy(
                                     function(event) {
-                                        var mediaName = this.$elem.find("div > select").val();
+                                        const mediaName = this.$elem.find("div > select").val();
                                         this.fbaClient.get_media_async({
                                                 auth: this.authToken(),
                                                 medias: [mediaName],
@@ -154,7 +154,7 @@
          * name and pH
          */
         buildHeaderInputs: function() {
-            var $headerInputDiv = $("<div>");
+            const $headerInputDiv = $("<div>");
             $headerInputDiv.append($("<b>")
                                    .append("Name (required): "))
                            .append($("<input>")
@@ -172,7 +172,7 @@
         },
 
         buildMediaTable: function() {
-            var $mediaTable = $("<table>")
+            const $mediaTable = $("<table>")
                               .addClass("table table-striped table-bordered")
                               .css({"margin-right": "auto", "margin-left": "auto"})
                               .append($("<tr>")
@@ -190,13 +190,13 @@
         },
 
         buildRowControlButton: function(trashOnly) {
-            var self = this;
+            const self = this;
 
-            var deleteRow = function(event) {
+            const deleteRow = function(event) {
                 $(event.currentTarget).closest("tr").remove();
             };
 
-            var addRow = function(event) {
+            const addRow = function(event) {
                 self.addEmptyMediaRow();
                 $(event.currentTarget).find("span")
                                       .addClass("glyphicon-trash")
@@ -206,7 +206,7 @@
                                       .click(deleteRow);
             };
 
-            var $button = $("<button>")
+            const $button = $("<button>")
                           .addClass("form-control")
                           .append($("<span>")
                                   .addClass("glyphicon")
@@ -225,13 +225,13 @@
         },
 
         addMediaRow: function(cpd) {
-            var self = this;
-            var $newRowBtn = this.buildRowControlButton(cpd);
+            const self = this;
+            const $newRowBtn = this.buildRowControlButton(cpd);
 
             // little hack to make the ternary operators below a little cleaner.
             if (!cpd) cpd = {};
 
-            var $row = $("<tr>")
+            const $row = $("<tr>")
                        .append($("<td>")
                                .append($("<input>")
                                        .addClass("form-control")
@@ -262,7 +262,7 @@
             media = media[0];
             this.$mediaTable.find("tr > td").closest("tr").remove();
 
-            for (var i=0; i<media.media_compounds.length; i++) {
+            for (let i=0; i<media.media_compounds.length; i++) {
                 this.addMediaRow(media.media_compounds[i]);
             }
             this.addEmptyMediaRow();
@@ -279,12 +279,12 @@
          * @return 
          */
         getParameters: function() {
-            var mediaName = this.$headerInputDiv.find("#media-name").val().trim().replace(/\s+/g, "_");
+            const mediaName = this.$headerInputDiv.find("#media-name").val().trim().replace(/\s+/g, "_");
             if (!mediaName) {
                 // stuuuuuuuuff...
             }
 
-            var mediaParams = {
+            const mediaParams = {
                 // workspace and auth token will be handled by the IPython kernel.
                 name : mediaName,
                 media : mediaName,
@@ -292,7 +292,7 @@
                 isMinimal : 0
             };
 
-            var cpds = [],
+            const cpds = [],
                 concs = [],
                 minFluxes = [],
                 maxFluxes = [];
@@ -301,11 +301,11 @@
 
             // Find all <tr> in the table that has a <td> (e.g., NOT the header row - that has <th>)
             // and iterate over those rows.
-            this.$mediaTable.find("tr:has('td')").each(function(idx, row) {
-                var cpd = $(row).find("td:nth-child(1) input").val().trim();
-                var conc = $(row).find("td:nth-child(2) input").val().trim();
-                var min = $(row).find("td:nth-child(3) input").val().trim();
-                var max = $(row).find("td:nth-child(4) input").val().trim();
+            this.$mediaTable.find("tr:has('td')").each((idx, row) => {
+                const cpd = $(row).find("td:nth-child(1) input").val().trim();
+                const conc = $(row).find("td:nth-child(2) input").val().trim();
+                const min = $(row).find("td:nth-child(3) input").val().trim();
+                const max = $(row).find("td:nth-child(4) input").val().trim();
 
                 if (cpd) {
                     cpds.push(cpd);

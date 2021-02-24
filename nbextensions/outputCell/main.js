@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'jquery',
@@ -15,7 +13,7 @@ define([
     'util/string',
     './widgets/outputCell',
     'custom/custom'
-], function(
+], (
     Promise,
     $,
     Uuid,
@@ -29,15 +27,15 @@ define([
     html,
     StringUtil,
     OutputCell
-) {
+) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div');
 
     function specializeCell(cell) {
         cell.minimize = function() {
-            var inputArea = this.input.find('.input_area').get(0),
+            const inputArea = this.input.find('.input_area').get(0),
                 outputArea = this.element.find('.output_wrapper'),
                 showCode = utils.getCellMeta(cell, 'kbase.outputCell.user-settings.showCodeInputArea');
 
@@ -48,7 +46,7 @@ define([
         };
 
         cell.maximize = function() {
-            var inputArea = this.input.find('.input_area').get(0),
+            const inputArea = this.input.find('.input_area').get(0),
                 outputArea = this.element.find('.output_wrapper'),
                 showCode = utils.getCellMeta(cell, 'kbase.outputCell.user-settings.showCodeInputArea');
 
@@ -62,7 +60,7 @@ define([
         };
 
         cell.renderIcon = function() {
-            var inputPrompt = this.element[0].querySelector('[data-element="icon"]');
+            const inputPrompt = this.element[0].querySelector('[data-element="icon"]');
 
             if (inputPrompt) {
                 inputPrompt.innerHTML = div({
@@ -74,12 +72,12 @@ define([
         };
 
         cell.getIcon = function() {
-            var icon = AppUtils.makeToolbarGenericIcon('arrow-left');
+            const icon = AppUtils.makeToolbarGenericIcon('arrow-left');
             return icon;
         };
 
         cell.isCodeShowing = function() {
-            var codeInputArea = this.input.find('.input_area')[0];
+            const codeInputArea = this.input.find('.input_area')[0];
             if (codeInputArea) {
                 return codeInputArea.classList.contains('-show');
             }
@@ -87,7 +85,7 @@ define([
         };
 
         cell.toggleCodeInputArea = function() {
-            var codeInputArea = this.input.find('.input_area')[0];
+            const codeInputArea = this.input.find('.input_area')[0];
             if (codeInputArea) {
                 codeInputArea.classList.toggle('-show');
                 // NB purely for side effect - toolbar refresh
@@ -122,7 +120,7 @@ define([
         // Disable this line to allow this setting to be sticky.
         utils.setCellMeta(cell, 'kbase.outputCell.user-settings.showCodeInputArea', false);
 
-        var outputCell = OutputCell.make({
+        const outputCell = OutputCell.make({
             cell: cell
         });
         outputCell.bus.emit('run', {
@@ -135,8 +133,8 @@ define([
     }
 
     function upgradeCell(cell, setupData) {
-        return Promise.try(function() {
-            var meta = cell.metadata,
+        return Promise.try(() => {
+            let meta = cell.metadata,
                 outputCode, parentTitle,
                 cellId = setupData.cellId || (new Uuid(4).format());
 
@@ -181,16 +179,16 @@ define([
     }
 
     function initializeExtension() {
-        $([Jupyter.events]).on('insertedAtIndex.Cell', function(event, payload) {
-            var cell = payload.cell;
-            var setupData = payload.data;
-            var jupyterCellType = payload.type;
+        $([Jupyter.events]).on('insertedAtIndex.Cell', (event, payload) => {
+            const cell = payload.cell;
+            const setupData = payload.data;
+            const jupyterCellType = payload.type;
 
             if (jupyterCellType === 'code' &&
                 setupData &&
                 setupData.type === 'output') {
                 upgradeCell(cell, setupData)
-                    .catch(function(err) {
+                    .catch((err) => {
                         console.error('ERROR creating cell', err);
                         // delete cell.
                         $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
@@ -199,7 +197,7 @@ define([
             }
         });
 
-        Jupyter.notebook.get_cells().forEach(function(cell) {
+        Jupyter.notebook.get_cells().forEach((cell) => {
             try {
                 setupCell(cell);
             } catch (ex) {
@@ -214,7 +212,7 @@ define([
             initializeExtension();
         }
         else {
-            $([Jupyter.events]).one('notebook_loaded.Notebook', function () {
+            $([Jupyter.events]).one('notebook_loaded.Notebook', () => {
                 initializeExtension();
             });
         }
@@ -224,6 +222,6 @@ define([
         // This is the sole ipython/jupyter api call
         load_ipython_extension: load
     };
-}, function(err) {
+}, (err) => {
     console.error('ERROR loading outputCell main', err);
 });

@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white: true*/
 /**
  * @author Andreas Wilke <wilke@anl.gov>
  * @public
@@ -12,14 +10,14 @@ define (
 		'narrativeConfig',
 		'kbaseNarrativeInput',
 		'kbStandaloneListSelect'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		Config,
 		kbaseNarrativeInput,
 		kbStandaloneListSelect
-	) {
+	) => {
     return KBWidget({
         name: "create_metagenome_set",
         parent : kbaseNarrativeInput,
@@ -43,23 +41,23 @@ define (
         },
 
 	    render: function() {
-		    var self = this;
-		    var container = this.$elem;
-            var foots = container.parent().parent().children();
+		    const self = this;
+		    const container = this.$elem;
+            const foots = container.parent().parent().children();
 	foots[foots.length - 1].style.display='none';
 	    container.empty();
             if (self.token == null) {
                 container.append("<div>[Error] You're not logged in</div>");
                 return;
             }
-            var kbws = new Workspace(self.ws_url, {'token': self.token});
-        
-		    var lslen = 0;
+            const kbws = new Workspace(self.ws_url, {'token': self.token});
+
+		    let lslen = 0;
         	if (window.hasOwnProperty('rendererListselect') && rendererListselect.length) {
         		lslen = rendererListselect.length;
        		}
 		    container.append("<div id='inputListselect"+lslen+"'><img src='" + this.loading_image + "'></div>");
-		    var listSelect = standaloneListselect.create({index: lslen});
+		    const listSelect = standaloneListselect.create({index: lslen});
 		    listSelect.settings.target = document.getElementById('inputListselect'+lslen);
 		    listSelect.settings.callback = this.metagenomesSelected;
 		    listSelect.settings.synchronous = true;
@@ -75,22 +73,22 @@ define (
 		    listSelect.settings.value = "id";
 		    listSelect.settings.master = self;
 		    listSelect.settings.index = lslen;
-		    var r = document.createElement('div');
+		    const r = document.createElement('div');
 		    r.setAttribute('id', 'mgInputResultDiv'+lslen);
 		    container.append(r);
 
             // Get list of metagenome ids from workspace
-            kbws.list_objects({ ids : [self.ws_id] , type : 'Communities.Metagenome'} , function(data) {
-                var idList = [];
-                for (var i=0; i<data.length; i++) {
+            kbws.list_objects({ ids : [self.ws_id] , type : 'Communities.Metagenome'} , (data) => {
+                const idList = [];
+                for (let i=0; i<data.length; i++) {
                     idList.push({ref: self.ws_id+"/"+data[i][0] });
                 }
                 //console.log(idList);
                 if (idList.length > 0) {
                     // get the metadata for the ids
-                    kbws.get_objects(idList, function(resData) {
-                        var listSelectData = [];
-                        for (var i=0; i<resData.length; i++) {
+                    kbws.get_objects(idList, (resData) => {
+                        const listSelectData = [];
+                        for (let i=0; i<resData.length; i++) {
                             listSelectData.push({
 					            "wsid": resData[i].info[6],
 						        "wsitem": resData[i].info[0],
@@ -124,7 +122,7 @@ define (
             });
 
 	    },
-	
+
 	    loggedInCallback: function(event, auth) {
             this.token = auth.token;
             this.render();
@@ -136,14 +134,14 @@ define (
             this.render();
             return this;
         },
-    
+
 	    metagenomesSelected: function(items, listName, index) {
-	        var self = this.master;
-	        var d = document.getElementById("mgInputResultDiv"+this.index);
+	        const self = this.master;
+	        const d = document.getElementById("mgInputResultDiv"+this.index);
 
 		// check if amplicon and wgs are mixed
-		var amplicon = 0;
-		var wgs = 0;
+		let amplicon = 0;
+		let wgs = 0;
 		for (var i=0; i<items.length; i++) {
 			if (items[i]["sequence type"] == "WGS") {
 				wgs++;
@@ -157,30 +155,30 @@ define (
 		}
 
 	        // if data is selected create list and save it to ws
-	        var date = new Date();
-	        var collection = {
+	        const date = new Date();
+	        const collection = {
 	    	    name: listName,
 	    	    type: 'Metagenome',
 	    	    created: date.toISOString(),
 	    	    members: []
 	        };
-	    
+
 	        for (var i=0 ; i<items.length;i++){
 		        collection.members[i] = {'ID': items[i].id, 'URL': items[i].wsid+"/"+items[i].wsitem};
 	        }
-	    
-	        var object_data = {
+
+	        const object_data = {
 	     	    type: 'Communities.Collection',
 	     	    data: collection,
 	     	    name: listName
 	        };
-	        var save_params = {
+	        const save_params = {
 	     	    id: self.ws_id, //if only ws name is given change to workspace
 	     	    objects: [object_data]
 	        };
 	        //console.log(save_params);
-	   
-	        var kbws = new Workspace(self.ws_url, {'token': self.token});
+
+	        const kbws = new Workspace(self.ws_url, {'token': self.token});
 	        kbws.save_objects(save_params);
 	        d.innerHTML += "<h5>collection "+listName+" saved.</h5>";
 	    }

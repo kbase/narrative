@@ -13,7 +13,7 @@ define([
 
     'bootstrap',
     'css!font-awesome'
-], function(
+], (
     require,
     Promise,
     html,
@@ -25,17 +25,17 @@ define([
     Resolver,
     Validation,
     FieldWidget
-) {
+) => {
     'use strict';
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         span = t('span'),
         button = t('button');
 
     function factory(config) {
-        var spec = config.parameterSpec,
+        let spec = config.parameterSpec,
             itemSpec = spec.parameters.specs.item,
             container,
             parent,
@@ -57,7 +57,7 @@ define([
             resolver = Resolver.make();
 
         function normalizeModel() {
-            var newModel = model.value.filter(function(item) {
+            const newModel = model.value.filter((item) => {
                 return item ? true : false;
             });
             model.value = newModel;
@@ -70,7 +70,7 @@ define([
         }
 
         function setModelValue(value, index) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                     if (index !== undefined) {
                         if (value) {
                             model.value[index] = value;
@@ -86,16 +86,16 @@ define([
                     }
                     normalizeModel();
                 })
-                .then(function() {
+                .then(() => {
                     return render();
                 });
         }
 
         function unsetModelValue() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                     model.value = [];
                 })
-                .then(function() {
+                .then(() => {
                     return render();
                 });
         }
@@ -105,37 +105,37 @@ define([
         }
 
         function exportModel() {
-            return viewModel.getItem('items').map(function(value) {
+            return viewModel.getItem('items').map((value) => {
                 return value.value;
             });
         }
 
 
         function validate(rawValue) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 // TODO: validate all items within the list as well!
                 return Validation.validate(rawValue, spec);
             });
         }
 
         function doRemoveControl(control) {
-            var item = viewModel.getItem(['items', control.index]);
+            const item = viewModel.getItem(['items', control.index]);
 
             // Remove item from viewmodel.
-            var items = viewModel.getItem('items');
+            const items = viewModel.getItem('items');
             items.splice(control.index, 1);
 
             // stop the field widget. This will unook all listeners
             // and also clear the dom node.
             item.inputControl.instance.stop()
-                .then(function() {
+                .then(() => {
 
                     // And we also need to remove the wrapper div attachment
                     // point as well.
                     item.node.parentNode.removeChild(item.node);
 
                     // Now, to renumber. Oh, fun!
-                    items.forEach(function(control, index) {
+                    items.forEach((control, index) => {
                         control.index = index;
                         UI.make({ node: control.node }).setContent('index-label.index', String(index + 1));
                     });
@@ -149,7 +149,7 @@ define([
         function doChanged(index, value) {
             viewModel.setItem(['items', index, 'value'], value);
             return validate(exportModel())
-                .then(function(result) {
+                .then((result) => {
                     channel.emit('validation', result);
                 });
         }
@@ -158,9 +158,9 @@ define([
         //   specialized to be very lightweight for the sequence control.
         function makeSingleInputControl(control, events) {
             return resolver.loadInputControl(itemSpec)
-                .then(function(widgetFactory) {
+                .then((widgetFactory) => {
                     // CONTROL
-                    var preButton, postButton,
+                    let preButton, postButton,
                         widgetId = html.genId(),
                         inputBus = runtime.bus().makeChannelBus({
                             description: 'Array input control'
@@ -178,19 +178,19 @@ define([
                         });
 
                     // set up listeners for the input
-                    fieldWidget.bus.on('sync', function() {
-                        var value = viewModel.getItem(['items', control.index, 'value']);
+                    fieldWidget.bus.on('sync', () => {
+                        const value = viewModel.getItem(['items', control.index, 'value']);
                         if (value) {
                             inputBus.emit('update', {
                                 value: value
                             });
                         }
                     });
-                    fieldWidget.bus.on('changed', function(message) {
+                    fieldWidget.bus.on('changed', (message) => {
                         doChanged(control.index, message.newValue);
                     });
 
-                    fieldWidget.bus.on('touched', function() {
+                    fieldWidget.bus.on('touched', () => {
                         channel.emit('touched');
                     });
 
@@ -240,7 +240,7 @@ define([
                     }, ui.buildIcon({
                         name: 'close'
                     })));
-                    var content = div({
+                    const content = div({
                         dataElement: 'input-row',
                         dataIndex: String(control.index),
                         style: {
@@ -278,7 +278,7 @@ define([
                 type: 'click',
                 handler: function() {
                     addNewControl()
-                        .then(function() {
+                        .then(() => {
                             return autoValidate();
                         });
                 }
@@ -320,9 +320,9 @@ define([
             if (initialValue === undefined) {
                 initialValue = lang.copy(itemSpec.data.defaultValue);
             }
-            return Promise.try(function() {
-                var events = Events.make({ node: container });
-                var control = {
+            return Promise.try(() => {
+                const events = Events.make({ node: container });
+                const control = {
                     // current native value.
                     value: initialValue,
                     // the actual input control (or field wrapper around such)
@@ -332,18 +332,18 @@ define([
                     // the current index - note: used by the inputControl 
                     index: null
                 };
-                var index = viewModel.pushItem(['items'], control);
+                const index = viewModel.pushItem(['items'], control);
                 control.index = index;
-                var parent = ui.getElement('control-container');
-                var controlNode = document.createElement('div');
+                const parent = ui.getElement('control-container');
+                const controlNode = document.createElement('div');
                 parent.appendChild(controlNode);
                 return makeSingleInputControl(control, events)
-                    .then(function(inputControl) {
+                    .then((inputControl) => {
                         // This adds the control wrapper html.
                         controlNode.innerHTML = inputControl.content;
                         // Each wrapper has a node inside with id "id" for
                         // the control to attach to.
-                        var attachmentNode = document.getElementById(inputControl.id);
+                        const attachmentNode = document.getElementById(inputControl.id);
                         control.node = controlNode;
                         control.inputControl = inputControl;
 
@@ -351,11 +351,11 @@ define([
                             node: attachmentNode
                         });
                     })
-                    .then(function() {
+                    .then(() => {
                         events.attachEvents();
                         return index;
                     })
-                    .catch(function(err) {
+                    .catch((err) => {
                         // TODO insert an Error Control placeholder
                         console.error('Error adding new control', err);
                     });
@@ -363,9 +363,9 @@ define([
         }
 
         function render(initialValue) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 // render now just builds the initial view
-                var events = Events.make({ node: container });
+                const events = Events.make({ node: container });
                 container.innerHTML = makeLayout();
                 ui.setContent('toolbar-container', makeToolbar(events));
                 events.attachEvents();
@@ -373,10 +373,10 @@ define([
                 if (!initialValue) {
                     return;
                 }
-                return Promise.all(initialValue.map(function(value) {
+                return Promise.all(initialValue.map((value) => {
                         return addNewControl(value);
                     }))
-                    .then(function() {
+                    .then(() => {
                         return autoValidate();
                     });
             });
@@ -397,7 +397,7 @@ define([
 
         function autoValidate() {
             return validate(exportModel())
-                .then(function(result) {
+                .then((result) => {
                     channel.emit('validation', result);
                 });
         }
@@ -405,20 +405,20 @@ define([
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
                 return render(config.initialValue)
-                    .then(function() {
-                        channel.on('reset-to-defaults', function(message) {
+                    .then(() => {
+                        channel.on('reset-to-defaults', (message) => {
                             resetModelValue();
                         });
-                        channel.on('update', function(message) {
+                        channel.on('update', (message) => {
                             setModelValue(message.value);
                         });
-                        channel.on('refresh', function() {});
+                        channel.on('refresh', () => {});
 
                         return autoValidate();
                     });
@@ -427,11 +427,11 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
-                return Promise.all(viewModel.getItem('items').map(function(item) {
+            return Promise.try(() => {
+                return Promise.all(viewModel.getItem('items').map((item) => {
                         return item.inputControl.instance.stop();
                     }))
-                    .then(function() {
+                    .then(() => {
                         busConnection.stop();
                     });
             });

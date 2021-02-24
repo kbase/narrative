@@ -9,7 +9,7 @@ define ([
     'ContigBrowserPanel',
     'util/string',
     'kb_common/jsonRpc/dynamicServiceClient'
-], function (
+], (
     $,
     KBWidget,
     kbaseAuthenticatedWidget,
@@ -22,11 +22,11 @@ define ([
     ContigBrowserPanel,
     StringUtil,
     DynamicServiceClient
-) {
+) => {
     'use strict';
 
     function buildError(err) {
-        var errorMessage;
+        let errorMessage;
         if (typeof err === 'string') {
             errorMessage = err;
         } else if (err.error) {
@@ -52,11 +52,11 @@ define ([
     };
 
     function WidgetState() {
-        var UNINITIALIZED = 0;
-        var OK = 1;
-        var ERROR = 2;
-        var state = null;
-        var _info = null;
+        const UNINITIALIZED = 0;
+        const OK = 1;
+        const ERROR = 2;
+        let state = null;
+        let _info = null;
         function ok(stateInfo) {
             state = OK;
             _info = stateInfo;
@@ -114,7 +114,7 @@ define ([
             else if (options.ws && options.id) {
                 this.metagenome_ref = [options.ws, options.id].join('/');
             } else {
-                var errorMessage;
+                let errorMessage;
                 errorMessage = 'Insufficient information for this widget';
                 console.error(errorMessage);
                 this.state.error({
@@ -144,15 +144,15 @@ define ([
             // This wrapper is required because the output widget displays a "Details..." button
             // with float right; without clearing this button will reside inside the error
             // display area.
-            var $errorBox = $('<div>')
+            const $errorBox = $('<div>')
                 .css('clear', 'both');
             $errorBox.append(buildError(err));
             this.$elem.append($errorBox);
         },
 
         tabData : function () {
-            var names = ['Overview', 'Browse Features', 'Browse Contigs'];
-            var ids = ['overview', 'browse_features', 'browse_contigs'];
+            const names = ['Overview', 'Browse Features', 'Browse Contigs'];
+            const ids = ['overview', 'browse_features', 'browse_contigs'];
 
             return {
                 names: names,
@@ -161,55 +161,55 @@ define ([
         },
 
         buildGeneSearchView: function (params) {
-            var self = this;
+            const self = this;
 
-            var BIG_COL_WIDTH = '25%';
+            const BIG_COL_WIDTH = '25%';
 
             // parse parameters
-            var $div = params.$div;
+            const $div = params.$div;
             if (!$div.is(':empty')) {
                 return; // if it has content, then do not rerender
             }
-            var metagenome_ref = params.ref;
+            const metagenome_ref = params.ref;
 
-            var idClick = null;
+            let idClick = null;
             if (params.idClick) {
                 idClick = params.idClick;
             }
-            var contigClick = null;
+            let contigClick = null;
             if (params.contigClick) {
                 contigClick = params.contigClick;
             }
 
             // setup some defaults and variables (should be moved to class variables)
-            var limit = 10;
-            var start = 0;
-            var sort_by = ['id', 1];
+            const limit = 10;
+            let start = 0;
+            const sort_by = ['id', 1];
 
-            var n_results = 0;
+            let n_results = 0;
 
             // setup the main search button and the results panel and layout
-            var $input = $('<input type="text" class="form-control" placeholder="Search Features">');
+            const $input = $('<input type="text" class="form-control" placeholder="Search Features">');
             $input.prop('disabled', true);
 
-            var $resultDiv = $('<div>');
-            var $noResultsDiv = $('<div>').append('<center>No matching features found.</center><br><center>Note: If this object was recently created, there may be a delay in feature tab functionality due to indexing.</center>').hide();
-            var $loadingDiv = $('<div>');
-            var $errorDiv = $('<div>');
-            var $pagenateDiv = $('<div>').css('text-align', 'left');
-            var $resultsInfoDiv = $('<div>');
+            const $resultDiv = $('<div>');
+            const $noResultsDiv = $('<div>').append('<center>No matching features found.</center><br><center>Note: If this object was recently created, there may be a delay in feature tab functionality due to indexing.</center>').hide();
+            let $loadingDiv = $('<div>');
+            const $errorDiv = $('<div>');
+            const $pagenateDiv = $('<div>').css('text-align', 'left');
+            const $resultsInfoDiv = $('<div>');
 
-            var $container = $('<div>').addClass('container-fluid').css({margin: '15px 0px', 'max-width':'100%'});
+            const $container = $('<div>').addClass('container-fluid').css({margin: '15px 0px', 'max-width':'100%'});
             $div.append($container);
-            var $headerRow = $('<div>').addClass('row')
+            const $headerRow = $('<div>').addClass('row')
                 .append($('<div>').addClass('col-md-4').append($pagenateDiv))
                 .append($('<div>').addClass('col-md-4').append($loadingDiv))
                 .append($('<div>').addClass('col-md-4').append($input));
-            var $resultsRow = $('<div>').addClass('row').css({'margin-top': '15px'})
+            const $resultsRow = $('<div>').addClass('row').css({'margin-top': '15px'})
                 .append($('<div>').addClass('col-md-12').append($resultDiv));
-            var $noResultsRow = $('<div>').addClass('row')
+            const $noResultsRow = $('<div>').addClass('row')
                 .append($('<div>').addClass('col-md-12').append($noResultsDiv));
-            var $infoRow = $('<div>').addClass('row')
+            const $infoRow = $('<div>').addClass('row')
                 .append($('<div>').addClass('col-md-4').append($resultsInfoDiv))
                 .append($('<div>').addClass('col-md-8'));
             $container
@@ -219,28 +219,28 @@ define ([
                 .append($noResultsRow)
                 .append($infoRow);
 
-            var $pageBack = $('<button class="btn btn-default">').append('<i class="fa fa-caret-left" aria-hidden="true">');
-            var $pageForward = $('<button class="btn btn-default">').append('<i class="fa fa-caret-right" aria-hidden="true">');
+            const $pageBack = $('<button class="btn btn-default">').append('<i class="fa fa-caret-left" aria-hidden="true">');
+            const $pageForward = $('<button class="btn btn-default">').append('<i class="fa fa-caret-right" aria-hidden="true">');
 
             $pagenateDiv.append($pageBack);
             $pagenateDiv.append($pageForward);
             $pagenateDiv.hide();
 
-            var clearInfo = function () {
+            const clearInfo = function () {
                 $resultsInfoDiv.empty();
                 $pagenateDiv.hide();
             };
 
             // define the functions that do everything
-            var setToLoad = function ($panel) {
+            const setToLoad = function ($panel) {
                 $panel.empty();
                 $loadingDiv = $('<div>').attr('align', 'left').append($('<i class="fa fa-spinner fa-spin fa-2x">'));
                 $panel.append($loadingDiv);
             };
 
-            var search = function (query, start, limit, sort_by) {
+            const search = function (query, start, limit, sort_by) {
                 $errorDiv.empty();
-                var local_sort_by = [];
+                const local_sort_by = [];
                 if (sort_by[0] === 'start') {
                     local_sort_by.push(['contig_id', 1]);
                 }
@@ -252,35 +252,35 @@ define ([
                     start: start,
                     limit: limit
                 }])
-                    .spread(function (d) {
+                    .spread((d) => {
                         return d;
                     })
-                    .catch(function (err) {
+                    .catch((err) => {
                         console.error(err);
                         $loadingDiv.empty();
                         $errorDiv.append(buildError(err));
                     });
             };
 
-            var showPaginate = function () {
+            const showPaginate = function () {
                 $pagenateDiv.show();
             };
 
-            var showViewInfo = function (start, num_showing, num_found) {
+            const showViewInfo = function (start, num_showing, num_found) {
                 $resultsInfoDiv.empty();
                 $resultsInfoDiv.append('Showing ' + (start + 1) + ' to ' + (start + num_showing) + ' of ' + num_found);
             };
-            var showNoResultsView = function () {
+            const showNoResultsView = function () {
                 $noResultsDiv.show();
                 $resultsInfoDiv.empty();
                 $pagenateDiv.hide();
             };
 
-            var buildRow = function (rowData) {
-                var $tr = $('<tr>');
-                var hasFunc = false;
-                var hasOntology = false;
-                var hasAlias = false;
+            const buildRow = function (rowData) {
+                const $tr = $('<tr>');
+                let hasFunc = false;
+                const hasOntology = false;
+                const hasAlias = false;
 
                 if (idClick) {
                     var getCallback = function (rowData) {
@@ -301,14 +301,14 @@ define ([
                     hasFunc = true;
                 }
 
-                var $td = $('<td>');
+                let $td = $('<td>');
                 $tr.append($td);
 
                 $td = $('<td>');
                 $tr.append($td);
 
                 if (rowData.global_location.contig_id) {
-                    var loc = rowData.global_location;
+                    const loc = rowData.global_location;
                     $tr.append($('<td>').append(numberWithCommas(loc.start)));
                     $tr.append($('<td>').append(loc.strand));
                     $tr.append($('<td>').append(numberWithCommas(loc.stop)));
@@ -337,18 +337,18 @@ define ([
                 };
             };
 
-            var renderResult = function ($table, results) {
+            const renderResult = function ($table, results) {
                 $table.find('tr:gt(0)').remove();
                 $loadingDiv.empty();
                 $noResultsDiv.hide();
                 clearInfo();
-                var features = results.features;
+                const features = results.features;
                 if (features.length > 0) {
-                    var hasFunc = false;
-                    var hasOntology = false;
-                    var hasAlias = false;
+                    let hasFunc = false;
+                    let hasOntology = false;
+                    let hasAlias = false;
                     features.forEach((feature) => {
-                        let row = buildRow(feature);
+                        const row = buildRow(feature);
                         $table.append(row.$tr);
                         if (row.hasFunc) {
                             hasFunc = true;
@@ -385,21 +385,21 @@ define ([
             };
 
             // Setup the actual table
-            var $table = $('<table>')
+            const $table = $('<table>')
                 .addClass('table table-striped table-bordered table-hover')
                 .css({'margin-left': 'auto', 'margin-right': 'auto'});
             $resultDiv.append($table);
 
 
-            var buildColumnHeader = function (name, id, click_event) {
-                var $sortIcon = $('<i>').css('margin-left', '8px');
-                var $th = $('<th>')
+            const buildColumnHeader = function (name, id, click_event) {
+                const $sortIcon = $('<i>').css('margin-left', '8px');
+                const $th = $('<th>')
                     .append('<b>' + name + '</b>')
                     .append($sortIcon);
                 if (click_event) {
                     $th
                         .css('cursor', 'pointer')
-                        .on('click', function () {
+                        .on('click', () => {
                             click_event(id, $sortIcon);
                         });
                 }
@@ -411,8 +411,8 @@ define ([
                 };
             };
 
-            var buildTableHeader = function () {
-                var inFlight = false,
+            const buildTableHeader = function () {
+                let inFlight = false,
                     $colgroup = $('<colgroup>'),
                     $tr = $('<tr>'),
                     ASC = 0,
@@ -421,7 +421,7 @@ define ([
                     DIR = 1,
                     cols = {};
 
-                var sortEvent = function (id, $sortIcon) {
+                const sortEvent = function (id, $sortIcon) {
                     if (inFlight) {
                         return;
                     } // skip if a sort call is already running
@@ -445,19 +445,19 @@ define ([
                     inFlight = true;
                     start = 0;
                     search($input.val(), start, limit, sort_by)
-                        .then(function (result) {    
+                        .then((result) => {    
                             renderResult($table, result);
                             inFlight = false;
                             start = 0;
                         })
-                        .catch(function () {
+                        .catch(() => {
                             inFlight = false;
                         });
                 };
 
-                var buildSingleColHeader = function (key, title, width, showSortedIcon, sortEvent, target) {
+                const buildSingleColHeader = function (key, title, width, showSortedIcon, sortEvent, target) {
                     target.$colgroup.append($('<col span=1>').addClass('feature-tbl-' + key).css('width', width));
-                    var h = buildColumnHeader(title, key, sortEvent);
+                    const h = buildColumnHeader(title, key, sortEvent);
                     target.$tr.append(h.$th);
                     if (showSortedIcon) {
                         h.$sortIcon.addClass('fa fa-sort-desc');
@@ -465,7 +465,7 @@ define ([
                     target.cols[h.id] = h;
                 };
 
-                var target = {
+                const target = {
                     $colgroup: $colgroup,
                     $tr: $tr,
                     cols: cols
@@ -487,7 +487,7 @@ define ([
                 };
             };
 
-            var headers = buildTableHeader();
+            const headers = buildTableHeader();
             $table.append(headers.$colgroup);
             $table.append(headers.$theader);
 
@@ -498,7 +498,7 @@ define ([
             // Perform the first search
             search('', start, limit, sort_by)
                 .then(
-                    function (results) {
+                    (results) => {
                         $input.prop('disabled', false);
                         renderResult($table, results);
                     }
@@ -506,7 +506,7 @@ define ([
 
 
 
-            $pageBack.on('click', function () {
+            $pageBack.on('click', () => {
                 if (start === 0) {
                     return;
                 }
@@ -517,36 +517,36 @@ define ([
                 }
                 setToLoad($loadingDiv);
                 search($input.val(), start, limit, sort_by)
-                    .then(function (result) {
+                    .then((result) => {
                         renderResult($table, result);
                     });
             });
-            $pageForward.on('click', function () {
+            $pageForward.on('click', () => {
                 if (start + limit > n_results) {
                     return;
                 }
                 start = start + limit;
                 setToLoad($loadingDiv);
                 search($input.val(), start, limit, sort_by)
-                    .then(function (result) {
+                    .then((result) => {
                         renderResult($table, result);
                     });
             });
 
 
             //put in a slight delay so on rapid typing we don't make a flood of calls
-            var fetchTimeout = null;
-            $input.on('input', function () {
+            let fetchTimeout = null;
+            $input.on('input', () => {
                 // if we were waiting on other input, cancel that request
                 if (fetchTimeout) {
                     window.clearTimeout(fetchTimeout);
                 }
-                fetchTimeout = window.setTimeout(function () {
+                fetchTimeout = window.setTimeout(() => {
                     fetchTimeout = null;
                     setToLoad($loadingDiv);
                     start = 0;
                     search($input.val(), start, limit, sort_by)
-                        .then(function (result) {
+                        .then((result) => {
                             renderResult($table, result);
                         });
                 }, 300);
@@ -555,43 +555,43 @@ define ([
         },
 
         buildContigSearchView: function (params) {
-            var self = this;
+            const self = this;
             // parse parameters
-            var $div = params['$div'];
+            const $div = params['$div'];
             if (!$div.is(':empty')) {
                 return; // if it has content, then do not rerender
             }
-            var metagenome_ref = params.ref;
+            const metagenome_ref = params.ref;
 
-            var contigClick = null;
+            let contigClick = null;
             if (params.contigClick) {
                 contigClick = params.contigClick;
             }
 
             // setup some defaults and variables (should be moved to class variables)
-            var limit = 10;
-            var start = 0;
-            var sort_by = ['contig_id', 1];
+            const limit = 10;
+            let start = 0;
+            const sort_by = ['contig_id', 1];
 
-            var n_results = 0;
+            let n_results = 0;
 
-            var $resultDiv = $('<div>');
-            var $noResultsDiv = $('<div>').append('<center>No matching contigs found.</center><br><center>Note: If this object was recently created, there may be a delay in contig tab functionality due to indexing.</center>').hide();
-            var $loadingDiv = $('<div>');
-            var $errorDiv = $('<div>');
-            var $pagenateDiv = $('<div>').css('text-align', 'left');
-            var $resultsInfoDiv = $('<div>');
+            const $resultDiv = $('<div>');
+            const $noResultsDiv = $('<div>').append('<center>No matching contigs found.</center><br><center>Note: If this object was recently created, there may be a delay in contig tab functionality due to indexing.</center>').hide();
+            let $loadingDiv = $('<div>');
+            const $errorDiv = $('<div>');
+            const $pagenateDiv = $('<div>').css('text-align', 'left');
+            const $resultsInfoDiv = $('<div>');
 
-            var $container = $('<div>').addClass('container-fluid').css({margin: '15px 0px', 'max-width': '100%'});
+            const $container = $('<div>').addClass('container-fluid').css({margin: '15px 0px', 'max-width': '100%'});
             $div.append($container);
-            var $headerRow = $('<div>').addClass('row')
+            const $headerRow = $('<div>').addClass('row')
                 .append($('<div>').addClass('col-md-4').append($pagenateDiv))
                 .append($('<div>').addClass('col-md-4').append($loadingDiv));
-            var $resultsRow = $('<div>').addClass('row').css({'margin-top': '15px'})
+            const $resultsRow = $('<div>').addClass('row').css({'margin-top': '15px'})
                 .append($('<div>').addClass('col-md-12').append($resultDiv));
-            var $noResultsRow = $('<div>').addClass('row')
+            const $noResultsRow = $('<div>').addClass('row')
                 .append($('<div>').addClass('col-md-12').append($noResultsDiv));
-            var $infoRow = $('<div>').addClass('row')
+            const $infoRow = $('<div>').addClass('row')
                 .append($('<div>').addClass('col-md-4').append($resultsInfoDiv))
                 .append($('<div>').addClass('col-md-8'));
             $container
@@ -601,20 +601,20 @@ define ([
                 .append($noResultsRow)
                 .append($infoRow);
 
-            var $pageBack = $('<button class="btn btn-default">').append('<i class="fa fa-caret-left" aria-hidden="true">');
-            var $pageForward = $('<button class="btn btn-default">').append('<i class="fa fa-caret-right" aria-hidden="true">');
+            const $pageBack = $('<button class="btn btn-default">').append('<i class="fa fa-caret-left" aria-hidden="true">');
+            const $pageForward = $('<button class="btn btn-default">').append('<i class="fa fa-caret-right" aria-hidden="true">');
 
             $pagenateDiv.append($pageBack);
             $pagenateDiv.append($pageForward);
             $pagenateDiv.hide();
 
-            var clearInfo = function () {
+            const clearInfo = function () {
                 $resultsInfoDiv.empty();
                 $pagenateDiv.hide();
             };
 
             // define the functions that do everything
-            var setToLoad = function ($panel) {
+            const setToLoad = function ($panel) {
                 $panel.empty();
                 $loadingDiv = $('<div>').attr('align', 'left').append($('<i class="fa fa-spinner fa-spin fa-2x">'));
                 $panel.append($loadingDiv);
@@ -629,34 +629,34 @@ define ([
                         start: start,
                         limit: limit
                     }])
-                    .spread(function (d) {
+                    .spread((d) => {
                         return d;
                     })
-                    .catch(function (err) {
+                    .catch((err) => {
                         console.error(err);
                         $loadingDiv.empty();
                         $errorDiv.append(buildError(err));
                     });
             }
 
-            var showPaginate = function () {
+            const showPaginate = function () {
                 $pagenateDiv.show();
             };
 
-            var showViewInfo = function (start, num_showing, num_found) {
+            const showViewInfo = function (start, num_showing, num_found) {
                 $resultsInfoDiv.empty();
                 $resultsInfoDiv.append('Showing ' + (start + 1) + ' to ' + (start + num_showing) + ' of ' + num_found);
             };
-            var showNoResultsView = function () {
+            const showNoResultsView = function () {
                 $noResultsDiv.show();
                 $resultsInfoDiv.empty();
                 $pagenateDiv.hide();
             };
 
-            var buildRow = function (rowData) {
-                var $tr = $('<tr>');
+            const buildRow = function (rowData) {
+                const $tr = $('<tr>');
                 if (contigClick) {
-                    var getCallback = function (rowData) {
+                    const getCallback = function (rowData) {
                         return function () {
                             contigClick(rowData.contig_id);
                         };
@@ -674,13 +674,13 @@ define ([
                 return $tr;
             };
 
-            var renderResult = function ($table, results) {
+            const renderResult = function ($table, results) {
                 $table.find('tr:gt(0)').remove();
                 $loadingDiv.empty();
                 $noResultsDiv.hide();
                 clearInfo();
 
-                var contigs = results.contigs;
+                const contigs = results.contigs;
                 if (contigs.length > 0) {
                     for (let k = 0; k < contigs.length; k += 1) {
                         $table.append(buildRow(contigs[k]));
@@ -694,21 +694,21 @@ define ([
             };
 
             // Setup the actual table
-            var $table = $('<table>')
+            const $table = $('<table>')
                 .addClass('table table-striped table-bordered table-hover')
                 .css({'margin-left': 'auto', 'margin-right': 'auto'});
             $resultDiv.append($table);
 
 
-            var buildColumnHeader = function (name, id, click_event) {
-                var $sortIcon = $('<i>').css('margin-left', '8px');
-                var $th = $('<th>')
+            const buildColumnHeader = function (name, id, click_event) {
+                const $sortIcon = $('<i>').css('margin-left', '8px');
+                const $th = $('<th>')
                     .append('<b>' + name + '</b>')
                     .append($sortIcon);
                 if (click_event) {
                     $th
                         .css('cursor', 'pointer')
-                        .on('click', function () {
+                        .on('click', () => {
                             click_event(id, $sortIcon);
                         });
                 }
@@ -720,15 +720,15 @@ define ([
                 };
             };
 
-            var buildTableHeader = function () {
-                var inFlight = false;
+            const buildTableHeader = function () {
+                let inFlight = false;
 
-                var $colgroup = $('<colgroup>');
+                const $colgroup = $('<colgroup>');
 
-                var $tr = $('<tr>');
-                var ASC = 0; var DESC = 1; var ID = 0; var DIR = 1;
-                var cols = {};
-                var sortEvent = function (id, $sortIcon) {
+                const $tr = $('<tr>');
+                const ASC = 0; const DESC = 1; const ID = 0; const DIR = 1;
+                const cols = {};
+                const sortEvent = function (id, $sortIcon) {
                     if (inFlight) {
                         return;
                     } // skip if a sort call is already running
@@ -752,18 +752,18 @@ define ([
                     inFlight = true;
                     start = 0;
                     search_contigs(start, limit, sort_by)
-                        .then(function (result) {
+                        .then((result) => {
                             renderResult($table, result);
                             inFlight = false;
                             start = 0;
                         })
-                        .catch(function (){
+                        .catch(()=> {
                             inFlight = false;
                         });
                 };
 
                 $colgroup.append($('<col span=1>').css('width', '20%'));
-                var h = buildColumnHeader('Contig ID', 'contig_id', sortEvent);
+                let h = buildColumnHeader('Contig ID', 'contig_id', sortEvent);
                 $tr.append(h.$th);
                 h.$sortIcon.addClass('fa fa-sort-desc');
                 cols[h.id] = h;
@@ -785,7 +785,7 @@ define ([
                 };
             };
 
-            var headers = buildTableHeader();
+            const headers = buildTableHeader();
             $table.append(headers.$colgroup);
             $table.append(headers.$theader);
 
@@ -795,14 +795,14 @@ define ([
 
             // Perform the first search
             search_contigs(start, limit, sort_by).then(
-                function (results) {
+                (results) => {
                     renderResult($table, results);
                 }
             );
 
 
 
-            $pageBack.on('click', function () {
+            $pageBack.on('click', () => {
                 if (start === 0) {
                     return;
                 }
@@ -813,18 +813,18 @@ define ([
                 }
                 setToLoad($loadingDiv);
                 search_contigs(start, limit, sort_by)
-                    .then(function (result) {
+                    .then((result) => {
                         renderResult($table, result);
                     });
             });
-            $pageForward.on('click', function () {
+            $pageForward.on('click', () => {
                 if(start + limit > n_results) {
                     return;
                 }
                 start = start + limit;
                 setToLoad($loadingDiv);
                 search_contigs(start, limit, sort_by)
-                    .then(function (result) {
+                    .then((result) => {
                         renderResult($table, result);
                     });
             });
@@ -833,20 +833,20 @@ define ([
         },
 
         renderContigData: function (metagenome_ref, contig_id, outputDivs) {
-            var $length = outputDivs.$length;
-            var $n_features = outputDivs.$n_features;
+            const $length = outputDivs.$length;
+            const $n_features = outputDivs.$n_features;
             return this.metagenomeAPI
                 .callFunc('get_contig_info', [{
                     ref: metagenome_ref,
                     contig_id: contig_id
                 }])
-                .spread(function (result) {
-                    var contigData = result.contig;
+                .spread((result) => {
+                    const contigData = result.contig;
                     $length.append(numberWithCommas(result.contig.length));
                     $n_features.append(numberWithCommas(result.contig.feature_count));
                     return contigData;
                 })
-                .catch(function (err) {
+                .catch((err) => {
                     console.error(err);
                     $length.empty();
                     $length.append(buildError(err));
@@ -858,15 +858,15 @@ define ([
         ////////////////////////
         showContigTab: function (metagenome_ref, contig_id, pref, tabPane) {
 
-            var self = this;
+            const self = this;
 
             function openTabGetId(tabName) {
                 if (tabPane.hasTab(tabName)) {
                     return null;
                 }
                 self.lastElemTabNum++;
-                var tabId = '' + pref + 'elem' + self.lastElemTabNum;
-                var $tabDiv = $('<div id="' + tabId + '"> ');
+                const tabId = '' + pref + 'elem' + self.lastElemTabNum;
+                const $tabDiv = $('<div id="' + tabId + '"> ');
                 tabPane.addTab({tab: tabName, content: $tabDiv, canDelete: true, show: true, deleteCallback: function (name) {
                     tabPane.removeTab(name);
                     tabPane.showTab(tabPane.activeTab());
@@ -876,7 +876,7 @@ define ([
 
             // setup mini contig browser
             function translate_feature_data(featureData) {
-                var cbFormat = {};
+                const cbFormat = {};
                 cbFormat.raw = featureData; //Store this in order to span new tabs
                 cbFormat.id = featureData.feature_id;
                 cbFormat.location = [];
@@ -907,10 +907,10 @@ define ([
                         page_start: 0,
                         page_limit: 2000
                     }])
-                    .spread(function (result) {
+                    .spread((result) => {
                         $div.empty();
 
-                        var contigWindowData = {
+                        const contigWindowData = {
                             name: contig_id,
                             length: contig_length,
                             genes: []
@@ -920,7 +920,7 @@ define ([
                             contigWindowData.genes.push(translate_feature_data(feature));
                         });
 
-                        var cgb = new ContigBrowserPanel();
+                        const cgb = new ContigBrowserPanel();
                         cgb.data.options.contig = contigWindowData;
                         cgb.data.options.onClickFunction = function (svgElement, feature) {
                             self.showFeatureTab(metagenome_ref, feature.original_data.raw, pref, tabPane);
@@ -930,59 +930,59 @@ define ([
                         cgb.data.options.showButtons = false;
                         cgb.data.options.token = self.token;
                         cgb.data.$elem = $('<div style="width:100%; height: 120px; overflow: auto;"/>');
-                        cgb.data.$elem.show(function () {
+                        cgb.data.$elem.show(() => {
                             cgb.data.update();
                         });
                         $div.append(cgb.data.$elem);
                         cgb.data.init();
                     })
-                    .catch(function (err) {
+                    .catch((err) => {
                         console.error(err);
                         $div.empty();
                         $div.append(buildError(err));
                     });
             }
             function showContig(metagenome_ref, contig_id) {
-                var $div = openTabGetId(contig_id);
+                const $div = openTabGetId(contig_id);
                 if ($div === null) {
                     tabPane.showTab(contig_id);
                     return;
                 }
 
-                var $tbl = $('<table>').addClass('table table-striped table-bordered table-hover')
+                const $tbl = $('<table>').addClass('table table-striped table-bordered table-hover')
                     .css({'margin-left': 'auto', 'margin-right': 'auto'});
                 $tbl.append($('<colgroup>').append($('<col span=1>').css('width', '15%')));
-                var $browserCtrlDiv = $('<div>');
-                var $browserDiv = $('<div>');
+                const $browserCtrlDiv = $('<div>');
+                const $browserDiv = $('<div>');
 
                 // basic layout
-                var $container = $('<div>').addClass('container-fluid').css({margin: '15px 0px', 'max-width': '100%'});
+                const $container = $('<div>').addClass('container-fluid').css({margin: '15px 0px', 'max-width': '100%'});
                 $div.append($container);
-                var $tblRow = $('<div>').addClass('row')
+                const $tblRow = $('<div>').addClass('row')
                     .append($('<div>').addClass('col-md-12').append($tbl));
-                var $browserCtrlRow = $('<div>').addClass('row').css({'margin-top': '15px', 'text-align': 'center'})
+                const $browserCtrlRow = $('<div>').addClass('row').css({'margin-top': '15px', 'text-align': 'center'})
                     .append($('<div>').addClass('col-md-12').append($browserCtrlDiv));
-                var $browserRow = $('<div>').addClass('row').css({'margin-top': '15px', 'text-align': 'center'})
+                const $browserRow = $('<div>').addClass('row').css({'margin-top': '15px', 'text-align': 'center'})
                     .append($('<div>').addClass('col-md-12').append($browserDiv));
                 $container.append($tblRow).append($browserCtrlRow).append($browserRow);
 
 
                 // ID
-                var $id = $('<tr>')
+                const $id = $('<tr>')
                     .append($('<td>').append('<b>Contig ID</b>'))
                     .append($('<td>').append(contig_id));
                 $tbl.append($id);
 
                 // Length
-                var $lengthField = $('<div>');
-                var $len = $('<tr>')
+                const $lengthField = $('<div>');
+                const $len = $('<tr>')
                     .append($('<td>').append('<b>Length</b>'))
                     .append($('<td>').append($lengthField));
                 $tbl.append($len);
 
                 // N Features
-                var $featureField = $('<div>');
-                var $nf = $('<tr>')
+                const $featureField = $('<div>');
+                const $nf = $('<tr>')
                     .append($('<td>').append('<b>Number of Features</b>'))
                     .append($('<td>').append($featureField));
                 $tbl.append($nf);
@@ -991,18 +991,18 @@ define ([
                     $length: $lengthField,
                     $n_features: $featureField
                 })
-                    .then(function (contigData) {
+                    .then((contigData) => {
                         // Browser
                         $browserRow.append($('<i class="fa fa-spinner fa-spin fa-2x">'));
-                        var start = 0;
-                        var twentyKb = 20000;
-                        var length = twentyKb;
-                        var contig_length = contigData.length;
+                        let start = 0;
+                        const twentyKb = 20000;
+                        let length = twentyKb;
+                        const contig_length = contigData.length;
 
-                        var $contigScrollBack = $('<button class="btn btn-default">')
+                        const $contigScrollBack = $('<button class="btn btn-default">')
                             .append('<i class="fa fa-caret-left" aria-hidden="true">')
                             .append(' back 20kb')
-                            .on('click', function () {
+                            .on('click', () => {
                                 if (start - twentyKb < 0) {
                                     return;
                                 }
@@ -1012,10 +1012,10 @@ define ([
                                 getFeaturesInRegionAndRenderBrowser(metagenome_ref, contig_id, start, length, contig_length, $browserRow);
                             });
 
-                        var $contigScrollForward = $('<button class="btn btn-default">')
+                        const $contigScrollForward = $('<button class="btn btn-default">')
                             .append('forward 20kb ')
                             .append('<i class="fa fa-caret-right" aria-hidden="true">')
-                            .on('click', function () {
+                            .on('click', () => {
                                 if (start + twentyKb > contig_length) {
                                     return;
                                 }
@@ -1038,39 +1038,39 @@ define ([
         },
 
         render: function () {
-            var pref = StringUtil.uuid();
-            var self = this;
+            const pref = StringUtil.uuid();
+            const self = this;
 
-            var container = this.$elem;
+            const container = this.$elem;
             if (self.token == null) {
                 this.showError('You\'re not logged in');
                 return;
             }
 
-            var get_feature_type_counts = function (metagenome_ref) {
+            const get_feature_type_counts = function (metagenome_ref) {
                 return self.metagenomeAPI.callFunc('get_feature_type_counts', [{
                     ref: metagenome_ref
                 }])
-                    .spread(function (d) {
+                    .spread((d) => {
                         return d;
                     })
-                    .catch(function (err) {
+                    .catch((err) => {
                         console.error(err);
                     });
             };
 
 
             ///////// Overview Tab /////////
-            var ready = function (metagenomeData) {
-                var mgnm = metagenomeData;
+            const ready = function (metagenomeData) {
+                const mgnm = metagenomeData;
 
-                var metagenome_ref = self.metagenome_ref;
-                var feature_type_counts = {};
-                var feature_type_vals = [];
-                var feature_type_labels = [];
+                const metagenome_ref = self.metagenome_ref;
+                let feature_type_counts = {};
+                const feature_type_vals = [];
+                const feature_type_labels = [];
 
                 get_feature_type_counts(metagenome_ref).then(
-                    function (result) {
+                    (result) => {
                         feature_type_counts = result['feature_type_counts'];
 
                         for (const property in feature_type_counts){
@@ -1079,51 +1079,51 @@ define ([
                         }
 
                         container.empty();
-                        var $tabPane = $('<div id="' + pref + 'tab-content">');
+                        const $tabPane = $('<div id="' + pref + 'tab-content">');
                         container.append($tabPane);
-                        var tabObj = new kbaseTabs($tabPane, {canDelete: true, tabs: []});
+                        const tabObj = new kbaseTabs($tabPane, {canDelete: true, tabs: []});
 
-                        var tabData = self.tabData(mgnm);
-                        var tabNames = tabData.names;
-                        var tabIds = tabData.ids;
+                        const tabData = self.tabData(mgnm);
+                        const tabNames = tabData.names;
+                        const tabIds = tabData.ids;
 
                         for (let i = 0; i < tabIds.length; i += 1) {
-                            var tabDiv = $('<div id="' + pref + tabIds[i] + '"> ');
+                            const tabDiv = $('<div id="' + pref + tabIds[i] + '"> ');
                             tabObj.addTab({tab: tabNames[i], content: tabDiv, canDelete: false, show: (i == 0)});
                         }
-                        var $overviewPanel = $('#' + pref + 'overview');
-                        var $overviewTable = $('<table>')
+                        const $overviewPanel = $('#' + pref + 'overview');
+                        const $overviewTable = $('<table>')
                             .addClass('table table-striped table-bordered table-hover')
                             .css({'margin-left': 'auto', 'margin-right': 'auto'})
                             .css({'word-wrap': 'break-word', 'table-layout': 'fixed'})
                             .append($('<colgroup>')
                                 .append($('<col span="1" style="width: 25%;">')));
 
-                        var $tableDiv = $('<div>').append($overviewTable); //.addClass('col-md-8').append($overviewTable);
-                        var $layout = $('<div>')//.addClass('row')
+                        const $tableDiv = $('<div>').append($overviewTable); //.addClass('col-md-8').append($overviewTable);
+                        const $layout = $('<div>')//.addClass('row')
                             .append($tableDiv);
 
                         $overviewPanel.append($('<div>').css('margin-top', '15px').append($layout));
 
-                        var id = '<a href = "/#dataview/' + mgnm.ref + '" target="_blank">' + mgnm.ws_obj_name + '</a>';
+                        const id = '<a href = "/#dataview/' + mgnm.ref + '" target="_blank">' + mgnm.ws_obj_name + '</a>';
 
-                        var source = mgnm.source;
-                        var source_id = mgnm.source_id;
-                        var size = mgnm.size;
+                        const source = mgnm.source;
+                        const source_id = mgnm.source_id;
+                        let size = mgnm.size;
                         if (size) {
                             size = numberWithCommas(size);
                         }
-                        var gc_content = mgnm.gc_content;
-                        var num_features = mgnm.num_features;
-                        var num_contigs = mgnm.num_contigs;
-                        var environment = mgnm.environment;
+                        const gc_content = mgnm.gc_content;
+                        const num_features = mgnm.num_features;
+                        const num_contigs = mgnm.num_contigs;
+                        const environment = mgnm.environment;
 
-                        var feat_type_labels = [];
+                        const feat_type_labels = [];
                         for (let i = 0; i < feature_type_counts.length; i +=1){
                             feat_type_labels.push("Number of ".concat(feat_str).concat("s"))
                         }
 
-                        var overviewLabels = [
+                        const overviewLabels = [
                             'KBase Object Name',
                             'Source',
                             'Source ID',
@@ -1134,7 +1134,7 @@ define ([
                             'Environment'
                         ].concat(feature_type_labels);
 
-                        var overviewData = [
+                        const overviewData = [
                             id,
                             source,
                             source_id,
@@ -1152,9 +1152,9 @@ define ([
                                     .append($('<td>').append(overviewData[i])));
                         }
 
-                        var liElems = $tabPane.find('li');
+                        const liElems = $tabPane.find('li');
 
-                        var browse_features_func = function (metagenome_ref) {
+                        const browse_features_func = function (metagenome_ref) {
                             self.buildGeneSearchView({
                                 $div: $('#' + pref + 'browse_features'),
                                 ref: metagenome_ref,
@@ -1167,7 +1167,7 @@ define ([
                             });
                         };
 
-                        var browse_contig_func = function (metagenome_ref) {
+                        const browse_contig_func = function (metagenome_ref) {
                             self.buildContigSearchView({
                                 $div: $('#' + pref + 'browse_contigs'),
                                 ref: metagenome_ref,
@@ -1179,10 +1179,10 @@ define ([
                         };
 
                         for (let liElemPos = 0; liElemPos < liElems.length; liElemPos += 1) {
-                            var liElem = $(liElems.get(liElemPos));
-                            var aElem = liElem.find('a');
+                            const liElem = $(liElems.get(liElemPos));
+                            const aElem = liElem.find('a');
                             if (aElem.length == 1) {
-                                var dataTab = aElem.attr('data-tab');
+                                const dataTab = aElem.attr('data-tab');
                                 if (dataTab === 'Browse Features' ) {
                                     aElem.on('click', () => browse_features_func(metagenome_ref));
                                 } else if (dataTab === 'Browse Contigs' ) {
@@ -1198,7 +1198,7 @@ define ([
             container.empty();
             container.append($('<div>').attr('align', 'center').append($('<i class="fa fa-spinner fa-spin fa-2x">')));
 
-            var metagenome_ref = self.metagenome_ref;
+            const metagenome_ref = self.metagenome_ref;
 
             if (self.metagenome_info) {
                 ready(self.normalizeMetagenomeDataFromNarrative(self.metagenome_info, metagenome_ref, ready));
@@ -1208,10 +1208,10 @@ define ([
                     .callFunc('get_annotated_metagenome_assembly', [{
                         ref: self.metagenome_ref,
                         included_fields: [] // include no fields
-                    }]).spread(function (data) {
+                    }]).spread((data) => {
                         ready(self.normalizeMetagenomeDataFromQuery(data.genomes[0], metagenome_ref, ready));
                     })
-                    .catch(function (err) {
+                    .catch((err) => {
                         console.error(err);
                         container.empty();
                         container.append(buildError(err));
@@ -1222,9 +1222,9 @@ define ([
         },
 
         normalizeMetagenomeDataFromQuery: function (wsReturnedData) {
-            var info = wsReturnedData.info;
-            var metadata = info[10];
-            var genomeData = this.normalizeMetagenomeMetadata(metadata);
+            const info = wsReturnedData.info;
+            const metadata = info[10];
+            const genomeData = this.normalizeMetagenomeMetadata(metadata);
             genomeData.ws_obj_name = info[1];
             genomeData.version = info[4];
             genomeData.ref = info[6] + '/' + info[1] + '/' + info[4];
@@ -1232,7 +1232,7 @@ define ([
         },
 
         normalizeMetagenomeDataFromNarrative: function (metagenome_info) {
-            var genomeData = this.normalizeMetagenomeMetadata(metagenome_info.meta);
+            const genomeData = this.normalizeMetagenomeMetadata(metagenome_info.meta);
             genomeData.ws_obj_name = metagenome_info.name;
             genomeData.version = metagenome_info.version;
             genomeData.ref = metagenome_info.ws_id + '/' + metagenome_info.name + '/' + metagenome_info.version;
@@ -1240,7 +1240,7 @@ define ([
         },
 
         normalizeMetagenomeMetadata: function (metadata) {
-            var genomeData = {
+            const genomeData = {
                 genetic_code: '',
                 source: '',
                 source_id: '',
@@ -1279,15 +1279,15 @@ define ([
         },
 
         showFeatureTab: function (metagenome_ref, featureData, pref, tabPane) {
-            var self = this;
+            const self = this;
 
             function openTabGetId(tabName) {
                 if (tabPane.hasTab(tabName)) {
                     return null;
                 }
                 self.lastElemTabNum += 1;
-                var tabId = '' + pref + 'elem' + self.lastElemTabNum;
-                var $tabDiv = $('<div id="' + tabId + '"> ');
+                const tabId = '' + pref + 'elem' + self.lastElemTabNum;
+                const $tabDiv = $('<div id="' + tabId + '"> ');
                 tabPane.addTab({tab: tabName, content: $tabDiv, canDelete: true, show: true, deleteCallback: function (name) {
                     tabPane.removeTab(name);
                     tabPane.showTab(tabPane.activeTab());
@@ -1296,11 +1296,11 @@ define ([
             }
 
             function printDNA(sequence, charWrap) {
-                var $div = $('<div>').css({'font-family': '"Lucida Console", Monaco, monospace'});
+                const $div = $('<div>').css({'font-family': '"Lucida Console", Monaco, monospace'});
 
-                var $posTD = $('<td>').css({'text-align': 'right', border: '0', color: '#777'});
-                var $seqTD = $('<td>').css({border: '0', color: '#000'});
-                var lines = 1;
+                const $posTD = $('<td>').css({'text-align': 'right', border: '0', color: '#777'});
+                const $seqTD = $('<td>').css({border: '0', color: '#000'});
+                let lines = 1;
                 for (let i = 0; i < sequence.length; i += 1) {
                     if (i > 0 && i % charWrap === 0) {
                         $posTD.append('<br>').append(i + 1).append(':&nbsp;');
@@ -1309,7 +1309,7 @@ define ([
                     } else if (i == 0) {
                         $posTD.append(i + 1).append(':&nbsp;');
                     }
-                    var base = sequence[i];
+                    const base = sequence[i];
                     $seqTD.append(base);
                 }
                 $div.append($('<table>').css({border: '0', 'border-collapse': 'collapse'}).append(
@@ -1322,7 +1322,7 @@ define ([
             }
 
             function getFeatureLocationBounds(locationObject) {
-                var loc = {};
+                const loc = {};
                 if (locationObject.strand && locationObject.strand === '-') {
                     loc.end = locationObject.start;
                     loc.start = loc.end - locationObject.stop;
@@ -1339,36 +1339,36 @@ define ([
                 if (featureData.feature_array === null) {
                     featureData.feature_array = 'features';
                 }
-                var fid = featureData.feature_id;
-                var $div = openTabGetId(fid);
+                const fid = featureData.feature_id;
+                const $div = openTabGetId(fid);
                 if ($div === null) {
                     tabPane.showTab(fid);
                     return;
                 }
-                var $tbl = $('<table>').addClass('table table-striped table-bordered table-hover')
+                const $tbl = $('<table>').addClass('table table-striped table-bordered table-hover')
                     .css({'margin-left': 'auto', 'margin-right': 'auto'});
                 $tbl.append($('<colgroup>').append($('<col span=1>').css('width', '15%')));
 
                 // basic layout
-                var $container = $('<div>').addClass('container-fluid').css({margin: '15px 0px', 'max-width': '100%'});
+                const $container = $('<div>').addClass('container-fluid').css({margin: '15px 0px', 'max-width': '100%'});
                 $div.append($container);
-                var $tblRow = $('<div>').addClass('row')
+                const $tblRow = $('<div>').addClass('row')
                     .append($('<div>').addClass('col-md-12').append($tbl));
                 $container.append($tblRow);
 
-                var tblLabels = [];
-                var tblData = [];
+                const tblLabels = [];
+                const tblData = [];
 
                 tblLabels.push('Feature ID');
                 // Landing pages don't work for all features yet
                 tblData.push(fid);
 
                 tblLabels.push('Aliases');
-                var $aliases = $('<div>');
+                const $aliases = $('<div>');
                 if (featureData.aliases) {
-                    var aliases = featureData.aliases;
-                    var isFirst = true;
-                    for (let alias in aliases) {
+                    const aliases = featureData.aliases;
+                    let isFirst = true;
+                    for (const alias in aliases) {
 
                         if (isFirst) {isFirst = false;}
                         else {$aliases.append(', ');}
@@ -1390,24 +1390,24 @@ define ([
                     tblData.push('None');
                 }
 
-                var $functions = $('<div>');
+                const $functions = $('<div>');
                 tblLabels.push('Function Descriptions');
                 tblData.push($functions);
 
                 tblLabels.push('Location');
-                var $loc = $('<div>');
+                const $loc = $('<div>');
                 if (featureData.global_location.contig_id) {
                     $loc.append('Contig:&nbsp;');
                     $loc.append($('<a>').append(featureData.global_location.contig_id)
                         .css({cursor: 'pointer'})
-                        .on('click', function () {
+                        .on('click', () => {
                             self.showContigTab(metagenome_ref, featureData.global_location.contig_id, pref, tabPane);
                         }));
                     $loc.append('<br>');
                     if (featureData.location) {
-                        var locs = featureData.location;
-                        var $locDiv = $('<div>');
-                        var crop = false;
+                        const locs = featureData.location;
+                        const $locDiv = $('<div>');
+                        let crop = false;
                         for (let i = 0; i < locs.length; i += 1) {
                             if (i > 0) { $locDiv.append('<br>'); }
                             if (i > 6) { crop=true; }
@@ -1426,24 +1426,24 @@ define ([
 
                 tblData.push($loc);
 
-                var $contigBrowser = $('<div>').append($('<i class="fa fa-spinner fa-spin">'))
+                const $contigBrowser = $('<div>').append($('<i class="fa fa-spinner fa-spin">'))
                     .append(' &nbsp;fetching nearby feature data...');
                 tblLabels.push('Feature Context');
                 tblData.push($contigBrowser);
 
-                var $relationships = $('<div>');
+                const $relationships = $('<div>');
                 tblLabels.push('Relationships');
                 tblData.push($relationships);
 
-                var $dnaLen = $('<div>');
+                const $dnaLen = $('<div>');
                 tblLabels.push('DNA Length');
                 tblData.push($dnaLen);
 
-                var $dnaSeq = $('<div>');
+                const $dnaSeq = $('<div>');
                 tblLabels.push('DNA Sequence');
                 tblData.push($dnaSeq);
 
-                var $warnings = $('<div>');
+                const $warnings = $('<div>');
                 tblLabels.push('Warnings');
                 tblData.push($warnings);
 
@@ -1476,8 +1476,8 @@ define ([
                 }
 
                 // setup mini contig browser
-                var translate_feature_data = function (featureData) {
-                    var cbFormat = {};
+                const translate_feature_data = function (featureData) {
+                    const cbFormat = {};
                     cbFormat.raw = featureData; //Store this in order to span new tabs
                     cbFormat.id = featureData.feature_id;
                     cbFormat.location = [];
@@ -1501,19 +1501,19 @@ define ([
                 if (!featureData.global_location.contig_id) {
                     $contigBrowser.empty().append('Genomic context is not available.');
                 } else {
-                    var contigDataForBrowser = {
+                    const contigDataForBrowser = {
                         name: featureData.global_location.contig_id,
                         genes: [translate_feature_data(featureData)]
                     };
-                    var range = 10000;
+                    const range = 10000;
                     var bounds = getFeatureLocationBounds(featureData.global_location);
 
-                    var search_start = bounds.start - range;
+                    let search_start = bounds.start - range;
                     if (search_start < 0){
                         search_start = 0;
                     };
-                    var search_stop = bounds.end + range;
-                    var search_length = search_stop - search_start;
+                    const search_stop = bounds.end + range;
+                    let search_length = search_stop - search_start;
                     contigDataForBrowser.length = search_stop;
 
                     if (search_length > 40000) {
@@ -1529,13 +1529,13 @@ define ([
                             page_start: 0,
                             page_limit: 100
                         }])
-                        .spread( function (result) {
+                        .spread( (result) => {
                             $contigBrowser.empty();
                             result.features.forEach((feature) => {
                                 contigDataForBrowser.genes.push(translate_feature_data(feature));
                             });
 
-                            var cgb = new ContigBrowserPanel();
+                            const cgb = new ContigBrowserPanel();
                             cgb.data.options.contig = contigDataForBrowser;
                             cgb.data.options.onClickFunction = function (svgElement, feature) {
                                 self.showFeatureTab(metagenome_ref, feature.original_data.raw, pref, tabPane);
@@ -1546,13 +1546,13 @@ define ([
                             cgb.data.options.showButtons = false;
                             cgb.data.options.token = self.token;
                             cgb.data.$elem = $('<div style="width:100%; height: 200px; overflow: auto"/>');
-                            cgb.data.$elem.show(function (){
+                            cgb.data.$elem.show(()=> {
                                 cgb.data.update();
                             });
                             $contigBrowser.append(cgb.data.$elem);
                             cgb.data.init();
                         })
-                        .catch(function (err) {
+                        .catch((err) => {
                             console.error(err);
                             $contigBrowser.empty();
                             $contigBrowser.append(buildError(err));
@@ -1565,7 +1565,7 @@ define ([
 
         loggedInCallback: function (event, auth) {
             if (!this.state.isOk()) {
-                var errorMessage = 'Widget is in invalid state -- cannot render: ' + this.state.info().message;
+                const errorMessage = 'Widget is in invalid state -- cannot render: ' + this.state.info().message;
                 console.error(errorMessage);
                 this.showError(errorMessage);
                 return;

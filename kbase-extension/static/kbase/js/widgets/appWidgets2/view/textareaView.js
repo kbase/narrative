@@ -7,22 +7,22 @@ define([
     'common/props',
     'bootstrap',
     'css!font-awesome'
-], function(
+], (
     Promise,
     html,
     Validation,
     Events,
     UI,
-    Props) {
+    Props) => {
     'use strict';
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         textarea = t('textarea');
 
     function factory(config) {
-        var spec = config.parameterSpec,
+        let spec = config.parameterSpec,
             parent, container,
             bus = config.bus,
             model = {
@@ -82,7 +82,7 @@ define([
         }
 
         function render() {
-            var content = div({
+            const content = div({
                 dataElement: 'main-panel'
             }, [
                 div({ dataElement: 'input-container' }, [
@@ -96,21 +96,21 @@ define([
 
         // LIFECYCLE API
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
-                var theLayout = render();
+                const theLayout = render();
 
                 setModelValue(config.initialValue);
 
                 container.innerHTML = theLayout.content;
 
-                bus.on('reset-to-defaults', function() {
+                bus.on('reset-to-defaults', () => {
                     resetModelValue();
                 });
-                bus.on('update', function(message) {
+                bus.on('update', (message) => {
                     setModelValue(message.value);
                 });
                 syncModelToControl();
@@ -118,7 +118,7 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (parent && container) {
                     parent.removeChild(container);
                 }

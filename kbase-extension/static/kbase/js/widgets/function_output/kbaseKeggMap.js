@@ -26,25 +26,25 @@
         
         render: function () {
             // get this
-            var renderer = this;
+            const renderer = this;
             
             // scaling
-            var orig_x = 3695;
-    	    var orig_y = 2250;
-    	    var ratio = orig_y / orig_x;
+            const orig_x = 3695;
+    	    const orig_y = 2250;
+    	    const ratio = orig_y / orig_x;
     	    renderer.options.factor = renderer.options.width / orig_x;
-    	    var height = parseInt(renderer.options.width * ratio);
+    	    const height = parseInt(renderer.options.width * ratio);
     	    renderer.options.height = height;
 
     	    // get the target div
-            var main_div = $('<div>');
+            const main_div = $('<div>');
             renderer.$elem.append(main_div);
-            var target = main_div[0];
-    	    var index = Math.floor((Math.random()*1000)+1);
+            const target = main_div[0];
+    	    const index = Math.floor((Math.random()*1000)+1);
 
     	    // set header text
     	    if (renderer.options.header != null) {
-                var text = document.createElement('p');
+                const text = document.createElement('p');
                 text.setAttribute('style', "padding: 10px 20px;");
                 text.innerHTML = renderer.options.header;
                 target.appendChild(text);
@@ -55,10 +55,10 @@
     	    
     	    // get image
     	    if (renderer.options.image == null) {
-    		    var image = document.createElement('img');
+    		    const image = document.createElement('img');
     		    image.setAttribute('src', renderer.imagepath);
-    		    image.addEventListener('load', function(event) {
-    		        var offset = parseInt(event.target.offsetTop) - 5;
+    		    image.addEventListener('load', (event) => {
+    		        const offset = parseInt(event.target.offsetTop) - 5;
     		        event.target.nextSibling.style.top = offset+"px";
     		    });
     		    target.appendChild(image);
@@ -68,7 +68,7 @@
     	    
     	    // create svg
     	    if (renderer.options.div == null) {
-    		    var div = document.createElement('div');
+    		    const div = document.createElement('div');
     		    div.setAttribute('id', 'map_div'+index);
     		    div.setAttribute('style', "position: absolute; left: "+renderer.options.image.offsetLeft+"px;");
     		    renderer.options.div = div;
@@ -86,14 +86,14 @@
         },
     	
     	drawImage: function (svg, mg_data) {
-    	    var renderer = this;
+    	    const renderer = this;
     	    for (k=0; k<2; k++) {
     		    for (i in mg_data[k]) {
     		        if (mg_data[k].hasOwnProperty(i)) {
     			        if (renderer.keggpolydata.hasOwnProperty(i)) {
-    			            var alist = renderer.keggpolydata[i];
-    			            var color = "#00D900";
-    			            var abu = "abundance: "+ mg_data[k][i];
+    			            const alist = renderer.keggpolydata[i];
+    			            let color = "#00D900";
+    			            let abu = "abundance: "+ mg_data[k][i];
     			            if (k==1) {
     				            color = "#0000D9";
     				            if (mg_data[0].hasOwnProperty(i)) {
@@ -107,8 +107,8 @@
     				            }	
     			            }
     			            for (j=0;j<alist.length;j++) {
-    				            var a = alist[j];
-    				            var path = svg.createPath();			    
+    				            const a = alist[j];
+    				            const path = svg.createPath();			    
     				            path.move(parseInt(a[0] * renderer.options.factor), parseInt(a[1] * renderer.options.factor));
     				            for (h=2;h<a.length;h+=2) {
     				                path.line(parseInt(a[h] * renderer.options.factor), parseInt(a[h+1] * renderer.options.factor));

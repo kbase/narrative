@@ -1,15 +1,15 @@
 define([
     'common/props'
-], function (
+], (
     Props
-) {
+) => {
     'use strict';
 
     function coerceToBoolean(value) {
         if (!value) {
             return false;
         }
-        var intValue = parseInt(value);
+        const intValue = parseInt(value);
         if (!isNaN(intValue)) {
             if (value > 0) {
                 return 1;
@@ -43,7 +43,7 @@ define([
         if (converted.multipleItems) {
             return [];
         }
-        var nullValue = (function () {
+        const nullValue = (function () {
             switch (converted.data.type) {
             case 'string':
                 return '';
@@ -97,7 +97,7 @@ define([
     }
 
     function defaultValue(converted, spec) {
-        var defaultValues = spec.default_values || [];
+        const defaultValues = spec.default_values || [];
         // No default value and not required? null value
 
         // special special cases.
@@ -202,7 +202,7 @@ define([
             // consider it plain, unconstrained text.
             return 'string';
         }
-        var validateAs = spec.text_options.validate_as;
+        const validateAs = spec.text_options.validate_as;
         if (validateAs) {
             // For int and float, "validateAs" overrides the type.
             if (validateAs === 'int' || validateAs === 'float') {
@@ -242,7 +242,7 @@ define([
     }
 
     function updateUI(converted, spec) {
-        var dataType = converted.data.type;
+        const dataType = converted.data.type;
 
         switch (dataType) {
         case 'subdata':
@@ -263,9 +263,9 @@ define([
      * These need to be really fleshed out...
      */
     function updateConstraints(converted, spec) {
-        var dataType = converted.data.type;
-        var fieldType = converted.ui.type;
-        var constraints;
+        const dataType = converted.data.type;
+        const fieldType = converted.ui.type;
+        let constraints;
 
         // NOTE:
         // field_type is text or dropdown, but does not always correspond to the
@@ -477,7 +477,7 @@ define([
             throw new Error('Unknown data type: ' + dataType);
         }
         if (constraints) {
-            Object.keys(constraints).forEach(function (key) {
+            Object.keys(constraints).forEach((key) => {
                 converted.data.constraints[key] = constraints[key];
             });
         }
@@ -497,9 +497,9 @@ define([
     // now with grouped params
 
     function convertSequenceParameter(spec) {
-        var dataType = grokDataType(spec);
+        const dataType = grokDataType(spec);
 
-        var required = (spec.optional ? false : true);
+        const required = (spec.optional ? false : true);
 
         // This is the spec that applies to each item in the sequence.
         // It is essentially like the main spec, but is not a sequence
@@ -507,7 +507,7 @@ define([
         // The sequence, if it has a default value sequence, will
         // be responsible for creating a sequence of values using
         // those default values.
-        var itemSpec = {
+        const itemSpec = {
             id: null,
             ui: {
                 label: spec.ui_name,
@@ -536,7 +536,7 @@ define([
         updateUI(itemSpec, spec);
         updateData(itemSpec, spec);
 
-        var converted = {
+        const converted = {
             id: spec.id,
             // TODO we should be able to remove this.
             multipleItems: true,
@@ -585,11 +585,11 @@ define([
                 return convertSequenceParameter(spec);
             }
         }
-        var multiple = (spec.allow_multiple ? true : false);
-        var dataType = grokDataType(spec);
+        const multiple = (spec.allow_multiple ? true : false);
+        const dataType = grokDataType(spec);
 
-        var required = (spec.optional ? false : true);
-        var converted = {
+        const required = (spec.optional ? false : true);
+        const converted = {
             id: spec.id,
             multipleItems: multiple,
             ui: {
@@ -622,28 +622,28 @@ define([
 
     function convertGroupToStruct(group, params) {
         // Collect params into group and remove from original params collection.
-        var groupParams = {};
-        group.parameter_ids.forEach(function (id) {
+        const groupParams = {};
+        group.parameter_ids.forEach((id) => {
             groupParams[id] = params[id];
             delete params[id];
 
             // TODO: figure out what to do with advanced params within groups
             groupParams[id].ui.advanced = false;
         });
-        var required = group.optional ? false : true;
+        const required = group.optional ? false : true;
 
-        var defaultValue;
-        var nullValue;
-        var zeroValue;
+        let defaultValue;
+        let nullValue;
+        let zeroValue;
 
         nullValue = null;
         defaultValue = {};
-        Object.keys(groupParams).forEach(function (id) {
+        Object.keys(groupParams).forEach((id) => {
             defaultValue[id] = groupParams[id].data.defaultValue;
         });
         zeroValue = defaultValue;
 
-        var structSpec = {
+        const structSpec = {
             id: group.id,
             multipleItems: false,
             ui: {
@@ -686,8 +686,8 @@ define([
         // We introduce a new "disableable" - http://www.urbandictionary.com/define.php?term=disableable
         itemSpec.data.constraints.disableable = false;
 
-        var required = (spec.optional ? false : true);
-        var converted = {
+        const required = (spec.optional ? false : true);
+        const converted = {
             id: spec.id,
             // TODO we should be able to remove this.
             multipleItems: true,
@@ -722,7 +722,7 @@ define([
     }
 
     function convertGroup(group, params) {
-        var structSpec = convertGroupToStruct(group, params);
+        const structSpec = convertGroupToStruct(group, params);
 
         // Skip groups with no parameters.
         // A spec which defines a group with no members should probably not
@@ -744,7 +744,7 @@ define([
 
     function convertAppSpec(sdkAppSpec) {
         // Parameters
-        var parameterSpecs = {},
+        let parameterSpecs = {},
             parameterLayout;
 
         // First convert all parameters
@@ -753,15 +753,15 @@ define([
         // and populate it with the specified parameters, removing them from
         // the top level of parameters.
 
-        sdkAppSpec.parameters.forEach(function (parameter, index) {
+        sdkAppSpec.parameters.forEach((parameter, index) => {
             parameterSpecs[parameter.id] = convertParameter(parameter);
             parameterSpecs[parameter.id]._position = index;
         });
 
-        var groups = [];
+        let groups = [];
         if (sdkAppSpec.parameter_groups) {
             groups = sdkAppSpec.parameter_groups;
-            sdkAppSpec.parameter_groups.forEach(function (group) {
+            sdkAppSpec.parameter_groups.forEach((group) => {
                 convertGroup(group, parameterSpecs);
                 // don't know how the group is ordered in the spec ... so just append it later.
             });
@@ -770,13 +770,13 @@ define([
         // first filter out the paramters which have been moved into groups,
         // and then add the groups in.
         parameterLayout = sdkAppSpec.parameters
-            .filter(function (parameter) {
+            .filter((parameter) => {
                 if (parameterSpecs[parameter.id]) {
                     return true;
                 }
                 return false;
             })
-            .map(function (parameter) {
+            .map((parameter) => {
                 return {
                     position: parameterSpecs[parameter.id]._position,
                     id: parameter.id
@@ -785,21 +785,21 @@ define([
             .concat(groups
                 // first filter out any groups which were not added to the parameters.
                 // This includes ones with no parameters specified
-                .filter(function (group) {
+                .filter((group) => {
                     if (parameterSpecs[group.id]) {
                         return true;
                     }
                     return false;
                 })
-                .map(function (group) {
+                .map((group) => {
                     return {
                         position: parameterSpecs[group.id]._position,
                         id: group.id
                     };
                 }));
 
-        var sortedLayout = parameterLayout
-            .sort(function (a, b) {
+        const sortedLayout = parameterLayout
+            .sort((a, b) => {
                 if (a.position < b.position) {
                     return -1;
                 } else if (a.position === b.position) {
@@ -808,7 +808,7 @@ define([
                 return 1;
 
             })
-            .map(function (item) {
+            .map((item) => {
                 return item.id;
             });
 

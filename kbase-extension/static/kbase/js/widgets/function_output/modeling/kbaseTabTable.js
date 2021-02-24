@@ -1,7 +1,7 @@
 'use strict';
 
 define(['kbwidget', 'jquery', 'bootstrap', 'kbaseAuthenticatedWidget', 'kbaseTabTableTabs', 'kbasePathways', 'narrativeConfig'],
-function(KBWidget, $, bootstrap, kbaseAuthenticatedWidget, kbaseTabTableTabs, kbasePathways, Config) {
+(KBWidget, $, bootstrap, kbaseAuthenticatedWidget, kbaseTabTableTabs, kbasePathways, Config) => {
 return KBWidget({
     name: "kbaseTabTable",
     parent : kbaseAuthenticatedWidget,
@@ -12,19 +12,19 @@ return KBWidget({
     init: function(input) {
 
         this._super(input);
-        var self = this;
-        var $tableContainer = $('<div>');
+        const self = this;
+        const $tableContainer = $('<div>');
         this.$elem.append($tableContainer);
 
         // root url path for landing pages
-        var DATAVIEW_URL = '/functional-site/#/dataview/';
+        const DATAVIEW_URL = '/functional-site/#/dataview/';
 
-        var type = input.type;
+        const type = input.type;
 
         // tab widget
-        var tabs;
+        let tabs;
 
-        var kbModeling = new KBModeling( self.authToken() );
+        const kbModeling = new KBModeling( self.authToken() );
 
         // kbase api helper
         this.kbapi = kbModeling.kbapi;
@@ -37,14 +37,14 @@ return KBWidget({
         //
         // 2) add the tabs (at page load)
         //
-        var tabList = this.obj.tabList;
+        const tabList = this.obj.tabList;
 
-        var uiTabs = [];
-        for (var i = 0; i < tabList.length; i++) {
-            var tab = tabList[i];
+        const uiTabs = [];
+        for (let i = 0; i < tabList.length; i++) {
+            const tab = tabList[i];
 
             // add loading status
-            var placeholder = $('<div>')
+            const placeholder = $('<div>')
             placeholder.loading();
 
             uiTabs.push({name: tabList[i].name, content: placeholder});
@@ -64,18 +64,18 @@ return KBWidget({
             var param = {ref: input.ws+'/'+input.obj};
 
         self.kbapi('ws', 'get_object_info_new', {objects: [param], includeMetadata: 1})
-          .done(function(res) {
+          .done((res) => {
               self.obj.setMetadata(res[0]);
 
-              for (var i = 0; i < tabList.length; i++) {
-                  var spec = tabList[i];
+              for (let i = 0; i < tabList.length; i++) {
+                  const spec = tabList[i];
 
                   if (spec.type == 'verticaltbl') {
-                      var key = spec.key,
+                      const key = spec.key,
                           data = self.obj[key],
                           tabPane = tabs.tabContent(spec.name);
 
-                      var table = self.verticalTable({rows: spec.rows, data: data});
+                      const table = self.verticalTable({rows: spec.rows, data: data});
                       tabPane.rmLoading();
                       tabPane.append(table)
                   }
@@ -91,12 +91,12 @@ return KBWidget({
             var param = {ref: input.ws+'/'+input.obj};
 
         self.kbapi('ws', 'get_objects', [param])
-          .done(function(data){
-              var setMethod = self.obj.setData(data[0].data, tabs);
+          .done((data)=> {
+              const setMethod = self.obj.setData(data[0].data, tabs);
 
               // see if setData method returns promise or not
               if (setMethod && 'done' in setMethod) {
-                  setMethod.done(function() {
+                  setMethod.done(() => {
                       buildContent()
                   })
               } else {
@@ -104,14 +104,14 @@ return KBWidget({
               }
         })
 
-        var refLookup = {};
+        const refLookup = {};
         function preProcessDataTable(tabSpec,tabPane) {
             // get refs
-            var refs = [];
-            var cols = tabSpec.columns;
-            cols.forEach(function(col){
+            const refs = [];
+            const cols = tabSpec.columns;
+            cols.forEach((col)=> {
                 if ((col.type === 'tabLink' || col.type === 'wstype') && col.linkformat === 'dispWSRef') {
-                    self.obj[tabSpec.key].forEach(function(item) {
+                    self.obj[tabSpec.key].forEach((item) => {
                         if (refs.indexOf(item[col.key]) === -1) {
                         	refs.push( {ref: item[col.key]} );
                         }
@@ -124,8 +124,8 @@ return KBWidget({
 
             // get human readable info from workspaces
             return self.kbapi('ws', 'get_object_info_new', {objects: refs})
-                       .then(function(data) {
-                            refs.forEach(function(ref, i){
+                       .then((data) => {
+                            refs.forEach((ref, i)=> {
                                 // if (ref in referenceLookup) return
                                 refLookup[ref.ref] = {name: data[i][1],
                                                       ws: data[i][7],
@@ -140,9 +140,9 @@ return KBWidget({
         function buildContent(data) {
 
             //5) Iterates over the entries in the spec and instantiate things
-            for (var i = 0; i < tabList.length; i++) {
-                var tabSpec = tabList[i];
-                var tabPane = tabs.tabContent(tabSpec.name);
+            for (let i = 0; i < tabList.length; i++) {
+                const tabSpec = tabList[i];
+                const tabPane = tabs.tabContent(tabSpec.name);
 
                 // skip any vertical tables for now
                 if (tabSpec.type == 'verticaltbl') continue;
@@ -156,7 +156,7 @@ return KBWidget({
                 }
 
                 // preprocess data to get workspace info on any references in class
-                var prom = preProcessDataTable(tabSpec,tabPane);
+                const prom = preProcessDataTable(tabSpec,tabPane);
                 if (!prom) {
                     createDataTable(tabSpec, tabPane);
                 }
@@ -166,7 +166,7 @@ return KBWidget({
 
         // creates a datatable on a tabPane
         function createDataTable(tabSpec, tabPane) {
-            var settings = self.getTableSettings(tabSpec, self.obj.data);
+            const settings = self.getTableSettings(tabSpec, self.obj.data);
             tabPane.rmLoading();
 
             // note: must add table first
@@ -179,17 +179,17 @@ return KBWidget({
 
         // takes table spec and prepared data, returns datatables settings object
         this.getTableSettings = function(tab, data) {
-            var tableColumns = getColSettings(tab);
+            const tableColumns = getColSettings(tab);
 
-            var settings = {dom: '<"top"lf>rt<"bottom"ip><"clear">',
+            const settings = {dom: '<"top"lf>rt<"bottom"ip><"clear">',
                             aaData: self.obj[tab.key],
                             aoColumns: tableColumns,
                             language: { search: "_INPUT_",
                                         searchPlaceholder: 'Search '+tab.name}}
 
             // add any events
-            for (var i=0; i<tab.columns.length; i++) {
-                var col = tab.columns[i];
+            for (let i=0; i<tab.columns.length; i++) {
+                const col = tab.columns[i];
 
                 settings.fnDrawCallback = function() {
                     newTabEvents(tab.name)
@@ -201,11 +201,11 @@ return KBWidget({
 
 
         function newTabEvents(name) {
-            var ids = tabs.tabContent(name).find('.id-click');
+            const ids = tabs.tabContent(name).find('.id-click');
 
             ids.unbind('click');
             ids.click(function() {
-                var info = {id: $(this).data('id'),
+                const info = {id: $(this).data('id'),
                             type: $(this).data('type'),
                             method: $(this).data('method'),
                             ref: $(this).data('ref'),
@@ -213,22 +213,22 @@ return KBWidget({
                             ws: $(this).data('ws'),
                             action: $(this).data('action')}
 
-                var content = $('<div>');
+                let content = $('<div>');
 
                 if (info.method && info.method != 'undefined') {
-                    var res = self.obj[info.method](info);
+                    const res = self.obj[info.method](info);
 
                     if (res && 'done' in res) {
                         content = $('<div>').loading();
-                        $.when(res).done(function(rows) {
+                        $.when(res).done((rows) => {
                             content.rmLoading();
-                            var table = self.verticalTable({rows: rows});
+                            const table = self.verticalTable({rows: rows});
                             content.append(table);
                         })
                     } else if (res == undefined) {
                         content.append('<br>No data found for '+info.id);
                     } else {
-                        var table = self.verticalTable({rows: res});
+                        const table = self.verticalTable({rows: res});
                         content.append(table);
                     }
 
@@ -252,19 +252,19 @@ return KBWidget({
         // takes table spec, returns datatables column settings
         function getColSettings(tab) {
 
-            var settings = [];
+            const settings = [];
 
-            var cols = tab.columns;
+            const cols = tab.columns;
 
-            for (var i=0; i<cols.length; i++) {
-                var col = cols[i];
-                var key = col.key,
+            for (let i=0; i<cols.length; i++) {
+                const col = cols[i];
+                const key = col.key,
                     type = col.type,
                     format = col.linkformat,
                     method = col.method,
                     action = col.action
 
-                var config = {sTitle: col.label,
+                const config = {sTitle: col.label,
                               sDefaultContent: '-',
                               mData: ref(key, type, format, method, action)}
 
@@ -281,18 +281,18 @@ return KBWidget({
         function ref(key, type, format, method, action) {
             return function(d) {
                         if (type == 'tabLink' && format == 'dispIDCompart') {
-                            var dispid = d[key];
+                            let dispid = d[key];
                             if ("dispid" in d) {
                             	dispid = d.dispid;
                             }
                             return '<a class="id-click" data-id="'+d[key]+'" data-method="'+method+'">'+
                                              dispid+'</a>';
                         } else if (type == 'tabLink' && format == 'dispID') {
-                            var id = d[key];
+                            const id = d[key];
                             return '<a class="id-click" data-id="'+id+'" data-method="'+method+'">'+
                                         id+'</a>';
                         } else if (type == 'wstype' && format == 'dispWSRef') {
-                            var ws = refLookup[ d[key] ].ws,
+                            const ws = refLookup[ d[key] ].ws,
                                 name = refLookup[ d[key] ].name,
                                 wstype = refLookup[ d[key] ].type,
                                 link = refLookup[ d[key] ].link;
@@ -309,7 +309,7 @@ return KBWidget({
                                     name+'</a>';
                         }
 
-                        var value = d[key];
+                        const value = d[key];
 
                         if ($.isArray(value)) {
                             if (type == 'tabLinkArray')
@@ -322,9 +322,9 @@ return KBWidget({
         }
 
         function tabLinkArray(a, method) {
-            var links = [];
-            a.forEach(function(d) {
-            	var dispid = d.id;
+            const links = [];
+            a.forEach((d) => {
+            	let dispid = d.id;
 				if ("dispid" in d) {
 					dispid = d.dispid;
 				}
@@ -334,14 +334,14 @@ return KBWidget({
         }
 
         this.verticalTable = function(p) {
-            var data = p.data;
-            var rows = p.rows;
+            const data = p.data;
+            const rows = p.rows;
 
-            var table = $('<table class="table table-bordered" style="margin-left: auto; margin-right: auto;">');
+            const table = $('<table class="table table-bordered" style="margin-left: auto; margin-right: auto;">');
 
 
-            for (var i=0; i<rows.length; i++) {
-                var row = rows[i],
+            for (let i=0; i<rows.length; i++) {
+                const row = rows[i],
                     type = row.type;
 
                 // don't display undefined things in vertical table
@@ -349,7 +349,7 @@ return KBWidget({
                     'key' in row && typeof data[row.key] == 'undefined')
                     continue
 
-                var r = $('<tr>');
+                const r = $('<tr>');
                 r.append('<td><b>'+row.label+'</b></td>')
 
                 // if the data is in the row definition, use it
@@ -366,14 +366,14 @@ return KBWidget({
                     r.append('<td>'+value+'</td>');
                 } else if ('key' in row) {
                     if (row.type == 'wstype') {
-                        var ref = data[row.key];
+                        const ref = data[row.key];
 
-                        var cell = $('<td data-ref="'+ref+'">loading...</td>');
+                        const cell = $('<td data-ref="'+ref+'">loading...</td>');
                         r.append(cell);
 
-                        getLink(ref).done(function(info) {
-                            var name = info.url.split('/')[1];
-                            var ref = info.ref;
+                        getLink(ref).done((info) => {
+                            const name = info.url.split('/')[1];
+                            const ref = info.ref;
                             table.find("[data-ref='"+ref+"']")
                                  .html('<a href="'+DATAVIEW_URL+info.url+'" target="_blank">'+name+'</a>');
                         })
@@ -392,16 +392,16 @@ return KBWidget({
 
 
         this.getBiochemReaction = function(id) {
-        	var input = {reactions: [id]};
+        	const input = {reactions: [id]};
             return self.kbapi('biochem', 'get_reactions', {reactions: [id]})
-                       .then(function(data) {
+                       .then((data) => {
                           return data[0];
                        })
         };
 
         this.getBiochemCompound = function(id) {
             return self.kbapi('biochem', 'get_compounds', {compounds: [id]})
-                       .then(function(data) {
+                       .then((data) => {
                           return data[0];
                        })
         };
@@ -409,13 +409,13 @@ return KBWidget({
         this.getBiochemCompounds = function(ids) {
             return self.kbapi('biochem', 'get_compounds', {compounds: ids})
         };
-        var imageURL = Config.url('compound_img_url');
+        const imageURL = Config.url('compound_img_url');
         this.compoundImage = function(id) {
             return "<img src="+imageURL+id.split("_")[0]+".png style='height:300px !important;'>"
         };
 
         this.pictureEquation = function(eq) {
-            var cpds = get_cpds(eq);
+            const cpds = get_cpds(eq);
 
             for (var i =0; i < cpds.left.length; i++) {
                 var cpd = cpds.left[i];
@@ -433,7 +433,7 @@ return KBWidget({
                 }
             }
 
-            var direction = $('<div class="pull-left text-center">'+'<=>'+'</div>');
+            const direction = $('<div class="pull-left text-center">'+'<=>'+'</div>');
             direction.css('margin', '25px 0 0 0');
             panel.append(direction);
 
@@ -454,11 +454,11 @@ return KBWidget({
             }
 
 
-            var cpd_ids = cpds.left.concat(cpds.right);
-            var prom = self.kbapi('biochem', 'get_compounds', {compounds: cpd_ids})
-            $.when(prom).done(function(d){
-                var map = {};
-                for (var i in d) {
+            const cpd_ids = cpds.left.concat(cpds.right);
+            const prom = self.kbapi('biochem', 'get_compounds', {compounds: cpd_ids})
+            $.when(prom).done((d)=> {
+                const map = {};
+                for (const i in d) {
                     map [d[i].id ] = d[i].name;
                 }
 
@@ -472,8 +472,8 @@ return KBWidget({
         }
 
         function get_cpds(equation) {
-            var cpds = {};
-            var sides = equation.split('=');
+            const cpds = {};
+            const sides = equation.split('=');
             cpds.left = sides[0].match(/cpd\d*/g);
             cpds.right = sides[1].match(/cpd\d*/g);
 
@@ -483,8 +483,8 @@ return KBWidget({
         function getLink(ref) {
             return self.kbapi('ws', 'get_object_info_new',
                         {objects: [{ref: ref}]})
-                        .then(function(data){
-                            var a = data[0];
+                        .then((data)=> {
+                            const a = data[0];
                             return {url: a[7]+'/'+a[1], ref: a[6]+'/'+a[0]+'/'+a[4]};
                         })
         }

@@ -33,12 +33,12 @@ define (
 		'bootstrap',
 		'jquery',
 		'kbasePrompt'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		kbasePrompt
-	) {
+	) => {
 
     return KBWidget({
 

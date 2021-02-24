@@ -19,24 +19,24 @@
         },
 	
         render: function() {
-	    var self = this;
-	    var container = this.$elem;
-	    var kbws = new Workspace(self.ws_url, {'token': self.options.auth});
+	    const self = this;
+	    const container = this.$elem;
+	    const kbws = new Workspace(self.ws_url, {'token': self.options.auth});
 
 	    container.empty();
 	    container.append("<div><img src=\""+self.loading_image+"\">&nbsp;&nbsp;loading data...</div>");
 
-	    kbws.get_objects([{ref: self.options.ws+"/"+self.options.id}], function(data) {
+	    kbws.get_objects([{ref: self.options.ws+"/"+self.options.id}], (data) => {
 	        container.empty();
-		var main = $('<div>');
-		var str = JSON.stringify(data, undefined, 2);
+		const main = $('<div>');
+		const str = JSON.stringify(data, undefined, 2);
 		main.append($('<p>')
 		    .css({'padding': '10px 20px'})
                     .append($('<pre>').text(str)));
 		container.append(main);
-	    }, function(data) {
+	    }, (data) => {
 		container.empty();
-		var main = $('<div>');
+		const main = $('<div>');
 		main.append($('<p>')
 		    .css({'padding': '10px 20px'})
 		    .text('[Error] '+data.error.message));

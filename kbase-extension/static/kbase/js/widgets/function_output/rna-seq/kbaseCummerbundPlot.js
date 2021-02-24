@@ -11,7 +11,7 @@ define (
 		'kbaseTable',
 		'kbaseAuthenticatedWidget',
 		'kbaseTabs'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -21,7 +21,7 @@ define (
 		kbaseTable,
 		kbaseAuthenticatedWidget,
 		kbaseTabs
-	) {
+	) => {
 
     'use strict';
 
@@ -48,7 +48,7 @@ define (
         IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
         CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     */
-    $.ajaxTransport("+binary", function(options, originalOptions, jqXHR){
+    $.ajaxTransport("+binary", (options, originalOptions, jqXHR)=> {
         // check for conditions and support for blob / arraybuffer response type
 
         if (window.FormData && ((options.dataType && (options.dataType == 'binary')) || (options.data && ((window.ArrayBuffer && options.data instanceof ArrayBuffer) || (window.Blob && options.data instanceof Blob)))))
@@ -58,7 +58,7 @@ define (
                 // create new XMLHttpRequest
                 send: function(headers, callback){
             // setup all variables
-                    var xhr = new XMLHttpRequest(),
+                    const xhr = new XMLHttpRequest(),
             url = options.url,
             type = options.type,
             async = options.async || true,
@@ -68,16 +68,16 @@ define (
             username = options.username || null,
             password = options.password || null;
 
-                    xhr.addEventListener('load', function(){
+                    xhr.addEventListener('load', ()=> {
 
-                var data = {};
+                const data = {};
                 data[options.dataType] = xhr.response;
                 // make callback and send data
                 callback(xhr.status, xhr.statusText, data, xhr.getAllResponseHeaders());
                     });
 
                     xhr.open(type, url, async, username, password);
-                    for (var i in headers ) {
+                    for (const i in headers ) {
                         xhr.setRequestHeader(i, headers[i] );
                     }
                     xhr.overrideMimeType('image/png');
@@ -110,7 +110,7 @@ define (
 
         setDataset : function setDataset(newDataset) {
 
-            var $plot = this;
+            const $plot = this;
 
             if (this.data('loader')) {
                 this.data('loader').hide();
@@ -123,7 +123,7 @@ define (
 
                 $.each(
                     newDataset,
-                    function(i,v) {
+                    (i,v) => {
                         $plot.data('selectbox')
                             .append(
                                 $.jqElem('option')
@@ -145,11 +145,11 @@ define (
 
             this._super(options);
 
-            var $plot = this;
+            const $plot = this;
 
-            var ws = new Workspace(window.kbconfig.urls.workspace, {token : $plot.authToken()});
+            const ws = new Workspace(window.kbconfig.urls.workspace, {token : $plot.authToken()});
 
-            var ws_params = {
+            const ws_params = {
                 workspace : this.options.workspaceName,
                 wsid : window.kbconfig.workspaceId,
                 name : this.options.ws_cummerbund_output || this.options.generate_cummerbund_plots
@@ -159,7 +159,7 @@ define (
                 delete ws_params['wsid'];
             }
 
-            ws.get_objects([ws_params]).then(function (d) {
+            ws.get_objects([ws_params]).then((d) => {
 
                 if (! d[0].data.cummerbundplotSet || !d[0].data.cummerbundplotSet.length) {
                   $plot.$elem.empty();
@@ -170,7 +170,7 @@ define (
                 else {
                   $plot.setDataset(d[0].data.cummerbundplotSet);
                 }
-            }).fail(function(d) {
+            }).fail((d) => {
                 $plot.$elem.empty();
                 $plot.$elem
                     .addClass('alert alert-danger')
@@ -184,11 +184,11 @@ define (
 
         displayPlot : function displayPlot(plot) {
 
-            var $plot = this;
+            const $plot = this;
 
             $.each(
                 this.dataset(),
-                function (i,v) {
+                (i,v) => {
 
                     if (v.plot_title == plot) {
                         $plot.data('imgElem').attr('src', undefined);
@@ -202,16 +202,16 @@ define (
                             dataType : 'binary',
                             headers : {'Authorization' : 'Oauth ' + $plot.authToken()},
                         })
-                        .then(function(d) {
+                        .then((d) => {
 
-                            var reader = new FileReader();
+                            const reader = new FileReader();
                             reader.readAsDataURL(d);
                             reader.onloadend = function() {
-                                var base64data = reader.result;
+                                const base64data = reader.result;
                                 $plot.data('imgElem').attr('src', base64data);
                             }
 
-                        }).fail(function(d) {
+                        }).fail((d) => {
                             $plot.$elem.empty();
                             $plot.$elem
                                 .addClass('alert alert-danger')
@@ -224,9 +224,9 @@ define (
 
         appendUI : function appendUI($elem) {
 
-            var $plot = this;
+            const $plot = this;
 
-            var $container = $.jqElem('div')
+            const $container = $.jqElem('div')
                 .append(
                     $.jqElem('div')
                         .css('display', 'none')

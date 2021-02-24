@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 define([
     'bluebird',
     'jquery',
@@ -16,7 +13,7 @@ define([
     'kb_common/html',
     './widgets/codeCell',
     'custom/custom'
-], function (
+], (
     Promise,
     $,
     Uuid,
@@ -30,15 +27,15 @@ define([
     jupyter,
     html,
     CodeCell
-) {
+) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         span = t('span');
 
     function specializeCell(cell) {
         cell.minimize = function () {
-            var inputArea = this.input.find('.input_area').get(0),
+            const inputArea = this.input.find('.input_area').get(0),
                 outputArea = this.element.find('.output_wrapper'),
                 showCode = utils.getCellMeta(cell, 'kbase.codeCell.userSettings.showCodeInputArea');
 
@@ -49,7 +46,7 @@ define([
         };
 
         cell.maximize = function () {
-            var inputArea = this.input.find('.input_area').get(0),
+            const inputArea = this.input.find('.input_area').get(0),
                 outputArea = this.element.find('.output_wrapper'),
                 showCode = utils.getCellMeta(cell, 'kbase.codeCell.userSettings.showCodeInputArea');
 
@@ -63,8 +60,8 @@ define([
         };
 
         cell.getIcon = function () {
-            var iconColor = 'silver';
-            var icon;
+            const iconColor = 'silver';
+            let icon;
             icon = span({ class: 'fa fa-inverse fa-stack-1x fa-' + 'terminal' });
 
             return span({ style: '' }, [
@@ -76,7 +73,7 @@ define([
         };
 
         cell.toggleCodeInputArea = function () {
-            var codeInputArea = this.input.find('.input_area')[0];
+            const codeInputArea = this.input.find('.input_area')[0];
             if (codeInputArea) {
                 codeInputArea.classList.toggle('-show');
                 utils.setCellMeta(cell, 'kbase.codeCell.userSettings.showCodeInputArea', this.isCodeShowing(), true);
@@ -107,7 +104,7 @@ define([
             utils.setCellMeta(cell, 'kbase.codeCell.userSettings.showCodeInputArea', false);
         }
 
-        var widget = CodeCell.make({
+        const widget = CodeCell.make({
             cell: cell
         });
         widget.bus.emit('run', {
@@ -134,12 +131,12 @@ define([
 
     function upgradeCell(cell, data) {
         data = data || {};
-        var meta = cell.metadata || {},
+        const meta = cell.metadata || {},
             cellId = data.cellId || (new Uuid(4).format());
 
         // Accomodate import/job cells.
         // For now we create an import property on the side.
-        var jobInfo;
+        let jobInfo;
         if (data && data.state) {
             jobInfo = {
                 jobId: data.jobId,
@@ -205,7 +202,7 @@ define([
     }
 
     function initializeExtension() {
-        Jupyter.notebook.get_cells().forEach(function (cell) {
+        Jupyter.notebook.get_cells().forEach((cell) => {
             try {
                 if (ensureCodeCell(cell)) {
                     setupCell(cell);
@@ -215,10 +212,10 @@ define([
             }
         });
 
-        $([Jupyter.events]).on('insertedAtIndex.Cell', function (event, payload) {
-            var cell = payload.cell;
-            var setupData = payload.data;
-            var jupyterCellType = payload.type;
+        $([Jupyter.events]).on('insertedAtIndex.Cell', (event, payload) => {
+            const cell = payload.cell;
+            const setupData = payload.data;
+            const jupyterCellType = payload.type;
             // var hasKBaseMetadata = payload.cell.metadata && payload.cell.metadata.kbase;
             if (jupyterCellType === 'code' &&
                 (!setupData || setupData.type === 'code')) {
@@ -241,7 +238,7 @@ define([
             initializeExtension();
         }
         else {
-            $([Jupyter.events]).one('notebook_loaded.Notebook', function () {
+            $([Jupyter.events]).one('notebook_loaded.Notebook', () => {
                 initializeExtension();
             });
         }
@@ -251,6 +248,6 @@ define([
         // This is the sole ipython/jupyter api call
         load_ipython_extension: load
     };
-}, function (err) {
+}, (err) => {
     console.error('ERROR loading codeCell main', err);
 });

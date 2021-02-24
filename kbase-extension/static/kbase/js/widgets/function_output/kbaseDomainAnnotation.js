@@ -13,7 +13,7 @@ define (
 		'kbaseAuthenticatedWidget',
 		'kbaseTabs',
 		'jquery-dataTables'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -21,7 +21,7 @@ define (
 		kbaseAuthenticatedWidget,
 		kbaseTabs,
 		jquery_dataTables
-	) {
+	) => {
     return KBWidget({
         name: 'kbaseDomainAnnotation',
         parent : kbaseAuthenticatedWidget,
@@ -84,49 +84,49 @@ define (
         },
 
         render: function(){
-            var self = this;
+            const self = this;
             self.pref = this.uuid();
             self.loading(true);
 
-            var container = this.$elem;
-            var kbws = this.ws;
+            const container = this.$elem;
+            const kbws = this.ws;
 
-            var domainAnnotationRef = self.buildObjectIdentity(this.options.workspaceID, this.options.domainAnnotationID, this.options.domainAnnotationVer);
-            kbws.get_objects([domainAnnotationRef], function(data) {
+            const domainAnnotationRef = self.buildObjectIdentity(this.options.workspaceID, this.options.domainAnnotationID, this.options.domainAnnotationVer);
+            kbws.get_objects([domainAnnotationRef], (data) => {
 
                 self.domainAnnotationData = data[0].data;
                 self.genomeRef = self.domainAnnotationData.genome_ref;
                 self.domainModelSetRef = self.domainAnnotationData.used_dms_ref;
 
                 // Job to get properties of AnnotationDomain object: name and id of the annotated genome
-                var jobGetDomainAnnotationProperties = kbws.get_object_subset(
+                const jobGetDomainAnnotationProperties = kbws.get_object_subset(
                     [
                         { 'ref':self.genomeRef, 'included':['/id'] },
                         { 'ref':self.genomeRef, 'included':['/scientific_name'] }
                     ],
-                    function(data){
+                    (data)=> {
                         self.genomeID = data[0].data.id;
                         self.genomeName = data[1].data.scientific_name;
                     },
-                    function(error){
+                    (error)=> {
                         self.clientError(error);
                     }
                 );
 
-                var jobGetDomainModelSet =  kbws.get_objects(
+                const jobGetDomainModelSet =  kbws.get_objects(
                     [{ref: self.domainModelSetRef}],
-                    function(data) {
+                    (data) => {
                         self.accessionToShortDescription = data[0].data.domain_accession_to_description;
 			self.domainModelSetName = data[0].data.set_name;
                         // make regex for each prefix to map to external URLs
-                        $.each(data[0].data.domain_prefix_to_dbxref_url, function(prefix,url) {
+                        $.each(data[0].data.domain_prefix_to_dbxref_url, (prefix,url) => {
                             self.prefixToURL[prefix] = url;
                         });
                         // make short & long descriptions for ones that are too long
-                        $.each(self.accessionToShortDescription, function(domainID,description) {
+                        $.each(self.accessionToShortDescription, (domainID,description) => {
                             self.accessionToLongDescription[domainID] = "";
                             if (description.length > self.options.maxDescriptionLength) {
-                                var pos = description.indexOf(" ",self.options.maxDescriptionLength);
+                                const pos = description.indexOf(" ",self.options.maxDescriptionLength);
                                 if (pos > -1) {
                                     self.accessionToLongDescription[domainID] = description + ' <small><a class="show-less' + self.pref  + '" data-id="' + domainID + '">show&nbsp;less</a></small>';
                                     self.accessionToShortDescription[domainID] = description.substring(0,pos) + ' <small><a class="show-more' + self.pref  + '" data-id="' + domainID + '">more&#8230;</a></small>';
@@ -134,25 +134,25 @@ define (
                             }
                         });
                     },
-                    function(error){
+                    (error)=> {
                         self.clientError(error);
                     }
                 );
 
                 // Launch jobs and vizualize data once they are done
-                $.when.apply($, [jobGetDomainAnnotationProperties, jobGetDomainModelSet]).done( function(){
+                $.when.apply($, [jobGetDomainAnnotationProperties, jobGetDomainModelSet]).done( ()=> {
                     self.loading(false);
                     self.prepareVizData();
 
                     ///////////////////////////////////// Instantiating Tabs ////////////////////////////////////////////
                     container.empty();
-                    var tabPane = $('<div id="'+self.pref+'tab-content">');
+                    const tabPane = $('<div id="'+self.pref+'tab-content">');
                     container.append(tabPane);
-                    var tabWidget = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
+                    const tabWidget = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
                     ///////////////////////////////////// Overview table ////////////////////////////////////////////
-                    var tabOverview = $("<div/>");
+                    const tabOverview = $("<div/>");
                     tabWidget.addTab({tab: 'Overview', content: tabOverview, canDelete : false, show: true});
-                    var tableOver = $('<table class="table table-striped table-bordered" '+
+                    const tableOver = $('<table class="table table-striped table-bordered" '+
                         'style="width: 100%; margin-left: 0px; margin-right: 0px;" id="'+self.pref+'overview-table"/>');
                     tabOverview.append(tableOver);
                     tableOver
@@ -170,12 +170,12 @@ define (
                             self.annotatedDomainsCount) );
 
                     ///////////////////////////////////// Domains table ////////////////////////////////////////////
-                    var tabDomains = $("<div/>");
+                    const tabDomains = $("<div/>");
                     tabWidget.addTab({tab: 'Domains', content: tabDomains, canDelete : false, show: false});
-                    var tableDomains = $('<table class="table table-striped table-bordered" '+
+                    let tableDomains = $('<table class="table table-striped table-bordered" '+
                         'style="width: 100%; margin-left: 0px; margin-right: 0px;" id="'+self.pref+'domain-table"/>');
                     tabDomains.append(tableDomains);
-                    var domainTableSettings = {
+                    const domainTableSettings = {
                         "sPaginationType": "full_numbers",
                         "iDisplayLength": 10,
                         "aaData": [],
@@ -194,16 +194,16 @@ define (
                         'fnDrawCallback': eventsDomainsTab
                     };
 
-                    var domainsTableData = [];
-                    var domains = self.domains;
+                    const domainsTableData = [];
+                    const domains = self.domains;
                     for(var domainID in domains){
-                        var domain = domains[domainID];
+                        const domain = domains[domainID];
 
 			// try to map each domain to a prefix,
 			// for external crossrefs and to show only
 			// the most relevant match per set
 			var domainRef = domainID;
-			$.each(self.prefixToURL, function(prefix,url) {
+			$.each(self.prefixToURL, (prefix,url) => {
 			    if (domainID.match('^'+prefix)) {
 				self.accessionToPrefix[domainID] = prefix;
 				domainRef += ' <small><a href="'+url+domainID.replace(prefix,"")+'" target="_blank">(more&nbsp;info)</a></small>';
@@ -212,8 +212,8 @@ define (
 			});
 
                         // Build concatenated list of gene references
-                        var geneRefs = "";
-                        for(var i = 0; i < domain.genes.length; i++){
+                        let geneRefs = "";
+                        for(let i = 0; i < domain.genes.length; i++){
                             gene = domain.genes[i];
                             if( i > 0 ) {
                                 geneRefs += '<br />';
@@ -243,9 +243,9 @@ define (
                     function eventsDomainsTab() {
                         $('.show-gene'+self.pref).unbind('click');
                         $('.show-gene'+self.pref).click(function() {
-                            var id = $(this).attr('data-id');
-                            var contigID = $(this).attr('data-contigID');
-                            var geneIndex = $(this).attr('data-geneIndex');
+                            const id = $(this).attr('data-id');
+                            const contigID = $(this).attr('data-contigID');
+                            const geneIndex = $(this).attr('data-geneIndex');
 
                             if (tabWidget.hasTab(id)) {
                                 tabWidget.showTab(id);
@@ -253,12 +253,12 @@ define (
                             }
 
                             ////////////////////////////// Build Gene Domains table //////////////////////////////
-                            var tabContent = $("<div/>");
+                            const tabContent = $("<div/>");
 
-                            var tableGeneDomains = $('<table class="table table-striped table-bordered" '+
+                            const tableGeneDomains = $('<table class="table table-striped table-bordered" '+
                                 'style="width: 100%; margin-left: 0px; margin-right: 0px;" id="' + self.pref + id + '-table"/>');
                             tabContent.append(tableGeneDomains);
-                            var geneDomainTableSettings = {
+                            const geneDomainTableSettings = {
                                 "sPaginationType": "full_numbers",
                                 "iDisplayLength": 10,
                                 "aaData": [],
@@ -278,14 +278,14 @@ define (
                                 },
 				'fnDrawCallback': eventsGeneTab
                             };
-                            var geneDomainsTableData = [];
+                            const geneDomainsTableData = [];
 
-                            var gene = self.domainAnnotationData.data[contigID][geneIndex];
-                            var geneID = gene[0];
-                            var geneStart = gene[1];
-                            var geneEnd = gene[2];
-                            var domainsInfo = gene[4];
-			    var geneLength = (geneEnd - geneStart + 1)/3;
+                            const gene = self.domainAnnotationData.data[contigID][geneIndex];
+                            const geneID = gene[0];
+                            const geneStart = gene[1];
+                            const geneEnd = gene[2];
+                            const domainsInfo = gene[4];
+			    let geneLength = (geneEnd - geneStart + 1)/3;
 
 			    // hack to correct display bug in genes with incorrect stated lengths
                             for(var domainID in domainsInfo){
@@ -300,14 +300,14 @@ define (
                             for(var domainID in domainsInfo){
                                 var domainsArray = domainsInfo[domainID];
                                 for(var i = 0 ; i < domainsArray.length; i++){
-                                    var domainStart = domainsArray[i][0];
+                                    const domainStart = domainsArray[i][0];
                                     var domainEnd = domainsArray[i][1];
-                                    var eValue = domainsArray[i][2];
+                                    const eValue = domainsArray[i][2];
 
-                                    var domainImgWidth = (domainEnd - domainStart)*100/geneLength;
-                                    var domainImgleftShift = (domainStart)*100/geneLength;
+                                    const domainImgWidth = (domainEnd - domainStart)*100/geneLength;
+                                    const domainImgleftShift = (domainStart)*100/geneLength;
 
-				    var domainRef = '<a class="show-domain' + self.pref  + '"'
+				    const domainRef = '<a class="show-domain' + self.pref  + '"'
 					+ ' data-id="' + domainID + '">'
 					+ domainID + '</a>';
 
@@ -341,7 +341,7 @@ define (
                     function eventsGeneTab() {
                         $('.show-domain'+self.pref).unbind('click');
                         $('.show-domain'+self.pref).click(function() {
-                            var domainID = $(this).attr('data-id');
+                            const domainID = $(this).attr('data-id');
 			    tableDomains.fnFilter(domainID);
                             tabWidget.showTab('Domains');
 			});
@@ -352,7 +352,7 @@ define (
                     function eventsMoreDescription() {
                         $('.show-more'+self.pref).unbind('click');
                         $('.show-more'+self.pref).click(function() {
-                            var domainID = $(this).attr('data-id');
+                            const domainID = $(this).attr('data-id');
 			    $(this).closest("td").html(self.accessionToLongDescription[domainID]);
 			    eventsLessDescription();
 			});
@@ -360,7 +360,7 @@ define (
                     function eventsLessDescription() {
                         $('.show-less'+self.pref).unbind('click');
                         $('.show-less'+self.pref).click(function() {
-                            var domainID = $(this).attr('data-id');
+                            const domainID = $(this).attr('data-id');
 			    $(this).closest("td").html(self.accessionToShortDescription[domainID]);
 			    eventsMoreDescription();
 			});
@@ -370,28 +370,28 @@ define (
         },
 
         prepareVizData: function(){
-            var self = this;
+            const self = this;
 
-            var dad = self.domainAnnotationData;
+            const dad = self.domainAnnotationData;
 
-            var domains = {};
-            var domainsCount = 0;
-            var genesCount = 0;
+            const domains = {};
+            let domainsCount = 0;
+            let genesCount = 0;
 
-            for(var contigID in dad.data){
+            for(const contigID in dad.data){
 
-                var genesArray = dad.data[contigID];
-                for(var i = 0 ; i < genesArray.length; i++){
-                    var geneID = genesArray[i][0];
+                const genesArray = dad.data[contigID];
+                for(let i = 0 ; i < genesArray.length; i++){
+                    const geneID = genesArray[i][0];
 //                    var geneStart = genesArray[i][1];
 //                    var geneEnd = genesArray[i][2];
-                    var domainsInfo = genesArray[i][4];
+                    const domainsInfo = genesArray[i][4];
                     if($.isEmptyObject(domainsInfo)) continue;
 
                     // If we have something in domainsInfo, then the gene was anntoated
                     genesCount++;
-                    for(var domainID in domainsInfo){
-                        var domainData = domains[domainID];
+                    for(const domainID in domainsInfo){
+                        let domainData = domains[domainID];
                         if(typeof domainData === 'undefined'){
                             domainData = {
                                 'id': domainID,
@@ -417,7 +417,7 @@ define (
         },
 
         makeRow: function(name, value) {
-            var $row = $("<tr/>")
+            const $row = $("<tr/>")
                        .append($("<th />").css('width','20%').append(name))
                        .append($("<td />").append(value));
             return $row;
@@ -440,7 +440,7 @@ define (
         },
 
         showMessage: function(message) {
-            var span = $("<span/>").append(message);
+            const span = $("<span/>").append(message);
 
             this.$messagePane.append(span);
             this.$messagePane.show();
@@ -453,14 +453,14 @@ define (
 
         uuid: function() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
-                function(c) {
-                    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+                (c) => {
+                    const r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                     return v.toString(16);
                 });
         },
 
         buildObjectIdentity: function(workspaceID, objectID, objectVer, wsRef) {
-            var obj = {};
+            const obj = {};
             if (wsRef) {
                 obj['ref'] = wsRef;
             } else {

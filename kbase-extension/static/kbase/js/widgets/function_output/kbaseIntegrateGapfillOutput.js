@@ -37,10 +37,10 @@
         },
 
         render: function(options) {
-            var self = this;
-            var container = this.$elem;
+            const self = this;
+            const container = this.$elem;
             
-            var n_rxns_added = parseInt(options.endingNumRxns) - parseInt(options.startingNumRxns);
+            const n_rxns_added = parseInt(options.endingNumRxns) - parseInt(options.startingNumRxns);
             if (n_rxns_added==0) {
                 container.append("Integration completed successfully, but no reactions were integrated.<br><br>");
                 container.append("This may result if the gapfill solution reactions were already integrated ");

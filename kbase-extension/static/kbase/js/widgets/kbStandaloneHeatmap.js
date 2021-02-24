@@ -52,8 +52,8 @@
         normalized value matrix
 */
 (function () {
-    var root = this || {};
-    var standaloneHeatmap = root.standaloneHeatmap = {
+    const root = this || {};
+    const standaloneHeatmap = root.standaloneHeatmap = {
 	about: {
 	    name: "heatmap",
 	    title: "Heatmap",
@@ -98,11 +98,11 @@
         },
 
 	create: function (params) {
-	    var renderer = this;
+	    const renderer = this;
 	    if (! window.hasOwnProperty('rendererHeatmap')) {
 		window.rendererHeatmap = [];
 	    }
-	    var instance = { settings: {},
+	    const instance = { settings: {},
 			     index: params.index };
 	    jQuery.extend(true, instance, renderer);
 	    jQuery.extend(true, instance.settings, renderer.about.defaults, params);
@@ -112,19 +112,19 @@
 	},
 
 	render: function (index) {
-	    var renderer = rendererHeatmap[index];
+	    const renderer = rendererHeatmap[index];
 
-	    var min_height = (renderer.settings.data.rows.length * renderer.settings.min_cell_height) + renderer.settings.tree_height + renderer.settings.legend_height;
+	    const min_height = (renderer.settings.data.rows.length * renderer.settings.min_cell_height) + renderer.settings.tree_height + renderer.settings.legend_height;
 	    if (renderer.settings.height < min_height) {
 		renderer.settings.height = min_height;
 	    }
-	    var min_width = (renderer.settings.data.columns.length * renderer.settings.min_cell_height) + renderer.settings.tree_width + renderer.settings.legend_width;
+	    const min_width = (renderer.settings.data.columns.length * renderer.settings.min_cell_height) + renderer.settings.tree_width + renderer.settings.legend_width;
 	    if (renderer.settings.width < min_width) {
 		renderer.settings.width = min_width;
 	    }
 
 	    // get the target div
-	    var target = renderer.settings.target;
+	    const target = renderer.settings.target;
 	    target.innerHTML = "<div id='heatmap_div"+index+"'></div>";
 	    target.firstChild.setAttribute('style', "width: "+ renderer.settings.width+"px; height: "+renderer.settings.height+"px;");
 	    jQuery('#heatmap_div'+index).svg();
@@ -134,36 +134,36 @@
 	},
 
 	drawImage: function (svg, index) {
-	    var renderer = rendererHeatmap[index];
+	    const renderer = rendererHeatmap[index];
 
 	    // initialize shortcut variables
-	    var numrows = renderer.settings.data.rows.length;
-	    var numcols = renderer.settings.data.columns.length;
-	    var boxwidth = parseInt((renderer.settings.width - renderer.settings.legend_width - renderer.settings.tree_width - 5) / numcols);
+	    const numrows = renderer.settings.data.rows.length;
+	    const numcols = renderer.settings.data.columns.length;
+	    const boxwidth = parseInt((renderer.settings.width - renderer.settings.legend_width - renderer.settings.tree_width - 5) / numcols);
 	    renderer.settings.boxwidth = boxwidth;
-	    var boxheight = parseInt((renderer.settings.height - renderer.settings.legend_height - renderer.settings.tree_height - 5) / numrows);
+	    const boxheight = parseInt((renderer.settings.height - renderer.settings.legend_height - renderer.settings.tree_height - 5) / numrows);
 	    renderer.settings.boxheight = boxheight;
-	    var displaywidth = parseInt(renderer.settings.width - renderer.settings.legend_width - renderer.settings.tree_width - 5);
-	    var displayheight = parseInt(renderer.settings.height - renderer.settings.legend_height - renderer.settings.tree_height - 5);
+	    const displaywidth = parseInt(renderer.settings.width - renderer.settings.legend_width - renderer.settings.tree_width - 5);
+	    const displayheight = parseInt(renderer.settings.height - renderer.settings.legend_height - renderer.settings.tree_height - 5);
 
-	    var x = 0;
-	    var y = 0;
-	    var rx = 0;
-	    var ry = 0;
-	    var width = 0;
-	    var height = 0;
-	    var settings = {fill: 'red', strokeWidth: 1, stroke: 'black'};
+	    let x = 0;
+	    let y = 0;
+	    const rx = 0;
+	    const ry = 0;
+	    let width = 0;
+	    let height = 0;
+	    const settings = {fill: 'red', strokeWidth: 1, stroke: 'black'};
 	    if (renderer.settings.data.hasOwnProperty('coldend') && renderer.settings.data.hasOwnProperty('colindex')) {
 	        renderer.settings.data.colcluster = renderer.settings.data.coldend;
 	    } else {
-	        var col_result = renderer.cluster(renderer.transpose(renderer.settings.data.data));
+	        const col_result = renderer.cluster(renderer.transpose(renderer.settings.data.data));
 	        renderer.settings.data.colcluster = col_result[0];
 	        renderer.settings.data.colindex = col_result[1];
 	    }
         if (renderer.settings.data.hasOwnProperty('rowdend') && renderer.settings.data.hasOwnProperty('rowindex')) {
             renderer.settings.data.rowcluster = renderer.settings.data.rowdend;
         } else {
-	        var row_result = renderer.cluster(renderer.settings.data.data);
+	        const row_result = renderer.cluster(renderer.settings.data.data);
 	        renderer.settings.data.rowcluster = row_result[0];
 	        renderer.settings.data.rowindex = row_result[1];
         }
@@ -171,11 +171,11 @@
 	    renderer.drawDendogram(svg, index, 1);
 
 	    // draw the heatmap
-	    for (var i=0;i<renderer.settings.data.data.length;i++) {
+	    for (let i=0;i<renderer.settings.data.data.length;i++) {
 		// draw row text
-		var textx = renderer.settings.tree_width + displaywidth + 5;
-		var texty = renderer.settings.tree_height + renderer.settings.legend_height + (boxheight * (i+1) - parseInt((boxheight - renderer.settings.row_text_size) / 2)) - 2;
-		var fontColor = "black";
+		const textx = renderer.settings.tree_width + displaywidth + 5;
+		const texty = renderer.settings.tree_height + renderer.settings.legend_height + (boxheight * (i+1) - parseInt((boxheight - renderer.settings.row_text_size) / 2)) - 2;
+		let fontColor = "black";
 		if (renderer.settings.selectedRows[i]) {
 		    fontColor = "blue";
 		}
@@ -185,11 +185,11 @@
 		renderer.settings.cells.push([]);
 
 		// draw cells
-		for (var h=0;h<renderer.settings.data.data[i].length;h++) {
+		for (let h=0;h<renderer.settings.data.data[i].length;h++) {
 		    // draw column text
 		    if (i==0) {
-			var ctextx = renderer.settings.tree_width + (boxwidth * h) + (parseInt((boxwidth - renderer.settings.col_text_size) / 2)) + 12;
-			var ctexty = renderer.settings.legend_height - 5;
+			const ctextx = renderer.settings.tree_width + (boxwidth * h) + (parseInt((boxwidth - renderer.settings.col_text_size) / 2)) + 12;
+			const ctexty = renderer.settings.legend_height - 5;
 			fontColor = "black";
 			if (renderer.settings.selectedColumns[h]) {
 			    fontColor = "blue";
@@ -205,9 +205,9 @@
 		    height = boxheight;
 
 		    // calculate box color
-		    var color = "black";
-		    var adjusted_value = (renderer.settings.data.data[renderer.settings.data.rowindex[i]-1][renderer.settings.data.colindex[h]-1] * 2) - 1;
-		    var cval = parseInt(255 * Math.abs(adjusted_value));
+		    let color = "black";
+		    const adjusted_value = (renderer.settings.data.data[renderer.settings.data.rowindex[i]-1][renderer.settings.data.colindex[h]-1] * 2) - 1;
+		    const cval = parseInt(255 * Math.abs(adjusted_value));
 		    if (adjusted_value < 0) {
 			color = "rgb("+cval+",0,0)";
 		    } else {
@@ -229,15 +229,15 @@
 	},
 
 	drawDendogram: function (svg, index, rotation) {
-	    var renderer = rendererHeatmap[index];
+	    const renderer = rendererHeatmap[index];
 
-	    var height = rotation ? renderer.settings.tree_width : renderer.settings.tree_height;
-	    var data = rotation ? renderer.settings.data.rowcluster : renderer.settings.data.colcluster;
-	    var cell_w = rotation ? renderer.settings.boxheight : renderer.settings.boxwidth;
-	    var xshift = rotation ? renderer.settings.tree_height : renderer.settings.tree_width;
-	    var yshift = renderer.settings.legend_height + renderer.settings.tree_height;
-	    var interval = parseInt(height / data.depth);
-	    var path = "";
+	    const height = rotation ? renderer.settings.tree_width : renderer.settings.tree_height;
+	    const data = rotation ? renderer.settings.data.rowcluster : renderer.settings.data.colcluster;
+	    const cell_w = rotation ? renderer.settings.boxheight : renderer.settings.boxwidth;
+	    let xshift = rotation ? renderer.settings.tree_height : renderer.settings.tree_width;
+	    let yshift = renderer.settings.legend_height + renderer.settings.tree_height;
+	    const interval = parseInt(height / data.depth);
+	    let path = "";
 	    if (rotation) {
 		xshift++;
 		for (var i=0;i<data.depth;i++) {
@@ -270,7 +270,7 @@
 	},
 
 	toggleSelected: function (row, index, dir) {
-	    var renderer = rendererHeatmap[index];
+	    const renderer = rendererHeatmap[index];
 
 	    if (dir) {
 		if (typeof renderer.settings.colClicked == "function") {
@@ -298,26 +298,26 @@
 	},
 
 	cellClick: function (row, col, value, cell, index) {
-	    var renderer = rendererHeatmap[index];
+	    const renderer = rendererHeatmap[index];
 	    if (typeof renderer.settings.cellClicked == "function") {
 		renderer.settings.cellClicked({row: row, col: col, value: value, cell: cell});
 	    }
 	},
 
 	cellHover: function (over, row, col, value, cell, index) {
-	    var renderer = rendererHeatmap[index];
+	    const renderer = rendererHeatmap[index];
 	    if (typeof renderer.settings.cellHovered == "function") {
 		renderer.settings.cellHovered({over: over, row: row, col: col, value: value, cell: cell});
 	    }
 	},
 
 	normalize: function (data, min, max) {
-	    var normdata = [];
+	    const normdata = [];
 	    min = min ? min : 0;
 	    max = max ? max : 1;
-	    for (var i=0;i<data.length;i++) {
-		var dmin = data[i][0];
-		var dmax = data[i][0];
+	    for (let i=0;i<data.length;i++) {
+		let dmin = data[i][0];
+		let dmax = data[i][0];
 		for (var h=0; h<data[i].length; h++) {
 		    if (data[i][h] < dmin) {
 			dmin = data[i][h];
@@ -340,17 +340,17 @@
 	},
 
 	distance: function (data) {
-	    var distances = {};
+	    const distances = {};
 	    for (var i=0;i<data.length;i++) {
 		distances[i] = {};
 	    }
 	    for (var i=0;i<data.length;i++) {
-	    	for (var h=0;h<data.length;h++) {
+	    	for (let h=0;h<data.length;h++) {
 	    	    if (i>=h) {
 	    		continue;
 	    	    }
-	    	    var dist = 0;
-	    	    for (var j=0;j<data[i].data[0].length;j++) {
+	    	    let dist = 0;
+	    	    for (let j=0;j<data[i].data[0].length;j++) {
 	    		dist += Math.pow(data[i].data[0][j] - data[h].data[0][j], 2);
 	    	    }
 	    	    distances[i][h] = Math.pow(dist, 0.5);
@@ -360,9 +360,9 @@
 	},
 
 	transpose: function (data) {
-	    var result = [];
-	    for (var i=0;i<data.length;i++) {
-		for (var h=0;h<data[i].length;h++) {
+	    const result = [];
+	    for (let i=0;i<data.length;i++) {
+		for (let h=0;h<data[i].length;h++) {
 		    if (i==0) {
 			result.push( [] );
 		    }
@@ -373,22 +373,22 @@
 	},
 
 	cluster: function (data) {
-	    var num_avail = data.length;
-	    var avail = {};
-	    var clusters = [];
+	    let num_avail = data.length;
+	    const avail = {};
+	    const clusters = [];
 	    for (var i=0;i<data.length;i++) {
 		clusters.push( { points: [ i ], data: [ data[i] ], basepoints: [ i ], level: [ 0 ] } );
 		avail[i] = true;
 	    }
 
 	    // get the initial distances between all nodes
-	    var distances = rendererHeatmap[0].distance(clusters);
+	    const distances = rendererHeatmap[0].distance(clusters);
 
 	    // calculate clusters
-	    var min;
-	    var coords;
+	    let min;
+	    let coords;
 	    while (num_avail > 1) {
-		var found = false;
+		let found = false;
 	    	for (var i in distances) {
 	    	    if (distances.hasOwnProperty(i)) {
 	    		for (var h in distances[i]) {
@@ -421,8 +421,8 @@
 	    	num_avail--;
 	    	avail[clusters.length] = true;
 
-		var sumpa = 0;
-		var sumpb = 0
+		let sumpa = 0;
+		let sumpb = 0
 		for (var h=0;h<2;h++) {
 		    for (var i=0;i<clusters[coords[h]].data.length;i++) {
 			if (h==0) {
@@ -432,8 +432,8 @@
 			}
 	    	    }
 		}
-		var pdata = [];
-		var bpoints = [];
+		const pdata = [];
+		const bpoints = [];
 	    	for (var h=0;h<2;h++) {
 		    var j = h;
 		    if (sumpa > sumpb) {
@@ -446,10 +446,10 @@
 			bpoints.push(clusters[coords[j]].basepoints[i]);
 		    }
 	    	}
-		var coord_a = coords[0];
-		var coord_b = coords[1];
+		let coord_a = coords[0];
+		let coord_b = coords[1];
 		if (sumpa > sumpb) {
-		    var triangle = coord_a;
+		    const triangle = coord_a;
 		    coord_a = coord_b;
 		    coord_b = triangle;
 		}
@@ -458,7 +458,7 @@
 
 	    	clusters.push({ points: [ coord_a, coord_b ], data: pdata, basepoints: bpoints, level: [ Math.max.apply(null, clusters[coord_a].level) + 1, Math.max.apply(null, clusters[coord_b].level) + 1 ] });
 
-	    	var row_a = [];
+	    	const row_a = [];
 	    	for (var h=0;h<2;h++) {
 	    	    for (var i=0;i<clusters[coords[h]].data.length;i++) {
 	    		for (var j=0; j<clusters[coords[h]].data[i].length; j++) {
@@ -472,10 +472,10 @@
 	    	for (var i=0; i<row_a.length; i++) {
 	    	    row_a[i] = row_a[i] / (clusters[coord_a].data.length + clusters[coord_b].data.length);
 	    	}
-	    	var index = clusters.length - 1;
+	    	const index = clusters.length - 1;
 		distances[index] = {};
 	    	for (var h=0; h<index; h++) {
-	    	    var row_b = [];
+	    	    const row_b = [];
 	    	    for (var i=0;i<clusters[h].data.length;i++) {
 	    		for (var j=0; j<clusters[h].data[i].length; j++) {
 	    		    if (i==0) {
@@ -487,7 +487,7 @@
 	    	    for (var i=0; i<row_b.length; i++) {
 	    		row_b[i] = row_b[i] / clusters[h].data.length;
 	    	    }
-	    	    var dist = 0;
+	    	    let dist = 0;
 	    	    for (var i=0;i<row_a.length;i++) {
 	    		dist += Math.pow(row_a[i] - row_b[i], 2);
 	    	    }
@@ -496,20 +496,20 @@
 	    }
 
 	    // record the row order after clustering
-	    var rowindex = [];
-	    var cind = clusters.length - 1;
+	    const rowindex = [];
+	    const cind = clusters.length - 1;
 	    for (var i=0;i<clusters[cind].basepoints.length; i++) {
 		rowindex.push(clusters[cind].basepoints[i] + 1);
 	    }
 
 	    // record the reverse row order for lookup
-	    var roworder = {};
+	    const roworder = {};
 	    for (var i=0;i<rowindex.length;i++) {
 		roworder[rowindex[i]] = i;
 	    }
 
 	    // get the depth
-	    var depth = 0;
+	    let depth = 0;
 	    for (var i=0; i<clusters.length; i++) {
 		if (clusters[i].level[0] && clusters[i].level[0] > depth) {
 		    depth = clusters[i].level[0];
@@ -520,20 +520,20 @@
 	    }
 
 	    // format the cluster data for visualization
-	    var clusterdata = { "depth": depth };
+	    const clusterdata = { "depth": depth };
 	    for (var i=0;i<clusterdata.depth;i++) {
 		clusterdata[i] = [];
 	    }
 	    for (var i=data.length; i<clusters.length; i++) {
 
 		// get the level this cluster is at
-		var level = Math.max.apply(null, clusters[i].level) - 1;
+		const level = Math.max.apply(null, clusters[i].level) - 1;
 
 		clusterdata[level].push({a: clusters[clusters[i].points[0]].data.length, b:clusters[clusters[i].points[1]].data.length, amin: roworder[Math.min.apply(null, clusters[clusters[i].points[0]].basepoints) + 1] });
 
 		// draw single lines until we reach the next root
 		if (clusters[i].level[0] != clusters[i].level[1]) {
-		    var n = 0;
+		    let n = 0;
 		    if (clusters[i].level[1] < clusters[i].level[0]) {
 			n = 1;
 		    }

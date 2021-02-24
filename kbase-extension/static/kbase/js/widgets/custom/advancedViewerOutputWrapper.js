@@ -3,12 +3,12 @@ define([
     'common/jupyter',
     'common/utils',
     'common/runtime'
-], function (
+], (
     require,
     jupyter,
     utils,
     Runtime
-) {
+) => {
     /*
      id: '{{input_id}}',
                     data: {{input_data}},
@@ -20,9 +20,9 @@ define([
 
     function outputWidgetSupport(config) {
         function factory (config) {
-            var cell = jupyter.getCell(config.cellId);
-            var runtime = Runtime.make();
-            var bus = runtime.bus().connect();            
+            const cell = jupyter.getCell(config.cellId);
+            const runtime = Runtime.make();
+            const bus = runtime.bus().connect();            
 
             // Save a plain object (json) to 
             // a specific path on the kbase-compatible metadata:
@@ -50,10 +50,10 @@ define([
     }
 
     function launchWidget(arg) {
-        var node = document.getElementById(arg.id);
+        const node = document.getElementById(arg.id);
         require([
             'widgets/custom/' + arg.widget
-        ], function (widget) {
+        ], (widget) => {
             widget.make({
                 node: node,
                 data: arg.data,
@@ -63,7 +63,7 @@ define([
                     initialState: arg.state
                 })
             }).start()
-            .catch(function (err) {
+            .catch((err) => {
                 node.innerHTML = 'ERROR: ' + err.message;
             });
         });

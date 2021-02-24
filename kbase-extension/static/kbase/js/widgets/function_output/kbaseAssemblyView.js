@@ -11,13 +11,13 @@
 		'jquery',
         'narrativeConfig',
 		'kbaseAuthenticatedWidget'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
         Config,
 		kbaseAuthenticatedWidget
-	) {
+	) => {
     return KBWidget({
         name: "kbaseAssemblyView",
         parent : kbaseAuthenticatedWidget,
@@ -51,22 +51,22 @@
         },
 
         render: function() {
-            var self = this;
-            var pref = this.uuid();
+            const self = this;
+            const pref = this.uuid();
 
-            var container = this.$elem;
+            const container = this.$elem;
             if (self.token == null) {
                 container.empty();
                 container.append("<div>[Error] You're not logged in</div>");
                 return;
             }
 
-            var kbws = new Workspace(self.wsUrl, {'token': self.token});
+            const kbws = new Workspace(self.wsUrl, {'token': self.token});
 
-            var ready = function() {
+            const ready = function() {
                 container.empty();
                 container.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;loading genome data...</div>");
-                var objname;
+                let objname;
                 objname = self.ws_id
                 console.log("wsid")
                 console.log(self.ws_id)
@@ -76,14 +76,14 @@
                     }
                 }
 
-                kbws.get_objects([{ref: self.ws_name +"/"+ objname}], function(data) {
+                kbws.get_objects([{ref: self.ws_name +"/"+ objname}], (data) => {
                     container.empty();
-                    var report_div = '<div class="" style="margin-top:15px">'
-                    var report = data[0].data.report
+                    let report_div = '<div class="" style="margin-top:15px">'
+                    const report = data[0].data.report
                     report_div += '<code style="">' + report +'</code><br>'
                     container.append(report_div);
 
-                }, function(data) {
+                }, (data) => {
                     container.empty();
                     container.append('<p>[Error] ' + data.error.message + '</p>');
                 });
@@ -115,8 +115,8 @@
 
         uuid: function() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
-                function(c) {
-                    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+                (c) => {
+                    const r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                     return v.toString(16);
                 });
         }

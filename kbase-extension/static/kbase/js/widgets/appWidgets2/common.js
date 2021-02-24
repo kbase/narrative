@@ -1,8 +1,5 @@
-/*global define*/ //eslint-disable-line no-redeclare
-/*jslint white:true,browser:true*/
-
 define([
-], function () {
+], () => {
     'use strict';
 
     /*

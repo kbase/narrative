@@ -10,7 +10,7 @@ define (
 		'kbaseAuthenticatedWidget',
 		'kbaseTabs',
 		'jquery-dataTables'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -19,7 +19,7 @@ define (
 		kbaseAuthenticatedWidget,
 		kbaseTabs,
 		jquery_dataTables
-	) {
+	) => {
     return KBWidget({
         name: 'kbaseChromatograms',
         parent : kbaseMatrix2DAbstract,
@@ -28,7 +28,7 @@ define (
         render: function(){
             this.loading(false);
 
-            var $vizContainer = $("<div/>");
+            const $vizContainer = $("<div/>");
             this.$elem.append( $vizContainer );
             this.buildWidget( $vizContainer );
         },
@@ -36,26 +36,26 @@ define (
         // To be overriden
         buildWidget: function($containerDiv){
 
-            var self = this;
-            var data = [];
-            var timeUnit = "";
-            var timeType = "";
+            const self = this;
+            const data = [];
+            let timeUnit = "";
+            let timeType = "";
 
-            var rowIds = self.matrix.data.row_ids;
-            var rowsMetadata = self.matrix.metadata.row_metadata;
-            var columnIds = self.matrix.data.col_ids;
-            var coulmnsMetadata = self.matrix.metadata.column_metadata;
-            var values = self.matrix.data.values;
+            const rowIds = self.matrix.data.row_ids;
+            const rowsMetadata = self.matrix.metadata.row_metadata;
+            const columnIds = self.matrix.data.col_ids;
+            const coulmnsMetadata = self.matrix.metadata.column_metadata;
+            const values = self.matrix.data.values;
 
-            for(var cIndex in columnIds) {
-                var cId = columnIds[cIndex];
-                var columnMetadata = coulmnsMetadata[cId];
+            for(const cIndex in columnIds) {
+                const cId = columnIds[cIndex];
+                const columnMetadata = coulmnsMetadata[cId];
 
                 // Build xValues. It should be time series and the values should be in row metadata
-                var xValues = [];
+                const xValues = [];
                 for(var rIndex in rowIds){
-                    var rId = rowIds[rIndex];
-                    var rowMetadata = rowsMetadata[rId];
+                    const rId = rowIds[rIndex];
+                    const rowMetadata = rowsMetadata[rId];
                     for (var i in rowMetadata){
                         var pv = rowMetadata[i];
                         if(pv.category == 'TimeSeries'){
@@ -67,12 +67,12 @@ define (
                 }
 
                 // Build yValues
-                var yValues = [];
+                const yValues = [];
                 for(var rIndex in rowIds) {
                     yValues.push( values[rIndex][cIndex] );
                 }
 
-                var label = "";
+                let label = "";
                 for(var i in columnMetadata){
                     var pv = columnMetadata[i];
                     if(pv.category == 'Measurement' && pv.property_name == 'Substance'){
@@ -82,7 +82,7 @@ define (
                 }
 
                 // Build track
-                var dataTrack = {
+                const dataTrack = {
                     x : xValues,
                     y : yValues,
                     name: label
@@ -90,7 +90,7 @@ define (
                 data.push(dataTrack);
             }
 
-            var layout = {
+            const layout = {
                 autosize: true,
                 margin: {
                     l: 50,

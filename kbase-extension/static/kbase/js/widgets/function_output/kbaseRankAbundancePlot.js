@@ -8,13 +8,13 @@ define (
 		'jquery',
 		'RGBColor',
 		'kbStandaloneGraph'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		RGBColor,
 		kbStandaloneGraph
-	) {
+	) => {
     return KBWidget({
             name: 'RankAbundancePlot',
             version: '1.0.0',
@@ -35,26 +35,26 @@ define (
         },
 	
         render: function() {
-	        var self = this;
-	        var pref = this.uuidv4();
-	        var container = this.$elem;
-	        var kbws = new Workspace(self.ws_url, {'token': self.options.auth});
+	        const self = this;
+	        const pref = this.uuidv4();
+	        const container = this.$elem;
+	        const kbws = new Workspace(self.ws_url, {'token': self.options.auth});
             
 	        container.empty();
 	        container.append("<div><img src=\""+self.loading_image+"\">&nbsp;&nbsp;loading data...</div>");
 
-	        kbws.get_objects([{ref: self.options.ws+"/"+self.options.id}], function(data) {
+	        kbws.get_objects([{ref: self.options.ws+"/"+self.options.id}], (data) => {
 	            container.empty();
 		        // parse data
 		        if (data.length == 0) {
-		            var msg = "[Error] Object "+self.options.id+" does not exist in workspace "+self.options.ws;
+		            const msg = "[Error] Object "+self.options.id+" does not exist in workspace "+self.options.ws;
 		            container.append('<div><p>'+msg+'>/p></div>');
 		        } else {
-		            var biom = data[0]['data'];
-		            var matrix = [];
-		            var colnum = biom['columns'].length;
-		            var rownum = biom['rows'].length;
-		            var rdata  = new Array(rownum);
+		            const biom = data[0]['data'];
+		            let matrix = [];
+		            const colnum = biom['columns'].length;
+		            const rownum = biom['rows'].length;
+		            const rdata  = new Array(rownum);
 		            // get matrix
 		            if (biom['matrix_type'] == 'sparse') {
 			            matrix = self.sparse2dense(biom['data'], biom['shape'][0], biom['shape'][1]);
@@ -63,7 +63,7 @@ define (
 		            }
 		            // get row data / stats
 		            for (var r = 0; r < rownum; r++) {
-		                var rowtemp = [ biom['rows'][r]['id'], 0, 0, 0 ]; // name, sum, average, max
+		                const rowtemp = [ biom['rows'][r]['id'], 0, 0, 0 ]; // name, sum, average, max
                         for (var i = 0; i < colnum; i++) {
                             rowtemp[1] += matrix[r][i];
                             rowtemp.push(matrix[r][i])
@@ -72,32 +72,32 @@ define (
                         rowtemp[3] = Math.max.apply(null, matrix[r]);
 		                rdata[r] = rowtemp;
 	                }
-	                var bardebug = new Array(10);
+	                const bardebug = new Array(10);
 	                for (var i = 0; i < 10; i++) {
 	                    bardebug[i] = rdata[i];
                     }
 		            // sort by a metagenome or by sum / average / max
 		            if (self.options.order == 'sum') {
-		                rdata.sort(function(a,b) { return b[1] - a[1]; });
+		                rdata.sort((a,b) => { return b[1] - a[1]; });
 		            } else if (self.options.order == 'average') {
-		                rdata.sort(function(a,b) { return b[2] - a[2]; });
+		                rdata.sort((a,b) => { return b[2] - a[2]; });
 	                } else if (self.options.order == 'max') {
-	                    rdata.sort(function(a,b) { return b[3] - a[3]; });
+	                    rdata.sort((a,b) => { return b[3] - a[3]; });
                     } else {
-                        var order_pos = 4;
+                        let order_pos = 4;
 		                if (isPositiveInteger(self.options.order)) {
 		                    order_pos = parseInt(self.options.order, 10) + 3;
 		                }
 		                if ((order_pos - 1) > rdata.length) {
 		                    order_pos = 4;
 		                }
-		                rdata.sort(function(a,b) { return b[order_pos] - a[order_pos]; });
+		                rdata.sort((a,b) => { return b[order_pos] - a[order_pos]; });
                     }
 		            // build data
-		            var count = parseInt(self.options.top, 10);
-		            var colors = GooglePalette(colnum);
-		            var bardata = new Array(colnum);
-		            var barlabels = new Array(count);
+		            const count = parseInt(self.options.top, 10);
+		            const colors = GooglePalette(colnum);
+		            const bardata = new Array(colnum);
+		            const barlabels = new Array(count);
 		            // names
 		            for (var c = 0; c < colnum; c++) {
 		                if (self.options.name == 0) {
@@ -114,12 +114,12 @@ define (
 	                    }
 	                }
 			        // BARCHART
-			        var glen = 0;
+			        let glen = 0;
                     if (window.hasOwnProperty('rendererGraph') && rendererGraph.length) {
                         glen = rendererGraph.length;
                     }
 			        container.append("<div id='outputGraph"+glen+"' style='width: 95%;'></div>");
-			        var barTest = standaloneGraph.create({index: glen});
+			        const barTest = standaloneGraph.create({index: glen});
 			        barTest.settings.target = document.getElementById("outputGraph"+glen);
 			        barTest.settings.data = bardata;
 			        barTest.settings.show_legend = true;
@@ -129,9 +129,9 @@ define (
 			        barTest.settings.type = 'column';
 			        barTest.render(glen);
 		        }
-	        }, function(data) {
+	        }, (data) => {
 		        container.empty();
-		        var main = $('<div>');
+		        const main = $('<div>');
 		        main.append($('<p>')
 		            .css({'padding': '10px 20px'})
 		            .text('[Error] '+data.error.message));
@@ -141,7 +141,7 @@ define (
         },
 
 	    sparse2dense: function(sparse, rmax, cmax) {
-	        var dense = new Array(rmax);
+	        const dense = new Array(rmax);
 	        for (var i = 0; i < rmax; i++) {
 		        dense[i] = Array.apply(null, new Array(cmax)).map(Number.prototype.valueOf, 0);
 	        }

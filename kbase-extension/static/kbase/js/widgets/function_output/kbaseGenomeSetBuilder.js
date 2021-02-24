@@ -12,14 +12,14 @@ define (
         'narrativeConfig',
 		'kbaseAuthenticatedWidget',
 		'kbasePrompt'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
         Config,
 		kbaseAuthenticatedWidget,
 		kbasePrompt
-	) {
+	) => {
     return KBWidget({
         name: "kbaseGenomeSetBuilder",
         parent : kbaseAuthenticatedWidget,
@@ -51,27 +51,27 @@ define (
         			this.$elem.append("<div>[Error] You're not logged in</div>");
                 	return;
         		}
-                var kbws = new Workspace(this.wsUrl, {'token': this.authToken()});
-        		var prom = kbws.get_objects([{workspace:this.options.wsName, name: this.options.genomeSetName}]);
-        		var self = this;
-        		$.when(prom).done(function(data) {
+                const kbws = new Workspace(this.wsUrl, {'token': this.authToken()});
+        		const prom = kbws.get_objects([{workspace:this.options.wsName, name: this.options.genomeSetName}]);
+        		const self = this;
+        		$.when(prom).done((data) => {
                 	var data = data[0].data;
-                	var state = { descr: data.description };
-                	var obj_refs = [];
-                	for (var key in data.elements)
+                	const state = { descr: data.description };
+                	const obj_refs = [];
+                	for (const key in data.elements)
                 		obj_refs.push({ref: data.elements[key]['ref']});
-                	$.when(kbws.get_object_info(obj_refs)).then(function(refinfo) {
-                		var refhash = {};
+                	$.when(kbws.get_object_info(obj_refs)).then((refinfo) => {
+                		const refhash = {};
                         for (var i=0; i<refinfo.length; i++) {
-                            var item = refinfo[i];
+                            const item = refinfo[i];
                             refhash[obj_refs[i].ref] = item[7]+"/"+item[1];
                         }
-                		var count = 0;
+                		let count = 0;
                         for (var key in data.elements) {
                             if (data.elements.hasOwnProperty(key))
                                 count++;
                         }
-                        var regenerate = false;
+                        let regenerate = false;
                         for (var i = 0; i < count; i++)
                             if (!data.elements.hasOwnProperty("param" + i)) {
                                 regenerate = true;
@@ -81,18 +81,18 @@ define (
                 		for (var key in data.elements) {
                             if (!data.elements.hasOwnProperty(key))
                                 continue;
-                            var newKey = key;
+                            let newKey = key;
                             if (regenerate)
                                 newKey = "param" + i;
                 			state[newKey] = refhash[data.elements[key]['ref']].split('/')[1];
                 			i++;
                 		}
                 		self.renderState(state);
-                	}).fail(function(e){
+                	}).fail((e)=> {
                 		self.$elem.append('<div class="alert alert-danger">'+
                                 e.error.message+'</div>')
             		});
-            	}).fail(function(e){
+            	}).fail((e)=> {
                 	self.$elem.append('<div class="alert alert-danger">'+
                                 e.error.message+'</div>')
             	});
@@ -103,8 +103,8 @@ define (
 
         renderState: function(state) {
         	this.$elem.empty();
-        	var cellStyle = "border:none; vertical-align:middle;";
-            var inputDiv = "<div class='kb-cell-params'>" +
+        	const cellStyle = "border:none; vertical-align:middle;";
+            let inputDiv = "<div class='kb-cell-params'>" +
             		"<b>Target genome set object name:</b> " + this.options.genomeSetName + "<br>" +
             		"<font size='-1'>(genome fields may be left blank if they are not needed)</font><br>"+
             		"<table id='gnms" + this.pref + "' class='table'>" +
@@ -120,24 +120,24 @@ define (
             		"and finally <button id='save"+this.pref+"'>Save</button> genome set object." +
             		"</div>";
             this.$elem.append(inputDiv);
-            var self = this;
-            $('#add'+this.pref).click(function(e) {
+            const self = this;
+            $('#add'+this.pref).click((e) => {
             	self.addParam("");
             	self.refresh();
             });
-            $('#save'+this.pref).click(function(e) {
+            $('#save'+this.pref).click((e) => {
             	self.saveIntoWs();
             });
             if (this.size(state) == 0) {
             	this.addParam("");
             } else {
-            	for (var key in state)
+            	for (const key in state)
             		if (state.hasOwnProperty(key) && key.indexOf("param") == 0)
             			this.addParam(state[key]);
             }
             if (state.hasOwnProperty("descr")) {
-                $(this.$elem).find("[name^=descr]").filter(":input").each(function(key, field) {
-                    var $field = $(field);
+                $(this.$elem).find("[name^=descr]").filter(":input").each((key, field) => {
+                    const $field = $(field);
                     if ($field.is("input") && $field.attr("type") === "text") {
                         $field.val(state["descr"]);
                     }
@@ -147,32 +147,32 @@ define (
         },
 
         saveIntoWs: function() {
-        	var self = this;
-            var kbws = new Workspace(this.wsUrl, {'token': this.authToken()});
-            var elems = {};
-            var state = this.getState();
-        	for (var key in state)
+        	const self = this;
+            const kbws = new Workspace(this.wsUrl, {'token': this.authToken()});
+            const elems = {};
+            const state = this.getState();
+        	for (const key in state)
         		if (state.hasOwnProperty(key) && key.indexOf("param") == 0 && state[key].length > 0)
         			elems[key] = {ref: this.options.wsName + "/" + state[key]};
-			var gset = {
+			const gset = {
 					description: state['descr'],
 					elements: elems
 			};
 			kbws.save_objects({workspace: this.options.wsName, objects: [{type: 'KBaseSearch.GenomeSet',
-				name: this.options.genomeSetName, data: gset}]}, function(data) {
+				name: this.options.genomeSetName, data: gset}]}, (data) => {
         			self.trigger('updateData.Narrative');
 					self.showInfo('Genome set object <b>' + self.options.genomeSetName + '</b> '+
 							'was stored into Narrative');
-				}, function(data) {
+				}, (data) => {
 					alert('Error: ' + data.error.message);
 				});
         },
 
         addParam: function(genomeObjectName) {
-        	var self = this;
-        	var paramPos = this.size(this.getState());
-        	var pid = "param" + paramPos;
-        	var cellStyle = "border:none; vertical-align:middle;";
+        	const self = this;
+        	const paramPos = this.size(this.getState());
+        	const pid = "param" + paramPos;
+        	const cellStyle = "border:none; vertical-align:middle;";
         	$('#gnms'+this.pref).append("" +
         			"<tr style='" + cellStyle + "'>" +
                 		"<td style='" + cellStyle + "'><b>Genome " + (paramPos + 1) + "</b></td>" +
@@ -186,14 +186,14 @@ define (
                 				"<span class='glyphicon glyphicon-trash'/></button></center>"+
                 		"</td>" +
                 	"</tr>");
-        	$('#btn_' + pid + '_' + this.pref).click(function(e) {
+        	$('#btn_' + pid + '_' + this.pref).click((e) => {
         		$('#inp_' + pid + '_' + self.pref).val('');
             });
         },
 
         size: function(obj) {
-        	var size = 0;
-        	for (var key in obj)
+        	let size = 0;
+        	for (const key in obj)
         		if (obj.hasOwnProperty(key) && key.indexOf("param") == 0)
         			size++;
         	return size;
@@ -209,13 +209,13 @@ define (
          * with one key/value for each parameter in the defined method.
          */
         getState: function() {
-            var state = {};
+            const state = {};
 
-            $(this.$elem).find("[name^=param]").filter(":input").each(function(key, field) {
+            $(this.$elem).find("[name^=param]").filter(":input").each((key, field) => {
                 state[field.name] = field.value;
             });
 
-            $(this.$elem).find("[name^=descr]").filter(":input").each(function(key, field) {
+            $(this.$elem).find("[name^=descr]").filter(":input").each((key, field) => {
                 state[field.name] = field.value;
             });
 
@@ -238,22 +238,22 @@ define (
          * information, those fields get refreshed without altering any other inputs.
          */
         refresh: function() {
-        	var type = "KBaseGenomes.Genome";
-            var lookupTypes = [type];
-            var size = this.size(this.getState());
-            var self = this;
+        	const type = "KBaseGenomes.Genome";
+            const lookupTypes = [type];
+            const size = this.size(this.getState());
+            const self = this;
             if (this.genomeList && this.genomeList.length > 0) {
             	this.refreshInputs();
             } else {
             	this.trigger('dataLoadedQuery.Narrative', [lookupTypes, this.IGNORE_VERSION, $.proxy(
-            			function(objects) {
-            				var objList = [];
+            			(objects) => {
+            				let objList = [];
             				/*
             				 * New sorting - by date, then alphabetically within dates.
             				 */
             				if (objects[type] && objects[type].length > 0) {
             					objList = objects[type];
-            					objList.sort(function(a, b) {
+            					objList.sort((a, b) => {
             						if (a[3] > b[3]) return -1;
             						if (a[3] < b[3]) return 1;
             						if (a[1] < b[1]) return -1;
@@ -270,14 +270,14 @@ define (
         },
 
         refreshInputs: function() {
-        	var type = "KBaseGenomes.Genome";
-        	var lookupTypes = [type];
-        	var size = this.size(this.getState());
-        	var objList = this.genomeList;
-        	for (var i=0; i<size; i++) {
-        		var pid = 'param' + i;
-        		var $input = $($(this.$elem).find("[name=" + pid + "]"));
-        		var datalistID = $input.attr('list');
+        	const type = "KBaseGenomes.Genome";
+        	const lookupTypes = [type];
+        	const size = this.size(this.getState());
+        	const objList = this.genomeList;
+        	for (let i=0; i<size; i++) {
+        		const pid = 'param' + i;
+        		const $input = $($(this.$elem).find("[name=" + pid + "]"));
+        		let datalistID = $input.attr('list');
         		if (objList.length == 0 && datalistID) {
         			$(this.$elem.find("#" + datalistID)).remove();
         			$input.removeAttr('list');
@@ -296,7 +296,7 @@ define (
         				$datalist = $(this.$elem.find("#" + datalistID));
         			}
         			$datalist.empty();
-        			for (var j=0; j<objList.length; j++) {
+        			for (let j=0; j<objList.length; j++) {
         				$datalist.append($('<option>')
         						.attr('value', objList[j][1])
         						.append(objList[j][1]));
@@ -306,8 +306,8 @@ define (
         },
 
         genUUID: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+                const r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                 return v.toString(16);
             });
         },

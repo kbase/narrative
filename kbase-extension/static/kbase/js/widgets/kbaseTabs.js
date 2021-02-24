@@ -38,12 +38,12 @@ define (
 		'bootstrap',
 		'jquery',
 		'kbaseDeletePrompt'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		kbaseDeletePrompt
-	) {
+	) => {
 
     return KBWidget({
 
@@ -78,17 +78,17 @@ define (
                 tabs = this.options.tabs;
             }
 
-            var $block =
+            const $block =
                 $('<div></div>')
                     .addClass('tabbable')
             ;
 
-            var $tabs = $('<div></div>')
+            const $tabs = $('<div></div>')
                 .addClass('tab-content')
                 .attr('id', 'tabs-content')
                 .css('height', this.tabsHeight())
             ;
-            var $nav = $('<ul></ul>')
+            const $nav = $('<ul></ul>')
                 .addClass('nav nav-tabs')
                 .attr('id', 'tabs-nav')
             ;
@@ -131,7 +131,7 @@ define (
                 tab.canDelete = this.options.canDelete;
             }
 
-            var $tab = $('<div></div>')
+            const $tab = $('<div></div>')
                 .addClass('tab-pane fade');
 
             $tab.hasContent = false;
@@ -146,10 +146,10 @@ define (
                 $tab.css('padding', '3px');
             }
 
-            var $that = this;   //thanks bootstrap! You suck!
+            const $that = this;   //thanks bootstrap! You suck!
 
 
-            var $nav = $('<li></li>')
+            const $nav = $('<li></li>')
                 .css('white-space', 'nowrap')
                 .append(
                     $('<a></a>')
@@ -161,7 +161,7 @@ define (
                                 e.preventDefault();
                                 e.stopPropagation();
 
-                                var previous = $that.data('tabs-nav').find('.active:last a')[0];
+                                const previous = $that.data('tabs-nav').find('.active:last a')[0];
 
                                 //we can't just call 'show' directly, since it requires an href or data-target attribute
                                 //on the link which MUST be an idref to something else in the dom. We don't have those,
@@ -236,7 +236,7 @@ define (
             this.data('tabs-content').append($tab);
             this.data('tabs-nav').append($nav);
 
-            var tabCount = 0;
+            let tabCount = 0;
             for (t in this.data('tabs')) { tabCount++; }
             if (tab.show || tabCount == 1) {
                 this.showTab(tab.tab);
@@ -260,8 +260,8 @@ define (
         },
 
         removeTab : function (tabName) {
-            var $tab = this.data('tabs')[tabName];
-            var $nav = this.data('nav')[tabName];
+            const $tab = this.data('tabs')[tabName];
+            const $nav = this.data('nav')[tabName];
 
             if ($nav.hasClass('active')) {
                 if ($nav.next('li').length) {
@@ -282,7 +282,7 @@ define (
         shouldShowTab : function (tab) { return 1; },
 
         deletePrompt : function(tabName) {
-            var $deleteModal =  new kbaseDeletePrompt($('<div></div>'), {
+            const $deleteModal =  new kbaseDeletePrompt($('<div></div>'), {
                     name     : tabName,
                     callback : this.deleteTabCallback(tabName),
                 }
@@ -306,7 +306,7 @@ define (
         shouldDeleteTab : function (tabName) { return 1; },
 
         activeTab : function() {
-            var activeNav = this.data('tabs-nav').find('.active:last a')[0];
+            const activeNav = this.data('tabs-nav').find('.active:last a')[0];
             return $(activeNav).attr('data-tab');
         },
 

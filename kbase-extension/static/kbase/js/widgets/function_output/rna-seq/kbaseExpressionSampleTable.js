@@ -9,7 +9,7 @@ define (
 		'kbaseTabs',
 		'kbaseHistogram',
 		'kbaseTable'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -17,7 +17,7 @@ define (
 		kbaseTabs,
 		kbaseHistogram,
 		kbaseTable
-	) {
+	) => {
 
     'use strict';
 
@@ -49,19 +49,19 @@ define (
 
         setDataset : function setDataset(newDataset) {
 
-            var rows = [];
-            var barData = [];
+            const rows = [];
+            const barData = [];
 
-            var min = Number.MAX_VALUE;
-            var max = Number.MIN_VALUE;
+            let min = Number.MAX_VALUE;
+            let max = Number.MIN_VALUE;
 
-            var exprKeys = Object.keys(newDataset.expression_levels).sort();
+            const exprKeys = Object.keys(newDataset.expression_levels).sort();
 
             $.each(
                 exprKeys,
-                function (i,k) {
+                (i,k) => {
 
-                    var val = Math.round(newDataset.expression_levels[k] * 1000) / 1000;
+                    const val = Math.round(newDataset.expression_levels[k] * 1000) / 1000;
 
                     rows.push( [k, val] );
 
@@ -87,7 +87,7 @@ define (
             this.data('histogram').setDataset(barData);
             //this.renderHistogram(this.options.numBins);
 
-            var $dt = this.data('tableElem').dataTable({
+            const $dt = this.data('tableElem').dataTable({
                 aoColumns : [
                     { title : 'Gene ID'},
                     { title : 'Feature Value : log2(FPKM + 1)'}
@@ -104,12 +104,12 @@ define (
         init : function init(options) {
             this._super(options);
 
-            var $self = this;
+            const $self = this;
 
-            var ws = new Workspace(window.kbconfig.urls.workspace, {token : $self.authToken()});
+            const ws = new Workspace(window.kbconfig.urls.workspace, {token : $self.authToken()});
             //var ws = new Workspace('https://ci.kbase.us/services/ws', {token : $self.authToken()});
 
-            var ws_params = {
+            const ws_params = {
                 workspace : this.options.workspace,
                 wsid : this.options.wsid,
                 name : this.options.output
@@ -117,9 +117,9 @@ define (
 
             this.appendUI(this.$elem);
 
-            ws.get_objects([ws_params]).then(function (d) {
+            ws.get_objects([ws_params]).then((d) => {
                 $self.setDataset(d[0].data);
-            }).fail(function(d) {
+            }).fail((d) => {
 
                 $self.$elem.empty();
                 $self.$elem
@@ -132,9 +132,9 @@ define (
 
         appendUI : function appendUI($elem) {
 
-            var $me = this;
+            const $me = this;
 
-            var $tableElem = $.jqElem('table')
+            const $tableElem = $.jqElem('table')
                 .css('width', '95%')
                     .append(
                         $.jqElem('thead')
@@ -146,11 +146,11 @@ define (
                     )
             ;
 
-            var $histElem = $.jqElem('div').css({width : 800, height : 500});
+            const $histElem = $.jqElem('div').css({width : 800, height : 500});
 
-            var $containerElem = $.jqElem('div').attr('id', 'containerElem').css('display', 'none');
+            const $containerElem = $.jqElem('div').attr('id', 'containerElem').css('display', 'none');
 
-            var $container =  new kbaseTabs($containerElem, {
+            const $container =  new kbaseTabs($containerElem, {
                     tabs : [
                         {
                             tab : 'Overview',
@@ -164,9 +164,9 @@ define (
                 }
             )
 
-            $container.$elem.find('[data-tab=Histogram]').on('click', function(e) {
+            $container.$elem.find('[data-tab=Histogram]').on('click', (e) => {
                 $histogram.renderXAxis();
-                setTimeout(function() {$histogram.renderHistogram() }, 300);
+                setTimeout(() => {$histogram.renderHistogram() }, 300);
             });
 
             $elem

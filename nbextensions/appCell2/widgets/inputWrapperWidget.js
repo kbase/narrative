@@ -1,13 +1,11 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'kb_common/html'
-], function (html) {
+], (html) => {
     'use strict';
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'), span = t('span');
     function factory(config) {
-        var container,
+        let container,
             spec = config.spec,
             wrappedWidget = config.widget,
             wrappedId = html.genId();
@@ -44,7 +42,7 @@ define([
                 ])
             ].join('\n');
         }
-        
+
         function xxlayout() {
             return  [
                 div({class: 'row'}, [
@@ -57,7 +55,7 @@ define([
                 ])
             ].join('\n');
         }
-        
+
         function layout() {
             return div({id: wrappedId});
         }

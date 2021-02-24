@@ -5,7 +5,7 @@
  * @public
  */
 
- var MAGIC_DOWNLOAD_NUMBER = 50;
+ const MAGIC_DOWNLOAD_NUMBER = 50;
 
 define ([
     'kbwidget',
@@ -13,13 +13,13 @@ define ([
     'jquery',
     'kbaseExpressionGenesetBaseWidget',
     'kbaseHeatmap'
-], function(
+], (
     KBWidget,
     bootstrap,
     $,
     kbaseExpressionGenesetBaseWidget,
     kbaseHeatmap
-) {
+) => {
     'use strict';
 
     return KBWidget({
@@ -32,9 +32,9 @@ define ([
 
         // To be overriden to specify additional parameters
         getSubmtrixParams: function(){
-            var self = this;
+            const self = this;
 
-            var features = [];
+            let features = [];
             if(self.options.geneIds) { features = $.map(self.options.geneIds.split(','), $.trim); }
 
             self.minRange = -1; self.maxRange = 1;
@@ -57,28 +57,28 @@ define ([
         },
 
         buildWidget : function($containerDiv){
-            var self = this;
-            var submatrixStat = this.submatrixStat;
-            var rowDescriptors = submatrixStat.row_descriptors;
-            var values = submatrixStat.row_pairwise_correlation.comparison_values;
+            const self = this;
+            const submatrixStat = this.submatrixStat;
+            const rowDescriptors = submatrixStat.row_descriptors;
+            const values = submatrixStat.row_pairwise_correlation.comparison_values;
 
             //Build row ids
-            var rowIds = [];
-            var i;
+            const rowIds = [];
+            let i;
             for(i = 0 ; i < rowDescriptors.length; i++){
                 rowIds.push(rowDescriptors[i].id);
             }
 
             // Build data
-            var data = [];
+            const data = [];
             for(i = 0 ; i < rowDescriptors.length; i++){
-                var row = [];
-                for(var j = 0 ; j < rowDescriptors.length; j++){
+                const row = [];
+                for(let j = 0 ; j < rowDescriptors.length; j++){
                     row.push(values[i][j].toFixed(3));
                 }
                 data.push(row);
             }
-            var heatmap =
+            const heatmap =
                 {
                     row_ids : rowIds,
                     row_labels : rowIds,
@@ -87,18 +87,18 @@ define ([
                     data : data,
                 };
 
-            var size = rowIds.length;
-            var rowH = 15;
-            var hmH = 80 + 20 + size * rowH;
+            const size = rowIds.length;
+            let rowH = 15;
+            let hmH = 80 + 20 + size * rowH;
 
             if (hmH < 210) {
                 hmH = 210;
                 rowH = Math.round((hmH - 100) / size);
             }
-            var colW = rowH;
-            var hmW = 150 + 110 + size * colW;
+            const colW = rowH;
+            const hmW = 150 + 110 + size * colW;
 
-            var $heatmapDiv = $('<div style = \'width : '+hmW+'px; height : '+hmH+'px\'></div>');
+            const $heatmapDiv = $('<div style = \'width : '+hmW+'px; height : '+hmH+'px\'></div>');
 //            $containerDiv.append($heatmapDiv);
             $containerDiv.append('<div style = \'width : 5px; height : 5px\'></div>');
 
@@ -114,22 +114,22 @@ define ([
               $containerDiv.append($heatmapDiv);
             }
             else {
-              var $svg = $heatmapDiv.find('svg');
-              var $dummy = $.jqElem('div').append($svg);
+              const $svg = $heatmapDiv.find('svg');
+              const $dummy = $.jqElem('div').append($svg);
 
               $containerDiv.append(
                 $.jqElem('button')
                   .append("Please download the svg of this pairwise correlation")
                   .addClass('btn btn-primary')
-                  .on('click', function(e) {
-                  var file = new Blob([$dummy.html()], {type : 'text'});
-                  var a = document.createElement("a"),
+                  .on('click', (e) => {
+                  const file = new Blob([$dummy.html()], {type : 'text'});
+                  const a = document.createElement("a"),
                           url = URL.createObjectURL(file);
                   a.href = url;
                   a.download = 'pairwise.svg';
                   document.body.appendChild(a);
                   a.click();
-                  setTimeout(function() {
+                  setTimeout(() => {
                       document.body.removeChild(a);
                       window.URL.revokeObjectURL(url);
                   }, 0);

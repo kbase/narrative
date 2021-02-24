@@ -1,5 +1,5 @@
 function KBaseSearch_GenomeSet(modeltabs) {
-    var self = this;
+    const self = this;
     this.modeltabs = modeltabs;
 
     this.setMetadata = function (data) {
@@ -22,7 +22,7 @@ function KBaseSearch_GenomeSet(modeltabs) {
     this.setData = function (indata) {
 	this.data = indata;
 	this.genome_refs = [];
-	for (var obj in indata.elements) {
+	for (const obj in indata.elements) {
 	    this.genome_refs.push({"ref":indata.elements[obj]["ref"]});
 	}
     }

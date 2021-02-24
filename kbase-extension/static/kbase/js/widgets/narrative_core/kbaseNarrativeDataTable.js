@@ -53,7 +53,7 @@
                       .append(this.$dataTable);
 
             this.$dataSelect.change($.proxy(function(event) {
-                var filterValue = '';
+                let filterValue = '';
                 this.$dataSelect.find('option:selected').each(function(){ filterValue = $( this ).val(); });
                 if (filterValue.length > 0)
                     this.$dataTable.fnFilter("^" + filterValue + "$", 2, true);
@@ -64,7 +64,7 @@
             // just filter the search bar on keyup events.
             // maybe add keydown? i don't know? i don't think we need to, though.
             this.$dataSearch.keyup($.proxy(function(event) {
-                var value = this.$dataSearch.val();
+                const value = this.$dataSearch.val();
                 this.$dataTable.fnFilter(value, 1);
             }, this));
 
@@ -90,7 +90,7 @@
                             // if the 'data' (name) is too long,
                             // truncate it and give it a tooltip with the full name.
                             var type = row[2];
-                            var typeName = /^(\S+)-/.exec(type);
+                            const typeName = /^(\S+)-/.exec(type);
                             if (typeName && typeName[1]) {
                                 type = typeName[1];
                             }
@@ -150,8 +150,8 @@
             // Add an 'all types' filter option that just shows everything.
             this.$dataSelect.append('<option value="">All Types</option>');
 
-            var dataList = [];
-            var dataKeys = Object.keys(data);
+            let dataList = [];
+            const dataKeys = Object.keys(data);
             // The types to be filtered should be alphabetically sorted
             dataKeys.sort();
             $.each(dataKeys, $.proxy(function(idx, key) {
@@ -168,8 +168,8 @@
             // This would be trickier if we were paginating the table. But we're not!
             this.$dataTable.find('.kb-function-help').click(
                 $.proxy(function(event) {
-                    var ws = $(event.target).attr('data-ws');
-                    var id = $(event.target).attr('data-id');
+                    const ws = $(event.target).attr('data-ws');
+                    const id = $(event.target).attr('data-id');
                     this.trigger('dataInfoClicked.Narrative', [ws, id]);
                 },
                 this)

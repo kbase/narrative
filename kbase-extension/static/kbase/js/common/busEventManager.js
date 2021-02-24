@@ -1,10 +1,7 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 define([
-], function () {
+], () => {
     function factory(config) {
-        var listeners = [],
+        let listeners = [],
             bus = config.bus;
         function add(listenerId) {
             listeners.push(listenerId);
@@ -14,7 +11,7 @@ define([
             delete listeners[listenerId];
         }
         function removeAll() {
-            listeners.forEach(function (id) {
+            listeners.forEach((id) => {
                 try {
                     bus.removeListener(id);
                 } catch (ex) {

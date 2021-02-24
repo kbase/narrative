@@ -4,12 +4,12 @@ define (
 		'bootstrap',
 		'bluebird',
 		'jquery'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		Promise,
 		$
-	) {
+	) => {
     'use strict';
 
     // favorites callback should accept:
@@ -45,13 +45,13 @@ define (
 
 
         this.show = function() {
-            for(var k=0; k<this.$divs.length; k++) {
+            for(let k=0; k<this.$divs.length; k++) {
                 this.$divs[k].show();
             }
         };
 
         this.hide = function() {
-            for(var k=0; k<this.$divs.length; k++) {
+            for(let k=0; k<this.$divs.length; k++) {
                 this.$divs[k].hide();
             }
         };
@@ -60,7 +60,7 @@ define (
         this.getNewCardDiv = function() {
             this.cardsAdded += 1;
             if(this.$divs.length<this.cardsAdded) {
-                var $newCard = this._renderAppCard();
+                const $newCard = this._renderAppCard();
                 this.$divs.push($newCard);
                 return $newCard;
             } else {
@@ -88,7 +88,7 @@ define (
         /* timestamp => the time at which this was favorited, optional */
         this.turnOnStar = function(timestamp) {
             this.onStar = true;
-            for(var k=0; k<this.$divs.length; k++) {
+            for(let k=0; k<this.$divs.length; k++) {
                 this.$divs[k].find('.kbcb-star')
                     .removeClass('kbcb-star-nonfavorite').addClass('kbcb-star-favorite');
             }
@@ -98,7 +98,7 @@ define (
         };
         this.turnOffStar = function() {
             this.onStar = false;
-            for(var k=0; k<this.$divs.length; k++) {
+            for(let k=0; k<this.$divs.length; k++) {
                 this.$divs[k].find('.kbcb-star')
                     .removeClass('kbcb-star-favorite').addClass('kbcb-star-nonfavorite');
             }
@@ -113,7 +113,7 @@ define (
 
         this.deactivateStar = function() {
             this.deactivatedStar = true;
-            for(var k=0; k<this.$divs.length; k++) {
+            for(let k=0; k<this.$divs.length; k++) {
                 this.$divs[k].find('.kbcb-star')
                     .removeClass('kbcb-star-favorite').removeClass('kbcb-star-nonfavorite');
             }
@@ -143,7 +143,7 @@ define (
         this.setRunCount = function(runs) {
             this.runCount = runs;
             if(this.runCount) {
-                for(var k=0; k<this.$divs.length; k++) {
+                for(let k=0; k<this.$divs.length; k++) {
                     this.$divs[k].find('.kbcb-runs').empty()
                         .append('<i class="fa fa-share"></i>')
                         .append($('<span>').addClass('kbcb-run-count').append(this.runCount))
@@ -161,17 +161,17 @@ define (
         /* rendering methods that are shared in multiple places */
         this._renderAppCard = function() {
 
-            var info = this.info;
-            var type = this.type;
-            var tag = this.tag;
-            var nms_base_url = this.nms_base_url;
+            const info = this.info;
+            const type = this.type;
+            const tag = this.tag;
+            const nms_base_url = this.nms_base_url;
 
             // Main Container
-            var $appDiv = $('<div>').addClass('kbcb-app-card kbcb-hover container');
+            const $appDiv = $('<div>').addClass('kbcb-app-card kbcb-hover container');
 
             // HEADER - contains logo, title, module link, authors
-            var $topDiv = $('<div>').addClass('row kbcb-app-card-header');
-            var $logoSpan = $('<div>').addClass('col-xs-3 kbcb-app-card-logo');
+            const $topDiv = $('<div>').addClass('row kbcb-app-card-header');
+            const $logoSpan = $('<div>').addClass('col-xs-3 kbcb-app-card-logo');
 
             if(type === 'method') {
                 $logoSpan.append('<div class="fa-stack fa-3x"><i class="fa fa-square fa-stack-2x method-icon"></i><i class="fa fa-inverse fa-stack-1x fa-cube"></i></div>')
@@ -188,14 +188,14 @@ define (
                 }
             }
 
-            var $titleSpan = $('<div>').addClass('col-xs-9 kbcb-app-card-title-panel');
+            const $titleSpan = $('<div>').addClass('col-xs-9 kbcb-app-card-title-panel');
                 
             $titleSpan.append($('<div>').addClass('kbcb-app-card-title').append(info.name));
             if(info['module_name']) {
                 $titleSpan.append($('<div>').addClass('kbcb-app-card-module').append(
                                         $('<a href="/#catalog/modules/'+info.module_name+'" target="_blank">')
                                             .append(info.module_name)
-                                            .on('click',function(event) {
+                                            .on('click',(event) => {
                                                 // have to stop propagation so we don't go to the app page first
                                                 event.stopPropagation();
                                             })));
@@ -203,8 +203,8 @@ define (
 
             if(type==='method') {
                 if(info.authors.length>0) {
-                    var $authorDiv = $('<div>').addClass('kbcb-app-card-authors').append('by ');
-                    for(var k=0; k<info.authors.length; k++) {
+                    const $authorDiv = $('<div>').addClass('kbcb-app-card-authors').append('by ');
+                    for(let k=0; k<info.authors.length; k++) {
                         if(k>=1) {
                             $authorDiv.append(', ');
                         }
@@ -214,7 +214,7 @@ define (
                         }
                         $authorDiv.append($('<a href="/#people/'+info.authors[k]+'" target="_blank">')
                                             .append(info.authors[k])
-                                            .on('click',function(event) {
+                                            .on('click',(event) => {
                                                 // have to stop propagation so we don't go to the app page first
                                                 event.stopPropagation();
                                             }));
@@ -231,19 +231,19 @@ define (
 
 
             // SUBTITLE - on mouseover of info, show subtitle information
-            var $subtitle = $('<div>').addClass('kbcb-app-card-subtitle').append(info.subtitle).hide()
+            const $subtitle = $('<div>').addClass('kbcb-app-card-subtitle').append(info.subtitle).hide()
             $appDiv.append($subtitle);
 
             // FOOTER - stars, number of runs, and info mouseover area
-            var $footer = $('<div>').addClass('clearfix kbcb-app-card-footer');
+            const $footer = $('<div>').addClass('clearfix kbcb-app-card-footer');
 
             if(type==='method') {
-                var $starDiv = $('<div>').addClass('col-xs-3').css('text-align','left');
-                var $star = $('<span>').addClass('kbcb-star').append('<i class="fa fa-star"></i>');
+                const $starDiv = $('<div>').addClass('col-xs-3').css('text-align','left');
+                const $star = $('<span>').addClass('kbcb-star').append('<i class="fa fa-star"></i>');
                 var self = this;
                 if(self.isLoggedIn) {
                     $star.addClass('kbcb-star-nonfavorite');
-                    $star.on('click', function(event) {
+                    $star.on('click', (event) => {
                         event.stopPropagation();
                         if(!self.deactivatedStar && self.favoritesCallback) {
                             self.favoritesCallback(self.info, self.callbackParams)
@@ -252,7 +252,7 @@ define (
                     $starDiv.tooltip({title:'Click on the star to add/remove from your favorites', placement:'bottom', container: 'body',
                                         delay:{show: 400, hide: 40}});
                 }
-                var $starCount = $('<span>').addClass('kbcb-star-count');
+                const $starCount = $('<span>').addClass('kbcb-star-count');
                 if(this.starCount) { $starCount.html(this.starCount); }
                 if(this.onStar) { $star.removeClass('kbcb-star-nonfavorite').addClass('kbcb-star-favorite'); }
                 $footer.append($starDiv.append($star).append($starCount));
@@ -262,8 +262,8 @@ define (
             }
 
             if(this.isSdk) {
-                var nRuns = Math.floor(Math.random()*10000);
-                var $nRuns = $('<div>').addClass('col-xs-3').css('text-align','left');
+                const nRuns = Math.floor(Math.random()*10000);
+                const $nRuns = $('<div>').addClass('col-xs-3').css('text-align','left');
                 $nRuns.append($('<span>').addClass('kbcb-runs'));
                 if(this.nRuns) {
                     $nRuns
@@ -279,7 +279,7 @@ define (
 
 
 
-            var moreLink = info.id;
+            let moreLink = info.id;
             if(type === 'method') {
                 if(info.module_name) {
                     // module name right now is encoded in the ID
@@ -302,17 +302,17 @@ define (
             $footer.append($('<div>').addClass('col-xs-4').css('text-align','left')
                             .append($('<a href="'+moreLink+'" target="_blank">').append('more...')));
 
-            var $moreInfoDiv = $('<div>').addClass('col-xs-1').addClass('kbcb-info').css('text-align','right');
+            const $moreInfoDiv = $('<div>').addClass('col-xs-1').addClass('kbcb-info').css('text-align','right');
             $moreInfoDiv
-                .on('mouseenter', function() {
+                .on('mouseenter', () => {
                     $topDiv.hide();
                     $subtitle.fadeIn('fast');
                 })
-                .on('mouseleave', function() {
+                .on('mouseleave', () => {
                     $subtitle.hide();
                     $topDiv.fadeIn('fast');
                 })
-                .on('click', function(event) {
+                .on('click', (event) => {
                     // do this the JS way because wrapping just in <a> messes up the styles!
                     event.stopPropagation();
                     window.open(moreLink)
@@ -322,14 +322,14 @@ define (
             $appDiv.append($footer);
 
             var self = this;
-            $appDiv.on('click', function() {
+            $appDiv.on('click', () => {
                 if(self.clickedCallback) {
                     self.clickedCallback(self);
                 }
             });
 
             // put it all in a container so we can control margins
-            var $appCardContainer = $('<div>').addClass('kbcb-app-card-container');
+            const $appCardContainer = $('<div>').addClass('kbcb-app-card-container');
             return $appCardContainer.append($appDiv);
         };
 

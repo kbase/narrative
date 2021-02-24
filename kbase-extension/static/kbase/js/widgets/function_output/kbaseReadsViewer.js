@@ -14,7 +14,7 @@ define ([
     'util/string',
     'util/display',
     'kbase-generic-client-api'
-], function (
+], (
     Promise,
     KBWidget,
     bootstrap,
@@ -25,7 +25,7 @@ define ([
     StringUtil,
     DisplayUtil,
     GenericClient
-) {
+) => {
     'use strict';
     return KBWidget({
         /*
@@ -62,13 +62,13 @@ define ([
                 }
             }
             Promise.resolve(this.client.sync_call("ReadsAPI.get_reads_info_all_formatted",[{workspace_obj_ref: this.reference}]))
-            .then(function(results) {
+            .then((results) => {
                 this.reads = results[0];
                 //		this.$elem.append('<div>' + JSON.stringify(this.reads) + '</div>');
                 this.renderBasicTable();
-            }.bind(this))
-            .catch(function(error) {
-                var errorMsg = 'No further information available',
+            })
+            .catch((error) => {
+                let errorMsg = 'No further information available',
                     errorTrace = undefined;
                 console.error("Render Function Error : ", error);
                 if (error && typeof error === 'object') {
@@ -95,13 +95,13 @@ define ([
                         errorMsg,
                         errorTrace
                     ));
-            }.bind(this));
+            });
 
             return this;
         },
 
         renderBasicTable: function() {
-            var $container = this.$elem,
+            const $container = this.$elem,
                 reads_type = '',
                 tab_ids = {
                     'overview': 'reads-overview-' + StringUtil.uuid(),

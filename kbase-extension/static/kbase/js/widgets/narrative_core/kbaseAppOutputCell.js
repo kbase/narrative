@@ -1,14 +1,12 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'jquery',
     'kbwidget',
     'base/js/namespace'
-], function (
+], (
     $,
     KBWidget,
     Jupyter
-    ) {
+    ) => {
     'use strict';
     return KBWidget({
         name: 'kbaseAppOutputCell',
@@ -44,27 +42,27 @@ define([
             this.renderAppOutputCell();
         },
         renderAppOutputCell: function () {
-            var $label = $('<span>').addClass('label label-info').append('Output');
+            const $label = $('<span>').addClass('label label-info').append('Output');
             this.renderCell('kb-cell-output', 'panel-default', 'kb-out-desc', $label, 'app output');
-            var $cell = this.$elem.closest('.cell');
+            const $cell = this.$elem.closest('.cell');
             $cell.trigger('set-icon.cell', ['<i class="fa fa-2x fa-file-o method-output-icon"></i>']);
         },
         renderErrorOutputCell: function () {
             require(['kbaseNarrativeError'], $.proxy(function () {
                 if (!this.options.title)
                     this.options.title = 'Narrative Error';
-                var $label = $('<span>').addClass('label label-danger').append('Error');
+                const $label = $('<span>').addClass('label label-danger').append('Error');
                 this.renderCell('kb-cell-error', 'panel-danger', 'kb-err-desc', $label);
-                var $cell = this.$elem.closest('.cell');
+                const $cell = this.$elem.closest('.cell');
                 $cell.trigger('set-icon.cell', ['<i class="fa fa-2x fa-exclamation-triangle error-icon"></i>']);
                 $cell.addClass('kb-error');
             }, this));
         },
         renderCell: function (baseClass, panelClass, headerClass, $label, titleSuffix) {
             // set up the widget line
-            var widget = this.options.widget;
-            var methodName = this.options.title ? this.options.title : 'Unknown method';
-            var title = methodName;
+            const widget = this.options.widget;
+            const methodName = this.options.title ? this.options.title : 'Unknown method';
+            let title = methodName;
             if (titleSuffix) {
                 title += ' (' + titleSuffix + ')';
             }
@@ -73,7 +71,7 @@ define([
                 .closest('.cell')
                 .trigger('set-title', [title]);
 
-            var widgetData = this.options.data;
+            let widgetData = this.options.data;
             if (widget === 'kbaseDefaultNarrativeOutput')
                 widgetData = {data: this.options.data};
 
@@ -86,26 +84,26 @@ define([
                 this.$elem.closest('.cell').find('.button_container').trigger('set-timestamp.toolbar', this.options.time);
             }
 
-            var $headerLabel = $('<span>')
+            const $headerLabel = $('<span>')
                 .addClass('label label-info')
                 .append('Output');
 
-            var $headerInfo = $('<span>')
+            const $headerInfo = $('<span>')
                 .addClass(headerClass)
                 .append($('<b>').append(methodName))
                 .append(this.$timestamp);
 
-            var $body = $('<div class="kb-cell-output-content">');
+            const $body = $('<div class="kb-cell-output-content">');
 
             try {
                 require([widget],
-                    function (W) {
+                    (W) => {
                         // If we successfully Require the widget code, render it:
                         this.$outWidget = new W($body, widgetData);
                         // this.$outWidget = $body.find('.panel-body > div')[widget](widgetData);
                         this.$elem.append($body);
-                    }.bind(this),
-                    function (err) {
+                    },
+                    (err) => {
                         // If we fail, render the error widget and log the error.
                         KBError("Output::" + this.options.title, "failed to render app output widget: '" + widget);
                         this.options.title = 'App Error';
@@ -122,7 +120,7 @@ define([
                         };
                         this.options.widget = this.OUTPUT_ERROR_WIDGET;
                         this.renderErrorOutputCell();
-                    }.bind(this));
+                    });
             } catch (err) {
                 KBError("Output::" + this.options.title, "failed to render app output widget: '" + widget);
                 this.options.title = 'App Error';
@@ -153,7 +151,7 @@ define([
 
         },
         getState: function () {
-            var state = null;
+            let state = null;
             if (this.$outWidget && this.$outWidget.getState) {
                 state = this.$outWidget.getState();
             }
@@ -186,19 +184,19 @@ define([
          * @return {string} a human readable timestamp
          */
         readableTimestamp: function (timestamp) {
-            var format = function (x) {
+            const format = function (x) {
                 if (x < 10)
                     x = '0' + x;
                 return x;
             };
 
-            var d = new Date(timestamp);
-            var hours = format(d.getHours());
-            var minutes = format(d.getMinutes());
-            var seconds = format(d.getSeconds());
-            var month = d.getMonth() + 1;
-            var day = format(d.getDate());
-            var year = d.getFullYear();
+            const d = new Date(timestamp);
+            const hours = format(d.getHours());
+            const minutes = format(d.getMinutes());
+            const seconds = format(d.getSeconds());
+            const month = d.getMonth() + 1;
+            const day = format(d.getDate());
+            const year = d.getFullYear();
 
             return hours + ":" + minutes + ":" + seconds + ", " + month + "/" + day + "/" + year;
         }

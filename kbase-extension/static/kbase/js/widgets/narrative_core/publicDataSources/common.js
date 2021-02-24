@@ -1,12 +1,12 @@
 define([
     'handlebars'
-], function (
+], (
     Handlebars
-) {
+) => {
     'use strict';
 
     function compileTemplates(templates) {
-        return templates.map(function ({template, id, label}) {
+        return templates.map(({template, id, label}) => {
             if (typeof template === 'string') {
                 return {
                     id,
@@ -28,8 +28,8 @@ define([
     }
 
     function applyMetadataTemplates(templates, data) {
-        return templates.map(function ({template, id, label}) {
-            var value;
+        return templates.map(({template, id, label}) => {
+            let value;
             if (template instanceof Array) {
                 value = applyMetadataTemplates(template, data);
             } else {
@@ -44,9 +44,9 @@ define([
     }
 
     function requireArg(arg, name) {
-        var argPath = name.split('.');
-        for (var i = 0; i < argPath.length; i += 1) {
-            var key = argPath[i];
+        const argPath = name.split('.');
+        for (let i = 0; i < argPath.length; i += 1) {
+            const key = argPath[i];
             if (!(key in arg)) {
                 throw new Error('Required argument "' + key + '" in "' + name +  '" is required but missing');
             }
@@ -63,9 +63,9 @@ define([
         }])
             .then(([data]) => {
                 return data.data.map((item) => {
-                    var info = item.object_info;
-                    var objectName = info[1];
-                    var metadata = info[10] || {};
+                    const info = item.object_info;
+                    const objectName = info[1];
+                    const metadata = info[10] || {};
                     return {
                         info,
                         objectName,

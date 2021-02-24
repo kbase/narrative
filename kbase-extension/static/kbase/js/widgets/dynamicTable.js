@@ -58,7 +58,7 @@ define([
     'util/string',
     'fileSaver',
     'jqueryui'
-], function(
+], (
     $,
     Bootstrap,
     Promise,
@@ -66,9 +66,9 @@ define([
     Display,
     StringUtil,
     FileSaver  //enables the saveAs function.
-) {
+) => {
     'use strict';
-    var DynamicTable = function (elem, options) {
+    const DynamicTable = function (elem, options) {
         this.options = {
             class: '',
             style: {},
@@ -118,9 +118,9 @@ define([
 
         this.$table = $('<table id="dynamic_table" class="table table-striped table-bordered table-hover">');
         this.$tHeader = $('<tr>');
-        this.headers.forEach(function (h) {
+        this.headers.forEach((h) => {
             this.$tHeader.append(this.makeTableHeader(h));
-        }.bind(this));
+        });
         this.$table.append($('<thead>').append(this.$tHeader));
         this.$tBody = $('<tbody>');
         this.$table.append(this.$tBody);
@@ -142,30 +142,30 @@ define([
     DynamicTable.prototype.makeWidgetFooter = function() {
         // var dropdownId = 'dtable-' + StringUtil.uuid();
         this.$shownText = $('<span></span>');
-        var $footer = $('<div class="row">')
+        const $footer = $('<div class="row">')
                       .append($('<div class="col-md-6">')
                               .append(this.$shownText));
 
         if (this.options.enableDownload) {
-            var self = this;
-            var csvRows = function(data) {
-                var headerNames = [];
-                self.headers.forEach(function(h) {
+            const self = this;
+            const csvRows = function(data) {
+                const headerNames = [];
+                self.headers.forEach((h) => {
                     headerNames.push(h.text);
                 });
                 data.unshift(headerNames);
-                return data.map(function(row) {
+                return data.map((row) => {
                     return row.join(',') + '\n';
                 });
             };
-            var $dlBtn = Display.simpleButton('btn-md btn-default dropdown-toggle', 'fa fa-download')
-                .click(function() {
+            const $dlBtn = Display.simpleButton('btn-md btn-default dropdown-toggle', 'fa fa-download')
+                .click(() => {
                     saveAs(new Blob(csvRows(self.currentData)), self.options.downloadFileName);
                 });
-            var $dlAllBtn = Display.simpleButton('btn-md btn-default dropdown-toggle', 'fa fa-cloud-download')
-                .click(function() {
+            const $dlAllBtn = Display.simpleButton('btn-md btn-default dropdown-toggle', 'fa fa-cloud-download')
+                .click(() => {
                     self.options.downloadAllDataFunction(self.currentSort.id, self.currentSort.sortState)
-                    .then(function(data) {
+                    .then((data) => {
                         saveAs(new Blob(csvRows(data)), self.options.downloadFileName);
                     });
                 });
@@ -183,22 +183,22 @@ define([
      * and a search element.
      */
     DynamicTable.prototype.makeWidgetHeader = function() {
-        var self = this;
-        var $leftBtn = Display.simpleButton('btn-md', 'fa fa-caret-left')
-                       .click(function() {
-                           var curP = self.currentPage;
+        const self = this;
+        const $leftBtn = Display.simpleButton('btn-md', 'fa fa-caret-left')
+                       .click(() => {
+                           const curP = self.currentPage;
                            if (self.getPrevPage() !== curP) {
                                self.getNewData();
                            }
                        });
-        var $rightBtn = Display.simpleButton('btn-md', 'fa fa-caret-right')
-                        .click(function() {
-                            var curP = self.currentPage;
+        const $rightBtn = Display.simpleButton('btn-md', 'fa fa-caret-right')
+                        .click(() => {
+                            const curP = self.currentPage;
                             if (self.getNextPage() !== curP) {
                                 self.getNewData();
                             }
                         });
-        var $pageBtns = $('<div class="col-md-4">')
+        const $pageBtns = $('<div class="col-md-4">')
                         .append($leftBtn)
                         .append($rightBtn);
 
@@ -206,18 +206,18 @@ define([
                                .attr('align', 'center')
                                .append($('<i>').addClass('fa fa-spinner fa-spin fa-2x'))
                                .hide();
-        var $loadingDiv = $('<div class="col-md-4">').append(self.$loadingElement);
+        const $loadingDiv = $('<div class="col-md-4">').append(self.$loadingElement);
 
         var $searchElement = $('<input>')
                              .attr('type', 'text')
                              .addClass('form-control')
                              .attr('placeholder', self.options.searchPlaceholder)
-                             .on('keyup', function() {
+                             .on('keyup', () => {
                                  self.currentQuery = $.trim($searchElement.val());
                                  self.currentPage = 0;
                                  self.getNewData();
                              });
-        var $searchDiv = $('<div class="col-md-4 pull-right">').append($searchElement);
+        const $searchDiv = $('<div class="col-md-4 pull-right">').append($searchElement);
 
         return $('<div class="row" style="margin-bottom: 5px">')
                 .append($pageBtns)
@@ -252,7 +252,7 @@ define([
      * Displays an error using the Narrative DisplayUtil stuff.
      */
     DynamicTable.prototype.displayError = function(error) {
-        var errorObj = error;
+        let errorObj = error;
         if (error.status && error.error && error.error.error) {
             errorObj = error.error;
         }
@@ -272,15 +272,15 @@ define([
                                     this.currentQuery,
                                     this.currentSort.id,
                                     this.currentSort.sortState)
-            .then(function(data) {
+            .then((data) => {
                 this.update(data);
-            }.bind(this))
-            .catch(function(error) {
+            })
+            .catch((error) => {
                 this.displayError(error);
-            }.bind(this))
-            .finally(function() {
+            })
+            .finally(() => {
                 this.$loadingElement.hide();
-            }.bind(this));
+            });
     };
 
     /**
@@ -289,15 +289,15 @@ define([
      * button if necessary.
      */
     DynamicTable.prototype.makeTableHeader = function(header) {
-        var $header = $('<th>').append($('<b>').append(header.text));
+        const $header = $('<th>').append($('<b>').append(header.text));
         header.sortState = 0;
         if (header.isSortable) {
             // add sorting.
-            var $sortBtn = Display.simpleButton('btn-xs', 'fa fa-sort text-muted').addClass('pull-right');
-            $sortBtn.click(function() {
+            const $sortBtn = Display.simpleButton('btn-xs', 'fa fa-sort text-muted').addClass('pull-right');
+            $sortBtn.click(() => {
                 // reset all other sort buttons
-                var curState = header.sortState;
-                this.headers.forEach(function(h) {
+                const curState = header.sortState;
+                this.headers.forEach((h) => {
                     h.sortState = 0;
                 });
                 // set this one to sort. if up, then down, if down then up, if neither then up
@@ -309,7 +309,7 @@ define([
                 }
                 this.currentSort = header;
                 this.getNewData();
-            }.bind(this));
+            });
             $header.append($sortBtn);
         }
         $header.resizable({
@@ -329,10 +329,10 @@ define([
         // list of lists. Empty it out, then put it in place in the given order.
         this.currentData = data;
         this.$tBody.empty();
-        data.forEach(function(row) {
+        data.forEach((row) => {
             // decorate each row element as necessary
-            var renderedRow = row.slice(); // make a copy by value
-            this.options.decoration.forEach(function(dec) {
+            const renderedRow = row.slice(); // make a copy by value
+            this.options.decoration.forEach((dec) => {
                 if (dec.type == 'link') {
                     renderedRow[dec.col] = '<a style="cursor:pointer">' + renderedRow[dec.col] + '</a>';
                 }
@@ -341,12 +341,12 @@ define([
                 }
             });
             // build the table row elem
-            var $newRow = tableRow(renderedRow);
+            let $newRow = tableRow(renderedRow);
             // add click bindings to decorated elements
-            this.options.decoration.forEach(function(dec) {
+            this.options.decoration.forEach((dec) => {
                 if (dec.clickFunction) {
-                    var $clickElem = $newRow.find('td:eq(' + dec.col + ') > :eq(0)');
-                    $clickElem.click(function() {
+                    const $clickElem = $newRow.find('td:eq(' + dec.col + ') > :eq(0)');
+                    $clickElem.click(() => {
                         dec.clickFunction($clickElem.text());
                     });
                 }
@@ -355,7 +355,7 @@ define([
                 $newRow = this.options.rowFunction($newRow, row);
             }
             this.$tBody.append($newRow);
-        }.bind(this));
+        });
     };
 
     /**
@@ -367,9 +367,9 @@ define([
      */
     DynamicTable.prototype.update = function(data) {
         // update header sort buttons
-        this.headers.forEach(function(h, idx) {
+        this.headers.forEach((h, idx) => {
             if (h.isSortable) {
-                var newClass = 'fa-sort text-muted';
+                let newClass = 'fa-sort text-muted';
                 if (h.sortState == 1) {
                     newClass = 'fa-sort-up';
                 }
@@ -381,7 +381,7 @@ define([
                     .removeClass('fa-sort fa-sort-down fa-sort-up text-muted')
                     .addClass(newClass);
             }
-        }.bind(this));
+        });
         // update data
         if (!data) {
             throw {
@@ -407,9 +407,9 @@ define([
      * </tr>
      */
     var tableRow = function(data) {
-        var elem = 'td';
+        const elem = 'td';
         return $('<tr>').append(
-            data.map(function(d) {
+            data.map((d) => {
                 return '<' + elem + '>' + d + '</' + elem + '>';
             }).join()
         );

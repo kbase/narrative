@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'base/js/namespace',
@@ -9,23 +7,23 @@ define([
     'common/ui',
     'bootstrap',
     'css!font-awesome'
-], function(
+], (
     Promise,
     Jupyter,
     html,
     Validation,
     Events,
-    UI) {
+    UI) => {
     'use strict';
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         input = t('input'),
         label = t('label');
 
     function factory(config) {
-        var spec = config.parameterSpec,
+        let spec = config.parameterSpec,
             bus = config.bus,
             parent, container,
             ui,
@@ -52,7 +50,7 @@ define([
         // CONTROL
 
         function getControlValue() {
-            var checkbox = ui.getElement('input-container.input');
+            const checkbox = ui.getElement('input-container.input');
             if (checkbox.checked) {
                 return 1;
             }
@@ -60,7 +58,7 @@ define([
         }
 
         function syncModelToControl() {
-            var control = ui.getElement('input-control.input');
+            const control = ui.getElement('input-control.input');
             if (model.value === 1) {
                 control.checked = true;
             } else {
@@ -71,8 +69,8 @@ define([
         // VALIDATION
 
         function validate() {
-            return Promise.try(function() {
-                var rawValue = getControlValue(),
+            return Promise.try(() => {
+                const rawValue = getControlValue(),
                     validationOptions = {
                         required: spec.data.constraints.required,
                         values: [0, 1]
@@ -83,7 +81,7 @@ define([
 
         function autoValidate() {
             return validate()
-                .then(function(result) {
+                .then((result) => {
                     bus.emit('validation', {
                         errorMessage: result.errorMessage,
                         diagnosis: result.diagnosis
@@ -95,7 +93,7 @@ define([
 
         function makeViewControl() {
             // CONTROL
-            var checked = false;
+            let checked = false;
             if (model.value === 1) {
                 checked = true;
             }
@@ -124,7 +122,7 @@ define([
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
 
@@ -132,7 +130,7 @@ define([
                     node: container
                 });
 
-                var events = Events.make({
+                const events = Events.make({
                     node: container
                 });
 
@@ -144,11 +142,11 @@ define([
 
                 // Listen for events from the containing environment.
 
-                bus.on('reset-to-defaults', function() {
+                bus.on('reset-to-defaults', () => {
                     resetModelValue();
                 });
 
-                bus.on('update', function(message) {
+                bus.on('update', (message) => {
                     setModelValue(message.value);
                     syncModelToControl();
                 });

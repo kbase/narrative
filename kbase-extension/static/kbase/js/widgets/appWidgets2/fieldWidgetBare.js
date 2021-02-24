@@ -17,7 +17,7 @@ define([
     'common/runtime',
     './errorControl',
     'css!google-code-prettify/prettify.css'
-], function (
+], (
     Promise,
     PR,
     html,
@@ -25,10 +25,10 @@ define([
     UI,
     Props,
     Runtime,
-    ErrorControlFactory) {
+    ErrorControlFactory) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         span = t('span'),
         label = t('label'),
@@ -47,7 +47,7 @@ define([
         };
 
     function factory(config) {
-        var ui,
+        let ui,
             runtime = Runtime.make(),
             bus = runtime.bus().makeChannelBus({
                 description: 'Field bus'
@@ -86,7 +86,7 @@ define([
         function doEnable() {
             if (!enabled) {
                 // do something...
-                var mask = ui.getElement('field-mask');
+                const mask = ui.getElement('field-mask');
                 mask.classList.add('hidden');
 
                 enabled = true;
@@ -96,7 +96,7 @@ define([
         function doDisable() {
             if (enabled) {
                 // do something
-                var mask = ui.getElement('field-mask');
+                const mask = ui.getElement('field-mask');
                 mask.classList.remove('hidden');
 
                 enabled = false;
@@ -111,7 +111,7 @@ define([
         }
 
         function buildInputMessage(messageDef) {
-            var events = Events.make(),
+            const events = Events.make(),
                 content = div({
                     class: 'alert alert-' + messageDef.type,
                     role: 'alert'
@@ -138,7 +138,7 @@ define([
         }
 
         function setError(error) {
-            var component = buildInputMessage({
+            const component = buildInputMessage({
                 title: 'ERROR',
                 type: 'danger',
                 message: error.message,
@@ -151,7 +151,7 @@ define([
         }
 
         function setWarning(warning) {
-            var component = buildInputMessage({
+            const component = buildInputMessage({
                 title: 'Warning',
                 type: 'warning',
                 message: warning.message,
@@ -207,7 +207,7 @@ define([
         }
 
         function rawSpec(spec) {
-            var specText = JSON.stringify(spec, false, 3),
+            const specText = JSON.stringify(spec, false, 3),
                 fixedSpec = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
             return pre({ class: 'prettyprint lang-json', style: { fontSize: '80%' } }, fixedSpec);
         }
@@ -257,7 +257,7 @@ define([
 
 
         function renderInfoTip() {
-            var infoTipText;
+            let infoTipText;
             if (spec.ui.description && spec.ui.hint !== spec.ui.description) {
                 infoTipText = spec.ui.description;
             } else {
@@ -294,7 +294,7 @@ define([
         }
 
         function render(events) {
-            var ids = {
+            const ids = {
                 fieldPanel: html.genId(),
                 messagePanel: html.genId(),
                 message: html.genId(),
@@ -306,15 +306,15 @@ define([
 
             // FEEDBACK
 
-            var infoId = html.genId();
+            const infoId = html.genId();
 
-            var advanced;
+            let advanced;
             if (spec.ui.advanced) {
                 advanced = 'advanced-parameter-hidden';
             } else {
                 advanced = '';
             }
-            var content = div({
+            const content = div({
                 class: ['form-horizontal', 'kb-app-parameter-row', 'parameter-panel', advanced].join(' '),
                 dataAdvancedParameter: spec.ui.advanced,
                 id: fieldId,
@@ -384,15 +384,15 @@ define([
         // LIFECYCLE
 
         function attach(node) {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 parent = node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
-                var events = Events.make({
+                const events = Events.make({
                     node: container
                 });
 
-                var rendered = render(events);
+                const rendered = render(events);
                 container.innerHTML = rendered.content;
                 events.attachEvents();
                 // TODO: use the pattern in which the render returns an object,
@@ -417,8 +417,8 @@ define([
 
         function start(arg) {
             return attach(arg.node)
-                .then(function () {
-                    bus.on('validation', function (message) {
+                .then(() => {
+                    bus.on('validation', (message) => {
                         switch (message.diagnosis) {
                         case 'valid':
                             feedbackOk();
@@ -456,10 +456,10 @@ define([
                     // bus.on('changed', function () {
                     //     places.feedback.style.backgroundColor = '';
                     // });
-                    bus.on('enable', function (message) {
+                    bus.on('enable', (message) => {
                         doEnable();
                     });
-                    bus.on('disable', function (message) {
+                    bus.on('disable', (message) => {
                         doDisable();
                     });
 
@@ -467,7 +467,7 @@ define([
                         return inputControl.start({
                             node: places.inputControl
                         })
-                        .then(function () {
+                        .then(() => {
                             // TODO: get rid of this pattern
                             bus.emit('run', {
                                 node: places.inputControl
@@ -478,9 +478,9 @@ define([
         }
 
         function stop() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 return inputControl.stop()
-                    .then(function () {
+                    .then(() => {
                         if (parent && container) {
                             parent.removeChild(container);
                         }

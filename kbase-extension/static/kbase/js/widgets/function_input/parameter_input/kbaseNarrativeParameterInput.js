@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white: true*/
 /**
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
@@ -12,13 +10,13 @@ define (
 		'jquery',
 		'narrativeConfig',
 		'kbaseAuthenticatedWidget'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		Config,
 		kbaseAuthenticatedWidget
-	) {
+	) => {
     'use strict';
     return KBWidget({
         name: "kbaseNarrativeParameterInput",

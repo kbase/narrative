@@ -13,12 +13,12 @@ define([
     'bootstrap',
     'jquery',
     'kbaseAccordion'
-], function (
+], (
     KBWidget,
     bootstrap,
     $,
     kbaseAccordion
-) {
+) => {
     'use strict';
 
     return KBWidget({
@@ -44,13 +44,13 @@ define([
             return this.render();
         },
         render: function () {
-            var addRow = function (name, value) {
+            const addRow = function (name, value) {
                 return "<tr><td><b>" + name + "</b></td><td>" + value + "</td></tr>";
             };
 
             // Shamelessly lifted from kbaseNarrativeWorkspace.
             // Thanks Dan!
-            var esc = function (s) {
+            const esc = function (s) {
                 return s;
                 // return s.replace(/'/g, "&apos;")
                 //         .replace(/"/g, "&quot;")
@@ -59,16 +59,16 @@ define([
             };
 
             // Reformat a TB as a list
-            var format_tb = function (err) {
-                var s = "\n";
-                var ind = ""; // keep in case change of mind
+            const format_tb = function (err) {
+                let s = "\n";
+                const ind = ""; // keep in case change of mind
                 if (err.traceback === undefined) {
                     s += "No traceback available.\n";
                 } else if (err.traceback instanceof Array) {
                     s += "Traceback (most recent call last):\n";
-                    var tb = err.traceback;
+                    const tb = err.traceback;
                     for (var i = 0, ctr = 0; i < tb.length; i++) {
-                        var entry = tb[i];
+                        const entry = tb[i];
                         if (entry.function == "__call__")
                             continue;  // ignore wrapper
                         ctr++;
@@ -90,18 +90,18 @@ define([
                 return s;
             };
 
-            var $errorHead = $('<div>')
+            const $errorHead = $('<div>')
                 .addClass('alert alert-danger')
                 .append(this.options.error.msg);
 
-            var $errorTable = $('<table>')
+            const $errorTable = $('<table>')
                 .addClass('table table-bordered')
                 .css({'margin-right': 'auto', 'margin-left': 'auto'})
                 .append(addRow("Function", esc(this.options.error.method_name)))
                 .append(addRow("Error Type", esc(this.options.error.type)))
                 .append(addRow("Severity", esc(this.options.error.severity)));
 
-            var $stackTraceAccordion = $('<div>');
+            const $stackTraceAccordion = $('<div>');
 
             this.$elem.append($errorHead)
                 .append($errorTable)

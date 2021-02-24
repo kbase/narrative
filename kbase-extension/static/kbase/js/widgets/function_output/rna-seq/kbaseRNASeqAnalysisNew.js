@@ -10,7 +10,7 @@ define (
 		'kbase-client-api',
 		'jquery-dataTables',
         'kb_service/utils'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -19,7 +19,7 @@ define (
 		kbase_client_api,
 		jquery_dataTables,
         ServiceUtils
-	) {
+	) => {
 
     'use strict';
 
@@ -43,18 +43,18 @@ define (
 
         loadAnalysis : function(ws, analysis) {
 
-            var $rna = this;
+            const $rna = this;
 
-            var all_promises = [ ];
+            const all_promises = [ ];
 
-            var external_ids = {};
-            var num_sample_ids = 0;
+            const external_ids = {};
+            let num_sample_ids = 0;
 
             if (analysis.sample_ids) {
 
                 $.each(
                     analysis.sample_ids,
-                    function (i, v) {
+                    (i, v) => {
                         num_sample_ids++;
 
                         if (v.match(/\//)) {
@@ -82,22 +82,22 @@ define (
 
             $.when.apply($, all_promises).then(function () {
 
-                var extra_args = arguments;
+                const extra_args = arguments;
 
-                var info_keys = ['id', 'name', 'type', 'save_date', 'version', 'saved_by', 'ws_id', 'ws_name', 'chsum', 'size', 'meta'];
+                const info_keys = ['id', 'name', 'type', 'save_date', 'version', 'saved_by', 'ws_id', 'ws_name', 'chsum', 'size', 'meta'];
 
-                var ref_map = {};
-                var ref_map_by_id = {};
+                const ref_map = {};
+                const ref_map_by_id = {};
                 $.each(
                   extra_args,
-                  function (eaIdx, extra_arg) {
+                  (eaIdx, extra_arg) => {
                     $.each(
                       extra_arg.infos,
-                      function(i, v) {
-                          var info_obj = {};
+                      (i, v) => {
+                          const info_obj = {};
                           $.each(
                               info_keys,
-                              function(i,key) {
+                              (i,key) => {
                                   info_obj[key] = v[i];
                               }
                           );
@@ -110,10 +110,10 @@ define (
 
                 if (analysis.sample_ids) {
 
-                    var sample_id_data = [];
+                    const sample_id_data = [];
                     $.each(
                       analysis.sample_ids,
-                      function (i, v) {
+                      (i, v) => {
                         sample_id_data.push(
                           [
                             ref_map_by_id[v] ? ref_map_by_id[v].name : v,
@@ -124,9 +124,9 @@ define (
                     )
 
                     $rna.dataset().parsed_read_samples = $.jqElem('div');
-                    var $sample_table = $.jqElem('table').addClass('display').css('width', '100%').css('border', '1px solid gray');
+                    const $sample_table = $.jqElem('table').addClass('display').css('width', '100%').css('border', '1px solid gray');
                     $rna.dataset().parsed_read_samples.append($sample_table);
-                    var $tt = $sample_table.DataTable({
+                    const $tt = $sample_table.DataTable({
                         columns: [
                             {title: 'Reads'},
                             {title: 'Treatment Labels'}
@@ -141,7 +141,7 @@ define (
 
                 $rna.updateUI();
             })
-            .fail(function(d) {
+            .fail((d) => {
 
                 $rna.$elem.empty();
                 $rna.$elem
@@ -152,14 +152,14 @@ define (
         },
 
         linkFromData : function(info_obj) {
-          var $rna = this;
+          const $rna = this;
 
-          var $v =
+          const $v =
             $.jqElem('a')
               .append(info_obj.name)
-              .on('click', function(e) {
-                  var $cell = $rna.$elem.nearest('.cell');
-                  var near_idx = IPython.notebook.find_cell_index($cell.data().cell);
+              .on('click', (e) => {
+                  const $cell = $rna.$elem.nearest('.cell');
+                  const near_idx = IPython.notebook.find_cell_index($cell.data().cell);
 
                   $rna.trigger('createViewerCell.Narrative', {
                       'nearCellIdx': near_idx,
@@ -173,22 +173,22 @@ define (
         },
 
         ulFromData : function(ids, ref_map) {
-            var $rna = this;
-            var $ul = $.jqElem('ul').css('list-style-type', 'none');
+            const $rna = this;
+            const $ul = $.jqElem('ul').css('list-style-type', 'none');
 
             $.each(
                 ids,
-                function(k, v) {
-                    var $li = $.jqElem('li');
+                (k, v) => {
+                    const $li = $.jqElem('li');
                     if (ref_map[k]) {
                         $li.append(
                             $.jqElem('li')
                                 .append(
                                     $.jqElem('a')
                                         .append(ref_map[k]['name'])
-                                        .on('click', function(e) {
-                                            var $cell = $rna.$elem.nearest('.cell');
-                                            var near_idx = IPython.notebook.find_cell_index($cell.data().cell);
+                                        .on('click', (e) => {
+                                            const $cell = $rna.$elem.nearest('.cell');
+                                            const near_idx = IPython.notebook.find_cell_index($cell.data().cell);
 
                                             $rna.trigger('createViewerCell.Narrative', {
                                                 'nearCellIdx': near_idx,
@@ -210,9 +210,9 @@ define (
                             .append(
                                 $.jqElem('a')
                                     .append(ref_map[v]['name'])
-                                    .on('click', function(e) {
-                                        var $cell = $rna.$elem.nearest('.cell');
-                                        var near_idx = IPython.notebook.find_cell_index($cell.data().cell);
+                                    .on('click', (e) => {
+                                        const $cell = $rna.$elem.nearest('.cell');
+                                        const near_idx = IPython.notebook.find_cell_index($cell.data().cell);
 
                                         $rna.trigger('createViewerCell.Narrative', {
                                             'nearCellIdx': near_idx,
@@ -236,9 +236,9 @@ define (
 
             this._super(options);
 
-            var $rna = this;
+            const $rna = this;
 
-            var ws = new Workspace(window.kbconfig.urls.workspace, {token : this.authToken()});
+            const ws = new Workspace(window.kbconfig.urls.workspace, {token : this.authToken()});
 
             if (this.options.SetupRNASeqAnalysis) {
                 this.setDataset(this.options.SetupRNASeqAnalysis);
@@ -251,18 +251,18 @@ define (
                         workspace : this.options.workspace,
                         name : this.options.output
                     }]}
-                ).then(function(d) {
+                ).then((d) => {
 
 
                     $rna.setDataset(d.data[0].data);
                     if ($rna.dataset().tool_used) {
 
-                      var promises = [];
-                      var keys = ['alignmentSet_id', 'expressionSet_id', 'genome_id', 'sampleset_id'];
-                      var vals = ['alignmentset', 'expressionset', 'genome', 'sampleset'];
+                      const promises = [];
+                      const keys = ['alignmentSet_id', 'expressionSet_id', 'genome_id', 'sampleset_id'];
+                      const vals = ['alignmentset', 'expressionset', 'genome', 'sampleset'];
                       $.each(
                         keys,
-                        function (i,v) {
+                        (i,v) => {
                           promises.push(
                             ws.get_object_info3({ objects : [{ref : $rna.dataset()[v]}] })
                           );
@@ -271,10 +271,10 @@ define (
 
                       $.when.apply($, promises).then(function () {
 
-                          var args = arguments;
+                          const args = arguments;
                           $.each(
                             arguments,
-                            function (i, v) {
+                            (i, v) => {
 
                               $rna.dataset()[vals[i]] = v[0];
                             }
@@ -289,7 +289,7 @@ define (
                       $rna.loadAnalysis(ws, d.data[0].data);
                     }
                 })
-                .fail(function(d) {
+                .fail((d) => {
 
                     $rna.$elem.empty();
                     $rna.$elem

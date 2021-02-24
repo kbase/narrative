@@ -1,8 +1,8 @@
 define([
     'RestAPIClient'
-], function(
+], (
     RestAPIClient
-) {
+) => {
     'use strict';
 
     return function constructor(args) {

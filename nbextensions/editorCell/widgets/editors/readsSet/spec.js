@@ -1,4 +1,4 @@
-define([], function() {
+define([], () => {
     return {
         parameters: {
             layout: ['name', 'description', 'items'],

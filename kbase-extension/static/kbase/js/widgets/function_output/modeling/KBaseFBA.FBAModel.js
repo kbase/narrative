@@ -1,6 +1,6 @@
-define(['kbasePathways'], function(kbasePathways) {
+define(['kbasePathways'], (kbasePathways) => {
 function KBaseFBA_FBAModel(modeltabs) {
-    var self = this;
+    const self = this;
     this.modeltabs = modeltabs;
 
     this.setMetadata = function (data) {
@@ -241,8 +241,8 @@ function KBaseFBA_FBAModel(modeltabs) {
 
 
     this.ReactionTab = function (info) {
-        var rxn = self.rxnhash[info.id];
-		var output = [{
+        const rxn = self.rxnhash[info.id];
+		const output = [{
 			"label": "Reaction",
 			"data": rxn.dispid,
 		}, {
@@ -274,9 +274,9 @@ function KBaseFBA_FBAModel(modeltabs) {
 		});
 		if (rxn.rxnkbid != "rxn00000") {
 			console.log(rxn.rxnkbid);
-			var p = self.modeltabs.kbapi('biochem', 'get_reactions', {
+			const p = self.modeltabs.kbapi('biochem', 'get_reactions', {
 				reactions: [rxn.rxnkbid],
-			}).then(function(data) {
+			}).then((data) => {
 				if ("deltaG" in data[0]) {
 					output.push({
 						"label": "Delta G",
@@ -289,9 +289,9 @@ function KBaseFBA_FBAModel(modeltabs) {
                         "data": data[0].enzymes.join(", ")
                     });
                 }
-				var aliashash = {};
-				var finalaliases = [];
-				for (var i=0; i < data[0].aliases.length; i++) {
+				const aliashash = {};
+				const finalaliases = [];
+				for (let i=0; i < data[0].aliases.length; i++) {
 					if (!(data[0].aliases[i] in aliashash)) {
 						finalaliases.push(data[0].aliases[i]);
 						aliashash[data[0].aliases[i]] = 1;
@@ -313,8 +313,8 @@ function KBaseFBA_FBAModel(modeltabs) {
     this.GeneTab = function (info) {
         // var gene = this.genehash[id];
         // doing this instead of creating hash
-        var data;
-        self.modelgenes.forEach(function(gene) {
+        let data;
+        self.modelgenes.forEach((gene) => {
             if (gene.id == info.id)
                 data = [{
                             label: "ID",
@@ -330,9 +330,9 @@ function KBaseFBA_FBAModel(modeltabs) {
     }
 
     this.CompoundTab = function (info) {
-        var cpd = self.cpdhash[info.id];
+        const cpd = self.cpdhash[info.id];
         console.log(cpd)
-		var output = [{
+		const output = [{
 			"label": "Compound",
 			"data": cpd.dispid,
 		},{
@@ -359,7 +359,7 @@ function KBaseFBA_FBAModel(modeltabs) {
 		}];
 		if (cpd.smiles && cpd.cpdkbid == "cpd00000") {
 		    var p = self.modeltabs.kbapi('biochem', 'depict_compounds', {structures: [cpd.smiles]
-		    }).then(function(data) {
+		    }).then((data) => {
                     output[1] = {
 						"label": "Image",
 						"data": data[0]
@@ -371,16 +371,16 @@ function KBaseFBA_FBAModel(modeltabs) {
 		if (cpd.cpdkbid != "cpd00000") {
 			var p = self.modeltabs.kbapi('biochem', 'get_compounds', {
 				compounds: [cpd.cpdkbid],
-			}).then(function(data) {
+			}).then((data) => {
 				if ("deltaG" in data[0]) {
 					output.push({
 						"label": "Delta G",
 						"data": data[0].deltaG+" ("+data[0].deltaGErr+") kcal/mol"
 					});
 				}
-				var aliashash = {};
-				var finalaliases = [];
-				for (var i=0; i < data[0].aliases.length; i++) {
+				const aliashash = {};
+				const finalaliases = [];
+				for (let i=0; i < data[0].aliases.length; i++) {
 					if (!(data[0].aliases[i] in aliashash)) {
 						finalaliases.push(data[0].aliases[i]);
 						aliashash[data[0].aliases[i]] = 1;
@@ -399,8 +399,8 @@ function KBaseFBA_FBAModel(modeltabs) {
     }
 
     this.CompartmentTab = function (info) {
-        var cmp = self.cmphash[info.id];
-		var output = [{
+        const cmp = self.cmphash[info.id];
+		const output = [{
 			"label": "Compartment",
 			"data": cmp.id,
 		}, {
@@ -417,8 +417,8 @@ function KBaseFBA_FBAModel(modeltabs) {
     }
 
     this.BiomassTab = function (info) {
-        var bio = self.biohash[info.id];
-		var output = [{
+        const bio = self.biohash[info.id];
+		const output = [{
 			"label": "Biomass",
 			"data": bio.id,
 		}, {
@@ -472,7 +472,7 @@ function KBaseFBA_FBAModel(modeltabs) {
         this.gfhash = {};
         this.biochemws = "kbase";
 		this.biochem = "default";
-        var gfobjects = [];
+        const gfobjects = [];
         for (var i=0; i < this.gapfillings.length; i++) {
         	this.gapfillings[i].simpid = "gf."+(i+1);
         	if ('fba_ref' in this.gapfillings[i] && this.gapfillings[i].fba_ref.length > 0) {
@@ -483,7 +483,7 @@ function KBaseFBA_FBAModel(modeltabs) {
         	this.gfhash[this.gapfillings[i].simpid] = this.gapfillings[i];
         }
         for (var i=0; i< this.modelcompartments.length; i++) {
-            var cmp = this.modelcompartments[i];
+            const cmp = this.modelcompartments[i];
             cmp.cmpkbid = cmp.compartment_ref.split("/").pop();
         	if (cmp.cmpkbid == "d") {
         		this.biochem = "plantdefault";
@@ -492,7 +492,7 @@ function KBaseFBA_FBAModel(modeltabs) {
             this.cmphash[cmp.id] = cmp;
         }
         for (var i=0; i< this.modelcompounds.length; i++) {
-            var cpd = this.modelcompounds[i];
+            const cpd = this.modelcompounds[i];
             var idarray = cpd.id.split('_');
             cpd.dispid = idarray[0]+"["+idarray[1]+"]";
             cpd.cmpkbid = cpd.modelcompartment_ref.split("/").pop();
@@ -503,7 +503,7 @@ function KBaseFBA_FBAModel(modeltabs) {
             cpd.name = cpd.name.replace(/_[a-zA-z]\d+$/, '');
             this.cpdhash[cpd.id] = cpd;
             if (cpd.cpdkbid != "cpd00000") {
-                var array = cpd.compound_ref.split("/");
+                const array = cpd.compound_ref.split("/");
                 this.cpdhash[cpd.cpdkbid+"_"+cpd.cmpkbid] = cpd;
                 if (idarray[0] != cpd.cpdkbid) {
                 	cpd.dispid += "<br>("+cpd.cpdkbid+")";
@@ -511,13 +511,13 @@ function KBaseFBA_FBAModel(modeltabs) {
             }
         }
         for (var i=0; i < this.biomasses.length; i++) {
-        	var biomass = this.biomasses[i];
+        	const biomass = this.biomasses[i];
         	this.biohash[biomass.id] = biomass;
         	biomass.dispid = biomass.id;
         	var reactants = "";
             var products = "";
         	for(var j=0; j < biomass.biomasscompounds.length; j++) {
-        		var biocpd = biomass.biomasscompounds[j];
+        		const biocpd = biomass.biomasscompounds[j];
         		biocpd.id = biocpd.modelcompound_ref.split("/").pop();
         		var idarray = biocpd.id.split('_');
         		biocpd.dispid = idarray[0]+"["+idarray[1]+"]";
@@ -550,7 +550,7 @@ function KBaseFBA_FBAModel(modeltabs) {
         	biomass.equation = reactants + " => " + products;
         }
         for (var i=0; i< this.modelreactions.length; i++) {
-            var rxn = this.modelreactions[i];
+            const rxn = this.modelreactions[i];
             var idarray = rxn.id.split('_');
             rxn.dispid = idarray[0]+"["+idarray[1]+"]";
             rxn.rxnkbid = rxn.reaction_ref.split("/").pop();
@@ -570,7 +570,7 @@ function KBaseFBA_FBAModel(modeltabs) {
             }
             var reactants = "";
             var products = "";
-            var sign = "<=>";
+            let sign = "<=>";
             if (rxn.direction == ">") {
                 sign = "=>";
             } else if (rxn.direction == "<") {
@@ -580,7 +580,7 @@ function KBaseFBA_FBAModel(modeltabs) {
             	rxn.gpr = "";
             }
             for (var j=0; j< rxn.modelReactionReagents.length; j++) {
-                var rgt = rxn.modelReactionReagents[j];
+                const rgt = rxn.modelReactionReagents[j];
                 rgt.cpdkbid = rgt.modelcompound_ref.split("/").pop();
                 if (rgt.coefficient < 0) {
                     if (reactants.length > 0) {
@@ -604,13 +604,13 @@ function KBaseFBA_FBAModel(modeltabs) {
             }
             rxn.ftrhash = {};
             for (var j=0; j< rxn.modelReactionProteins.length; j++) {
-                var prot = rxn.modelReactionProteins[j];
+                const prot = rxn.modelReactionProteins[j];
                 if (j > 0) {
                    	rxn.gpr += " or ";
                 }
                 rxn.gpr += "(";
-                for (var k=0; k< prot.modelReactionProteinSubunits.length; k++) {
-                    var subunit = prot.modelReactionProteinSubunits[k];
+                for (let k=0; k< prot.modelReactionProteinSubunits.length; k++) {
+                    const subunit = prot.modelReactionProteinSubunits[k];
                     if (k > 0) {
                     	rxn.gpr += " and ";
                     }
@@ -618,8 +618,8 @@ function KBaseFBA_FBAModel(modeltabs) {
                     if (subunit.feature_refs.length == 0) {
                     	rxn.gpr += "Unknown";
                     }
-                    for (var m=0; m< subunit.feature_refs.length; m++) {
-                    	var ftrid = subunit.feature_refs[m].split("/").pop();
+                    for (let m=0; m< subunit.feature_refs.length; m++) {
+                    	const ftrid = subunit.feature_refs[m].split("/").pop();
                         rxn.ftrhash[ftrid] = 1;
                         if (m > 0) {
                     		rxn.gpr += " or ";
@@ -632,7 +632,7 @@ function KBaseFBA_FBAModel(modeltabs) {
             }
 
 			rxn.gapfilling = [];
-			for (var gf in rxn.gapfill_data) {
+			for (const gf in rxn.gapfill_data) {
 				if (rxn.gapfill_data[gf][0][0] == '<') {
 					rxn.gapfilling.push(gf+": reverse");
 				} else {
@@ -643,11 +643,11 @@ function KBaseFBA_FBAModel(modeltabs) {
 
             rxn.dispfeatures = "";
             rxn.genes = [];
-            for (var gene in rxn.ftrhash) {
+            for (const gene in rxn.ftrhash) {
                 rxn.genes.push({id:gene});
 
                 var genes = [];
-                this.modelgenes.forEach(function(item) {
+                this.modelgenes.forEach((item) => {
                     genes.push(item.id)
                 })
 
@@ -660,18 +660,18 @@ function KBaseFBA_FBAModel(modeltabs) {
             rxn.equation = reactants+" "+sign+" "+products;
         }
         if (gfobjects.length > 0) {
-			var p = self.modeltabs.kbapi('ws', 'get_objects', gfobjects).then(function(data){
-				for (var i=0; i < data.length; i++) {
-					var solrxns = data[i].data.gapfillingSolutions[0].gapfillingSolutionReactions;
-					for (var j=0; j < solrxns.length; j++) {
-						var array = solrxns[j].reaction_ref.split("/");
-						var id = array.pop();
+			const p = self.modeltabs.kbapi('ws', 'get_objects', gfobjects).then((data)=> {
+				for (let i=0; i < data.length; i++) {
+					const solrxns = data[i].data.gapfillingSolutions[0].gapfillingSolutionReactions;
+					for (let j=0; j < solrxns.length; j++) {
+						const array = solrxns[j].reaction_ref.split("/");
+						let id = array.pop();
 						var rxnobj;
 						if (id in self.rxnhash) {
 							rxnobj = self.rxnhash[id];
 						} else {
-							var cmparray = solrxns[j].compartment_ref.split("/");
-							var cmp = cmparray.pop();
+							const cmparray = solrxns[j].compartment_ref.split("/");
+							const cmp = cmparray.pop();
 							id = id+"_"+cmp+solrxns[j].compartmentIndex;
 							rxnobj = self.rxnhash[id];
 						}

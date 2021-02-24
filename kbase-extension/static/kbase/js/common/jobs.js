@@ -1,10 +1,7 @@
-/*global define,console*/
-/*jslint white:true,browser:true*/
-
 define([
     'bluebird',
     'base/js/namespace'
-], function (Promise, Jupyter) {
+], (Promise, Jupyter) => {
     'use strict';
 
     /*
@@ -35,8 +32,8 @@ define([
     }
 
     function runPython(command) {
-        return new Promise(function (resolve, reject) {
-            var callbacks = {
+        return new Promise((resolve, reject) => {
+            const callbacks = {
                 shell: {
                     reply: function (content) {
                         defaultHandler('reply', content);
@@ -50,7 +47,7 @@ define([
                 iopub: {
                     output: function (content) {
                         if (content.msg_type === 'error') {
-                            var trace = content.content.traceback.map(function (line) {
+                            const trace = content.content.traceback.map((line) => {
                                 return consoleToText(line);
                             }),
                                 message = 'Error in iopub output: ' + content.content.ename + ':' + content.content.evalue;

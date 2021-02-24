@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 define([
     'bluebird',
     'jquery',
@@ -28,7 +25,7 @@ define([
     'text!kbase/templates/job_status/new_objects.html',
     'css!kbase/css/kbaseJobLog.css',
     'bootstrap'
-], function (
+], (
     Promise,
     $,
     _,
@@ -54,7 +51,7 @@ define([
     LogLineTemplate,
     NewObjectsTemplate,
     Alert
-) {
+) => {
     'use strict';
 
     return new KBWidget({
@@ -82,9 +79,9 @@ define([
             this.appInfo = this.options.info;
 
 
-            var cellNode = this.$elem.closest('.cell').get(0);
+            const cellNode = this.$elem.closest('.cell').get(0);
             function findCell() {
-                var cells = Jupyter.notebook.get_cell_elements().toArray().filter(function (element) {
+                const cells = Jupyter.notebook.get_cell_elements().toArray().filter((element) => {
                     if (element === cellNode) {
                         return true;
                     }
@@ -112,7 +109,7 @@ define([
                  * 3. Initialize layout, set up bus.
                  */
             //raw object
-            var cellMeta = this.getCellState();
+            const cellMeta = this.getCellState();
             // When this is initially inserted into the Narrative, the cell metadata will not be fully populated.
             // In this case, the job state that is passed to the widget will be used, otherwise the job state
             // stored in the metadata will be used.
@@ -142,7 +139,7 @@ define([
             this.updateView();
 
             Semaphore.make().when('comm', 'ready', Config.get('comm_wait_timeout'))
-                .then(function () {
+                .then(() => {
                     this.busConnection.listen({
                         channel: {
                             jobId: this.jobId
@@ -187,8 +184,8 @@ define([
                     this.channel.emit('request-job-status', {
                         jobId: this.jobId
                     });
-                }.bind(this))
-                .catch(function (err) {
+                })
+                .catch((err) => {
                     console.error('Jobs Comm channel not available', err);
                 });
             return this;
@@ -196,7 +193,7 @@ define([
 
         handleJobInfo: function (info) {
             if (utils.getCellMeta(this.cell, 'kbase.attributes.title') !== info.jobInfo.app_name) {
-                var metadata = this.cell.metadata;
+                const metadata = this.cell.metadata;
                 if (metadata.kbase && metadata.kbase.attributes) {
                     metadata.kbase.attributes.title = info.jobInfo.app_name;
                     metadata.kbase.attributes.subtitle = 'App Status';
@@ -212,9 +209,9 @@ define([
                  * Second = Console.
                  * Third = View Inputs
                  */
-            var header = this.makeHeader();
-            var body = this.makeBody();
-            var statusPanel = this.makeJobStatusPanel();
+            const header = this.makeHeader();
+            const body = this.makeBody();
+            const statusPanel = this.makeJobStatusPanel();
             this.$elem.append(header);
             body.append(statusPanel);
             this.view = {
@@ -224,8 +221,8 @@ define([
             };
             this.reportView = this.makeReportPanel();
             this.newDataView = this.makeNewDataView();
-            var $tabDiv = $('<div>');
-            var $jobLogDiv = $('<div>');
+            const $tabDiv = $('<div>');
+            const $jobLogDiv = $('<div>');
             this.tabController = new KBaseTabs($tabDiv, {
                 tabs: [{
                     tab: 'Status',
@@ -282,10 +279,10 @@ define([
                     this.tabController.addTab({
                         tab: 'New Data Objects',
                         showContentCallback: function () {
-                            var params = this.outputWidgetInfo.params;
+                            const params = this.outputWidgetInfo.params;
                             params.showReportText = false;
                             params.showCreatedObjects = true;
-                            var $newObjDiv = $('<div>');
+                            const $newObjDiv = $('<div>');
                             new KBaseReportView($newObjDiv, params);
                             return $newObjDiv;
                         }.bind(this)
@@ -293,23 +290,23 @@ define([
                 }
                 // If not, try to guess what we've got?
                 else {
-                    var results = this.state.result;
-                    var refs = this.guessReferences(results);
+                    const results = this.state.result;
+                    const refs = this.guessReferences(results);
                     if (refs && refs.length > 0) {
-                        var objRefs = [];
-                        refs.forEach(function (ref) {
+                        const objRefs = [];
+                        refs.forEach((ref) => {
                             objRefs.push({ ref: ref });
                         });
-                        var newObjTmpl = Handlebars.compile(NewObjectsTemplate);
-                        var wsClient = new Workspace(Config.url('workspace'), { token: this.runtime.authToken() });
+                        const newObjTmpl = Handlebars.compile(NewObjectsTemplate);
+                        const wsClient = new Workspace(Config.url('workspace'), { token: this.runtime.authToken() });
                         Promise.resolve(wsClient.get_object_info_new({ objects: objRefs }))
-                            .then(function (objInfo) {
+                            .then((objInfo) => {
                                 this.tabController.addTab({
                                     tab: 'New Data Objects',
                                     showContentCallback: function () {
-                                        var renderedInfo = [];
-                                        var $div = $('<div>');
-                                        objInfo.forEach(function (obj) {
+                                        const renderedInfo = [];
+                                        const $div = $('<div>');
+                                        objInfo.forEach((obj) => {
                                             renderedInfo.push({
                                                 'name': obj[1],
                                                 'type': obj[2].split('-')[0].split('.')[1],
@@ -318,10 +315,10 @@ define([
                                                 // 'ws_info': objI[k]
                                             });
                                         });
-                                        var $objTable = $(newObjTmpl(renderedInfo));
-                                        for (var i = 0; i < objInfo.length; i++) {
+                                        const $objTable = $(newObjTmpl(renderedInfo));
+                                        for (let i = 0; i < objInfo.length; i++) {
                                             var info = objInfo[0];
-                                            $objTable.find('[data-object-name="' + objInfo[i][1] + '"]').click(function (e) {
+                                            $objTable.find('[data-object-name="' + objInfo[i][1] + '"]').click((e) => {
                                                 e.stopPropagation();
                                                 e.preventDefault();
                                                 if (Jupyter.narrative.readonly) {
@@ -333,14 +330,14 @@ define([
                                                     return;
                                                 }
                                                 Jupyter.narrative.addViewerCell(info);
-                                            }.bind(this));
+                                            });
                                         }
                                         $div.append($objTable);
                                         return $div;
                                     }.bind(this)
                                 });
-                            }.bind(this))
-                            .catch(function (error) {
+                            })
+                            .catch((error) => {
                                 //die silently.
                             });
                     }
@@ -364,7 +361,7 @@ define([
                  * 3. obj == Array
                  * - scan all elements with guessReferences
                  */
-            var type = Object.prototype.toString.call(obj);
+            const type = Object.prototype.toString.call(obj);
             switch (type) {
             case '[object String]':
                 if (obj.match(/^[^\/]+\/[^\/]+(\/[^\/]+)?$/)) {
@@ -375,22 +372,22 @@ define([
 
             case '[object Array]':
                 var ret = [];
-                obj.forEach(function (elem) {
-                    var refs = this.guessReferences(elem);
+                obj.forEach((elem) => {
+                    const refs = this.guessReferences(elem);
                     if (refs) {
                         ret = ret.concat(refs);
                     }
-                }.bind(this));
+                });
                 return ret;
 
             case '[object Object]':
                 var ret = [];
-                Object.keys(obj).forEach(function (key) {
-                    var refs = this.guessReferences(obj[key]);
+                Object.keys(obj).forEach((key) => {
+                    const refs = this.guessReferences(obj[key]);
                     if (refs) {
                         ret = ret.concat(refs);
                     }
-                }.bind(this));
+                });
                 return ret;
 
             default:
@@ -407,10 +404,10 @@ define([
                 this.tabController.addTab({
                     tab: 'Report',
                     showContentCallback: function () {
-                        var params = this.outputWidgetInfo.params;
+                        const params = this.outputWidgetInfo.params;
                         params.showReportText = true;
                         params.showCreatedObjects = false;
-                        var $reportDiv = $('<div>');
+                        const $reportDiv = $('<div>');
                         new KBaseReportView($reportDiv, params);
                         return $reportDiv;
                     }.bind(this)
@@ -428,18 +425,18 @@ define([
         },
 
         makeHeader: function () {
-            var tmpl = Handlebars.compile(HeaderTemplate);
+            const tmpl = Handlebars.compile(HeaderTemplate);
             return $(tmpl(this.appInfo));
         },
 
         getCellState: function () {
-            var metadata = this.cell.metadata;
+            const metadata = this.cell.metadata;
             // This is altogether the wrong place to do this sort of
             // cell repair...
             if (metadata.kbase) {
                 if (metadata.kbase.state) {
                     // Copied from the codeCell extension
-                    var newKbaseMeta = {
+                    const newKbaseMeta = {
                         type: 'code',
                         attributes: {
                             id: StringUtil.uuid(),
@@ -477,7 +474,7 @@ define([
         },
 
         setCellState: function () {
-            var metadata = this.cell.metadata;
+            const metadata = this.cell.metadata;
             metadata.kbase.codeCell.jobInfo = {
                 jobId: this.jobId,
                 state: this.state
@@ -531,11 +528,11 @@ define([
         },
 
         requestJobStatus: function () {
-            window.setTimeout(function () {
+            window.setTimeout(() => {
                 this.channel.emit('request-job-status', {
                     jobId: this.jobId
                 });
-            }.bind(this), this.statusRequestInterval);
+            }, this.statusRequestInterval);
         },
 
 
@@ -544,8 +541,8 @@ define([
         },
 
         updateJobStatusPanel: function () {
-            var elapsedQueueTime;
-            var elapsedRunTime;
+            let elapsedQueueTime;
+            let elapsedRunTime;
 
             if (!this.state.creation_time) {
                 elapsedQueueTime = '-';
@@ -565,7 +562,7 @@ define([
                 }
             }
 
-            var info = {
+            const info = {
                 jobId: this.jobId,
                 status: this.state.status === 'suspend' ? 'error' : this.state.status,
                 creationTime: TimeFormat.readableTimestamp(this.state.creation_time),

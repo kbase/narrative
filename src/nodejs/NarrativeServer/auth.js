@@ -1,15 +1,15 @@
 'use strict';
 
-var cookie = require('cookie');
-var HttpError = require('./utils').HttpError;
-var QueryString = require('querystring');
+const cookie = require('cookie');
+const HttpError = require('./utils').HttpError;
+const QueryString = require('querystring');
 
 module.exports.Auth = Object.create({}, {
     parseCookie: {
         value: function (cookie) {
-            var obj = {};
-            cookie.split(/\|/).forEach(function (field) {
-                var o = field.split(/=/);
+            const obj = {};
+            cookie.split(/\|/).forEach((field) => {
+                const o = field.split(/=/);
                 obj[o[0]] = o[1];
             });
             return obj;
@@ -22,7 +22,7 @@ module.exports.Auth = Object.create({}, {
     },
     parseSessionCookie: {
         value: function (cookie) {
-            var session = this.parseCookie(cookie);
+            const session = this.parseCookie(cookie);
             session.token = this.fixToken(session.token);
             return session;
         }
@@ -43,18 +43,18 @@ module.exports.Auth = Object.create({}, {
             if (!req.headers.cookie) {
                 throw new Error('No narrative auth cookie');
             }
-            var cookies = cookie.parse(req.headers.cookie);
+            const cookies = cookie.parse(req.headers.cookie);
 
-            var narrCookie = cookies.kbase_session;
+            const narrCookie = cookies.kbase_session;
             if (!narrCookie) {
                 throw HttpError.make(401, 'Auth required', 'Sorry, you need to log in');
                 // throw new Error('No narrative auth cookie');
             }
-            var session = this.parseSessionCookie(narrCookie);
+            const session = this.parseSessionCookie(narrCookie);
             if (!session) {
                 throw new Error('Session is missing or invalid');
             }
-            var userId = session.user_id;
+            const userId = session.user_id;
             if (!userId) {
                 throw new Error('User id not found');
             }
@@ -65,7 +65,7 @@ module.exports.Auth = Object.create({}, {
         value: function (req, res, url) {
             res.statusCode = 200;
             res.setHeader('Content-Type', 'text/html');
-            var content = '<form action="/signin" method="POST">'+
+            const content = '<form action="/signin" method="POST">'+
                           'Username: <input type="text" name="username"><br>'+
                           'Password: <input type="password" name="password"><br>'+
                           '<input type="text" name="return_uri" value="' + url.query.return_uri + '">'+
@@ -78,20 +78,20 @@ module.exports.Auth = Object.create({}, {
     },
     handleSignin: {
         value: function (req, res, url) {
-            var data = '';
-            req.on('data', function (chunk) {
+            let data = '';
+            req.on('data', (chunk) => {
                 data += chunk;
             });
-            req.on('end', function () {
-                var formData = QueryString.parse(data);
-                var username = formData.username;
-                var password = formData.password;
+            req.on('end', () => {
+                const formData = QueryString.parse(data);
+                const username = formData.username;
+                const password = formData.password;
 
                 res.setHeader('Set-Cookie', [cookie.serialize('kbase_session', username)]);
 
                 console.log(formData);
 
-                var location = formData.return_uri;
+                const location = formData.return_uri;
                 res.statusCode = 302;
                 res.setHeader('Location', location);
                 res.end();

@@ -1,4 +1,3 @@
-/*jslint white: true*/
 /*eslint-env browser*/
 
 /**
@@ -173,7 +172,7 @@ define([
                     this.$slideoutBtn.tooltip('hide');
                     this.trigger('toggleSidePanelOverlay.Narrative', [this.$overlayPanel]);
 
-                    // NOTE - this will be missed and a widget will remain active if the panel 
+                    // NOTE - this will be missed and a widget will remain active if the panel
                     // is closed by means other than clicking this button.
                     // This should be re-visited at some point.
                     // this.deactivateLastRenderedPanel();

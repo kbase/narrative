@@ -32,11 +32,11 @@ define (
 		'kbwidget',
 		'bootstrap',
 		'jquery'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$
-	) {
+	) => {
 
     return KBWidget({
 
@@ -62,14 +62,14 @@ define (
 
         appendUI : function ($elem) {
 
-            var $sc = this;
+            const $sc = this;
 
-            var restoreMouseOver = this.options.onMouseover;
+            const restoreMouseOver = this.options.onMouseover;
 
             if (this.options.type == 'floating') {
                 $elem.css('position', 'relative');
             }
-            var $filterbox =
+            const $filterbox =
                 $.jqElem('div')
                     .addClass('input-group input-group-sm')
                     .append(
@@ -82,7 +82,7 @@ define (
                                     $sc.value(undefined);
                                 }
 
-                                var value = $sc.value();
+                                const value = $sc.value();
 
                                 if (value.length) {
                                     $sc.data('searchIcon').removeClass('fa-search');
@@ -147,14 +147,14 @@ define (
 
             $elem
                 .on('mouseover.kbaseSearchControls',
-                    function(e) {
+                    (e) => {
                         if ($sc.options.onMouseover) {
                             $filterbox.show();
                         }
                     }
                 )
                 .on('mouseout.kbaseSearchControls',
-                    function(e) {
+                    (e) => {
                         if ($sc.options.onMouseover) {
                             $filterbox.hide();
                         }

@@ -26,16 +26,16 @@ return KBWidget({
     },
     
     render: function() {
-        var self = this;
-        var container = this.$elem;
+        const self = this;
+        const container = this.$elem;
     	container.empty();
         if (self.token == null) {
         	container.append("<div>[Error] You're not logged in</div>");
         	return;
         }
-    	var pref = this.uuid();
-        var kbws = new Workspace(this.wsUrl, {'token': self.token});
-    	var panel = $('<div>'+
+    	const pref = this.uuid();
+        const kbws = new Workspace(this.wsUrl, {'token': self.token});
+    	const panel = $('<div>'+
     			'Genome Target ID: ' + self.genome_id + '<br><br>' +
     			'<form id="'+pref+'form" action="' + self.uploadUrl + '" enctype="multipart/form-data" method="post" target="'+pref+'hidden-iframe">'+
     			'<input type="hidden" name="token" value="' + self.token + '">'+
@@ -48,12 +48,12 @@ return KBWidget({
     			'<iframe id="'+pref+'frm" name="'+pref+'hidden-iframe" style="display: none; width:800px; height: 100px; overflow-x: scroll; overflow-y: scroll"></iframe>'+
     			'</div>');
     	container.append(panel);
-    	var ifrm = document.getElementById(pref+'frm');
+    	let ifrm = document.getElementById(pref+'frm');
     	ifrm = (ifrm.contentWindow) ? ifrm.contentWindow : (ifrm.contentDocument.document) ? ifrm.contentDocument.document : ifrm.contentDocument;
     	ifrm.document.open();
     	ifrm.document.write("<html><body>Please wait...</body></html>");
     	ifrm.document.close();
-    	$('#'+pref+'form').submit(function( event ) {
+    	$('#'+pref+'form').submit(( event ) => {
     		$('#'+pref+'frm').show();
     	});
         return this;
@@ -73,8 +73,8 @@ return KBWidget({
 
     uuid: function() {
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, 
-            function(c) {
-                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+            (c) => {
+                const r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                 return v.toString(16);
             });
     }

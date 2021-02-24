@@ -22,14 +22,14 @@ define([
     'bluebird',
     'base/js/namespace',
     'bootstrap'
-], function (
+], (
     $,
     Promise,
     Jupyter
-) {
+) => {
     'use strict';
 
-    var BootstrapSearch = function($target, options) {
+    const BootstrapSearch = function($target, options) {
         options = options || {};
 
         if (!options.placeholder) {
@@ -56,14 +56,14 @@ define([
     };
 
     BootstrapSearch.prototype.initialize = function($target) {
-        var self = this;
+        const self = this;
 
         // structure.
-        var $input = $('<input type="text">')
+        const $input = $('<input type="text">')
             .attr('Placeholder', this.options.placeholder)
             .addClass('form-control');
 
-        var $addonBtn = $('<span>')
+        const $addonBtn = $('<span>')
             .addClass('input-group-addon btn btn-default kb-method-search-clear')
             .attr('type', 'button')
             .css({
@@ -72,12 +72,12 @@ define([
                 'border-left': 'none'
             });
 
-        var $addonIcon = $('<span>')
+        const $addonIcon = $('<span>')
             .addClass('fa ' + this.options.emptyIcon);
 
         $addonBtn.append($addonIcon);
 
-        var $container = $('<div>')
+        const $container = $('<div>')
             .addClass('input-group')
             .append($input)
             .append($addonBtn);
@@ -85,15 +85,15 @@ define([
         $target.append($container);
 
         // event bindings.
-        $input.on('focus', function () {
+        $input.on('focus', () => {
             if (Jupyter && Jupyter.narrative) {
                 Jupyter.narrative.disableKeyboardManager();
             }
-        }).on('blur', function () {
+        }).on('blur', () => {
             if (Jupyter && Jupyter.narrative) {
                 Jupyter.narrative.disableKeyboardManager();
             }
-        }).on('input', function (e, ignoreDelay) {
+        }).on('input', (e, ignoreDelay) => {
             if ($input.val()) {
                 $addonIcon.removeClass(self.options.emptyIcon);
                 $addonIcon.addClass(self.options.filledIcon);
@@ -114,7 +114,7 @@ define([
                     self.options.delay
                 );
             }
-        }).on('keyup', function (e) {
+        }).on('keyup', (e) => {
             if (e.keyCode === 27) {
                 if (self.options.escFunction) {
                     self.options.escFunction(e);
@@ -122,7 +122,7 @@ define([
             }
         });
 
-        $addonBtn.click(function(e) {
+        $addonBtn.click((e) => {
             if (!self.options.addonFunction) {
                 $input.val('');
                 $input.trigger('input', [true]);
@@ -137,7 +137,7 @@ define([
     };
 
     BootstrapSearch.prototype.val = function(val) {
-        var retVal;
+        let retVal;
         if (val === undefined || val === null) {
             retVal = this.$input.val();
         }

@@ -8,9 +8,9 @@
 */
 define([
     'uuid'
-], function (
+], (
     Uuid
-) {
+) => {
     'use strict';
     class JSONRPC20 {
         constructor({url, token}) {

@@ -6,11 +6,11 @@ define (
 		'kbwidget',
 		'bootstrap',
 		'jquery'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$
-	) {
+	) => {
     return KBWidget({
         name: "KBaseContigBrowserButtons",
          
@@ -27,44 +27,44 @@ define (
                 return;
             }
 
-            var self = this;
-            var $buttonSet = $("<div/>")
+            const self = this;
+            const $buttonSet = $("<div/>")
                              .addClass("btn-group")
                              .append($("<button/>")
                                      .attr("type", "button")
                                      .addClass("btn btn-default")
                                      .append("First")
-                                     .click(function() { self.options.browser.moveLeftEnd(); })
+                                     .click(() => { self.options.browser.moveLeftEnd(); })
                                     )
                              .append($("<button/>")
                                      .attr("type", "button")
                                      .addClass("btn btn-default")
                                      .append("Previous")
-                                     .click(function() { self.options.browser.moveLeftStep(); })
+                                     .click(() => { self.options.browser.moveLeftStep(); })
                                     )
                              .append($("<button/>")
                                      .attr("type", "button")
                                      .addClass("btn btn-default")
                                      .append("Zoom In")
-                                     .click(function() { self.options.browser.zoomIn(); } )
+                                     .click(() => { self.options.browser.zoomIn(); } )
                                     )
                              .append($("<button/>")
                                      .attr("type", "button")
                                      .addClass("btn btn-default")
                                      .append("Zoom Out")
-                                     .click(function() { self.options.browser.zoomOut(); })
+                                     .click(() => { self.options.browser.zoomOut(); })
                                     )
                              .append($("<button/>")
                                      .attr("type", "button")
                                      .addClass("btn btn-default")
                                      .append("Next")
-                                     .click(function() { self.options.browser.moveRightStep(); })
+                                     .click(() => { self.options.browser.moveRightStep(); })
                                     )
                              .append($("<button/>")
                                      .attr("type", "button")
                                      .addClass("btn btn-default")
                                      .append("Last")
-                                     .click(function() { self.options.browser.moveRightEnd(); })
+                                     .click(() => { self.options.browser.moveRightEnd(); })
                                     );
 
 

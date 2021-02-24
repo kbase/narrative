@@ -1,10 +1,10 @@
 define([
     'messages',
     'heightNotifier'
-], function (
+], (
     Messages,
     HeightNotifier
-) {
+) => {
     function getParams(id) {
         if (!document.getElementById(id).hasAttribute('data-params')) {
             console.warn('This iframe is not configured correctly - the data-params attribute is required');
@@ -14,13 +14,13 @@ define([
     }
 
     function factory(config) {
-        var params = getParams(config.iframeId);
-        var messageManager = Messages.make({
+        const params = getParams(config.iframeId);
+        const messageManager = Messages.make({
             root: window,
             iframeId: params.iframeId,
             name: params.iframeId
         });
-        var iframeHeightNotifier = HeightNotifier.make({
+        const iframeHeightNotifier = HeightNotifier.make({
             interval: 200,
             messageManager: messageManager,
             nodeGetter: function() {
@@ -61,7 +61,7 @@ define([
                 iframeId: params.iframeId
             });
 
-            document.getElementById(params.iframeId).addEventListener('click', function () {
+            document.getElementById(params.iframeId).addEventListener('click', () => {
                 messageManager.send('parent', {
                     name: 'clicked',
                     iframeId: params.iframeId

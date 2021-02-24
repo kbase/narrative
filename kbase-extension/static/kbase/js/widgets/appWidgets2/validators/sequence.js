@@ -1,7 +1,7 @@
 define([
     'bluebird',
     './resolver'
-], function(Promise, resolver) {
+], (Promise, resolver) => {
     'use strict';
 
     function applyConstraints(value, constraints) {
@@ -28,8 +28,8 @@ define([
     }
 
     function validate(values, spec) {
-        var validationResult;
-        return Promise.try(function() {
+        let validationResult;
+        return Promise.try(() => {
             // validate the struct itself.
             validationResult = applyConstraints(values, spec);
 
@@ -41,20 +41,20 @@ define([
                 }
                 return validationResult;
             } else {
-                return Promise.all(values.map(function(value) {
+                return Promise.all(values.map((value) => {
                         // nb a sequenc always has a param named "item".
-                        var paramSpec = spec.parameters.specs.item;
-                        var paramValue = value;
+                        const paramSpec = spec.parameters.specs.item;
+                        const paramValue = value;
                         return resolver.validate(paramValue, paramSpec);
                     }))
-                    .then(function(subValidationResults) {
+                    .then((subValidationResults) => {
                         if (spec.data.constraints.required) {
                             // For now, we need to inspect the sub validation results -- 
                             // if this struct is required any any sub-fields are invalid or
                             // required-missing, we are also required-missing...
                             // could also try to represent an error state...
-                            Object.keys(subValidationResults).forEach(function(id) {
-                                var result = subValidationResults[id];
+                            Object.keys(subValidationResults).forEach((id) => {
+                                const result = subValidationResults[id];
                                 if (result.isValid === false) {
                                     //if (result.diagnosis === 'required-missing') {
                                     validationResult.isValid = false;

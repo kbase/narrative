@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'kb_common/html',
@@ -9,16 +7,16 @@ define([
     'common/dom',
     'bootstrap',
     'css!font-awesome'
-], function(Promise, html, Validation, Events, Runtime, Dom) {
+], (Promise, html, Validation, Events, Runtime, Dom) => {
     'use strict';
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         input = t('input');
 
     function factory(config) {
-        var options = {},
+        let options = {},
             spec = config.parameterSpec,
             workspaceId = config.workspaceId,
             parent,
@@ -48,7 +46,7 @@ define([
          */
 
         function getInputValue() {
-            let val = dom.getElement('input-container.input').value;
+            const val = dom.getElement('input-container.input').value;
             // if (!val) {
             //     return null;  // empty strings should -> null, otherwise it throws off validation.
             // }
@@ -56,23 +54,23 @@ define([
         }
 
         function setModelValue(value) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (model.value !== value) {
                     model.value = value;
                     return true;
                 }
                 return false;
             })
-                .then(function(changed) {
+                .then((changed) => {
                     render();
                 });
         }
 
         function unsetModelValue() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 model.value = undefined;
             })
-                .then(function(changed) {
+                .then((changed) => {
                     render();
                 });
         }
@@ -103,7 +101,7 @@ define([
                 });
             }
             else {
-                var rawValue = getInputValue();
+                const rawValue = getInputValue();
                 return validateUniqueOutput(rawValue)
                     .then((isUnique) => {
                         if (!isUnique) {
@@ -114,7 +112,7 @@ define([
                             };
                         }
                         else {
-                            let validationOptions = {
+                            const validationOptions = {
                                 required: spec.data.constraints.required,
                                 shouldNotExist: true,
                                 workspaceId: workspaceId,
@@ -125,7 +123,7 @@ define([
                             return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
                         }
                     })
-                    .then(function(validationResult) {
+                    .then((validationResult) => {
                         return validationResult;
                     });
             }
@@ -140,12 +138,12 @@ define([
                     type: 'get-parameters'
                 }
             }).then((paramValues) => {
-                let duplicates = Object.values(paramValues).filter(value => rawValue === value && !!value);
-                return !Boolean(duplicates.length);
+                const duplicates = Object.values(paramValues).filter(value => rawValue === value && !!value);
+                return !duplicates.length;
             });
         }
 
-        var autoChangeTimer;
+        let autoChangeTimer;
 
         function cancelTouched() {
             if (autoChangeTimer) {
@@ -155,13 +153,13 @@ define([
         }
 
         function handleTouched(interval) {
-            var editPauseInterval = interval || 500;
+            const editPauseInterval = interval || 500;
             return {
                 type: 'keyup',
                 handler: function(e) {
                     bus.emit('touched');
                     cancelTouched();
-                    autoChangeTimer = window.setTimeout(function() {
+                    autoChangeTimer = window.setTimeout(() => {
                         autoChangeTimer = null;
                         e.target.dispatchEvent(new Event('change'));
                     }, editPauseInterval);
@@ -174,7 +172,7 @@ define([
                 type: 'change',
                 handler: function() {
                     validate()
-                        .then(function(result) {
+                        .then((result) => {
                             if (result.isValid || result.diagnosis === 'required-missing') {
                                 bus.emit('changed', {
                                     newValue: result.parsedValue
@@ -187,7 +185,7 @@ define([
                             }
                             bus.emit('validation', result);
                         })
-                        .catch(function(err) {
+                        .catch((err) => {
                             bus.emit('validation', {
                                 errorMessage: err.message,
                                 diagnosis: 'error'
@@ -217,20 +215,20 @@ define([
         }
 
         function render() {
-            Promise.try(function() {
-                var events = Events.make(),
+            Promise.try(() => {
+                const events = Events.make(),
                     inputControl = makeInputControl(model.value, events, bus);
 
                 dom.setContent('input-container', inputControl);
                 events.attachEvents(container);
             })
-                .then(function() {
+                .then(() => {
                     return autoValidate();
                 });
         }
 
         function layout(events) {
-            var content = div({
+            const content = div({
                 dataElement: 'main-panel'
             }, [
                 div({ dataElement: 'input-container' })
@@ -243,10 +241,10 @@ define([
 
         function autoValidate() {
             return validate()
-                .then(function(result) {
+                .then((result) => {
                     bus.emit('validation', result);
                 })
-                .catch(function(err) {
+                .catch((err) => {
                     bus.emit('validation', {
                         errorMessage: err.message,
                         diagnosis: 'error'
@@ -257,26 +255,26 @@ define([
         // LIFECYCLE API
 
         function start() {
-            return Promise.try(function() {
-                bus.on('run', function(message) {
+            return Promise.try(() => {
+                bus.on('run', (message) => {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
                     dom = Dom.make({ node: container });
 
-                    var events = Events.make(),
+                    const events = Events.make(),
                         theLayout = layout(events);
 
                     container.innerHTML = theLayout.content;
                     events.attachEvents(container);
 
 
-                    bus.on('reset-to-defaults', function(message) {
+                    bus.on('reset-to-defaults', (message) => {
                         resetModelValue();
                     });
-                    bus.on('update', function(message) {
+                    bus.on('update', (message) => {
                         setModelValue(message.value);
                     });
-                    bus.on('refresh', function() {
+                    bus.on('refresh', () => {
 
                     });
                     bus.emit('sync');

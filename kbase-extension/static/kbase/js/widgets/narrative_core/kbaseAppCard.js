@@ -39,7 +39,7 @@ define (
         'kbase/js/widgets/narrative_core/kbaseCardLayout',
         'narrativeConfig',
         'jquery'
-    ], function(
+    ], (
         bootstrap,
         Icon,
         Promise,
@@ -48,16 +48,16 @@ define (
         kbaseCardLayout,
         Config,
         $
-    ) {
+    ) => {
         function KbaseAppCard(entry) {
-            var self = this;
-            var favorite = entry.app.favorite;
-            var app = entry.app.info;
+            const self = this;
+            let favorite = entry.app.favorite;
+            const app = entry.app.info;
             
-            var shortName = entry.name ? entry.name : app.name;
-            var authors = entry.createdBy; 
-            var version = entry.version ? entry.version : ('v' + app.ver);
-            var type;
+            const shortName = entry.name ? entry.name : app.name;
+            let authors = entry.createdBy; 
+            const version = entry.version ? entry.version : ('v' + app.ver);
+            let type;
 
             if(entry.createdBy === undefined){
                 if(app.authors.length >2){
@@ -71,14 +71,14 @@ define (
                     app.namespace + '</a> ';
             }
 
-            var $star = $('<i>').addClass('fa fa-star kbcb-star-default');
+            const $star = $('<i>').addClass('fa fa-star kbcb-star-default');
             if (favorite) {
                 $star.addClass('fa fa-star kbcb-star-favorite').append('&nbsp;');
             }
 
-            $star.click(function(e){
+            $star.click((e)=> {
                 e.stopPropagation();
-                var params = {};
+                const params = {};
                 if (app.module_name) {
                     params['module_name'] = app.module_name;
                     params['id'] = app.id.split('/')[1];
@@ -88,20 +88,20 @@ define (
 
                 if (favorite) {
                     Promise.resolve(self.catalog.remove_favorite(params))
-                        .then(function () {
+                        .then(() => {
                             $star.removeClass('kbcb-star-favorite');
                             favorite = null; // important to set this if we don't refresh the panel
                         })
-                        .catch(function (error) {
+                        .catch((error) => {
                             console.error(error);
                         });
                 } else {
                     Promise.resolve(self.catalog.add_favorite(params))
-                        .then(function () {
+                        .then(() => {
                             $star.addClass('kbcb-star-favorite');
                             favorite = new Date().getTime(); // important to set this if we don't refresh the panel
                         })
-                        .catch(function (error) {
+                        .catch((error) => {
                             console.error(error);
                         });
                 }            
@@ -116,23 +116,23 @@ define (
                     }
                 });
 
-            var $logo = $('<div>');
+            const $logo = $('<div>');
             if (app.icon && app.icon.url) {
-                var url = Config.url('narrative_method_store_image')+ app.icon.url;
+                const url = Config.url('narrative_method_store_image')+ app.icon.url;
                 $logo.append(DisplayUtil.getAppIcon({ url: url, cursor: 'pointer', setColor: true, size: '50px' }));
             } else {
                 $logo.append(DisplayUtil.getAppIcon({ cursor: 'pointer', setColor: true }));
             }
                    
-            var $name = $('<div>').addClass('kb-data-list-name').append(shortName);
-            var $version = $('<span>').addClass('kb-data-list-version').append(version);
-            var $type = $('<span>').addClass('kb-data-list-type').append(type).append($version);
-            var $date = $('<span>').addClass('kb-data-list-date');
-            var $authors = $('<span>').addClass('kb-data-list-edit-by').append(authors);
+            const $name = $('<div>').addClass('kb-data-list-name').append(shortName);
+            const $version = $('<span>').addClass('kb-data-list-version').append(version);
+            const $type = $('<span>').addClass('kb-data-list-type').append(type).append($version);
+            const $date = $('<span>').addClass('kb-data-list-date');
+            const $authors = $('<span>').addClass('kb-data-list-edit-by').append(authors);
 
-            var $title = $('<div>').append($name).append($star);
+            const $title = $('<div>').append($name).append($star);
 
-            var $subcontent = $('<div>')
+            const $subcontent = $('<div>')
                 .addClass('narrative-data-list-subcontent')
                 .append($('<span/>').append($star))
                 .append($type)
@@ -142,14 +142,14 @@ define (
                 $subcontent.append($authors);
             }
           
-            var layout = {
+            const layout = {
                 logo: $logo,
                 title: $title,
                 subcontent: $subcontent,
                 moreContent : entry.moreContent
             };
 
-            var $card = new kbaseCardLayout(layout);
+            const $card = new kbaseCardLayout(layout);
 
             return $card;
         }

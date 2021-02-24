@@ -11,13 +11,13 @@ define (
 		'jquery',
         'narrativeConfig',
 		'kbaseAuthenticatedWidget'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
         Config,
 		kbaseAuthenticatedWidget
-	) {
+	) => {
     return KBWidget({
         name: 'kbaseMSA',
         parent : kbaseAuthenticatedWidget,
@@ -94,36 +94,36 @@ define (
         },
 
         loadMSA: function() {
-            var prom;
-            var objId = this.buildObjectIdentity(this.options.workspaceID, this.options.msaID, null, null);
+            let prom;
+            const objId = this.buildObjectIdentity(this.options.workspaceID, this.options.msaID, null, null);
             if (this.options.kbCache)
                 prom = this.options.kbCache.req('ws', 'get_objects', [objId]);
             else
                 prom = this.wsClient.get_objects([objId]);
 
-            var self = this;
+            const self = this;
 
-            $.when(prom).done($.proxy(function(objArr) {
+            $.when(prom).done($.proxy((objArr) => {
                 self.$elem.empty();
                 self.$elem.append(''+
                 '<table class="table table-striped table-bordered" style="margin-left: auto; margin-right: auto;">'+
 				'<tr><td width="40%">Multiple Sequence Alignment object ID</td><td>'+self.options.msaID+'</td></tr></table>');
                 //self.$elem.append("<p>Multiple Sequence Alignment object ID:&nbsp;<b>" + self.options.msaID + "</b></p><br>");
-                var canvasId = "canvas-" + self.pref;
-                var canvasDivId = "canvas-div-" + self.pref;
-                var canvasDiv = $('<div id="' + canvasDivId + '" style="border:1px solid #d3d3d3;">').append($('<canvas id="' + canvasId + '">'));
+                const canvasId = "canvas-" + self.pref;
+                const canvasDivId = "canvas-div-" + self.pref;
+                const canvasDiv = $('<div id="' + canvasDivId + '" style="border:1px solid #d3d3d3;">').append($('<canvas id="' + canvasId + '">'));
                 canvasDiv.css({'max-height':400, 'max-width':1080, 'overflow':'scroll'});
                 self.$elem.append(canvasDiv);
                 watchForWidgetMaxWidthCorrection(canvasDivId);
-                var canvas = document.getElementById(canvasId);
+                const canvas = document.getElementById(canvasId);
 
-                var aln = objArr[0].data.alignment;
-                var size = 0;
-                var len = null;
-                var max_lbl_w = 0;
+                const aln = objArr[0].data.alignment;
+                let size = 0;
+                let len = null;
+                let max_lbl_w = 0;
                 for (var key in aln) {
                 	size++;
-                	var lbl_w = self.drawLine(canvas, key, 0, true);
+                	const lbl_w = self.drawLine(canvas, key, 0, true);
                 	if (max_lbl_w < lbl_w)
                 		max_lbl_w = lbl_w;
                 	len = aln[key].length;
@@ -131,12 +131,12 @@ define (
 
                 canvas.width = max_lbl_w + (2 + len) * 8;
             	canvas.height = size * 12 + 2;
-                var line = 0;
+                let line = 0;
                 for (var key in aln) {
                 	self.drawLine(canvas, key, line, false);
-                	var seq = aln[key];
-                	for (var i = 0; i < seq.length; i++) {
-                		var smb = seq.substring(i, i + 1);
+                	const seq = aln[key];
+                	for (let i = 0; i < seq.length; i++) {
+                		const smb = seq.substring(i, i + 1);
                 		self.drawSymbol(canvas, smb, self.getColor(smb), max_lbl_w, 2 + i, line);
                 	}
                 	line++;
@@ -147,37 +147,37 @@ define (
         },
 
         drawSymbol: function(canvas, smb, color, xshift, xpos, ypos) {
-            var text = smb;
-            var ctx = canvas.getContext("2d");
-            var fontH = 10;
-            var fontW = 7;
-            var font = fontH + "pt courier-new";
+            const text = smb;
+            const ctx = canvas.getContext("2d");
+            const fontH = 10;
+            const fontW = 7;
+            const font = fontH + "pt courier-new";
             CanvasTextFunctions.enable(ctx);
             ctx.strokeStyle = "#000000";
             ctx.fillStyle = color;
-            var smbW = ctx.measureText(font, fontH, text);
-            var x = xshift + xpos * (fontW + 1);
-            var y = ypos * (fontH + 2);
+            const smbW = ctx.measureText(font, fontH, text);
+            const x = xshift + xpos * (fontW + 1);
+            const y = ypos * (fontH + 2);
             //var h = fontsize;
             ctx.fillRect(x - 1, y + 1, fontW + 1, fontH + 2);
             ctx.drawText(font, fontH, x + (fontW - smbW) / 2, y + fontH * 1.1, text);
         },
 
         drawLine: function(canvas, text, ypos, dryMode) {
-            var ctx = canvas.getContext("2d");
-            var fontH = 10;
-            var font = fontH + "pt courier-new";
+            const ctx = canvas.getContext("2d");
+            const fontH = 10;
+            const font = fontH + "pt courier-new";
             CanvasTextFunctions.enable(ctx);
             ctx.strokeStyle = "#000000";
-            var lineW = ctx.measureText(font, fontH, text);
-            var y = ypos * (fontH + 2);
+            const lineW = ctx.measureText(font, fontH, text);
+            const y = ypos * (fontH + 2);
             if (!dryMode)
             	ctx.drawText(font, fontH, 0, y + fontH * 1.1, text);
             return lineW;
         },
 
         getColor: function(smb) {
-        	var ret = this.aminoAcidColors[smb];
+        	let ret = this.aminoAcidColors[smb];
         	if (!ret)
         		ret = "#ffffff";
         	return ret;
@@ -190,7 +190,7 @@ define (
             else if (error.error && error.error.message)
                 errString = error.error.message;
 
-            var $errorDiv = $("<div>")
+            const $errorDiv = $("<div>")
                             .addClass("alert alert-danger")
                             .append("<b>Error:</b>")
                             .append("<br>" + errString);
@@ -208,7 +208,7 @@ define (
         },
 
         buildObjectIdentity: function(workspaceID, objectID, objectVer, wsRef) {
-            var obj = {};
+            const obj = {};
             if (wsRef) {
             	obj['ref'] = wsRef;
             } else {
@@ -237,7 +237,7 @@ define (
         },
 
         showMessage: function(message) {
-            var span = $("<span/>").append(message);
+            const span = $("<span/>").append(message);
 
             this.$messagePane.append(span);
             this.$messagePane.show();
@@ -250,8 +250,8 @@ define (
 
         uuid: function() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
-                function(c) {
-                    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+                (c) => {
+                    const r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                     return v.toString(16);
                 });
         },

@@ -10,7 +10,7 @@ define (
 		'kbaseGrowthMatrixAbstract',
 		'kbaseTabs',
 		'jquery-dataTables'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -18,7 +18,7 @@ define (
 		kbaseGrowthMatrixAbstract,
 		kbaseTabs,
 		jquery_dataTables
-	) {
+	) => {
     return KBWidget({
         name: 'kbaseGrowthParams2DPlot',
         parent : kbaseGrowthMatrixAbstract,
@@ -36,17 +36,17 @@ define (
 
         buildWidget: function($containerDiv){
 
-            var growthParamNames = {
+            const growthParamNames = {
                 "maxRate": "Max growth rate",
                 "maxRateTime": "Max growth rate time",
                 "maxOD":  "Max OD",
                 "maxODTime": "Max OD time"
             };
 
-            var growthParamType = this.options.growthParam;
-            var growthParamName = growthParamNames[growthParamType];
-            var conditionParamX = this.options.conditionParamX;
-            var conditionParamY = this.options.conditionParamY;
+            const growthParamType = this.options.growthParam;
+            const growthParamName = growthParamNames[growthParamType];
+            const conditionParamX = this.options.conditionParamX;
+            const conditionParamY = this.options.conditionParamY;
 
 
             this.buildPlot($containerDiv, growthParamType, growthParamName, conditionParamX, conditionParamY);
@@ -54,26 +54,26 @@ define (
         },
 
         buildPlot: function($containerDiv, growthParamType, growthParamName, conditionParamX, conditionParamY){
-            var self = this;
+            const self = this;
             var data = [];
-            var xLabel = "";
-            var yLabel = "";
+            let xLabel = "";
+            let yLabel = "";
 
-            var xUnit = null;
-            var yUnit = null;
+            let xUnit = null;
+            let yUnit = null;
 
-            var xValues = {};
-            var yValues = {};
-            var zValues = {};
+            const xValues = {};
+            const yValues = {};
+            const zValues = {};
 
-            var conditions = self.conditions;
-            for(var ci in conditions){
-                var condition = conditions[ci];
+            const conditions = self.conditions;
+            for(const ci in conditions){
+                const condition = conditions[ci];
 
                 var xValue;
                 var yValue;
                 for(var i in condition.metadata){
-                    var propValue  = condition.metadata[i];
+                    const propValue  = condition.metadata[i];
                     if( propValue.entity != 'Condition') continue;
 
                     if( propValue.property_name == conditionParamX){
@@ -100,32 +100,32 @@ define (
 
 
             // Build data X's, Y's, and Z's
-            var dataXs = [];
+            const dataXs = [];
             for(var i in xValues){
                 dataXs.push( xUnit ?  parseFloat(xValues[i]) : xValues[i]);
             }
 //            console.log('xUnit', xUnit);
 //            console.log('before sort: dataXs', dataXs);
-            dataXs.sort(function(a, b) { return a > b ? 1 : -1});
+            dataXs.sort((a, b) => { return a > b ? 1 : -1});
 //            console.log('after sort: dataXs', dataXs);
 //            dataXs.sort(function(a, b) { return parseFloat(a) > parseFloat(b) ? 1 : -1});
 
-            var dataYs = [];
+            const dataYs = [];
             for(var i in yValues){
                 dataYs.push( yUnit ?  parseFloat(yValues[i]) : yValues[i]);
             }
 //            console.log('yUnit', yUnit);
 //            console.log('before sort: dataYs', dataYs);
-            dataYs.sort(function(a, b) { return a > b ? 1 : -1});
+            dataYs.sort((a, b) => { return a > b ? 1 : -1});
 //            console.log('after sort: dataYs', dataYs);
 //            dataYs.sort(function(a, b) { return parseFloat(a) > parseFloat(b) ? 1 : -1});
 
 
-            var dataZs = [];
-            for(var yIndex in dataYs){
-                var row = [];
-                for(var xIndex in dataXs){
-                    var key = dataXs[xIndex] + "_" + dataYs[yIndex];
+            const dataZs = [];
+            for(const yIndex in dataYs){
+                const row = [];
+                for(const xIndex in dataXs){
+                    const key = dataXs[xIndex] + "_" + dataYs[yIndex];
                     if(key in zValues){
                         row.push(zValues[key]);
                     } else{
@@ -145,13 +145,13 @@ define (
             ];
 
             // Build title
-            var title = growthParamName;
-            var filters = self.options.conditionFilter;
+            let title = growthParamName;
+            const filters = self.options.conditionFilter;
             if(filters){
                 title += '<br><span style="font-size:0.8em; font-style: italic">constrained parameteres: ';
                 var i = 0;
-                for(var param in filters){
-                    var value = filters[param];
+                for(const param in filters){
+                    const value = filters[param];
                     if(i > 0){
                         title += ', ';
                     }
@@ -161,7 +161,7 @@ define (
                 title += "</span>";
             }
 
-            var layout = {
+            const layout = {
                 autosize: true,
                 margin: {
                     l: 50,
@@ -188,7 +188,7 @@ define (
                 }
             };
 
-            var $plotDiv = $("<div/>");
+            const $plotDiv = $("<div/>");
             $containerDiv.append( $plotDiv );
             Plotly.plot( $plotDiv[0], data, layout, {showLink: false} );
         }

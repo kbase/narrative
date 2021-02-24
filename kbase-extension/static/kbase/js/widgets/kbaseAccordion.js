@@ -32,11 +32,11 @@ define (
 		'kbwidget',
 		'bootstrap',
 		'jquery'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$
-	) {
+	) => {
 
 
     return KBWidget({
@@ -66,9 +66,9 @@ define (
                 elements = this.options.elements;
             }
 
-            var fontSize = this.options.fontSize;
+            const fontSize = this.options.fontSize;
 
-            var $block =
+            const $block =
                 $('<div></div>')
                     .addClass('accordion')
                     .css('font-size', fontSize)
@@ -119,8 +119,8 @@ define (
                                             'click',
                                                 function(e) {
                                                     e.preventDefault();
-                                                    var $opened = $(this).closest('.panel').find('.in');
-                                                    var $target = $(this).next();
+                                                    const $opened = $(this).closest('.panel').find('.in');
+                                                    const $target = $(this).next();
 
                                                     if ($opened != undefined) {
                                                         $opened.collapse('hide');

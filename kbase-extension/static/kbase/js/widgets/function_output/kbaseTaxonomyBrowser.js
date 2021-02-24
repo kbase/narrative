@@ -13,7 +13,7 @@ define (
 		'kbase-generic-client-api',
 		'narrativeConfig',
 		'common/runtime'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -26,7 +26,7 @@ define (
 		GenericClient,
 		Config,
 		Runtime
-	) {
+	) => {
     'use strict';
 
     return KBWidget({
@@ -38,20 +38,20 @@ define (
 
         init: function init(options) {
           this._super(options);
-          var $self = this;
+          const $self = this;
           //console.log("INIT WITH OPTIONS", options);
           this.genericClient = new GenericClient(Config.url('service_wizard'), {
             token: Runtime.make().authToken()
           });
 
           this.genericClient.sync_call("taxonomy_service.get_genomes_for_taxonomy",[{taxa_ref : '1779/590344/3'}])
-            .then(function(data) {
+            .then((data) => {
 
-              var lineage = [];
+              const lineage = [];
               $self.lineage = {};
               $.each(
                 data[0].lineage_genomes,
-                function (i, g) {
+                (i, g) => {
                   lineage.unshift(
                     {
                       label : g.lineage_step,
@@ -71,11 +71,11 @@ define (
               $self.data('loaderElem').hide();
               $self.data('tabsDiv').show();
 
-              var promises = [];
+              const promises = [];
               $self.loadLineage( data[0].lineage_genomes[0].lineage_step );
 
             })
-            .catch(function(e) {
+            .catch((e) => {
               $self.$elem.empty();
               $self.$elem.append("Could not load anything : " + e);
             });
@@ -89,18 +89,18 @@ define (
 
         loadLineage : function(lineage_step) {
 
-          var $self = this;
+          const $self = this;
 
           $self.data('tabsDiv').hide();
           $self.data('loaderElem').show();
 
           $self.genericClient.sync_call("taxonomy_service.get_genomes_for_taxa_group",[{lineage_step : lineage_step, start : 0, limit : $self.lineage [ lineage_step ] }])
-            .then(function (data) {
+            .then((data) => {
 
-              var taxaInfo = data[0].TaxaInfo;
-              var viewInfo = data[0].view_info;
+              const taxaInfo = data[0].TaxaInfo;
+              const viewInfo = data[0].view_info;
 
-              var tableData = {
+              const tableData = {
                 name    : viewInfo.scientific_name,
                 parent : viewInfo.parent_name,
                 //peers   :
@@ -109,10 +109,10 @@ define (
                 domain  : viewInfo.domain
               };
 
-              var genomeTableData = [];
+              const genomeTableData = [];
               $.each(
                 taxaInfo,
-                function (i, v) {
+                (i, v) => {
                   /*{title: 'Type'},
                   {title: 'Name'},
                   {title: 'Owner'},
@@ -138,7 +138,7 @@ define (
               $self.data('tabsDiv').show();
 
             })
-            .catch( function (e) {
+            .catch( (e) => {
               $self.$elem.empty();
               $self.$elem.append("Could not load anything : " + e);
             });
@@ -156,11 +156,11 @@ define (
         },
 
         loadData: function loadData() {
-          var $overviewElem = this.data('overviewElem');
+          const $overviewElem = this.data('overviewElem');
 
           $overviewElem.empty();
 
-          var data = {
+          const data = {
             lineage : [ ],
             genomes : []
           };
@@ -177,23 +177,23 @@ define (
 
         buildLineageElem : function(data) {
 
-          var $self = this;
+          const $self = this;
 
-          var ulCss = {
+          const ulCss = {
             'list-style': 'none',
             margin : '10px',
             padding : 0
           };
 
-          var $container = $self.data('lineageElem') || $.jqElem('ul').css(ulCss);
+          const $container = $self.data('lineageElem') || $.jqElem('ul').css(ulCss);
 
-          var $ul = $container;
+          let $ul = $container;
 
           $.each(
             data,
-            function (i, line) {
+            (i, line) => {
 
-              var $next = $.jqElem('ul').css(ulCss);
+              const $next = $.jqElem('ul').css(ulCss);
 
               $ul.append(
                 $.jqElem('li')
@@ -212,12 +212,12 @@ define (
 
         buildOverviewTable : function buildOverviewTable(data) {
 
-          var $self = this;
+          const $self = this;
 
-          var $containerElem = $self.data('overviewElem');
+          const $containerElem = $self.data('overviewElem');
           $containerElem.empty();
 
-          var $overviewTable =  new kbaseTable($.jqElem('div'), {
+          const $overviewTable =  new kbaseTable($.jqElem('div'), {
             allowNullRows: false,
             structure: {
               keys: [
@@ -243,15 +243,15 @@ define (
 
         buildGenomesElem : function bunildGenomesElem(data) {
 
-          var $genomesElem = this.data('genomesElem');
+          const $genomesElem = this.data('genomesElem');
           $genomesElem.empty();
 
-          var $self = this;
-          var $containerElem = $.jqElem('table').addClass('display').css({ 'width' : '100%', 'border': '1px solid #ddd'})
+          const $self = this;
+          const $containerElem = $.jqElem('table').addClass('display').css({ 'width' : '100%', 'border': '1px solid #ddd'})
 
           $genomesElem.append($containerElem);
 
-          var $dt = $containerElem.DataTable({
+          const $dt = $containerElem.DataTable({
             columns: [
               {title: 'Type'},
               {title: 'Name'},
@@ -268,11 +268,11 @@ define (
 
         buildSelectorElem : function(data) {
 
-          var $self = this;
+          const $self = this;
 
           var $select = $self.data('selectorElem')
             || $.jqElem('select')
-                .on('change', function(e) {
+                .on('change', (e) => {
                   $self.loadLineage( $select.val() );
                 })
           ;
@@ -280,9 +280,9 @@ define (
 
           $.each(
             data,
-            function (i, line) {
+            (i, line) => {
 
-              var $option = $.jqElem('option')
+              const $option = $.jqElem('option')
                   .attr( 'value', line.label )
                   .append(line.label);
 
@@ -303,13 +303,13 @@ define (
 
         appendUI: function appendUI($elem) {
 
-          var $self = this;
+          const $self = this;
 
-          var $tabsDiv = $self.data('tabsDiv', $.jqElem('div').css('display', 'none') );
-          var $overviewElem = $self.data('overviewElem', $.jqElem('div'));
-          var $genomesElem = $self.data('genomesElem', $.jqElem('div'));
+          const $tabsDiv = $self.data('tabsDiv', $.jqElem('div').css('display', 'none') );
+          const $overviewElem = $self.data('overviewElem', $.jqElem('div'));
+          const $genomesElem = $self.data('genomesElem', $.jqElem('div'));
 
-          var $loaderElem = $self.data('loaderElem', $.jqElem('div').css({width : '100%', 'text-align' : 'center'})
+          const $loaderElem = $self.data('loaderElem', $.jqElem('div').css({width : '100%', 'text-align' : 'center'})
             .append(
               $.jqElem('i').addClass('fa fa-spinner fa-spin fa-4x')
             )
@@ -318,7 +318,7 @@ define (
           $overviewElem.append($self.loaderElem());
           $genomesElem.append($self.loaderElem());
 
-          var $tabs = new kbaseTabs($tabsDiv,
+          const $tabs = new kbaseTabs($tabsDiv,
             {
               tabs : [
                 {

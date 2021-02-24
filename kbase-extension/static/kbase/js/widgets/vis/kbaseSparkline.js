@@ -4,12 +4,12 @@ define (
 		'bootstrap',
 		'jquery',
 		'kbaseLinechart'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		kbaseLinechart
-	) {
+	) => {
 
     'use strict';
 
@@ -45,7 +45,7 @@ define (
 
         setDataset : function(dataset) {
 
-            var sparkValues = dataset;
+            const sparkValues = dataset;
 
             dataset = [
                 {
@@ -56,7 +56,7 @@ define (
             this._super(dataset);
 
             if (this.options.addLastPoint) {
-                var lastPoint = sparkValues[sparkValues.length - 1];
+                const lastPoint = sparkValues[sparkValues.length - 1];
                 lastPoint.shape     = this.options.lastPointShape;
                 lastPoint.shapeArea = this.options.lastPointShapeArea;
                 lastPoint.color     = this.options.lastPointColor;

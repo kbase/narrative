@@ -1,6 +1,6 @@
 require([
     './narrative_paths',
-], function () {
+], () => {
     'use strict';
     require([
         'jquery',
@@ -9,18 +9,18 @@ require([
         'narrativeConfig',
         'narrativeLogin',
         'css!font-awesome'
-    ], function (
+    ], (
         $,
         Promise,
         DynamicServiceClient,
         Config,
         Login
-    ) {
+    ) => {
     Config.updateConfig()
-        .then(function () {
+        .then(() => {
             return Login.init($('#signin-button'), true);
         })
-        .then(function () {
+        .then(() => {
             const statusCode = document.getElementById('error_container').getAttribute('data-code');
             if (statusCode === '403') {
                 buildRequestControl();
@@ -43,11 +43,11 @@ require([
         toggleControls();
         toggleLoader(true);
         Promise.try(() => {
-            let resultElem = document.getElementById('request-result');
+            const resultElem = document.getElementById('request-result');
             while (resultElem.firstChild) {
                 resultElem.removeChild(resultElem.firstChild);
             }
-            let userId = Login.sessionInfo.user_id,
+            const userId = Login.sessionInfo.user_id,
                 token = Login.sessionInfo.token,
                 reqLevel = document.getElementById('req-level').value,
                 wsId = Config.get('workspaceId'),
@@ -72,7 +72,7 @@ require([
     }
 
     function toggleLoader(on) {
-        let loader = document.getElementById('loader');
+        const loader = document.getElementById('loader');
         if (on) {
             loader.style.display = 'inherit';
         } else {
@@ -81,7 +81,7 @@ require([
     }
 
     function toggleControls(on) {
-        let controls = document.getElementById('perm-request');
+        const controls = document.getElementById('perm-request');
         if (on) {
             controls.style.display = 'inherit';
         } else {
@@ -90,14 +90,14 @@ require([
     }
 
     function showError(err) {
-        let msg = err.message ? err.message : err.originalError.name,
+        const msg = err.message ? err.message : err.originalError.name,
             errText = 'Sorry, an error occurred while processing your request: ' + msg,
             errElem = document.getElementById('request-result');
         errElem.append(errText);
     }
 
     function showSuccess() {
-        let errElem = document.getElementById('request-result');
+        const errElem = document.getElementById('request-result');
         errElem.append('Access request sent successfully!');
     }
 });

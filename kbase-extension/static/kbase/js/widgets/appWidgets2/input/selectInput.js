@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'kb_common/html',
@@ -11,24 +9,24 @@ define([
 
     'bootstrap',
     'css!font-awesome'
-], function(
+], (
     Promise,
     html,
     Events,
     UI,
     Runtime,
     Validation,
-    inputUtils) {
+    inputUtils) => {
     'use strict';
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         select = t('select'),
         option = t('option');
 
     function factory(config) {
-        var spec = config.parameterSpec,
+        let spec = config.parameterSpec,
             runtime = Runtime.make(),
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(config.channelName),
@@ -43,13 +41,13 @@ define([
         model.availableValues = spec.data.constraints.options;
 
         model.availableValuesMap = {};
-        model.availableValues.forEach(function(item, index) {
+        model.availableValues.forEach((item, index) => {
             item.index = index;
             model.availableValuesMap[item.value] = item;
         });
 
         function getControlValue() {
-            var control = ui.getElement('input-container.input'),
+            const control = ui.getElement('input-container.input'),
                 selected = control.selectedOptions;
 
             if (selected.length === 0) {
@@ -64,20 +62,20 @@ define([
         // VALIDATION
 
         function importControlValue() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 return Validation.importString(getControlValue());
             });
         }
 
         function validate(value) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 return Validation.validate(value, spec);
             });
         }
 
         function autoValidate() {
             return validate(model.value)
-                .then(function(result) {
+                .then((result) => {
                     channel.emit('validation', result);
                 });
         }
@@ -89,14 +87,14 @@ define([
                 type: 'change',
                 handler: function() {
                     importControlValue()
-                        .then(function(value) {
+                        .then((value) => {
                             model.value = value;
                             channel.emit('changed', {
                                 newValue: value
                             });
                             return validate(value);
                         })
-                        .then(function(result) {
+                        .then((result) => {
                             if (result.isValid) {
                                 if (config.showOwnMessages) {
                                     ui.setContent('input-container.message', '');
@@ -106,7 +104,7 @@ define([
                             } else {
                                 if (config.showOwnMessages) {
                                     // show error message -- new!
-                                    var message = inputUtils.buildMessageAlert({
+                                    const message = inputUtils.buildMessageAlert({
                                         title: 'ERROR',
                                         type: 'danger',
                                         id: result.messageId,
@@ -118,7 +116,7 @@ define([
                             }
                             channel.emit('validation', result);
                         })
-                        .catch(function(err) {
+                        .catch((err) => {
                             channel.emit('validation', {
                                 isValid: false,
                                 diagnosis: 'invalid',
@@ -130,8 +128,8 @@ define([
         }
 
         function makeInputControl(events) {
-            var selected,
-                selectOptions = model.availableValues.map(function(item) {
+            let selected,
+                selectOptions = model.availableValues.map((item) => {
                     selected = false;
                     if (item.value === model.value) {
                         selected = true;
@@ -153,20 +151,20 @@ define([
 
         function syncModelToControl() {
             // assuming the model has been modified...
-            var control = ui.getElement('input-container.input');
+            const control = ui.getElement('input-container.input');
             // loop through the options, selecting the one with the value.
             // unselect
             if (control.selectedIndex >= 0) {
                 control.options.item(control.selectedIndex).selected = false;
             }
-            var selectedItem = model.availableValuesMap[model.value];
+            const selectedItem = model.availableValuesMap[model.value];
             if (selectedItem) {
                 control.options.item(selectedItem.index + 1).selected = true;
             }
         }
 
         function layout(events) {
-            var content = div({
+            const content = div({
                 dataElement: 'main-panel'
             }, [
                 div({ dataElement: 'input-container' },
@@ -193,21 +191,21 @@ define([
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
-                var events = Events.make({ node: container }),
+                const events = Events.make({ node: container }),
                     theLayout = layout(events);
 
                 container.innerHTML = theLayout.content;
                 events.attachEvents();
 
-                channel.on('reset-to-defaults', function() {
+                channel.on('reset-to-defaults', () => {
                     resetModelValue();
                 });
-                channel.on('update', function(message) {
+                channel.on('update', (message) => {
                     setModelValue(message.value);
                 });
                 // bus.emit('sync');
@@ -219,7 +217,7 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (container) {
                     parent.removeChild(container);
                 }

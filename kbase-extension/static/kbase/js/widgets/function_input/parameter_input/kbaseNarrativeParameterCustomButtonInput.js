@@ -12,13 +12,13 @@ define (
 		'jquery',
 		'select2',
         'kbaseNarrativeParameterInput'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		select2,
         kbaseNarrativeParameterInput
-	) {
+	) => {
 
     return KBWidget({
         name: "kbaseNarrativeParameterCustomButtonInput",
@@ -40,12 +40,12 @@ define (
         value: false,
 
         render: function() {
-            var self = this;
-            var spec = self.spec;
+            const self = this;
+            const spec = self.spec;
 
-            var nameColClass  = "col-md-2";
-            var inputColClass = "col-md-5";
-            var hintColClass  = "col-md-5";
+            const nameColClass  = "col-md-2";
+            const inputColClass = "col-md-5";
+            const hintColClass  = "col-md-5";
 
             self.$button = $('<button type="button">' + spec.ui_name + '</button>')
                     .addClass('btn btn-default ')
@@ -58,16 +58,16 @@ define (
 
             self.$rowDiv = $('<div>').addClass("row kb-method-parameter-row")
                             .hover(function(){$(this).toggleClass('kb-method-parameter-row-hover');});
-            var $nameCol = $('<div>').addClass(nameColClass).addClass("kb-method-parameter-name")
+            const $nameCol = $('<div>').addClass(nameColClass).addClass("kb-method-parameter-name")
                                 .append('');
-            var $inputCol = $('<div>').addClass(inputColClass).addClass("kb-method-parameter-input")
+            const $inputCol = $('<div>').addClass(inputColClass).addClass("kb-method-parameter-input")
                             .append($('<div>').css({"width":"100%","display":"inline-block"}).append(self.$button))
                             .append($('<div>').css({"display":"inline-block"}).append(self.$feedbackDiv));
-            var $hintCol  = $('<div>').addClass(hintColClass).addClass("kb-method-parameter-hint")
+            const $hintCol  = $('<div>').addClass(hintColClass).addClass("kb-method-parameter-hint")
                             .append(spec.short_hint);
             self.$rowDiv.append($nameCol).append($inputCol).append($hintCol);
 
-            var $errorPanel = $('<div>').addClass("kb-method-parameter-error-mssg").hide();
+            const $errorPanel = $('<div>').addClass("kb-method-parameter-error-mssg").hide();
             self.$errorDiv = $('<div>').addClass('row')
                                 .append($('<div>').addClass(nameColClass))
                                 .append($errorPanel.addClass(inputColClass));
@@ -75,7 +75,7 @@ define (
             self.$mainPanel.append(self.$rowDiv);
             self.$mainPanel.append(self.$errorDiv);
 
-            self.$button.click(function(){
+            self.$button.click(()=> {
                 self.options.dataModel.onButtonClick();
                 self.setParameterValue(true);
             });
@@ -85,7 +85,7 @@ define (
 
         // What will be saved in the narrative
         getState: function() {
-            var state = {
+            const state = {
                 value:  this.getParameterValue(),
                 active : this.active
             };
@@ -104,9 +104,9 @@ define (
         refresh: function() {
         },
         isValid: function() {
-            var self = this;
-            var errorMessages = [];
-            var valid = self.getParameterValue();
+            const self = this;
+            const errorMessages = [];
+            const valid = self.getParameterValue();
 
             if(!valid){
                 errorMessages.push("Button "+self.spec.ui_name+" needs to be clicked.");

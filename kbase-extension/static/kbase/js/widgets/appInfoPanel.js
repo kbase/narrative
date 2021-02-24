@@ -1,4 +1,3 @@
-/*jslint white:true,browser:true*/
 /**
  * Creates an informational panel for Apps, based on some general app info.
  * Needs the following keys in its config:
@@ -38,32 +37,32 @@ define([
         function start(arg) {
             container = arg.node;
 
-            var infoProms = [
+            const infoProms = [
                 /* Get the method full info so we can populate the description */
                 nms.get_method_full_info({ 'ids': [appId], 'tag': tag })
-                    .then(function(methodInfo) {
+                    .then((methodInfo) => {
                         methodInfo = methodInfo[0] || {};
-                        var desc = methodInfo.description || '';
+                        const desc = methodInfo.description || '';
                         info.description = new Handlebars.SafeString(desc);
 
-                        var authorList = methodInfo.authors || [];
+                        const authorList = methodInfo.authors || [];
                         info.authorList = authorList.join(', ');
                         info.multiAuthors = authorList.length > 1;
                     }),
 
                 /* Get the method stats so we know how many times it was run. */
                 catalog.get_exec_aggr_stats({ 'full_app_ids': [appId] })
-                    .then(function(appStats) {
+                    .then((appStats) => {
                         appStats = appStats[0] || {};
                         info.runCount = appStats.number_of_calls || 'unknown';
                     }),
 
                 /* Get the module info so we know when it was last updated. */
                 catalog.get_module_info({ 'module_name': appModule })
-                    .then(function(moduleInfo) {
+                    .then((moduleInfo) => {
                         moduleInfo = moduleInfo[tag] || {};
-                        var timestamp = moduleInfo.timestamp || 'unknown';
-                        var dateString = 'unknown';
+                        const timestamp = moduleInfo.timestamp || 'unknown';
+                        let dateString = 'unknown';
                         try {
                             dateString = new Date(timestamp).toLocaleDateString();
                         } catch (e) {

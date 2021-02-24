@@ -20,7 +20,7 @@ define (
 		'geometry_rectangle',
 		'geometry_point',
 		'geometry_size'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -30,7 +30,7 @@ define (
 		geometry_rectangle,
 		geometry_point,
 		geometry_size
-	) {
+	) => {
 
     return KBWidget({
 
@@ -75,19 +75,19 @@ define (
 
                 if ($.isArray(idx)) {
 
-                    var colors = [];
+                    const colors = [];
                     $.each(
                         idx,
-                        function (idx, val) {
+                        (idx, val) => {
                             colors.push( d3.rgb($venn.options.fillColor(val, d, $venn) ) );
                         }
                     );
 
-                    var blend = d3.rgb();
-                    var diminisher = 2;
+                    const blend = d3.rgb();
+                    const diminisher = 2;
                     $.each(
                         colors,
-                        function (idx, color) {
+                        (idx, color) => {
                             blend.r += Math.floor(color.r / diminisher);
                             blend.g += Math.floor(color.g / diminisher);
                             blend.b += Math.floor(color.b / diminisher);
@@ -99,7 +99,7 @@ define (
                 }
                 else {
 
-                    var color = $venn.circleColors[idx];
+                    let color = $venn.circleColors[idx];
 
                     if (color == undefined) {
                         color = $venn.circleColors[idx] = $venn.fillScale(idx);
@@ -132,59 +132,59 @@ define (
 
             //First, we convert the polar coordinates into cartesian.
 
-            var cc1 = {
+            const cc1 = {
                 x : Math.cos(c1.angle) * c1.originDistance,
                 y : - Math.sin(c1.angle) * c1.originDistance,
             };
 
-            var cc2 = {
+            const cc2 = {
                 x : Math.cos(c2.angle) * c1.originDistance,
                 y : - Math.sin(c2.angle) * c1.originDistance,
             };
 
-            var lowerLeftPoint = {
+            const lowerLeftPoint = {
                 x : Math.min(cc1.x, cc2.x),
                 y : Math.min(cc1.y, cc2.y),
             };
 
-            var midPoint = {
+            const midPoint = {
                 x : lowerLeftPoint.x + Math.abs(cc1.x - cc2.x) / 2,
                 y : lowerLeftPoint.y + Math.abs(cc1.y - cc2.y) / 2,
             };
 
-            var width  = (cc1.x - cc2.x);
-            var height = (cc1.y - cc2.y);
+            const width  = (cc1.x - cc2.x);
+            const height = (cc1.y - cc2.y);
 
 
             //get the lower right angle. Assume that there is no width by default
-            var lowerRightAngle = Math.PI / 2;
+            let lowerRightAngle = Math.PI / 2;
             if (width != 0) {
                 lowerRightAngle = Math.atan(height / width);
             }
 
             //and the complement, in RADIANS.
-            var complementAngle = (Math.PI / 2 - lowerRightAngle);
+            const complementAngle = (Math.PI / 2 - lowerRightAngle);
 
-            var adjacentSide = Math.sqrt( Math.pow(midPoint.x - lowerLeftPoint.x, 2) + Math.pow(midPoint.y - lowerLeftPoint.y, 2) );
+            const adjacentSide = Math.sqrt( Math.pow(midPoint.x - lowerLeftPoint.x, 2) + Math.pow(midPoint.y - lowerLeftPoint.y, 2) );
 
 
-            var oppSide = Math.sin(Math.acos(adjacentSide / c2.r )) * c2.r;
-            var distance = oppSide;
+            const oppSide = Math.sin(Math.acos(adjacentSide / c2.r )) * c2.r;
+            const distance = oppSide;
 
-            var i1 = {
+            const i1 = {
                 x : midPoint.x + Math.cos(complementAngle) * distance,//c1.r * Math.sqrt(3) / 2,
                 y : midPoint.y - Math.sin(complementAngle) * distance,//c1.r * Math.sqrt(3) / 2,
             };
 
-            var i2 = {
+            const i2 = {
                 x : midPoint.x + Math.cos(complementAngle + Math.PI) * distance,//c1.r * Math.sqrt(3) / 2,
                 y : midPoint.y - Math.sin(complementAngle + Math.PI) * distance,//c1.r * Math.sqrt(3) / 2,
             };
 
-            var mag1 = Math.sqrt(Math.pow(i1.x, 2) + Math.pow(i1.y, 2));
-            var mag2 = Math.sqrt(Math.pow(i2.x, 2) + Math.pow(i2.y, 2));
+            const mag1 = Math.sqrt(Math.pow(i1.x, 2) + Math.pow(i1.y, 2));
+            const mag2 = Math.sqrt(Math.pow(i2.x, 2) + Math.pow(i2.y, 2));
 
-            var ret = mag1 > mag2
+            const ret = mag1 > mag2
                 ? [i1, i2, midPoint]
                 : [i2, i1, midPoint];
 
@@ -196,18 +196,18 @@ define (
 
 
         renderChart : function() {
-            var bounds = this.chartBounds();
-            var $venn  = this;
-            var dataset = $venn.dataset();
+            const bounds = this.chartBounds();
+            const $venn  = this;
+            const dataset = $venn.dataset();
 
             if (dataset == undefined) {
                 return;
             }
 
-            var radius = this.options.radius || Math.min(bounds.size.width, bounds.size.height) / 2;
+            let radius = this.options.radius || Math.min(bounds.size.width, bounds.size.height) / 2;
             radius *= this.options.radiusScale;
 
-            var venn = this.data('D3svg').select( this.region('chart') ).selectAll('.venn').data([0]);
+            const venn = this.data('D3svg').select( this.region('chart') ).selectAll('.venn').data([0]);
             venn.enter().append('g')
                 .attr('class', 'venn')
                 .attr('transform',
@@ -221,13 +221,13 @@ define (
             radius = radius * .5;   //basically just guessing at a magic number that looks reasonably good
 
             radius = this.options.radius || radius;
-            var overlap = this.options.overlap;
+            const overlap = this.options.overlap;
 
-            var overlapRadius = radius * (1 - overlap);
+            const overlapRadius = radius * (1 - overlap);
 
-            var numCircles = 3;
+            const numCircles = 3;
 
-            var circleData = [
+            const circleData = [
 
                 {
                     id : 0,
@@ -251,14 +251,14 @@ define (
             ];
 
 
-            var intersects = this.intersectCircles(circleData[0], circleData[1]);
-            var intersects2 = this.intersectCircles(circleData[1], circleData[2]);
-            var intersects3 = this.intersectCircles(circleData[0], circleData[2]);
+            const intersects = this.intersectCircles(circleData[0], circleData[1]);
+            const intersects2 = this.intersectCircles(circleData[1], circleData[2]);
+            const intersects3 = this.intersectCircles(circleData[0], circleData[2]);
 
-            var necessary_keys = ['c1', 'c2', 'c3', 'c1c3', 'c1c2', 'c2c3', 'c1c2c3'];
+            const necessary_keys = ['c1', 'c2', 'c3', 'c1c3', 'c1c2', 'c2c3', 'c1c2c3'];
             $.each(
               necessary_keys,
-              function(i,v) {
+              (i,v) => {
                 if (dataset[v] == undefined) {
                   dataset[v] = {value : 0, label : ''}
                 }
@@ -266,7 +266,7 @@ define (
             );
 
 
-            var labelData = [//];/*
+            const labelData = [//];/*
                 {
                     angle : circleData[0].angle,
                     label : dataset.c1.label,
@@ -357,11 +357,11 @@ define (
                 },
             ];
 
-            var transitionTime = this.initialized
+            const transitionTime = this.initialized
                 ? this.options.transitionTime
                 : 0;
 
-            var circleAction = function(d) {
+            const circleAction = function(d) {
 
                 this
                     .on('mouseover', function(d) {
@@ -369,7 +369,7 @@ define (
 
 
                         if ($venn.options.tooltips) {
-                            var tooltip = $venn.tooltip(d);
+                            const tooltip = $venn.tooltip(d);
 
                             if (tooltip) {
                                 $venn.showToolTip(
@@ -387,7 +387,7 @@ define (
                     })
                     .on('mouseout', function(d) {
 
-                        var target = d3.event.toElement;
+                        const target = d3.event.toElement;
 
                         //assume that if we've moused over text, that that means we're over the label.
                         if (target && target.tagName != 'text') {
@@ -399,7 +399,7 @@ define (
                     })
                     .on('click', function(d) {
                         if (d.data.action) {
-                            var func = d.data.action;
+                            let func = d.data.action;
                             if (typeof func == 'string') {
                                 func = Function("d", func);
                             }
@@ -480,11 +480,11 @@ arcs.enter()
 arcs
     .call(function(d) {circleAction.call(this, d)})
     .transition().duration(transitionTime)
-    .attr('d', function(d) { return d.d})
-    .attr('fill', function(d, idx) { var c =  $venn.options.fillColor(d.circle, d, $venn); return c; })
+    .attr('d', (d) => { return d.d})
+    .attr('fill', (d, idx) => { const c =  $venn.options.fillColor(d.circle, d, $venn); return c; })
     .attr('stroke', 'none')
-    .attr('fill-opacity', function (d) { return d.fillOpacity || $venn.options.fillOpacity })
-    .call($venn.endall, function() {
+    .attr('fill-opacity', (d) => { return d.fillOpacity || $venn.options.fillOpacity })
+    .call($venn.endall, () => {
         $venn.initialized = true;
     })
 ;
@@ -493,7 +493,7 @@ arcs.exit().remove();
 
             //filledCircles.exit().remove();
 
-            var strokedCircles = venn.selectAll('.strokedCircle').data(circleData );
+            const strokedCircles = venn.selectAll('.strokedCircle').data(circleData );
 
             strokedCircles.enter()
                 .append('circle')
@@ -503,19 +503,19 @@ arcs.exit().remove();
             strokedCircles
                 //.call(circleAction)
                 .transition().duration(transitionTime)
-                .attr('cx', function (d) { return d.cx || Math.cos(d.angle) * d.originDistance } )
-                .attr('cy', function (d) { return d.cy || - Math.sin(d.angle) * d.originDistance } )
-                .attr('r', function (d) {return d.r} )
+                .attr('cx', (d) => { return d.cx || Math.cos(d.angle) * d.originDistance } )
+                .attr('cy', (d) => { return d.cy || - Math.sin(d.angle) * d.originDistance } )
+                .attr('r', (d) => {return d.r} )
                 .attr('fill', 'none')
-                .attr('stroke', function(d, idx) { return d.strokeColor || $venn.options.strokeColor(idx, d) })
-                .attr('stroke-width', function (d) { return d.strokeWidth || $venn.options.strokeWidth } )
+                .attr('stroke', (d, idx) => { return d.strokeColor || $venn.options.strokeColor(idx, d) })
+                .attr('stroke-width', (d) => { return d.strokeWidth || $venn.options.strokeWidth } )
             ;
 
             strokedCircles.exit().remove();
 
 
 
-            var labelTown = function( opacity ) {
+            const labelTown = function( opacity ) {
 
                 if (opacity == undefined) {
                     opacity = 1;
@@ -523,14 +523,14 @@ arcs.exit().remove();
 
                 this
                     .attr("text-anchor", "middle")
-                    .attr('dy', function (d) {return d.dy || '0.5em'} )
+                    .attr('dy', (d) => {return d.dy || '0.5em'} )
                     .attr('cursor', 'default')
                 ;
 
                 if (this.attrTween) {
 
                     this
-                        .text(function(d) {
+                        .text((d) => {
                             return d.label || d.value;
                         })
                         .attrTween("transform", function(d, idx) {
@@ -539,23 +539,23 @@ arcs.exit().remove();
                                 this._current = d;
                             }
 
-                            var endPoint = d;
+                            const endPoint = d;
                             if (endPoint.radius == undefined) {
                                 endPoint.radius = overlapRadius * 0.7;
                             }
 
-                            var interpolate = d3.interpolate(this._current, endPoint);
+                            const interpolate = d3.interpolate(this._current, endPoint);
 
                             this._current = interpolate(0);
 
                             return function(t) {
-                                var d2 = interpolate(t);
-                                var pos = [Math.cos(d2.angle) * d2.radius, - Math.sin(d2.angle) * d2.radius];
+                                const d2 = interpolate(t);
+                                const pos = [Math.cos(d2.angle) * d2.radius, - Math.sin(d2.angle) * d2.radius];
                                 return "translate("+ pos +")";
                             };
 
                         })
-                        .attr('font-size', function(d) { return d.fontSize || '12pt'})
+                        .attr('font-size', (d) => { return d.fontSize || '12pt'})
 
                     }
 
@@ -565,7 +565,7 @@ arcs.exit().remove();
 
             if ($venn.options.labels) {
 
-                var labels = venn.selectAll('text').data(labelData );
+                const labels = venn.selectAll('text').data(labelData );
 
                 labels.enter()
                     .append('text')

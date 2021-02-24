@@ -10,7 +10,7 @@ define (
 		'kbaseAuthenticatedWidget',
         'kbaseTabs',
 		'jquery-dataTables'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -20,7 +20,7 @@ define (
 		kbaseAuthenticatedWidget,
         kbaseTabs,
 		jquery_dataTables
-	) {
+	) => {
 return KBWidget({
     name: "kbaseFbaModelComparisonNew",
     parent : kbaseAuthenticatedWidget,
@@ -43,8 +43,8 @@ return KBWidget({
     },
 
     render: function() {
-        var self = this;
-        var container = this.$elem;
+        const self = this;
+        const container = this.$elem;
         container.empty();
         if (!self.authToken()) {
             container.append("<div>[Error] You're not logged in</div>");
@@ -53,26 +53,26 @@ return KBWidget({
 
         container.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;Loading model comparison data...</div>");
 
-        var pref = StringUtil.uuid();
-        var kbws = new Workspace(this.wsUrl, {'token': self.authToken()});
-        var get_object_input = [{ref: self.ws_name + "/" + self.mc_id}];
+        const pref = StringUtil.uuid();
+        const kbws = new Workspace(this.wsUrl, {'token': self.authToken()});
+        const get_object_input = [{ref: self.ws_name + "/" + self.mc_id}];
 
         Promise.resolve(kbws.get_objects(get_object_input))
-        .then(function(data) {
+        .then((data) => {
 
-            var modelComp = data[0].data;
+            const modelComp = data[0].data;
             self.fba_model1 = modelComp.models[0];
             self.fba_model2 = modelComp.models[1];
 
             ///////////////////////////////////// Instantiating Tabs ////////////////////////////////////////////
             container.empty();
-            var tabPane = $('<div id="'+pref+'tab-content">');
+            const tabPane = $('<div id="'+pref+'tab-content">');
             container.append(tabPane);
-            var tabWidget = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
+            const tabWidget = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
             //////////////////////////////////////////// Statistics tab /////////////////////////////////////////////
-            var tabStats = $("<div/>");
+            const tabStats = $("<div/>");
             tabWidget.addTab({tab: 'Statistics', content: tabStats, canDelete : false, show: true});
-            var tableStats = $('<table class="table table-striped table-bordered" '+
+            const tableStats = $('<table class="table table-striped table-bordered" '+
                     'style="margin-left: auto; margin-right: auto;" id="'+pref+'modelcomp-stats"/>');
             tabStats.append(tableStats);
 	    for (var i = 0; i < modelComp.models.length; i++) {
@@ -89,9 +89,9 @@ return KBWidget({
             tableStats.append('<tr><td>Conserved biomass compounds</td><td>'+modelComp.core_biomass_compounds+'</td></tr>');
             tableStats.append('<tr><td>Conserved protein families</td><td>'+modelComp.core_families+'</td></tr>');
             //////////////////////////////////////////// Reactions tab /////////////////////////////////////////////
-            var tabReactions = $("<div/>");
+            const tabReactions = $("<div/>");
             tabWidget.addTab({tab: 'Reactions', content: tabReactions, canDelete : false, show: false});
-            var tableReactions = $('<table class="table table-striped table-bordered" '+
+            const tableReactions = $('<table class="table table-striped table-bordered" '+
                     'style="margin-left: auto; margin-right: auto;" id="'+pref+'modelcomp-common"/>');
             tabReactions.append(tableReactions);
 	    for (var i = 0; i < modelComp.reactions.length; i++) {
@@ -113,7 +113,7 @@ return KBWidget({
 		    }
 		}
 	    }
-	    var aoColumns = [
+	    let aoColumns = [
                                   { "sTitle": "Reaction", 'mData': 'id'},
                                   { "sTitle": "Equation&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", 'mData': 'equation'},
                                   { "sTitle": "Number Models", 'mData': 'number_models'},
@@ -135,9 +135,9 @@ return KBWidget({
                     'fnDrawCallback': events
             });
             //////////////////////////////////////////// Compounds tab /////////////////////////////////////////////
-            var tabCompounds = $("<div/>");
+            const tabCompounds = $("<div/>");
             tabWidget.addTab({tab: 'Compounds', content: tabCompounds, canDelete : false, show: false});
-            var tableCompounds = $('<table class="table table-striped table-bordered" '+
+            const tableCompounds = $('<table class="table table-striped table-bordered" '+
                     'style="margin-left: auto; margin-right: auto;" id="'+pref+'modelcomp-common"/>');
             tabCompounds.append(tableCompounds);
 	    for (var i = 0; i < modelComp.compounds.length; i++) {
@@ -178,9 +178,9 @@ return KBWidget({
                     'fnDrawCallback': events
             });
             //////////////////////////////////////////// Biomass tab /////////////////////////////////////////////
-            var tabBiomass = $("<div/>");
+            const tabBiomass = $("<div/>");
             tabWidget.addTab({tab: 'Biomass compounds', content: tabBiomass, canDelete : false, show: false});
-            var tableBiomass = $('<table class="table table-striped table-bordered" '+
+            const tableBiomass = $('<table class="table table-striped table-bordered" '+
                     'style="margin-left: auto; margin-right: auto;" id="'+pref+'modelcomp-common"/>');
             tabBiomass.append(tableBiomass);
 	    for (var i = 0; i < modelComp.biomasscpds.length; i++) {
@@ -221,9 +221,9 @@ return KBWidget({
                     'fnDrawCallback': events
             });
             //////////////////////////////////////////// Families tab /////////////////////////////////////////////
-            var tabFamilies = $("<div/>");
+            const tabFamilies = $("<div/>");
             tabWidget.addTab({tab: 'Families', content: tabFamilies, canDelete : false, show: false});
-            var tableFamilies = $('<table class="table table-striped table-bordered" '+
+            const tableFamilies = $('<table class="table table-striped table-bordered" '+
                     'style="margin-left: auto; margin-right: auto;" id="'+pref+'modelcomp-common"/>');
             tabFamilies.append(tableFamilies);
 	    for (var i = 0; i < modelComp.families.length; i++) {
@@ -268,7 +268,7 @@ return KBWidget({
                 // event for clicking on ortholog count
                 $('.show-reaction'+pref).unbind('click');
                 $('.show-reaction'+pref).click(function() {
-                    var id = $(this).data('id');
+                    const id = $(this).data('id');
                     if (tabWidget.hasTab(id)) {
                         tabWidget.showTab(id);
                         return;
@@ -277,7 +277,7 @@ return KBWidget({
                 });
                 $('.show-gene'+pref).unbind('click');
                 $('.show-gene'+pref).click(function() {
-                    var id = $(this).data('id');
+                    const id = $(this).data('id');
                     if (tabWidget.hasTab(id)) {
                         tabWidget.showTab(id);
                         return;
@@ -286,8 +286,8 @@ return KBWidget({
                 });
             }
 
-        }.bind(this))
-        .catch(function(error) {
+        })
+        .catch((error) => {
             container.empty();
             if (error.error.message) {
                 container.append('<p>[Error] ' + error.error.message + '</p>');

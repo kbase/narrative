@@ -9,7 +9,7 @@ define (
 		'kbaseAuthenticatedWidget',
 		'kbaseTable',
 		'kbaseTabs'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -18,7 +18,7 @@ define (
 		kbaseAuthenticatedWidget,
 		kbaseTable,
 		kbaseTabs
-	) {
+	) => {
     'use strict';
 
     return KBWidget({
@@ -48,30 +48,30 @@ define (
             this.colors = ["#66c2a5","#fc8d62","#8da0cb","#e78ac3","#a6d854","#ffd92f","#e5c494","#b3b3b3"];//colorbrewer.Set2[8];
             this.colorMap = {};
 
-            var $self = this;
+            const $self = this;
 
-            var ws = new Workspace(window.kbconfig.urls.workspace, {token : this.authToken()});
+            const ws = new Workspace(window.kbconfig.urls.workspace, {token : this.authToken()});
 
-            var dictionary_params = { };
+            const dictionary_params = { };
             dictionary_params[this.wsKey] = this.options.wsNameOrId;
             dictionary_params[this.objKey] = this.options.objNameOrId;
 
             ws.get_objects([dictionary_params])
-                .then(function (data) {
+                .then((data) => {
                     data = data[0].data;
 
-                    var $metaElem = $self.data('metaElem');
+                    const $metaElem = $self.data('metaElem');
 
                     $metaElem.empty();
 
-                    var comments = {};
+                    const comments = {};
 
-                    var $commentsTable;
+                    let $commentsTable;
                     data.comment.split(/\n/).forEach(
-                        function (v, i) {
-                            var tmp = v.split(/:/);
+                        (v, i) => {
+                            let tmp = v.split(/:/);
                             if (tmp.length > 2) {
-                                var tail = tmp.slice(1, tmp.length).join(':');
+                                const tail = tmp.slice(1, tmp.length).join(':');
                                 tmp = [tmp[0], tail];
                             }
                             if (tmp.length === 2) {
@@ -100,7 +100,7 @@ define (
                         );
                     }
 
-                    var dict_links = {
+                    const dict_links = {
                       'ncbi'           : 'KBaseOntology/1',
                       'po'           : 'KBaseOntology/2',
                       'go'           : 'KBaseOntology/3',
@@ -113,7 +113,7 @@ define (
 
 
 
-                    var $metaTable =  new kbaseTable($.jqElem('div'), {
+                    const $metaTable =  new kbaseTable($.jqElem('div'), {
                             allowNullRows: false,
                             structure: {
                                 keys: [
@@ -138,15 +138,15 @@ define (
 
                     $metaElem.append($metaTable.$elem);
 
-                    var table_data = [];
+                    const table_data = [];
 
                     $.each(
                         Object.keys(data.translation).sort(),
-                        function (i, k) {
-                            var v = data.translation[k];
+                        (i, k) => {
+                            const v = data.translation[k];
                             $.each(
                                 v.equiv_terms,
-                                function (j, e) {
+                                (j, e) => {
                                     table_data.push(
                                         [
                                             k,
@@ -159,9 +159,9 @@ define (
                         }
                     );
 
-                    var equivalent_dictionary = dict_links[data.ontology2];
+                    const equivalent_dictionary = dict_links[data.ontology2];
 
-                    var $dt = $self.data('tableElem').DataTable({
+                    const $dt = $self.data('tableElem').DataTable({
                         columns: [
                             {title: 'Term ID', 'class': 'ontology-top'},
                             {title: 'Equivalent Name'},
@@ -169,7 +169,7 @@ define (
                         ],
                         createdRow: function (row, data, index) {
 
-                            var $linkCell = $('td', row).eq(2);
+                            const $linkCell = $('td', row).eq(2);
                             $linkCell.empty();
 
                             $linkCell.append($self.termLink(data[2], equivalent_dictionary));
@@ -185,7 +185,7 @@ define (
                     $self.data('globalContainerElem').show();
 
                 })
-                .fail(function (d) {
+                .fail((d) => {
 
                     $self.$elem.empty();
                     $self.$elem
@@ -199,7 +199,7 @@ define (
         },
 
         termLink: function (term_id, dictionary) {
-            var $self = this;
+            const $self = this;
             if (dictionary != undefined) {
               return $.jqElem('a')
                   .attr('target', '_blank')
@@ -222,9 +222,9 @@ define (
 
             $elem.append($.jqElem('style').text('.ontology-top { vertical-align : top }'));
 
-            var $self = this;
+            const $self = this;
 
-            var $loaderElem = $.jqElem('div')
+            const $loaderElem = $.jqElem('div')
                 .append('<br>&nbsp;Loading data...<br>&nbsp;please wait...<br>&nbsp;Data parsing may take upwards of 30 seconds, during which time this page may be unresponsive.')
                 .append($.jqElem('br'))
                 .append(
@@ -237,16 +237,16 @@ define (
             $self.data('loaderElem', $loaderElem);
             $elem.append($loaderElem);
 
-            var $globalContainer = $self.data('globalContainerElem', $.jqElem('div').css('display', 'none'));
+            const $globalContainer = $self.data('globalContainerElem', $.jqElem('div').css('display', 'none'));
             $elem.append($globalContainer);
 
             if (this.options.isNarrativeWidget) {
               this.globalTabs = new kbaseTabs($globalContainer);
             }
 
-            var $metaElem = $self.data('metaElem', $.jqElem('div'));
+            const $metaElem = $self.data('metaElem', $.jqElem('div'));
 
-            var $metaContainerElem = $self.createContainerElem('Translation Information', [$metaElem]);
+            const $metaContainerElem = $self.createContainerElem('Translation Information', [$metaElem]);
 
             $self.data('metaContainerElem', $metaContainerElem);
             if (this.options.isNarrativeWidget) {
@@ -259,15 +259,15 @@ define (
               $globalContainer.append($metaContainerElem);
             }
 
-            var $tableElem = $.jqElem('table')
+            const $tableElem = $.jqElem('table')
                 .addClass('display')
                 .css({ 'width' : '100%', 'border': '1px solid #ddd'});
                 ;
 
             $self.data('tableElem', $tableElem);
-            var $colorMapElem = $self.data('colorMapElem', $.jqElem('div'));
+            const $colorMapElem = $self.data('colorMapElem', $.jqElem('div'));
 
-            var $containerElem = $self.createContainerElem('Translation Dictionary', [$tableElem]);
+            const $containerElem = $self.createContainerElem('Translation Dictionary', [$tableElem]);
 
             $self.data('containerElem', $containerElem);
             if (this.options.isNarrativeWidget) {
@@ -286,17 +286,17 @@ define (
         },
         createContainerElem: function (name, content, display) {
 
-            var $panelBody = $.jqElem('div')
+            const $panelBody = $.jqElem('div')
 ;
 
             $.each(
                 content,
-                function (i, v) {
+                (i, v) => {
                     $panelBody.append(v);
                 }
             );
 
-            var $containerElem;
+            let $containerElem;
 
             if (this.options.isNarrativeWidget) {
               $containerElem = $panelBody.css('display', display);

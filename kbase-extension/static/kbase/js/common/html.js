@@ -1,7 +1,3 @@
-/*jslint
- browser: true,
- white: true
- */
 define([
     'uuid'
 ], (
@@ -19,7 +15,7 @@ define([
         a = tag('a');
 
     /**
-     * Given a simple object of keys and values, create a string which 
+     * Given a simple object of keys and values, create a string which
      * encodes them into a form suitable for the value of a style attribute.
      * Style attribute values are themselves attributes, but due to the limitation
      * of html attributes, they are embedded in a string:
@@ -71,7 +67,7 @@ define([
 
 
     /**
-     * Given a simple object of keys and values, create a string which 
+     * Given a simple object of keys and values, create a string which
      * encodes a set of html tag attributes.
      * String values escape the "
      * Boolean values either insert the attribute name or not
@@ -239,7 +235,7 @@ define([
      * arg.tabs.label
      * arg.tabs.name
      * arg.tabs.content
-     * 
+     *
      * @param {type} arg
      * @returns {unresolved}
      */

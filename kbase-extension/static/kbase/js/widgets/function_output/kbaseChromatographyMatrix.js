@@ -6,51 +6,51 @@ define (
 		'kbaseMatrix2DAbstract',
 		'kbaseTabs',
 		'jquery-dataTables'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		kbaseMatrix2DAbstract,
 		kbaseTabs,
 		jquery_dataTables
-	) {
+	) => {
     return KBWidget({
         name: 'kbaseChromatographyMatrix',
         parent : kbaseMatrix2DAbstract,
         version: '1.0.0',
 
         render: function(){
-            var pref = self.pref;
+            const pref = self.pref;
 
             // Prepare data for visualization
-            var timePoints = this.getTimePoints(this.matrix);
-            var substances = this.buildSubstances(this.matrix, timePoints);
+            const timePoints = this.getTimePoints(this.matrix);
+            const substances = this.buildSubstances(this.matrix, timePoints);
 
-            var timeSeriesSummary = this.getNumericProperyStat(this.matrix.metadata.row_metadata, 'TimeSeries');
+            const timeSeriesSummary = this.getNumericProperyStat(this.matrix.metadata.row_metadata, 'TimeSeries');
 //            var substancesSummary = this.getSubstancesSummary(substances);
 
             this.loading(false);
-            var $container = $("<div/>");
+            const $container = $("<div/>");
             this.$elem.append( $container );
 
             // Create a tabPane for all tabs
-            var $tabPane = $('<div>')
+            const $tabPane = $('<div>')
                 .attr( 'id', pref+'tab-content')
                 .appendTo($container);
-            var tabWidget = new kbaseTabs($tabPane, {canDelete : true, tabs : []});
+            const tabWidget = new kbaseTabs($tabPane, {canDelete : true, tabs : []});
 
             // Build matrix overview tab
-            var $tabOverview = $("<div/>");
+            const $tabOverview = $("<div/>");
             tabWidget.addTab({tab: 'Overview', content: $tabOverview, canDelete : false, show: true});
             this.buildMatrixOverview( $tabOverview );
 
             // Build  matrix summary tab
-            var $tabSummary = $("<div/>");
+            const $tabSummary = $("<div/>");
             tabWidget.addTab({tab: 'Summary', content: $tabSummary, canDelete : false, show: false});
             this.buildMatrixSummary($tabSummary, timeSeriesSummary, substances);
 
             // Build  matrix series tab
-            var $tabSubstances = $("<div/>");
+            const $tabSubstances = $("<div/>");
             tabWidget.addTab({tab: 'Substances', content: $tabSubstances, canDelete : false, show: false});
             this.buildSubstancesTable($tabSubstances, substances);
         },
@@ -60,10 +60,10 @@ define (
         },
 
         buildMatrixSummary: function($tab, timeSeriesSummary, substances){
-            var pref = this.pref;
+            const pref = this.pref;
 
             // Substances summary
-            var $container = $("<div>")
+            const $container = $("<div>")
                 .css('margin-top','1em')
                 .appendTo($tab);
 
@@ -73,7 +73,7 @@ define (
                 .css('font-style', 'italic')
                 .appendTo($container);
 
-            var $tableConditionsSummary = $('<table>')
+            const $tableConditionsSummary = $('<table>')
                 .attr('id', pref+'conditions-summary-table')
                 .addClass("table table-striped table-bordered")
                 .css('width', '100%')
@@ -88,8 +88,8 @@ define (
                     "Number of substances",
                     substances.length ) );
 
-            for(var i in substances){
-                var substabce = substances[i];
+            for(const i in substances){
+                const substabce = substances[i];
                 $tableConditionsSummary
                     .append( this.makeRow(
                         'Substance',
@@ -104,7 +104,7 @@ define (
                 .css('margin-top', '3em')
                 .appendTo($container);
 
-            var $tableTimeSummary =  $('<table>')
+            const $tableTimeSummary =  $('<table>')
                 .attr('id', pref+'time-summary-table')
                 .addClass("table table-striped table-bordered")
                 .css('width', '100%')
@@ -125,24 +125,24 @@ define (
         },
 
         buildSubstances: function(matrix, timePoints){
-            var substances = [];
-            var columnIds = matrix.data.col_ids;
-            var columnsMetadata = matrix.metadata.column_metadata;
+            const substances = [];
+            const columnIds = matrix.data.col_ids;
+            const columnsMetadata = matrix.metadata.column_metadata;
 
-            for(var cIndex in columnIds){
-                var columnId = columnIds[cIndex];
-                var columnMetadata = columnsMetadata[columnId];
-                var substanceName = this.getPropertyValue(columnMetadata, 'Measurement', 'Substance');
+            for(const cIndex in columnIds){
+                const columnId = columnIds[cIndex];
+                const columnMetadata = columnsMetadata[columnId];
+                const substanceName = this.getPropertyValue(columnMetadata, 'Measurement', 'Substance');
                 if(substanceName == null) continue;
 
-                var maxValue = null;
-                var maxValueTime = null;
-                for(var i in timePoints){
-                    var timePoint = timePoints[i];
-                    var time = timePoint.value;
-                    var rIndex = timePoint.index;
+                let maxValue = null;
+                let maxValueTime = null;
+                for(const i in timePoints){
+                    const timePoint = timePoints[i];
+                    const time = timePoint.value;
+                    const rIndex = timePoint.index;
 
-                    var val = matrix.data.values[rIndex][cIndex];
+                    const val = matrix.data.values[rIndex][cIndex];
                     if(maxValue == null || val > maxValue){
                         maxValue = val;
                         maxValueTime = time;

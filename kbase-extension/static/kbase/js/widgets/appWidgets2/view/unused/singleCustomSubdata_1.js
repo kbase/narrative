@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'jquery',
     'bluebird',
@@ -13,7 +11,7 @@ define([
     'common/props',
     'bootstrap',
     'css!font-awesome'
-], function (
+], (
     $,
     Promise,
     Handlebars,
@@ -24,7 +22,7 @@ define([
     Runtime,
     Dom,
     Props
-    ) {
+    ) => {
     'use strict';
 
     /*
@@ -43,7 +41,7 @@ define([
      */
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'), p = t('p'),
         select = t('select'),
         option = t('option');
@@ -81,14 +79,14 @@ define([
         options.enabled = true;
 
         function buildOptions() {
-            var availableValues = model.getItem('availableValues'),
+            const availableValues = model.getItem('availableValues'),
                 value = model.getItem('value') || [],
                 selectOptions = [option({value: ''}, '')];
             if (!availableValues) {
                 return selectOptions;
             }
-            return selectOptions.concat(availableValues.map(function (availableValue) {
-                var selected = false,
+            return selectOptions.concat(availableValues.map((availableValue) => {
+                let selected = false,
                     optionLabel = availableValue.desc,
                     optionValue = availableValue.id;
                 // TODO: pull the value out of the object
@@ -103,21 +101,21 @@ define([
         }
 
         function buildCount() {
-            var availableValues = model.getItem('availableValues') || [],
+            const availableValues = model.getItem('availableValues') || [],
                 value = model.getItem('value') || null;
-            
+
             if (value) {
                 return  '1 / ' + String(availableValues.length) + ' items';
             } else {
                 return  '0 / ' + String(availableValues.length) + ' items';
-                
+
             }
         }
 
         function makeInputControl(events, bus) {
             // There is an input control, and a dropdown,
             // TODO select2 after we get a handle on this...
-            var selectOptions,
+            let selectOptions,
                 size = 1,
                 multiple = false,
                 availableValues = model.getItem('availableValues'),
@@ -144,7 +142,7 @@ define([
                         type: 'change',
                         handler: function (e) {
                             validate()
-                                .then(function (result) {
+                                .then((result) => {
                                     if (result.isValid) {
                                         model.setItem('value', result.value);
                                         updateInputControl('value');
@@ -177,12 +175,12 @@ define([
          * Given an existing input control, and new model state, update the
          * control to suite the new data.
          * Cases:
-         * 
+         *
          * - change in source data - fetch new data, populate available values,
          *   reset selected values, remove existing options, add new options.
-         *   
+         *
          * - change in selected items - remove all selections, add new selections
-         * 
+         *
          */
         function updateInputControl(changedProperty) {
             switch (changedProperty) {
@@ -220,13 +218,13 @@ define([
          * values.
          */
         function getInputValue() {
-            var control = dom.getElement('input-container.input');
+            const control = dom.getElement('input-container.input');
             if (!control) {
                 return null;
             }
-            var input = control.selectedOptions,
+            let input = control.selectedOptions,
                 i, values = [];
-            
+
             if (control.selectedOptions.length === 0) {
                 return;
             }
@@ -244,7 +242,7 @@ define([
         }
 
         function validate() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 if (!options.enabled) {
                     return {
                         isValid: true,
@@ -253,14 +251,14 @@ define([
                     };
                 }
 
-                var rawValue = getInputValue(),
+                const rawValue = getInputValue(),
                     validationOptions = {
                         required: constraints.required
                     };
 
                 return Validation.validateText(rawValue, validationOptions);
             })
-                .then(function (validationResult) {
+                .then((validationResult) => {
                     return {
                         isValid: validationResult.isValid,
                         validated: true,
@@ -273,7 +271,7 @@ define([
 
         // unsafe, but pretty.
         function getProp(obj, props) {
-            props.forEach(function (prop) {
+            props.forEach((prop) => {
                 obj = obj[prop];
             });
             return obj;
@@ -285,7 +283,7 @@ define([
             if (!model.getItem('referenceObjectName')) {
                 return [];
             }
-            var workspace = new Workspace(runtime.config('services.workspace.url'), {
+            const workspace = new Workspace(runtime.config('services.workspace.url'), {
                 token: runtime.authToken()
             }),
                 subObjectIdentity = {
@@ -295,24 +293,24 @@ define([
             return workspace.get_object_subset([
                 subObjectIdentity
             ])
-                .then(function (result) {
-                    var subdata = Props.make({data: result[0].data}).getItem(constraints.subdataPath);
+                .then((result) => {
+                    const subdata = Props.make({data: result[0].data}).getItem(constraints.subdataPath);
                     return constraints.map(subdata);
                 });
         }
 
         function syncAvailableValues() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 return fetchData();
             })
-                .then(function (data) {
+                .then((data) => {
                     model.setItem('availableValues', data);
                 });
         }
 
         function autoValidate() {
             return validate()
-                .then(function (result) {
+                .then((result) => {
                     bus.emit('validation', {
                         errorMessage: result.errorMessage,
                         diagnosis: result.diagnosis
@@ -327,8 +325,8 @@ define([
          * Hooks up event listeners
          */
         function render() {
-            return Promise.try(function () {
-                var events = Events.make(),
+            return Promise.try(() => {
+                const events = Events.make(),
                     inputControl = makeInputControl(events, bus),
                     content = div({
                         class: 'input-group',
@@ -340,10 +338,10 @@ define([
                 dom.setContent('input-container', content);
                 events.attachEvents(container);
             })
-                .then(function () {
+                .then(() => {
                     return autoValidate();
                 })
-                .catch(function (err) {
+                .catch((err) => {
                     console.error('ERROR in render', err);
                 });
         }
@@ -354,7 +352,7 @@ define([
          * For the objectInput, there is only ever one control.
          */
         function layout(events) {
-            var content = div({
+            const content = div({
                 dataElement: 'main-panel'
             }, [
                 div({
@@ -368,7 +366,7 @@ define([
         }
 
         function registerEvents() {
-            bus.on('reset-to-defaults', function (message) {
+            bus.on('reset-to-defaults', (message) => {
                 resetModelValue();
                 // TODO: this should really be set when the linked field is reset...
                 model.setItem('availableValues', []);
@@ -376,7 +374,7 @@ define([
                 updateInputControl('availableValues');
                 updateInputControl('value');
             });
-            bus.on('update', function (message) {
+            bus.on('update', (message) => {
                 model.setItem('value', message.value);
                 updateInputControl('value');
             });
@@ -393,18 +391,18 @@ define([
             //                   bus }
             //                });
 
-            bus.on('parameter-changed', function (message) {
+            bus.on('parameter-changed', (message) => {
                 if (message.parameter === constraints.referredParameter) {
-                    var newValue = message.newValue;
+                    let newValue = message.newValue;
                     if (message.newValue === '') {
                         newValue = null;
                     }
                     model.setItem('referenceObjectName', newValue);
                     syncAvailableValues()
-                        .then(function () {
+                        .then(() => {
                             updateInputControl('availableValues');
                         })
-                        .catch(function (err) {
+                        .catch((err) => {
                             console.error('ERROR syncing available values', err);
                         });
                 }
@@ -426,8 +424,8 @@ define([
         // LIFECYCLE API
 
         function start() {
-            return Promise.try(function () {
-                bus.on('run', function (message) {
+            return Promise.try(() => {
+                bus.on('run', (message) => {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
                     $container = $(container);
@@ -435,7 +433,7 @@ define([
                         node: container
                     });
 
-                    var events = Events.make(),
+                    const events = Events.make(),
                         theLayout = layout(events);
 
                     container.innerHTML = theLayout.content;

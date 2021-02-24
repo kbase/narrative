@@ -17,7 +17,7 @@ define([
     'handlebars',
     'text!kbase/templates/static_narrative.html'
 ],
-function(
+(
     $,
     Promise,
     Config,
@@ -29,7 +29,7 @@ function(
     Jupyter,
     Handlebars,
     StaticNarrativeTmpl
-) {
+) => {
     'use strict';
 
     class StaticNarrativesPanel {
@@ -108,10 +108,10 @@ function(
                 info.currentVersion = docInfo[4];
                 info.currentVersionSaved = TimeFormat.prettyTimestamp(docInfo[3]);
                 info.isCurrentVersion = info.currentVersion === info.version;
-                let tmpl = Handlebars.compile(StaticNarrativeTmpl);
+                const tmpl = Handlebars.compile(StaticNarrativeTmpl);
                 this.container.innerHTML = tmpl(info);
 
-                let createBtn = this.hostNode.querySelector('button.btn-primary');
+                const createBtn = this.hostNode.querySelector('button.btn-primary');
                 if (createBtn) {
                     createBtn.addEventListener('click', this.saveStaticNarrative.bind(this));
                 }

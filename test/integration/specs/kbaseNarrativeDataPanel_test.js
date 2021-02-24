@@ -1,5 +1,3 @@
-/*global  browser, $ */
-/* eslint {strict: ['error', 'global']} */
 'use strict';
 
 const { login, openNarrative, clickWhenReady, waitForClass } = require('../wdioUtils.js');

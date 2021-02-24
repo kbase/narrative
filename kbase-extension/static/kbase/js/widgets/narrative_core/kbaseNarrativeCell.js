@@ -9,11 +9,11 @@ define (
 		'kbwidget',
 		'bootstrap',
 		'jquery'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$
-	) {
+	) => {
     return KBWidget({
         /* 
          * (required) Your widget should be named in CamelCase.

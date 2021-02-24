@@ -1,5 +1,5 @@
 define(['jquery', 'kbwidget'],
-function($) {
+($) => {
     $.KBWidget({
         name: 'kbaseAuthenticatedWidget',
         _accessors : [
@@ -19,27 +19,27 @@ function($) {
             this._super(options);
             $(document).on(
                 'loggedIn.kbase',
-                function(e, auth) {
+                (e, auth) => {
                     if (this.loggedInCallback) {
                         this.loggedInCallback(e, {token: ""});
                     }
-                }.bind(this)
+                }
             );
 
             $(document).on(
                 'loggedOut.kbase',
-                function(e) {
+                (e) => {
                     if (this.loggedOutCallback) {
                         this.loggedOutCallback(e);
                     }
-                }.bind(this)
+                }
             );
 
-            this.callAfterInit(function() {
+            this.callAfterInit(() => {
                 if (this.loggedInQueryCallback) {
                     this.loggedInQueryCallback({token: ""});
                 }
-            }.bind(this));
+            });
 
             return this;
 

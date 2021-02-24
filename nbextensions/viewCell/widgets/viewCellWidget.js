@@ -19,7 +19,7 @@ define([
     'google-code-prettify/prettify',
     'css!google-code-prettify/prettify.css',
     'css!font-awesome.css'
-], function(
+], (
     $,
     Promise,
     Uuid,
@@ -38,9 +38,9 @@ define([
     Fsm,
     Spec,
     PR
-) {
+) => {
     'use strict';
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         span = t('span'),
         a = t('a'),
@@ -232,7 +232,7 @@ define([
         ];
 
     function factory(config) {
-        var container, ui,
+        let container, ui,
             workspaceInfo = config.workspaceInfo,
             runtime = Runtime.make(),
             cell = config.cell,
@@ -290,7 +290,7 @@ define([
          * @returns {unresolved}
          */
         function syncAppSpec(appId, appTag) {
-            var appRef = {
+            const appRef = {
                     ids: [appId],
                     tag: appTag
                 },
@@ -299,7 +299,7 @@ define([
                 });
 
             return nms.get_method_spec(appRef)
-                .then(function(data) {
+                .then((data) => {
                     if (!data[0]) {
                         throw new Error('App not found');
                     }
@@ -319,8 +319,8 @@ define([
         // }
 
         function showFsmBar() {
-            var currentState = fsm.getCurrentState(),
-                content = Object.keys(currentState.state).map(function(key) {
+            const currentState = fsm.getCurrentState(),
+                content = Object.keys(currentState.state).map((key) => {
                     return span([
                         span({ style: { fontStyle: 'italic' } }, key),
                         ' : ',
@@ -347,7 +347,7 @@ define([
                     th('Name'),
                     td({ dataElement: 'name' })
                 ]),
-                ui.ifAdvanced(function() {
+                ui.ifAdvanced(() => {
                     return tr([
                         th('Module'),
                         td({ dataElement: 'module' })
@@ -369,7 +369,7 @@ define([
                     th('Authors'),
                     td({ dataElement: 'authors' })
                 ]),
-                ui.ifAdvanced(function() {
+                ui.ifAdvanced(() => {
                     return tr([
                         th('Git commit hash'),
                         td({ dataElement: 'git-commit-hash' })
@@ -389,7 +389,7 @@ define([
                     name: 'summary',
                     content: renderAppSummary()
                 },
-                ui.ifAdvanced(function() {
+                ui.ifAdvanced(() => {
                     return {
                         label: 'Spec',
                         name: 'spec',
@@ -402,7 +402,7 @@ define([
 
 
         function renderSetting(settingName) {
-            var setting = settings[settingName],
+            let setting = settings[settingName],
                 value;
 
             if (!setting) {
@@ -422,7 +422,7 @@ define([
         }
 
         function doChangeSetting(event) {
-            var control = event.target,
+            const control = event.target,
                 settingName = control.value;
 
             model.setItem(['user-settings', settingName], control.checked);
@@ -431,9 +431,9 @@ define([
         }
 
         function renderSettings() {
-            var events = Events.make({ node: container }),
-                content = Object.keys(settings).map(function(key) {
-                    var setting = settings[key],
+            const events = Events.make({ node: container }),
+                content = Object.keys(settings).map((key) => {
+                    const setting = settings[key],
                         settingsValue = model.getItem(['user-settings', key], setting.defaultValue);
                     return div({}, [
                         input({
@@ -455,7 +455,7 @@ define([
             events.attachEvents();
 
             //Ensure that the settings are reflected in the UI.
-            Object.keys(settings).forEach(function(key) {
+            Object.keys(settings).forEach((key) => {
                 renderSetting(key);
             });
         }
@@ -468,7 +468,7 @@ define([
         }
 
         function showAboutApp() {
-            var appSpec = model.getItem('app.spec');
+            const appSpec = model.getItem('app.spec');
             ui.setContent('about-app.name', appSpec.info.name);
             ui.setContent('about-app.module', appSpec.info.namespace || ui.na());
             ui.setContent('about-app.id', appSpec.info.id);
@@ -481,25 +481,25 @@ define([
                 }
                 return ui.na();
             }()));
-            var appRef = [appSpec.info.namespace || 'l.m', appSpec.info.id].filter(toBoolean).join('/'),
+            const appRef = [appSpec.info.namespace || 'l.m', appSpec.info.id].filter(toBoolean).join('/'),
                 link = a({ href: '/#appcatalog/app/' + appRef, target: '_blank' }, 'Catalog Page');
             ui.setContent('about-app.catalog-link', link);
         }
 
         function showAppSpec() {
-            var appSpec = model.getItem('app.spec');
-            var specText = JSON.stringify(appSpec, false, 3),
+            const appSpec = model.getItem('app.spec');
+            const specText = JSON.stringify(appSpec, false, 3),
                 fixedText = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;'),
                 content = pre({ class: 'prettyprint lang-json', style: { fontSize: '80%' } }, fixedText);
             ui.setContent('about-app.spec', content);
         }
 
         function renderLayout() {
-            var readOnlyStyle = {};
+            const readOnlyStyle = {};
             if (!Narrative.canEdit()) {
                 readOnlyStyle.display = 'none';
             }
-            var events = Events.make(),
+            const events = Events.make(),
                 content = div({ class: 'kbase-extension kb-app-cell', style: { display: 'flex', alignItems: 'stretch' } }, [
                     div({ class: 'prompt', dataElement: 'prompt', style: { display: 'flex', alignItems: 'stretch', flexDirection: 'column' } }, [
                         div({ dataElement: 'status' })
@@ -634,7 +634,7 @@ define([
         }
 
         function buildPython(cell, cellId, app, params) {
-            var runId = new Uuid(4).format(),
+            const runId = new Uuid(4).format(),
                 code = PythonInterop.buildViewRunner(cellId, runId, fixApp(app), params);
 
             // TODO: do something with the runId
@@ -646,7 +646,7 @@ define([
         }
 
         function initializeFSM() {
-            var currentState = model.getItem('fsm.currentState');
+            let currentState = model.getItem('fsm.currentState');
             if (!currentState) {
                 // TODO: evaluate the state of things to try to guess the state?
                 // Or is this just an error unless it is a new cell?
@@ -683,7 +683,7 @@ define([
         }
 
         function showCodeInputArea() {
-            var codeInputArea = cell.input.find('.input_area').get(0);
+            const codeInputArea = cell.input.find('.input_area').get(0);
             if (model.getItem('user-settings.showCodeInputArea')) {
                 if (!codeInputArea.classList.contains('-show')) {
                     codeInputArea.classList.add('-show');
@@ -706,7 +706,7 @@ define([
         }
 
         function toggleSettings() {
-            var name = 'showSettings',
+            let name = 'showSettings',
                 selector = 'settings',
                 node = ui.getElement(selector),
                 showing = model.getItem(['user-settings', name]);
@@ -728,16 +728,16 @@ define([
         }
 
         function doRemoveNotification(index) {
-            var notifications = model.getItem('notifications') || [];
+            const notifications = model.getItem('notifications') || [];
             notifications.splice(index, 1);
             model.setItem('notifications', notifications);
             renderNotifications();
         }
 
         function renderNotifications() {
-            var events = Events.make(),
+            const events = Events.make(),
                 notifications = model.getItem('notifications') || [],
-                content = notifications.map(function(notification, index) {
+                content = notifications.map((notification, index) => {
                     return div({ class: 'row' }, [
                         div({ class: 'col-md-10' }, notification),
                         div({ class: 'col-md-2', style: { textAlign: 'right' } }, span({}, [
@@ -758,7 +758,7 @@ define([
         }
 
         function addNotification(notification) {
-            var notifications = model.getItem('notifications') || [];
+            const notifications = model.getItem('notifications') || [];
             notifications.push(notification);
             model.setItem('notifications', notifications);
             renderNotifications();
@@ -774,29 +774,29 @@ define([
             showFsmBar();
             renderNotifications();
             renderSettings();
-            var state = fsm.getCurrentState();
+            const state = fsm.getCurrentState();
 
             // Button state
-            state.ui.buttons.enabled.forEach(function(button) {
+            state.ui.buttons.enabled.forEach((button) => {
                 ui.enableButton(button);
             });
-            state.ui.buttons.disabled.forEach(function(button) {
+            state.ui.buttons.disabled.forEach((button) => {
                 ui.disableButton(button);
             });
 
 
             // Element state
-            state.ui.elements.show.forEach(function(element) {
+            state.ui.elements.show.forEach((element) => {
                 ui.showElement(element);
             });
-            state.ui.elements.hide.forEach(function(element) {
+            state.ui.elements.hide.forEach((element) => {
                 ui.hideElement(element);
             });
 
         }
 
         function doDeleteCell() {
-            var content = div([
+            const content = div([
                 p([
                     'Deleting this cell will remove the data visualization, ',
                     'but will not delete the data object, which will still be available ',
@@ -805,7 +805,7 @@ define([
                 p('Continue to delete this data cell?')
             ]);
             ui.showConfirmDialog({ title: 'Confirm Cell Deletion', body: content })
-                .then(function(confirmed) {
+                .then((confirmed) => {
                     if (!confirmed) {
                         return;
                     }
@@ -824,7 +824,7 @@ define([
         // LIFECYCLE API
 
         function init() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 initializeFSM();
                 initCodeInputArea();
                 return null;
@@ -832,7 +832,7 @@ define([
         }
 
         function attach(node) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 container = node;
                 ui = Ui.make({
                     node: container,
@@ -848,7 +848,7 @@ define([
                     };
                 }
 
-                var layout = renderLayout();
+                const layout = renderLayout();
                 container.innerHTML = layout.content;
                 layout.events.attachEvents(container);
 
@@ -857,26 +857,26 @@ define([
         }
 
         function start() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 // DOM EVENTS
-                cell.element.on('toggleCodeArea.cell', function() {
+                cell.element.on('toggleCodeArea.cell', () => {
                     toggleCodeInputArea(cell);
                 });
                 /*
                  * listeners for the local input cell message bus
                  */
 
-                bus.on('edit-cell-metadata', function() {
+                bus.on('edit-cell-metadata', () => {
                     doEditCellMetadata();
                 });
-                bus.on('edit-notebook-metadata', function() {
+                bus.on('edit-notebook-metadata', () => {
                     doEditNotebookMetadata();
                 });
-                cell.element.on('toggleCellSettings.cell', function() {
+                cell.element.on('toggleCellSettings.cell', () => {
                     toggleSettings(cell);
                 });
-                bus.on('toggle-settings', function() {
-                    var showing = toggleSettings(cell),
+                bus.on('toggle-settings', () => {
+                    const showing = toggleSettings(cell),
                         label = span({ class: 'fa fa-cog ' }),
                         buttonNode = ui.getButton('toggle-settings');
                     buttonNode.innerHTML = label;
@@ -886,13 +886,13 @@ define([
                         buttonNode.classList.remove('active');
                     }
                 });
-                bus.on('run-app', function() {
+                bus.on('run-app', () => {
                     doRun();
                 });
 
                 // Events from widgets...
 
-                parentBus.on('reset-to-defaults', function() {
+                parentBus.on('reset-to-defaults', () => {
                     bus.emit('reset-to-defaults');
                 });
 
@@ -903,19 +903,19 @@ define([
                     description: 'A cell channel'
                 });
 
-                eventManager.add(cellBus.on('delete-cell', function() {
+                eventManager.add(cellBus.on('delete-cell', () => {
                     doDeleteCell();
                 }));
 
-                eventManager.add(runtime.bus().on('ui-mode-changed', function() {
+                eventManager.add(runtime.bus().on('ui-mode-changed', () => {
                     if (Narrative.canEdit()) {
                         unloadParamsWidget()
-                            .then(function() {
+                            .then(() => {
                                 loadInputParamsWidget();
                             });
                     } else {
                         unloadParamsWidget()
-                            .then(function() {
+                            .then(() => {
                                 loadViewParamsWidget();
                             });
                     }
@@ -928,12 +928,12 @@ define([
         }
 
         function exportParams() {
-            var params = model.getItem('params'),
+            const params = model.getItem('params'),
                 paramsToExport = {},
                 parameters = spec.getSpec().parameters;
 
-            Object.keys(params).forEach(function(key) {
-                var value = params[key],
+            Object.keys(params).forEach((key) => {
+                const value = params[key],
                     paramSpec = parameters.specs[key];
 
                 if (!paramSpec) {
@@ -948,7 +948,7 @@ define([
         }
 
         function unloadParamsWidget() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (paramsWidget) {
                     return paramsWidget.stop();
                 }
@@ -956,10 +956,10 @@ define([
         }
 
         function pRequire(ModulePath) {
-            return new Promise(function(resolve, reject) {
-                require([ModulePath], function(Widget) {
+            return new Promise((resolve, reject) => {
+                require([ModulePath], (Widget) => {
                     resolve(Widget);
-                }, function(err) {
+                }, (err) => {
                     reject(err);
                 });
             });
@@ -968,16 +968,16 @@ define([
         // TODO: handle raciness of the paramsWidget...
         function loadInputParamsWidget() {
             pRequire('nbextensions/viewCell/widgets/appParamsWidget')
-                .then(function(Widget) {
-                    var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' });
+                .then((Widget) => {
+                    const bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' });
 
                     paramsWidget = Widget.make({
                         bus: bus,
                         workspaceInfo: workspaceInfo
                     });
 
-                    bus.on('parameter-sync', function(message) {
-                        var value = model.getItem(['params', message.parameter]);
+                    bus.on('parameter-sync', (message) => {
+                        const value = model.getItem(['params', message.parameter]);
                         bus.send({
                             parameter: message.parameter,
                             value: value
@@ -990,8 +990,8 @@ define([
                         });
                     });
 
-                    bus.on('sync-params', function(message) {
-                        message.parameters.forEach(function(paramId) {
+                    bus.on('sync-params', (message) => {
+                        message.parameters.forEach((paramId) => {
                             bus.send({
                                 parameter: paramId,
                                 value: model.getItem(['params', message.parameter])
@@ -1016,7 +1016,7 @@ define([
                         }
                     });
 
-                    bus.on('parameter-changed', function(message) {
+                    bus.on('parameter-changed', (message) => {
                         // We simply store the new value for the parameter.
                         model.setItem(['params', message.parameter], message.newValue);
                         evaluateAppState();
@@ -1032,16 +1032,16 @@ define([
 
         function loadViewParamsWidget() {
             pRequire('nbextensions/viewCell/widgets/appParamsViewWidget')
-                .then(function(Widget) {
-                    var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' });
+                .then((Widget) => {
+                    const bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' });
 
                     paramsWidget = Widget.make({
                         bus: bus,
                         workspaceInfo: workspaceInfo
                     });
 
-                    bus.on('parameter-sync', function(message) {
-                        var value = model.getItem(['params', message.parameter]);
+                    bus.on('parameter-sync', (message) => {
+                        const value = model.getItem(['params', message.parameter]);
                         bus.send({
                             parameter: message.parameter,
                             value: value
@@ -1054,8 +1054,8 @@ define([
                         });
                     });
 
-                    bus.on('sync-params', function(message) {
-                        message.parameters.forEach(function(paramId) {
+                    bus.on('sync-params', (message) => {
+                        message.parameters.forEach((paramId) => {
                             bus.send({
                                 parameter: paramId,
                                 value: model.getItem(['params', message.parameter])
@@ -1080,7 +1080,7 @@ define([
                         }
                     });
 
-                    bus.on('parameter-changed', function(message) {
+                    bus.on('parameter-changed', (message) => {
                         // We simply store the new value for the parameter.
                         model.setItem(['params', message.parameter], message.newValue);
                         evaluateAppState();
@@ -1096,11 +1096,11 @@ define([
 
         // just a quick hack since we are not truly recursive yet..,
         function gatherValidationMessages(validationResult) {
-            var messages = [];
+            const messages = [];
 
             function harvestErrors(validations) {
                 if (validations instanceof Array) {
-                    validations.forEach(function(result, index) {
+                    validations.forEach((result, index) => {
                         if (!result.isValid) {
                             messages.push(String(index) + ':' + result.errorMessage);
                         }
@@ -1109,8 +1109,8 @@ define([
                         }
                     });
                 } else {
-                    Object.keys(validations).forEach(function(id) {
-                        var result = validations[id];
+                    Object.keys(validations).forEach((id) => {
+                        const result = validations[id];
                         if (!result.isValid) {
                             messages.push(id + ':' + result.errorMessage);
                         }
@@ -1126,10 +1126,10 @@ define([
 
         function evaluateAppState() {
             validateModel()
-                .then(function(result) {
+                .then((result) => {
                     // we have a tree of validations, so we need to walk the tree to see if anything
                     // does not validate.
-                    var messages = gatherValidationMessages(result);
+                    const messages = gatherValidationMessages(result);
 
                     if (messages.length === 0) {
                         buildPython(cell, utils.getMeta(cell, 'attributes').id, model.getItem('app'), exportParams());
@@ -1141,7 +1141,7 @@ define([
                         renderUI();
                     }
                 })
-                .catch(function(err) {
+                .catch((err) => {
                     alert('internal error'),
                     console.error('INTERNAL ERROR', err);
                 });
@@ -1151,8 +1151,8 @@ define([
             // First get the app specs, which is stashed in the model,
             // with the parameters returned.
             return syncAppSpec(params.appId, params.appTag)
-                .then(function() {
-                    var appRef = [model.getItem('app.id'), model.getItem('app.tag')].filter(toBoolean).join('/'),
+                .then(() => {
+                    const appRef = [model.getItem('app.id'), model.getItem('app.tag')].filter(toBoolean).join('/'),
                         url = '/#appcatalog/app/' + appRef;
                     utils.setCellMeta(cell, 'kbase.attributes.title', model.getItem('app.spec.info.name'));
                     utils.setCellMeta(cell, 'kbase.attributes.subtitle', model.getItem('app.spec.info.subtitle'));
@@ -1160,24 +1160,24 @@ define([
                     utils.setCellMeta(cell, 'kbase.attributes.info.label', 'more...');
                     if (Narrative.canEdit()) {
                         return unloadParamsWidget()
-                            .then(function() {
+                            .then(() => {
                                 return loadInputParamsWidget();
                             });
                     } else {
                         return unloadParamsWidget()
-                            .then(function() {
+                            .then(() => {
                                 return loadViewParamsWidget();
                             });
                     }
                 })
-                .then(function() {
+                .then(() => {
                     // this will not change, so we can just render it here.
                     showAboutApp();
                     showAppSpec();
                     PR.prettyPrint(null, container);
                     renderUI();
                 })
-                .then(function() {
+                .then(() => {
                     // if we start out in 'new' state, then we need to promote to
                     // editing...
                     if (fsm.getCurrentState().state.mode === 'new') {
@@ -1186,7 +1186,7 @@ define([
                     }
                     renderUI();
                 })
-                .catch(function(err) {
+                .catch((err) => {
                     console.error('ERROR loading main widgets', err);
                     addNotification('Error loading main widgets: ' + err.message);
                     model.setItem('fatalError', {
@@ -1224,7 +1224,7 @@ define([
             return factory(config);
         }
     };
-}, function(err) {
+}, (err) => {
     'use strict';
     console.error('ERROR loading viewCell viewCellWidget', err);
 });

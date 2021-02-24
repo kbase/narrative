@@ -1,7 +1,4 @@
-/*global define*/
-/*jslint white:true,browser:true */
-
-define([], function() {
+define([], () => {
     'use strict';
 
     // Static methods
@@ -24,7 +21,7 @@ define([], function() {
             return;
         }
         // pop off the last property for setting at the end.
-        var propKey = path.pop(),
+        let propKey = path.pop(),
             key, temp = data;
         // Walk the path, creating empty objects if need be.
         while (path.length > 0) {
@@ -49,7 +46,7 @@ define([], function() {
             return;
         }
         // pop off the last property for setting at the end.
-        var propKey = path.pop(),
+        let propKey = path.pop(),
             key, temp = data;
         // Walk the path, creating empty objects if need be.
         while (path.length > 0) {
@@ -77,7 +74,7 @@ define([], function() {
         } else if (!isArray(path)) {
             throw new TypeError('Invalid type for key: ' + (typeof path));
         }
-        var i, temp = data;
+        let i, temp = data;
         for (i = 0; i < path.length; i += 1) {
             if ((temp === undefined) ||
                 (typeof temp !== 'object') ||
@@ -98,7 +95,7 @@ define([], function() {
         } else if (!isArray(path)) {
             throw new TypeError('Invalid type for key: ' + (typeof path));
         }
-        var i, temp = data;
+        let i, temp = data;
         for (i = 0; i < path.length; i += 1) {
             if ((temp === undefined) ||
                 (typeof temp !== 'object') ||
@@ -121,7 +118,7 @@ define([], function() {
         if (!config) {
             config = {};
         }
-        var obj = config.data || {},
+        let obj = config.data || {},
             lastObj,
             historyCount = 0,
             updateHandler = config.onUpdate,
@@ -144,7 +141,7 @@ define([], function() {
                 return;
             }
 
-            timer = window.setTimeout(function() {
+            timer = window.setTimeout(() => {
                 try {
                     timer = null;
                     if (historyEnabled) {
@@ -189,7 +186,7 @@ define([], function() {
         }
 
         function copyItem(props, defaultValue) {
-            var item = getItem(props, defaultValue);
+            const item = getItem(props, defaultValue);
             if (item !== undefined) {
                 return JSON.parse(JSON.stringify(item));
             }
@@ -199,7 +196,7 @@ define([], function() {
             if (typeof propPath === 'string') {
                 propPath = propPath.split('.');
             }
-            var i, temp = obj;
+            let i, temp = obj;
             for (i = 0; i < propPath.length; i += 1) {
                 if ((temp === undefined) ||
                     (typeof temp !== 'object') ||
@@ -223,7 +220,7 @@ define([], function() {
 
         function pushItem(path, value) {
             ensureHistory();
-            var len = pushDataItem(obj, path, value);
+            const len = pushDataItem(obj, path, value);
             run();
             return len;
         }
@@ -248,7 +245,7 @@ define([], function() {
                 return;
             }
             increment = (increment === undefined) ? 1 : increment;
-            var propKey = path.pop(),
+            let propKey = path.pop(),
                 key, temp = obj;
             while (path.length > 0) {
                 key = path.shift();
@@ -278,7 +275,7 @@ define([], function() {
             if (path.length === 0) {
                 return;
             }
-            var propKey = path.pop(),
+            let propKey = path.pop(),
                 key, temp = obj;
             while (path.length > 0) {
                 key = path.shift();

@@ -52,7 +52,7 @@ define (
 		'geometry_rectangle',
 		'geometry_point',
 		'geometry_size'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -62,7 +62,7 @@ define (
 		geometry_rectangle,
 		geometry_point,
 		geometry_size
-	) {
+	) => {
 
     'use strict';
 
@@ -90,11 +90,11 @@ define (
                 return [0,0];
             }
 
-            var min = 0.9 * d3.min(this.dataset().map( function(d) {return d.x} ).filter(function(d) { return this.xScaleType() != 'log' || d != 0 }, this) );
+            const min = 0.9 * d3.min(this.dataset().map( (d) => {return d.x} ).filter(function(d) { return this.xScaleType() != 'log' || d != 0 }, this) );
 
             return [
                 min,
-                1.1 * d3.max(this.dataset().map( function(d) {return d.x}))
+                1.1 * d3.max(this.dataset().map( (d) => {return d.x}))
             ];
         },
 
@@ -104,11 +104,11 @@ define (
                 return [0,0];
             }
 
-            var min = 0.9 * d3.min(this.dataset().map( function(d) {return d.y}).filter(function(d) { return this.yScaleType() != 'log' || d != 0 }, this) );
+            const min = 0.9 * d3.min(this.dataset().map( (d) => {return d.y}).filter(function(d) { return this.yScaleType() != 'log' || d != 0 }, this) );
 
             return [
                 min,
-                1.1 * d3.max(this.dataset().map( function(d) {return d.y}))
+                1.1 * d3.max(this.dataset().map( (d) => {return d.y}))
             ]
         },
 
@@ -118,39 +118,39 @@ define (
                 return;
             }
 
-            var bounds = this.chartBounds();
-            var $scatter = this;
+            const bounds = this.chartBounds();
+            const $scatter = this;
 
-            var funkyTown = function() {
+            const funkyTown = function() {
                 this
                     .attr('cx',
-                        function (d) {
-                            var cx = $scatter.xScale()(d.x);
+                        (d) => {
+                            const cx = $scatter.xScale()(d.x);
 
                             return isNaN(cx) ? -500000 : cx;
                         }
                     )
                     .attr('cy',
-                        function (d) {
-                            var cy = $scatter.yScale()(d.y);
+                        (d) => {
+                            const cy = $scatter.yScale()(d.y);
 
                             return isNaN(cy) ? -500000 : cy;
                         }
                     )
                     .attr('r',
-                        function (d) {
+                        (d) => {
                             return d.weight || $scatter.options.weight
                         }
                     )
                     //.attr('y', function (d) { return $scatter.yScale()(d.y) })
                     .attr('fill',
-                        function(d) {
+                        (d) => {
                             return d.color || $scatter.options.color
                         }
                     )
             };
 
-            var mouseAction = function() {
+            const mouseAction = function() {
 
                 this.on('mouseover', function(d) {
 
@@ -160,7 +160,7 @@ define (
                             .attr('stroke-width', 3);
                     }
 
-                    var label = d.label
+                    const label = d.label
                         ? d.label
                         : ($scatter.options.weight || d.weight) + ' at (' + d.x + ',' + d.y + ')';
 
@@ -181,7 +181,7 @@ define (
 
                     $scatter.D3svg().select($scatter.region('yPadding')).selectAll('g g text')
                         .attr("fill",
-                            function(r,ri){
+                            (r,ri)=> {
                                return 'black';
                             }
                     );
@@ -191,11 +191,11 @@ define (
                 return this;
             };
 
-            var transitionTime = this.rendered
+            const transitionTime = this.rendered
                 ? this.options.transitionTime
                 : 0;
 
-            var chart = this.D3svg().select(this.region('chart')).selectAll('.point').data(this.dataset());
+            const chart = this.D3svg().select(this.region('chart')).selectAll('.point').data(this.dataset());
             chart
                 .enter()
                     .append('path')
@@ -209,15 +209,15 @@ define (
                 .call(mouseAction)
                 .transition()
                 .duration(transitionTime)
-                    .attr("transform", function(d) {
-                        var x = $scatter.xScale()(d.x);
-                        var y = $scatter.yScale()(d.y);
+                    .attr("transform", (d) => {
+                        let x = $scatter.xScale()(d.x);
+                        let y = $scatter.yScale()(d.y);
 
                          x = isNaN(x) ? -500000 : x; y = isNaN(y) ? -500000 : y;
 
                         return "translate(" + x + "," + y + ")";
                     })
-                    .attr('d', function (d) { return d3.svg.symbol().type(d.shape || $scatter.options.shape).size(d.weight || $scatter.options.weight)() } )
+                    .attr('d', (d) => { return d3.svg.symbol().type(d.shape || $scatter.options.shape).size(d.weight || $scatter.options.weight)() } )
                     .call(funkyTown)
             ;
 

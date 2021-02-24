@@ -1,5 +1,5 @@
 function KBaseBiochem_CompoundSet(tabwidget) {
-    var self = this;
+    const self = this;
     this.tabwidget = tabwidget;
 
     this.setMetadata = function (data) {
@@ -14,20 +14,20 @@ function KBaseBiochem_CompoundSet(tabwidget) {
         this.data = data;
         this.compounds = this.data.compounds;
         this.cpdhash = {};
-        var cpdarray = [];
+        const cpdarray = [];
 
-        for (var i=0; i< this.compounds.length; i++) {
-            var cpd = this.compounds[i];
+        for (let i=0; i< this.compounds.length; i++) {
+            const cpd = this.compounds[i];
             this.cpdhash[cpd.id] = cpd;
             cpdarray.push(cpd.id);
         }
     };
 
     this.CompoundTab = function (info) {
-        var cpd = this.cpdhash[info.id];
+        const cpd = this.cpdhash[info.id];
         console.log('info', cpd)
 
-        var output = [{
+        const output = [{
             "label": "Compound",
             "data": cpd.id,
         }, {
@@ -56,8 +56,8 @@ function KBaseBiochem_CompoundSet(tabwidget) {
             "data": cpd.concentration
         }];
         if (cpd.smiles) {
-		    var p = self.tabwidget.kbapi('biochem', 'depict_compounds', {structures: [cpd.smiles]
-		    }).then(function(data) {
+		    const p = self.tabwidget.kbapi('biochem', 'depict_compounds', {structures: [cpd.smiles]
+		    }).then((data) => {
                     output[1] = {
 						"label": "Image",
 						"data": data[0]

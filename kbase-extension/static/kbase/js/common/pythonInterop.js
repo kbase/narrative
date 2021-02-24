@@ -1,8 +1,8 @@
-define([], function () {
+define([], () => {
     'use strict';
 
     function escapeString(stringValue, delimiter) {
-        var delimiterRegex = new RegExp(delimiter, 'g');
+        const delimiterRegex = new RegExp(delimiter, 'g');
         return stringValue.replace(delimiterRegex, '\\' + delimiter).replace(/\n/g, '\\n');
     }
 
@@ -13,10 +13,10 @@ define([], function () {
         return '\'';
     }
 
-    var indentString = '    ';
+    const indentString = '    ';
     function makeIndent(level) {
-        var retval = '';
-        for (var i = 0; i < level; i += 1) {
+        let retval = '';
+        for (let i = 0; i < level; i += 1) {
             retval += indentString;
         }
         return retval;
@@ -36,7 +36,7 @@ define([], function () {
             return value ? 'True' : 'False';
         case 'object':
             if (value instanceof Array) {
-                return '[' + value.map(function (value) {
+                return '[' + value.map((value) => {
                     return pythonifyValue(value, options, indentLevel);
                 }).join(', ') + ']';
             }
@@ -45,7 +45,7 @@ define([], function () {
             }
             var prefix = makeIndent(indentLevel + 1);
             return '{\n' +
-                Object.keys(value).map(function (key) {
+                Object.keys(value).map((key) => {
                     return prefix + pythonifyValue(key, options) + ': ' + pythonifyValue(value[key], options, indentLevel + 1);
                 }).join(',\n') +
                 '\n' + makeIndent(indentLevel) + '}';
@@ -56,8 +56,8 @@ define([], function () {
     }
 
     function objectToNamedArgs(params) {
-        return Object.keys(params).map(function (name) {
-            var value = params[name];
+        return Object.keys(params).map((name) => {
+            const value = params[name];
             // This allows a non-sparse map of params, in which a param key may
             // be set as undefined, e.g. in the case of an optional param which
             // simply has not been set. This simplifies calling code because it
@@ -66,18 +66,18 @@ define([], function () {
                 return name + '=' + pythonifyValue(value);
             }
         })
-            .filter(function (param) {
+            .filter((param) => {
                 return (param !== undefined);
             });
     }
 
     function buildNiceArgsList(args) {
-        var indent = indentString;
+        const indent = indentString;
         return '\n' + indent + args.join(',\n' + indent) + '\n';
     }
 
     function buildBatchAppRunner(cellId, runId, app, params) {
-        var paramSetName = 'batch_params',
+        let paramSetName = 'batch_params',
             pythonifiedParams = pythonifyValue(params, { autoIndent: true }),
             positionalArgs = [
                 pythonifyValue(app.id),
@@ -98,7 +98,7 @@ define([], function () {
     }
 
     function buildAppRunner(cellId, runId, app, params) {
-        var positionalArgs = [
+        const positionalArgs = [
                 pythonifyValue(app.id),
                 pythonifyValue(params, { autoIndent: true }, 1)
             ],
@@ -119,7 +119,7 @@ define([], function () {
     }
 
     function buildEditorRunner(cellId, runId, app, params) {
-        var positionalArgs = [
+        const positionalArgs = [
                 pythonifyValue(app.id),
                 pythonifyValue(params, { autoIndent: true })
             ],
@@ -140,7 +140,7 @@ define([], function () {
 
 
     function buildViewRunner(cellId, runId, app, params) {
-        var positionalArgs = [
+        const positionalArgs = [
                 pythonifyValue(app.id),
                 pythonifyValue(params, { autoIndent: true })
             ],
@@ -160,7 +160,7 @@ define([], function () {
     }
 
     function buildAdvancedViewRunner(cellId, runId, app, params, outputState) {
-        var positionalArgs = [
+        const positionalArgs = [
                 pythonifyValue(app.id),
                 pythonifyValue(params, { autoIndent: true }),
                 pythonifyValue(outputState, { autoIndent: true })
@@ -181,7 +181,7 @@ define([], function () {
     }
 
     function buildOutputRunner(jqueryWidgetName, widgetTag, cellId, params) {
-        var positionalArgs = [
+        const positionalArgs = [
                 pythonifyValue(jqueryWidgetName),
                 pythonifyValue(params, { autoIndent: true }, 1)
             ],
@@ -199,16 +199,16 @@ define([], function () {
     }
 
     function buildDataWidgetRunner(ref, cellId, title, tag) {
-        var positionalArgs = [
+        const positionalArgs = [
             pythonifyValue(ref)
         ];
-        var namedArgs = objectToNamedArgs({
+        const namedArgs = objectToNamedArgs({
             cell_id: cellId,
             title: title,
             tag: tag
         });
-        var args = positionalArgs.concat(namedArgs);
-        var pythonCode = [
+        const args = positionalArgs.concat(namedArgs);
+        const pythonCode = [
             'from biokbase.narrative.widgetmanager import WidgetManager',
             'WidgetManager().show_data_widget(' + buildNiceArgsList(args) + ')'
         ].join('\n');
@@ -216,7 +216,7 @@ define([], function () {
     }
 
     function buildCustomWidgetRunner(cellId, runId, app) {
-        var positionalArgs = [
+        const positionalArgs = [
                 pythonifyValue(app.id)
             ],
             namedArgs = objectToNamedArgs({

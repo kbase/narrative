@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white: true*/
 /**
  * An input widget to handle building a media set.
  * This has the option of loading/modifying an existing media.
@@ -14,16 +12,16 @@ define (
 		'jquery',
 		'narrativeConfig',
 		'kbaseNarrativeInput'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		Config,
 		kbaseNarrativeInput
-	) {
+	) => {
     'use strict';
     return KBWidget({
-        name: "kbaseBuildMediaInput", 
+        name: "kbaseBuildMediaInput",
         parent : kbaseNarrativeInput,
         version: "1.0.0",
         options: {
@@ -61,21 +59,21 @@ define (
          * Builds controls to fetch a media set and populate the current list.
          */
         buildFetchMediaDiv: function() {
-            var $fetchMediaDiv = $("<div class='form-inline'>");
+            const $fetchMediaDiv = $("<div class='form-inline'>");
             $fetchMediaDiv.append("Select an existing media to modify (optional): ");
 
-            var $mediaList = $("<select>")
+            const $mediaList = $("<select>")
                               .addClass('form-control')
                               .css({'max-width': '80%', 'margin-right' : '10px'});
 
-            var $fetchButton = $("<button>")
+            const $fetchButton = $("<button>")
                                .attr("type", "button")
                                .attr("value", "Fetch")
                                .addClass("btn btn-primary")
                                .append("Fetch")
                                .click($.proxy(
                                     function(event) {
-                                        var mediaName = this.$elem.find("div > select").val();
+                                        const mediaName = this.$elem.find("div > select").val();
 
                                         if (!mediaName) {
                                             this.fetchMediaError({
@@ -109,7 +107,7 @@ define (
                                                 medias: [mediaName],
                                                 workspaces: [this.wsId],
                                             },
-                                            $.proxy(function(media) { 
+                                            $.proxy(function(media) {
                                                 this.updateMediaTable(media);
                                                 $fetchMediaDiv.find("img").hide();
 
@@ -147,8 +145,8 @@ define (
                           .append(this.$errorPanel);
 
              new kbaseAccordion(this.$errorPanel.find("#error-accordion"), {
-                    elements: [{ 
-                        title: "Error Details", 
+                    elements: [{
+                        title: "Error Details",
                         body: $("<pre>")
                               .addClass('kb-err-msg')
                               .append("ERROR'D!"),
@@ -166,7 +164,7 @@ define (
          * name and pH
          */
         buildHeaderInputs: function() {
-            var $headerInputDiv = $("<div>");
+            const $headerInputDiv = $("<div>");
             $headerInputDiv.append($("<b>")
                                    .append("Name (required): "))
                            .append($("<input>")
@@ -184,7 +182,7 @@ define (
         },
 
         buildMediaTable: function() {
-            var $mediaTable = $("<table>")
+            const $mediaTable = $("<table>")
                               .addClass("table table-striped table-bordered")
                               .css({"margin-right": "auto", "margin-left": "auto"})
                               .append($("<tr>")
@@ -202,13 +200,13 @@ define (
         },
 
         buildRowControlButton: function(trashOnly) {
-            var self = this;
+            const self = this;
 
-            var deleteRow = function(event) {
+            const deleteRow = function(event) {
                 $(event.currentTarget).closest("tr").remove();
             };
 
-            var addRow = function(event) {
+            const addRow = function(event) {
                 self.addEmptyMediaRow();
                 $(event.currentTarget).find("span")
                                       .addClass("glyphicon-trash")
@@ -218,7 +216,7 @@ define (
                                       .click(deleteRow);
             };
 
-            var $button = $("<button>")
+            const $button = $("<button>")
                           .addClass("form-control")
                           .append($("<span>")
                                   .addClass("glyphicon")
@@ -240,13 +238,13 @@ define (
         },
 
         addMediaRow: function(cpd) {
-            var self = this;
-            var $newRowBtn = this.buildRowControlButton(cpd);
+            const self = this;
+            const $newRowBtn = this.buildRowControlButton(cpd);
 
             // little hack to make the ternary operators below a little cleaner.
             if (!cpd) cpd = {};
 
-            var $row = $("<tr>")
+            const $row = $("<tr>")
                        .append($("<td>")
                                .append($("<input>")
                                        .addClass("form-control")
@@ -277,7 +275,7 @@ define (
             media = media[0];
             this.$mediaTable.find("tr > td").closest("tr").remove();
 
-            for (var i=0; i<media.media_compounds.length; i++) {
+            for (let i=0; i<media.media_compounds.length; i++) {
                 this.addMediaRow(media.media_compounds[i]);
             }
             this.addEmptyMediaRow();
@@ -291,15 +289,15 @@ define (
          * representing a new media set. This gets passed to the IPython back end
          * to be processed into a new medium.
          * @public
-         * @return 
+         * @return
          */
         getParameters: function() {
-            var mediaName = this.$headerInputDiv.find("#media-name").val().trim().replace(/\s+/g, "_");
+            const mediaName = this.$headerInputDiv.find("#media-name").val().trim().replace(/\s+/g, "_");
             if (!mediaName) {
                 // stuuuuuuuuff...
             }
 
-            var mediaParams = {
+            const mediaParams = {
                 // workspace and auth token will be handled by the IPython kernel.
                 name : mediaName,
                 media : mediaName,
@@ -307,7 +305,7 @@ define (
                 isMinimal : 0
             };
 
-            var cpds = [],
+            const cpds = [],
                 concs = [],
                 minFluxes = [],
                 maxFluxes = [];
@@ -316,11 +314,11 @@ define (
 
             // Find all <tr> in the table that has a <td> (e.g., NOT the header row - that has <th>)
             // and iterate over those rows.
-            this.$mediaTable.find("tr:has('td')").each(function(idx, row) {
-                var cpd = $(row).find("td:nth-child(1) input").val().trim();
-                var conc = $(row).find("td:nth-child(2) input").val().trim();
-                var min = $(row).find("td:nth-child(3) input").val().trim();
-                var max = $(row).find("td:nth-child(4) input").val().trim();
+            this.$mediaTable.find("tr:has('td')").each((idx, row) => {
+                const cpd = $(row).find("td:nth-child(1) input").val().trim();
+                const conc = $(row).find("td:nth-child(2) input").val().trim();
+                const min = $(row).find("td:nth-child(3) input").val().trim();
+                const max = $(row).find("td:nth-child(4) input").val().trim();
 
                 if (cpd) {
                     cpds.push(cpd);
@@ -345,7 +343,7 @@ define (
          * {
          *   'name' : <string name>,
          *   'ph' : <string ph>,
-         *   'compounds' : 
+         *   'compounds' :
          *       [
          *          {
          *              'name' : <cpd name>,
@@ -361,12 +359,12 @@ define (
          * It also gives the compound list in the same order as on the screen. Hopefully.
          */
         getState: function() {
-            var state = {};
+            const state = {};
             state['name'] = this.$headerInputDiv.find("#media-name").val();
             state['ph'] = this.$headerInputDiv.find("#media-ph").val();
 
-            var cpds = [];
-            this.$mediaTable.find("tr:has('td')").each(function(idx, row) {
+            const cpds = [];
+            this.$mediaTable.find("tr:has('td')").each((idx, row) => {
                 cpds.push({
                     'name' : $(row).find("td:nth-child(1) input").val(),
                     'conc' : $(row).find("td:nth-child(2) input").val(),
@@ -389,10 +387,10 @@ define (
             this.$headerInputDiv.find("#media-name").val(state['name']);
             this.$headerInputDiv.find("#media-ph").val(state['ph']);
 
-            var cpds = state['compounds'];
+            const cpds = state['compounds'];
             this.$mediaTable.find("tr > td").closest("tr").remove();
-            for (var i=0; i<cpds.length; i++) {
-                var cpd = cpds[i];
+            for (let i=0; i<cpds.length; i++) {
+                const cpd = cpds[i];
                 cpd.concentration = cpd.conc;
                 cpd.min_flux = cpd.min;
                 cpd.max_flux = cpd.max;
@@ -405,10 +403,10 @@ define (
         refresh: function() {
             this.trigger("dataLoadedQuery.Narrative", [ [ this.mediaType ], this.IGNORE_VERSION,
                 $.proxy(function(objects) {
-                    var mediaList = objects[ this.mediaType ];
+                    const mediaList = objects[ this.mediaType ];
                     if (mediaList && mediaList.length > 0) {
                         this.$fetchMediaDiv.find('select').empty();
-                        for (var i=0; i<mediaList.length; i++) {
+                        for (let i=0; i<mediaList.length; i++) {
                             this.$fetchMediaDiv.find('select').append($('<option>').append(mediaList[i][1]));
                         }
                         this.$fetchMediaDiv.find('button').hide();
@@ -424,11 +422,11 @@ define (
         },
 
         fetchMediaError: function(error) {
-            var addRow = function(name, val) {
+            const addRow = function(name, val) {
                 return "<tr><td><b>" + name + "</b></td><td>" + val + "</td></tr>";
             };
 
-            var esc = function(s) { 
+            const esc = function(s) {
                 return String(s).replace(/'/g, "&apos;")
                                 .replace(/"/g, "&quot;")
                                 .replace(/</g, "&gt;")

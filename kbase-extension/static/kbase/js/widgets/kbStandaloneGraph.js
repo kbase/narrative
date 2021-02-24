@@ -102,8 +102,8 @@
       If set to false the stacked area chart will not normalize the values
 */
 (function () {
-    var root = this || {};
-    var standaloneGraph = root.standaloneGraph = {
+    const root = this || {};
+    const standaloneGraph = root.standaloneGraph = {
 	about: {
 	    name: "graph",
 	    title: "Graph",
@@ -221,11 +221,11 @@
         },
 
 	create: function (params) {
-	    var renderer = this;
+	    const renderer = this;
 	    if (! window.hasOwnProperty('rendererGraph')) {
 		window.rendererGraph = [];
 	    }
-	    var instance = { settings: {},
+	    const instance = { settings: {},
 			     index: params.index };
 	    jQuery.extend(true, instance, renderer);
 	    jQuery.extend(true, instance.settings, renderer.about.defaults, params);
@@ -235,16 +235,16 @@
 	},
 
 	render: function (index) {
-	    var renderer = rendererGraph[index];
+	    const renderer = rendererGraph[index];
 
 	    // get the target div
-	    var target = renderer.settings.target;
+	    const target = renderer.settings.target;
 	    var index = renderer.index;
 	    target.innerHTML = "<div id='graph_div"+index+"'></div>";
 	    target.firstChild.setAttribute('style', "width: "+ renderer.settings.width+"px; height: "+renderer.settings.height+"px;");
 	    jQuery('#graph_div'+index).svg();
 
-	    var cmax = 0;
+	    let cmax = 0;
 	    if (renderer.settings.type == 'deviation' && ! renderer.settings.data[0].data.hasOwnProperty('upper')) {
 		renderer.calculateData(renderer.settings.data, index);
 		cmax = renderer.cmax;
@@ -256,9 +256,9 @@
 	},
 
 	niceNum: function (range, round) {
-            var exponent = Math.floor(Math.log10(range)); /** exponent of range */
-            var fraction = range / Math.pow(10, exponent); /** fractional part of range */
-            var niceFraction; /** nice, rounded fraction */
+            const exponent = Math.floor(Math.log10(range)); /** exponent of range */
+            const fraction = range / Math.pow(10, exponent); /** fractional part of range */
+            let niceFraction; /** nice, rounded fraction */
 
             if (round) {
 		if (fraction < 1.5) {
@@ -287,22 +287,22 @@
 
 	/* get a nice scale, min, max and tick interval */
 	niceScale: function (params) {
- 	    var minPoint = params.min;
-	    var maxPoint = params.max;
-	    var maxTicks = params.ticks || 10;
-	    var range = rendererGraph[0].niceNum(maxPoint - minPoint, false);
-	    var tickSpacing = rendererGraph[0].niceNum(range / (maxTicks - 1), true);
-	    var niceMin = Math.floor(minPoint / tickSpacing) * tickSpacing;;
-	    var niceMax = Math.ceil(maxPoint / tickSpacing) * tickSpacing;
+ 	    const minPoint = params.min;
+	    const maxPoint = params.max;
+	    const maxTicks = params.ticks || 10;
+	    const range = rendererGraph[0].niceNum(maxPoint - minPoint, false);
+	    const tickSpacing = rendererGraph[0].niceNum(range / (maxTicks - 1), true);
+	    const niceMin = Math.floor(minPoint / tickSpacing) * tickSpacing;;
+	    const niceMax = Math.ceil(maxPoint / tickSpacing) * tickSpacing;
 
 	    return { min: niceMin, max: niceMax, space: tickSpacing };
 	},
 
 	hover: function (title, value, event, e) {
-	    var id = e.currentTarget.ownerSVGElement.ownerSVGElement.parentNode.id;
-	    var index = id.substr(9);
-	    var renderer = rendererGraph[index];
-	    var svg = jQuery('#'+id).svg('get');
+	    const id = e.currentTarget.ownerSVGElement.ownerSVGElement.parentNode.id;
+	    const index = id.substr(9);
+	    const renderer = rendererGraph[index];
+	    const svg = jQuery('#'+id).svg('get');
 	    if (title) {
 		jQuery(this, svg.root()).attr('fill-opacity', .8);
 		jQuery(this, svg.root()).attr('title', title+": "+value);
@@ -310,12 +310,12 @@
 		jQuery(this, svg.root()).attr('fill-opacity', 1);
 	    }
 	    if (event == 'click') {
-		var num = parseInt(this.parentElement.className.baseVal.substr(this.parentElement.className.baseVal.search(/\d+/)));
+		const num = parseInt(this.parentElement.className.baseVal.substr(this.parentElement.className.baseVal.search(/\d+/)));
 		svg.graph.options({ explode: [ num ], explodeDist: 15 });
 
 		if (typeof(renderer.settings.onclick) == "function") {
-		    var label = "";
-		    var i;
+		    let label = "";
+		    let i;
 		    for (i=0;i<this.parentElement.children.length;i++) {
 			if (this.parentElement.children[i] === this) {
 			    if (this.getAttribute('r')) {
@@ -330,22 +330,22 @@
 	    }
 	},
 	drawImage: function (svg, cmax, index) {
-	    var renderer = rendererGraph[index];
-	    var chartAreas = [ [ 0.1, 0.1, 0.95, 0.9 ],   // no legend
+	    const renderer = rendererGraph[index];
+	    const chartAreas = [ [ 0.1, 0.1, 0.95, 0.9 ],   // no legend
 			       [ 0.2, 0.1, 0.95, 0.9 ],   // legend left
 			       [ 0.1, 0.1, 0.75, 0.9 ],   // legend right
 			       [ 0.1, 0.25, 0.9, 0.9 ],   // legend top
 			       [ 0.1, 0.1, 0.9, 0.8  ] ]; // legend bottom
 
-	    var legendAreas = [ [ 0.0, 0.0, 0.0, 0.0     ],   // no legend
+	    const legendAreas = [ [ 0.0, 0.0, 0.0, 0.0     ],   // no legend
 				[ 0.005, 0.1, 0.125, 0.5 ],   // left
 				[ 0.8, 0.1, 0.97, 0.5    ],   // right
 				[ 0.2, 0.1, 0.8, 0.2     ],   // top
 				[ 0.2, 0.9, 0.8, 0.995   ] ]; // bottom
 
-	    var fills = [ 'url(#fadeBlue)', 'url(#fadeRed)', 'url(#fadeGreen)', 'url(#fadeYellow)', 'url(#fadeLightblue)', 'url(#fadePurple)' ];
+	    const fills = [ 'url(#fadeBlue)', 'url(#fadeRed)', 'url(#fadeGreen)', 'url(#fadeYellow)', 'url(#fadeLightblue)', 'url(#fadePurple)' ];
 
-	    var colors = [ '#0044CC', // blue
+	    const colors = [ '#0044CC', // blue
 			   '#BD362F', // red
 			   '#51A351', // green
 			   '#F89406', // yellow
@@ -353,9 +353,9 @@
 			   '#bd2fa6'  // purple
 			 ];
 
-	    var defs = svg.defs();
-	    var max = 0;
-	    var y2max = 0;
+	    const defs = svg.defs();
+	    let max = 0;
+	    let y2max = 0;
 	    for (i=0; i<renderer.settings.data.length; i++) {
 		for (h=0; h<renderer.settings.data[i].data.length; h++) {
 		    if (renderer.settings.data[i].settings && renderer.settings.data[i].settings.isY2) {
@@ -398,7 +398,7 @@
 		svg.graph.xAxis.labelRotation = renderer.settings.x_labels_rotation;
 		svg.graph.xAxis.labels(renderer.settings.x_labels);
 	    }
-	    var sy = rendererGraph[0].niceScale({min: 0, max: max, ticks: renderer.settings.y_labeled_tick_interval });
+	    const sy = rendererGraph[0].niceScale({min: 0, max: max, ticks: renderer.settings.y_labeled_tick_interval });
 	    svg.graph.yAxis.
 		title(renderer.settings.y_title, renderer.settings.y_title_color).
 		ticks(sy.max / renderer.settings.y_labeled_tick_interval, sy.max / renderer.settings.y_tick_interval, null, null, renderer.settings.y_scale).
@@ -421,8 +421,8 @@
 	    }
 	    svg.graph.legend.settings({fill: 'white', stroke: 'white'});
 
-	    var chartType = renderer.settings.type;
-	    var chartLegend = 0;
+	    const chartType = renderer.settings.type;
+	    let chartLegend = 0;
 	    if (renderer.settings.show_legend) {
 		switch (renderer.settings.legend_position) {
 		case 'left': chartLegend = 1;
@@ -435,7 +435,7 @@
 		    break;
 		};
 	    }
-	    var chartOptions = { barWidth: renderer.settings.barWidth || 25 };
+	    const chartOptions = { barWidth: renderer.settings.barWidth || 25 };
 
 	    svg.graph.status(rendererGraph[index].hover);
 
@@ -448,13 +448,13 @@
 		type(chartType, chartOptions).redraw();
 	},
 	calculateData: function (data, index) {
-	    var renderer = rendererGraph[index];
-	    var fivenumbers = [];
-	    var min = data[0].data[0];
-	    var max = data[0].data[0];
+	    const renderer = rendererGraph[index];
+	    const fivenumbers = [];
+	    let min = data[0].data[0];
+	    let max = data[0].data[0];
 
 	    for (var i=0;i<data.length;i++) {
-		data[i].data = data[i].data.sort(function (a, b) {
+		data[i].data = data[i].data.sort((a, b) => {
 		    return a - b;
 		});
 		if (data[i].data[0] < min) {
@@ -466,9 +466,9 @@
 		fivenumbers[i] = [];
 		fivenumbers[i]['min'] = data[i].data[0];
 		fivenumbers[i]['max'] = data[i].data[data[i].data.length - 1];
-		var boxarray = [];
+		const boxarray = [];
 		if (data[i].data.length % 2 == 1) {
-		    var med = parseInt(data[i].data.length / 2);
+		    const med = parseInt(data[i].data.length / 2);
 		    fivenumbers[i]['median'] = data[i].data[med];
 		    if ((med + 1) % 2 == 1) {
 			fivenumbers[i]['lower'] = data[i].data[parseInt((med + 1) / 2)];
@@ -478,8 +478,8 @@
 			fivenumbers[i]['upper'] = ((data[i].data[med + ((med + 1) / 2) - 1]) + (data[i].data[med + ((med + 1) / 2)])) / 2;
 		    }
 		} else {
-		    var medup = data[i].data.length / 2;
-		    var medlow = (data[i].data.length / 2) - 1;
+		    const medup = data[i].data.length / 2;
+		    const medlow = (data[i].data.length / 2) - 1;
 		    fivenumbers[i]['median'] = (data[i].data[medlow] + data[i].data[medup]) / 2;
 		    if (medup % 2 == 1) {
 			fivenumbers[i]['lower'] = data[i].data[medlow / 2];

@@ -7,7 +7,7 @@ define (
 		'kbaseSamplePropertyMatrixAbstract',
 		'kbaseTabs',
 		'jquery-dataTables'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -15,55 +15,55 @@ define (
 		kbaseSamplePropertyMatrixAbstract,
 		kbaseTabs,
 		jquery_dataTables
-	) {
+	) => {
     return KBWidget({
         name: 'kbaseSamplePropertyMatrix',
         parent : kbaseSamplePropertyMatrixAbstract,
         version: '1.0.0',
 
         render: function(){
-            var pref = self.pref;
+            const pref = self.pref;
 
             // Prepare data for visualization
-            var matrix = this.matrix;
-            var data = matrix.data;
-            var rowsMetadata = matrix.metadata.row_metadata;
-            var columnsMetadata = matrix.metadata.column_metadata;
+            const matrix = this.matrix;
+            const data = matrix.data;
+            const rowsMetadata = matrix.metadata.row_metadata;
+            const columnsMetadata = matrix.metadata.column_metadata;
 
-            var samples = this.buildSamples(data.row_ids, rowsMetadata);
-            var sampleProperties = this.buildSampleProperties(data.col_ids, columnsMetadata);
+            const samples = this.buildSamples(data.row_ids, rowsMetadata);
+            const sampleProperties = this.buildSampleProperties(data.col_ids, columnsMetadata);
 
-            var samplesSat = this.buildSamplesStat(matrix, samples, sampleProperties);
-            var samplePropertiesStat = this.buildSamplePropertyStat(matrix, samples, sampleProperties);
+            const samplesSat = this.buildSamplesStat(matrix, samples, sampleProperties);
+            const samplePropertiesStat = this.buildSamplePropertyStat(matrix, samples, sampleProperties);
 
 
             this.loading(false);
-            var $container = $("<div/>");
+            const $container = $("<div/>");
             this.$elem.append( $container );
 
             // Create a tabPane for all tabs
-            var $tabPane = $('<div>')
+            const $tabPane = $('<div>')
                 .attr( 'id', pref+'tab-content')
                 .appendTo($container);
-            var tabWidget = new kbaseTabs($tabPane, {canDelete : true, tabs : []});
+            const tabWidget = new kbaseTabs($tabPane, {canDelete : true, tabs : []});
 
             // Build matrix overview tab
-            var $tabOverview = $("<div/>");
+            const $tabOverview = $("<div/>");
             tabWidget.addTab({tab: 'Overview', content: $tabOverview, canDelete : false, show: true});
             this.buildMatrixOverview( $tabOverview );
 
             // Build  matrix summary tab
-            var $tabSummary = $("<div/>");
+            const $tabSummary = $("<div/>");
             tabWidget.addTab({tab: 'Summary', content: $tabSummary, canDelete : false, show: false});
             this.buildMatrixSummary($tabSummary, samples, sampleProperties);
 
             // Build  samples tab
-            var $tabSamples = $("<div/>");
+            const $tabSamples = $("<div/>");
             tabWidget.addTab({tab: 'Samples', content: $tabSamples, canDelete : false, show: false});
             this.buildSamplesTab($tabSamples, samplesSat);
 
             // Build  sample properties tab
-            var $tabSampleProperties = $("<div/>");
+            const $tabSampleProperties = $("<div/>");
             tabWidget.addTab({tab: 'Sample properties', content: $tabSampleProperties, canDelete : false, show: false});
             this.buildSamplePropertiesTab($tabSampleProperties, samplePropertiesStat);
 
@@ -101,15 +101,15 @@ define (
 
 
         buildMatrixSummary: function($tab, samples, sampleProperties){
-            var pref = this.pref;
+            const pref = this.pref;
 
             // Substances summary
-            var $container = $("<div>")
+            const $container = $("<div>")
                 .css('margin-top','1em')
                 .appendTo($tab);
 
 
-            var $tableSummary = $('<table>')
+            const $tableSummary = $('<table>')
                 .attr('id', pref+'summary-table')
                 .addClass("table table-striped table-bordered")
                 .css('width', '100%')

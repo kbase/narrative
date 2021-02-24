@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 define([
     'jquery',
     'bluebird',
@@ -23,7 +20,7 @@ define([
     './advancedViewCellWidget-fsm',
     'css!google-code-prettify/prettify.css',
     'css!font-awesome.css'
-], function (
+], (
     $,
     Promise,
     Uuid,
@@ -43,9 +40,9 @@ define([
     Spec,
     PR,
     appStates
-) {
+) => {
     'use strict';
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         span = t('span'),
         a = t('a'),
@@ -57,7 +54,7 @@ define([
         img = t('img');
 
     function factory(config) {
-        var container, ui,
+        let container, ui,
             workspaceInfo = config.workspaceInfo,
             runtime = Runtime.make(),
             cell = config.cell,
@@ -116,7 +113,7 @@ define([
          * @returns {unresolved}
          */
         function syncAppSpec(appId, appTag) {
-            var appRef = {
+            const appRef = {
                     ids: [appId],
                     tag: appTag
                 },
@@ -125,7 +122,7 @@ define([
                 });
 
             return nms.get_method_spec(appRef)
-                .then(function (data) {
+                .then((data) => {
                     if (!data[0]) {
                         throw new Error('App not found');
                     }
@@ -195,7 +192,7 @@ define([
         }
 
         function initializeFSM() {
-            var currentState = model.getItem('fsm.currentState');
+            let currentState = model.getItem('fsm.currentState');
             if (!currentState) {
                 // TODO: evaluate the state of things to try to guess the state?
                 // Or is this just an error unless it is a new cell?
@@ -235,7 +232,7 @@ define([
         }
 
         function showCodeInputArea() {
-            var codeInputArea = cell.input.find('.input_area');
+            const codeInputArea = cell.input.find('.input_area');
             if (model.getItem('user-settings.showCodeInputArea')) {
                 codeInputArea.removeClass('hidden');
             } else {
@@ -254,16 +251,16 @@ define([
         }
 
         function doRemoveNotification(index) {
-            var notifications = model.getItem('notifications') || [];
+            const notifications = model.getItem('notifications') || [];
             notifications.splice(index, 1);
             model.setItem('notifications', notifications);
             renderNotifications();
         }
 
         function renderNotifications() {
-            var events = Events.make(),
+            const events = Events.make(),
                 notifications = model.getItem('notifications') || [],
-                content = notifications.map(function (notification, index) {
+                content = notifications.map((notification, index) => {
                     return div({ class: 'row' }, [
                         div({ class: 'col-md-10' }, notification),
                         div({ class: 'col-md-2', style: { textAlign: 'right' } }, span({}, [
@@ -284,7 +281,7 @@ define([
         }
 
         function addNotification(notification) {
-            var notifications = model.getItem('notifications') || [];
+            const notifications = model.getItem('notifications') || [];
             notifications.push(notification);
             model.setItem('notifications', notifications);
             renderNotifications();
@@ -297,7 +294,7 @@ define([
         // WIDGETS
 
         function showWidget(name, widgetModule, path) {
-            var bus = runtime.bus().makeChannelBus({ description: 'Bus for showWidget' }),
+            const bus = runtime.bus().makeChannelBus({ description: 'Bus for showWidget' }),
                 widget = widgetModule.make({
                     bus: bus,
                     workspaceInfo: workspaceInfo
@@ -319,33 +316,33 @@ define([
          */
         function renderUI() {
             renderNotifications();
-            var state = fsm.getCurrentState();
+            const state = fsm.getCurrentState();
 
             // Button state
-            state.ui.buttons.enabled.forEach(function (button) {
+            state.ui.buttons.enabled.forEach((button) => {
                 ui.enableButton(button);
             });
-            state.ui.buttons.disabled.forEach(function (button) {
+            state.ui.buttons.disabled.forEach((button) => {
                 ui.disableButton(button);
             });
 
 
             // Element state
-            state.ui.elements.show.forEach(function (element) {
+            state.ui.elements.show.forEach((element) => {
                 ui.showElement(element);
             });
-            state.ui.elements.hide.forEach(function (element) {
+            state.ui.elements.hide.forEach((element) => {
                 ui.hideElement(element);
             });
         }
 
         function renderLayout() {
 
-            var readOnlyStyle = {};
+            const readOnlyStyle = {};
             if (JupyterNamespace.narrative.readonly) {
                 readOnlyStyle.display = 'none';
             }
-            var events = Events.make(),
+            const events = Events.make(),
                 configureId = html.genId(),
                 content = div({
                     class: 'kbase-extension kb-app-cell',
@@ -421,16 +418,16 @@ define([
                 ]);
             container.innerHTML = content;
             events.attachEvents(container);
-            $('#' + configureId + ' .collapse').on('hidden.bs.collapse', function() {
+            $('#' + configureId + ' .collapse').on('hidden.bs.collapse', () => {
                 utils.setCellMeta(cell, 'kbase.viewCell.user-settings.collapsedConfigurePanel', true);
             });
-            $('#' + configureId + ' .collapse').on('shown.bs.collapse', function() {
+            $('#' + configureId + ' .collapse').on('shown.bs.collapse', () => {
                 utils.setCellMeta(cell, 'kbase.viewCell.user-settings.collapsedConfigurePanel', false);
             });
         }
 
         function doDeleteCell() {
-            var content = div([
+            const content = div([
                 p([
                     'Deleting this cell will remove the data visualization, ',
                     'but will not delete the data object, which will still be available ',
@@ -439,7 +436,7 @@ define([
                 p('Continue to delete this data cell?')
             ]);
             ui.showConfirmDialog({ title: 'Confirm Cell Deletion', body: content })
-                .then(function (confirmed) {
+                .then((confirmed) => {
                     if (!confirmed) {
                         return;
                     }
@@ -458,7 +455,7 @@ define([
         // LIFECYCLE API
 
         function init() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 initializeFSM();
                 initCodeInputArea();
                 return null;
@@ -466,7 +463,7 @@ define([
         }
 
         function attach(node) {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 container = node;
                 ui = Ui.make({
                     node: container,
@@ -490,36 +487,36 @@ define([
         }
 
         function start() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 /*
                  * listeners for the local input cell message bus
                  */
 
-                bus.on('toggle-code-view', function () {
-                    var showing = toggleCodeInputArea(),
+                bus.on('toggle-code-view', () => {
+                    const showing = toggleCodeInputArea(),
                         label = showing ? 'Hide Code' : 'Show Code';
                     ui.setButtonLabel('toggle-code-view', label);
                 });
-                bus.on('show-notifications', function () {
+                bus.on('show-notifications', () => {
                     doShowNotifications();
                 });
-                bus.on('edit-cell-metadata', function () {
+                bus.on('edit-cell-metadata', () => {
                     doEditCellMetadata();
                 });
-                bus.on('edit-notebook-metadata', function () {
+                bus.on('edit-notebook-metadata', () => {
                     doEditNotebookMetadata();
                 });
-                bus.on('run-app', function () {
+                bus.on('run-app', () => {
                     doRun();
                 });
 
-                bus.on('sync-all-display-parameters', function () {
+                bus.on('sync-all-display-parameters', () => {
                     widgets.paramsDisplayWidget.bus.emit('sync-all-parameters');
                 });
 
                 // Events from widgets...
 
-                parentBus.on('reset-to-defaults', function () {
+                parentBus.on('reset-to-defaults', () => {
                     bus.emit('reset-to-defaults');
                 });
 
@@ -530,11 +527,11 @@ define([
                     description: 'A cell channel'
                 });
 
-                eventManager.add(cellBus.on('delete-cell', function () {
+                eventManager.add(cellBus.on('delete-cell', () => {
                     doDeleteCell();
                 }));
 
-                eventManager.add(cellBus.on('metadata-changed', function () {
+                eventManager.add(cellBus.on('metadata-changed', () => {
                     evaluateAppState();
                 }));
 
@@ -545,12 +542,12 @@ define([
         }
 
         function exportParams() {
-            var params = model.getItem('params'),
+            const params = model.getItem('params'),
                 paramsToExport = {},
                 parameters = spec.getSpec().parameters;
 
-            Object.keys(params).forEach(function (key) {
-                var value = params[key],
+            Object.keys(params).forEach((key) => {
+                const value = params[key],
                     paramSpec = parameters.specs[key];
 
                 if (!paramSpec) {
@@ -565,12 +562,12 @@ define([
         }
 
         function loadInputWidget() {
-            return new Promise(function (resolve, reject) {
-                var selectedWidget = 'nbextensions/advancedViewCell/widgets/appParamsWidget';
+            return new Promise((resolve, reject) => {
+                const selectedWidget = 'nbextensions/advancedViewCell/widgets/appParamsWidget';
 
-                require([selectedWidget], function (Widget) {
+                require([selectedWidget], (Widget) => {
                     // TODO: widget should make own bus.
-                    var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' }),
+                    const bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' }),
                         widget = Widget.make({
                             bus: bus,
                             workspaceInfo: workspaceInfo
@@ -581,8 +578,8 @@ define([
                         bus: bus,
                         instance: widget
                     };
-                    bus.on('parameter-sync', function (message) {
-                        var value = model.getItem(['params', message.parameter]);
+                    bus.on('parameter-sync', (message) => {
+                        const value = model.getItem(['params', message.parameter]);
                         bus.send({
                             parameter: message.parameter,
                             value: value
@@ -595,8 +592,8 @@ define([
                         });
                     });
 
-                    bus.on('sync-params', function (message) {
-                        message.parameters.forEach(function (paramId) {
+                    bus.on('sync-params', (message) => {
+                        message.parameters.forEach((paramId) => {
                             bus.send({
                                 parameter: paramId,
                                 value: model.getItem(['params', message.parameter])
@@ -621,7 +618,7 @@ define([
                         }
                     });
 
-                    bus.on('parameter-changed', function (message) {
+                    bus.on('parameter-changed', (message) => {
                         // We simply store the new value for the parameter.
                         model.setItem(['params', message.parameter], message.newValue);
                         evaluateAppState();
@@ -632,10 +629,10 @@ define([
                             parameters: spec.getSpec().parameters,
                             params: model.getItem('params')
                         })
-                        .then(function () {
+                        .then(() => {
                             resolve();
                         });
-                }, function (err) {
+                }, (err) => {
                     console.log('ERROR', err);
                     reject(err);
                 });
@@ -644,7 +641,7 @@ define([
 
         function makeIcon() {
             // icon is in the spec ...
-            var appSpec = env.appSpec,
+            const appSpec = env.appSpec,
                 nmsBase = runtime.config('services.narrative_method_store_image.url'),
                 iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
 
@@ -664,11 +661,11 @@ define([
 
         // just a quick hack since we are not truly recursive yet..,
         function gatherValidationMessages(validationResult) {
-            var messages = [];
+            const messages = [];
 
             function harvestErrors(validations) {
                 if (validations instanceof Array) {
-                    validations.forEach(function (result, index) {
+                    validations.forEach((result, index) => {
                         if (!result.isValid) {
                             messages.push(String(index) + ':' + result.errorMessage);
                         }
@@ -677,8 +674,8 @@ define([
                         }
                     });
                 } else {
-                    Object.keys(validations).forEach(function (id) {
-                        var result = validations[id];
+                    Object.keys(validations).forEach((id) => {
+                        const result = validations[id];
                         if (!result.isValid) {
                             messages.push(id + ':' + result.errorMessage);
                         }
@@ -694,10 +691,10 @@ define([
 
         function evaluateAppState() {
             validateModel()
-                .then(function (result) {
+                .then((result) => {
                     // we have a tree of validations, so we need to walk the tree to see if anything
                     // does not validate.
-                    var messages = gatherValidationMessages(result);
+                    const messages = gatherValidationMessages(result);
 
                     if (messages.length === 0) {
                         buildPython(cell, utils.getMeta(cell, 'attributes').id, model.getItem('app'), exportParams());
@@ -709,7 +706,7 @@ define([
                         renderUI();
                     }
                 })
-                .catch(function (err) {
+                .catch((err) => {
                     alert('internal error'),
                         console.error('INTERNAL ERROR', err);
                 });
@@ -719,8 +716,8 @@ define([
             // First get the app specs, which is stashed in the model,
             // with the parameters returned.
             return syncAppSpec(params.appId, params.appTag)
-                .then(function () {
-                    var appRef = [model.getItem('app.id'), model.getItem('app.tag')].filter(toBoolean).join('/'),
+                .then(() => {
+                    const appRef = [model.getItem('app.id'), model.getItem('app.tag')].filter(toBoolean).join('/'),
                         url = '/#appcatalog/app/' + appRef;
                     utils.setCellMeta(cell, 'kbase.attributes.title', model.getItem('app.spec.info.name'));
                     utils.setCellMeta(cell, 'kbase.attributes.subtitle', model.getItem('app.spec.info.subtitle'));
@@ -730,12 +727,12 @@ define([
                         loadInputWidget()
                     ]);
                 })
-                .then(function () {
+                .then(() => {
                     // this will not change, so we can just render it here.
                     PR.prettyPrint(null, container);
                     renderUI();
                 })
-                .then(function () {
+                .then(() => {
                     // if we start out in 'new' state, then we need to promote to
                     // editing...
                     if (fsm.getCurrentState().state.mode === 'new') {
@@ -744,7 +741,7 @@ define([
                     }
                     renderUI();
                 })
-                .catch(function (err) {
+                .catch((err) => {
                     console.error('ERROR loading main widgets', err);
                     addNotification('Error loading main widgets: ' + err.message);
                     model.setItem('fatalError', {
@@ -784,6 +781,6 @@ define([
             return factory(config);
         }
     };
-}, function (err) {
+}, (err) => {
     console.error('ERROR loading viewCell viewCellWidget', err);
 });

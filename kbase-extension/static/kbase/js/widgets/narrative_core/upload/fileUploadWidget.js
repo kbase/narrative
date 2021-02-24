@@ -8,7 +8,7 @@ define([
     'StagingServiceClient',
     'text!kbase/templates/data_staging/dropzone_area.html',
     'text!kbase/templates/data_staging/dropped_file.html'
-], function(
+], (
     $,
     KBWidget,
     Config,
@@ -18,7 +18,7 @@ define([
     StagingServiceClient,
     DropzoneAreaHtml,
     DropFileHtml
-) {
+) => {
     'use strict';
     return new KBWidget({
         name: 'fileUploadWidget',
@@ -79,7 +79,7 @@ define([
 
                 })
                 .on('success', (file) => {
-                    var $successElem = $(file.previewElement);
+                    const $successElem = $(file.previewElement);
                     $successElem.find('#upload_progress_and_cancel').hide();
                     $successElem.find('#dz_file_row_1').css({'display': 'flex', 'align-items': 'center'});
                     $successElem.find('#success_icon').css('display', 'flex');
@@ -87,7 +87,7 @@ define([
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
 
                     this.removeProgressBar($dropzoneElem);
-                    $(file.previewElement).fadeOut(1000, function() {
+                    $(file.previewElement).fadeOut(1000, () => {
                         $(file.previewElement.querySelector('.btn')).trigger('click');
                     });
                 })
@@ -96,7 +96,7 @@ define([
                     //okay, if we've been given a full path, then we pull out the pieces (ignoring the filename at the end) and then
                     //tack it onto our set path, then set that as the destPath form param.
                     if (file.fullPath) {
-                        var subPath = file.fullPath.replace(new RegExp('/' + file.name + '$'), '');
+                        const subPath = file.fullPath.replace(new RegExp('/' + file.name + '$'), '');
                         data.append('destPath', [this.path, subPath].join('/'));
                     }
                     //if we don't have a fullPath, then we're uploading a file and not a folder. Just use the current path.
@@ -106,14 +106,14 @@ define([
                     $($dropzoneElem.find('#total-progress')).show();
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
                 })
-                .on('reset', function() {
+                .on('reset', () => {
                     $('#clear-all-btn-container').remove();
                     $('#clear-all-btn').remove();
                     $dropzoneElem.find('#global-info').css({'display': 'none'});
                     $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0'});
                 })
                 .on('error', (erroredFile) => {
-                    var $errorElem = $(erroredFile.previewElement);
+                    const $errorElem = $(erroredFile.previewElement);
                     $errorElem.find('#upload_progress_and_cancel').hide();
                     $errorElem.find('#dz_file_row_1').css({'display': 'flex', 'align-items': 'center'});
                     $errorElem.css('color', '#DF0002');
@@ -122,7 +122,7 @@ define([
 
                     // Set error message
                     let errorText = 'unable to upload file!';
-                    var $errorMessage = $errorElem.find('#error_message');
+                    const $errorMessage = $errorElem.find('#error_message');
 
                     // I don't know how to determine if the file was too big other than looking at the preview message
                     if ($errorMessage.html().search('File is too big') !== -1){
@@ -148,11 +148,11 @@ define([
             e.preventDefault();
 
             if(e.target.href === globusUrlLinked) {
-                let stagingServiceClient = new StagingServiceClient({
+                const stagingServiceClient = new StagingServiceClient({
                     root: this.stagingUrl,
                     token: Runtime.make().authToken()
                 });
-                var globusWindow = window.open('', 'dz-globus');
+                const globusWindow = window.open('', 'dz-globus');
                 globusWindow.document.write('<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>');
                 stagingServiceClient.addAcl()
                     .done(() => {
@@ -165,17 +165,17 @@ define([
         },
 
         makeClearAllButton: function() {
-            var $clearAllBtn = $('<button>')
+            const $clearAllBtn = $('<button>')
                 .text('Clear All')
                 .addClass('btn__text clear-all-dropzone')
                 .attr('aria-label', 'clear all errored files from the dropzone')
                 .attr('id', 'clear-all-btn')
-                .click(function(){
+                .click(()=> {
                     this.dropzone.removeAllFiles();
                     this.deleteClearAllButton();
-                }.bind(this));
+                });
 
-            var $buttonContainer = $('<div>')
+            const $buttonContainer = $('<div>')
                 .attr('id', 'clear-all-btn-container')
                 .addClass('text-center')
                 .append($clearAllBtn);
@@ -197,9 +197,9 @@ define([
                     'href': url,
                     'aria-label': 'opens new window to kbase globus upload docs'
                 }).text('upload with Globus.')
-                .click(function(e) {
+                .click((e) => {
                     this.uploadGlobusClickEvent(e, globusUrlLinked);
-                }.bind(this));
+                });
 
             if (this.userInfo.globusLinked){
                 $globusErrorLink
@@ -215,7 +215,7 @@ define([
         removeProgressBar: function($dropzoneElem) {
             if (!this.dropzone.getQueuedFiles().length &&
             !this.dropzone.getUploadingFiles().length) {
-                $($dropzoneElem.find('#total-progress')).fadeOut(1000, function() {
+                $($dropzoneElem.find('#total-progress')).fadeOut(1000, () => {
                     $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0'});
                 });
             }
@@ -225,13 +225,13 @@ define([
             if (!this.dropzone) {
                 return 'No files uploading.';
             }
-            var numUploading = this.dropzone.getUploadingFiles().length;
-            var numQueued = this.dropzone.getQueuedFiles().length;
+            const numUploading = this.dropzone.getUploadingFiles().length;
+            const numQueued = this.dropzone.getQueuedFiles().length;
             if (numUploading === 0 && numQueued === 0) {
                 return 'No files uploading.';
             }
-            var queuedText = numQueued ? ('(' + numQueued + ' queued)') : '';
-            var pluralFiles = numUploading > 1 ? 's' : '';
+            const queuedText = numQueued ? ('(' + numQueued + ' queued)') : '';
+            const pluralFiles = numUploading > 1 ? 's' : '';
             return [
                 'Uploading ',
                 numUploading,

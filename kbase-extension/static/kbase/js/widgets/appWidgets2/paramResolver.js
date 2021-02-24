@@ -1,16 +1,16 @@
 define([
     'bluebird',
     'require'
-], function(
+], (
     Promise,
     require
-) {
+) => {
     'use strict';
 
     function factory(config) {
 
         function getWidgetModule(spec) {
-            var dataType = spec.data.type,
+            const dataType = spec.data.type,
                 controlType = spec.ui.control;
 
             switch (dataType) {
@@ -147,22 +147,22 @@ define([
         }
 
         function loadModule(type, name) {
-            return new Promise(function(resolve, reject) {
-                require(['./' + type + '/' + name], function(Module) {
+            return new Promise((resolve, reject) => {
+                require(['./' + type + '/' + name], (Module) => {
                     resolve(Module);
-                }, function(err) {
+                }, (err) => {
                     reject(err);
                 });
             });
         }
 
         function loadInputControl(parameterSpec) {
-            var module = getWidgetModule(parameterSpec);
+            const module = getWidgetModule(parameterSpec);
             return loadModule('input', module.input);
         }
 
         function loadViewControl(parameterSpec) {
-            var module = getWidgetModule(parameterSpec);
+            const module = getWidgetModule(parameterSpec);
             return loadModule('view', module.view);
         }
 

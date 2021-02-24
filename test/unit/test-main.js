@@ -1,5 +1,6 @@
-/* eslint-disable strict */
+/* eslint {strict: ['error', 'global']} */
 /* global requirejs */
+'use strict';
 const tests = [
     ...['text', 'json'],
     ...Object.keys(window.__karma__.files).filter((file) => /[sS]pec\.js$/.test(file)),
@@ -58,8 +59,6 @@ requirejs.config({
     },
 
     callback: function () {
-        'use strict';
-
         require(['testUtil'], (TestUtil) => {
             TestUtil.make().then(() => {
                 window.__karma__.start();

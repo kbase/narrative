@@ -10,7 +10,7 @@ define (
 		'kbaseAuthenticatedWidget',
 		'kbStandalonePlot',
 		'RGBColor'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -18,7 +18,7 @@ define (
 		kbaseAuthenticatedWidget,
 		kbStandalonePlot,
 		RGBColor
-	) {
+	) => {
     return KBWidget({
             name: 'AbundanceDataPcoa',
             parent : kbaseAuthenticatedWidget,
@@ -39,10 +39,10 @@ define (
         },
 
         render: function() {
-	        var self = this;
-	        var pref = this.uuidv4();
+	        const self = this;
+	        const pref = this.uuidv4();
 
-	        var container = this.$elem;
+	        const container = this.$elem;
 	        container.empty();
             if (self.token == null) {
                 container.append("<div>[Error] You're not logged in</div>");
@@ -50,26 +50,26 @@ define (
             }
             container.append("<div><img src=\""+self.loading_image+"\">&nbsp;&nbsp;loading data...</div>");
 
-	        var kbws = new Workspace(self.ws_url, {'token': self.token});
-	        kbws.get_objects([{ref: self.options.ws+"/"+self.options.id}], function(data) {
+	        const kbws = new Workspace(self.ws_url, {'token': self.token});
+	        kbws.get_objects([{ref: self.options.ws+"/"+self.options.id}], (data) => {
 	            container.empty();
 		        // parse data
 		        if (data.length == 0) {
-		            var msg = "[Error] Object "+self.options.id+" does not exist in workspace "+self.options.ws;
+		            const msg = "[Error] Object "+self.options.id+" does not exist in workspace "+self.options.ws;
 		            container.append('<div><p>'+msg+'>/p></div>');
 		        } else {
-		            var pcoa = data[0]['data'];
+		            const pcoa = data[0]['data'];
 		            var plen = pcoa['data'].length;
-                    var x_pos = parseInt(self.options.x_axis, 10) - 1;
-                    var y_pos = parseInt(self.options.y_axis, 10) - 1;
+                    let x_pos = parseInt(self.options.x_axis, 10) - 1;
+                    let y_pos = parseInt(self.options.y_axis, 10) - 1;
                     if (isNaN(x_pos) || isNaN(y_pos) || (x_pos < 0) || (x_pos > (plen-1)) || (y_pos < 0) || (y_pos > (plen-1))) {
                         x_pos = 0;
                         y_pos = 1;
                     }
 		            // do grouping
-		            var groups = {};
-		            var x_all = new Array(plen);
-		            var y_all = new Array(plen);
+		            const groups = {};
+		            const x_all = new Array(plen);
+		            const y_all = new Array(plen);
 		            for (var i = 0; i < plen; i++) {
 		                // group is id if no group given
 		                var data = {
@@ -90,14 +90,14 @@ define (
 		                }
 	                }
 	                // build series and points
-	                var colors = GooglePalette(groups.length);
-	                var plotdata = {
+	                const colors = GooglePalette(groups.length);
+	                const plotdata = {
 	                    'series': [],
 	                    'points': []
 	                };
-	                var num = 0;
-	                for (var group in groups) {
-	                    var coords = [];
+	                let num = 0;
+	                for (const group in groups) {
+	                    const coords = [];
 	                    for (var i = 0; i < groups[group].length; i++) {
 	                        coords.push({'x': groups[group][i]['x'], 'y': groups[group][i]['y']});
                         }
@@ -106,16 +106,16 @@ define (
                         num += 1;
 	                }
 			        // PLOT
-			        var x_min = Math.min.apply(null, x_all);
-			        var x_max = Math.max.apply(null, x_all);
-			        var y_min = Math.min.apply(null, y_all);
-			        var y_max = Math.max.apply(null, y_all);
+			        const x_min = Math.min.apply(null, x_all);
+			        const x_max = Math.max.apply(null, x_all);
+			        const y_min = Math.min.apply(null, y_all);
+			        const y_max = Math.max.apply(null, y_all);
                     var plen = 0;
                     if (window.hasOwnProperty('rendererPlot') && rendererPlot.length) {
                         plen = rendererPlot.length;
                     }
                     container.append("<div id='outputPlot"+plen+"' style='width: 95%;'></div>");
-                    var plotTest = standalonePlot.create({index: plen});
+                    const plotTest = standalonePlot.create({index: plen});
                     plotTest.settings.target = document.getElementById("outputPlot"+plen);
                     plotTest.settings.data = plotdata;
                     plotTest.settings.x_title = 'PC'+(x_pos+1).toString();
@@ -129,9 +129,9 @@ define (
 			        plotTest.settings.show_legend = true;
                     plotTest.render(plen);
 		        }
-	        }, function(data) {
+	        }, (data) => {
 		        container.empty();
-		        var main = $('<div>');
+		        const main = $('<div>');
 		        main.append($('<p>')
 		            .css({'padding': '10px 20px'})
 		            .text('[Error] '+data.error.message));

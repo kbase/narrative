@@ -1,6 +1,6 @@
-define(['kbasePMIBarchart', 'kbasePathways'], function(kbasePMIBarchart, kbasePathways) {
+define(['kbasePMIBarchart', 'kbasePathways'], (kbasePMIBarchart, kbasePathways) => {
 function KBaseFBA_FBA(modeltabs) {
-    var self = this;
+    const self = this;
     this.modeltabs = modeltabs;
 
     this.tabList = [{
@@ -360,14 +360,14 @@ function KBaseFBA_FBA(modeltabs) {
         }
         this.biohash = {};
         for (var i=0; i < self.data.FBABiomassVariables.length; i++) {
-            var bioid = self.data.FBABiomassVariables[i].biomass_ref.split("/").pop();
+            const bioid = self.data.FBABiomassVariables[i].biomass_ref.split("/").pop();
             this.biohash[bioid] = self.data.FBABiomassVariables[i];
         }
         this.maxpod = 0;
         this.metprodhash = {};
         for (var i=0; i < this.FBAMetaboliteProductionResults.length; i++) {
             this.tabList[4].columns[5].visible = 1;
-            var metprod = self.data.FBAMetaboliteProductionResults[i];
+            const metprod = self.data.FBAMetaboliteProductionResults[i];
             var cpdid = metprod.modelcompound_ref.split("/").pop();
             this.metprodhash[cpdid] = metprod;
         }
@@ -383,7 +383,7 @@ function KBaseFBA_FBA(modeltabs) {
         }*/
         this.delhash = {};
         for (var i=0; i < self.data.FBADeletionResults.length; i++) {
-            var geneid = self.data.FBADeletionResults[i].feature_refs[0].split("/").pop();
+            const geneid = self.data.FBADeletionResults[i].feature_refs[0].split("/").pop();
             this.delhash[geneid] = self.data.FBADeletionResults[i];
         }
         this.cpdboundhash = {};
@@ -397,7 +397,7 @@ function KBaseFBA_FBA(modeltabs) {
             this.rxnboundhash[rxnid] = self.data.FBAReactionBounds[i];
         }
         for (var i=0; i< this.modelgenes.length; i++) {
-            var mdlgene = this.modelgenes[i];
+            const mdlgene = this.modelgenes[i];
             if (this.genehash[mdlgene.id]) {
                 mdlgene.ko = this.genehash[mdlgene.id].ko;
             }
@@ -405,10 +405,10 @@ function KBaseFBA_FBA(modeltabs) {
                 mdlgene.growthFraction = this.delhash[mdlgene.id].growthFraction;
             }
         }
-        var exp_state = 0;
-        var exp_value = 0;
+        let exp_state = 0;
+        let exp_value = 0;
         for (var i=0; i< this.modelreactions.length; i++) {
-            var mdlrxn = this.modelreactions[i];
+            const mdlrxn = this.modelreactions[i];
             if (this.rxnhash[mdlrxn.id]) {
                 if ("exp_state" in this.rxnhash[mdlrxn.id]) {
                 	mdlrxn.exp_state = this.rxnhash[mdlrxn.id].exp_state;
@@ -457,7 +457,7 @@ function KBaseFBA_FBA(modeltabs) {
         this.compoundFluxes = [];
         this.cpdfluxhash = {};
         for (var i=0; i< this.modelcompounds.length; i++) {
-            var mdlcpd = this.modelcompounds[i];
+            const mdlcpd = this.modelcompounds[i];
             if (this.cpdhash[mdlcpd.id]) {
                 mdlcpd.exchangerxn = " => "+mdlcpd.name+"[e]";
                 mdlcpd.upperFluxBound = this.cpdhash[mdlcpd.id].upperBound;
@@ -486,7 +486,7 @@ function KBaseFBA_FBA(modeltabs) {
             }
         }
         for (var i=0; i< this.biomasses.length; i++) {
-            var bio = this.biomasses[i];
+            const bio = this.biomasses[i];
             if (this.biohash[bio.id]) {
                 bio.upperFluxBound = this.biohash[bio.id].upperBound;
                 bio.lowerFluxBound = this.biohash[bio.id].lowerBound;
@@ -509,7 +509,7 @@ function KBaseFBA_FBA(modeltabs) {
             bio.disp_high_flux = bio.fluxMax + "<br>(" + bio.upperFluxBound + ")";
         }
         for (var i=0; i < this.biomasscpds.length; i++) {
-            var biocpd = this.biomasscpds[i];
+            const biocpd = this.biomasscpds[i];
             if (this.biohash[biocpd.biomass]) {
                 biocpd.bioflux = this.biohash[biocpd.biomass].flux;
             }
@@ -522,22 +522,22 @@ function KBaseFBA_FBA(modeltabs) {
 	this.setData = function (indata, tabs) { // this is a mess
 
         self.data = indata;
-        var p = self.modeltabs.kbapi('ws', 'get_objects', [{ref: indata.fbamodel_ref}]).then(function(data){
+        const p = self.modeltabs.kbapi('ws', 'get_objects', [{ref: indata.fbamodel_ref}]).then((data)=> {
             self.model = data[0].data;
 
             //this is a godawful hack. When we setData, lookup the PlantModelTemplate, and if it's there, then add a barchart
             //otherwise, do nothing. Assume we'll attempt this if we've been given tabs.
             if (tabs != undefined) {
-                self.modeltabs.kbapi('ws', 'get_objects', [{ref : self.model.template_ref}]).then(function(data) {
+                self.modeltabs.kbapi('ws', 'get_objects', [{ref : self.model.template_ref}]).then((data) => {
 
-                    var $usePlantModel = 0;
+                    let $usePlantModel = 0;
 
                     if (data[0].info[1] == 'PlantModelTemplate') {
                         $usePlantModel = 1;
                         //tabs.$elem.find('[data-id=Pathways]').hide();
                     }
 
-                    var $barchartElem = $.jqElem('div')
+                    const $barchartElem = $.jqElem('div')
                      new kbasePMIBarchart($barchartElem, {
                                 fba_workspace : self.workspace,
                                 fba_object : self.objName,
@@ -562,7 +562,7 @@ function KBaseFBA_FBA(modeltabs) {
                     });
                 });
             }
-			var kbModeling = new KBModeling();  // this is a mess
+			const kbModeling = new KBModeling();  // this is a mess
 			self.model = new kbModeling["KBaseFBA_FBAModel"](self.modeltabs);
 
 			self.model.setMetadata(data[0].info);
@@ -573,16 +573,16 @@ function KBaseFBA_FBA(modeltabs) {
     };
 
     this.ReactionTab = function (info) {
-    	var rxn = self.rxnhash[info.id];
+    	let rxn = self.rxnhash[info.id];
     	if (typeof rxn == 'undefined') {
     		rxn = self.biohash[info.id];
     		if (typeof rxn != 'undefined') {
     			return self.BiomassTab(info);
     		}
     	}
-		var output = self.model.ReactionTab(info);
+		const output = self.model.ReactionTab(info);
         if (output && 'done' in output) {
-        	output.then(function(data) {
+        	output.then((data) => {
         		return self.ExtendReactionTab(info,data);
         	})
         	return output;
@@ -591,7 +591,7 @@ function KBaseFBA_FBA(modeltabs) {
     };
 
     this.ExtendReactionTab = function (info,data) {
-    	var rxn = self.rxnhash[info.id];
+    	const rxn = self.rxnhash[info.id];
     	data.push({
     		"label": "Flux",
             "data": rxn.flux
@@ -612,9 +612,9 @@ function KBaseFBA_FBA(modeltabs) {
     };
 
     this.CompoundTab = function (info) {
-		var output = self.model.CompoundTab(info);
+		const output = self.model.CompoundTab(info);
         if (output && 'done' in output) {
-        	output.then(function(data) {
+        	output.then((data) => {
         		return self.ExtendCompoundTab(info,data);
         	})
         	return output;
@@ -623,7 +623,7 @@ function KBaseFBA_FBA(modeltabs) {
     };
 
     this.ExtendCompoundTab = function (info,data) {
-    	var cpd = self.cpdhash[info.id];
+    	const cpd = self.cpdhash[info.id];
     	data.push({
     		"label": "Exchange reaction",
             "data": cpd.exchangerxn
@@ -648,9 +648,9 @@ function KBaseFBA_FBA(modeltabs) {
     };
 
     this.GeneTab = function (info) {
-		var output = self.model.GeneTab(info);
+		const output = self.model.GeneTab(info);
         if (output && 'done' in output) {
-        	output.then(function(data) {
+        	output.then((data) => {
         		return self.ExtendGeneTab(info,data);
         	})
         	return output;
@@ -659,7 +659,7 @@ function KBaseFBA_FBA(modeltabs) {
     };
 
     this.ExtendGeneTab = function (info,data) {
-        var gene = self.genehash[info.id];
+        const gene = self.genehash[info.id];
 		data.push({
     		"label": "Gene knocked out",
             "data": gene.ko
@@ -672,9 +672,9 @@ function KBaseFBA_FBA(modeltabs) {
     };
 
     this.BiomassTab = function (info) {
-		var output = self.model.BiomassTab(info);
+		const output = self.model.BiomassTab(info);
         if (output && 'done' in output) {
-        	output.then(function(data) {
+        	output.then((data) => {
         		return self.ExtendBiomassTab(info,data);
         	})
         	return output;
@@ -683,7 +683,7 @@ function KBaseFBA_FBA(modeltabs) {
     };
 
     this.ExtendBiomassTab = function (info,data) {
-        var bio = self.biohash[info.id];
+        const bio = self.biohash[info.id];
 		data.push({
     		"label": "Flux",
             "data": bio.flux

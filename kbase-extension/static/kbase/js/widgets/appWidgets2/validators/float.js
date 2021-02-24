@@ -1,12 +1,12 @@
 define([
     'bluebird'
-], function(
+], (
     Promise
-) {
+) => {
     'use strict';
 
     function importString(value) {
-        var normalizedValue;
+        let normalizedValue;
 
         if (value === undefined || value === null) {
             return null;
@@ -38,7 +38,7 @@ define([
     }
 
     function applyConstraints(value, constraints) {
-        var errorMessage, diagnosis;
+        let errorMessage, diagnosis;
 
         if (value === null) {
             if (constraints.required) {
@@ -63,7 +63,7 @@ define([
     }
 
     function validate(value, spec) {
-        return Promise.try(function() {
+        return Promise.try(() => {
             return applyConstraints(value, spec.data.constraints);
         });
     }

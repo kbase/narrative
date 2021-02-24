@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'common/runtime',
     'common/busEventManager',
@@ -7,22 +5,22 @@ define([
     'common/ui',
     'common/html',
     'common/jupyter'
-], function(
+], (
     Runtime,
     BusEventManager,
     Props,
     UI,
     html,
     JupyterInterop
-) {
+) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         p = t('p');
 
     function factory(config) {
-        var cell = config.cell,
+        let cell = config.cell,
             runtime = Runtime.make(),
             eventManager = BusEventManager.make({
                 bus: runtime.bus()
@@ -36,8 +34,8 @@ define([
             cellBus;
 
         function doDeleteCell() {
-            var parentCellId = Props.getDataItem(cell.metadata, 'kbase.outputCell.parentCellId');
-            var content = div([
+            const parentCellId = Props.getDataItem(cell.metadata, 'kbase.outputCell.parentCellId');
+            const content = div([
                 p([
                     'Deleting this cell will remove the data visualization, ',
                     'but will not delete the data object, which will still be available ',
@@ -47,7 +45,7 @@ define([
                 p('Continue to delete this data cell?')
             ]);
             ui.showConfirmDialog({ title: 'Confirm Cell Deletion', body: content })
-                .then(function(confirmed) {
+                .then((confirmed) => {
                     if (!confirmed) {
                         return;
                     }
@@ -71,12 +69,12 @@ define([
 
         // Widget API
 
-        eventManager.add(bus.on('run', function(message) {
+        eventManager.add(bus.on('run', (message) => {
             // container = message.node;
             ui = UI.make({ node: message.node });
 
             // Events for comm from the parent.
-            eventManager.add(bus.on('stop', function() {
+            eventManager.add(bus.on('stop', () => {
                 eventManager.removeAll();
             }));
 
@@ -87,7 +85,7 @@ define([
                 description: 'A cell channel'
             });
 
-            eventManager.add(cellBus.on('delete-cell', function() {
+            eventManager.add(cellBus.on('delete-cell', () => {
                 doDeleteCell();
             }));
         }));

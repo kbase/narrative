@@ -1,20 +1,17 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 define([
     'kb_common/html',
     'common/props',
     'common/runtime',
     'narrativeConfig'
-], function (html, Props, Runtime, narrativeConfig) {
+], (html, Props, Runtime, narrativeConfig) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         span = t('span'), img = t('img');
-        
+
     function makeToolbarAppIcon(appSpec) {
         // icon is in the spec ...
-        var runtime = Runtime.make(),
+        const runtime = Runtime.make(),
             nmsBase = runtime.config('services.narrative_method_store_image.url'),
             iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
 
@@ -29,9 +26,9 @@ define([
                 span({class: 'fa fa-inverse fa-stack-1x fa-cube'})
             ]);
     }
-    
+
      function makeToolbarGenericIcon(fontAwesomeIconName, color) {
-        var iconColor = color || 'silver';
+        const iconColor = color || 'silver';
 
         return span({style: ''}, [
             span({class: 'fa-stack fa-2x', style: {verticalAlign: 'top', padding: '0', lineHeight: '56px'}}, [
@@ -43,7 +40,7 @@ define([
 
     function makeAppIcon(appSpec) {
         // icon is in the spec ...
-        var runtime = Runtime.make(),
+        const runtime = Runtime.make(),
             nmsBase = runtime.config('services.narrative_method_store_image.url'),
             iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
 
@@ -62,7 +59,7 @@ define([
     }
 
     function makeGenericIcon(fontAwesomeIconName, color) {
-        var iconColor = color || 'silver';
+        const iconColor = color || 'silver';
 
         return span({style: ''}, [
             span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: iconColor}}, [
@@ -71,7 +68,7 @@ define([
             ])
         ]);
     }
-    
+
     function parseType(typeId) {
         var parsed = typeId.split('-'),
             typeId = parsed[0].split('.'),
@@ -86,25 +83,25 @@ define([
     }
 
     function makeTypeIcon(typeId) {
-        var type = parseType(typeId),
-            iconSpec = narrativeConfig.get('icons'), 
+        let type = parseType(typeId),
+            iconSpec = narrativeConfig.get('icons'),
             color, iconDef, icon;
-        
+
         if (iconSpec) {
             color = iconSpec.color_mapping[type.name];
             iconDef = iconSpec.data[type.name];
         }
-        
+
         if (iconDef) {
             icon = iconDef[0];
         } else {
             icon = iconSpec.data.DEFAULT[0];
         }
-        
+
         if (!color) {
             color = 'black';
         }
-        
+
         return span([
             span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: color}}, [
                 span({class: 'fa fa-circle fa-stack-2x', style: {color: color}}),
@@ -112,27 +109,27 @@ define([
             ])
         ]);
     }
-    
+
     function makeToolbarTypeIcon(typeId) {
-        var type = parseType(typeId),
-            iconSpec = narrativeConfig.get('icons'), 
+        let type = parseType(typeId),
+            iconSpec = narrativeConfig.get('icons'),
             color, iconDef, icon;
-        
+
         if (iconSpec) {
             color = iconSpec.color_mapping[type.name];
             iconDef = iconSpec.data[type.name];
         }
-        
+
         if (iconDef) {
             icon = iconDef[0];
         } else {
             icon = iconSpec.data.DEFAULT[0];
         }
-        
+
         if (!color) {
             color = 'black';
         }
-        
+
         return span([
             span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: color, lineHeight: '56px'}}, [
                 span({class: 'fa fa-circle fa-stack-2x', style: {color: color, lineHeight: '56px'}}),

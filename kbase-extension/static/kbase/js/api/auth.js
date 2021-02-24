@@ -2,11 +2,11 @@ define([
     'bluebird',
     'jquery',
     'narrativeConfig'
-], function (
+], (
     Promise,
     $,
     Config
-) {
+) => {
     'use strict';
 
     function factory(config) {
@@ -309,13 +309,13 @@ define([
                 retries = 3;
             }
             return getTokenInfo(token)
-                .then(function (info) {
+                .then((info) => {
                     if (info.expires && info.expires > new Date().getTime()) {
                         return true;
                     }
                     return false;
                 })
-                .catch(function (error) {
+                .catch((error) => {
                     if (error.status === 401 || error.status === 403 || retries < 0) {
                         return false;
                     }

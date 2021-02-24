@@ -24,7 +24,7 @@ define([
     'kbaseNarrativeCellMenu',
     'kbaseTabs',
     'kbaseReportView'
-], function (
+], (
     KBWidget,
     bootstrap,
     $,
@@ -39,7 +39,7 @@ define([
     kbaseNarrativeCellMenu,
     kbaseTabs,
     kbaseReportView
-) {
+) => {
     'use strict';
     return KBWidget({
         name: "kbaseNarrativeMethodCell",
@@ -91,9 +91,9 @@ define([
             });
 
             this.methClient = new NarrativeMethodStore(Config.url('narrative_method_store'));
-            this.on('get_cell_subtitle.Narrative', function(e, callback) {
+            this.on('get_cell_subtitle.Narrative', (e, callback) => {
                 callback(this.getSubtitle());
-            }.bind(this));
+            });
             this.render();
 
             if (Jupyter.narrative)
@@ -168,14 +168,14 @@ define([
                                 )
                                 .hide();
 
-            var $buttons = $('<div>')
+            const $buttons = $('<div>')
                            .addClass('buttons pull-left')
                            .append(this.$runButton)
                            .append(this.$stopButton)
                            .append(this.$resetButton)
                            .append(this.$submitted);
 
-            var $progressBar = $('<div>')
+            const $progressBar = $('<div>')
                                .attr('id', 'kb-func-progress')
                                .addClass('pull-left')
                                .css({'display' : 'none'})
@@ -191,11 +191,11 @@ define([
                                .append($('<p>')
                                        .addClass('text-success'));
 
-            var methodId = 'method-details-'+StringUtil.uuid();
-            var buttonLabel = 'details';
-            var methodDesc = this.method.info.tooltip;
+            const methodId = 'method-details-'+StringUtil.uuid();
+            const buttonLabel = 'details';
+            const methodDesc = this.method.info.tooltip;
 
-            var link = this.options.methodHelpLink;
+            let link = this.options.methodHelpLink;
             if(this.method.info.module_name) {
                 link = link + this.method.info.id; // TODO: add version here, but we don't have the info stored yet
             } else {
@@ -212,7 +212,7 @@ define([
             this.$header.append(this.$dynamicMethodSummary);
 
             // Controls (minimize)
-            var $controlsSpan = $('<div>').addClass("pull-left");
+            const $controlsSpan = $('<div>').addClass("pull-left");
             this.$minimizeControl = $("<span class='glyphicon glyphicon-chevron-down'>")
                                     .css({color: "#888", fontSize: "14pt",  cursor:'pointer',
                                           paddingTop: "7px", margin: "5px"});
@@ -232,7 +232,7 @@ define([
             // Add minimize/restore actions.
             // These mess with the CSS on the cells!
             var self = this;
-            $controlsSpan.click(function() {
+            $controlsSpan.click(() => {
                 if (self.panel_minimized) {
                     self.maximizeView();
                 } else {
@@ -240,7 +240,7 @@ define([
                 }
             });
 
-            var inputWidgetName = this.method.widgets.input;
+            let inputWidgetName = this.method.widgets.input;
             if (!inputWidgetName || inputWidgetName === 'null')
                 inputWidgetName = this.defaultInputWidget;
 
@@ -248,9 +248,9 @@ define([
                 .closest('.cell')
                 .trigger('set-title.cell', [self.method.info.name]);
 
-            var $logo = $('<div>');
+            const $logo = $('<div>');
             if(this.method.info.icon && this.method.info.icon.url) {
-                var url = this.options.methodStoreURL.slice(0, -3) + this.method.info.icon.url;
+                const url = this.options.methodStoreURL.slice(0, -3) + this.method.info.icon.url;
                 $logo.append( Display.getAppIcon({url: url}) );
             } else {
                 $logo.append( Display.getAppIcon({}) );
@@ -262,11 +262,11 @@ define([
 
             console.log('trying to load input widget ' + inputWidgetName);
             require([inputWidgetName],
-                function(W) {
+                (W) => {
                     console.log('loaded input widget ' + inputWidgetName);
                     this.$inputWidget = new W(this.$inputDiv, { method: this.options.method });
-                }.bind(this),
-                function(error) {
+                },
+                (error) => {
                     console.error('Error while trying to load widget "' + inputWidgetName + '"');
                 }
             );
@@ -303,9 +303,9 @@ define([
          */
         getParameterMapForReplacementText: function() {
             if (this.$inputWidget) {
-                var paramMap = {};
-                var paramList = this.$inputWidget.getParameters();
-                for(var k=0; k<this.method.parameters.length; k++) {
+                const paramMap = {};
+                const paramList = this.$inputWidget.getParameters();
+                for(let k=0; k<this.method.parameters.length; k++) {
                     if(k<paramList.length) {
                         paramMap[this.method.parameters[k].id] = paramList[k];
 
@@ -383,7 +383,7 @@ define([
 
         /* Show/hide running icon */
         displayRunning: function(is_running, had_error) {
-            var $cellMenu = this.$elem.closest('.cell').find('.button_container');
+            const $cellMenu = this.$elem.closest('.cell').find('.button_container');
             if (is_running) {
                 $cellMenu.trigger('runningIndicator.toolbar', {enabled: true});
                 $cellMenu.trigger('errorIndicator.toolbar', {enabled: false});
@@ -440,7 +440,7 @@ define([
             if (!this.$cellPanel)
                 return;
 
-            var $toolbar = this.$elem.find('.button_container');
+            const $toolbar = this.$elem.find('.button_container');
             $toolbar.trigger('run-state.toolbar', {
                 status: this.runState.toLowerCase()
             });
@@ -529,14 +529,14 @@ define([
             }
 
             if (jobDetails && jobDetails['job_id']) {
-                var jobState = jobDetails['job_state'];
-                var jobInfo = jobDetails['job_info'];
-                var status = jobDetails['status'];
+                const jobState = jobDetails['job_state'];
+                const jobInfo = jobDetails['job_info'];
+                let status = jobDetails['status'];
                 if (!status)
                     status = jobState.status;
                 if (!this.$jobProcessTabs) {
                     this.$jobProcessTabs = $('<div>').addClass('panel-body').addClass('kb-cell-output');
-                    var targetPanel = this.$elem;
+                    let targetPanel = this.$elem;
                     // console.log(this.isJobStatusLoadedFromState, status, jobState, jobInfo);
                     if (this.isJobStatusLoadedFromState && status) {
                         if ($.inArray(status.toLowerCase(), this.completedStatus) >= 0) {
@@ -552,11 +552,11 @@ define([
                     this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'Status', content: this.$jobStatusDiv,
                         canDelete: false, show: true});
                 }
-                var jobId = jobDetails['job_id'];
-                var fullJobId = jobId;
+                let jobId = jobDetails['job_id'];
+                const fullJobId = jobId;
                 if (jobId.indexOf(':') > 0)
                     jobId = jobId.split(':')[1];
-                status = status.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
+                status = status.replace(/(?:^|\s)\S/g, (a) => { return a.toUpperCase(); });
                 if (status === 'Suspend' || status === 'Error' || status === 'Unknown' || status === 'Awe_error') {
                     status = this.makeJobErrorPanel(fullJobId, jobState, jobInfo, 'Error');
                 } else if (status === 'Deleted') {
@@ -576,7 +576,7 @@ define([
                     this.hasLogsPanelLoaded = true;
                     this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'Console Log', showContentCallback:
                         function() {
-                            var $jobLogsPanel = $('<div>ERROR: this component is not supported anymore.</div>');
+                            const $jobLogsPanel = $('<div>ERROR: this component is not supported anymore.</div>');
                             return $jobLogsPanel;
                         },
                         canDelete: false, show: false});
@@ -589,8 +589,8 @@ define([
 
                             this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'Report', showContentCallback:
                                 function() {
-                                    var $reportPanel = $('<div>');
-                                    var result = jobDetails.result;
+                                    const $reportPanel = $('<div>');
+                                    const result = jobDetails.result;
                                     result['showReportText'] = true;
                                     result['showCreatedObjects'] = false;
                                     $reportPanel.kbaseReportView(result);
@@ -600,8 +600,8 @@ define([
 
                             this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'New Data Objects', showContentCallback:
                                 function() {
-                                    var $reportPanel = $('<div>');
-                                    var result = jobDetails.result;
+                                    const $reportPanel = $('<div>');
+                                    const result = jobDetails.result;
                                     result['showReportText'] = false;
                                     result['showCreatedObjects'] = true;
                                     $reportPanel.kbaseReportView(result);
@@ -622,20 +622,20 @@ define([
                         .append(info));
             }
 
-            var $infoTable = $('<table class="table table-bordered">')
+            const $infoTable = $('<table class="table table-bordered">')
                     .append(makeInfoRow('Job Id', jobId))
                     .append(makeInfoRow('Status', statusText));
             if (jobState && jobState.state) {
-                var state = jobState.state;
-                var creationTime = state.start_timestamp;
-                var execStartTime = null;
-                var finishTime = null;
-                var posInQueue = null;
+                const state = jobState.state;
+                let creationTime = state.start_timestamp;
+                let execStartTime = null;
+                let finishTime = null;
+                let posInQueue = null;
                 // console.log(state.step_stats);
                 if (state.step_stats) {
-                    for (var key in state.step_stats) {
+                    for (const key in state.step_stats) {
                         if (state.step_stats.hasOwnProperty(key)) {
-                            var stats = state.step_stats[key];
+                            const stats = state.step_stats[key];
                             // console.log(key, stats);
                             if (stats['creation_time'])
                                 creationTime = stats['creation_time'];
@@ -664,15 +664,15 @@ define([
         },
 
         makeJobErrorPanel: function(jobId, jobState, jobInfo, btnText) {
-            var $errBtn = $('<div>')
+            const $errBtn = $('<div>')
                 .addClass('btn btn-danger btn-xs kb-jobs-error-btn')
                 .css('background-color', '#F44336')
                 .append('<span class="fa fa-warning" style="color:white"></span>');
             if (btnText)
                 $errBtn.append(' ' + btnText);
-            var headText = $errBtn; //"An error has been detected in this job!";
-            var errorText = "The KBase servers are reporting an error for this job:";
-            var errorType = "Unknown";
+            const headText = $errBtn; //"An error has been detected in this job!";
+            let errorText = "The KBase servers are reporting an error for this job:";
+            let errorType = "Unknown";
 
             /* 1. jobState.source doesn't exist = not pointed at a cell
              * 2. $('#jobState.source') doesn't exist = cell is missing
@@ -719,14 +719,14 @@ define([
             else if (Object.keys(jobState.state.step_errors).length !== 0) {
                 errorType = "Runtime";
                 errorText = $('<div>');  // class="kb-jobs-error-modal">');
-                for (var stepId in jobState.state.step_errors) {
+                for (const stepId in jobState.state.step_errors) {
                     if (jobState.state.step_errors.hasOwnProperty(stepId)) {
                         // contort that into the method name
                         // gotta search for it in the spec for the method id, first.
-                        var methodName = "Unknown method: " + stepId;
+                        let methodName = "Unknown method: " + stepId;
                         if (jobId.indexOf("njs:") == 0) {
-                            var methodId = null;
-                            for (var i=0; i<jobInfo.spec.appSpec.steps.length; i++) {
+                            let methodId = null;
+                            for (let i=0; i<jobInfo.spec.appSpec.steps.length; i++) {
                                 if (stepId === jobInfo.spec.appSpec.steps[i].step_id) {
                                     methodId = jobInfo.spec.appSpec.steps[i].method_id;
                                     break;
@@ -752,15 +752,15 @@ define([
                         .append(info));
             }
 
-            var $errorTable = $('<table class="table table-bordered">')
+            const $errorTable = $('<table class="table table-bordered">')
                     .append(makeInfoRow('Job Id', jobId))
                     .append(makeInfoRow('Type', errorType))
                     .append(makeInfoRow('Error', errorText));
 
-            var $modalBody = $('<div>').append(headText)
+            const $modalBody = $('<div>').append(headText)
                     .append($errorTable);
             if (jobState && jobState.state && jobState.state.traceback) {
-                var $tb = $('<div>');
+                const $tb = $('<div>');
                  new kbaseAccordion($tb, {
                     elements: [{
                         title: 'Detailed Error Information',
@@ -793,7 +793,7 @@ define([
          */
         prepareDataBeforeRun: function() {
             if (this.inputSteps) {
-                for(var i=0; i<this.inputSteps.length; i++)
+                for(let i=0; i<this.inputSteps.length; i++)
                     var v = this.inputSteps[i].widget.prepareDataBeforeRun();
             }
         },
@@ -802,10 +802,10 @@ define([
             returns true if everything is valid and we can start, false if there were errors
         */
         checkMethodRun: function() {
-            var v = this.$inputWidget.isValid();
+            const v = this.$inputWidget.isValid();
             if (!v.isValid) {
-                var $error = $('<div>');
-                for (var i=0; i<v.errormssgs.length; i++) {
+                const $error = $('<div>');
+                for (let i=0; i<v.errormssgs.length; i++) {
                     $error.append($('<div>').addClass("kb-app-step-error-mssg")
                                             .append('['+(i+1)+']: ' + v.errormssgs[i]));
                 }
@@ -837,10 +837,10 @@ define([
             if (data.cellId && this.allowOutput) {
                 this.allowOutput = false;
                 // Show the 'next-steps' to take, if there are any
-                this.getNextSteps(function(next_steps) {
+                this.getNextSteps((next_steps) => {
                     data.next_steps = next_steps;
                     this.trigger('createOutputCell.Narrative', data);
-                }.bind(this));
+                });
             }
             this.changeState('complete', null, data.result);
         },
@@ -853,7 +853,7 @@ define([
         },
 
         updateDynamicMethodSummaryHeader: function() {
-            var self = this;
+            const self = this;
             self.$dynamicMethodSummary.empty();
 
             // First set the main text
@@ -861,7 +861,7 @@ define([
               self.submittedText && !self.isAwaitingInput()) {
                 // If replacement text exists, and the method was submitted, use it
 console.log("h3", self.method.replacement_text, Handlebars);
-                var template = Handlebars.compile(self.method.replacement_text);
+                const template = Handlebars.compile(self.method.replacement_text);
                 self.$dynamicMethodSummary.append($('<h1>').html(template(self.getParameterMapForReplacementText())));
                 self.$dynamicMethodSummary.append($('<h2>').append(self.submittedText));
             } else {
@@ -876,8 +876,8 @@ console.log("h3", self.method.replacement_text, Handlebars);
 
 
         minimizeView: function(noAnimation) {
-            var self = this;
-            var $mintarget = self.$cellPanel;
+            const self = this;
+            const $mintarget = self.$cellPanel;
 
             // create the dynamic summary based on the run state
             self.updateDynamicMethodSummaryHeader()
@@ -895,8 +895,8 @@ console.log("h3", self.method.replacement_text, Handlebars);
         },
 
         maximizeView: function() {
-            var self = this;
-            var $mintarget = self.$cellPanel;
+            const self = this;
+            const $mintarget = self.$cellPanel;
             $mintarget.find(".panel-body").slideDown();
             $mintarget.find(".panel-footer").slideDown();
             self.$minimizeControl.removeClass("glyphicon-chevron-right")
@@ -914,17 +914,17 @@ console.log("h3", self.method.replacement_text, Handlebars);
          */
         getNextSteps: function(render_cb) {
           // fetch full info, which contains suggested next steps
-          var params = {ids: [this.method.info.id]};
-          var result = {};
-          var self = this;
+          const params = {ids: [this.method.info.id]};
+          const result = {};
+          const self = this;
           this.methClient.get_method_full_info(params,
             $.proxy(function(info_list) {
-              var sugg = info_list[0].suggestions;
-              var params = {apps: sugg.next_apps, methods: sugg.next_methods};
+              const sugg = info_list[0].suggestions;
+              const params = {apps: sugg.next_apps, methods: sugg.next_methods};
               this.trigger('getFunctionSpecs.Narrative', [params,
                 function(specs) { render_cb(specs); }]);
             }, this),
-            function(error) {
+            (error) => {
               console.error(error, "method=", self.method);
               KBError("kbaseNarrativeMethodCell.getNextSteps",
                        "Could not get full info for method: " + self.method.info.id);
@@ -940,23 +940,23 @@ console.log("h3", self.method.replacement_text, Handlebars);
          * @return {string} a human readable timestamp
          */
         readableTimestamp: function(timestamp) {
-            var format = function(x) {
+            const format = function(x) {
                 if (x < 10)
                     x = '0' + x;
                 return x;
             };
 
-            var d = null;
+            let d = null;
             if (timestamp)
                 d = new Date(timestamp);
             else
                 d = new Date();
-            var hours = format(d.getHours());
-            var minutes = format(d.getMinutes());
-            var seconds = format(d.getSeconds());
-            var month = d.getMonth()+1;
-            var day = format(d.getDate());
-            var year = d.getFullYear();
+            const hours = format(d.getHours());
+            const minutes = format(d.getMinutes());
+            const seconds = format(d.getSeconds());
+            const month = d.getMonth()+1;
+            const day = format(d.getDate());
+            const year = d.getFullYear();
 
             return hours + ":" + minutes + ":" + seconds + ", " + month + "/" + day + "/" + year;
         }

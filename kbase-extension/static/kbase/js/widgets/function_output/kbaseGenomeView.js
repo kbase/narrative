@@ -7,7 +7,7 @@
  * October 25, 2013
  */
 define(['kbwidget', 'jquery', 'bootstrap'],
-function(KBWidget, $, bootstrap) {
+(KBWidget, $, bootstrap) => {
 
 	return KBWidget({
         name: "GenomeView", 
@@ -20,21 +20,21 @@ function(KBWidget, $, bootstrap) {
         init: function(options) {
 			this._super(options);
 
-            var data = this.options.data;
+            const data = this.options.data;
 
-            var tableRow = function(a, b) {
+            const tableRow = function(a, b) {
                 return $("<tr>")
                        .append("<td>" + a + "</td>")
                        .append("<td>" + b + "</td>");
             };
 
-            var calcGC = function(gc, total) {
+            const calcGC = function(gc, total) {
                 if (gc > 1)
                     gc = gc/total;
                 return (100*gc).toFixed(2);
             };
 
-            var $metaTable = $("<table>")
+            const $metaTable = $("<table>")
                              .addClass("table table-striped table-bordered")
                              .css({"margin-left":"auto", "margin-right":"auto", "width":"100%"})
                              .append(tableRow("<b>ID</b>", "<b>" + data[0] + "</b>"))

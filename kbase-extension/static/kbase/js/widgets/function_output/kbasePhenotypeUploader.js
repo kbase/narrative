@@ -18,10 +18,10 @@
 
         init: function(options) {
             this._super(options);
-            var self = this;
-        	var pref = this.uuid();
+            const self = this;
+        	const pref = this.uuid();
 
-            var container = this.$elem;
+            const container = this.$elem;
         	container.empty();
             if (!self.authToken()) {
             	container.append("<div>[Error] You're not logged in</div>");
@@ -29,38 +29,38 @@
             }
         	container.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;loading media data...</div>");
 
-            var kbws = new Workspace(this.wsUrl, {'token': self.authToken()});
+            const kbws = new Workspace(this.wsUrl, {'token': self.authToken()});
             //var kbws = new workspaceService(wsUrl);
             
-            var request = {workspaces: [options.ws_name], type: 'KBaseBiochem.Media'};
-            kbws.list_objects(request, function(data) {
+            const request = {workspaces: [options.ws_name], type: 'KBaseBiochem.Media'};
+            kbws.list_objects(request, (data) => {
             	container.empty();
-            	var medias = [];
-            	for (var tuplePos in data) {
-            		var media = data[tuplePos][1];
+            	const medias = [];
+            	for (const tuplePos in data) {
+            		const media = data[tuplePos][1];
             		medias.push(media);
             	}
             	container.append('<table class="table table-striped table-bordered" \
             			style="margin-left: auto; margin-right: auto;" id="'+pref+'pheno-table"/>');
-            	var table = $('#'+pref+'pheno-table');
+            	const table = $('#'+pref+'pheno-table');
             	table.append('<tr><td>Storing phenotype set ID</td><td>' + options.phenotype_id + '</td></tr>');
             	table.append('<tr><td>Genome object ID</td><td>' + options.genome_id + '</td></tr>');
             	table.append('<tr><td>Your tab delimited data<br>(first line is header)</td> \
             			<td><textarea id="'+pref+'pheno-ta" style="width:100%;" cols="80" rows="15"></textarea></td></tr>');
             	container.append('<button class="btn" id="'+pref+'pheno-btn">Save in workspace</button>');
             	container.append('&nbsp;<button class="btn" id="'+pref+'xmpl-btn">Show an example in text area above</button>');
-            	$('#'+pref+'pheno-btn').click(function() {
-            		var val = $('#'+pref+'pheno-ta').val();
-            		var lines = val.split(/\r\n|\r|\n/g);
-            		var phenotypes = [];
-            		var good = true;
-            		for (var pos in lines) {
+            	$('#'+pref+'pheno-btn').click(() => {
+            		const val = $('#'+pref+'pheno-ta').val();
+            		const lines = val.split(/\r\n|\r|\n/g);
+            		const phenotypes = [];
+            		let good = true;
+            		for (const pos in lines) {
             			if (pos == 0)
             				continue;
-            			var line = lines[pos];
+            			const line = lines[pos];
             			if (line == '')
             				continue;
-            			var parts = line.split(/\t/g);
+            			const parts = line.split(/\t/g);
             			if (parts.length != 5) {
             				good = false;
             				alert('Data line has wrong format: [' + line + ']. It should be in format: media_id{TAB}workspace{TAB}growth(0_or_1){TAB}geneKO(or_none){TAB}addtlCpd(or_none)');
@@ -81,8 +81,8 @@
             				alert('Data line contains wrong growth value: [' + line + ']. It should be 0 or 1');
             				break;
             			}
-            			var phenotype = {}; // tuple<list<feature_id> geneKO,media_id baseMedia,workspace_id media_workspace,list<compound_id> additionalCpd,float normalizedGrowth,string label>
-            			var geneKO = [];
+            			const phenotype = {}; // tuple<list<feature_id> geneKO,media_id baseMedia,workspace_id media_workspace,list<compound_id> additionalCpd,float normalizedGrowth,string label>
+            			let geneKO = [];
             			if (parts[3] != 'none') {
             				geneKO = parts[3].split(',');
             			}
@@ -90,7 +90,7 @@
             			phenotype['geneko_refs'] = geneKO;
             			phenotype['media_ref'] = parts[1] + "/" + parts[0];
             			//phenotype['workspace'] = parts[1];
-            			var additionalCpd = [];
+            			let additionalCpd = [];
             			if (parts[4] != 'none') {
             				additionalCpd = parts[4].split(',');
             			}
@@ -117,7 +117,7 @@
                         }, function(data) {
                         	alert('Error storing data: ' + data.error.message);
                         });*/
-            			var pset = {
+            			const pset = {
             					id: options.phenotype_id,
             					genome_ref: options.ws_name + '/' + options.genome_id,
             					phenotype_set_id: options.phenotype_id,
@@ -129,16 +129,16 @@
             					name: options.phenotype_id,
             					importErrors: ''
             			};
-            			kbws.save_objects({workspace: options.ws_name, objects: [{type: 'KBasePhenotypes.PhenotypeSet', name: options.phenotype_id, data: pset}]}, function(data) {
+            			kbws.save_objects({workspace: options.ws_name, objects: [{type: 'KBasePhenotypes.PhenotypeSet', name: options.phenotype_id, data: pset}]}, (data) => {
             				alert('Data was stored in workspace');
-                        }, function(data) {
+                        }, (data) => {
                         	alert('Error: ' + data.error.message);
                         });            	
             		}
             	});
-            	$('#'+pref+'xmpl-btn').click(function() {
-            		var ws = options.ws_name;
-            		var text = "media	mediaws	growth	geneko	addtlCpd\n" +
+            	$('#'+pref+'xmpl-btn').click(() => {
+            		const ws = options.ws_name;
+            		const text = "media	mediaws	growth	geneko	addtlCpd\n" +
             				"C-L-serine	"+ws+"	1	none	cpd00367,cpd00009,cpd00048\n" +
             				"C-L-serine	"+ws+"	1	none	cpd00023,cpd00009,cpd00048\n" +
             				"C-L-serine	"+ws+"	1	none	cpd00221,cpd00159,cpd00013,cpd00048,cpd00046\n" +
@@ -147,13 +147,13 @@
             				"C-L-serine	"+ws+"	0	none	cpd00013,cpd00009,cpd00048,cpd00141\n" +
             				"C-L-serine	"+ws+"	0	none	cpd00122,cpd00009,cpd00048\n" +
             				"C-L-serine	"+ws+"	0	none	cpd00161,cpd00009,cpd00048\n";
-            		var val = $('#'+pref+'pheno-ta').val();
+            		let val = $('#'+pref+'pheno-ta').val();
             		if (val != "")
             			val += "\n";
             		val += text;
             		$('#'+pref+'pheno-ta').val(val);
             	});
-            }, function(data) {
+            }, (data) => {
             	container.empty();
                 container.append('<p>[Error] ' + data.error.message + '</p>');
                 return;
@@ -172,8 +172,8 @@
 
         uuid: function() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, 
-                function(c) {
-                    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+                (c) => {
+                    const r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                     return v.toString(16);
                 });
         }

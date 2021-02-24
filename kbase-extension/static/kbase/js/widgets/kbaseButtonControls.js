@@ -35,14 +35,14 @@ define (
 		'geometry_rectangle',
 		'geometry_point',
 		'geometry_size'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		geometry_rectangle,
 		geometry_point,
 		geometry_size
-	) {
+	) => {
 
     return KBWidget({
 
@@ -70,7 +70,7 @@ define (
         },
 
         bounds : function($e) {
-            var offset = $e.offset();
+            const offset = $e.offset();
 
             return new Rectangle(
                 new Point(offset.left, offset.top),
@@ -80,13 +80,13 @@ define (
 
         visibleBounds : function($e) {
 
-            var rect = this.bounds($e);
+            let rect = this.bounds($e);
 
-            var throttle = 0;
+            let throttle = 0;
 
             while ($e = $e.parent()) {
 
-                var parentRect = this.bounds($e);
+                const parentRect = this.bounds($e);
                 rect = rect.intersectRect(parentRect);
 
                 //just being paranoid
@@ -114,7 +114,7 @@ define (
                 $elem.append($.jqElem('style').text('.tooltip { position : fixed }'));
             }
 
-           var $controlButtons =
+           const $controlButtons =
                 $('<div></div>')
                     .addClass('btn-group btn-group-xs')
                     .attr('id', 'control-buttons')
@@ -136,10 +136,10 @@ define (
 
             if (this.options.onMouseover && this.options.type == 'floating') {
 
-                var overControls = false;
-                var overParent = false;
+                const overControls = false;
+                let overParent = false;
 
-                var $controls = this;
+                const $controls = this;
 
                 $elem
                     .mouseover(
@@ -160,15 +160,15 @@ define (
                         }
                     )
                     .mouseout(
-                        function(e) {
+                        (e) => {
                             e.preventDefault();
                             e.stopPropagation();
 
-                            var controlBounds = $controls.bounds($controlButtons);
-                            var controlBoundsV = $controls.visibleBounds($controlButtons);
-                            var elemBounds = $controls.bounds($elem);
+                            const controlBounds = $controls.bounds($controlButtons);
+                            const controlBoundsV = $controls.visibleBounds($controlButtons);
+                            const elemBounds = $controls.bounds($elem);
 
-                            var bounds = elemBounds.intersectRect(controlBounds);
+                            const bounds = elemBounds.intersectRect(controlBounds);
 
                             if (! controlBoundsV.containsPoint(new Point(e.pageX, e.pageY)) ) {
                             //if (! $.contains($elem.get(0), e.target)) {
@@ -221,7 +221,7 @@ define (
                 this._controls[control] = undefined;
             }
 
-            var $buttonControls = this;
+            const $buttonControls = this;
 
             $.each(
                 controls,
@@ -233,7 +233,7 @@ define (
                         }
                     }
 
-                    var btnClass = 'btn btn-default';
+                    let btnClass = 'btn btn-default';
                     if (val.type) {
                         btnClass = btnClass + ' btn-' + val.type;
                     }
@@ -260,7 +260,7 @@ define (
                         tooltip.delay = 1;
                     }
 
-                    var $button =
+                    const $button =
                         $('<button></button>')
                             .attr('href', '#')
                             .css('padding-top', '1px')

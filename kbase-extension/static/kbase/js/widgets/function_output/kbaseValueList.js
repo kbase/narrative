@@ -23,7 +23,7 @@
         wsUrl: window.kbconfig.urls.workspace,
 
         init: function(options) {
-            var vals = options.values;
+            const vals = options.values;
             console.debug("ValueListWidget.init.start values=", vals);
             this._super(options);
             // on error, may be called with null
@@ -39,17 +39,17 @@
 
         render: function() {
             console.debug("ValueListWidget.render.start");
-            var i;
+            let i;
             // Create table container.
-            var table = $('<table>')
+            const table = $('<table>')
                 .addClass('table table-condensed');
             table.css({'border': '0', 'border-width': '0'});
-            var tbody = $('<tbody>');
+            const tbody = $('<tbody>');
             //thead.css({'background-color': '#EEEEEE', 'color': '#0D7876'});
             // Add body.
-            var vals = this.options.values;
+            const vals = this.options.values;
             for (i = 0; i < vals.length; i++) {
-                var tr = $('<tr>').css({'border': '0px'})
+                const tr = $('<tr>').css({'border': '0px'})
                     .append($('<td>').css({'color': '#2A6496', 'border': '0'}).text(vals[i][0]))  // key
                     .append($('<td>').css({'border': '0'}).text(vals[i][1]));                     // value
                 tbody.append(tr);

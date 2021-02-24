@@ -1,16 +1,13 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 define([
     'kb_common/html'
-], function (html) {
+], (html) => {
     'use strict';
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'), span = t('span'),
         button = t('button');
 
     function factory(config) {
-        var container = config.node,
+        const container = config.node,
             bus = config.bus;
 
         /*
@@ -20,7 +17,7 @@ define([
             if (typeof names === 'string') {
                 names = names.split('.');
             }
-            var selector = names.map(function (name) {
+            const selector = names.map((name) => {
                 return '[data-element="' + name + '"]';
             }).join(' ');
 
@@ -33,9 +30,9 @@ define([
                 // TODO: support a path of elements up to the button.
                 throw new Error('Currently only a single string supported to get a button');
             }
-            var selector = '[data-button="' + name + '"]',
+            const selector = '[data-button="' + name + '"]',
                 buttonNode = container.querySelector(selector);
-            
+
             if (!buttonNode) {
                 throw new Error('Button ' + name + ' not found');
             }
@@ -46,7 +43,7 @@ define([
             if (typeof names === 'string') {
                 names = [names];
             }
-            var selector = names.map(function (dataSelector) {
+            const selector = names.map((dataSelector) => {
                 return '[data-' + dataSelector.type + '="' + dataSelector.name + '"]';
             }).join(' ');
 
@@ -67,7 +64,7 @@ define([
         }
 
         function makeButton(label, name, options) {
-            var klass = options.type || 'default',
+            const klass = options.type || 'default',
                 events = options.events;
             return button({
                 type: 'button',
@@ -88,9 +85,9 @@ define([
         function setButtonLabel(name, label) {
             getButton(name).innerHTML = label;
         }
-        
+
         // Hmm, something like this, but need to think it through more.
-//        function setButton(name, options) {            
+//        function setButton(name, options) {
 //            var buttonNode = getButton(name);
 //            if (options.label) {
 //                buttonNode.innerHTML = options.label;
@@ -102,7 +99,7 @@ define([
 //                    buttonNode.classList.add(klass);
 //                });
 //            }
-//                
+//
 //        }
 
         function ensureOriginalDisplayStyle(el) {
@@ -112,7 +109,7 @@ define([
         }
 
         function hideElement(name) {
-            var el = getElement(name);
+            const el = getElement(name);
             if (!el) {
                 return;
             }
@@ -122,7 +119,7 @@ define([
         }
 
         function showElement(name) {
-            var el = getElement(name),
+            let el = getElement(name),
                 original;
             if (!el) {
                 return;
@@ -144,19 +141,19 @@ define([
         }
 
         function buildPanel(args) {
-            var type = args.type || 'primary',
+            const type = args.type || 'primary',
                 classes = ['panel', 'panel-' + type];
             if (args.hidden) {
                 classes.push('hidden');
                 // style.display = 'none';
             }
             return  div({class: classes.join(' '), dataElement: args.name}, [
-                (function () { 
+                (function () {
                     if (args.title) {
                         return div({class: 'panel-heading'}, [
                             div({class: 'panel-title'}, args.title)
                         ]);
-                    }                    
+                    }
                 }()),
                 div({class: 'panel-body'}, [
                     args.body
@@ -165,7 +162,7 @@ define([
         }
 
         function makeCollapsiblePanel(title, elementName) {
-            var collapseId = html.genId();
+            const collapseId = html.genId();
 
             return div({class: 'panel panel-default'}, [
                 div({class: 'panel-heading'}, [
@@ -187,8 +184,8 @@ define([
         }
 
         function buildCollapsiblePanel(args) {
-            var collapseId = html.genId(),
-                type = args.type || 'primary',                
+            const collapseId = html.genId(),
+                type = args.type || 'primary',
                 classes = ['panel', 'panel-' + type],
                 collapseClasses = ['panel-collapse collapse'],
                 toggleClasses = [];
@@ -220,30 +217,30 @@ define([
                     )
             ]);
         }
-        
+
         function collapsePanel(path) {
-            var node = getElement(path);
+            const node = getElement(path);
             if (!node) {
                 return;
             }
-            var collapseToggle = node.querySelector('[data-toggle="collapse"]'),
+            const collapseToggle = node.querySelector('[data-toggle="collapse"]'),
                 targetSelector = collapseToggle.getAttribute('data-target'),
                 collapseTarget = node.querySelector(targetSelector);
-            
+
             collapseToggle.classList.add('collapsed');
             collapseToggle.setAttribute('aria-expanded', 'false');
             collapseTarget.classList.remove('in');
             collapseTarget.setAttribute('aria-expanded', 'false');
         }
         function expandPanel(path) {
-            var node = getElement(path);
+            const node = getElement(path);
             if (!node) {
                 return;
             }
-            var collapseToggle = node.querySelector('[data-toggle="collapse"]'),
+            const collapseToggle = node.querySelector('[data-toggle="collapse"]'),
                 targetSelector = collapseToggle.getAttribute('data-target'),
                 collapseTarget = node.querySelector(targetSelector);
-            
+
             collapseToggle.classList.remove('collapsed');
             collapseToggle.setAttribute('aria-expanded', 'true');
             collapseTarget.classList.add('in');
@@ -251,13 +248,13 @@ define([
         }
 
         function createNode(markup) {
-            var node = document.createElement('div');
+            const node = document.createElement('div');
             node.innerHTML = markup;
             return node.firstChild;
         }
 
         function setContent(path, content) {
-            var node = getElement(path);
+            const node = getElement(path);
             if (node) {
                 node.innerHTML = content;
             }

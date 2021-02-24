@@ -13,7 +13,7 @@ define([
     'util/kbaseApiUtil',
     'kbase-generic-client-api',
     'kbase-client-api'
-], function(
+], (
     $,
     KBWidget,
     KBaseAuthenticatedWidget,
@@ -27,7 +27,7 @@ define([
     Display,
     ApiUtil,
     GenericClient
-) {
+) => {
     'use strict';
     return KBWidget ({
         name: 'kbaseBinnedContigs',
@@ -53,7 +53,7 @@ define([
             if (this.isError) {
                 return;
             }
-            var $tabContainer = $('<div>');
+            const $tabContainer = $('<div>');
             this.$elem.append($tabContainer);
             this.tabs = new KBaseTabs($tabContainer, {
                 tabPosition: top,
@@ -73,22 +73,22 @@ define([
         },
 
         showBinSummary: function () {
-            var $content = $('<div>').css({'margin-top': '15px'}).append(this.loadingElement());
+            const $content = $('<div>').css({'margin-top': '15px'}).append(this.loadingElement());
             Promise.resolve(this.wsClient.get_object_info3({objects: [{ref: this.options.objRef}], includeMetadata: 1}))
-            .then(function(data) {
-                var info = data.infos[0];
+            .then((data) => {
+                const info = data.infos[0];
                 this.objectName = info[1];
-                var $infoTable = $('<table class="table table-striped table-bordered table-hover">')
+                const $infoTable = $('<table class="table table-striped table-bordered table-hover">')
                     .append($('<colgroup>').append($('<col span=1>').css('width','25%')))
                     .append(this.tableRow(['<b>KBase Object Name</b>', this.objectName]))
                     .append(this.tableRow(['<b>Number of Bins</b>', info[10].n_bins]))
                     .append(this.tableRow(['<b>Total Contig Nucleotides</b>', info[10].total_contig_len]));
                 $content.empty().append($infoTable);
-            }.bind(this))
-            .catch(function(error) {
+            })
+            .catch((error) => {
                 this.$elem.empty().append(Display.createError('Error while getting Summary', error));
                 console.error(error);
-            }.bind(this));
+            });
             return $content;
         },
 
@@ -96,8 +96,8 @@ define([
          * Shows the list of bins.
          */
         showBinList: function () {
-            var self = this;
-            var $content = $('<div>');
+            const self = this;
+            const $content = $('<div>');
             new DynamicTable($content, {
                 headers: [{
                     id: 'bin_id',
@@ -123,7 +123,7 @@ define([
                 searchPlaceholder: 'Search contig bins',
                 style: {'margin-top': '5px'},
                 updateFunction: function(pageNum, query, sortColId, sortColDir) {
-                    var sortBy = [];
+                    const sortBy = [];
                     if (sortColId && sortColDir !== 0) {
                         sortBy.push([sortColId, sortColDir === 1 ? 1 : 0]);
                     }
@@ -134,10 +134,10 @@ define([
                         limit: self.options.binLimit,
                         sort_by: sortBy
                     }]))
-                    .then(function(results) {
+                    .then((results) => {
                         results = results[0];
-                        var rows = [];
-                        results.bins.forEach(function(bin) {
+                        const rows = [];
+                        results.bins.forEach((bin) => {
                             rows.push([bin.bin_id, bin.cov, bin.gc, bin.n_contigs, bin.sum_contig_len]);
                         });
                         return {
@@ -149,12 +149,12 @@ define([
                     });
                 },
                 rowFunction: function($row, rowValues) {
-                    var $listBtn = Display.simpleButton('btn-xs', 'fa fa-list')
-                        .click(function() {
+                    const $listBtn = Display.simpleButton('btn-xs', 'fa fa-list')
+                        .click(() => {
                             self.showBinTab(rowValues[0]);
                         });
-                    var $plotBtn = Display.simpleButton('btn-xs', 'fa fa-bar-chart')
-                        .click(function() {
+                    const $plotBtn = Display.simpleButton('btn-xs', 'fa fa-bar-chart')
+                        .click(() => {
                             self.showPlotTab(rowValues[0]);
                         });
 
@@ -173,9 +173,9 @@ define([
                         ref: self.options.objRef,
                         limit: 1
                     }]))
-                    .then(function(results) {
-                        var total = results[0].num_found;
-                        var sortBy = [];
+                    .then((results) => {
+                        const total = results[0].num_found;
+                        const sortBy = [];
                         if (sortColId && sortColDir !== 0) {
                             sortBy.push([sortColId, sortColDir === 1 ? 1 : 0]);
                         }
@@ -186,9 +186,9 @@ define([
                             sort_by: sortBy
                         }]))
                     })
-                    .then(function(results) {
-                        var rows = [];
-                        results[0].bins.forEach(function(bin) {
+                    .then((results) => {
+                        const rows = [];
+                        results[0].bins.forEach((bin) => {
                             rows.push([bin.bin_id, bin.cov, bin.gc, bin.n_contigs, bin.sum_contig_len]);
                         });
                         return rows;
@@ -200,7 +200,7 @@ define([
         },
 
         showPlotTab: function(binId) {
-            var self = this;
+            const self = this;
             if (!self.tabs.hasTab(binId + '-plot')) {
                 self.tabs.addTab({
                     tab: binId + '-plot',
@@ -217,7 +217,7 @@ define([
         },
 
         showBinTab: function(binId) {
-            var self = this;
+            const self = this;
             if (!self.tabs.hasTab(binId)) {
                 self.tabs.addTab({
                     tab: binId,
@@ -234,7 +234,7 @@ define([
         },
 
         plotBin: function(binId) {
-            var $content = $('<div>').css({'margin-top': '15px', 'width': '100%'}).append(this.loadingElement());
+            const $content = $('<div>').css({'margin-top': '15px', 'width': '100%'}).append(this.loadingElement());
 
             Promise.resolve(this.serviceClient.sync_call('MetagenomeAPI.search_contigs_in_bin', [{
                 ref: this.options.objRef,
@@ -243,32 +243,32 @@ define([
                 limit: this.options.plotContigLimit,
                 sort_by: [['len', 0]]
             }]))
-            .then(function(results) {
+            .then((results) => {
                 results = results[0];
-                var title = binId + ' Lengths and GC %';
+                let title = binId + ' Lengths and GC %';
                 if (results.num_found > this.options.plotContigLimit) {
                     title += ' (longest ' + this.options.plotContigLimit + ')';
                 }
                 console.log(results);
-                var labels = [];
-                var gcs = [];
-                var lengths = [];
-                results.contigs.forEach(function(contig) {
+                const labels = [];
+                const gcs = [];
+                const lengths = [];
+                results.contigs.forEach((contig) => {
                     labels.push(contig.contig_id);
                     gcs.push(contig.gc);
                     lengths.push(contig.len);
                 });
                 $content.empty();
 
-                var d3 = Plotly.d3;
-                var WIDTH_IN_PERCENT_OF_PARENT = 100;
-                var HEIGHT_IN_PERCENT_OF_PARENT = 50;
-                var gd3 = d3.select($content.get(0))
+                const d3 = Plotly.d3;
+                const WIDTH_IN_PERCENT_OF_PARENT = 100;
+                const HEIGHT_IN_PERCENT_OF_PARENT = 50;
+                const gd3 = d3.select($content.get(0))
                     .style({
                         width: WIDTH_IN_PERCENT_OF_PARENT + '%',
                         height: HEIGHT_IN_PERCENT_OF_PARENT + 'vh',
                     });
-                var gd = gd3.node();
+                const gd = gd3.node();
 
                 Plotly.newPlot(gd, [{
                     x: labels,
@@ -304,8 +304,8 @@ define([
                     Plotly.Plots.resize(gd);
                 };
                 Plotly.Plots.resize(gd);
-            }.bind(this))
-            .catch(function(error) {
+            })
+            .catch((error) => {
                 console.error(error);
             });
 
@@ -321,10 +321,10 @@ define([
                 limit: limit,
                 sort_by: sortBy
             }]))
-            .then(function(results) {
+            .then((results) => {
                 results = results[0];
-                var dataRows = [];
-                results.contigs.forEach(function(c) {
+                const dataRows = [];
+                results.contigs.forEach((c) => {
                     dataRows.push([
                         c.contig_id,
                         c.cov,
@@ -342,8 +342,8 @@ define([
         },
 
         createBinTab: function(binId) {
-            var self = this;
-            var $content = $('<div>');
+            const self = this;
+            const $content = $('<div>');
             new DynamicTable($content, {
                 headers: [{
                     id: 'id',
@@ -363,7 +363,7 @@ define([
                     isSortable: true,
                 }],
                 updateFunction: function(pageNum, query, sortColId, sortColDir) {
-                    var sortBy = [];
+                    const sortBy = [];
                     if (sortColId && sortColDir !== 0) {
                         sortBy.push([ sortColId, sortColDir === 1 ? 1 : 0 ]);
                     }
@@ -381,15 +381,15 @@ define([
                         bin_id: binId,
                         limit: 1
                     }]))
-                    .then(function(results) {
-                        var total = results[0].num_found;
-                        var sortBy = [];
+                    .then((results) => {
+                        const total = results[0].num_found;
+                        const sortBy = [];
                         if (sortColId && sortColDir !== 0) {
                             sortBy.push([sortColId, sortColDir === 1 ? 1 : 0]);
                         }
                         return self.getSortedBinData(binId, 0, total, '', sortBy);
                     })
-                    .then(function(results) {
+                    .then((results) => {
                         return results.rows;
                     });
                 }
@@ -409,11 +409,11 @@ define([
          * as a jQuery node
          */
         tableRow: function(data, isHeader) {
-            var elem = 'td';
+            let elem = 'td';
             if (isHeader) {
                 elem = 'th';
             }
-            return $('<tr>').append(data.map(function(d) { return '<' + elem + '>' + d + '</' + elem + '>'; }).join());
+            return $('<tr>').append(data.map((d) => { return '<' + elem + '>' + d + '</' + elem + '>'; }).join());
         },
 
         /**

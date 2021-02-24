@@ -1,13 +1,13 @@
 
 
 function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_version) {
-    var self = this;
+    const self = this;
 
     this.url = url;
-    var _url = url;
+    let _url = url;
 
     this.timeout = timeout;
-    var _timeout = timeout;
+    const _timeout = timeout;
     
     this.async_job_check_time_ms = async_job_check_time_ms;
     if (!this.async_job_check_time_ms)
@@ -21,8 +21,8 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
     if (typeof(_url) != "string" || _url.length == 0) {
         _url = "https://kbase.us/services/service_wizard";
     }
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
      this.get_reads_set_v1 = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
@@ -33,13 +33,13 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
         json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "SetAPI", 
-                'version' : self.service_version}], 1, function(service_status_ret) {
+                'version' : self.service_version}], 1, (service_status_ret) => {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "SetAPI.get_reads_set_v1", 
                 [params], 1, _callback, _errorCallback, null, deferred);
-        }, function(err) {
+        }, (err) => {
             if (_errorCallback) {
                 _errorCallback(err);
             } else {
@@ -61,13 +61,13 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
         json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "SetAPI", 
-                'version' : self.service_version}], 1, function(service_status_ret) {
+                'version' : self.service_version}], 1, (service_status_ret) => {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "SetAPI.save_reads_set_v1", 
                 [params], 1, _callback, _errorCallback, null, deferred);
-        }, function(err) {
+        }, (err) => {
             if (_errorCallback) {
                 _errorCallback(err);
             } else {
@@ -89,13 +89,13 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
         json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "SetAPI", 
-                'version' : self.service_version}], 1, function(service_status_ret) {
+                'version' : self.service_version}], 1, (service_status_ret) => {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "SetAPI.list_sets", 
                 [params], 1, _callback, _errorCallback, null, deferred);
-        }, function(err) {
+        }, (err) => {
             if (_errorCallback) {
                 _errorCallback(err);
             } else {
@@ -117,13 +117,13 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
         json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "SetAPI", 
-                'version' : self.service_version}], 1, function(service_status_ret) {
+                'version' : self.service_version}], 1, (service_status_ret) => {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "SetAPI.get_set_items", 
                 [params], 1, _callback, _errorCallback, null, deferred);
-        }, function(err) {
+        }, (err) => {
             if (_errorCallback) {
                 _errorCallback(err);
             } else {
@@ -143,13 +143,13 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 2)
             throw 'Too many arguments ('+arguments.length+' instead of 2)';
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
         json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "SetAPI", 
-                'version' : self.service_version}], 1, function(service_status_ret) {
+                'version' : self.service_version}], 1, (service_status_ret) => {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "SetAPI.status", 
                 [], 1, _callback, _errorCallback, null, deferred);
-        }, function(err) {
+        }, (err) => {
             if (_errorCallback) {
                 _errorCallback(err);
             } else {
@@ -178,7 +178,7 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
@@ -187,8 +187,8 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
         if (json_rpc_context)
             rpc['context'] = json_rpc_context;
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -196,7 +196,7 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: srv_url,
             dataType: "text",
             type: 'POST',
@@ -205,9 +205,9 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
             beforeSend: beforeSend,
             timeout: _timeout,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -221,10 +221,10 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
                 deferred.resolve(result);
             },
             error: function (xhr, textStatus, errorThrown) {
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -239,7 +239,7 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }

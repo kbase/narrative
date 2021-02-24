@@ -54,6 +54,7 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime'], (
 
         afterEach(() => {
             window.kbaseRuntime = null;
+            document.body.innerHTML = '';
         });
 
         it('Should load properly', () => {
@@ -399,11 +400,11 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime'], (
                         comm.handleCommMessages(msg);
                     })
                     .then(() => {
-                        jasmine.clock().tick(2000);
+                        jasmine.clock().tick(5000);
                         expect(document.querySelector('.modal #kb-job-err-trace')).not.toBeNull();
                         // click the 'OK' button
                         document.querySelector('.modal a.btn.btn-default').click();
-                        jasmine.clock().tick(2000);
+                        jasmine.clock().tick(5000);
                         // expect it to be gone
                         expect(document.querySelector('.modal #kb-job-err-trace')).toBeNull();
                     })

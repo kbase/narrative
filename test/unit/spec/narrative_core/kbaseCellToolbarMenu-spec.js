@@ -1,19 +1,9 @@
-/*global describe, it, expect, beforeAll */
-/*jslint white: true*/
-define([
-    'jquery',
-    'kbaseCellToolbarMenu',
-    'base/js/namespace'
-], function (
-    $,
-    Widget,
-    Jupyter
-) {
+define(['jquery', 'kbaseCellToolbarMenu', 'base/js/namespace'], ($, Widget, Jupyter) => {
     'use strict';
-    describe('Test the kbaseCellToolbarMenu widget', function () {
+    describe('The kbaseCellToolbarMenu widget', () => {
         beforeAll(() => {
             Jupyter.narrative = {
-                readonly: false
+                readonly: false,
             };
         });
 
@@ -21,7 +11,7 @@ define([
             const messageContainer = document.createElement('div');
             const currentState = {
                 mode: mode,
-                stage: stage
+                stage: stage,
             };
             const fsm = {
                 currentState: currentState,
@@ -32,14 +22,14 @@ define([
                 metadata: {
                     kbase: {
                         appCell: {
-                            fsm: fsm
+                            fsm: fsm,
                         },
                         cellState: {
-                            toggleMinMax: collapsedState
+                            toggleMinMax: collapsedState,
                         },
-                        type: 'app'
-                    }
-                }
+                        type: 'app',
+                    },
+                },
             };
         };
 
@@ -48,30 +38,30 @@ define([
             const parentCell = mockParentCell(mode, stage, collapsedState);
             const toolbarDiv = document.createElement('div');
             instance.register_callback([toolbarDiv], parentCell);
-            return toolbarDiv.querySelectorAll(
-                'div.title div:nth-child(3)'
-            )[0].innerText;
+            return toolbarDiv.querySelectorAll('div.title div:nth-child(3)')[0].innerText;
         };
-
 
         const mockToolbarDataTestNodes = (mode, stage, collapsedState) => {
             const instance = Widget.make();
             const parentCell = mockParentCell(mode, stage, collapsedState);
             const toolbarDiv = document.createElement('div');
             instance.register_callback([toolbarDiv], parentCell);
-            return toolbarDiv.querySelectorAll(
-                '[data-test]'
-            );
+            return toolbarDiv.querySelectorAll('[data-test]');
         };
 
         // This test might better be served through Snapshot Testing
         // This test might want to check to see if each buttton has the correct fa-* class
-        it('Should render the correct app cell buttons in the correct order', function () {
-            var testToolBar = mockToolbarDataTestNodes('success', '', 'maximized');
-            var expectedButtonOrder = ['cell-dropdown', 'cell-move-up', 'cell-move-down', 'cell-toggle-expansion'];
-            var extractedButtons = [];
-            testToolBar.forEach(function (element) {
-                var attribute = element.getAttribute('data-test');
+        it('Should render the correct app cell buttons in the correct order', () => {
+            const testToolBar = mockToolbarDataTestNodes('success', '', 'maximized');
+            const expectedButtonOrder = [
+                'cell-dropdown',
+                'cell-move-up',
+                'cell-move-down',
+                'cell-toggle-expansion',
+            ];
+            const extractedButtons = [];
+            testToolBar.forEach((element) => {
+                const attribute = element.getAttribute('data-test');
                 if (expectedButtonOrder.includes(attribute)) {
                     extractedButtons.push(attribute);
                 }
@@ -80,53 +70,36 @@ define([
             expect(extractedButtons).toEqual(expectedButtonOrder);
         });
 
-
-        it('Should say Error when minimized and mode is error', function () {
-            expect(
-                mockToolbar('error', '', 'minimized')
-            ).toBe('Error');
+        it('Should say Error when minimized and mode is error', () => {
+            expect(mockToolbar('error', '', 'minimized')).toBe('Error');
         });
 
-        it('Should say Error when minimized and mode is internal-error', function () {
-            expect(
-                mockToolbar('internal-error', '', 'minimized')
-            ).toBe('Error');
+        it('Should say Error when minimized and mode is internal-error', () => {
+            expect(mockToolbar('internal-error', '', 'minimized')).toBe('Error');
         });
 
-        it('Should say Canceled when minimized and canceling', function () {
-            expect(
-                mockToolbar('canceling', '', 'minimized')
-            ).toBe('Canceled');
+        it('Should say Canceled when minimized and canceling', () => {
+            expect(mockToolbar('canceling', '', 'minimized')).toBe('Canceled');
         });
 
-        it('Should say Canceled when minimized and canceled', function () {
-            expect(
-                mockToolbar('canceled', '', 'minimized')
-            ).toBe('Canceled');
+        it('Should say Canceled when minimized and canceled', () => {
+            expect(mockToolbar('canceled', '', 'minimized')).toBe('Canceled');
         });
 
-        it('Should say Running when minimized and running', function () {
-            expect(
-                mockToolbar('processing', 'running', 'minimized')
-            ).toBe('Running');
+        it('Should say Running when minimized and running', () => {
+            expect(mockToolbar('processing', 'running', 'minimized')).toBe('Running');
         });
 
-        it('Should say Running when minimized and queued', function () {
-            expect(
-                mockToolbar('processing', 'queued', 'minimized')
-            ).toBe('Queued');
+        it('Should say Running when minimized and queued', () => {
+            expect(mockToolbar('processing', 'queued', 'minimized')).toBe('Queued');
         });
 
-        it('Should say Success when minimized and mode is success', function () {
-            expect(
-                mockToolbar('success', '', 'minimized')
-            ).toBe('Success');
+        it('Should say Success when minimized and mode is success', () => {
+            expect(mockToolbar('success', '', 'minimized')).toBe('Success');
         });
 
-        it('Should suppress the status message if maximized', function () {
-            expect(
-                mockToolbar('processing', 'running', 'maximized')
-            ).toBe('');
+        it('Should suppress the status message if maximized', () => {
+            expect(mockToolbar('processing', 'running', 'maximized')).toBe('');
         });
     });
 });

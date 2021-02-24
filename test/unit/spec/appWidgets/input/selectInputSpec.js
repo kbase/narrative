@@ -1,10 +1,4 @@
-define([
-    'common/runtime',
-    'widgets/appWidgets2/input/selectInput'
-], (
-    Runtime,
-    SelectInput
-) => {
+define(['common/runtime', 'widgets/appWidgets2/input/selectInput'], (Runtime, SelectInput) => {
     'use strict';
     let bus,
         testConfig,
@@ -23,21 +17,25 @@ define([
                     constraints: {
                         required: required,
                         defaultValue: defaultValue,
-                        options: [{
-                            value: 'apple',
-                            display: 'Apple'
-                        }, {
-                            value: 'banana',
-                            display: 'Banana'
-                        }, {
-                            value: 'carrot',
-                            display: 'Carrot'
-                        }]
-                    }
-                }
+                        options: [
+                            {
+                                value: 'apple',
+                                display: 'Apple',
+                            },
+                            {
+                                value: 'banana',
+                                display: 'Banana',
+                            },
+                            {
+                                value: 'carrot',
+                                display: 'Carrot',
+                            },
+                        ],
+                    },
+                },
             },
             channelName: bus.channelName,
-            initialValue: 'apple'
+            initialValue: 'apple',
         };
     }
 
@@ -62,14 +60,15 @@ define([
         });
 
         it('Should start and stop a widget', (done) => {
-            let widget = SelectInput.make(testConfig);
+            const widget = SelectInput.make(testConfig);
             expect(widget).toBeDefined();
             expect(widget.start).toBeDefined();
 
-            widget.start({node: node})
+            widget
+                .start({ node: node })
                 .then(() => {
                     // verify it's there.
-                    let inputElem = node.querySelector('select[data-element="input"]');
+                    const inputElem = node.querySelector('select[data-element="input"]');
                     expect(inputElem).toBeDefined();
                     return widget.stop();
                 })
@@ -80,18 +79,18 @@ define([
                 });
         });
 
-        it('Should update value via bus', (done) => { //and reset model properly via bus', (done) => {
+        it('Should update value via bus', (done) => {
+            //and reset model properly via bus', (done) => {
             // start with one value, change it, then reset.
             // check along the way.
             bus.on('validation', (message) => {
                 expect(message.isValid).toBeTruthy();
                 done();
             });
-            let widget = SelectInput.make(testConfig);
-            widget.start({node: node})
-                .then(() => {
-                    bus.emit('update', {value: 'banana'});
-                });
+            const widget = SelectInput.make(testConfig);
+            widget.start({ node: node }).then(() => {
+                bus.emit('update', { value: 'banana' });
+            });
         });
 
         it('Should reset to default via bus', (done) => {
@@ -99,62 +98,58 @@ define([
                 expect(message.isValid).toBeTruthy();
                 done();
             });
-            let widget = SelectInput.make(testConfig);
-            widget.start({node: node})
-                .then(() => {
-                    bus.emit('reset-to-defaults');
-                });
+            const widget = SelectInput.make(testConfig);
+            widget.start({ node: node }).then(() => {
+                bus.emit('reset-to-defaults');
+            });
         });
 
         it('Should respond to input change events with "changed"', (done) => {
-            let widget = SelectInput.make(testConfig);
+            const widget = SelectInput.make(testConfig);
             bus.on('changed', (message) => {
                 expect(message.newValue).toEqual('banana');
                 done();
             });
-            widget.start({node: node})
-                .then(() => {
-                    let inputElem = node.querySelector('select[data-element="input"]');
-                    inputElem.selectedIndex=2;
-                    inputElem.dispatchEvent(new Event('change'));
-                });
+            widget.start({ node: node }).then(() => {
+                const inputElem = node.querySelector('select[data-element="input"]');
+                inputElem.selectedIndex = 2;
+                inputElem.dispatchEvent(new Event('change'));
+            });
         });
 
         it('Should respond to input change events with "validation"', (done) => {
-            let widget = SelectInput.make(testConfig);
+            const widget = SelectInput.make(testConfig);
             bus.on('validation', (message) => {
                 expect(message.isValid).toBeTruthy();
                 expect(message.errorMessage).toBeUndefined();
                 done();
             });
-            widget.start({node: node})
-                .then(() => {
-                    let inputElem = node.querySelector('select[data-element="input"]');
-                    inputElem.selectedIndex = 1
-                    inputElem.dispatchEvent(new Event('change'));
-                });
+            widget.start({ node: node }).then(() => {
+                const inputElem = node.querySelector('select[data-element="input"]');
+                inputElem.selectedIndex = 1;
+                inputElem.dispatchEvent(new Event('change'));
+            });
         });
 
         it('Should show message when configured', (done) => {
             testConfig.showOwnMessages = true;
-            let widget = SelectInput.make(testConfig);
+            const widget = SelectInput.make(testConfig);
             bus.on('validation', (message) => {
                 expect(message.isValid).toBeTruthy();
                 // ...detect something?
                 done();
             });
-            widget.start({node: node})
-                .then(() => {
-                    let inputElem = node.querySelector('select[data-element="input"]');
-                    inputElem.value = 'banana';
-                    inputElem.dispatchEvent(new Event('change'));
-                });
+            widget.start({ node: node }).then(() => {
+                const inputElem = node.querySelector('select[data-element="input"]');
+                inputElem.value = 'banana';
+                inputElem.dispatchEvent(new Event('change'));
+            });
         });
 
         it('Should return a diagnosis of required-missing if so', (done, fail) => {
             bus = runtime.bus().makeChannelBus();
             testConfig = buildTestConfig(true, '', bus);
-            let widget = SelectInput.make(testConfig);
+            const widget = SelectInput.make(testConfig);
             const inputText = null;
             let msgCount = 0,
                 okCount = 0;
@@ -173,12 +168,11 @@ define([
                     done();
                 }
             });
-            widget.start({node: node})
-                .then(() => {
-                    let inputElem = node.querySelector('select[data-element="input"]');
-                    inputElem.selectedIndex = -1;
-                    inputElem.dispatchEvent(new Event('change'));
-                });
+            widget.start({ node: node }).then(() => {
+                const inputElem = node.querySelector('select[data-element="input"]');
+                inputElem.selectedIndex = -1;
+                inputElem.dispatchEvent(new Event('change'));
+            });
         });
     });
-})
+});

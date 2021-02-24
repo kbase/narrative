@@ -29,7 +29,7 @@ define([
     'api/dataProvider',
     'bootstrap',
     'jquery-nearest'
-], function (
+], (
     KBWidget,
     $,
     _,
@@ -54,7 +54,7 @@ define([
     BootstrapSearch,
     kbaseDataCard,
     DataProvider
-) {
+) => {
     'use strict';
 
     return KBWidget({
@@ -123,8 +123,8 @@ define([
         /*
         variables to keep track of current state before workspace refresh
         */
-        selectedType : '',
-        lastSortFunction : null,
+        selectedType: '',
+        lastSortFunction: null,
 
         /**
          * Utility function to portably return the identifier to
@@ -171,7 +171,7 @@ define([
          */
         inAnySet: function (item_info) {
             if (this.setViewMode) {
-                var item_id = this.itemId(item_info);
+                const item_id = this.itemId(item_info);
                 return _.has(this.setItems, item_id);
             } else {
                 return false;
@@ -191,21 +191,20 @@ define([
          *         the keys: (item_id, expanded, div).
          */
         getItemParents: function (item_info) {
-            var item_id = this.itemId(item_info);
+            const item_id = this.itemId(item_info);
             // empty if not in ANY set
             if (!_.has(this.setItems, item_id)) {
                 return [];
             }
-            var _this = this;
             // Construct return value, which is one
             // map for each of the Sets.
             return _.map(
                 _.keys(this.setItems[item_id]),
-                function (key) {
+                (key) => {
                     return {
                         item_id: key,
-                        expanded: _this.setInfo[key].expanded,
-                        div: _this.setInfo[key].div
+                        expanded: this.setInfo[key].expanded,
+                        div: this.setInfo[key].div
                     };
                 }
             );
@@ -240,9 +239,8 @@ define([
          */
         init: function (options) {
             this._super(options);
-            var _this = this;
 
-            var dataConfig = Config.get('data_panel');
+            const dataConfig = Config.get('data_panel');
             // this is the limit of the number of objects to retrieve from the ws on each pass
             // note that if there are more objects than this, then sorts/search filters may
             // not show accurate results
@@ -276,20 +274,19 @@ define([
             this.mainListId = StringUtil.uuid();
             this.$mainListDiv = $('<div id=' + this.mainListId + '>')
                 .css({ 'overflow-x': 'hidden', 'overflow-y': 'auto', 'height': this.mainListPanelHeight })
-                .on('scroll', function () {
+                .on('scroll', () => {
                     if ($(this).scrollTop() + $(this).innerHeight() >= this.scrollHeight) {
-                        _this.renderMore();
+                        this.renderMore();
                     }
                 });
 
             this.$addDataButton = $('<button>').addClass('kb-data-list-add-data-button fa fa-plus fa-2x')
                 .attr('aria-label', 'add data')
                 .css({ 'position': 'absolute', bottom: '15px', right: '25px', 'z-index': '5' })
-                .click(function () {
-                    _this.trigger('hideGalleryPanelOverlay.Narrative');
-                    _this.trigger('toggleSidePanelOverlay.Narrative', _this.options.parentControlPanel.$overlayPanel);
+                .click(() => {
+                    this.trigger('toggleSidePanelOverlay.Narrative', [this.options.parentControlPanel.$overlayPanel]);
                 });
-            var $mainListDivContainer = $('<div>').css({ 'position': 'relative' })
+            const $mainListDivContainer = $('<div>').css({ 'position': 'relative' })
                 .append(this.loadingDiv.div)
                 .append(this.$mainListDiv)
                 .append(this.$addDataButton.hide());
@@ -301,8 +298,8 @@ define([
             }
 
             // listener for refresh
-            $(document).on('updateDataList.Narrative', function () {
-                _this.refresh();
+            $(document).on('updateDataList.Narrative', () => {
+                this.refresh();
             });
 
             if (this.options.ws_name) {
@@ -367,15 +364,15 @@ define([
         },
 
         refresh: function (showError) {
-            if(this.writingLock) {
+            if (this.writingLock) {
                 return;
             }
             // Set the refresh timer on the first refresh. From  here, it'll refresh itself
             // every this.options.refresh_interval (30000) ms
             if (this.refreshTimer === null) {
-                this.refreshTimer = setInterval(function () {
+                this.refreshTimer = setInterval(() => {
                     this.refresh();
-                }.bind(this), this.options.refresh_interval); // check if there is new data every X ms
+                }, this.options.refresh_interval); // check if there is new data every X ms
             }
 
             if (!this.ws_name || !this.ws) {
@@ -387,7 +384,7 @@ define([
             return Promise.resolve(this.ws.get_workspace_info({
                 workspace: this.ws_name
             }))
-                .then(function (wsInfo) {
+                .then((wsInfo) => {
                     if (this.wsLastUpdateTimestamp !== wsInfo[3]) {
                         this.wsLastUpdateTimestamp = wsInfo[3];
                         this.maxWsObjId = wsInfo[4];
@@ -396,22 +393,22 @@ define([
                     } else {
                         this.refreshTimeStrings();
                     }
-                }.bind(this))
-                .catch(function (error) {
+                })
+                .catch((error) => {
                     console.error('DataList: when checking for updates:', error);
                     if (showError) {
                         this.showBlockingError('Sorry, an error occurred while fetching your data.', { 'error': 'Unable to connect to KBase database.' });
                     }
-                }.bind(this));
+                });
         },
 
         refreshTimeStrings: function () {
-            Object.keys(this.dataObjects).forEach(function (i) {
+            Object.keys(this.dataObjects).forEach((i) => {
                 if (this.dataObjects[i].$div) {
-                    var newTime = TimeFormat.getTimeStampStr(this.dataObjects[i].info[3]);
+                    const newTime = TimeFormat.getTimeStampStr(this.dataObjects[i].info[3]);
                     this.dataObjects[i].$div.find('.kb-data-list-date').text(newTime);
                 }
-            }.bind(this));
+            });
         },
 
         reloadWsData: function () {
@@ -425,24 +422,24 @@ define([
             this.clearSets();
 
             this.fetchWorkspaceData()
-                .then(function () {
+                .then(() => {
                     // Signal all data channel listeners that we have new data.
                     // TODO: only signal if there are actual changes
                     // TODO: data fetch and sychronization should live as a ui
                     // service, not in a widget.
-                    var justInfo = Object.keys(this.dataObjects).map(function (objId) {
+                    const justInfo = Object.keys(this.dataObjects).map((objId) => {
                         return this.dataObjects[objId].info;
-                    }.bind(this));
-                    var objectInfoPlus = Object.keys(this.dataObjects).map(function (objId) {
+                    });
+                    const objectInfoPlus = Object.keys(this.dataObjects).map((objId) => {
                         // see code below this function for the format of
                         // items in the dataObjects collection
-                        var dataObject = this.dataObjects[objId];
-                        var info = this.createInfoObject(dataObject.info);
+                        const dataObject = this.dataObjects[objId];
+                        const info = this.createInfoObject(dataObject.info);
                         dataObject.objectInfo = info;
                         info.dataPaletteRef = dataObject.refPath;
                         return info;
-                    }.bind(this));
-                    var data = JSON.parse(JSON.stringify(justInfo));
+                    });
+                    const data = JSON.parse(JSON.stringify(justInfo));
                     this.runtime.bus().set({
                         data: data,
                         timestamp: new Date().getTime(),
@@ -453,17 +450,17 @@ define([
                             type: 'workspace-data-updated'
                         }
                     });
-                }.bind(this))
-                .then(function () {
+                })
+                .then(() => {
                     this.showLoading('Rendering data...');
-                    var numObj = Object.keys(this.dataObjects).length;
+                    const numObj = Object.keys(this.dataObjects).length;
                     if (numObj > this.options.maxObjsToPreventFilterAsYouTypeInSearch) {
                         this.$searchInput.off('input');
                     }
 
                     if (numObj <= this.options.max_objs_to_prevent_initial_sort) {
-                        this.viewOrder.sort(function (a, b) {
-                            var idA = a.objId,
+                        this.viewOrder.sort((a, b) => {
+                            const idA = a.objId,
                                 idB = b.objId;
                             if (this.dataObjects[idA].info[3] > this.dataObjects[idB].info[3]) {
                                 return -1;
@@ -472,26 +469,26 @@ define([
                                 return 1;
                             }
                             return 0;
-                        }.bind(this));
+                        });
                         this.$elem.find('#nar-data-list-default-sort-option').attr('checked');
                     }
 
                     this.populateAvailableTypes();
-                    var typeSelected = this.$filterTypeSelect.val();
-                    if(this.selectedType === 'filterTypeSelect'){
+                    const typeSelected = this.$filterTypeSelect.val();
+                    if (this.selectedType === 'filterTypeSelect') {
                         this.currentMatch = this.viewOrder;
                         this.filterByType(typeSelected);
-                    }else if(this.selectedType === 'sortData'){
+                    } else if (this.selectedType === 'sortData') {
                         this.sortData(this.lastSortFunction);
                     }
-                    else{
+                    else {
                         this.renderList();
                         this.$elem.find('#nar-data-list-default-sort-label').addClass('active');
 
                     }
                     this.hideLoading();
                     this.trigger('dataUpdated.Narrative');
-                }.bind(this));
+                });
         },
 
         /**
@@ -511,17 +508,17 @@ define([
         },
 
         fetchWorkspaceData: function () {
-            var addObjectInfo = function (objInfo, dpInfo) {
+            const addObjectInfo = (objInfo, dpInfo) => {
                 // Get the object info
-                var objId = this.itemId(objInfo); //objInfo[6] + '/' + objInfo[0]; // + '/' + objInfo[2]
-                var fullDpReference = null;
+                const objId = this.itemId(objInfo);
+                let fullDpReference = null;
                 if (dpInfo && dpInfo.ref) {
                     fullDpReference = dpInfo.ref + ';' + objInfo[6] + '/' + objInfo[0] + '/' + objInfo[4];
                 }
                 if (this.dataObjects[objId]) {
                     return;
                 }
-                var key = StringUtil.uuid();
+                const key = StringUtil.uuid();
                 this.dataObjects[objId] = {
                     key: key,
                     $div: null,
@@ -538,14 +535,14 @@ define([
                 });
 
                 // set the type -> object info structure
-                var typeKey = objInfo[2].split('-')[0];
+                const typeKey = objInfo[2].split('-')[0];
                 if (!(typeKey in this.objData)) {
                     this.objData[typeKey] = [];
                 }
                 this.objData[typeKey].push(objInfo.concat(fullDpReference));
 
                 // get the count of objects for each type
-                var typeName = typeKey.split('.')[1];
+                const typeName = typeKey.split('.')[1];
                 if (!(typeName in this.availableTypes)) {
                     this.availableTypes[typeName] = {
                         type: typeName,
@@ -553,12 +550,12 @@ define([
                     };
                 }
                 this.availableTypes[typeName].count++;
-            }.bind(this);
+            };
 
-            var updateSetInfo = function (obj) {
-                var setId = this.itemId(obj.object_info); //obj.object_info[6] + '/' + obj.object_info[0];
-                obj.set_items.set_items_info.forEach(function (setItem) {
-                    var itemId = this.itemId(setItem); //setItem[6] + '/' + setItem[0];
+            const updateSetInfo = (obj) => {
+                const setId = this.itemId(obj.object_info);
+                obj.set_items.set_items_info.forEach((setItem) => {
+                    const itemId = this.itemId(setItem);
                     if (!this.setInfo[setId]) {
                         this.setInfo[setId] = {
                             div: null,
@@ -574,13 +571,13 @@ define([
                     if (!this.dataObjects[itemId]) {
                         addObjectInfo(setItem, obj.dp_info);
                     }
-                }.bind(this));
-            }.bind(this);
+                });
+            };
 
             return DataProvider.getData(true)
-                .then(function(objects) {
-                    objects.forEach(function (obj) {
-                        var objInfo = obj.object_info;
+                .then((objects) => {
+                    objects.forEach((obj) => {
+                        const objInfo = obj.object_info;
                         if (objInfo[2].indexOf('KBaseNarrative') === 0) {
                             if (objInfo[2].indexOf('KBaseNarrative.Narrative') === 0) {
                                 Jupyter.narrative.checkDocumentVersion(objInfo);
@@ -593,13 +590,13 @@ define([
                             updateSetInfo(obj);
                         }
                     });
-                }.bind(this))
-                .catch(function (error) {
+                })
+                .catch((error) => {
                     this.showBlockingError('Sorry, an error occurred while fetching your data.', error);
                     console.error(error);
                     window.KBError('kbaseNarrativeDataList.fetchWorkspaceData', error.error.message);
                     throw error;
-                }.bind(this));
+                });
 
         },
 
@@ -607,15 +604,15 @@ define([
          * Returns the available object data for a type.
          * If no type is specified (type is falsy), returns all object data
          */
-        getObjData: function (type) {
-            if (type) {
-                var dataSet = {};
-                if (typeof type === 'string') {
-                    type = [type];
+        getObjData: function (types) {
+            if (types) {
+                const dataSet = {};
+                if (typeof types === 'string') {
+                    types = [types];
                 }
-                for (var i = 0; i < type.length; i++) {
-                    if (this.objData[type[i]]) {
-                        dataSet[type[i]] = this.objData[type[i]];
+                for (const type of types) {
+                    if (this.objData[type]) {
+                        dataSet[type] = this.objData[type];
                     }
                 }
                 return dataSet;
@@ -634,16 +631,16 @@ define([
             }
             // if it's part of a ref chain, just get the last one
             if (ref.indexOf(';') >= 0) {
-                var refSplit = ref.split(';');
+                const refSplit = ref.split(';');
                 ref = refSplit[refSplit.length - 1];
             }
             // carve off the version, if present
-            var refSegments = ref.split('/');
+            const refSegments = ref.split('/');
             if (refSegments.length < 2 || refSegments.length > 3) {
                 return null;
             }
             ref = refSegments[0] + '/' + refSegments[1];
-            var retVal = null;
+            let retVal = null;
             if (this.dataObjects[ref]) {
                 retVal = this.dataObjects[ref].info;
                 if (asObject) {
@@ -657,9 +654,9 @@ define([
 
         getDataObjectByName: function (name, wsId) {
             // means we gotta search. Oof.
-            var objInfo = null;
-            Object.keys(this.dataObjects).forEach(function (id) {
-                var obj = this.dataObjects[id];
+            let objInfo = null;
+            Object.keys(this.dataObjects).forEach((id) => {
+                const obj = this.dataObjects[id];
                 if (obj.info[1] === name) {
                     if (wsId) {
                         if (wsId === obj.info[6]) {
@@ -669,7 +666,7 @@ define([
                         objInfo = obj.info;
                     }
                 }
-            }.bind(this));
+            });
             return objInfo;
         },
 
@@ -677,14 +674,13 @@ define([
         selectedObject: null,
 
         setSelected: function ($selectedRow, object_info) {
-            var _this = this;
-            if (_this.$currentSelectedRow) {
-                _this.$currentSelectedRow.removeClass('kb-data-list-obj-row-selected');
+            if (this.$currentSelectedRow) {
+                this.$currentSelectedRow.removeClass('kb-data-list-obj-row-selected');
             }
-            if (object_info[0] === _this.selectedObject) {
-                _this.$currentSelectedRow = null;
-                _this.selectedObject = null;
-                _this.trigger('removeFilterMethods.Narrative');
+            if (object_info[0] === this.selectedObject) {
+                this.$currentSelectedRow = null;
+                this.selectedObject = null;
+                this.trigger('removeFilterMethods.Narrative');
             }
         },
 
@@ -693,10 +689,10 @@ define([
         },
 
         makeToolbarButton: function (name) {
-            var btnClasses = 'btn btn-xs btn-default';
-            var btnCss = { 'color': '#888' };
+            const btnClasses = 'btn btn-xs btn-default';
+            const btnCss = { 'color': '#888' };
 
-            var $btn = $('<span>')
+            const $btn = $('<span>')
                 .addClass(btnClasses)
                 .css(btnCss);
 
@@ -718,9 +714,9 @@ define([
                     }
                 })
                 .append($('<span>').addClass('fa fa-sign-in'))
-                .click(function () {
+                .click(() => {
                     this.trigger('filterMethods.Narrative', 'input:' + objData.objectInfo.type.split('-')[0]);
-                }.bind(this));
+                });
         },
 
         filterMethodOutputButton: function (objData) {
@@ -734,9 +730,9 @@ define([
                     }
                 })
                 .append($('<span>').addClass('fa fa-sign-out'))
-                .click(function () {
+                .click(() => {
                     this.trigger('filterMethods.Narrative', 'output:' + objData.objectInfo.type.split('-')[0]);
-                }.bind(this));
+                });
         },
 
         openLandingPageButton: function (objData, $alertContainer) {
@@ -750,21 +746,27 @@ define([
                     }
                 })
                 .append($('<span>').addClass('fa fa-binoculars'))
-                .click(function (e) {
+                .click((e) => {
                     e.stopPropagation();
                     $alertContainer.empty();
-                    var landingPageLink = this.options.lp_url + objData.objectInfo.ref;
+                    const landingPageLink = this.options.lp_url + objData.objectInfo.ref;
                     window.open(landingPageLink, '_blank');
-                }.bind(this));
+                });
         },
 
         openReportButton: function () {
-            var $openReport = this.makeToolbarButton('report');
-            return $openReport;
+            return this.makeToolbarButton('report');
+        },
+
+        renderError: function ($alertContainer, message) {
+            $alertContainer.empty();
+            $alertContainer
+                .append($('<span>')
+                    .css({ 'color': '#F44336' })
+                    .append('Error! ' + message));
         },
 
         openHistoryButton: function (objData, $alertContainer) {
-            var _this = this;
             return this.makeToolbarButton()
                 .tooltip({
                     title: 'View history to revert changes',
@@ -775,24 +777,24 @@ define([
                     }
                 })
                 .append($('<span>').addClass('fa fa-history'))
-                .click(function (e) {
+                .click((e) => {
                     e.stopPropagation();
                     $alertContainer.empty();
 
-                    if (_this.ws_name && _this.ws) {
-                        _this.ws.get_object_history({ ref: objData.objectInfo.wsid + '/' + objData.objectInfo.id },
-                            function (history) {
+                    if (this.ws_name && this.ws) {
+                        this.ws.get_object_history({ ref: objData.objectInfo.wsid + '/' + objData.objectInfo.id },
+                            (history) => {
                                 $alertContainer.append($('<div>')
                                     .append($('<button>').addClass('kb-data-list-cancel-btn')
                                         .append('Hide History')
-                                        .click(function () {
+                                        .click(() => {
                                             $alertContainer.empty();
                                         })));
                                 history.reverse();
-                                var $tbl = $('<table>').css({ 'width': '100%' });
-                                for (var k = 0; k < history.length; k++) {
-                                    var $revertBtn = $('<button>').append('v' + history[k][4]).addClass('kb-data-list-btn');
-                                    if (k == 0) {
+                                const $tbl = $('<table>').css({ 'width': '100%' });
+                                for (const [historyItem, historyIndex] of history.items()) {
+                                    const $revertBtn = $('<button>').append('v' + historyItem[4]).addClass('kb-data-list-btn');
+                                    if (historyIndex === 0) {
                                         $revertBtn.tooltip({
                                             title: 'Current Version',
                                             container: 'body',
@@ -803,8 +805,8 @@ define([
                                             }
                                         });
                                     } else {
-                                        var revertRef = { wsid: history[k][6], objid: history[k][0], ver: history[k][4] };
-                                        (function (revertRefLocal) {
+                                        const revertRef = { wsid: historyItem[6], objid: historyItem[0], ver: historyItem[4] };
+                                        ((revertRefLocal) => {
                                             $revertBtn.tooltip({
                                                 title: 'Revert to this version?',
                                                 container: 'body',
@@ -814,26 +816,25 @@ define([
                                                     hide: Config.get('tooltip').hideDelay
                                                 }
                                             })
-                                                .click(function () {
-                                                    _this.ws.revert_object(revertRefLocal,
-                                                        function () {
-                                                            _this.writingLock = false;
-                                                            _this.refresh();
+                                                .click(() => {
+                                                    this.ws.revert_object(revertRefLocal,
+                                                        () => {
+                                                            this.writingLock = false;
+                                                            this.refresh();
                                                         },
-                                                        function (error) {
+                                                        (error) => {
                                                             console.error(error);
-                                                            $alertContainer.empty();
-                                                            $alertContainer.append($('<span>').css({ 'color': '#F44336' }).append('Error! ' + error.error.message));
+                                                            this.renderError($alertContainer, error.error.message);
                                                         });
                                                 });
                                         })(revertRef);
                                     }
                                     $tbl.append($('<tr>')
                                         .append($('<td>').append($revertBtn))
-                                        .append($('<td>').append('Saved by ' + history[k][5] + '<br>' + TimeFormat.getTimeStampStr(history[k][3])))
+                                        .append($('<td>').append('Saved by ' + historyItem[5] + '<br>' + TimeFormat.getTimeStampStr(historyItem[3])))
                                         .append($('<td>').append($('<span>').css({ margin: '4px' }).addClass('fa fa-info pull-right'))
                                             .tooltip({
-                                                title: history[k][2] + '<br>' + history[k][8] + '<br>' + history[k][9] + ' bytes',
+                                                title: historyItem[2] + '<br>' + historyItem[8] + '<br>' + historyItem[9] + ' bytes',
                                                 container: 'body',
                                                 html: true,
                                                 placement: 'bottom',
@@ -846,10 +847,9 @@ define([
                                 }
                                 $alertContainer.append($tbl);
                             },
-                            function (error) {
+                            (error) => {
                                 console.error(error);
-                                $alertContainer.empty();
-                                $alertContainer.append($('<span>').css({ 'color': '#F44336' }).append('Error! ' + error.error.message));
+                                this.renderError($alertContainer, error.error.message);
                             });
                     }
                 });
@@ -866,7 +866,7 @@ define([
                     }
                 })
                 .append($('<span>').addClass('fa fa-sitemap fa-rotate-90'))
-                .click(function (e) {
+                .click((e) => {
                     e.stopPropagation();
                     $alertContainer.empty();
                     window.open('/#objgraphview/' + objData.objectInfo.ref);
@@ -874,7 +874,6 @@ define([
         },
 
         downloadButton: function (objData, ref_path, $alertContainer) {
-            var _this = this;
             return this.makeToolbarButton()
                 .tooltip({
                     title: 'Export / Download data',
@@ -885,28 +884,27 @@ define([
                     }
                 })
                 .append($('<span>').addClass('fa fa-download'))
-                .click(function (e) {
+                .click((e) => {
                     e.stopPropagation();
                     $alertContainer.empty();
-                    var type = objData.objectInfo.type.split('-')[0];
-                    var wsId = objData.objectInfo.wsid;
-                    var objId = objData.objectInfo.id;
-                    var objRef = objData.fromPalette ? ref_path : (wsId + '/' + objId);
-                    var downloadPanel = $('<div>');
+                    const type = objData.objectInfo.type.split('-')[0];
+                    const wsId = objData.objectInfo.wsid;
+                    const objId = objData.objectInfo.id;
+                    const objRef = objData.fromPalette ? ref_path : (wsId + '/' + objId);
+                    const downloadPanel = $('<div>');
                     $alertContainer.append(downloadPanel);
                     new kbaseNarrativeDownloadPanel(downloadPanel, {
-                        token: _this._attributes.auth.token,
+                        token: this._attributes.auth.token,
                         type: type,
                         objId: objId,
                         ref: objRef,
                         objName: objData.objectInfo.name,
-                        downloadSpecCache: _this.downloadSpecCache
+                        downloadSpecCache: this.downloadSpecCache
                     });
                 });
         },
 
         renameButton: function (objData, $alertContainer) {
-            var _this = this;
             return this.makeToolbarButton()
                 .tooltip({
                     title: 'Rename data',
@@ -917,7 +915,7 @@ define([
                     }
                 })
                 .append($('<span>').addClass('fa fa-font'))
-                .click(function (e) {
+                .click((e) => {
                     e.stopPropagation();
                     $alertContainer.empty();
                     if (Jupyter.narrative.readonly) {
@@ -930,67 +928,65 @@ define([
                     }
 
                     //lock on refresh expires after 15 min
-                    var releaseLock = function(){
-                        if(_this.refreshwritingLock !== null) {
-                            clearTimeout(_this.refreshwritingLock);
+                    const releaseLock = () => {
+                        if (this.refreshwritingLock !== null) {
+                            clearTimeout(this.refreshwritingLock);
                         }
 
-                        _this.refreshwritingLock = setTimeout(function () {
-                            _this.writingLock = false;
+                        this.refreshwritingLock = setTimeout(() => {
+                            this.writingLock = false;
                         }, 900000);
                     };
-                    var $newNameInput = $('<input type="text">')
+                    const $newNameInput = $('<input type="text">')
                         .addClass('form-control')
                         .val(objData.objectInfo.name)
-                        .on('focus', function () {
+                        .on('focus', () => {
                             if (Jupyter && Jupyter.narrative) {
-                                _this.writingLock = true;
+                                this.writingLock = true;
                                 Jupyter.narrative.disableKeyboardManager();
                             }
                         })
-                        .on('blur', function () {
+                        .on('blur', () => {
                             if (Jupyter && Jupyter.narrative) {
                                 Jupyter.narrative.enableKeyboardManager();
                             }
                         });
 
-                    $newNameInput.unbind('focus',releaseLock);
-                    $newNameInput.bind('focus',releaseLock);
+                    $newNameInput.unbind('focus', releaseLock);
+                    $newNameInput.bind('focus', releaseLock);
 
                     $alertContainer.append($('<div>')
                         .append($('<div>').append('Warning: Apps using the old name may break.'))
                         .append($('<div>').append($newNameInput))
                         .append($('<button>').addClass('kb-data-list-btn')
                             .append('Rename')
-                            .click(function () {
+                            .click(() => {
 
-                                if (_this.ws_name && _this.ws) {
-                                    _this.ws.rename_object({
+                                if (this.ws_name && this.ws) {
+                                    this.ws.rename_object({
                                         obj: { ref: objData.objectInfo.wsid + '/' + objData.objectInfo.id },
                                         new_name: $newNameInput.val()
                                     },
-                                    function () {
-                                        _this.writingLock = false;
-                                        _this.refresh();
-                                    },
-                                    function (error) {
-                                        console.error(error);
-                                        $alertContainer.empty();
-                                        $alertContainer.append($('<span>').css({ 'color': '#F44336' }).append('Error! ' + error.error.message));
-                                    });
+                                        () => {
+                                            this.writingLock = false;
+                                            this.refresh();
+                                        },
+                                        (error) => {
+                                            console.error(error);
+                                            this.renderError($alertContainer, error.error.message);
+                                        });
                                 }
                             }))
                         .append($('<button>').addClass('kb-data-list-cancel-btn')
                             .append('Cancel')
-                            .click(function () {
-                                _this.writingLock = false;
+                            .click(() => {
+                                this.writingLock = false;
                                 $alertContainer.empty();
                             })));
                 });
         },
 
         deleteButton: function (objData, $alertContainer) {
-            var _this = this;
             return this.makeToolbarButton()
                 .tooltip({
                     title: 'Delete data',
@@ -1001,7 +997,7 @@ define([
                     }
                 })
                 .append($('<span>').addClass('fa fa-trash-o'))
-                .click(function (e) {
+                .click((e) => {
                     e.stopPropagation();
                     $alertContainer.empty();
                     // TODO: The control should actually be disabled. This should be via a listener
@@ -1018,54 +1014,52 @@ define([
                         .append($('<span>').append('Are you sure?'))
                         .append($('<button>').addClass('kb-data-list-btn')
                             .append('Delete')
-                            .click(function () {
-                                if (_this.ws_name && _this.ws) {
-                                    _this.ws.rename_object({
+                            .click(() => {
+                                if (this.ws_name && this.ws) {
+                                    this.ws.rename_object({
                                         obj: { ref: objData.objectInfo.wsid + '/' + objData.objectInfo.id },
                                         new_name: objData.objectInfo.name.split('-deleted-')[0] + '-deleted-' + (new Date()).getTime()
                                     },
-                                    function () {
-                                        _this.ws.delete_objects([{ ref: objData.objectInfo.wsid + '/' + objData.objectInfo.id }],
-                                            function () {
-                                                $(document).trigger('deleteDataList.Narrative', objData.objectInfo.name);
-                                                _this.writingLock = false;
-                                                _this.refresh();
+                                        () => {
+                                            this.ws.delete_objects([{ ref: objData.objectInfo.wsid + '/' + objData.objectInfo.id }],
+                                                () => {
+                                                    $(document).trigger('deleteDataList.Narrative', objData.objectInfo.name);
+                                                    this.writingLock = false;
+                                                    this.refresh();
 
-                                            },
-                                            function (error) {
-                                                console.error(error);
-                                                $alertContainer.empty();
-                                                $alertContainer.append($('<span>').css({ 'color': '#F44336' }).append('Error! ' + error.error.message));
-                                            });
-                                    },
-                                    function (error) {
-                                        console.error(error);
-                                        $alertContainer.empty();
-                                        $alertContainer.append($('<span>').css({ 'color': '#F44336' }).append('Error! ' + error.error.message));
-                                    });
+                                                },
+                                                (error) => {
+                                                    console.error(error);
+                                                    this.renderError($alertContainer, error.error.message);
+                                                });
+                                        },
+                                        (error) => {
+                                            console.error(error);
+                                            this.renderError($alertContainer, error.error.message);
+                                        });
 
                                 }
                             }))
                         .append($('<button>').addClass('kb-data-list-cancel-btn')
                             .append('Cancel')
-                            .click(function () {
+                            .click(() => {
                                 $alertContainer.empty();
                             })));
                 });
         },
 
         addDataControls: function (objData, $alertContainer, ref_path) {
-            var $filterMethodInput = this.filterMethodInputButton(objData);
-            var $filterMethodOutput = this.filterMethodOutputButton(objData);
-            var $openLandingPage = this.openLandingPageButton(objData, $alertContainer);
-            var $openReport = this.openReportButton(objData);
-            var $openHistory = this.openHistoryButton(objData, $alertContainer);
-            var $openProvenance = this.openProvenanceButton(objData, $alertContainer);
-            var $download = this.downloadButton(objData, ref_path, $alertContainer);
-            var $rename = this.renameButton(objData, $alertContainer);
-            var $delete = this.deleteButton(objData, $alertContainer);
+            const $filterMethodInput = this.filterMethodInputButton(objData);
+            const $filterMethodOutput = this.filterMethodOutputButton(objData);
+            const $openLandingPage = this.openLandingPageButton(objData, $alertContainer);
+            const $openReport = this.openReportButton(objData);
+            const $openHistory = this.openHistoryButton(objData, $alertContainer);
+            const $openProvenance = this.openProvenanceButton(objData, $alertContainer);
+            const $download = this.downloadButton(objData, ref_path, $alertContainer);
+            const $rename = this.renameButton(objData, $alertContainer);
+            const $delete = this.deleteButton(objData, $alertContainer);
 
-            var $btnToolbar = $('<span>')
+            const $btnToolbar = $('<span>')
                 .addClass('btn-group');
 
             $btnToolbar.append($filterMethodInput)
@@ -1089,19 +1083,19 @@ define([
         },
 
         toggleSetExpansion: function (objId, $setDiv) {
-            var setInfo = this.setInfo[objId];
-            var setItemsShown, i;
+            const setInfo = this.setInfo[objId];
+            let setItemsShown, i;
             if (!setInfo) {
                 return;
             }
-            var showItems = this.dataObjects[objId].expanded;
+            const showItems = this.dataObjects[objId].expanded;
             if (showItems) {
                 setItemsShown = 0;
                 for (i = 0; i < setInfo.item_ids.length; i++) {
-                    var setItemId = setInfo.item_ids[i];
-                    var viewInfo = _.findWhere(this.viewOrder, { objId: setItemId });
+                    const setItemId = setInfo.item_ids[i];
+                    const viewInfo = _.findWhere(this.viewOrder, { objId: setItemId });
                     if (viewInfo.inFilter) {
-                        var $setItemDiv = this.renderObjectRowDiv(setItemId, 1);
+                        const $setItemDiv = this.renderObjectRowDiv(setItemId, 1);
                         $setDiv.after($setItemDiv);
                         setItemsShown++;
                     }
@@ -1116,7 +1110,7 @@ define([
         },
 
         getReportForObject: function (objectInfo) {
-            var narrativeService = new DynamicServiceClient({
+            const narrativeService = new DynamicServiceClient({
                 module: 'NarrativeService',
                 url: Config.url('service_wizard'),
                 token: this.token
@@ -1125,27 +1119,27 @@ define([
                 {
                     upa: objectInfo.ref
                 }
-            ]).spread(function(result) {
+            ]).spread((reportResult) => {
 
-                if (result.report_upas.length === 0) {
+                if (reportResult.report_upas.length === 0) {
                     return [];
                 }
 
-                var objectsToFetch = result.report_upas.map(function (reportRef) {
+                const objectsToFetch = reportResult.report_upas.map((ref) => {
                     return {
-                        ref: reportRef
+                        ref
                     };
                 });
 
                 // If, after evaluation of the reports, we really don't have any, just
                 // shortcircuit with an array of nulls.
-                if (objectsToFetch.length === 0)  {
+                if (objectsToFetch.length === 0) {
                     return [];
                 }
 
-                var reportRef = result.object_upa;
+                const reportRef = reportResult.object_upa;
 
-                var workspace = new GenericClient({
+                const workspace = new GenericClient({
                     module: 'Workspace',
                     url: Config.url('workspace'),
                     token: this.token
@@ -1155,15 +1149,15 @@ define([
                     objects: objectsToFetch,
                     ignoreErrors: 0
                 }])
-                    .spread(function (result) {
-                        var objectReportsForOutput = result.data.filter(function (reportObject) {
+                    .spread((result) => {
+                        let objectReportsForOutput = result.data.filter((reportObject) => {
                             // pull out found objects which are in the list of objects created in the report.
                             // objects_created looks like {description: .., ref: ..}
-                            return reportObject.data.objects_created.some(function (objectCreated) {
+                            return reportObject.data.objects_created.some((objectCreated) => {
                                 return objectCreated.ref === reportRef;
                             });
                         })
-                            .map(function (reportObject) {
+                            .map((reportObject) => {
                                 return ServiceUtils.objectInfoToObject(reportObject.info);
                             });
 
@@ -1172,14 +1166,14 @@ define([
                         // TODO: otherwise? is it possible to have more than one report and not have
                         //       one in the current workspace????
                         if (objectReportsForOutput.length > 1) {
-                            objectReportsForOutput = objectReportsForOutput.filter(function (reportInfo) {
+                            objectReportsForOutput = objectReportsForOutput.filter((reportInfo) => {
                                 return (reportInfo.wsid === objectInfo.wsid);
                             });
                         }
 
                         return objectReportsForOutput;
                     });
-            }.bind(this));
+            });
         },
 
         onOpenDataListItem: function ($moreRow, objData) {
@@ -1187,18 +1181,16 @@ define([
                 return;
             }
 
-            var _this = this;
-
-            var objectInfo = objData.objectInfo;
+            const objectInfo = objData.objectInfo;
             // The report button needs the report to be found!
-            var $reportButton = $moreRow.find('[data-button="report"]');
+            const $reportButton = $moreRow.find('[data-button="report"]');
 
             $reportButton.empty().append($('<span>')
                 .addClass('fa fa-spinner fa-spin fa-fw fa-sm').css('width', '0.75em'));
 
 
             this.getReportForObject(objectInfo)
-                .then(function (result) {
+                .then((result) => {
                     if (result.length === 0) {
                         $reportButton.addClass('disabled');
                         $reportButton.empty().append($('<span>')
@@ -1207,7 +1199,7 @@ define([
                         $reportButton
                             .tooltip({
                                 title: 'No report associated with this object',
-                                container: '#' + _this.mainListId,
+                                container: '#' + this.mainListId,
                                 delay: {
                                     show: Config.get('tooltip').showDelay,
                                     hide: Config.get('tooltip').hideDelay
@@ -1225,16 +1217,16 @@ define([
                         $reportButton
                             .tooltip({
                                 title: 'View associated report',
-                                container: '#' + _this.mainListId,
+                                container: '#' + this.mainListId,
                                 delay: {
                                     show: Config.get('tooltip').showDelay,
                                     hide: Config.get('tooltip').hideDelay
                                 }
                             })
-                            .click(function (e) {
+                            .click((e) => {
                                 e.stopPropagation();
                                 if (objData.reportRef) {
-                                    _this.showReportLandingPage(objData.reportRef);
+                                    this.showReportLandingPage(objData.reportRef);
                                 }
                             });
                     } else {
@@ -1243,7 +1235,7 @@ define([
                         $reportButton
                             .tooltip({
                                 title: 'Too many reports associated with this object',
-                                container: '#' + _this.mainListId,
+                                container: '#' + this.mainListId,
                                 delay: {
                                     show: Config.get('tooltip').showDelay,
                                     hide: Config.get('tooltip').hideDelay
@@ -1262,52 +1254,51 @@ define([
          * in the data list.
          */
         renderObjectRowDiv: function (objId) {
-            var _this = this;
-            var objData = this.dataObjects[objId];
-            var object_info = objData.info;
-            var ref_path = objData.refPath;
-            var object_key = objData.key;
+            const objData = this.dataObjects[objId];
+            const object_info = objData.info;
+            const ref_path = objData.refPath;
+            const object_key = objData.key;
 
             // object_info:
             // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
             // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
             // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
             // [9] : int size // [10] : usermeta meta
-            var type_tokens = object_info[2].split('.');
-            var type_module = type_tokens[0];
-            var type = type_tokens[1].split('-')[0];
-            var is_set = this.isASet(object_info);
+            const type_tokens = object_info[2].split('.');
+            const type_module = type_tokens[0];
+            const type = type_tokens[1].split('-')[0];
+            const is_set = this.isASet(object_info);
 
-            var author = ' ';
-            if (object_info[5] !== _this.my_username) {
+            let author = ' ';
+            if (object_info[5] !== this.my_username) {
                 author = ' by ' + object_info[5];
             }
 
-            var metadata = object_info[10] || {};
-            var viewType = type;
+            const metadata = object_info[10] || {};
+            let viewType = type;
             if (type === 'Genome' || type === 'GenomeAnnotation') {
-                if (metadata.hasOwnProperty('Name')) {
+                if ('Name' in metadata) {
                     viewType = type + ': ' + metadata['Name'];
                 }
             }
 
-            var metadataText = '';
-            for (var key in metadata) {
-                if (metadata.hasOwnProperty(key)) {
+            let metadataText = '';
+            for (const key in metadata) {
+                if (Object.prototype.hasOwnProperty.call(metadata, key)) {
                     metadataText += '<tr><th>' + key + '</th><td>' + metadata[key] + '</td></tr>';
                 }
             }
 
             // create more content
-            var $savedByUserSpan = $('<td>').addClass('kb-data-list-username-td');
+            const $savedByUserSpan = $('<td>').addClass('kb-data-list-username-td');
             DisplayUtil.displayRealName(object_info[5], $savedByUserSpan);
 
-            var $alertDiv = $('<div>').css({ 'text-align': 'center', 'margin': '10px 0px' });
-            var typeLink = '<a href="/#spec/module/' + type_module + '" target="_blank">' + type_module + '</a>.<wbr>' +
+            const $alertDiv = $('<div>').css({ 'text-align': 'center', 'margin': '10px 0px' });
+            const typeLink = '<a href="/#spec/module/' + type_module + '" target="_blank">' + type_module + '</a>.<wbr>' +
                 '<a href="/#spec/type/' + object_info[2] + '" target="_blank">' + (type_tokens[1].replace('-', '&#8209;')) + '.' + type_tokens[2] + '</a>';
 
-            var $moreContent = $('<div>').addClass('kb-data-list-more-div')
-                .append(_this.addDataControls(objData, $alertDiv, ref_path)).append($alertDiv)
+            const $moreContent = $('<div>').addClass('kb-data-list-more-div')
+                .append(this.addDataControls(objData, $alertDiv, ref_path)).append($alertDiv)
                 .append(
                     $('<table style="width:100%;">')
                         .append('<tr><th>Permanent Id</th><td>' + object_info[6] + '/' + object_info[0] + '/' + object_info[4] + '</td></tr>')
@@ -1315,20 +1306,20 @@ define([
                         .append($('<tr>').append('<th>Saved by</th>').append($savedByUserSpan))
                         .append(metadataText));
 
-            var $card = kbaseDataCard.apply(this,[{
+            const $card = kbaseDataCard.apply(this, [{
                 viewType: viewType,
                 type: type,
                 editedBy: author,
                 moreContent: $moreContent,
                 is_set: is_set,
                 object_info: object_info,
-                onOpen: function() {
-                    _this.onOpenDataListItem($moreContent, objData);
+                onOpen: () => {
+                    this.onOpenDataListItem($moreContent, objData);
                 }
             }]);
 
             if (objData.fromPalette) {
-                var $paletteIcon = $('<div>')
+                const $paletteIcon = $('<div>')
                     .addClass('pull-right narrative-card-palette-icon')
                     .append($('<i>')
                         .addClass('fa fa-link')
@@ -1347,23 +1338,23 @@ define([
             }
             //add custom click events
 
-            $card.find('.narrative-card-logo , .kb-data-list-name').click(function (e) {
+            $card.find('.narrative-card-logo , .kb-data-list-name').click((e) => {
                 e.stopPropagation();
-                _this.insertViewer(object_key);
+                this.insertViewer(object_key);
             });
 
-            $card.find('.narrative-card-row-main').click(function () {
-                var $node = $(this.parentElement).find('.narrative-card-row-more');
-                if (_this.selectedObject === object_info[0] && $node.is(':visible')) {
+            $card.find('.narrative-card-row-main').click(() => {
+                const $node = $(this.parentElement).find('.narrative-card-row-more');
+                if (this.selectedObject === object_info[0] && $node.is(':visible')) {
                     // assume selection handling occurs before this is called
                     // so if we are now selected and the moreContent is visible, leave it...
                     return;
                 }
 
                 if ($node.is(':visible')) {
-                    _this.writingLock = false;
+                    this.writingLock = false;
                 } else {
-                    _this.getRichData(object_info, $node);
+                    this.getRichData(object_info, $node);
                 }
             });
 
@@ -1377,25 +1368,24 @@ define([
         // ============= DnD ==================
 
         addDropZone: function (container, targetCell, isBelow) {
-            var targetDiv = document.createElement('div'),
-                _this = this;
+            const targetDiv = document.createElement('div');
 
             targetDiv.classList.add('kb-data-list-drag-target');
             targetDiv.innerHTML = '<i>drop data object here</i>';
-            targetDiv.addEventListener('dragover', function (e) {
+            targetDiv.addEventListener('dragover', (e) => {
                 e.target.classList.add('-drag-active');
                 e.preventDefault();
             });
-            targetDiv.addEventListener('dragenter', function (e) {
+            targetDiv.addEventListener('dragenter', (e) => {
                 e.target.classList.add('-drag-hover');
                 e.preventDefault();
             });
-            targetDiv.addEventListener('dragleave', function (e) {
+            targetDiv.addEventListener('dragleave', (e) => {
                 e.target.classList.remove('-drag-hover');
                 e.target.classList.remove('-drag-active');
                 e.preventDefault();
             });
-            targetDiv.addEventListener('drop', function (e) {
+            targetDiv.addEventListener('drop', (e) => {
                 if (Jupyter.narrative.readonly) {
                     new BootstrapDialog({
                         type: 'warning',
@@ -1405,10 +1395,11 @@ define([
                     }).show();
                     return;
                 }
-                var data = JSON.parse(e.dataTransfer.getData('info')),
-                    obj = _this.dataObjects[_this.keyToObjId[data.key]],
-                    info = _this.createInfoObject(obj.info, obj.refPath),
-                    cell, cellIndex, placement;
+                const data = JSON.parse(e.dataTransfer.getData('info'));
+                const obj = this.dataObjects[this.keyToObjId[data.key]];
+                const info = this.createInfoObject(obj.info, obj.refPath);
+
+                let cell, placement;
 
                 if (e.target.getAttribute('cellIs') === 'below') {
                     cell = $(e.target.nextSibling).data().cell;
@@ -1417,7 +1408,7 @@ define([
                     cell = $(e.target.previousSibling).data().cell;
                     placement = 'below';
                 }
-                cellIndex = Jupyter.notebook.find_cell_index(cell);
+                const cellIndex = Jupyter.notebook.find_cell_index(cell);
 
                 $(document).trigger('createViewerCell.Narrative', {
                     nearCellIdx: cellIndex,
@@ -1436,7 +1427,7 @@ define([
         },
 
         addDragAndDrop: function ($row) {
-            var node = $row.children().get(0),
+            const node = $row.children().get(0),
                 key = $row.attr('kb-oid'),
                 obj = this.dataObjects[this.keyToObjId[key]], //_.findWhere(this.objectList, {key: key}),
                 info = this.createInfoObject(obj.info, obj.refPath),
@@ -1445,30 +1436,29 @@ define([
                     info: info,
                     key: key
                 },
-                dataString = JSON.stringify(data),
-                _this = this;
+                dataString = JSON.stringify(data);
 
             node.setAttribute('draggable', true);
 
-            node.addEventListener('dragstart', function (e) {
+            node.addEventListener('dragstart', (e) => {
                 e.dataTransfer.dropEffect = 'copy';
                 e.dataTransfer.setData('info', dataString);
 
-                var targetCells = document.querySelectorAll('#notebook-container .cell');
-                var container = document.querySelector('#notebook-container');
-                for (var i = 0; i < targetCells.length; i += 1) {
-                    _this.addDropZone(container, targetCells.item(i));
+                const targetCells = document.querySelectorAll('#notebook-container .cell');
+                const container = document.querySelector('#notebook-container');
+                for (let i = 0; i < targetCells.length; i += 1) {
+                    this.addDropZone(container, targetCells.item(i));
                     if (i === targetCells.length - 1) {
-                        _this.addDropZone(container, targetCells.item(i), true);
+                        this.addDropZone(container, targetCells.item(i), true);
                     }
                 }
             });
 
-            node.addEventListener('dragend', function () {
-                var container = document.querySelector('#notebook-container'),
+            node.addEventListener('dragend', () => {
+                const container = document.querySelector('#notebook-container'),
                     targetCells = document.querySelectorAll('#notebook-container .kb-data-list-drag-target');
-                for (var i = 0; i < targetCells.length; i += 1) {
-                    var targetCell = targetCells.item(i);
+                for (let i = 0; i < targetCells.length; i += 1) {
+                    const targetCell = targetCells.item(i);
                     container.removeChild(targetCell);
                 }
             });
@@ -1495,7 +1485,7 @@ define([
          * list of fields returned from Workspace service.
          */
         createInfoObject: function (info, refPath) {
-            var ret = ServiceUtils.objectInfoToObject(info);
+            const ret = ServiceUtils.objectInfoToObject(info);
 
             if (refPath) {
                 ret['ref_path'] = refPath;
@@ -1509,9 +1499,9 @@ define([
         },
 
         renderMore: function () {
-            var start = this.lastObjectRendered;
-            var limit = this.n_objs_rendered + this.options.objs_to_render_on_scroll;
-            for (var i = start + 1;
+            const start = this.lastObjectRendered;
+            const limit = this.n_objs_rendered + this.options.objs_to_render_on_scroll;
+            for (let i = start + 1;
                 (i < this.viewOrder.length) && (this.n_objs_rendered < limit); i++) {
                 if (this.shouldRenderObject(this.viewOrder[i])) {
                     this.renderObject(this.viewOrder[i].objId);
@@ -1528,7 +1518,7 @@ define([
         },
 
         shouldRenderObject: function (viewInfo) {
-            var render = viewInfo.inFilter;
+            let render = viewInfo.inFilter;
             if (render) {
                 if (this.setViewMode && this.inAnySet(this.dataObjects[viewInfo.objId].info)) {
                     render = false;
@@ -1544,8 +1534,8 @@ define([
             this.n_objs_rendered = 0;
 
             if (this.viewOrder.length > 0) {
-                var limit = this.options.objs_to_render_to_start;
-                for (var i = 0; i < this.viewOrder.length && (this.n_objs_rendered < limit); i++) {
+                const limit = this.options.objs_to_render_to_start;
+                for (let i = 0; i < this.viewOrder.length && (this.n_objs_rendered < limit); i++) {
                     if (this.shouldRenderObject(this.viewOrder[i])) {
                         this.renderObject(this.viewOrder[i].objId);
                         this.n_objs_rendered++;
@@ -1559,18 +1549,18 @@ define([
                 }
 
             } else {
-                var $noDataDiv = $('<div>')
+                const $noDataDiv = $('<div>')
                     .css({ 'text-align': 'center', 'margin': '20pt' })
                     .append('This Narrative has no data yet.<br><br>');
                 if (Jupyter && Jupyter.narrative && !Jupyter.narrative.readonly) {
                     $noDataDiv.append($('<button>')
                         .append('Add Data')
                         .addClass('kb-data-list-add-data-text-button')
+                        .attr('data-test-id', 'add-data-button')
                         .css({ 'margin': '20px' })
-                        .click(function () {
-                            this.trigger('hideGalleryPanelOverlay.Narrative');
-                            this.trigger('toggleSidePanelOverlay.Narrative', this.options.parentControlPanel.$overlayPanel);
-                        }.bind(this)));
+                        .click(() => {
+                            this.trigger('toggleSidePanelOverlay.Narrative', [this.options.parentControlPanel.$overlayPanel]);
+                        }));
                     this.$addDataButton.hide();
                 }
                 this.$mainListDiv.append($noDataDiv);
@@ -1579,7 +1569,7 @@ define([
         },
 
         renderObject: function (objId) {
-            var $renderedDiv = this.renderObjectRowDiv(objId);
+            const $renderedDiv = this.renderObjectRowDiv(objId);
             this.dataObjects[objId].$div = $renderedDiv;
             this.$mainListDiv.append($renderedDiv);
             if (this.setViewMode) {
@@ -1588,14 +1578,12 @@ define([
         },
 
         renderController: function () {
-            var _this = this;
-
-            var $upOrDown = $('<button class="btn btn-default btn-sm" type="button">').css({ 'margin-left': '5px' })
+            const $upOrDown = $('<button class="btn btn-default btn-sm" type="button">').css({ 'margin-left': '5px' })
                 .append('<span class="fa fa-sort-amount-asc" style="color:#777" aria-hidden="true" />')
-                .on('click', function () {
-                    _this.reverseData();
-                    _this.sortOrder *= -1;
-                    var $icon = $upOrDown.find('.fa');
+                .on('click', () => {
+                    this.reverseData();
+                    this.sortOrder *= -1;
+                    const $icon = $upOrDown.find('.fa');
                     if ($icon.is('.fa-sort-amount-desc,.fa-sort-amount-asc')) {
                         $icon.toggleClass('fa-sort-amount-desc fa-sort-amount-asc');
                     }
@@ -1604,49 +1592,49 @@ define([
                     }
                 });
 
-            var setSortIcon = function(newIcon) {
+            const setSortIcon = (newIcon) => {
                 $upOrDown
                     .find('.fa')
                     .removeClass()
                     .addClass('fa ' + newIcon);
             };
 
-            var $byDate = $('<label id="nar-data-list-default-sort-label" class="btn btn-default">').addClass('btn btn-default')
+            const $byDate = $('<label id="nar-data-list-default-sort-label" class="btn btn-default">').addClass('btn btn-default')
                 .append($('<input type="radio" name="options" id="nar-data-list-default-sort-option" autocomplete="off">'))
                 .append('date')
-                .on('click', function () {
-                    _this.sortData(function (a, b) {
-                        return _this.sortOrder * _this.dataObjects[a.objId].info[3]
-                            .localeCompare(_this.dataObjects[b.objId].info[3]);
+                .on('click', () => {
+                    this.sortData((a, b) => {
+                        return this.sortOrder * this.dataObjects[a.objId].info[3]
+                            .localeCompare(this.dataObjects[b.objId].info[3]);
                     });
-                    setSortIcon(_this.sortOrder > 0 ? 'fa-sort-amount-desc' : 'fa-sort-amount-asc');
+                    setSortIcon(this.sortOrder > 0 ? 'fa-sort-amount-desc' : 'fa-sort-amount-asc');
                 });
 
-            var $byName = $('<label class="btn btn-default">')
+            const $byName = $('<label class="btn btn-default">')
                 .append($('<input type="radio" name="options" id="option2" autocomplete="off">'))
                 .append('name')
-                .on('click', function () {
-                    _this.sortData(function (a, b) {
-                        return -1 * _this.sortOrder * _this.dataObjects[a.objId].info[1].toUpperCase()
-                            .localeCompare(_this.dataObjects[b.objId].info[1].toUpperCase());
+                .on('click', () => {
+                    this.sortData((a, b) => {
+                        return -1 * this.sortOrder * this.dataObjects[a.objId].info[1].toUpperCase()
+                            .localeCompare(this.dataObjects[b.objId].info[1].toUpperCase());
                     });
-                    setSortIcon(_this.sortOrder > 0 ? 'fa-sort-alpha-desc' : 'fa-sort-alpha-asc');
+                    setSortIcon(this.sortOrder > 0 ? 'fa-sort-alpha-desc' : 'fa-sort-alpha-asc');
                 });
 
-            var $byType = $('<label class="btn btn-default">')
+            const $byType = $('<label class="btn btn-default">')
                 .append($('<input type="radio" name="options" id="option3" autocomplete="off">'))
                 .append('type')
-                .on('click', function () {
-                    _this.sortData(function (a, b) {
-                        var aType = _this.dataObjects[a.objId].info[2].toUpperCase().match(/\.(.+)/)[1];
-                        var bType = _this.dataObjects[b.objId].info[2].toUpperCase().match(/\.(.+)/)[1];
-                        return -1 * _this.sortOrder * aType.localeCompare(bType);
+                .on('click', () => {
+                    this.sortData((a, b) => {
+                        const aType = this.dataObjects[a.objId].info[2].toUpperCase().match(/\.(.+)/)[1];
+                        const bType = this.dataObjects[b.objId].info[2].toUpperCase().match(/\.(.+)/)[1];
+                        return -1 * this.sortOrder * aType.localeCompare(bType);
                     });
-                    setSortIcon(_this.sortOrder > 0 ? 'fa-sort-alpha-desc' : 'fa-sort-alpha-asc');
+                    setSortIcon(this.sortOrder > 0 ? 'fa-sort-alpha-desc' : 'fa-sort-alpha-asc');
                 });
 
 
-            var $sortByGroup = $('<div data-toggle="buttons">')
+            const $sortByGroup = $('<div data-toggle="buttons">')
                 .addClass('btn-group btn-group-sm')
                 .css({ 'margin': '2px' })
                 .append($byDate)
@@ -1654,8 +1642,8 @@ define([
                 .append($byType);
 
             /** Set view mode toggle */
-            _this.viewModeDisableHnd = {};
-            var $viewMode = $('<span>')
+            this.viewModeDisableHnd = {};
+            const $viewMode = $('<span>')
                 .addClass('btn btn-xs btn-default kb-data-list-ctl')
                 .attr('id', 'kb-data-list-hierctl')
                 .tooltip({
@@ -1667,29 +1655,29 @@ define([
                     }
                 })
                 .append('<span class="fa fa-copy"></span>')
-                .on('click', function () {
-                    _this.setViewMode = !_this.setViewMode;
-                    if (_this.setViewMode) {
+                .on('click', () => {
+                    this.setViewMode = !this.setViewMode;
+                    if (this.setViewMode) {
                         $('#kb-data-list-hierctl').attr('enabled', '1');
                     } else {
                         $('#kb-data-list-hierctl').removeAttr('enabled');
                     }
-                    _this.renderList();
+                    this.renderList();
                 });
 
             // Search control
-            _this.controlClickHnd.search = function () {
-                if (!_this.$searchDiv.is(':visible')) {
-                    _this.$sortByDiv.hide({ effect: 'blind', duration: 'fast' });
-                    _this.$filterTypeDiv.hide({ effect: 'blind', duration: 'fast' });
-                    _this.$searchDiv.show({ effect: 'blind', duration: 'fast' });
-                    _this.bsSearch.focus();
+            this.controlClickHnd.search = () => {
+                if (!this.$searchDiv.is(':visible')) {
+                    this.$sortByDiv.hide({ effect: 'blind', duration: 'fast' });
+                    this.$filterTypeDiv.hide({ effect: 'blind', duration: 'fast' });
+                    this.$searchDiv.show({ effect: 'blind', duration: 'fast' });
+                    this.bsSearch.focus();
                 } else {
-                    _this.$searchDiv.hide({ effect: 'blind', duration: 'fast' });
+                    this.$searchDiv.hide({ effect: 'blind', duration: 'fast' });
                 }
             };
 
-            var $openSearch = $('<span>')
+            const $openSearch = $('<span>')
                 .addClass('btn btn-xs btn-default kb-data-list-ctl')
                 .attr('id', 'kb-data-list-searchctl')
                 .tooltip({
@@ -1701,19 +1689,19 @@ define([
                     }
                 })
                 .append('<span class="fa fa-search"></span>')
-                .on('click', _this.controlClickHnd.search);
+                .on('click', this.controlClickHnd.search);
 
             // Sort control
-            _this.controlClickHnd.sort = function () {
-                if (!_this.$sortByDiv.is(':visible')) {
-                    _this.$searchDiv.hide({ effect: 'blind', duration: 'fast' });
-                    _this.$filterTypeDiv.hide({ effect: 'blind', duration: 'fast' });
-                    _this.$sortByDiv.show({ effect: 'blind', duration: 'fast' });
+            this.controlClickHnd.sort = () => {
+                if (!this.$sortByDiv.is(':visible')) {
+                    this.$searchDiv.hide({ effect: 'blind', duration: 'fast' });
+                    this.$filterTypeDiv.hide({ effect: 'blind', duration: 'fast' });
+                    this.$sortByDiv.show({ effect: 'blind', duration: 'fast' });
                 } else {
-                    _this.$sortByDiv.hide({ effect: 'blind', duration: 'fast' });
+                    this.$sortByDiv.hide({ effect: 'blind', duration: 'fast' });
                 }
             };
-            var $openSort = $('<span>')
+            const $openSort = $('<span>')
                 .addClass('btn btn-xs btn-default kb-data-list-ctl')
                 .attr('id', 'kb-data-list-sortctl')
                 .tooltip({
@@ -1725,19 +1713,19 @@ define([
                     }
                 })
                 .append('<span class="fa fa-sort-amount-asc"></span>')
-                .on('click', _this.controlClickHnd.sort);
+                .on('click', this.controlClickHnd.sort);
 
             // Filter control
-            _this.controlClickHnd.filter = function () {
-                if (!_this.$filterTypeDiv.is(':visible')) {
-                    _this.$sortByDiv.hide({ effect: 'blind', duration: 'fast' });
-                    _this.$searchDiv.hide({ effect: 'blind', duration: 'fast' });
-                    _this.$filterTypeDiv.show({ effect: 'blind', duration: 'fast' });
+            this.controlClickHnd.filter = () => {
+                if (!this.$filterTypeDiv.is(':visible')) {
+                    this.$sortByDiv.hide({ effect: 'blind', duration: 'fast' });
+                    this.$searchDiv.hide({ effect: 'blind', duration: 'fast' });
+                    this.$filterTypeDiv.show({ effect: 'blind', duration: 'fast' });
                 } else {
-                    _this.$filterTypeDiv.hide({ effect: 'blind', duration: 'fast' });
+                    this.$filterTypeDiv.hide({ effect: 'blind', duration: 'fast' });
                 }
             };
-            var $openFilter = $('<span>')
+            const $openFilter = $('<span>')
                 .addClass('btn btn-xs btn-default kb-data-list-ctl')
                 .attr('id', 'kb-data-list-filterctl')
                 .tooltip({
@@ -1749,10 +1737,10 @@ define([
                     }
                 })
                 .append('<span class="fa fa-filter"></span>')
-                .on('click', _this.controlClickHnd.filter);
+                .on('click', this.controlClickHnd.filter);
 
             // Refresh control
-            var $refreshBtn = $('<span>')
+            const $refreshBtn = $('<span>')
                 .addClass('btn btn-xs btn-default')
                 .tooltip({
                     title: 'Refresh data list',
@@ -1763,50 +1751,50 @@ define([
                     }
                 })
                 .append('<span class="fa fa-refresh"></span>')
-                .on('click', function () {
+                .on('click', () => {
                     this.writingLock = false;
-                    _this.refresh();
+                    this.refresh();
                 });
-            _this.$searchDiv = $('<div>');
-            _this.bsSearch = new BootstrapSearch(_this.$searchDiv, {
-                inputFunction: function() {
-                    _this.search();
+            this.$searchDiv = $('<div>');
+            this.bsSearch = new BootstrapSearch(this.$searchDiv, {
+                inputFunction: () => {
+                    this.search();
                 },
                 placeholder: 'Search in your data'
             });
 
-            _this.$sortByDiv = $('<div>').css('text-align', 'center')
+            this.$sortByDiv = $('<div>').css('text-align', 'center')
                 .append('<small>sort by: </small>')
                 .append($sortByGroup)
                 .append($upOrDown);
 
-            _this.$filterTypeSelect = $('<select>').addClass('form-control')
+            this.$filterTypeSelect = $('<select>').addClass('form-control')
                 .css('margin', 'inherit')
                 .append($('<option value="">'))
-                .change(function () {
-                    _this.selectedType = 'filterTypeSelect';
-                    var optionSelected = $(this).find('option:selected');
-                    var typeSelected = optionSelected.val();
+                .change(() => {
+                    this.selectedType = 'filterTypeSelect';
+                    const optionSelected = $(this).find('option:selected');
+                    const typeSelected = optionSelected.val();
 
                     // whenever we change the type filter, we need to clear the current match
                     // so that the complete filter can rerun
-                    _this.currentMatch = _this.viewOrder;
+                    this.currentMatch = this.viewOrder;
 
-                    _this.filterByType(typeSelected);
+                    this.filterByType(typeSelected);
                 });
 
-            _this.$filterTypeDiv = $('<div>')
-                .append(_this.$filterTypeSelect);
+            this.$filterTypeDiv = $('<div>')
+                .append(this.$filterTypeSelect);
 
-            var $header = $('<div>');
-            if (_this.options.parentControlPanel) {
+            const $header = $('<div>');
+            if (this.options.parentControlPanel) {
                 if (Config.get('features').hierarchicalDataView) {
-                    _this.options.parentControlPanel.addButtonToControlPanel($viewMode);
+                    this.options.parentControlPanel.addButtonToControlPanel($viewMode);
                 }
-                _this.options.parentControlPanel.addButtonToControlPanel($openSearch);
-                _this.options.parentControlPanel.addButtonToControlPanel($openSort);
-                _this.options.parentControlPanel.addButtonToControlPanel($openFilter);
-                _this.options.parentControlPanel.addButtonToControlPanel($refreshBtn);
+                this.options.parentControlPanel.addButtonToControlPanel($openSearch);
+                this.options.parentControlPanel.addButtonToControlPanel($openSort);
+                this.options.parentControlPanel.addButtonToControlPanel($openFilter);
+                this.options.parentControlPanel.addButtonToControlPanel($refreshBtn);
             } else {
                 $header.addClass('row').css({ 'margin': '5px' })
                     .append($('<div>').addClass('col-xs-12').css({ 'margin': '0px', 'padding': '0px', 'text-align': 'right' })
@@ -1817,38 +1805,43 @@ define([
             }
 
 
-            _this.$sortByDiv.hide();
-            _this.$searchDiv.hide();
-            _this.$filterTypeDiv.hide();
+            this.$sortByDiv.hide();
+            this.$searchDiv.hide();
+            this.$filterTypeDiv.hide();
 
-            var $filterDiv = $('<div>')
-                .append(_this.$sortByDiv)
-                .append(_this.$searchDiv)
-                .append(_this.$filterTypeDiv);
+            const $filterDiv = $('<div>')
+                .append(this.$sortByDiv)
+                .append(this.$searchDiv)
+                .append(this.$filterTypeDiv);
 
-            _this.$controllerDiv.append($header).append($filterDiv);
+            this.$controllerDiv.append($header).append($filterDiv);
+        },
+
+        pluralize(word, count) {
+            if (count > 0) {
+                return `${word}s`;
+            }
+            return word;
         },
         /**
          * Populates the filter set of available types.
          */
         populateAvailableTypes: function () {
             if (this.availableTypes && this.$filterTypeSelect) {
-                var selected = this.$filterTypeSelect.val();
+                const selected = this.$filterTypeSelect.val();
                 this.$filterTypeSelect.empty();
-                var runningCount = 0;
-                Object.keys(this.availableTypes).sort().forEach(function (type) {
-                    var typeInfo = this.availableTypes[type];
-                    var suf = typeInfo.count > 0 ? 's' : '';
+                let runningCount = 0;
+                Object.keys(this.availableTypes).sort().forEach((type) => {
+                    const typeInfo = this.availableTypes[type];
                     this.$filterTypeSelect.append(
                         $('<option value="' + typeInfo.type + '">')
-                            .append([typeInfo.type, ' (', typeInfo.count, ' object', suf, ')'].join(''))
+                            .append([typeInfo.type, ' (', typeInfo.count, ' ', this.pluralize('object', typeInfo.count), ')'].join(''))
                     );
                     runningCount += typeInfo.count;
-                }.bind(this));
-                var suf = runningCount > 0 ? 's' : '';
+                });
                 this.$filterTypeSelect
                     .prepend($('<option value="">')
-                        .append('Show All Types (' + runningCount + ' object' + suf + ')'))
+                        .append('Show All Types (' + runningCount + ' ' + this.pluralize('object', runningCount) + ')'))
                     .val(selected);
 
             }
@@ -1896,17 +1889,16 @@ define([
                 term = term.replace(/\./g, '\\.').replace(/\\\\\./g, '.'); // dots are common in names, so we escape them, but
                 // if a user writes '\\.' we assume they want the regex '.'
 
-                var regex = new RegExp(term, 'i');
+                const regex = new RegExp(term, 'i');
 
                 this.n_filteredObjsRendered = 0;
-                for (var k = 0; k < this.viewOrder.length; k++) {
-
+                for (const orderedObject of this.viewOrder) {
                     // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
                     // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
                     // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
                     // [9] : int size // [10] : usermeta meta
-                    var match = false;
-                    var info = this.dataObjects[this.viewOrder[k].objId].info;
+                    let match = false;
+                    const info = this.dataObjects[orderedObject.objId].info;
                     if (regex.test(info[1])) {
                         match = true;
                     } // match on name
@@ -1918,15 +1910,16 @@ define([
                     } // match on saved_by user
 
                     if (!match && info[10]) { // match on metadata values
-                        for (var metaKey in info[10]) {
-                            if (info[10].hasOwnProperty(metaKey)) {
-                                if (regex.test(info[10][metaKey])) {
-                                    match = true;
-                                    break;
-                                } else if (regex.test(metaKey + '::' + info[10][metaKey])) {
-                                    match = true;
-                                    break;
-                                }
+                        for (const [metaKey, metaValue] of info[10].entries()) {
+                            // Omits enumerable properties not directly on this object,
+                            // which in reality simply won't occur.
+                            if (!(Object.prototype.hasOwnProperty.call(info[10], metaKey))) {
+                                continue;
+                            }
+                            if (regex.test(metaValue) ||
+                                regex.test(metaKey + '::' + metaValue)) {
+                                match = true;
+                                break;
                             }
                         }
                     }
@@ -1936,11 +1929,11 @@ define([
                             match = false; // no match if we are not the selected type!
                         }
                     }
-                    this.viewOrder[k].inFilter = match;
+                    orderedObject.inFilter = match;
                 }
             } else {
                 // no new search, so show all and render the list
-                this.viewOrder.forEach(function (viewInfo) {
+                this.viewOrder.forEach((viewInfo) => {
                     viewInfo.inFilter = true;
                 });
             }
@@ -1957,7 +1950,7 @@ define([
             // e.g. the report button.
 
             // The "Saved by" field needs to lookup that user's real name.
-            var $usernameTd = $moreRow.find('.kb-data-list-username-td');
+            const $usernameTd = $moreRow.find('.kb-data-list-username-td');
             DisplayUtil.displayRealName(object_info[5], $usernameTd);
         }
     });

@@ -1,4 +1,3 @@
-/*global define*/
 /**
  * This is the Communication Channel that handles talking between the front end and the kernel.
  * It's used by creating a new JobCommChannel(), then running initCommChannel() on it.
@@ -40,7 +39,7 @@ define([
     'services/kernels/comm',
     'common/semaphore',
     'text!kbase/templates/job_panel/job_init_error.html'
-], function (
+], (
     Promise,
     $,
     Handlebars,
@@ -51,7 +50,7 @@ define([
     JupyterComm,
     Semaphore,
     JobInitErrorTemplate
-) {
+) => {
     'use strict';
 
     const COMM_NAME = 'KBaseJobs',
@@ -89,7 +88,7 @@ define([
          * @param {any} message
          */
         sendBusMessage(channelName, channelId, msgType, message) {
-            let channel = {};
+            const channel = {};
             channel[channelName] = channelId;
             this.runtime.bus().send(JSON.parse(JSON.stringify(message)), {
                 channel: channel,
@@ -105,7 +104,7 @@ define([
          * kernel.
          */
         handleBusMessages() {
-            let bus = this.runtime.bus();
+            const bus = this.runtime.bus();
 
             bus.on('ping-comm-channel', (message) => {
                 this.sendCommMessage('ping', null, {
@@ -174,7 +173,7 @@ define([
                     reject(new Error('Comm channel not initialized, not sending message.'));
                 }
 
-                var msg = {
+                let msg = {
                     target_name: COMM_NAME,
                     request_type: msgType
                 };
@@ -212,9 +211,9 @@ define([
          * @param {object} msg
          */
         handleCommMessages(msg) {
-            var msgType = msg.content.data.msg_type;
-            var msgData = msg.content.data.content;
-            var jobId = null;
+            const msgType = msg.content.data.msg_type,
+                msgData = msg.content.data.content;
+            let jobId = null;
             switch (msgType) {
             case 'start':
                 // console.log('START', msgData.time);
@@ -318,7 +317,8 @@ define([
                 this.sendBusMessage(CELL, msgData.cell_id, 'run-status', msgData);
                 break;
             case 'job_canceled':
-                var canceledId = msgData.job_id;
+                // eslint-disable-next-line no-case-declarations
+                const canceledId = msgData.job_id;
                 this.sendBusMessage(JOB, canceledId, 'job-canceled',
                                     { jobId: canceledId, via: 'job_canceled' });
                 break;
@@ -377,14 +377,16 @@ define([
                 /*
                  code, error, job_id (opt), message, name, source
                  */
-                var $modalBody = $(Handlebars.compile(JobInitErrorTemplate)(msgData));
-                var modal = new BootstrapDialog({
+                // eslint-disable-next-line no-case-declarations
+                const $modalBody = $(Handlebars.compile(JobInitErrorTemplate)(msgData));
+                // eslint-disable-next-line no-case-declarations
+                const modal = new BootstrapDialog({
                     title: 'Job Initialization Error',
                     body: $modalBody,
                     buttons: [
                         $('<a type="button" class="btn btn-default">')
                         .append('OK')
-                        .click(function (event) {
+                        .click(() => {
                             modal.hide();
                         })
                     ]
@@ -405,10 +407,8 @@ define([
                     }]
                 });
 
-                $modalBody.find('button#kb-job-err-report').click(function (e) {
-
-                });
-                modal.getElement().on('hidden.bs.modal', function () {
+                $modalBody.find('button#kb-job-err-report').click(() => {});
+                modal.getElement().on('hidden.bs.modal', () => {
                     modal.destroy();
                 });
                 modal.show();
@@ -440,9 +440,9 @@ define([
         initCommChannel() {
             const _this = this;
             _this.comm = null;
-            let commSemaphore = Semaphore.make();
+            const commSemaphore = Semaphore.make();
             commSemaphore.add('comm', false);
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
                 // First we check to see if our comm channel already
                 // exists. If so, we do some funny business to create a
                 // new client side for it, register it, and set up our

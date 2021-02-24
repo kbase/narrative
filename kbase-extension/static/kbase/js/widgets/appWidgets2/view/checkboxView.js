@@ -6,14 +6,8 @@ define([
     'common/events',
     'common/ui',
     'bootstrap',
-    'css!font-awesome'
-], (
-    Promise,
-    Jupyter,
-    html,
-    Validation,
-    Events,
-    UI) => {
+    'css!font-awesome',
+], (Promise, Jupyter, html, Validation, Events, UI) => {
     'use strict';
 
     // Constants
@@ -25,11 +19,12 @@ define([
     function factory(config) {
         let spec = config.parameterSpec,
             bus = config.bus,
-            parent, container,
+            parent,
+            container,
             ui,
             model = {
                 updates: 0,
-                value: undefined
+                value: undefined,
             };
 
         // MODEL
@@ -38,7 +33,7 @@ define([
             if (model.value !== value) {
                 model.value = value;
                 bus.emit('changed', {
-                    newValue: model.value
+                    newValue: model.value,
                 });
             }
         }
@@ -73,20 +68,19 @@ define([
                 const rawValue = getControlValue(),
                     validationOptions = {
                         required: spec.data.constraints.required,
-                        values: [0, 1]
+                        values: [0, 1],
                     };
                 return Validation.validateSet(rawValue, validationOptions);
             });
         }
 
         function autoValidate() {
-            return validate()
-                .then((result) => {
-                    bus.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
+            return validate().then((result) => {
+                bus.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
 
         // RENDERING
@@ -104,19 +98,18 @@ define([
                     checked: checked,
                     value: 1,
                     disabled: true,
-                    readonly: true
-                })
+                    readonly: true,
+                }),
             ]);
         }
 
         function render(events) {
-            return div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' },
-                    makeViewControl(events, bus)
-                )
-            ]);
+            return div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' }, makeViewControl(events, bus))]
+            );
         }
 
         // LIFECYCLE API
@@ -127,11 +120,11 @@ define([
                 container = parent.appendChild(document.createElement('div'));
 
                 ui = UI.make({
-                    node: container
+                    node: container,
                 });
 
                 const events = Events.make({
-                    node: container
+                    node: container,
                 });
 
                 setModelValue(config.initialValue);
@@ -163,13 +156,13 @@ define([
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

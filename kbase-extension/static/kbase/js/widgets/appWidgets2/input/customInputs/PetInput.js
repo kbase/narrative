@@ -1,11 +1,4 @@
-define([
-    'bluebird',
-    'kb_common/html',
-    'common/monoBus'
-], (
-    Promise,
-    html
-) => {
+define(['bluebird', 'kb_common/html', 'common/monoBus'], (Promise, html) => {
     // This is a functional html composition and generation library.
     const t = html.tag,
         div = t('div'),
@@ -15,8 +8,8 @@ define([
     function factory(config) {
         // The node provided by the invoker of this widget.
         let hostNode;
-        
-        // A node created and owned by this widget. It is typically 
+
+        // A node created and owned by this widget. It is typically
         // simply the only child of the host node.
         let container;
 
@@ -24,21 +17,21 @@ define([
         // directly from the runtime module.
         const runtime = config.runtime;
 
-        // This creates a bus "connection", which basically keeps any 
-        // listener ids created by "on" or "listen" calls on 
-        // channels it provides, the benefit being that they will all 
+        // This creates a bus "connection", which basically keeps any
+        // listener ids created by "on" or "listen" calls on
+        // channels it provides, the benefit being that they will all
         // be closed when the connection is closed
         const busConnection = runtime.bus().connect();
 
         // This creates a new channel with a randomized (uuid) name.
         const channel = busConnection.channel();
 
-        // This is NOT required for a widget. It is only a simple 
+        // This is NOT required for a widget. It is only a simple
         // structure this widget uses for association DOM and state.
         const vm = {
             layout: {
                 id: html.genId(),
-                node: null
+                node: null,
             },
             inputControl: {
                 id: html.genId(),
@@ -48,15 +41,15 @@ define([
                     name: {
                         id: html.genId(),
                         value: null,
-                        node: null
+                        node: null,
                     },
                     disposition: {
                         id: html.genId(),
                         value: null,
-                        node: null
-                    }
-                }
-            }
+                        node: null,
+                    },
+                },
+            },
         };
 
         // INPUT INTERFACE
@@ -90,9 +83,9 @@ define([
         }
 
         function updateVm(vm, data) {
-            // the incoming data is raw json, need to 
+            // the incoming data is raw json, need to
             // dispence it to the vm, update the vm control value,
-            // then sync the controls. I know, a lot of boilerplate, 
+            // then sync the controls. I know, a lot of boilerplate,
             // and a framework would make this easier...
             // Assume the data structure mirrors the vm -- that is the point
             // after all.. otherwise could of course be hand coded.
@@ -128,13 +121,13 @@ define([
         function doChanged() {
             const value = exportVm(vm.inputControl);
             channel.emit('changed', {
-                newValue: value
+                newValue: value,
             });
         }
 
         function renderLayout() {
             container.innerHTML = div({
-                id: vm.layout.id
+                id: vm.layout.id,
             });
             vm.layout.node = document.getElementById(vm.layout.id);
         }
@@ -149,30 +142,33 @@ define([
         }
 
         function renderControl() {
-            vm.layout.node.innerHTML = div({
-                dataElement: 'inputControl'
-            }, [
-                div({}, [
-                    label({}, 'Name'),
-                    input({
-                        class: 'form-control',
-                        dataElement: 'inputControl',
-                        type: 'text',
-                        id: vm.inputControl.vm.name.id,
-                        value: vm.inputControl.vm.name.value
-                    })
-                ]),
-                div({}, [
-                    label({}, 'Disposition'),
-                    input({
-                        class: 'form-control',
-                        dataElement: 'inputControl',
-                        type: 'text',
-                        id: vm.inputControl.vm.disposition.id,
-                        value: vm.inputControl.vm.disposition.value
-                    })
-                ])
-            ]);
+            vm.layout.node.innerHTML = div(
+                {
+                    dataElement: 'inputControl',
+                },
+                [
+                    div({}, [
+                        label({}, 'Name'),
+                        input({
+                            class: 'form-control',
+                            dataElement: 'inputControl',
+                            type: 'text',
+                            id: vm.inputControl.vm.name.id,
+                            value: vm.inputControl.vm.name.value,
+                        }),
+                    ]),
+                    div({}, [
+                        label({}, 'Disposition'),
+                        input({
+                            class: 'form-control',
+                            dataElement: 'inputControl',
+                            type: 'text',
+                            id: vm.inputControl.vm.disposition.id,
+                            value: vm.inputControl.vm.disposition.value,
+                        }),
+                    ]),
+                ]
+            );
             vm.inputControl.node = document.getElementById(vm.inputControl.id);
             setupInputNode(vm.inputControl.vm.name);
             setupInputNode(vm.inputControl.vm.disposition);
@@ -204,13 +200,13 @@ define([
 
             // lifecycle api
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

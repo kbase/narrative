@@ -6,17 +6,17 @@
  * - Addig
  */
 
-(function(window) {
-    "use strict";
+(function (window) {
+    'use strict';
     /* Make console logging a no-op where not defined */
-	if (typeof console === 'undefined' || !console.log) {
-	  window.console = {
-	    debug: function() {},
-	    trace: function() {},
-	    log: function() {},
-	    info: function() {},
-	    warn: function() {},
-	    error: function() {}
-	  };
-	}
+    if (typeof console === 'undefined' || !console.log) {
+        window.console = {
+            debug: function () {},
+            trace: function () {},
+            log: function () {},
+            info: function () {},
+            warn: function () {},
+            error: function () {},
+        };
+    }
 })(window);

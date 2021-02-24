@@ -1,11 +1,7 @@
-define([
-    'uuid'
-], (
-    Uuid
-) => {
+define(['uuid'], (Uuid) => {
     'use strict';
 
-    const TAGS = {}
+    const TAGS = {};
 
     const div = tag('div'),
         span = tag('span'),
@@ -65,7 +61,6 @@ define([
             .join('; ');
     }
 
-
     /**
      * Given a simple object of keys and values, create a string which
      * encodes a set of html tag attributes.
@@ -95,7 +90,6 @@ define([
                         // Special handling of specific attribute types.
                         if (isSimpleObject(value) && attribName === 'style') {
                             return makeStyleAttribs(value);
-
                         } else if (Array.isArray(value) && attribName === 'class') {
                             return value.join(' ');
                         } else {
@@ -109,7 +103,10 @@ define([
                 })();
                 switch (typeof attribValue) {
                     case 'string': {
-                        const escapedValue = attribValue.replace(new RegExp('\\' + quoteChar, 'g'), '\\' + quoteChar);
+                        const escapedValue = attribValue.replace(
+                            new RegExp('\\' + quoteChar, 'g'),
+                            '\\' + quoteChar
+                        );
                         return `${attribName}=${quoteChar}${escapedValue}${quoteChar}`;
                     }
                     case 'boolean':
@@ -128,15 +125,21 @@ define([
 
     function renderContent(children) {
         switch (typeof children) {
-            case 'string': return children;
-            case 'number': return String(children);
-            case 'boolean': return '';
-            case 'undefined': return '';
+            case 'string':
+                return children;
+            case 'number':
+                return String(children);
+            case 'boolean':
+                return '';
+            case 'undefined':
+                return '';
             case 'object':
                 if (Array.isArray(children)) {
-                    return children.map((item) => {
-                        return renderContent(item);
-                    }).join('');
+                    return children
+                        .map((item) => {
+                            return renderContent(item);
+                        })
+                        .join('');
                 } else if (children === null) {
                     return '';
                 } else {
@@ -206,27 +209,20 @@ define([
     }
 
     function genId() {
-        return 'kb_html_' + (new Uuid(4)).format();
+        return 'kb_html_' + new Uuid(4).format();
     }
 
     function makePanel(arg) {
         const klass = arg.class || 'default';
         return div({ class: 'panel panel-' + klass }, [
-            div({ class: 'panel-heading' }, [
-                span({ class: 'panel-title' }, arg.title)
-            ]),
-            div({ class: 'panel-body' }, [
-                arg.content
-            ])
+            div({ class: 'panel-heading' }, [span({ class: 'panel-title' }, arg.title)]),
+            div({ class: 'panel-body' }, [arg.content]),
         ]);
     }
 
     function loading(msg) {
         const prompt = msg ? `${msg} &nbsp;&nbsp;` : '';
-        return span([
-            prompt,
-            i({ class: 'fa fa-spinner fa-pulse fa-2x fa-fw margin-bottom' })
-        ]);
+        return span([prompt, i({ class: 'fa fa-spinner fa-pulse fa-2x fa-fw margin-bottom' })]);
     }
 
     /**
@@ -253,7 +249,7 @@ define([
             tabClasses = ['nav', 'nav-tabs'],
             tabStyle = {},
             tabs = arg.tabs.filter((tab) => {
-                return (tab ? true : false);
+                return tab ? true : false;
             });
 
         let activeIndex, tabTabs;
@@ -273,28 +269,37 @@ define([
             activeIndex = 0;
         }
         return div(tabsAttribs, [
-            ul({ class: tabClasses.join(' '), role: 'tablist' },
+            ul(
+                { class: tabClasses.join(' '), role: 'tablist' },
                 tabTabs.map((tab, index) => {
                     const attribs = {
-                        role: 'presentation'
+                        role: 'presentation',
                     };
                     if (index === activeIndex) {
                         attribs.class = 'active';
                     }
                     attribs.style = tabStyle;
-                    return li(attribs, a({
-                        href: '#' + tab.id,
-                        ariaControls: 'home',
-                        role: 'tab',
-                        dataToggle: 'tab'
-                    }, tab.label));
-                })),
-            div({ class: 'tab-content' },
+                    return li(
+                        attribs,
+                        a(
+                            {
+                                href: '#' + tab.id,
+                                ariaControls: 'home',
+                                role: 'tab',
+                                dataToggle: 'tab',
+                            },
+                            tab.label
+                        )
+                    );
+                })
+            ),
+            div(
+                { class: 'tab-content' },
                 tabs.map((tab, index) => {
                     const attribs = {
                         role: 'tabpanel',
                         class: 'tab-pane',
-                        id: tab.id
+                        id: tab.id,
                     };
                     if (tab.name) {
                         attribs['data-name'] = tab.name;
@@ -304,7 +309,7 @@ define([
                     }
                     return div(attribs, tab.content);
                 })
-            )
+            ),
         ]);
     }
 
@@ -316,6 +321,6 @@ define([
         makePanel,
         makeTabs,
         merge,
-        tag
+        tag,
     });
 });

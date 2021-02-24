@@ -1,7 +1,4 @@
-define([
-    'jquery',
-    'kb_common/html'
-], ($, html) => {
+define(['jquery', 'kb_common/html'], ($, html) => {
     'use strict';
 
     function factory(config) {
@@ -26,7 +23,7 @@ define([
                 jquery: event.jquery,
                 handler: function (e) {
                     event.handler(e);
-                }
+                },
             });
             return id;
         }
@@ -48,7 +45,7 @@ define([
                     selector: selector,
                     handler: function (e) {
                         event.handler(e);
-                    }
+                    },
                 });
             });
             return id;
@@ -72,13 +69,13 @@ define([
         return {
             addEvent: addEvent,
             addEvents: addEvents,
-            attachEvents: attachEvents
+            attachEvents: attachEvents,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

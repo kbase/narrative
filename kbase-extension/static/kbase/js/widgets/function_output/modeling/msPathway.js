@@ -14,16 +14,16 @@
  * 	Requires:
  * 		ModelSeedVizConfig.js - configuration file things such as colors
  *
-*/
+ */
 
 function ModelSeedPathway(params) {
     'use strict';
 
     try {
-        var container = $('#'+params.elem);
-    } catch(e) {
+        var container = $('#' + params.elem);
+    } catch (e) {
         console.error('Pathway widget requires element ("elem") in params');
-        return
+        return;
     }
 
     const self = this;
@@ -38,50 +38,55 @@ function ModelSeedPathway(params) {
 
     // globals
     const mapData = params.mapData;
-    const groups = mapData.groups,      // groups of reactions
-        rxns = mapData.reactions,            // reactions
-        cpds = mapData.compounds,            // compounds
-        mapLinks = mapData.linkedmaps;        // lines from reactions to maps and visa versa
+    const groups = mapData.groups, // groups of reactions
+        rxns = mapData.reactions, // reactions
+        cpds = mapData.compounds, // compounds
+        mapLinks = mapData.linkedmaps; // lines from reactions to maps and visa versa
 
-    let oset = 12,       // off set for arrows
-        r = 12,          // radial offset from circle.  Hooray for math degrees.
-        max_x = 0,       // used to compute canvas size (width) based on data
-        max_y = 0,       // used to compute canvas size (height) based on data
-        c_pad = 50,     // padding around max_x/max_y
+    let oset = 12, // off set for arrows
+        r = 12, // radial offset from circle.  Hooray for math degrees.
+        max_x = 0, // used to compute canvas size (width) based on data
+        max_y = 0, // used to compute canvas size (height) based on data
+        c_pad = 50, // padding around max_x/max_y
         svg = undefined; // svg element for map
 
-    drawMap()
+    drawMap();
 
     function drawMap() {
-        container.html('')
+        container.html('');
 
-        svg = d3.select('#'+params.elem).append("svg")
-                                        .attr("width", 800)
-                                        .attr("height", 1000);
+        svg = d3
+            .select('#' + params.elem)
+            .append('svg')
+            .attr('width', 800)
+            .attr('height', 1000);
 
         // add arrow markers for use
-        svg.append("svg:defs").selectAll("marker")
-            .data(["end"])      // Different link/path types can be defined here
-          .enter().append("svg:marker")    // This section adds in the arrows
-            .attr("id", 'end-arrow')
-            .attr("viewBox", "0 -5 10 10")
-            .attr("refX", 16)
-            .attr("refY", 0)
-            .attr("markerWidth", 10)
-            .attr("markerHeight", 10)
-            .attr("orient", "auto")
+        svg.append('svg:defs')
+            .selectAll('marker')
+            .data(['end']) // Different link/path types can be defined here
+            .enter()
+            .append('svg:marker') // This section adds in the arrows
+            .attr('id', 'end-arrow')
+            .attr('viewBox', '0 -5 10 10')
+            .attr('refX', 16)
+            .attr('refY', 0)
+            .attr('markerWidth', 10)
+            .attr('markerHeight', 10)
+            .attr('orient', 'auto')
             .attr('fill', '#666')
-          .append("svg:path")
-            .attr("d", "M0,-5L10,0L0,5");
+            .append('svg:path')
+            .attr('d', 'M0,-5L10,0L0,5');
 
-        svg.append('svg:defs').append('svg:marker')
+        svg.append('svg:defs')
+            .append('svg:marker')
             .attr('id', 'start-arrow')
             .attr('viewBox', '0 -5 10 10')
             .attr('refX', 4)
             .attr('markerWidth', 3)
             .attr('markerHeight', 3)
             .attr('orient', 'auto')
-          .append('svg:path')
+            .append('svg:path')
             .attr('d', 'M10,-5L0,0L10,5')
             .attr('fill', '#000');
 
@@ -89,12 +94,10 @@ function ModelSeedPathway(params) {
         drawReactions();
         if (!usingImage) drawMapLinks();
 
-
         // addjust canvas size for map size //fixme: this could be precomputed
-        svg.attr("width", max_x)
-           .attr("height", max_y);
+        svg.attr('width', max_x).attr('height', max_y);
 
-        if (params.editable) editable()
+        if (params.editable) editable();
     }
 
     // draw reactions
@@ -102,7 +105,7 @@ function ModelSeedPathway(params) {
         const count = self.models ? self.models.length : 1;
 
         // for each rxn on the map
-        for (let i=0; i<rxns.length; i++) {
+        for (let i = 0; i < rxns.length; i++) {
             var color = '#fff',
                 lightLabel = undefined;
 
@@ -110,14 +113,14 @@ function ModelSeedPathway(params) {
             const rxn = rxns[i];
 
             // adjust boxes
-            var x = rxn.x - rxn.w/2 - 1,
-                y = rxn.y - rxn.h/2 - 1.5,
+            var x = rxn.x - rxn.w / 2 - 1,
+                y = rxn.y - rxn.h / 2 - 1.5,
                 w = rxn.w + 3,
                 h = rxn.h + 2;
 
             // adjust canvas size
-            if (x > max_x) max_x = x+2*w+c_pad;
-            if (y > max_y) max_y = y+2*h+c_pad;
+            if (x > max_x) max_x = x + 2 * w + c_pad;
+            if (y > max_y) max_y = y + 2 * h + c_pad;
 
             const group = svg.append('g').attr('class', 'rect');
 
@@ -135,42 +138,48 @@ function ModelSeedPathway(params) {
             if (self.models) {
                 var w = rxn.w / count;
 
-                for (var j=0; j<found_rxns.length; j++) {
+                for (var j = 0; j < found_rxns.length; j++) {
                     var found_rxn = found_rxns[j];
 
-                    var rect = group.append('rect')
-                                .attr('class', 'rxn-divider-stroke')
-                                .attr('x', () => {
-                                    if (j == 0) return x + (w*j) + 1;
-                                    return x + (w*j)
-                                })
-                                .attr('y', y+1)
-                                .attr('width', () => {
-                                    if (j == count) return w;
-                                    return w + 2
-                                })
-                                .attr('height', h-1.5);
-
+                    var rect = group
+                        .append('rect')
+                        .attr('class', 'rxn-divider-stroke')
+                        .attr('x', () => {
+                            if (j == 0) return x + w * j + 1;
+                            return x + w * j;
+                        })
+                        .attr('y', y + 1)
+                        .attr('width', () => {
+                            if (j == count) return w;
+                            return w + 2;
+                        })
+                        .attr('height', h - 1.5);
 
                     if (found_rxn.length > 0) {
                         rect.attr('fill', '#bbe8f9');
                         rect.attr('stroke', config.strokeDark);
                     } else {
-                        rect.attr('fill', '#fff')
+                        rect.attr('fill', '#fff');
                         rect.attr('stroke', config.strokeDark);
-                    };
+                    }
 
-                    var title = '<h5>'+self.models[j].name+'<br>'+
-                                '<small>'+self.models[j].source_id+'</small></h5>';
+                    var title =
+                        '<h5>' +
+                        self.models[j].name +
+                        '<br>' +
+                        '<small>' +
+                        self.models[j].source_id +
+                        '</small></h5>';
                     tooltip(rect.node(), title, rxn);
                 }
             } else {
-                var rect = group.append('rect')
-                            .attr('class', 'rxn')
-                            .attr('x', x)
-                            .attr('y', y)
-                            .attr('width', w)
-                            .attr('height', h);
+                var rect = group
+                    .append('rect')
+                    .attr('class', 'rxn')
+                    .attr('x', x)
+                    .attr('y', y)
+                    .attr('width', w)
+                    .attr('height', h);
             }
 
             // determine if fba results should be added for the map reaction
@@ -178,10 +187,8 @@ function ModelSeedPathway(params) {
             if (self.fbas) {
                 var fba_rxns = getFbaRxns(rxn.rxns);
 
-                if ([].concat.apply([], fba_rxns).length == 0 )
-                    var addFBAResults = false;
-                else
-                    var addFBAResults = true;
+                if ([].concat.apply([], fba_rxns).length == 0) var addFBAResults = false;
+                else var addFBAResults = true;
             }
 
             // color flux depending on rxns found for each fba
@@ -189,20 +196,21 @@ function ModelSeedPathway(params) {
                 var w = rxn.w / self.fbas.length;
 
                 // for each fba result
-                for (var j=0; j<fba_rxns.length; j++) {
+                for (var j = 0; j < fba_rxns.length; j++) {
                     var found_rxn = fba_rxns[j];
-                    var rect = group.append('rect')
-                                .attr('class', 'rxn-divider-stroke')
-                                .attr('x', () => {
-                                    if (j == 0) return x + (w*j) + 1;
-                                    return x + (w*j)
-                                })
-                                .attr('y', y+1)
-                                .attr('width', () => {
-                                    if (j == count) return w;
-                                    return w + 1
-                                })
-                                .attr('height', h-1.5)
+                    var rect = group
+                        .append('rect')
+                        .attr('class', 'rxn-divider-stroke')
+                        .attr('x', () => {
+                            if (j == 0) return x + w * j + 1;
+                            return x + w * j;
+                        })
+                        .attr('y', y + 1)
+                        .attr('width', () => {
+                            if (j == count) return w;
+                            return w + 1;
+                        })
+                        .attr('height', h - 1.5);
 
                     var flux;
 
@@ -210,45 +218,50 @@ function ModelSeedPathway(params) {
                     // so find the largest magnitude flux
                     if (found_rxn.length > 0) {
                         var flux = found_rxn[0].value;
-                        for (let k=1; k<found_rxn.length; k++) {
-                            if (Math.abs(found_rxn[k].value) > Math.abs(flux) ) {
+                        for (let k = 1; k < found_rxn.length; k++) {
+                            if (Math.abs(found_rxn[k].value) > Math.abs(flux)) {
                                 flux = found_rxn[k].value;
                             }
                         }
 
-                        if (Math.abs(flux) > 499)
-                            lightLabel = true;
+                        if (Math.abs(flux) > 499) lightLabel = true;
                     }
 
                     if (typeof flux != 'undefined') {
                         var color = config.getColor(flux, useAbsFlux);
-                        if (color)
-                            rect.attr('fill', color);
-                        else
-                            rect.attr('fill', config.geneColor);
+                        if (color) rect.attr('fill', color);
+                        else rect.attr('fill', config.geneColor);
                     }
 
                     //var title = self.fbas[i].info[1];
-                    var title = '<h5>'+self.models[j].name+'<br>'+
-                                '<small>'+self.models[j].source_id+'</small></h5>';
+                    var title =
+                        '<h5>' +
+                        self.models[j].name +
+                        '<br>' +
+                        '<small>' +
+                        self.models[j].source_id +
+                        '</small></h5>';
                     tooltip(rect.node(), title, rxn, flux, self.fbas[j]);
                 }
-            }  // end fbas rects
+            } // end fbas rects
 
-            const text = group.append('text')
-                            .attr('x', x+2)
-                            .attr('y', y+h/2+6)
-                            .text(rxn.name)
-                            .attr('class', (lightLabel ? 'rxn-label-light' : 'rxn-label') );
+            const text = group
+                .append('text')
+                .attr('x', x + 2)
+                .attr('y', y + h / 2 + 6)
+                .text(rxn.name)
+                .attr('class', lightLabel ? 'rxn-label-light' : 'rxn-label');
 
-            $(group.node()).hover(function() {
-                $(this).find('text').hide();
-            }, function() {
-                $(this).find('text').show();
-            })
+            $(group.node()).hover(
+                function () {
+                    $(this).find('text').hide();
+                },
+                function () {
+                    $(this).find('text').show();
+                }
+            );
         } // end loop
     }
-
 
     function tooltip(container, title, mapRxn, flux, obj) {
         // get substrates and products
@@ -262,14 +275,24 @@ function ModelSeedPathway(params) {
         }
 
         //content for tooltip
-        const content = '<table class="table table-condensed">'+
-                          (typeof flux != 'undefined' ?
-                          '<tr><td><b>Flux</b></td><td>'+flux+'</td></tr>' : '')+
-                          '<tr><td><b>Map RXN ID</b></td><td>'+mapRxn.id+'</td></tr>'+
-                          '<tr><td><b>Rxns</b></td><td>'+ mapRxn.rxns.join(', ')+'</td></tr>'+
-                          '<tr><td><b>Substrates</b></td><td>'+subs.join(', ')+'</td></tr>'+
-                          '<tr><td><b>Products</b></td><td>'+prods.join(', ')+'</td></tr>'+
-                       '</table>'
+        const content =
+            '<table class="table table-condensed">' +
+            (typeof flux != 'undefined'
+                ? '<tr><td><b>Flux</b></td><td>' + flux + '</td></tr>'
+                : '') +
+            '<tr><td><b>Map RXN ID</b></td><td>' +
+            mapRxn.id +
+            '</td></tr>' +
+            '<tr><td><b>Rxns</b></td><td>' +
+            mapRxn.rxns.join(', ') +
+            '</td></tr>' +
+            '<tr><td><b>Substrates</b></td><td>' +
+            subs.join(', ') +
+            '</td></tr>' +
+            '<tr><td><b>Products</b></td><td>' +
+            prods.join(', ') +
+            '</td></tr>' +
+            '</table>';
 
         //$(container).popover({html: true, content: content, animation: false, title: title,
         //                      container: 'body', trigger: 'hover'});
@@ -280,37 +303,37 @@ function ModelSeedPathway(params) {
             const cpd = cpds[i];
             const r = cpd.w;
             const g = svg.append('g').attr('class', 'circle');
-            const circle = g.append('circle')
-                              .attr('class', 'cpd')
-                              .attr('cx', cpd.x)
-                              .attr('cy', cpd.y)
-                              .attr('r', r);
+            const circle = g
+                .append('circle')
+                .attr('class', 'cpd')
+                .attr('cx', cpd.x)
+                .attr('cy', cpd.y)
+                .attr('r', r);
 
-            const content = 'ID: ' + cpd.id+'<br>'+
-                          'kegg id: ' + cpd.name;
+            const content = 'ID: ' + cpd.id + '<br>' + 'kegg id: ' + cpd.name;
             //$(circle.node()).popover({html: true, content: content, animation: false,
             //                        container: 'body', trigger: 'hover'});
         }
     }
 
     function drawConnections() {
-        const node_ids =[]
-        const nodes = []
-        const links = []
+        const node_ids = [];
+        const nodes = [];
+        const links = [];
 
         // draw connections from substrate to products
         for (const j in groups) {
             const group = groups[j];
             const group_rxn_ids = group.rxn_ids;
-            const x = group.x
-            const y = group.y
+            const x = group.x;
+            const y = group.y;
 
             // get all model rxn objects for each rxn id in map
-            let model_rxns = []
+            let model_rxns = [];
             for (var i in rxns) {
                 if (group_rxn_ids.indexOf(rxns[i].id) != -1) {
                     var rxn = rxns[i];
-                    model_rxns = model_rxns.concat(rxn.rxns)
+                    model_rxns = model_rxns.concat(rxn.rxns);
                 }
             }
 
@@ -321,49 +344,78 @@ function ModelSeedPathway(params) {
 
             // create substrate line (links)
             for (var i in subs) {
-                const sub_id = subs[i].id
+                const sub_id = subs[i].id;
 
                 // find associated compound (for position)
                 for (var k in cpds) {
                     var cpd = cpds[k];
 
-                    if (cpd.id != sub_id ) continue;
+                    if (cpd.id != sub_id) continue;
 
-                    var id = cpd.id
+                    var id = cpd.id;
 
                     // if node has already been created,
                     // create link from that node.  Otherwise, create new node and link.
                     if (node_ids.indexOf(id) != -1) {
-
                         // create link from existing node to next node
-                        links.push({source: node_ids.indexOf(id), target: nodes.length,
-                                    value: 1, cpd_id: id, group_index: j, rxns:model_rxns,
-                                    line_type: 'substrate'});
+                        links.push({
+                            source: node_ids.indexOf(id),
+                            target: nodes.length,
+                            value: 1,
+                            cpd_id: id,
+                            group_index: j,
+                            rxns: model_rxns,
+                            line_type: 'substrate',
+                        });
 
                         // if there is a special path to draw the line on,
                         // draw nodes and links along path.
                         if (group.substrate_path) {
                             var path = group.substrate_path;
-                            links.push({source: nodes.length, target: nodes.length+1,
-                                        value: 1, cpd_id: id, group_index: j, rxns: model_rxns,
-                                        line_type: 'substrate'});
-                            for (var k=1; k < path.length; k++) {
-                                nodes.push({x:path[k][0], y: path[k][1], fixed: true,
-                                            style: 'point'});
+                            links.push({
+                                source: nodes.length,
+                                target: nodes.length + 1,
+                                value: 1,
+                                cpd_id: id,
+                                group_index: j,
+                                rxns: model_rxns,
+                                line_type: 'substrate',
+                            });
+                            for (var k = 1; k < path.length; k++) {
+                                nodes.push({
+                                    x: path[k][0],
+                                    y: path[k][1],
+                                    fixed: true,
+                                    style: 'point',
+                                });
                                 node_ids.push('null');
                             }
                         } else {
-                            nodes.push({ x:x, y:y, fixed: true, style: 'point'});
+                            nodes.push({ x: x, y: y, fixed: true, style: 'point' });
                             node_ids.push('null');
                         }
-
-                    }  else {
-                        links.push({source: nodes.length, target: nodes.length+1, value: 1,
-                                    cpd_id: id, group_index: j, line_type: 'substrate', rxns:model_rxns});
-                        nodes.push({x: cpd.x, y:cpd.y, fixed: true, type: 'compound',
-                                    name: cpd.label, cpd_index: k, rxns: model_rxns,
-                                    label_x: cpd.label_x, label_y: cpd.label_y});
-                        nodes.push({x:x, y:y, fixed: true, style: 'reaction'});
+                    } else {
+                        links.push({
+                            source: nodes.length,
+                            target: nodes.length + 1,
+                            value: 1,
+                            cpd_id: id,
+                            group_index: j,
+                            line_type: 'substrate',
+                            rxns: model_rxns,
+                        });
+                        nodes.push({
+                            x: cpd.x,
+                            y: cpd.y,
+                            fixed: true,
+                            type: 'compound',
+                            name: cpd.label,
+                            cpd_index: k,
+                            rxns: model_rxns,
+                            label_x: cpd.label_x,
+                            label_y: cpd.label_y,
+                        });
+                        nodes.push({ x: x, y: y, fixed: true, style: 'reaction' });
                         node_ids.push(id);
                         node_ids.push('null');
                     }
@@ -372,45 +424,75 @@ function ModelSeedPathway(params) {
 
             // create product lines (links)
             for (var i in prods) {
-                const prod_id = prods[i].id
+                const prod_id = prods[i].id;
 
                 for (var k in cpds) {
                     var cpd = cpds[k];
 
                     if (cpd.id != prod_id) continue;
 
-                    var id = cpd.id
+                    var id = cpd.id;
 
                     // if there is a special path to draw the line on,
                     // draw nodes and links along path.
-                    if (node_ids.indexOf(id) != -1 ) {
-                        links.push({source: nodes.length, target: node_ids.indexOf(id),
-                                    value: 1, type: 'arrow', cpd_id: id, group_index: j,
-                                    line_type: 'product', rxns:model_rxns})
+                    if (node_ids.indexOf(id) != -1) {
+                        links.push({
+                            source: nodes.length,
+                            target: node_ids.indexOf(id),
+                            value: 1,
+                            type: 'arrow',
+                            cpd_id: id,
+                            group_index: j,
+                            line_type: 'product',
+                            rxns: model_rxns,
+                        });
 
                         if (group.product_path) {
                             var path = group.product_path;
-                            links.push({source: nodes.length-1, target: nodes.length,
-                                   value: 1, cpd_id: id, group_index: j,
-                                   line_type: 'product', rxns:model_rxns});
-                            for (var k=1; k < path.length; k++) {
-                                nodes.push({ x:path[k][0], y: path[k][1], fixed: true,
-                                            style: 'point'});
+                            links.push({
+                                source: nodes.length - 1,
+                                target: nodes.length,
+                                value: 1,
+                                cpd_id: id,
+                                group_index: j,
+                                line_type: 'product',
+                                rxns: model_rxns,
+                            });
+                            for (var k = 1; k < path.length; k++) {
+                                nodes.push({
+                                    x: path[k][0],
+                                    y: path[k][1],
+                                    fixed: true,
+                                    style: 'point',
+                                });
                                 node_ids.push('null');
                             }
                         } else {
-                            nodes.push({ x: x, y:y, fixed:true, style:'point'})
+                            nodes.push({ x: x, y: y, fixed: true, style: 'point' });
                             node_ids.push('null');
                         }
-
                     } else {
-                        links.push({source: nodes.length, target: nodes.length+1,
-                                    value: 1, type: 'arrow', cpd_id: id, group_index: j,
-                                    line_type: 'product', rxns:model_rxns})
-                        nodes.push({ x: x, y:y, fixed:true, style:'reaction'})
-                        nodes.push({ x:cpd.x, y:cpd.y, fixed: true, style: 'compound',
-                                     name: cpd.label, cpd_index: k,
-                                     label_x: cpd.label_x, label_y: cpd.label_y})
+                        links.push({
+                            source: nodes.length,
+                            target: nodes.length + 1,
+                            value: 1,
+                            type: 'arrow',
+                            cpd_id: id,
+                            group_index: j,
+                            line_type: 'product',
+                            rxns: model_rxns,
+                        });
+                        nodes.push({ x: x, y: y, fixed: true, style: 'reaction' });
+                        nodes.push({
+                            x: cpd.x,
+                            y: cpd.y,
+                            fixed: true,
+                            style: 'compound',
+                            name: cpd.label,
+                            cpd_index: k,
+                            label_x: cpd.label_x,
+                            label_y: cpd.label_y,
+                        });
                         node_ids.push('null');
                         node_ids.push(id);
                     }
@@ -419,21 +501,25 @@ function ModelSeedPathway(params) {
         }
 
         // the following does all the drawing
-        const force = d3.layout.force()
-                      .nodes(nodes)
-                      .links(links)
-                      .charge(-400)
-                      .linkDistance(40)
-                      .on('tick', tick)
-                      .start()
+        const force = d3.layout
+            .force()
+            .nodes(nodes)
+            .links(links)
+            .charge(-400)
+            .linkDistance(40)
+            .on('tick', tick)
+            .start();
 
         // define connections between compounds and reactions (nodes)
-        const link = svg.selectAll(".link")
-              .data(links)
-            .enter().append("g").append('line')
-              .attr("class", "link")
+        const link = svg
+            .selectAll('.link')
+            .data(links)
+            .enter()
+            .append('g')
+            .append('line')
+            .attr('class', 'link');
 
-              /*.style('stroke', function(d) {
+        /*.style('stroke', function(d) {
                     c = '#666';
 
                     // if there is fba data, color lines
@@ -464,119 +550,134 @@ function ModelSeedPathway(params) {
                     }
               })*/
 
-        const node = svg.selectAll(".node")
-              .data(nodes)
-            .enter().append('g')
-            .attr("class", "node")
-              .call(force.drag)
+        const node = svg
+            .selectAll('.node')
+            .data(nodes)
+            .enter()
+            .append('g')
+            .attr('class', 'node')
+            .call(force.drag);
 
-        node.append("circle")
-            .attr('class', 'cpd')
+        node.append('circle').attr('class', 'cpd');
 
         //fix me!  tranform dep?
-        node.append("text")
-            .attr("class", "cpd-label")
-            .attr("x", 10)
-            .attr("dy", ".35em")
+        node.append('text')
+            .attr('class', 'cpd-label')
+            .attr('x', 10)
+            .attr('dy', '.35em')
             .style('font-size', '8pt')
-            .attr("transform", (d) => {
-                if (d.label_x || d.label_y)
-                    return "translate(" + d.label_x + "," + d.label_y + ")";
+            .attr('transform', (d) => {
+                if (d.label_x || d.label_y) return 'translate(' + d.label_x + ',' + d.label_y + ')';
             })
-            .text((d) => { return d.name; });
-
+            .text((d) => {
+                return d.name;
+            });
 
         function tick() {
-            link.attr("x1", (d) => { return d.source.x; })
-                .attr("y1", (d) => { return d.source.y; })
-                .attr("x2", (d) => { return d.target.x; })
-                .attr("y2", (d) => { return d.target.y; })
+            link.attr('x1', (d) => {
+                return d.source.x;
+            })
+                .attr('y1', (d) => {
+                    return d.source.y;
+                })
+                .attr('x2', (d) => {
+                    return d.target.x;
+                })
+                .attr('y2', (d) => {
+                    return d.target.y;
+                })
                 .attr('marker-end', (d) => {
-                      if (d.type == 'arrow') {
-                          return 'url(#end-arrow)'
-                      } else {
-                          return ''
-                      }
+                    if (d.type == 'arrow') {
+                        return 'url(#end-arrow)';
+                    } else {
+                        return '';
+                    }
                 });
 
-            node.attr("transform", (d) => { return "translate(" + d.x + "," + d.y + ")"; })
+            node.attr('transform', (d) => {
+                return 'translate(' + d.x + ',' + d.y + ')';
+            });
 
             // size the circles depending on kind of point
-            node.select('circle').attr("r", (d) => {
-                    if (d.style == "point")
-                        return 0;
-                    else if (d.style == "reaction")
-                        return 1;
-                    else
-                        return 7;
-                })
-        };
-
+            node.select('circle').attr('r', (d) => {
+                if (d.style == 'point') return 0;
+                else if (d.style == 'reaction') return 1;
+                else return 7;
+            });
+        }
     } // end draw connections
 
     function drawMapLinks() {
-        for (let i=0; i<mapLinks.length; i++) {
+        for (let i = 0; i < mapLinks.length; i++) {
             const map = mapLinks[i];
 
-            const x = map.x - map.w/2,
-                y = map.y - map.h/2,
-                w = parseInt(map.w)+2,
-                h = parseInt(map.h)+2;
+            const x = map.x - map.w / 2,
+                y = map.y - map.h / 2,
+                w = parseInt(map.w) + 2,
+                h = parseInt(map.h) + 2;
 
-            if (x > max_x) max_x = x+w+c_pad;
-            if (y > max_y) max_y = y+h+c_pad;
+            if (x > max_x) max_x = x + w + c_pad;
+            if (y > max_y) max_y = y + h + c_pad;
 
             const group = svg.append('g');
 
             // draw reactions (rectangles)
-            const rect = group.append('rect')
-                              .attr('class', 'map')
-                              .attr('x', x)
-                              .attr('y', y)
-                              .attr('width', w)
-                              .attr('height', h)
+            const rect = group
+                .append('rect')
+                .attr('class', 'map')
+                .attr('x', x)
+                .attr('y', y)
+                .attr('width', w)
+                .attr('height', h);
 
-            const text = group.append('text')
-                              .attr('class', 'map-label')
-                              .style('font-size', '8pt')
-                              .text(map.name)
-                              .attr('x', x+2)
-                              .attr('y', y+10)
-                              .call(wrap, w+2);
+            const text = group
+                .append('text')
+                .attr('class', 'map-label')
+                .style('font-size', '8pt')
+                .text(map.name)
+                .attr('x', x + 2)
+                .attr('y', y + 10)
+                .call(wrap, w + 2);
         }
-
     }
-
-
 
     function wrap(text, width) {
         //var dy = 3;
         const dy = 0;
 
-        text.each(function() {
+        text.each(function () {
             let text = d3.select(this),
                 words = text.text().split(/\s+/).reverse(),
                 word,
                 line = [],
                 lineNumber = 0,
                 lineHeight = 1.1, // ems
-                y = text.attr("y"),
+                y = text.attr('y'),
                 x = text.attr('x'),
-                tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", dy + "em");
+                tspan = text
+                    .text(null)
+                    .append('tspan')
+                    .attr('x', x)
+                    .attr('y', y)
+                    .attr('dy', dy + 'em');
 
-            while (word = words.pop()) {
-              line.push(word);
-              tspan.text(line.join(" "));
-              if (tspan.node().getComputedTextLength() > width) {
-                line.pop();
-                tspan.text(line.join(" "));
-                line = [word];
-                tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
-              }
+            while ((word = words.pop())) {
+                line.push(word);
+                tspan.text(line.join(' '));
+                if (tspan.node().getComputedTextLength() > width) {
+                    line.pop();
+                    tspan.text(line.join(' '));
+                    line = [word];
+                    tspan = text
+                        .append('tspan')
+                        .attr('x', x)
+                        .attr('y', y)
+                        .attr('dy', ++lineNumber * lineHeight + dy + 'em')
+                        .text(word);
+                }
             }
         });
     }
-
 
     function getModelRxns(rxn_ids) {
         // get a list of rxn objects (or undefined)
@@ -612,7 +713,7 @@ function ModelSeedPathway(params) {
         const found_rxns = [];
 
         // for each fba, look for model data
-        for (let j=0; j<self.fbas.length; j++) {
+        for (let j = 0; j < self.fbas.length; j++) {
             const fba = self.fbas[j];
             //if (!fba) continue;
             const fba_objs = fba.FBAReactionVariables;
@@ -633,59 +734,72 @@ function ModelSeedPathway(params) {
         return found_rxns;
     }
 
-
     function zoom() {
-        const margin = {top: -5, right: -5, bottom: -5, left: -5},
+        const margin = { top: -5, right: -5, bottom: -5, left: -5 },
             width = 960 - margin.left - margin.right,
             height = 500 - margin.top - margin.bottom;
 
-        const zoom = d3.behavior.zoom()
-            .scaleExtent([1, 10])
-            .on("zoom", zoomed);
+        const zoom = d3.behavior.zoom().scaleExtent([1, 10]).on('zoom', zoomed);
 
-        const drag = d3.behavior.drag()
-            .origin((d) => { return d; })
-            .on("dragstart", dragstarted)
-            .on("drag", dragged)
-            .on("dragend", dragended);
+        const drag = d3.behavior
+            .drag()
+            .origin((d) => {
+                return d;
+            })
+            .on('dragstart', dragstarted)
+            .on('drag', dragged)
+            .on('dragend', dragended);
 
         //var svg = d3.select("body").append("svg")
         //    .attr("width", width + margin.left + margin.right)
-         //   .attr("height", height + margin.top + margin.bottom)
+        //   .attr("height", height + margin.top + margin.bottom)
         //  .append("g")
         //    .attr("transform", "translate(" + margin.left + "," + margin.right + ")")
-         //   .call(zoom);
-         svg.call(zoom)
+        //   .call(zoom);
+        svg.call(zoom);
 
-        const rect = svg.append("rect")
-            .attr("width", width)
-            .attr("height", height)
-            .style("fill", "none")
-            .style("pointer-events", "all");
+        const rect = svg
+            .append('rect')
+            .attr('width', width)
+            .attr('height', height)
+            .style('fill', 'none')
+            .style('pointer-events', 'all');
 
-        const container = svg.append("g");
+        const container = svg.append('g');
 
-        container.append("g")
-            .attr("class", "x axis")
-          .selectAll("line")
+        container
+            .append('g')
+            .attr('class', 'x axis')
+            .selectAll('line')
             .data(d3.range(0, width, 10))
-          .enter().append("line")
-            .attr("x1", (d) => { return d; })
-            .attr("y1", 0)
-            .attr("x2", (d) => { return d; })
-            .attr("y2", height);
+            .enter()
+            .append('line')
+            .attr('x1', (d) => {
+                return d;
+            })
+            .attr('y1', 0)
+            .attr('x2', (d) => {
+                return d;
+            })
+            .attr('y2', height);
 
-        container.append("g")
-            .attr("class", "y axis")
-          .selectAll("line")
+        container
+            .append('g')
+            .attr('class', 'y axis')
+            .selectAll('line')
             .data(d3.range(0, height, 10))
-          .enter().append("line")
-            .attr("x1", 0)
-            .attr("y1", (d) => { return d; })
-            .attr("x2", width)
-            .attr("y2", (d) => { return d; });
+            .enter()
+            .append('line')
+            .attr('x1', 0)
+            .attr('y1', (d) => {
+                return d;
+            })
+            .attr('x2', width)
+            .attr('y2', (d) => {
+                return d;
+            });
 
-            /*
+        /*
         d3.tsv("dots.tsv", dottype, function(error, dots) {
           dot = container.append("g")
               .attr("class", "dot")
@@ -699,32 +813,37 @@ function ModelSeedPathway(params) {
         });*/
 
         function dottype(d) {
-          d.x = +d.x;
-          d.y = +d.y;
-          return d;
+            d.x = +d.x;
+            d.y = +d.y;
+            return d;
         }
 
         function zoomed() {
-          container.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+            container.attr(
+                'transform',
+                'translate(' + d3.event.translate + ')scale(' + d3.event.scale + ')'
+            );
         }
 
         function dragstarted(d) {
-          d3.event.sourceEvent.stopPropagation();
-          d3.select(this).classed("dragging", true);
+            d3.event.sourceEvent.stopPropagation();
+            d3.select(this).classed('dragging', true);
         }
 
         function dragged(d) {
-          d3.select(this).attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
+            d3.select(this)
+                .attr('cx', (d.x = d3.event.x))
+                .attr('cy', (d.y = d3.event.y));
         }
 
         function dragended(d) {
-          d3.select(this).classed("dragging", false);
+            d3.select(this).classed('dragging', false);
         }
     }
 
-
     function editable() {
-        const edit_opts = $('<div class="map-opts pull-left">\
+        const edit_opts = $(
+            '<div class="map-opts pull-left">\
                               <!--<button class="btn btn-primary btn-edit-map">Edit Map</button>-->\
                               <button class="btn btn-default btn-map-opts">Options <div class="caret"></div></button>\
                               <!--<button class="btn btn-default btn-map-cancel">Done</button>-->\
@@ -735,9 +854,11 @@ function ModelSeedPathway(params) {
                                x: <span id="x-pos">0</span>\
                                y: <span id="y-pos">0</span>\
                            </span>\
-                           <br><br>');
+                           <br><br>'
+        );
 
-        const opts = $('<div class="opts-dd">Display:\
+        const opts = $(
+            '<div class="opts-dd">Display:\
                     <div class="checkbox">\
                         <label><input type="checkbox" data-type="rxn-label" checked="checked">Enzymes Labels</label>\
                     </div>\
@@ -753,7 +874,8 @@ function ModelSeedPathway(params) {
                     <div class="checkbox">\
                         <label><input type="checkbox" data-type="cpd-label" checked="checked">Compound Labels</label>\
                     </div>\
-                    </div>')
+                    </div>'
+        );
 
         // display x, y coordinates (on top left)
         svg.on('mousemove', function () {
@@ -763,26 +885,32 @@ function ModelSeedPathway(params) {
             $('#x-pos').html(x);
             $('#y-pos').html(y);
         });
-        container.prepend(edit_opts)
+        container.prepend(edit_opts);
 
         // event for options
-        $('.btn-map-opts').popover({html: true, content: opts, animation: false,
-                                   container: 'body', trigger: 'click', placement: 'bottom'});
+        $('.btn-map-opts').popover({
+            html: true,
+            content: opts,
+            animation: false,
+            container: 'body',
+            trigger: 'click',
+            placement: 'bottom',
+        });
         $('.btn-map-opts').click(() => {
-            opts.find('input').unbind('change')
-            opts.find('input').change(function() {
+            opts.find('input').unbind('change');
+            opts.find('input').change(function () {
                 const type = $(this).data('type');
-                const checked = ($(this).attr('checked') == 'checked' ? true : false);
+                const checked = $(this).attr('checked') == 'checked' ? true : false;
 
                 if (checked) {
-                    svg.selectAll('.'+type).style('display', 'none')
-                    $(this).attr('checked', false)
+                    svg.selectAll('.' + type).style('display', 'none');
+                    $(this).attr('checked', false);
                 } else {
-                    svg.selectAll('.'+type).style('display', 'block')
-                    $(this).attr('checked', true)
+                    svg.selectAll('.' + type).style('display', 'block');
+                    $(this).attr('checked', true);
                 }
-            })
-        })
+            });
+        });
 
         // event for highlighting elements
         /*svg.selectAll('g').on('mouseover', function(){
@@ -795,46 +923,42 @@ function ModelSeedPathway(params) {
         })*/
 
         // drag event
-        const drag = d3.behavior.drag()
-          .on("dragstart", () => {
-              d3.event.sourceEvent.stopPropagation()
-          })
-          .on("drag", function(){
-            dragmove(this)
-          });
+        const drag = d3.behavior
+            .drag()
+            .on('dragstart', () => {
+                d3.event.sourceEvent.stopPropagation();
+            })
+            .on('drag', function () {
+                dragmove(this);
+            });
 
-
-        svg.selectAll('.link').on('click', function(){
-            $('.first, .last, .middle').remove()
+        svg.selectAll('.link').on('click', function () {
+            $('.first, .last, .middle').remove();
             editLine(this);
-            edit_opts.find('.btn-map-save').addClass('btn-primary')
-        })
+            edit_opts.find('.btn-map-save').addClass('btn-primary');
+        });
 
-        svg.selectAll('.cpd-label').on('click', function(){
-            $('.first, .last, .middle').remove()
+        svg.selectAll('.cpd-label').on('click', function () {
+            $('.first, .last, .middle').remove();
             editLabel(this);
-            edit_opts.find('.btn-map-save').addClass('btn-primary')
-        })
+            edit_opts.find('.btn-map-save').addClass('btn-primary');
+        });
 
         edit_opts.find('.btn-map-cancel').click(() => {
             //$('.first, .second, .middle').remove()
-        })
-
+        });
 
         edit_opts.find('.btn-map-save').click(() => {
             saveMap();
-        })
-
+        });
 
         function editLabel(label) {
-            var label = d3.select(label)
-                        .call(drag)
-            label.attr('fill', config.highlight)
-                 .attr('class', 'edited-label')
+            var label = d3.select(label).call(drag);
+            label.attr('fill', config.highlight).attr('class', 'edited-label');
         }
 
         function editLine(line) {
-            var line = d3.select(line)
+            var line = d3.select(line);
 
             // highlight line
             line.attr('stroke', config.highlight)
@@ -846,111 +970,131 @@ function ModelSeedPathway(params) {
                 y1 = line.attr('y1'),
                 x2 = line.attr('x2'),
                 y2 = line.attr('y2');
-            const g = line.node().parentNode
+            const g = line.node().parentNode;
 
             // start, draggalbe circle
-            const start = d3.select(g).append("g")
-             .attr("transform", "translate(" + x1 + "," + y1 + ")")
-             .attr("class", "first")
-             .call(drag)
-             .append("circle").attr({
-               r: 0,
-             }).attr('class','line-start')
-             .transition()
-                  .duration(750)
-                  .ease("elastic")
-                  .attr("r", 8)
-
+            const start = d3
+                .select(g)
+                .append('g')
+                .attr('transform', 'translate(' + x1 + ',' + y1 + ')')
+                .attr('class', 'first')
+                .call(drag)
+                .append('circle')
+                .attr({
+                    r: 0,
+                })
+                .attr('class', 'line-start')
+                .transition()
+                .duration(750)
+                .ease('elastic')
+                .attr('r', 8);
 
             // end, dragable circle
-            const end = d3.select(g).append("g")
-             .attr("transform", "translate(" + x2 + "," + y2 + ")")
-             .attr("class", "last")
-             .call(drag)
-             .append("circle").attr({
-               r: 0,
-             }).attr('class','line-end')
-             .transition()
-                  .duration(750)
-                  .ease("elastic")
-                  .attr("r", 8)
-
+            const end = d3
+                .select(g)
+                .append('g')
+                .attr('transform', 'translate(' + x2 + ',' + y2 + ')')
+                .attr('class', 'last')
+                .call(drag)
+                .append('circle')
+                .attr({
+                    r: 0,
+                })
+                .attr('class', 'line-end')
+                .transition()
+                .duration(750)
+                .ease('elastic')
+                .attr('r', 8);
 
             // when clicking on selected line, divide into two lines.
-            line.on('click', function() {
+            line.on('click', function () {
                 // add class to denoted edited lines
-                d3.select(g).attr('class', 'edited-line')
+                d3.select(g).attr('class', 'edited-line');
 
                 d3.event.stopPropagation();
                 // get position of new circle
                 const x = d3.mouse(this)[0];
                 const y = d3.mouse(this)[1];
 
-                const type = d3.select(this).data()[0].type
+                const type = d3.select(this).data()[0].type;
 
                 // remove old line
-                d3.select(this).remove()
+                d3.select(this).remove();
 
                 // add new lines
-                const line1 = d3.select(g).append("line")
-                             .attr('class', 'line1')
-                             .attr("x1", x1)
-                             .attr("y1", y1)
-                             .attr("x2", x)
-                             .attr("y2", y)
+                const line1 = d3
+                    .select(g)
+                    .append('line')
+                    .attr('class', 'line1')
+                    .attr('x1', x1)
+                    .attr('y1', y1)
+                    .attr('x2', x)
+                    .attr('y2', y);
 
-                const line2 = d3.select(g).append("line")
-                             .attr('class', 'line2')
-                             .attr("x1", x)
-                             .attr("y1", y)
-                             .attr("x2", x2)
-                             .attr("y2", y2)
+                const line2 = d3
+                    .select(g)
+                    .append('line')
+                    .attr('class', 'line2')
+                    .attr('x1', x)
+                    .attr('y1', y)
+                    .attr('x2', x2)
+                    .attr('y2', y2);
 
                 if (type == 'arrow') {
-                    line2.attr('marker-end', "url(#end-arrow)");
+                    line2.attr('marker-end', 'url(#end-arrow)');
                 }
 
                 // to be stored
-                const wayPoints = [[x1, y1], [x,y], [x2,y2]]
+                const wayPoints = [
+                    [x1, y1],
+                    [x, y],
+                    [x2, y2],
+                ];
 
                 // mid, draggable circle
-                const mid = d3.select(g).append("g")
-                     .attr("transform", "translate(" + x + "," + y + ")")
-                     .attr("class", "middle")
-                     .call(drag)
-                     .append("circle").attr({
-                       r: 0,
-                     }).attr('class','line-middle')
-                     .transition()
-                          .duration(750)
-                          .ease("elastic")
-                          .attr("r", 8)
-            })
+                const mid = d3
+                    .select(g)
+                    .append('g')
+                    .attr('transform', 'translate(' + x + ',' + y + ')')
+                    .attr('class', 'middle')
+                    .call(drag)
+                    .append('circle')
+                    .attr({
+                        r: 0,
+                    })
+                    .attr('class', 'line-middle')
+                    .transition()
+                    .duration(750)
+                    .ease('elastic')
+                    .attr('r', 8);
+            });
         }
     }
 
-
     function saveMap() {
-        const new_map = $.extend({}, self.map_data)
+        const new_map = $.extend({}, self.map_data);
 
         // get data on edited lines
         const g = svg.selectAll('.edited-line');
-        g.each(function(d, i){
+        g.each(function (d, i) {
             const l1 = d3.select(this).select('.line1');
             const l2 = d3.select(this).select('.line2');
-            const cpd_id = l1.data()[0].cpd_id
-            const group_index = l1.data()[0].group_index
-            const line_type = l1.data()[0].line_type
+            const cpd_id = l1.data()[0].cpd_id;
+            const group_index = l1.data()[0].group_index;
+            const line_type = l1.data()[0].line_type;
 
+            const x1 = parseInt(l1.attr('x1'));
+            const y1 = parseInt(l1.attr('y1'));
+            const x = parseInt(l1.attr('x2'));
+            const y = parseInt(l1.attr('y2'));
+            const x2 = parseInt(l2.attr('x2'));
+            const y2 = parseInt(l2.attr('y2'));
 
-            const x1 = parseInt(l1.attr('x1'))
-            const y1 = parseInt(l1.attr('y1'))
-            const x = parseInt(l1.attr('x2'))
-            const y = parseInt(l1.attr('y2'))
-            const x2 = parseInt(l2.attr('x2'))
-            const y2 = parseInt(l2.attr('y2'))
-
-            const path = [[x1, y1], [x, y], [x2, y2]];
+            const path = [
+                [x1, y1],
+                [x, y],
+                [x2, y2],
+            ];
 
             const groups = new_map.groups;
             if (line_type == 'substrate') {
@@ -958,102 +1102,96 @@ function ModelSeedPathway(params) {
             } else if (line_type == 'product') {
                 groups[group_index]['product_path'] = path;
             }
-
-        })
+        });
 
         // get data on edited compound labels
         const labels = svg.selectAll('.edited-label');
-        labels.each(function(d, i){
-            const l = d3.select(this)
+        labels.each(function (d, i) {
+            const l = d3.select(this);
 
-            const transform = l.attr('transform')
+            const transform = l.attr('transform');
 
             // if label hasn't been moved, don't save
             if (!transform) return;
 
-            const x = parseInt(transform.split(',')[0].split('(')[1] )
-            const y = parseInt(transform.split(',')[1].split(')')[0] )
-            const cpd_index = l.data()[0].cpd_index
-
+            const x = parseInt(transform.split(',')[0].split('(')[1]);
+            const y = parseInt(transform.split(',')[1].split(')')[0]);
+            const cpd_index = l.data()[0].cpd_index;
 
             const cpds = new_map.compounds;
-            cpds[cpd_index].label_x = x
-            cpds[cpd_index].label_y = y
-        })
+            cpds[cpd_index].label_x = x;
+            cpds[cpd_index].label_y = y;
+        });
 
         // have to get meta data to resave object
-        const prom = kb.ws.get_object_info([{workspace: self.workspace,
-                                           name: self.map_name}], 1)
+        const prom = kb.ws.get_object_info([{ workspace: self.workspace, name: self.map_name }], 1);
         $.when(prom).done((data) => {
             const metadata = data[0][10];
             // saving object to workspace
-            const p = kb.ws.save_object({'workspace': self.workspace,
-                    'data': new_map,
-                    'id': self.map_name,
-                    'type': 'KBaseBiochem.MetabolicMap',
-                    'metadata': metadata
-                    })
+            const p = kb.ws.save_object({
+                workspace: self.workspace,
+                data: new_map,
+                id: self.map_name,
+                type: 'KBaseBiochem.MetabolicMap',
+                metadata: metadata,
+            });
 
-            $.when(p).done((d) => {
-                const msg = $('<div class="alert alert-success pull-left">Saved.</div>')
-                msg.css('padding', '7px');  // one exception for putting this in js
-                msg.css('margin-left', '10px')
-                msg.css('margin-bottom', 0);
-                container.find('.map-opts').after(msg);
-                msg.delay(3000).fadeOut(500);
+            $.when(p)
+                .done((d) => {
+                    const msg = $('<div class="alert alert-success pull-left">Saved.</div>');
+                    msg.css('padding', '7px'); // one exception for putting this in js
+                    msg.css('margin-left', '10px');
+                    msg.css('margin-bottom', 0);
+                    container.find('.map-opts').after(msg);
+                    msg.delay(3000).fadeOut(500);
 
-                // redraw map
-                self.drawMap();
-
-            }).fail((e)=> {
-                container.prepend('<div class="alert alert-danger">'+
-                                e.error.message+'</div>')
-            })
-
-        })
+                    // redraw map
+                    self.drawMap();
+                })
+                .fail((e) => {
+                    container.prepend(
+                        '<div class="alert alert-danger">' + e.error.message + '</div>'
+                    );
+                });
+        });
     }
 
     //Drag handler
     function dragmove(d) {
-
         const x = d3.event.x;
         const y = d3.event.y;
-        d3.select(d).attr("transform", "translate(" + x + "," + y + ")");
+        d3.select(d).attr('transform', 'translate(' + x + ',' + y + ')');
 
-
-        if (d3.select(d).attr("class") == "first") {
-            d3.select(d.parentNode).select('line').attr("x1", x);
-            d3.select(d.parentNode).select('line').attr("y1", y);
-        } else if ( (d3.select(d).attr("class") == "middle")) {
-            d3.select(d.parentNode).select('.line1').attr("x2", x);
-            d3.select(d.parentNode).select('.line1').attr("y2", y);
-            d3.select(d.parentNode).select('.line2').attr("x1", x);
-            d3.select(d.parentNode).select('.line2').attr("y1", y);
+        if (d3.select(d).attr('class') == 'first') {
+            d3.select(d.parentNode).select('line').attr('x1', x);
+            d3.select(d.parentNode).select('line').attr('y1', y);
+        } else if (d3.select(d).attr('class') == 'middle') {
+            d3.select(d.parentNode).select('.line1').attr('x2', x);
+            d3.select(d.parentNode).select('.line1').attr('y2', y);
+            d3.select(d.parentNode).select('.line2').attr('x1', x);
+            d3.select(d.parentNode).select('.line2').attr('y1', y);
         } else {
-            d3.select(d.parentNode).select('line').attr("x2", x);
-            d3.select(d.parentNode).select('line').attr("y2", y);
+            d3.select(d.parentNode).select('line').attr('x2', x);
+            d3.select(d.parentNode).select('line').attr('y2', y);
         }
-
     }
 
     function splines() {
-
         const width = 960,
             height = 500;
 
-        const points = d3.select('line').each(function() {
-            const x1 = d3.select(this).attr('x1')
-            const y1 = d3.select(this).attr('y1')
-            svg.append()
-            d3.select(this).attr('class', 'special')
+        const points = d3.select('line').each(function () {
+            const x1 = d3.select(this).attr('x1');
+            const y1 = d3.select(this).attr('y1');
+            svg.append();
+            d3.select(this).attr('class', 'special');
             return [x1, y1];
-        })
+        });
 
         /*
         var points = d3.range(1, 5).map(function(i) {
           return [i * width / 5, 50 + Math.random() * (height - 100)];
         });*/
-
 
         let dragged = null,
             selected = points[0];
@@ -1066,111 +1204,124 @@ function ModelSeedPathway(params) {
             .attr("height", height)
             .attr("tabindex", 1);
         */
-        svg.append("rect")
+        svg.append('rect')
             .attr('fill', 'none')
-            .attr("width", width)
-            .attr("height", height)
-            .on("mousedown", mousedown);
+            .attr('width', width)
+            .attr('height', height)
+            .on('mousedown', mousedown);
 
-        svg.append("path")
+        svg.append('path')
             .datum(points)
-            .attr("class", "line")
-            .attr("fill", "none")
+            .attr('class', 'line')
+            .attr('fill', 'none')
             .attr('stroke', 'steelblue')
             .attr('stroke-width', 2)
             .call(redraw);
 
-        d3.select(window)
-            .on("mousemove", mousemove)
-            .on("mouseup", mouseup)
-            .on("keydown", keydown);
+        d3.select(window).on('mousemove', mousemove).on('mouseup', mouseup).on('keydown', keydown);
 
-
-        d3.select("#interpolate")
-            .on("change", change)
-          .selectAll("option")
+        d3.select('#interpolate')
+            .on('change', change)
+            .selectAll('option')
             .data([
-              "linear",
-              "step-before",
-              "step-after",
-              "basis",
-              "basis-open",
-              "basis-closed",
-              "cardinal",
-              "cardinal-open",
-              "cardinal-closed",
-              "monotone"
+                'linear',
+                'step-before',
+                'step-after',
+                'basis',
+                'basis-open',
+                'basis-closed',
+                'cardinal',
+                'cardinal-open',
+                'cardinal-closed',
+                'monotone',
             ])
-          .enter().append("option")
-            .attr("value", (d) => { return d; })
-            .text((d) => { return d; });
+            .enter()
+            .append('option')
+            .attr('value', (d) => {
+                return d;
+            })
+            .text((d) => {
+                return d;
+            });
 
         svg.node().focus();
 
         function redraw() {
+            svg.select('path').attr('d', line);
 
-          svg.select("path").attr("d", line);
+            const circle = svg.selectAll('.special').data(points, (d) => {
+                return d;
+            });
 
-          const circle = svg.selectAll(".special")
-              .data(points, (d) => { return d; });
+            circle
+                .enter()
+                .append('circle')
+                .attr('r', 1e-6)
+                .on('mousedown', (d) => {
+                    selected = dragged = d;
+                    redraw();
+                })
+                .transition()
+                .duration(750)
+                .ease('elastic')
+                .attr('r', 6.5);
 
-          circle.enter().append("circle")
-              .attr("r", 1e-6)
-              .on("mousedown", (d) => { selected = dragged = d; redraw(); })
-            .transition()
-              .duration(750)
-              .ease("elastic")
-              .attr("r", 6.5);
+            circle
+                .classed('selected', (d) => {
+                    return d === selected;
+                })
+                .attr('cx', (d) => {
+                    return d[0];
+                })
+                .attr('cy', (d) => {
+                    return d[1];
+                });
 
-          circle
-              .classed("selected", (d) => { return d === selected; })
-              .attr("cx", (d) => { return d[0]; })
-              .attr("cy", (d) => { return d[1]; });
+            circle.exit().remove();
 
-          circle.exit().remove();
-
-          if (d3.event) {
-            d3.event.preventDefault();
-            d3.event.stopPropagation();
-          }
+            if (d3.event) {
+                d3.event.preventDefault();
+                d3.event.stopPropagation();
+            }
         }
 
         function change() {
-          line.interpolate(this.value);
-          redraw();
+            line.interpolate(this.value);
+            redraw();
         }
 
         function mousedown() {
-          points.push(selected = dragged = d3.mouse(svg.node()));
-          redraw();
+            points.push((selected = dragged = d3.mouse(svg.node())));
+            redraw();
         }
 
         function mousemove() {
-          if (!dragged) return;
-          const m = d3.mouse(svg.node());
-          dragged[0] = Math.max(0, Math.min(width, m[0]));
-          dragged[1] = Math.max(0, Math.min(height, m[1]));
-          redraw();
+            if (!dragged) return;
+            const m = d3.mouse(svg.node());
+            dragged[0] = Math.max(0, Math.min(width, m[0]));
+            dragged[1] = Math.max(0, Math.min(height, m[1]));
+            redraw();
         }
 
         function mouseup() {
-          if (!dragged) return;
-          mousemove();
-          dragged = null;
+            if (!dragged) return;
+            mousemove();
+            dragged = null;
         }
 
         function keydown() {
-          if (!selected) return;
-          switch (d3.event.keyCode) {
-            case 8: // backspace
-            case 46: { // delete
-              const i = points.indexOf(selected);
-              points.splice(i, 1);
-              selected = points.length ? points[i > 0 ? i - 1 : 0] : null;
-              redraw();
-              break;
+            if (!selected) return;
+            switch (d3.event.keyCode) {
+                case 8: // backspace
+                case 46: {
+                    // delete
+                    const i = points.indexOf(selected);
+                    points.splice(i, 1);
+                    selected = points.length ? points[i > 0 ? i - 1 : 0] : null;
+                    redraw();
+                    break;
+                }
             }
-          }
         }
     }
 }

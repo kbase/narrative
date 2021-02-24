@@ -4,12 +4,12 @@ define(['./ajax', './exceptions'], (ajax, exceptions) => {
     function request(url, module, func, params, numRets, options) {
         // Argh -- a poor man's json rpc.
         const rpc = {
-            params: params,
-            method: module + '.' + func,
-            version: '1.1',
-            id: String(Math.random()).slice(2)
-        },
-        header = {};
+                params: params,
+                method: module + '.' + func,
+                version: '1.1',
+                id: String(Math.random()).slice(2),
+            },
+            header = {};
 
         if (options.rpcContext) {
             rpc.context = options.rpcContext;
@@ -19,12 +19,13 @@ define(['./ajax', './exceptions'], (ajax, exceptions) => {
             header.Authorization = options.authorization;
         }
 
-        return ajax.post({
-            url: url,
-            timeout: options.timeout,
-            data: JSON.stringify(rpc),
-            header: header
-        })
+        return ajax
+            .post({
+                url: url,
+                timeout: options.timeout,
+                data: JSON.stringify(rpc),
+                header: header,
+            })
             .then((response) => {
                 const data = JSON.parse(response);
                 if (numRets === 1) {
@@ -41,7 +42,12 @@ define(['./ajax', './exceptions'], (ajax, exceptions) => {
                         // it as an exception.
                     } catch (ex) {
                         // not json, oh well.
-                        throw new exceptions.RequestError(err.xhr.status, err.xhr.statusText, url, err.xhr.responseText);
+                        throw new exceptions.RequestError(
+                            err.xhr.status,
+                            err.xhr.statusText,
+                            url,
+                            err.xhr.responseText
+                        );
                     }
 
                     // DANGER: This is highly dependent up on what is returned in
@@ -49,8 +55,7 @@ define(['./ajax', './exceptions'], (ajax, exceptions) => {
                     // It is assumbed to be a newline separated list of strings
                     // the penultimate one of which is a simple string expressing
                     // the exception.
-                    let maybeStackTrace,
-                        maybeErrorName;
+                    let maybeStackTrace, maybeErrorName;
 
                     if (data.error && data.error.error && typeof data.error.error === 'string') {
                         maybeStackTrace = data.error.error.split('\n');
@@ -65,15 +70,20 @@ define(['./ajax', './exceptions'], (ajax, exceptions) => {
                             throw new exceptions.AttributeError(module, func, data);
                             break;
                         default:
-                            throw new exceptions.JsonRpcError(module, func, params, url, data.error);
+                            throw new exceptions.JsonRpcError(
+                                module,
+                                func,
+                                params,
+                                url,
+                                data.error
+                            );
                     }
-
                 }
                 throw err;
             });
     }
 
     return Object.freeze({
-        request: request
+        request: request,
     });
 });

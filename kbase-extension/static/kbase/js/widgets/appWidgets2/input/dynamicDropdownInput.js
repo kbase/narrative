@@ -16,7 +16,7 @@ define([
     'common/props',
     'select2',
     'bootstrap',
-    'css!font-awesome'
+    'css!font-awesome',
 ], (
     Promise,
     $,
@@ -55,11 +55,11 @@ define([
             dd_options = spec.original.dynamic_dropdown_options || {},
             dataSource = dd_options.data_source || 'ftp_staging',
             model = {
-                value: undefined
+                value: undefined,
             },
             stagingService = new StagingServiceClient({
                 root: runtime.config('services.staging_api_url.url'),
-                token: runtime.authToken()
+                token: runtime.authToken(),
             }),
             userId = runtime.userId(),
             eventListeners = [];
@@ -72,12 +72,12 @@ define([
          * This function takes a nested return and returns a flat key-value pairing for use with
          * handlebar replacement for example {"foo":{"bar": "meh"}} becomes {"foo.bar": "meh"}
          */
-        var flattenObject = function(ob) {
+        var flattenObject = function (ob) {
             const toReturn = {};
             for (const i in ob) {
                 if (!Object.prototype.hasOwnProperty.call(ob, i)) continue;
 
-                if ((typeof ob[i]) === 'object') {
+                if (typeof ob[i] === 'object') {
                     const flatObject = flattenObject(ob[i]);
                     for (const x in flatObject) {
                         if (!Object.prototype.hasOwnProperty.call(flatObject, x)) continue;
@@ -92,15 +92,18 @@ define([
 
         function makeInputControl() {
             let selectOptions;
-            const selectElem = select({
-                class: 'form-control',
-                dataElement: 'input',
-                style: {
-                    width: '100%'
+            const selectElem = select(
+                {
+                    class: 'form-control',
+                    dataElement: 'input',
+                    style: {
+                        width: '100%',
+                    },
+                    multiple: false,
+                    id: html.genId(),
                 },
-                multiple: false,
-                id: html.genId()
-            }, [option({ value: '' }, '')].concat(selectOptions));
+                [option({ value: '' }, '')].concat(selectOptions)
+            );
 
             return selectElem;
         }
@@ -117,8 +120,7 @@ define([
                 const modelVal = getModelValue();
                 if (modelVal) {
                     return modelVal;
-                }
-                else {
+                } else {
                     return '';
                 }
             }
@@ -166,7 +168,7 @@ define([
                     validationConstraints = {
                         min_length: spec.data.constraints.min_length,
                         max_length: spec.data.constraints.max_length,
-                        required: spec.data.constraints.required
+                        required: spec.data.constraints.required,
                     };
                 // selected item might be either a string or a number.
                 // if it's a number, we want it to be a string
@@ -182,10 +184,15 @@ define([
         function genericClientCall(call_params) {
             const swUrl = runtime.config('services.service_wizard.url'),
                 genericClient = new GenericClient(swUrl, {
-                    token: runtime.authToken()
+                    token: runtime.authToken(),
                 });
-            return genericClient.sync_call(dd_options.service_function,
-                call_params, null, null, dd_options.service_version || 'release');
+            return genericClient.sync_call(
+                dd_options.service_function,
+                call_params,
+                null,
+                null,
+                dd_options.service_version || 'release'
+            );
         }
 
         function fetchData(searchTerm) {
@@ -195,84 +202,93 @@ define([
                 return Promise.resolve([]);
             }
             if (dataSource === 'ftp_staging') {
-                return Promise.resolve(stagingService.search({query: searchTerm}))
-                    .then((results) => {
+                return Promise.resolve(stagingService.search({ query: searchTerm })).then(
+                    (results) => {
                         results = JSON.parse(results).filter((file) => {
                             return !file.isFolder;
                         });
                         results.forEach((file) => {
                             file.text = file.path;
-                            file.subdir = file.path.substring(0, file.path.length - file.name.length);
+                            file.subdir = file.path.substring(
+                                0,
+                                file.path.length - file.name.length
+                            );
                             file.subpath = file.path.substring(userId.length + 1);
                             file.id = file.subpath;
                         });
                         return results;
-                    });
+                    }
+                );
             } else {
-                let call_params = JSON.stringify(dd_options.service_params).replace('{{dynamic_dropdown_input}}', searchTerm);
-                call_params =  JSON.parse(call_params);
-                
-                return Promise.resolve(genericClientCall(call_params))
-                    .then((results) => {
-                        let index = dd_options.result_array_index;
-                        if (!index) {
-                            index = 0;
-                        }
-                        if (index >= results.length) {
-                            console.error(`Result array from ${dd_options.service_function} ` +
-                                    `has length ${results.length} but index ${index} ` +
-                                    'was requested');
-                            return [];
-                        }
-                        results = results[index];
-                        let path = dd_options.path_to_selection_items;
-                        if (!path) {
-                            path = [];
-                        }
-                        results = Props.getDataItem(results, path);
-                        if (!Array.isArray(results)) {
-                            console.error('Selection items returned from ' +
-                                    `${dd_options.service_function} at path /${path.join('/')} ` +
-                                    `in postion ${index} of the returned list are not an array`);
-                            return [];
-                        } else {
-                            results.forEach((obj, index) => {
-                                // could check here that each item is a map? YAGNI
-                                obj = flattenObject(obj);
-                                if (!('id' in obj)) {
-                                    obj.id = index; // what the fuck
-                                }
-                                //this blows away any 'text' field
-                                obj.text = obj[dd_options.selection_id];
-                                results[index] = obj;
-                            });
-                            return results;
+                let call_params = JSON.stringify(dd_options.service_params).replace(
+                    '{{dynamic_dropdown_input}}',
+                    searchTerm
+                );
+                call_params = JSON.parse(call_params);
 
-                        }
-                    });
+                return Promise.resolve(genericClientCall(call_params)).then((results) => {
+                    let index = dd_options.result_array_index;
+                    if (!index) {
+                        index = 0;
+                    }
+                    if (index >= results.length) {
+                        console.error(
+                            `Result array from ${dd_options.service_function} ` +
+                                `has length ${results.length} but index ${index} ` +
+                                'was requested'
+                        );
+                        return [];
+                    }
+                    results = results[index];
+                    let path = dd_options.path_to_selection_items;
+                    if (!path) {
+                        path = [];
+                    }
+                    results = Props.getDataItem(results, path);
+                    if (!Array.isArray(results)) {
+                        console.error(
+                            'Selection items returned from ' +
+                                `${dd_options.service_function} at path /${path.join('/')} ` +
+                                `in postion ${index} of the returned list are not an array`
+                        );
+                        return [];
+                    } else {
+                        results.forEach((obj, index) => {
+                            // could check here that each item is a map? YAGNI
+                            obj = flattenObject(obj);
+                            if (!('id' in obj)) {
+                                obj.id = index; // what the fuck
+                            }
+                            //this blows away any 'text' field
+                            obj.text = obj[dd_options.selection_id];
+                            results[index] = obj;
+                        });
+                        return results;
+                    }
+                });
             }
         }
 
         function doChange() {
-            validate()
-                .then((result) => {
-                    if (result.isValid) {
-                        const newValue = result.parsedValue === undefined ? result.value : result.parsedValue;
-                        model.value = newValue;
-                        channel.emit('changed', {
-                            newValue: newValue
-                        });
-                    } else if (result.diagnosis === 'required-missing') {
-                        model.value = spec.data.nullValue;
-                        channel.emit('changed', {
-                            newValue: spec.data.nullValue
-                        });
-                    }
-                    channel.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
+            validate().then((result) => {
+                if (result.isValid) {
+                    const newValue =
+                        result.parsedValue === undefined ? result.value : result.parsedValue;
+                    model.value = newValue;
+                    channel.emit('changed', {
+                        newValue: newValue,
                     });
+                } else if (result.diagnosis === 'required-missing') {
+                    model.value = spec.data.nullValue;
+                    channel.emit('changed', {
+                        newValue: spec.data.nullValue,
+                    });
+                }
+                channel.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
 
         /**
@@ -292,26 +308,29 @@ define([
                 if (!ret_obj.id) {
                     return $('<div style="display:block; height:20px">').append(ret_obj.text);
                 }
-                return $(div([
-                    span({style: 'word-wrap: break-word'}, [
-                        ret_obj.subdir,
-                        b(ret_obj.name)
-                    ]),
-                    div({style: 'margin-left: 7px'}, [
-                        'Size: ' + StringUtil.readableBytes(ret_obj.size) + '<br>',
-                        'Uploaded ' + TimeFormat.getTimeStampStr(ret_obj.mtime, true)
+                return $(
+                    div([
+                        span({ style: 'word-wrap: break-word' }, [ret_obj.subdir, b(ret_obj.name)]),
+                        div({ style: 'margin-left: 7px' }, [
+                            'Size: ' + StringUtil.readableBytes(ret_obj.size) + '<br>',
+                            'Uploaded ' + TimeFormat.getTimeStampStr(ret_obj.mtime, true),
+                        ]),
                     ])
-                ]));
+                );
             } else {
-                const replacer = function (match, p1) {return ret_obj[p1];};
+                const replacer = function (match, p1) {
+                    return ret_obj[p1];
+                };
                 let formatted_string;
                 if (dd_options.description_template) {
                     // use slice to avoid modifying global description_template
-                    formatted_string = dd_options.description_template.slice().replace(/{{(.+?)}}/g, replacer);
+                    formatted_string = dd_options.description_template
+                        .slice()
+                        .replace(/{{(.+?)}}/g, replacer);
                 } else {
                     formatted_string = JSON.stringify(ret_obj);
                 }
-                return  $('<div style="display:block; height:20px">').append(formatted_string);
+                return $('<div style="display:block; height:20px">').append(formatted_string);
             }
         }
 
@@ -341,25 +360,27 @@ define([
 
                 ui.setContent('input-container', content);
 
-                $(ui.getElement('input-container.input')).select2({
-                    templateResult: formatObjectDisplay,
-                    templateSelection: selectionTemplate,
-                    ajax: {
-                        delay: 250,
-                        transport: function(params, success, failure) {
-                            return fetchData(params.data.term)
-                                .then((data) => {
-                                    success({results: data});
-                                })
-                                .catch((err) => {
-                                    console.error(err);
-                                    failure(err);
-                                });
-                        }
-                    }
-                }).on('change', () => {
-                    doChange();
-                });
+                $(ui.getElement('input-container.input'))
+                    .select2({
+                        templateResult: formatObjectDisplay,
+                        templateSelection: selectionTemplate,
+                        ajax: {
+                            delay: 250,
+                            transport: function (params, success, failure) {
+                                return fetchData(params.data.term)
+                                    .then((data) => {
+                                        success({ results: data });
+                                    })
+                                    .catch((err) => {
+                                        console.error(err);
+                                        failure(err);
+                                    });
+                            },
+                        },
+                    })
+                    .on('change', () => {
+                        doChange();
+                    });
                 events.attachEvents(container);
             });
         }
@@ -370,25 +391,25 @@ define([
          * For the objectInput, there is only ever one control.
          */
         function layout(events) {
-            const content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' })
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
         function autoValidate() {
-            return validate()
-                .then((result) => {
-                    channel.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
+            return validate().then((result) => {
+                channel.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
 
         // LIFECYCLE API
@@ -409,17 +430,16 @@ define([
                     model.value = config.initialValue;
                 }
 
-                return render()
-                    .then(() => {
-                        channel.on('reset-to-defaults', () => {
-                            resetModelValue();
-                        });
-                        channel.on('update', (message) => {
-                            setModelValue(message.value);
-                        });
-                        setControlValue(getModelValue());
-                        autoValidate();
+                return render().then(() => {
+                    channel.on('reset-to-defaults', () => {
+                        resetModelValue();
                     });
+                    channel.on('update', (message) => {
+                        setModelValue(message.value);
+                    });
+                    setControlValue(getModelValue());
+                    autoValidate();
+                });
             });
         }
 
@@ -437,16 +457,15 @@ define([
 
         // INIT
 
-
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

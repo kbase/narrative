@@ -1,5 +1,4 @@
-define([
-], () => {
+define([], () => {
     'use strict';
 
     function Messages(config) {
@@ -29,7 +28,8 @@ define([
         function receiveMessage(event) {
             let origin = event.origin || event.originalEvent.origin,
                 message = event.data,
-                listener, response;
+                listener,
+                response;
 
             if (message.id && awaitingResponse[message.id]) {
                 try {
@@ -52,7 +52,6 @@ define([
                     }
                 });
             }
-
         }
 
         function getPartner(name) {
@@ -74,7 +73,7 @@ define([
             message.id = id;
             awaitingResponse[id] = {
                 started: new Date(),
-                handler: handler
+                handler: handler,
             };
             sendMessage(partnerName, message);
         }
@@ -96,14 +95,13 @@ define([
 
         root.addEventListener('message', receiveMessage, false);
 
-
         return {
             addPartner: addPartner,
             request: request,
             send: sendMessage,
             // sendMessages: sendMessages,
             listen: listenForMessage,
-            setName: setName
+            setName: setName,
         };
     }
 

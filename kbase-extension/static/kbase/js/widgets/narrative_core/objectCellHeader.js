@@ -9,37 +9,30 @@ define([
     'kbwidget',
     'kb_service/client/workspace',
     'common/runtime',
-    'util/timeFormat'
-], (
-    $,
-    Promise,
-    KBWidget,
-    Workspace,
-    Runtime,
-    TimeFormat
-) => {
+    'util/timeFormat',
+], ($, Promise, KBWidget, Workspace, Runtime, TimeFormat) => {
     'use strict';
 
     return KBWidget({
         name: 'objectCellHeader',
         options: {
-            upas: {},   // key = some id string, value = either string (single upa) or array (many)
+            upas: {}, // key = some id string, value = either string (single upa) or array (many)
             versionCallback: null,
-            primaryUpaId: null // main key in the upas object
+            primaryUpaId: null, // main key in the upas object
         },
         objectInfo: {},
 
-        init: function(options) {
+        init: function (options) {
             options.upas = options.upas || {};
             this._super(options);
             const runtime = Runtime.make();
             this.workspace = new Workspace(runtime.config('services.workspace.url'), {
-                token: runtime.authToken()
+                token: runtime.authToken(),
             });
             this.fetchObjectInfo();
         },
 
-        updateUpas: function(upas) {
+        updateUpas: function (upas) {
             this.options.upas = upas;
             this.fetchObjectInfo();
         },
@@ -48,7 +41,7 @@ define([
          * Fetches general info about all UPAs in options.upas.
          * Stores this info in a map from upa->info (this.objectInfo)
          */
-        fetchObjectInfo: function() {
+        fetchObjectInfo: function () {
             // parse upas dict into a list.
             const self = this;
             self.objectInfo = {};
@@ -56,8 +49,7 @@ define([
                 const upa = self.options.upas[key];
                 if (typeof upa === 'string') {
                     self.objectInfo[upa] = {};
-                }
-                else if (Array.isArray(upa)) {
+                } else if (Array.isArray(upa)) {
                     upa.forEach((subUpa) => {
                         self.options.upas[subUpa] = {};
                         self.objectInfo[subUpa] = {};
@@ -68,12 +60,13 @@ define([
             // prep workspace call.
             const wsInfoCall = [];
             Object.keys(self.objectInfo).forEach((upa) => {
-                wsInfoCall.push({'ref': upa});
+                wsInfoCall.push({ ref: upa });
             });
 
             const allPromises = [];
             // do ws call.
-            const objInfoProm = self.workspace.get_object_info_new({'objects': wsInfoCall})
+            const objInfoProm = self.workspace
+                .get_object_info_new({ objects: wsInfoCall })
                 .then((infos) => {
                     wsInfoCall.forEach((upaRef, idx) => {
                         self.objectInfo[upaRef.ref].info = infos[idx];
@@ -83,7 +76,8 @@ define([
 
             wsInfoCall.forEach((upaRef) => {
                 if (upaRef.ref.indexOf(';') === -1) {
-                    const histPromise = self.workspace.get_object_history(upaRef)
+                    const histPromise = self.workspace
+                        .get_object_history(upaRef)
                         .then((history) => {
                             self.objectInfo[upaRef.ref].history = history;
                         });
@@ -99,14 +93,14 @@ define([
                 });
         },
 
-        buildObjectInfo: function(upa) {
+        buildObjectInfo: function (upa) {
             const $info = $('<div>');
             if (!this.objectInfo[upa]) {
                 return $info;
             }
             const objInfo = this.objectInfo[upa].info;
 
-            const addField = function(key, value) {
+            const addField = function (key, value) {
                 $info.append($('<div><span>' + key + '</span>: <span>' + value + '</span></div>'));
             };
 
@@ -129,7 +123,7 @@ define([
             return $info;
         },
 
-        buildVersionToggle: function(upaId) {
+        buildVersionToggle: function (upaId) {
             const upa = this.options.upas[upaId];
             if (!upa || !this.objectInfo[upa] || !this.objectInfo[upa].history) {
                 return $('<div>Other object versions unavailable!</div>');
@@ -145,7 +139,7 @@ define([
                 .click(() => {
                     // move back version
                     if (curVersion > 1) {
-                        this.options.versionCallback(upaId, curVersion-1);
+                        this.options.versionCallback(upaId, curVersion - 1);
                     }
                 });
             if (curVersion > 1) {
@@ -157,25 +151,23 @@ define([
                 .append($('<span>').addClass('fa fa-arrow-right'))
                 .click(() => {
                     if (curVersion < totalVersions) {
-                        this.options.versionCallback(upaId, curVersion+1);
+                        this.options.versionCallback(upaId, curVersion + 1);
                     }
                 });
             if (curVersion < totalVersions) {
                 $fwdBtn.removeClass('disabled');
             }
 
-            $versions.append(
-                $('<div>').append($fwdBtn).append($backBtn)
-            );
+            $versions.append($('<div>').append($fwdBtn).append($backBtn));
             return $versions;
         },
 
-        detach: function() {
+        detach: function () {
             // remove events from buttons.
             this.$elem.find('button').off('click');
         },
 
-        render: function() {
+        render: function () {
             let mainUpa = null,
                 mainUpaId = null,
                 numUpas = Object.keys(this.objectInfo).length;
@@ -185,20 +177,22 @@ define([
                 mainUpaId = Object.keys(this.options.upas)[0];
             }
             mainUpa = this.options.upas[mainUpaId];
-            let $body = $('<div style="display:flex; flex-direction:row; justify-content: space-between">'),
+            let $body = $(
+                    '<div style="display:flex; flex-direction:row; justify-content: space-between">'
+                ),
                 $info;
             if (mainUpa) {
                 $info = this.buildObjectInfo(mainUpa);
-            }
-            else {
-                $info = $('<div>Lots of info available for ' + numUpas + ' object on display!</div>');
+            } else {
+                $info = $(
+                    '<div>Lots of info available for ' + numUpas + ' object on display!</div>'
+                );
             }
 
             const $versionToggle = this.buildVersionToggle(mainUpaId);
 
-            $body.append($info)
-                .append($versionToggle);
+            $body.append($info).append($versionToggle);
             this.$elem.empty().append($body);
-        }
+        },
     });
 });

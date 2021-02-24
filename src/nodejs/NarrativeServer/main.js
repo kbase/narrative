@@ -10,7 +10,7 @@ App.init();
 const Utils = require('./utils');
 const HttpError = Utils.HttpError;
 const Auth = require('./auth').Auth;
-const Admin = require('./admin').Admin.init({app: App});
+const Admin = require('./admin').Admin.init({ app: App });
 
 const httpServer = http.createServer();
 
@@ -20,8 +20,8 @@ function extensionToMime(ext) {
     const map = {
         html: 'text/html',
         js: 'application/javascript',
-        css: 'text/stylesheet'
-    }
+        css: 'text/stylesheet',
+    };
     return map[ext] || 'text/plain';
 }
 
@@ -29,21 +29,26 @@ httpServer.on('request', (req, res) => {
     try {
         const url = Url.parse(req.url, true);
         let matched;
-        if ( (matched = url.path.match(/\/narrative(:?$|\/(.*))/)) ) {
+        if ((matched = url.path.match(/\/narrative(:?$|\/(.*))/))) {
             App.getUserContainer(req, (userContainer) => {
-                userContainer.proxy.web(req, res, {
-                    toProxy: '/' + matched[1]
-                }, (err) => {
-                    console.log('Error proxying');
-                    console.log(err);
-                    console.log(req.url);
-                });
+                userContainer.proxy.web(
+                    req,
+                    res,
+                    {
+                        toProxy: '/' + matched[1],
+                    },
+                    (err) => {
+                        console.log('Error proxying');
+                        console.log(err);
+                        console.log(req.url);
+                    }
+                );
             });
         } else if (url.path.match(/\/login/)) {
             Auth.renderLogin(req, res, url);
         } else if (url.path.match(/\/signin/)) {
             Auth.handleSignin(req, res, url);
-        } else if ( (matched = url.path.match(/\/admin\/(.*)/)) ) {
+        } else if ((matched = url.path.match(/\/admin\/(.*)/))) {
             Admin.route(req, res, url, matched[1]);
         } else {
             const filePath = './htdocs' + url.path;
@@ -70,7 +75,7 @@ httpServer.on('request', (req, res) => {
                 FS.createReadStream(filePath).pipe(res);
                 return;
             });
-        } 
+        }
     } catch (err) {
         if (err.isHttpError) {
             switch (err.code) {
@@ -84,10 +89,9 @@ httpServer.on('request', (req, res) => {
                 default:
                     res.statusCode = err.code;
                     res.statusMessage = err.message;
-                    res.setHeader('Content-Type', 'text/plain');            
+                    res.setHeader('Content-Type', 'text/plain');
                     res.end(err.content || '');
             }
-             
         } else {
             res.statusCode = 500;
             res.statusMessage = 'Server error';
@@ -96,13 +100,11 @@ httpServer.on('request', (req, res) => {
             res.end('Sorry, server error.');
         }
     }
-        
 });
 
 httpServer.on('upgrade', (req, socket, head) => {
     App.getUserContainer(req, (userContainer) => {
-        userContainer.proxy.ws(req, socket, head, {
-        }, (err) => {
+        userContainer.proxy.ws(req, socket, head, {}, (err) => {
             console.log(err);
         });
     });

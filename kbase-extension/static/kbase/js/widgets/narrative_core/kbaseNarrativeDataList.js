@@ -28,7 +28,7 @@ define([
     'kbase/js/widgets/narrative_core/kbaseDataCard',
     'api/dataProvider',
     'bootstrap',
-    'jquery-nearest'
+    'jquery-nearest',
 ], (
     KBWidget,
     $,
@@ -68,7 +68,7 @@ define([
             lp_url: Config.url('landing_pages'),
             loadingImage: Config.get('loading_gif'),
             parentControlPanel: null,
-            slideTime: 400
+            slideTime: 400,
         },
         // private variables
         runtime: Runtime.make(),
@@ -96,7 +96,7 @@ define([
         controlClickHnd: {}, // click handlers for control buttons
         token: null,
         my_username: null,
-        sortOrder: -1,  // order for sorting the list. 1 = increasing, -1 = decreasing
+        sortOrder: -1, // order for sorting the list. 1 = increasing, -1 = decreasing
 
         objectRowTmpl: Handlebars.compile(ObjectRowHtml),
 
@@ -198,16 +198,13 @@ define([
             }
             // Construct return value, which is one
             // map for each of the Sets.
-            return _.map(
-                _.keys(this.setItems[item_id]),
-                (key) => {
-                    return {
-                        item_id: key,
-                        expanded: this.setInfo[key].expanded,
-                        div: this.setInfo[key].div
-                    };
-                }
-            );
+            return _.map(_.keys(this.setItems[item_id]), (key) => {
+                return {
+                    item_id: key,
+                    expanded: this.setInfo[key].expanded,
+                    div: this.setInfo[key].div,
+                };
+            });
         },
 
         /**
@@ -255,7 +252,8 @@ define([
 
             //if there are more than this # of objs, user must click search
             //instead of updating as you type
-            this.options.maxObjsToPreventFilterAsYouTypeInSearch = dataConfig.typeahead_search_limit;
+            this.options.maxObjsToPreventFilterAsYouTypeInSearch =
+                dataConfig.typeahead_search_limit;
 
             // initial sort makes loading slower, so we can turn it off if
             // there are more than this number of objects
@@ -269,24 +267,32 @@ define([
 
             this.loadingDiv = DisplayUtil.loadingDiv();
             this.loadingDiv.div.hide();
-            this.loadingDiv.div.css({ 'top': '0', 'bottom': '0' });
+            this.loadingDiv.div.css({ top: '0', bottom: '0' });
 
             this.mainListId = StringUtil.uuid();
             this.$mainListDiv = $('<div id=' + this.mainListId + '>')
-                .css({ 'overflow-x': 'hidden', 'overflow-y': 'auto', 'height': this.mainListPanelHeight })
+                .css({
+                    'overflow-x': 'hidden',
+                    'overflow-y': 'auto',
+                    height: this.mainListPanelHeight,
+                })
                 .on('scroll', () => {
                     if ($(this).scrollTop() + $(this).innerHeight() >= this.scrollHeight) {
                         this.renderMore();
                     }
                 });
 
-            this.$addDataButton = $('<button>').addClass('kb-data-list-add-data-button fa fa-plus fa-2x')
+            this.$addDataButton = $('<button>')
+                .addClass('kb-data-list-add-data-button fa fa-plus fa-2x')
                 .attr('aria-label', 'add data')
-                .css({ 'position': 'absolute', bottom: '15px', right: '25px', 'z-index': '5' })
+                .css({ position: 'absolute', bottom: '15px', right: '25px', 'z-index': '5' })
                 .click(() => {
-                    this.trigger('toggleSidePanelOverlay.Narrative', [this.options.parentControlPanel.$overlayPanel]);
+                    this.trigger('toggleSidePanelOverlay.Narrative', [
+                        this.options.parentControlPanel.$overlayPanel,
+                    ]);
                 });
-            const $mainListDivContainer = $('<div>').css({ 'position': 'relative' })
+            const $mainListDivContainer = $('<div>')
+                .css({ position: 'relative' })
                 .append(this.loadingDiv.div)
                 .append(this.$mainListDiv)
                 .append(this.$addDataButton.hide());
@@ -314,9 +320,9 @@ define([
         setListHeight: function (height, animate) {
             if (this.$mainListDiv) {
                 if (animate) {
-                    this.$mainListDiv.animate({ 'height': height }, this.options.slideTime);
+                    this.$mainListDiv.animate({ height: height }, this.options.slideTime);
                 } else {
-                    this.$mainListDiv.css({ 'height': height });
+                    this.$mainListDiv.css({ height: height });
                 }
             }
         },
@@ -381,9 +387,11 @@ define([
                 console.error('ws: ' + this.ws);
                 return;
             }
-            return Promise.resolve(this.ws.get_workspace_info({
-                workspace: this.ws_name
-            }))
+            return Promise.resolve(
+                this.ws.get_workspace_info({
+                    workspace: this.ws_name,
+                })
+            )
                 .then((wsInfo) => {
                     if (this.wsLastUpdateTimestamp !== wsInfo[3]) {
                         this.wsLastUpdateTimestamp = wsInfo[3];
@@ -397,7 +405,10 @@ define([
                 .catch((error) => {
                     console.error('DataList: when checking for updates:', error);
                     if (showError) {
-                        this.showBlockingError('Sorry, an error occurred while fetching your data.', { 'error': 'Unable to connect to KBase database.' });
+                        this.showBlockingError(
+                            'Sorry, an error occurred while fetching your data.',
+                            { error: 'Unable to connect to KBase database.' }
+                        );
                     }
                 });
         },
@@ -440,16 +451,19 @@ define([
                         return info;
                     });
                     const data = JSON.parse(JSON.stringify(justInfo));
-                    this.runtime.bus().set({
-                        data: data,
-                        timestamp: new Date().getTime(),
-                        objectInfo: objectInfoPlus
-                    }, {
-                        channel: 'data',
-                        key: {
-                            type: 'workspace-data-updated'
+                    this.runtime.bus().set(
+                        {
+                            data: data,
+                            timestamp: new Date().getTime(),
+                            objectInfo: objectInfoPlus,
+                        },
+                        {
+                            channel: 'data',
+                            key: {
+                                type: 'workspace-data-updated',
+                            },
                         }
-                    });
+                    );
                 })
                 .then(() => {
                     this.showLoading('Rendering data...');
@@ -480,11 +494,9 @@ define([
                         this.filterByType(typeSelected);
                     } else if (this.selectedType === 'sortData') {
                         this.sortData(this.lastSortFunction);
-                    }
-                    else {
+                    } else {
                         this.renderList();
                         this.$elem.find('#nar-data-list-default-sort-label').addClass('active');
-
                     }
                     this.hideLoading();
                     this.trigger('dataUpdated.Narrative');
@@ -500,9 +512,7 @@ define([
          */
         showBlockingError: function (title, error) {
             this.$mainListDiv.empty();
-            this.$mainListDiv.append(
-                DisplayUtil.createError(title, error)
-            );
+            this.$mainListDiv.append(DisplayUtil.createError(title, error));
             this.loadingDiv.div.hide();
             this.$mainListDiv.show();
         },
@@ -513,7 +523,8 @@ define([
                 const objId = this.itemId(objInfo);
                 let fullDpReference = null;
                 if (dpInfo && dpInfo.ref) {
-                    fullDpReference = dpInfo.ref + ';' + objInfo[6] + '/' + objInfo[0] + '/' + objInfo[4];
+                    fullDpReference =
+                        dpInfo.ref + ';' + objInfo[6] + '/' + objInfo[0] + '/' + objInfo[4];
                 }
                 if (this.dataObjects[objId]) {
                     return;
@@ -525,13 +536,13 @@ define([
                     info: objInfo,
                     attached: false,
                     fromPalette: this.wsId !== objInfo[6],
-                    refPath: fullDpReference
+                    refPath: fullDpReference,
                 };
                 this.keyToObjId[key] = objId;
                 this.viewOrder.push({
                     objId: objId,
                     inView: false,
-                    inFilter: true
+                    inFilter: true,
                 });
 
                 // set the type -> object info structure
@@ -546,7 +557,7 @@ define([
                 if (!(typeName in this.availableTypes)) {
                     this.availableTypes[typeName] = {
                         type: typeName,
-                        count: 0
+                        count: 0,
                     };
                 }
                 this.availableTypes[typeName].count++;
@@ -560,7 +571,7 @@ define([
                         this.setInfo[setId] = {
                             div: null,
                             expanded: false,
-                            item_ids: []
+                            item_ids: [],
                         };
                     }
                     this.setInfo[setId].item_ids.push(itemId);
@@ -592,12 +603,17 @@ define([
                     });
                 })
                 .catch((error) => {
-                    this.showBlockingError('Sorry, an error occurred while fetching your data.', error);
+                    this.showBlockingError(
+                        'Sorry, an error occurred while fetching your data.',
+                        error
+                    );
                     console.error(error);
-                    window.KBError('kbaseNarrativeDataList.fetchWorkspaceData', error.error.message);
+                    window.KBError(
+                        'kbaseNarrativeDataList.fetchWorkspaceData',
+                        error.error.message
+                    );
                     throw error;
                 });
-
         },
 
         /**
@@ -690,11 +706,9 @@ define([
 
         makeToolbarButton: function (name) {
             const btnClasses = 'btn btn-xs btn-default';
-            const btnCss = { 'color': '#888' };
+            const btnCss = { color: '#888' };
 
-            const $btn = $('<span>')
-                .addClass(btnClasses)
-                .css(btnCss);
+            const $btn = $('<span>').addClass(btnClasses).css(btnCss);
 
             if (name) {
                 $btn.attr('data-button', name);
@@ -710,12 +724,15 @@ define([
                     container: '#' + this.mainListId,
                     delay: {
                         show: Config.get('tooltip').showDelay,
-                        hide: Config.get('tooltip').hideDelay
-                    }
+                        hide: Config.get('tooltip').hideDelay,
+                    },
                 })
                 .append($('<span>').addClass('fa fa-sign-in'))
                 .click(() => {
-                    this.trigger('filterMethods.Narrative', 'input:' + objData.objectInfo.type.split('-')[0]);
+                    this.trigger(
+                        'filterMethods.Narrative',
+                        'input:' + objData.objectInfo.type.split('-')[0]
+                    );
                 });
         },
 
@@ -726,12 +743,15 @@ define([
                     container: '#' + this.mainListId,
                     delay: {
                         show: Config.get('tooltip').showDelay,
-                        hide: Config.get('tooltip').hideDelay
-                    }
+                        hide: Config.get('tooltip').hideDelay,
+                    },
                 })
                 .append($('<span>').addClass('fa fa-sign-out'))
                 .click(() => {
-                    this.trigger('filterMethods.Narrative', 'output:' + objData.objectInfo.type.split('-')[0]);
+                    this.trigger(
+                        'filterMethods.Narrative',
+                        'output:' + objData.objectInfo.type.split('-')[0]
+                    );
                 });
         },
 
@@ -742,8 +762,8 @@ define([
                     container: '#' + this.mainListId,
                     delay: {
                         show: Config.get('tooltip').showDelay,
-                        hide: Config.get('tooltip').hideDelay
-                    }
+                        hide: Config.get('tooltip').hideDelay,
+                    },
                 })
                 .append($('<span>').addClass('fa fa-binoculars'))
                 .click((e) => {
@@ -760,10 +780,11 @@ define([
 
         renderError: function ($alertContainer, message) {
             $alertContainer.empty();
-            $alertContainer
-                .append($('<span>')
-                    .css({ 'color': '#F44336' })
-                    .append('Error! ' + message));
+            $alertContainer.append(
+                $('<span>')
+                    .css({ color: '#F44336' })
+                    .append('Error! ' + message)
+            );
         },
 
         openHistoryButton: function (objData, $alertContainer) {
@@ -773,8 +794,8 @@ define([
                     container: 'body',
                     delay: {
                         show: Config.get('tooltip').showDelay,
-                        hide: Config.get('tooltip').hideDelay
-                    }
+                        hide: Config.get('tooltip').hideDelay,
+                    },
                 })
                 .append($('<span>').addClass('fa fa-history'))
                 .click((e) => {
@@ -782,18 +803,25 @@ define([
                     $alertContainer.empty();
 
                     if (this.ws_name && this.ws) {
-                        this.ws.get_object_history({ ref: objData.objectInfo.wsid + '/' + objData.objectInfo.id },
+                        this.ws.get_object_history(
+                            { ref: objData.objectInfo.wsid + '/' + objData.objectInfo.id },
                             (history) => {
-                                $alertContainer.append($('<div>')
-                                    .append($('<button>').addClass('kb-data-list-cancel-btn')
-                                        .append('Hide History')
-                                        .click(() => {
-                                            $alertContainer.empty();
-                                        })));
+                                $alertContainer.append(
+                                    $('<div>').append(
+                                        $('<button>')
+                                            .addClass('kb-data-list-cancel-btn')
+                                            .append('Hide History')
+                                            .click(() => {
+                                                $alertContainer.empty();
+                                            })
+                                    )
+                                );
                                 history.reverse();
-                                const $tbl = $('<table>').css({ 'width': '100%' });
+                                const $tbl = $('<table>').css({ width: '100%' });
                                 for (const [historyItem, historyIndex] of history.items()) {
-                                    const $revertBtn = $('<button>').append('v' + historyItem[4]).addClass('kb-data-list-btn');
+                                    const $revertBtn = $('<button>')
+                                        .append('v' + historyItem[4])
+                                        .addClass('kb-data-list-btn');
                                     if (historyIndex === 0) {
                                         $revertBtn.tooltip({
                                             title: 'Current Version',
@@ -801,56 +829,88 @@ define([
                                             placement: 'bottom',
                                             delay: {
                                                 show: Config.get('tooltip').showDelay,
-                                                hide: Config.get('tooltip').hideDelay
-                                            }
+                                                hide: Config.get('tooltip').hideDelay,
+                                            },
                                         });
                                     } else {
-                                        const revertRef = { wsid: historyItem[6], objid: historyItem[0], ver: historyItem[4] };
+                                        const revertRef = {
+                                            wsid: historyItem[6],
+                                            objid: historyItem[0],
+                                            ver: historyItem[4],
+                                        };
                                         ((revertRefLocal) => {
-                                            $revertBtn.tooltip({
-                                                title: 'Revert to this version?',
-                                                container: 'body',
-                                                placement: 'bottom',
-                                                delay: {
-                                                    show: Config.get('tooltip').showDelay,
-                                                    hide: Config.get('tooltip').hideDelay
-                                                }
-                                            })
+                                            $revertBtn
+                                                .tooltip({
+                                                    title: 'Revert to this version?',
+                                                    container: 'body',
+                                                    placement: 'bottom',
+                                                    delay: {
+                                                        show: Config.get('tooltip').showDelay,
+                                                        hide: Config.get('tooltip').hideDelay,
+                                                    },
+                                                })
                                                 .click(() => {
-                                                    this.ws.revert_object(revertRefLocal,
+                                                    this.ws.revert_object(
+                                                        revertRefLocal,
                                                         () => {
                                                             this.writingLock = false;
                                                             this.refresh();
                                                         },
                                                         (error) => {
                                                             console.error(error);
-                                                            this.renderError($alertContainer, error.error.message);
-                                                        });
+                                                            this.renderError(
+                                                                $alertContainer,
+                                                                error.error.message
+                                                            );
+                                                        }
+                                                    );
                                                 });
                                         })(revertRef);
                                     }
-                                    $tbl.append($('<tr>')
-                                        .append($('<td>').append($revertBtn))
-                                        .append($('<td>').append('Saved by ' + historyItem[5] + '<br>' + TimeFormat.getTimeStampStr(historyItem[3])))
-                                        .append($('<td>').append($('<span>').css({ margin: '4px' }).addClass('fa fa-info pull-right'))
-                                            .tooltip({
-                                                title: historyItem[2] + '<br>' + historyItem[8] + '<br>' + historyItem[9] + ' bytes',
-                                                container: 'body',
-                                                html: true,
-                                                placement: 'bottom',
-                                                delay: {
-                                                    show: Config.get('tooltip').showDelay,
-                                                    hide: Config.get('tooltip').hideDelay
-                                                }
-                                            })
-                                        ));
+                                    $tbl.append(
+                                        $('<tr>')
+                                            .append($('<td>').append($revertBtn))
+                                            .append(
+                                                $('<td>').append(
+                                                    'Saved by ' +
+                                                        historyItem[5] +
+                                                        '<br>' +
+                                                        TimeFormat.getTimeStampStr(historyItem[3])
+                                                )
+                                            )
+                                            .append(
+                                                $('<td>')
+                                                    .append(
+                                                        $('<span>')
+                                                            .css({ margin: '4px' })
+                                                            .addClass('fa fa-info pull-right')
+                                                    )
+                                                    .tooltip({
+                                                        title:
+                                                            historyItem[2] +
+                                                            '<br>' +
+                                                            historyItem[8] +
+                                                            '<br>' +
+                                                            historyItem[9] +
+                                                            ' bytes',
+                                                        container: 'body',
+                                                        html: true,
+                                                        placement: 'bottom',
+                                                        delay: {
+                                                            show: Config.get('tooltip').showDelay,
+                                                            hide: Config.get('tooltip').hideDelay,
+                                                        },
+                                                    })
+                                            )
+                                    );
                                 }
                                 $alertContainer.append($tbl);
                             },
                             (error) => {
                                 console.error(error);
                                 this.renderError($alertContainer, error.error.message);
-                            });
+                            }
+                        );
                     }
                 });
         },
@@ -862,8 +922,8 @@ define([
                     container: 'body',
                     delay: {
                         show: Config.get('tooltip').showDelay,
-                        hide: Config.get('tooltip').hideDelay
-                    }
+                        hide: Config.get('tooltip').hideDelay,
+                    },
                 })
                 .append($('<span>').addClass('fa fa-sitemap fa-rotate-90'))
                 .click((e) => {
@@ -880,8 +940,8 @@ define([
                     container: 'body',
                     delay: {
                         show: Config.get('tooltip').showDelay,
-                        hide: Config.get('tooltip').hideDelay
-                    }
+                        hide: Config.get('tooltip').hideDelay,
+                    },
                 })
                 .append($('<span>').addClass('fa fa-download'))
                 .click((e) => {
@@ -890,7 +950,7 @@ define([
                     const type = objData.objectInfo.type.split('-')[0];
                     const wsId = objData.objectInfo.wsid;
                     const objId = objData.objectInfo.id;
-                    const objRef = objData.fromPalette ? ref_path : (wsId + '/' + objId);
+                    const objRef = objData.fromPalette ? ref_path : wsId + '/' + objId;
                     const downloadPanel = $('<div>');
                     $alertContainer.append(downloadPanel);
                     new kbaseNarrativeDownloadPanel(downloadPanel, {
@@ -899,7 +959,7 @@ define([
                         objId: objId,
                         ref: objRef,
                         objName: objData.objectInfo.name,
-                        downloadSpecCache: this.downloadSpecCache
+                        downloadSpecCache: this.downloadSpecCache,
                     });
                 });
         },
@@ -911,19 +971,21 @@ define([
                     container: 'body',
                     delay: {
                         show: Config.get('tooltip').showDelay,
-                        hide: Config.get('tooltip').hideDelay
-                    }
+                        hide: Config.get('tooltip').hideDelay,
+                    },
                 })
                 .append($('<span>').addClass('fa fa-font'))
                 .click((e) => {
                     e.stopPropagation();
                     $alertContainer.empty();
                     if (Jupyter.narrative.readonly) {
-                        $alertContainer
-                            .append($('<div>')
-                                .append($('<span>')
+                        $alertContainer.append(
+                            $('<div>').append(
+                                $('<span>')
                                     .append('Read-only Narrative - Cannot rename data object')
-                                    .addClass('text-warning')));
+                                    .addClass('text-warning')
+                            )
+                        );
                         return;
                     }
 
@@ -955,34 +1017,53 @@ define([
                     $newNameInput.unbind('focus', releaseLock);
                     $newNameInput.bind('focus', releaseLock);
 
-                    $alertContainer.append($('<div>')
-                        .append($('<div>').append('Warning: Apps using the old name may break.'))
-                        .append($('<div>').append($newNameInput))
-                        .append($('<button>').addClass('kb-data-list-btn')
-                            .append('Rename')
-                            .click(() => {
-
-                                if (this.ws_name && this.ws) {
-                                    this.ws.rename_object({
-                                        obj: { ref: objData.objectInfo.wsid + '/' + objData.objectInfo.id },
-                                        new_name: $newNameInput.val()
-                                    },
-                                        () => {
-                                            this.writingLock = false;
-                                            this.refresh();
-                                        },
-                                        (error) => {
-                                            console.error(error);
-                                            this.renderError($alertContainer, error.error.message);
-                                        });
-                                }
-                            }))
-                        .append($('<button>').addClass('kb-data-list-cancel-btn')
-                            .append('Cancel')
-                            .click(() => {
-                                this.writingLock = false;
-                                $alertContainer.empty();
-                            })));
+                    $alertContainer.append(
+                        $('<div>')
+                            .append(
+                                $('<div>').append('Warning: Apps using the old name may break.')
+                            )
+                            .append($('<div>').append($newNameInput))
+                            .append(
+                                $('<button>')
+                                    .addClass('kb-data-list-btn')
+                                    .append('Rename')
+                                    .click(() => {
+                                        if (this.ws_name && this.ws) {
+                                            this.ws.rename_object(
+                                                {
+                                                    obj: {
+                                                        ref:
+                                                            objData.objectInfo.wsid +
+                                                            '/' +
+                                                            objData.objectInfo.id,
+                                                    },
+                                                    new_name: $newNameInput.val(),
+                                                },
+                                                () => {
+                                                    this.writingLock = false;
+                                                    this.refresh();
+                                                },
+                                                (error) => {
+                                                    console.error(error);
+                                                    this.renderError(
+                                                        $alertContainer,
+                                                        error.error.message
+                                                    );
+                                                }
+                                            );
+                                        }
+                                    })
+                            )
+                            .append(
+                                $('<button>')
+                                    .addClass('kb-data-list-cancel-btn')
+                                    .append('Cancel')
+                                    .click(() => {
+                                        this.writingLock = false;
+                                        $alertContainer.empty();
+                                    })
+                            )
+                    );
                 });
         },
 
@@ -993,8 +1074,8 @@ define([
                     container: 'body',
                     delay: {
                         show: Config.get('tooltip').showDelay,
-                        hide: Config.get('tooltip').hideDelay
-                    }
+                        hide: Config.get('tooltip').hideDelay,
+                    },
                 })
                 .append($('<span>').addClass('fa fa-trash-o'))
                 .click((e) => {
@@ -1003,48 +1084,86 @@ define([
                     // TODO: The control should actually be disabled. This should be via a listener
                     // for the view-only event...
                     if (Jupyter.narrative.readonly) {
-                        $alertContainer
-                            .append($('<div>')
-                                .append($('<span>')
+                        $alertContainer.append(
+                            $('<div>').append(
+                                $('<span>')
                                     .append('Read-only Narrative - Cannot delete data object')
-                                    .addClass('text-warning')));
+                                    .addClass('text-warning')
+                            )
+                        );
                         return;
                     }
-                    $alertContainer.append($('<div>')
-                        .append($('<span>').append('Are you sure?'))
-                        .append($('<button>').addClass('kb-data-list-btn')
-                            .append('Delete')
-                            .click(() => {
-                                if (this.ws_name && this.ws) {
-                                    this.ws.rename_object({
-                                        obj: { ref: objData.objectInfo.wsid + '/' + objData.objectInfo.id },
-                                        new_name: objData.objectInfo.name.split('-deleted-')[0] + '-deleted-' + (new Date()).getTime()
-                                    },
-                                        () => {
-                                            this.ws.delete_objects([{ ref: objData.objectInfo.wsid + '/' + objData.objectInfo.id }],
+                    $alertContainer.append(
+                        $('<div>')
+                            .append($('<span>').append('Are you sure?'))
+                            .append(
+                                $('<button>')
+                                    .addClass('kb-data-list-btn')
+                                    .append('Delete')
+                                    .click(() => {
+                                        if (this.ws_name && this.ws) {
+                                            this.ws.rename_object(
+                                                {
+                                                    obj: {
+                                                        ref:
+                                                            objData.objectInfo.wsid +
+                                                            '/' +
+                                                            objData.objectInfo.id,
+                                                    },
+                                                    new_name:
+                                                        objData.objectInfo.name.split(
+                                                            '-deleted-'
+                                                        )[0] +
+                                                        '-deleted-' +
+                                                        new Date().getTime(),
+                                                },
                                                 () => {
-                                                    $(document).trigger('deleteDataList.Narrative', objData.objectInfo.name);
-                                                    this.writingLock = false;
-                                                    this.refresh();
-
+                                                    this.ws.delete_objects(
+                                                        [
+                                                            {
+                                                                ref:
+                                                                    objData.objectInfo.wsid +
+                                                                    '/' +
+                                                                    objData.objectInfo.id,
+                                                            },
+                                                        ],
+                                                        () => {
+                                                            $(document).trigger(
+                                                                'deleteDataList.Narrative',
+                                                                objData.objectInfo.name
+                                                            );
+                                                            this.writingLock = false;
+                                                            this.refresh();
+                                                        },
+                                                        (error) => {
+                                                            console.error(error);
+                                                            this.renderError(
+                                                                $alertContainer,
+                                                                error.error.message
+                                                            );
+                                                        }
+                                                    );
                                                 },
                                                 (error) => {
                                                     console.error(error);
-                                                    this.renderError($alertContainer, error.error.message);
-                                                });
-                                        },
-                                        (error) => {
-                                            console.error(error);
-                                            this.renderError($alertContainer, error.error.message);
-                                        });
-
-                                }
-                            }))
-                        .append($('<button>').addClass('kb-data-list-cancel-btn')
-                            .append('Cancel')
-                            .click(() => {
-                                $alertContainer.empty();
-                            })));
+                                                    this.renderError(
+                                                        $alertContainer,
+                                                        error.error.message
+                                                    );
+                                                }
+                                            );
+                                        }
+                                    })
+                            )
+                            .append(
+                                $('<button>')
+                                    .addClass('kb-data-list-cancel-btn')
+                                    .append('Cancel')
+                                    .click(() => {
+                                        $alertContainer.empty();
+                                    })
+                            )
+                    );
                 });
         },
 
@@ -1059,10 +1178,10 @@ define([
             const $rename = this.renameButton(objData, $alertContainer);
             const $delete = this.deleteButton(objData, $alertContainer);
 
-            const $btnToolbar = $('<span>')
-                .addClass('btn-group');
+            const $btnToolbar = $('<span>').addClass('btn-group');
 
-            $btnToolbar.append($filterMethodInput)
+            $btnToolbar
+                .append($filterMethodInput)
                 .append($filterMethodOutput)
                 .append($openLandingPage)
                 .append($openReport);
@@ -1071,12 +1190,10 @@ define([
                 $btnToolbar.append($openHistory);
             }
 
-            $btnToolbar.append($openProvenance)
-                .append($download);
+            $btnToolbar.append($openProvenance).append($download);
 
             if (!Jupyter.narrative.readonly && !objData.fromPalette) {
-                $btnToolbar.append($rename)
-                    .append($delete);
+                $btnToolbar.append($rename).append($delete);
             }
 
             return $btnToolbar;
@@ -1113,67 +1230,76 @@ define([
             const narrativeService = new DynamicServiceClient({
                 module: 'NarrativeService',
                 url: Config.url('service_wizard'),
-                token: this.token
+                token: this.token,
             });
-            return narrativeService.callFunc('find_object_report', [
-                {
-                    upa: objectInfo.ref
-                }
-            ]).spread((reportResult) => {
+            return narrativeService
+                .callFunc('find_object_report', [
+                    {
+                        upa: objectInfo.ref,
+                    },
+                ])
+                .spread((reportResult) => {
+                    if (reportResult.report_upas.length === 0) {
+                        return [];
+                    }
 
-                if (reportResult.report_upas.length === 0) {
-                    return [];
-                }
-
-                const objectsToFetch = reportResult.report_upas.map((ref) => {
-                    return {
-                        ref
-                    };
-                });
-
-                // If, after evaluation of the reports, we really don't have any, just
-                // shortcircuit with an array of nulls.
-                if (objectsToFetch.length === 0) {
-                    return [];
-                }
-
-                const reportRef = reportResult.object_upa;
-
-                const workspace = new GenericClient({
-                    module: 'Workspace',
-                    url: Config.url('workspace'),
-                    token: this.token
-                });
-
-                return workspace.callFunc('get_objects2', [{
-                    objects: objectsToFetch,
-                    ignoreErrors: 0
-                }])
-                    .spread((result) => {
-                        let objectReportsForOutput = result.data.filter((reportObject) => {
-                            // pull out found objects which are in the list of objects created in the report.
-                            // objects_created looks like {description: .., ref: ..}
-                            return reportObject.data.objects_created.some((objectCreated) => {
-                                return objectCreated.ref === reportRef;
-                            });
-                        })
-                            .map((reportObject) => {
-                                return ServiceUtils.objectInfoToObject(reportObject.info);
-                            });
-
-                        // we can get multiple reports if this narrative has been copied.
-                        // If so, we only want to look at the one in the current workspace.
-                        // TODO: otherwise? is it possible to have more than one report and not have
-                        //       one in the current workspace????
-                        if (objectReportsForOutput.length > 1) {
-                            objectReportsForOutput = objectReportsForOutput.filter((reportInfo) => {
-                                return (reportInfo.wsid === objectInfo.wsid);
-                            });
-                        }
-
-                        return objectReportsForOutput;
+                    const objectsToFetch = reportResult.report_upas.map((ref) => {
+                        return {
+                            ref,
+                        };
                     });
-            });
+
+                    // If, after evaluation of the reports, we really don't have any, just
+                    // shortcircuit with an array of nulls.
+                    if (objectsToFetch.length === 0) {
+                        return [];
+                    }
+
+                    const reportRef = reportResult.object_upa;
+
+                    const workspace = new GenericClient({
+                        module: 'Workspace',
+                        url: Config.url('workspace'),
+                        token: this.token,
+                    });
+
+                    return workspace
+                        .callFunc('get_objects2', [
+                            {
+                                objects: objectsToFetch,
+                                ignoreErrors: 0,
+                            },
+                        ])
+                        .spread((result) => {
+                            let objectReportsForOutput = result.data
+                                .filter((reportObject) => {
+                                    // pull out found objects which are in the list of objects created in the report.
+                                    // objects_created looks like {description: .., ref: ..}
+                                    return reportObject.data.objects_created.some(
+                                        (objectCreated) => {
+                                            return objectCreated.ref === reportRef;
+                                        }
+                                    );
+                                })
+                                .map((reportObject) => {
+                                    return ServiceUtils.objectInfoToObject(reportObject.info);
+                                });
+
+                            // we can get multiple reports if this narrative has been copied.
+                            // If so, we only want to look at the one in the current workspace.
+                            // TODO: otherwise? is it possible to have more than one report and not have
+                            //       one in the current workspace????
+                            if (objectReportsForOutput.length > 1) {
+                                objectReportsForOutput = objectReportsForOutput.filter(
+                                    (reportInfo) => {
+                                        return reportInfo.wsid === objectInfo.wsid;
+                                    }
+                                );
+                            }
+
+                            return objectReportsForOutput;
+                        });
+                });
         },
 
         onOpenDataListItem: function ($moreRow, objData) {
@@ -1185,68 +1311,66 @@ define([
             // The report button needs the report to be found!
             const $reportButton = $moreRow.find('[data-button="report"]');
 
-            $reportButton.empty().append($('<span>')
-                .addClass('fa fa-spinner fa-spin fa-fw fa-sm').css('width', '0.75em'));
+            $reportButton
+                .empty()
+                .append(
+                    $('<span>').addClass('fa fa-spinner fa-spin fa-fw fa-sm').css('width', '0.75em')
+                );
 
+            this.getReportForObject(objectInfo).then((result) => {
+                if (result.length === 0) {
+                    $reportButton.addClass('disabled');
+                    $reportButton
+                        .empty()
+                        .append($('<span>').addClass('fa fa-file-text').css('width', '0.75em'));
+                    $reportButton.tooltip({
+                        title: 'No report associated with this object',
+                        container: '#' + this.mainListId,
+                        delay: {
+                            show: Config.get('tooltip').showDelay,
+                            hide: Config.get('tooltip').hideDelay,
+                        },
+                    });
+                    objData.reportRef = null;
+                    return;
+                } else if (result.length === 1) {
+                    $reportButton
+                        .empty()
+                        .append($('<span>').addClass('fa fa-file-text').css('width', '0.75em'));
+                    objData.reportRef = result[0].ref;
+                    $reportButton
+                        .tooltip({
+                            title: 'View associated report',
+                            container: '#' + this.mainListId,
+                            delay: {
+                                show: Config.get('tooltip').showDelay,
+                                hide: Config.get('tooltip').hideDelay,
+                            },
+                        })
+                        .click((e) => {
+                            e.stopPropagation();
+                            if (objData.reportRef) {
+                                this.showReportLandingPage(objData.reportRef);
+                            }
+                        });
+                } else {
+                    console.warn('oops, too many reports', result);
 
-            this.getReportForObject(objectInfo)
-                .then((result) => {
-                    if (result.length === 0) {
-                        $reportButton.addClass('disabled');
-                        $reportButton.empty().append($('<span>')
-                            .addClass('fa fa-file-text')
-                            .css('width', '0.75em'));
-                        $reportButton
-                            .tooltip({
-                                title: 'No report associated with this object',
-                                container: '#' + this.mainListId,
-                                delay: {
-                                    show: Config.get('tooltip').showDelay,
-                                    hide: Config.get('tooltip').hideDelay
-                                }
-                            });
-                        objData.reportRef = null;
-                        return;
-                    } else if (result.length === 1) {
-                        $reportButton
-                            .empty()
-                            .append($('<span>')
-                                .addClass('fa fa-file-text')
-                                .css('width', '0.75em'));
-                        objData.reportRef = result[0].ref;
-                        $reportButton
-                            .tooltip({
-                                title: 'View associated report',
-                                container: '#' + this.mainListId,
-                                delay: {
-                                    show: Config.get('tooltip').showDelay,
-                                    hide: Config.get('tooltip').hideDelay
-                                }
-                            })
-                            .click((e) => {
-                                e.stopPropagation();
-                                if (objData.reportRef) {
-                                    this.showReportLandingPage(objData.reportRef);
-                                }
-                            });
-                    } else {
-                        console.warn('oops, too many reports', result);
-
-                        $reportButton
-                            .tooltip({
-                                title: 'Too many reports associated with this object',
-                                container: '#' + this.mainListId,
-                                delay: {
-                                    show: Config.get('tooltip').showDelay,
-                                    hide: Config.get('tooltip').hideDelay
-                                }
-                            });
-                        $reportButton.addClass('disabled');
-                        $reportButton.empty().append($('<span>').addClass('fa fa-ban').css('width', '0.75em'));
-                        objData.reportRef = null;
-                    }
-
-                });
+                    $reportButton.tooltip({
+                        title: 'Too many reports associated with this object',
+                        container: '#' + this.mainListId,
+                        delay: {
+                            show: Config.get('tooltip').showDelay,
+                            hide: Config.get('tooltip').hideDelay,
+                        },
+                    });
+                    $reportButton.addClass('disabled');
+                    $reportButton
+                        .empty()
+                        .append($('<span>').addClass('fa fa-ban').css('width', '0.75em'));
+                    objData.reportRef = null;
+                }
+            });
         },
 
         /**
@@ -1293,48 +1417,69 @@ define([
             const $savedByUserSpan = $('<td>').addClass('kb-data-list-username-td');
             DisplayUtil.displayRealName(object_info[5], $savedByUserSpan);
 
-            const $alertDiv = $('<div>').css({ 'text-align': 'center', 'margin': '10px 0px' });
-            const typeLink = '<a href="/#spec/module/' + type_module + '" target="_blank">' + type_module + '</a>.<wbr>' +
-                '<a href="/#spec/type/' + object_info[2] + '" target="_blank">' + (type_tokens[1].replace('-', '&#8209;')) + '.' + type_tokens[2] + '</a>';
+            const $alertDiv = $('<div>').css({ 'text-align': 'center', margin: '10px 0px' });
+            const typeLink =
+                '<a href="/#spec/module/' +
+                type_module +
+                '" target="_blank">' +
+                type_module +
+                '</a>.<wbr>' +
+                '<a href="/#spec/type/' +
+                object_info[2] +
+                '" target="_blank">' +
+                type_tokens[1].replace('-', '&#8209;') +
+                '.' +
+                type_tokens[2] +
+                '</a>';
 
-            const $moreContent = $('<div>').addClass('kb-data-list-more-div')
-                .append(this.addDataControls(objData, $alertDiv, ref_path)).append($alertDiv)
+            const $moreContent = $('<div>')
+                .addClass('kb-data-list-more-div')
+                .append(this.addDataControls(objData, $alertDiv, ref_path))
+                .append($alertDiv)
                 .append(
                     $('<table style="width:100%;">')
-                        .append('<tr><th>Permanent Id</th><td>' + object_info[6] + '/' + object_info[0] + '/' + object_info[4] + '</td></tr>')
+                        .append(
+                            '<tr><th>Permanent Id</th><td>' +
+                                object_info[6] +
+                                '/' +
+                                object_info[0] +
+                                '/' +
+                                object_info[4] +
+                                '</td></tr>'
+                        )
                         .append('<tr><th>Full Type</th><td>' + typeLink + '</td></tr>')
                         .append($('<tr>').append('<th>Saved by</th>').append($savedByUserSpan))
-                        .append(metadataText));
+                        .append(metadataText)
+                );
 
-            const $card = kbaseDataCard.apply(this, [{
-                viewType: viewType,
-                type: type,
-                editedBy: author,
-                moreContent: $moreContent,
-                is_set: is_set,
-                object_info: object_info,
-                onOpen: () => {
-                    this.onOpenDataListItem($moreContent, objData);
-                }
-            }]);
+            const $card = kbaseDataCard.apply(this, [
+                {
+                    viewType: viewType,
+                    type: type,
+                    editedBy: author,
+                    moreContent: $moreContent,
+                    is_set: is_set,
+                    object_info: object_info,
+                    onOpen: () => {
+                        this.onOpenDataListItem($moreContent, objData);
+                    },
+                },
+            ]);
 
             if (objData.fromPalette) {
                 const $paletteIcon = $('<div>')
                     .addClass('pull-right narrative-card-palette-icon')
-                    .append($('<i>')
-                        .addClass('fa fa-link')
-                    )
+                    .append($('<i>').addClass('fa fa-link'))
                     .tooltip({
                         title: 'This is a reference to an object in another Narrative.',
                         placement: 'right',
                         container: 'body',
                         delay: {
                             show: Config.get('tooltip').showDelay,
-                            hide: Config.get('tooltip').hideDelay
-                        }
+                            hide: Config.get('tooltip').hideDelay,
+                        },
                     });
                 $card.find('.kb-data-list-info').append($paletteIcon);
-
             }
             //add custom click events
 
@@ -1390,8 +1535,9 @@ define([
                     new BootstrapDialog({
                         type: 'warning',
                         title: 'Warning',
-                        body: 'Read-only Narrative -- may not insert a data viewer into this Narrative',
-                        alertOnly: true
+                        body:
+                            'Read-only Narrative -- may not insert a data viewer into this Narrative',
+                        alertOnly: true,
                     }).show();
                     return;
                 }
@@ -1414,7 +1560,7 @@ define([
                     nearCellIdx: cellIndex,
                     widget: 'kbaseNarrativeDataCell',
                     info: info,
-                    placement: placement
+                    placement: placement,
                 });
             });
             if (isBelow) {
@@ -1434,7 +1580,7 @@ define([
                 data = {
                     widget: 'kbaseNarrativeDataCell',
                     info: info,
-                    key: key
+                    key: key,
                 },
                 dataString = JSON.stringify(data);
 
@@ -1456,7 +1602,9 @@ define([
 
             node.addEventListener('dragend', () => {
                 const container = document.querySelector('#notebook-container'),
-                    targetCells = document.querySelectorAll('#notebook-container .kb-data-list-drag-target');
+                    targetCells = document.querySelectorAll(
+                        '#notebook-container .kb-data-list-drag-target'
+                    );
                 for (let i = 0; i < targetCells.length; i += 1) {
                     const targetCell = targetCells.item(i);
                     container.removeChild(targetCell);
@@ -1466,16 +1614,16 @@ define([
             // Add tooltip to indicate this functionality
             $row.attr({
                 'data-toggle': 'tooltip',
-                'title': 'Drag onto Narrative &rarr;'
+                title: 'Drag onto Narrative &rarr;',
             });
 
             $row.tooltip({
                 delay: {
                     show: Config.get('tooltip').showDelay,
-                    hide: Config.get('tooltip').hideDelay
+                    hide: Config.get('tooltip').hideDelay,
                 },
                 placement: 'top auto',
-                html: true
+                html: true,
             });
 
             return this;
@@ -1501,8 +1649,11 @@ define([
         renderMore: function () {
             const start = this.lastObjectRendered;
             const limit = this.n_objs_rendered + this.options.objs_to_render_on_scroll;
-            for (let i = start + 1;
-                (i < this.viewOrder.length) && (this.n_objs_rendered < limit); i++) {
+            for (
+                let i = start + 1;
+                i < this.viewOrder.length && this.n_objs_rendered < limit;
+                i++
+            ) {
                 if (this.shouldRenderObject(this.viewOrder[i])) {
                     this.renderObject(this.viewOrder[i].objId);
                     this.n_objs_rendered++;
@@ -1528,14 +1679,12 @@ define([
         },
 
         renderList: function () {
-
-
             this.detachAllRows();
             this.n_objs_rendered = 0;
 
             if (this.viewOrder.length > 0) {
                 const limit = this.options.objs_to_render_to_start;
-                for (let i = 0; i < this.viewOrder.length && (this.n_objs_rendered < limit); i++) {
+                for (let i = 0; i < this.viewOrder.length && this.n_objs_rendered < limit; i++) {
                     if (this.shouldRenderObject(this.viewOrder[i])) {
                         this.renderObject(this.viewOrder[i].objId);
                         this.n_objs_rendered++;
@@ -1547,20 +1696,23 @@ define([
                 } else {
                     this.$addDataButton.show();
                 }
-
             } else {
                 const $noDataDiv = $('<div>')
-                    .css({ 'text-align': 'center', 'margin': '20pt' })
+                    .css({ 'text-align': 'center', margin: '20pt' })
                     .append('This Narrative has no data yet.<br><br>');
                 if (Jupyter && Jupyter.narrative && !Jupyter.narrative.readonly) {
-                    $noDataDiv.append($('<button>')
-                        .append('Add Data')
-                        .addClass('kb-data-list-add-data-text-button')
-                        .attr('data-test-id', 'add-data-button')
-                        .css({ 'margin': '20px' })
-                        .click(() => {
-                            this.trigger('toggleSidePanelOverlay.Narrative', [this.options.parentControlPanel.$overlayPanel]);
-                        }));
+                    $noDataDiv.append(
+                        $('<button>')
+                            .append('Add Data')
+                            .addClass('kb-data-list-add-data-text-button')
+                            .attr('data-test-id', 'add-data-button')
+                            .css({ margin: '20px' })
+                            .click(() => {
+                                this.trigger('toggleSidePanelOverlay.Narrative', [
+                                    this.options.parentControlPanel.$overlayPanel,
+                                ]);
+                            })
+                    );
                     this.$addDataButton.hide();
                 }
                 this.$mainListDiv.append($noDataDiv);
@@ -1578,16 +1730,18 @@ define([
         },
 
         renderController: function () {
-            const $upOrDown = $('<button class="btn btn-default btn-sm" type="button">').css({ 'margin-left': '5px' })
-                .append('<span class="fa fa-sort-amount-asc" style="color:#777" aria-hidden="true" />')
+            const $upOrDown = $('<button class="btn btn-default btn-sm" type="button">')
+                .css({ 'margin-left': '5px' })
+                .append(
+                    '<span class="fa fa-sort-amount-asc" style="color:#777" aria-hidden="true" />'
+                )
                 .on('click', () => {
                     this.reverseData();
                     this.sortOrder *= -1;
                     const $icon = $upOrDown.find('.fa');
                     if ($icon.is('.fa-sort-amount-desc,.fa-sort-amount-asc')) {
                         $icon.toggleClass('fa-sort-amount-desc fa-sort-amount-asc');
-                    }
-                    else {
+                    } else {
                         $icon.toggleClass('fa-sort-alpha-desc fa-sort-alpha-asc');
                     }
                 });
@@ -1599,13 +1753,24 @@ define([
                     .addClass('fa ' + newIcon);
             };
 
-            const $byDate = $('<label id="nar-data-list-default-sort-label" class="btn btn-default">').addClass('btn btn-default')
-                .append($('<input type="radio" name="options" id="nar-data-list-default-sort-option" autocomplete="off">'))
+            const $byDate = $(
+                '<label id="nar-data-list-default-sort-label" class="btn btn-default">'
+            )
+                .addClass('btn btn-default')
+                .append(
+                    $(
+                        '<input type="radio" name="options" id="nar-data-list-default-sort-option" autocomplete="off">'
+                    )
+                )
                 .append('date')
                 .on('click', () => {
                     this.sortData((a, b) => {
-                        return this.sortOrder * this.dataObjects[a.objId].info[3]
-                            .localeCompare(this.dataObjects[b.objId].info[3]);
+                        return (
+                            this.sortOrder *
+                            this.dataObjects[a.objId].info[3].localeCompare(
+                                this.dataObjects[b.objId].info[3]
+                            )
+                        );
                     });
                     setSortIcon(this.sortOrder > 0 ? 'fa-sort-amount-desc' : 'fa-sort-amount-asc');
                 });
@@ -1615,8 +1780,13 @@ define([
                 .append('name')
                 .on('click', () => {
                     this.sortData((a, b) => {
-                        return -1 * this.sortOrder * this.dataObjects[a.objId].info[1].toUpperCase()
-                            .localeCompare(this.dataObjects[b.objId].info[1].toUpperCase());
+                        return (
+                            -1 *
+                            this.sortOrder *
+                            this.dataObjects[a.objId].info[1]
+                                .toUpperCase()
+                                .localeCompare(this.dataObjects[b.objId].info[1].toUpperCase())
+                        );
                     });
                     setSortIcon(this.sortOrder > 0 ? 'fa-sort-alpha-desc' : 'fa-sort-alpha-asc');
                 });
@@ -1626,17 +1796,20 @@ define([
                 .append('type')
                 .on('click', () => {
                     this.sortData((a, b) => {
-                        const aType = this.dataObjects[a.objId].info[2].toUpperCase().match(/\.(.+)/)[1];
-                        const bType = this.dataObjects[b.objId].info[2].toUpperCase().match(/\.(.+)/)[1];
+                        const aType = this.dataObjects[a.objId].info[2]
+                            .toUpperCase()
+                            .match(/\.(.+)/)[1];
+                        const bType = this.dataObjects[b.objId].info[2]
+                            .toUpperCase()
+                            .match(/\.(.+)/)[1];
                         return -1 * this.sortOrder * aType.localeCompare(bType);
                     });
                     setSortIcon(this.sortOrder > 0 ? 'fa-sort-alpha-desc' : 'fa-sort-alpha-asc');
                 });
 
-
             const $sortByGroup = $('<div data-toggle="buttons">')
                 .addClass('btn-group btn-group-sm')
-                .css({ 'margin': '2px' })
+                .css({ margin: '2px' })
                 .append($byDate)
                 .append($byName)
                 .append($byType);
@@ -1651,8 +1824,8 @@ define([
                     container: 'body',
                     delay: {
                         show: Config.get('tooltip').showDelay,
-                        hide: Config.get('tooltip').hideDelay
-                    }
+                        hide: Config.get('tooltip').hideDelay,
+                    },
                 })
                 .append('<span class="fa fa-copy"></span>')
                 .on('click', () => {
@@ -1685,8 +1858,8 @@ define([
                     container: 'body',
                     delay: {
                         show: Config.get('tooltip').showDelay,
-                        hide: Config.get('tooltip').hideDelay
-                    }
+                        hide: Config.get('tooltip').hideDelay,
+                    },
                 })
                 .append('<span class="fa fa-search"></span>')
                 .on('click', this.controlClickHnd.search);
@@ -1709,8 +1882,8 @@ define([
                     container: 'body',
                     delay: {
                         show: Config.get('tooltip').showDelay,
-                        hide: Config.get('tooltip').hideDelay
-                    }
+                        hide: Config.get('tooltip').hideDelay,
+                    },
                 })
                 .append('<span class="fa fa-sort-amount-asc"></span>')
                 .on('click', this.controlClickHnd.sort);
@@ -1733,8 +1906,8 @@ define([
                     container: 'body',
                     delay: {
                         show: Config.get('tooltip').showDelay,
-                        hide: Config.get('tooltip').hideDelay
-                    }
+                        hide: Config.get('tooltip').hideDelay,
+                    },
                 })
                 .append('<span class="fa fa-filter"></span>')
                 .on('click', this.controlClickHnd.filter);
@@ -1747,8 +1920,8 @@ define([
                     container: 'body',
                     delay: {
                         show: Config.get('tooltip').showDelay,
-                        hide: Config.get('tooltip').hideDelay
-                    }
+                        hide: Config.get('tooltip').hideDelay,
+                    },
                 })
                 .append('<span class="fa fa-refresh"></span>')
                 .on('click', () => {
@@ -1760,15 +1933,17 @@ define([
                 inputFunction: () => {
                     this.search();
                 },
-                placeholder: 'Search in your data'
+                placeholder: 'Search in your data',
             });
 
-            this.$sortByDiv = $('<div>').css('text-align', 'center')
+            this.$sortByDiv = $('<div>')
+                .css('text-align', 'center')
                 .append('<small>sort by: </small>')
                 .append($sortByGroup)
                 .append($upOrDown);
 
-            this.$filterTypeSelect = $('<select>').addClass('form-control')
+            this.$filterTypeSelect = $('<select>')
+                .addClass('form-control')
                 .css('margin', 'inherit')
                 .append($('<option value="">'))
                 .change(() => {
@@ -1783,8 +1958,7 @@ define([
                     this.filterByType(typeSelected);
                 });
 
-            this.$filterTypeDiv = $('<div>')
-                .append(this.$filterTypeSelect);
+            this.$filterTypeDiv = $('<div>').append(this.$filterTypeSelect);
 
             const $header = $('<div>');
             if (this.options.parentControlPanel) {
@@ -1796,14 +1970,19 @@ define([
                 this.options.parentControlPanel.addButtonToControlPanel($openFilter);
                 this.options.parentControlPanel.addButtonToControlPanel($refreshBtn);
             } else {
-                $header.addClass('row').css({ 'margin': '5px' })
-                    .append($('<div>').addClass('col-xs-12').css({ 'margin': '0px', 'padding': '0px', 'text-align': 'right' })
-                        .append(Config.get('features').hierarchicalDataView ? $viewMode : '')
-                        .append($openSearch)
-                        .append($openSort)
-                        .append($openFilter));
+                $header
+                    .addClass('row')
+                    .css({ margin: '5px' })
+                    .append(
+                        $('<div>')
+                            .addClass('col-xs-12')
+                            .css({ margin: '0px', padding: '0px', 'text-align': 'right' })
+                            .append(Config.get('features').hierarchicalDataView ? $viewMode : '')
+                            .append($openSearch)
+                            .append($openSort)
+                            .append($openFilter)
+                    );
             }
-
 
             this.$sortByDiv.hide();
             this.$searchDiv.hide();
@@ -1831,19 +2010,35 @@ define([
                 const selected = this.$filterTypeSelect.val();
                 this.$filterTypeSelect.empty();
                 let runningCount = 0;
-                Object.keys(this.availableTypes).sort().forEach((type) => {
-                    const typeInfo = this.availableTypes[type];
-                    this.$filterTypeSelect.append(
-                        $('<option value="' + typeInfo.type + '">')
-                            .append([typeInfo.type, ' (', typeInfo.count, ' ', this.pluralize('object', typeInfo.count), ')'].join(''))
-                    );
-                    runningCount += typeInfo.count;
-                });
+                Object.keys(this.availableTypes)
+                    .sort()
+                    .forEach((type) => {
+                        const typeInfo = this.availableTypes[type];
+                        this.$filterTypeSelect.append(
+                            $('<option value="' + typeInfo.type + '">').append(
+                                [
+                                    typeInfo.type,
+                                    ' (',
+                                    typeInfo.count,
+                                    ' ',
+                                    this.pluralize('object', typeInfo.count),
+                                    ')',
+                                ].join('')
+                            )
+                        );
+                        runningCount += typeInfo.count;
+                    });
                 this.$filterTypeSelect
-                    .prepend($('<option value="">')
-                        .append('Show All Types (' + runningCount + ' ' + this.pluralize('object', runningCount) + ')'))
+                    .prepend(
+                        $('<option value="">').append(
+                            'Show All Types (' +
+                                runningCount +
+                                ' ' +
+                                this.pluralize('object', runningCount) +
+                                ')'
+                        )
+                    )
                     .val(selected);
-
             }
         },
         reverseData: function () {
@@ -1859,9 +2054,12 @@ define([
             this.search(); // always refilter on the search term search if there is something there
 
             // go back to the top on sort
-            this.$mainListDiv.animate({
-                scrollTop: 0
-            }, 300); // fast = 200, slow = 600
+            this.$mainListDiv.animate(
+                {
+                    scrollTop: 0,
+                },
+                300
+            ); // fast = 200, slow = 600
         },
 
         search: function (term, type) {
@@ -1909,22 +2107,23 @@ define([
                         match = true;
                     } // match on saved_by user
 
-                    if (!match && info[10]) { // match on metadata values
+                    if (!match && info[10]) {
+                        // match on metadata values
                         for (const [metaKey, metaValue] of info[10].entries()) {
                             // Omits enumerable properties not directly on this object,
                             // which in reality simply won't occur.
-                            if (!(Object.prototype.hasOwnProperty.call(info[10], metaKey))) {
+                            if (!Object.prototype.hasOwnProperty.call(info[10], metaKey)) {
                                 continue;
                             }
-                            if (regex.test(metaValue) ||
-                                regex.test(metaKey + '::' + metaValue)) {
+                            if (regex.test(metaValue) || regex.test(metaKey + '::' + metaValue)) {
                                 match = true;
                                 break;
                             }
                         }
                     }
 
-                    if (type) { // if type is defined, then our sort must also filter by the type
+                    if (type) {
+                        // if type is defined, then our sort must also filter by the type
                         if (type !== info[2].split('-')[0].split('.')[1]) {
                             match = false; // no match if we are not the selected type!
                         }
@@ -1952,6 +2151,6 @@ define([
             // The "Saved by" field needs to lookup that user's real name.
             const $usernameTd = $moreRow.find('.kb-data-list-username-td');
             DisplayUtil.displayRealName(object_info[5], $usernameTd);
-        }
+        },
     });
 });

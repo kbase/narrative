@@ -5,29 +5,21 @@
  * The dataModel should have getDropdownSpecs method providing an array of spec files.
  *
  */
-define(
-    [
-        'kbwidget',
-        'bootstrap',
-        'jquery',
-        'kbaseNarrativeParameterDropdownInput',
-        'kbaseNarrativeParameterInput',
-    ], (
-    KBWidget,
-    bootstrap,
-    $,
-    kbaseNarrativeParameterDropdownInput,
-    kbaseNarrativeParameterInput
-    ) => {
-
+define([
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+    'kbaseNarrativeParameterDropdownInput',
+    'kbaseNarrativeParameterInput',
+], (KBWidget, bootstrap, $, kbaseNarrativeParameterDropdownInput, kbaseNarrativeParameterInput) => {
     return KBWidget({
-        name: "kbaseNarrativeParameterCustomDropdownGroupInput",
+        name: 'kbaseNarrativeParameterCustomDropdownGroupInput',
         parent: kbaseNarrativeParameterInput,
-        version: "1.0.0",
+        version: '1.0.0',
         options: {
-            loadingImage: "../images/ajax-loader.gif",
+            loadingImage: '../images/ajax-loader.gif',
             isInSidePanel: false,
-            dataModel: null
+            dataModel: null,
         },
         $optionsDiv: null,
         enabled: true,
@@ -46,14 +38,17 @@ define(
             }
 
             if (specs.length > 0) {
-                self.$optionsDiv.append($('<div>').append(self.spec.ui_name + ":"));
+                self.$optionsDiv.append($('<div>').append(self.spec.ui_name + ':'));
                 for (const i in specs) {
-                    self.addParameterDiv(specs[i], "kbaseNarrativeParameterDropdownInput", self.$optionsDiv);
+                    self.addParameterDiv(
+                        specs[i],
+                        'kbaseNarrativeParameterDropdownInput',
+                        self.$optionsDiv
+                    );
                 }
             } else {
-                self.$optionsDiv.append($('<div>').append(self.spec.ui_name + ": no elements"));
+                self.$optionsDiv.append($('<div>').append(self.spec.ui_name + ': no elements'));
             }
-
         },
         reset: function () {
             this.$optionsDiv.empty();
@@ -62,13 +57,17 @@ define(
         addParameterDiv: function (paramSpec, widgetName, $optionsDiv) {
             const self = this;
             const $stepDiv = $('<div>');
-            const $widget = $stepDiv[widgetName](
-                {
-                    loadingImage: self.options.loadingImage,
-                    parsedParameterSpec: paramSpec,
-                    isInSidePanel: self.options.isInSidePanel
-                });
-            this.parameters.push({id: paramSpec.id, widget: $widget, name: paramSpec.ui_name, spec: paramSpec});
+            const $widget = $stepDiv[widgetName]({
+                loadingImage: self.options.loadingImage,
+                parsedParameterSpec: paramSpec,
+                isInSidePanel: self.options.isInSidePanel,
+            });
+            this.parameters.push({
+                id: paramSpec.id,
+                widget: $widget,
+                name: paramSpec.ui_name,
+                spec: paramSpec,
+            });
             $optionsDiv.append($stepDiv);
         },
         render: function () {
@@ -80,11 +79,11 @@ define(
         getState: function () {
             const state = {
                 specs: [],
-                value: this.getParameterValue()
+                value: this.getParameterValue(),
             };
 
             for (const i in this.parameters) {
-                const param = this.parameters[i]
+                const param = this.parameters[i];
                 state.specs.push(param.spec);
             }
             return state;
@@ -93,10 +92,9 @@ define(
             this.show(state.specs);
             this.setParameterValue(state.value);
         },
-        refresh: function () {
-        },
+        refresh: function () {},
         isValid: function () {
-            return {isValid: true, errormssgs: []};
+            return { isValid: true, errormssgs: [] };
         },
         disableParameterEditing: function () {
             for (const i in this.parameters) {
@@ -125,8 +123,7 @@ define(
             }
             return value;
         },
-        prepareValueBeforeRun: function (methodSpec) {
-        },
+        prepareValueBeforeRun: function (methodSpec) {},
         lockInputs: function () {
             this.disableParameterEditing();
         },
@@ -134,7 +131,7 @@ define(
             this.enableParameterEditing();
         },
         addInputListener: function (onChangeFunc) {
-            this.$elem.find("#" + this.spec.id).on("change", onChangeFunc);
-        }
+            this.$elem.find('#' + this.spec.id).on('change', onChangeFunc);
+        },
     });
 });

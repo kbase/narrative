@@ -4,7 +4,7 @@
  * the login widget, and wires the environment together.
  * @author Bill Riehl wjriehl@lbl.gov
  */
-define ([
+define([
     'jquery',
     'bluebird',
     'kbapi',
@@ -12,20 +12,11 @@ define ([
     'narrativeConfig',
     'api/auth',
     'userMenu',
-    'util/bootstrapDialog'
-], (
-    $,
-    Promise,
-    kbapi,
-    JupyterUtils,
-    Config,
-    Auth,
-    UserMenu,
-    BootstrapDialog
-) => {
+    'util/bootstrapDialog',
+], ($, Promise, kbapi, JupyterUtils, Config, Auth, UserMenu, BootstrapDialog) => {
     'use strict';
     const baseUrl = JupyterUtils.get_body_data('baseUrl');
-    const authClient = Auth.make({url: Config.url('auth')});
+    const authClient = Auth.make({ url: Config.url('auth') });
     let sessionInfo = null;
     let tokenCheckTimer = null;
 
@@ -48,55 +39,57 @@ define ([
     function ipythonLogin(token) {
         window.kb = new window.KBCacheClient(token); // just as bad as global, but passes linting
         $.ajax({
-            url: JupyterUtils.url_join_encode(baseUrl, 'login')
-        }).then(
-            () => {
+            url: JupyterUtils.url_join_encode(baseUrl, 'login'),
+        })
+            .then(() => {
                 // console.log(ret);
-            }
-        ).fail(
-            () => {
+            })
+            .fail(() => {
                 // console.err(err);
-            }
-        );
+            });
     }
 
     function ipythonLogout() {
         $.ajax({
-            url: JupyterUtils.url_join_encode(baseUrl, 'logout')
-        }).then(
-            () => {
+            url: JupyterUtils.url_join_encode(baseUrl, 'logout'),
+        })
+            .then(() => {
                 // console.log(ret);
-            }
-        ).fail(
-            () => {
+            })
+            .fail(() => {
                 // console.err(err);
-            }
-        );
+            });
         window.location.href = '/';
     }
 
     function showTokenInjectionDialog() {
         const $inputField = $('<input type="text" class="form-control">');
         const $body = $('<div data-test-id="dev-login">')
-            .append('<div>You appear to be working on a local development environment of the Narrative Interface, but you don\'t have a valid auth token. You can paste one in below.</div>')
-            .append('<div><b>You are operating in the ' + Config.get('environment') + ' environment.')
+            .append(
+                "<div>You appear to be working on a local development environment of the Narrative Interface, but you don't have a valid auth token. You can paste one in below.</div>"
+            )
+            .append(
+                '<div><b>You are operating in the ' + Config.get('environment') + ' environment.'
+            )
             .append($('<div>').append($inputField));
         var dialog = new BootstrapDialog({
-            'title': 'Insert an authentication token?',
-            'body': $body,
-            'buttons': [$('<a type="button" class="btn btn-default">')
-                .append('OK')
-                .click(() => {
-                    dialog.hide();
-                    const newToken = $inputField.val();
-                    authClient.setCookie({
-                        name: 'kbase_session',
-                        value: newToken,
-                        domain: 'localhost',
-                        secure: false
-                    });
-                    location.reload();
-                })]
+            title: 'Insert an authentication token?',
+            body: $body,
+            buttons: [
+                $('<a type="button" class="btn btn-default">')
+                    .append('OK')
+                    .click(() => {
+                        dialog.hide();
+                        const newToken = $inputField.val();
+                        authClient.setCookie({
+                            name: 'kbase_session',
+                            value: newToken,
+                            domain: 'localhost',
+                            secure: false,
+                        });
+                        location.reload();
+                    }),
+            ],
         });
         dialog.show();
     }
@@ -104,19 +97,21 @@ define ([
     function showNotLoggedInDialog() {
         const message = `
         <p>You are logged out (or your session has expired).</p>
-        <p>You will be redirected to the sign in page after closing this, or ${AUTO_LOGOUT_DELAY / 1000} seconds,
+        <p>You will be redirected to the sign in page after closing this, or ${
+            AUTO_LOGOUT_DELAY / 1000
+        } seconds,
            whichever comes first.</p>
         `;
         var dialog = new BootstrapDialog({
-            'title': 'Logged Out',
-            'body': $('<div>').append(message),
-            'buttons': [
+            title: 'Logged Out',
+            body: $('<div>').append(message),
+            buttons: [
                 $('<a type="button" class="btn btn-default">')
                     .append('OK')
                     .click(() => {
                         dialog.hide();
-                    })
-            ]
+                    }),
+            ],
         });
         dialog.onHide(() => {
             window.clearTimeout(autoLogoutTimer);
@@ -132,15 +127,17 @@ define ([
     let aboutToLogoutDialog = null;
     function showAboutToLogoutDialog() {
         aboutToLogoutDialog = new BootstrapDialog({
-            'title': 'Expiring session',
-            'body': $('<div>').append('Your authenticated KBase session will expire in 5 minutes or less. To continue using KBase, we suggest you log out and back in.'),
-            'buttons': [
+            title: 'Expiring session',
+            body: $('<div>').append(
+                'Your authenticated KBase session will expire in 5 minutes or less. To continue using KBase, we suggest you log out and back in.'
+            ),
+            buttons: [
                 $('<a type="button" class="btn btn-default">')
                     .append('OK')
                     .click(() => {
                         aboutToLogoutDialog.hide();
-                    })
-            ]
+                    }),
+            ],
         });
         aboutToLogoutDialog.show();
     }
@@ -212,7 +209,10 @@ define ([
             // continue with the possible token validation check.
             // The reason for a minimal time is that a user will not have time to absorb and respond
             // to the dialog in just a few seconds.
-            if (timeUntilExpiration > ABOUT_TO_LOGOUT_MINIMUM && timeUntilExpiration <= ABOUT_TO_LOGOUT_THRESHOLD) {
+            if (
+                timeUntilExpiration > ABOUT_TO_LOGOUT_MINIMUM &&
+                timeUntilExpiration <= ABOUT_TO_LOGOUT_THRESHOLD
+            ) {
                 if (!hasViewedAboutToLogout) {
                     hasViewedAboutToLogout = true;
                     showAboutToLogoutDialog();
@@ -229,7 +229,8 @@ define ([
                 // hard coded in the config at 1 minute.
                 disableTokenCheck();
                 lastCheckTime = Date.now();
-                authClient.validateToken(token)
+                authClient
+                    .validateToken(token)
                     .then((info) => {
                         if (info !== true) {
                             tokenTimeout(true);
@@ -243,7 +244,6 @@ define ([
                     .finally(() => {
                         enableTokenCheck();
                     });
-
             }
         }, TOKEN_MONITORING_INTERVAL);
     }
@@ -295,7 +295,10 @@ define ([
          */
         clearTokenCheckTimers();
         const sessionToken = authClient.getAuthToken();
-        return Promise.all([authClient.getTokenInfo(sessionToken), authClient.getUserProfile(sessionToken)])
+        return Promise.all([
+            authClient.getTokenInfo(sessionToken),
+            authClient.getUserProfile(sessionToken),
+        ])
             .then((results) => {
                 const tokenInfo = results[0];
                 sessionInfo = tokenInfo;
@@ -315,17 +318,18 @@ define ([
                     token: sessionToken,
                     userName: sessionInfo.user,
                     email: results[1].email,
-                    displayName: results[1].display
+                    displayName: results[1].display,
                 });
                 return userMenu.start();
             })
             .catch((error) => {
                 console.error(error);
-                if (document.location.hostname.indexOf('localhost') !== -1 ||
-                    document.location.hostname.indexOf('0.0.0.0') !== -1) {
+                if (
+                    document.location.hostname.indexOf('localhost') !== -1 ||
+                    document.location.hostname.indexOf('0.0.0.0') !== -1
+                ) {
                     showTokenInjectionDialog();
-                }
-                else {
+                } else {
                     showNotLoggedInDialog();
                 }
             });
@@ -341,6 +345,6 @@ define ([
         sessionInfo,
         getAuthToken,
         clearTokenCheckTimers,
-        destroy
+        destroy,
     };
 });

@@ -5,18 +5,15 @@
     This implementation is not complete, but functional enough for it's usages.
     Extend as need be.
 */
-define([
-    './JSONRPC20'
-], (
-    JSONRPC20
-) => {
+define(['./JSONRPC20'], (JSONRPC20) => {
     'use strict';
 
     class SearchAPI2 extends JSONRPC20 {
-        search_objects({params, timeout}) {
+        search_objects({ params, timeout }) {
             return this.callMethod({
                 method: 'search_objects',
-                params, timeout
+                params,
+                timeout,
             });
         }
     }

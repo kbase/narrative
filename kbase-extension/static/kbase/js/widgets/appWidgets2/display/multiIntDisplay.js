@@ -1,15 +1,14 @@
-define([
-    'bluebird',
-    'kb_common/html',
-    'common/props',
-    'bootstrap',
-    'css!font-awesome'
-], (Promise, html, Props) => {
+define(['bluebird', 'kb_common/html', 'common/props', 'bootstrap', 'css!font-awesome'], (
+    Promise,
+    html,
+    Props
+) => {
     'use strict';
 
     // Constants
     const t = html.tag,
-        div = t('div'), span = t('span');
+        div = t('div'),
+        span = t('span');
 
     function factory(config) {
         let options = {},
@@ -24,15 +23,27 @@ define([
         options.required = spec.required();
 
         function render() {
-            let values = model.getItem('values'), displayValue;
+            let values = model.getItem('values'),
+                displayValue;
             if (values === null) {
-                displayValue = span({style: {fontStyle: 'italic', color: 'orange'}}, 'NA');
+                displayValue = span({ style: { fontStyle: 'italic', color: 'orange' } }, 'NA');
             } else {
-                displayValue = values.map((value) => {
-                    return span({style: {fontFamily: 'monospace', fontWeight: 'bold', color: 'gray'}}, String(value));
-                }).join(', ');
+                displayValue = values
+                    .map((value) => {
+                        return span(
+                            {
+                                style: {
+                                    fontFamily: 'monospace',
+                                    fontWeight: 'bold',
+                                    color: 'gray',
+                                },
+                            },
+                            String(value)
+                        );
+                    })
+                    .join(', ');
             }
-            container.innerHTML = div({class: 'form-control-static'}, displayValue);
+            container.innerHTML = div({ class: 'form-control-static' }, displayValue);
         }
 
         // LIFECYCLE API
@@ -46,24 +57,23 @@ define([
                 bus.on('update', (message) => {
                     model.setItem('values', message.value);
                 });
-
             });
         }
 
         model = Props.make({
             onUpdate: function (props) {
                 render();
-            }
+            },
         });
 
         return {
-            start: start
+            start: start,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

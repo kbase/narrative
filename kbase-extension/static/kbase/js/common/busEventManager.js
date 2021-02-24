@@ -1,5 +1,4 @@
-define([
-], () => {
+define([], () => {
     function factory(config) {
         let listeners = [],
             bus = config.bus;
@@ -23,13 +22,13 @@ define([
         return {
             add: add,
             remove: remove,
-            removeAll: removeAll
+            removeAll: removeAll,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

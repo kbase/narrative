@@ -3,26 +3,26 @@ define([], () => {
 
     // Static methods
     function isArray(testValue) {
-        return (testValue instanceof Array);
+        return testValue instanceof Array;
     }
 
     function isNumber(testValue) {
-        return (typeof testValue === 'number');
+        return typeof testValue === 'number';
     }
-
 
     function setDataItem(data, path, value) {
         if (typeof path === 'string') {
             path = path.split('.');
         } else if (!isArray(path)) {
-            throw new TypeError('Invalid type for key: ' + (typeof path));
+            throw new TypeError('Invalid type for key: ' + typeof path);
         }
         if (path.length === 0) {
             return;
         }
         // pop off the last property for setting at the end.
         let propKey = path.pop(),
-            key, temp = data;
+            key,
+            temp = data;
         // Walk the path, creating empty objects if need be.
         while (path.length > 0) {
             key = path.shift();
@@ -40,14 +40,15 @@ define([], () => {
         if (typeof path === 'string') {
             path = path.split('.');
         } else if (!isArray(path)) {
-            throw new TypeError('Invalid type for key: ' + (typeof path));
+            throw new TypeError('Invalid type for key: ' + typeof path);
         }
         if (path.length === 0) {
             return;
         }
         // pop off the last property for setting at the end.
         let propKey = path.pop(),
-            key, temp = data;
+            key,
+            temp = data;
         // Walk the path, creating empty objects if need be.
         while (path.length > 0) {
             key = path.shift();
@@ -72,13 +73,12 @@ define([], () => {
         if (typeof path === 'string') {
             path = path.split('.');
         } else if (!isArray(path)) {
-            throw new TypeError('Invalid type for key: ' + (typeof path));
+            throw new TypeError('Invalid type for key: ' + typeof path);
         }
-        let i, temp = data;
+        let i,
+            temp = data;
         for (i = 0; i < path.length; i += 1) {
-            if ((temp === undefined) ||
-                (typeof temp !== 'object') ||
-                (temp === null)) {
+            if (temp === undefined || typeof temp !== 'object' || temp === null) {
                 return defaultValue;
             }
             temp = temp[path[i]];
@@ -93,13 +93,12 @@ define([], () => {
         if (typeof path === 'string') {
             path = path.split('.');
         } else if (!isArray(path)) {
-            throw new TypeError('Invalid type for key: ' + (typeof path));
+            throw new TypeError('Invalid type for key: ' + typeof path);
         }
-        let i, temp = data;
+        let i,
+            temp = data;
         for (i = 0; i < path.length; i += 1) {
-            if ((temp === undefined) ||
-                (typeof temp !== 'object') ||
-                (temp === null)) {
+            if (temp === undefined || typeof temp !== 'object' || temp === null) {
                 return defaultValue;
             }
             temp = temp[path[i]];
@@ -124,7 +123,8 @@ define([], () => {
             updateHandler = config.onUpdate,
             historyEnabled = updateHandler ? true : false,
             lastValueSaved = false,
-            timer, api;
+            timer,
+            api;
 
         /*
          * In enabled by setting an update handler via the onUpdate factory
@@ -180,7 +180,6 @@ define([], () => {
             lastValueSaved = false;
         }
 
-
         function getItem(props, defaultValue) {
             return getDataItem(obj, props, defaultValue);
         }
@@ -196,11 +195,10 @@ define([], () => {
             if (typeof propPath === 'string') {
                 propPath = propPath.split('.');
             }
-            let i, temp = obj;
+            let i,
+                temp = obj;
             for (i = 0; i < propPath.length; i += 1) {
-                if ((temp === undefined) ||
-                    (typeof temp !== 'object') ||
-                    (temp === null)) {
+                if (temp === undefined || typeof temp !== 'object' || temp === null) {
                     return false;
                 }
                 temp = temp[propPath[i]];
@@ -210,7 +208,6 @@ define([], () => {
             }
             return true;
         }
-
 
         function setItem(path, value) {
             ensureHistory();
@@ -244,9 +241,10 @@ define([], () => {
             if (path.length === 0) {
                 return;
             }
-            increment = (increment === undefined) ? 1 : increment;
+            increment = increment === undefined ? 1 : increment;
             let propKey = path.pop(),
-                key, temp = obj;
+                key,
+                temp = obj;
             while (path.length > 0) {
                 key = path.shift();
                 if (temp[key] === undefined) {
@@ -276,7 +274,8 @@ define([], () => {
                 return;
             }
             let propKey = path.pop(),
-                key, temp = obj;
+                key,
+                temp = obj;
             while (path.length > 0) {
                 key = path.shift();
                 if (temp[key] === undefined) {
@@ -300,24 +299,24 @@ define([], () => {
             pushItem: pushItem,
             popItem: popItem,
             reset: reset,
-            getRawObject: function() {
+            getRawObject: function () {
                 return obj;
             },
-            getLastRawObject: function() {
+            getLastRawObject: function () {
                 return lastObj;
             },
-            getHistoryCount: getHistoryCount
+            getHistoryCount: getHistoryCount,
         };
         return api;
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
         },
         getDataItem: getDataItem,
         setDataItem: setDataItem,
         pushDataItem: pushDataItem,
-        popDataItem: popDataItem
+        popDataItem: popDataItem,
     };
 });

@@ -1,7 +1,4 @@
-define([
-    'bluebird',
-    'kb_common/html'
-], (Promise, html) => {
+define(['bluebird', 'kb_common/html'], (Promise, html) => {
     'use strict';
 
     function factory() {
@@ -25,14 +22,13 @@ define([
 
         return Object.freeze({
             start: start,
-            stop: stop
+            stop: stop,
         });
-
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
-    }
+        },
+    };
 });

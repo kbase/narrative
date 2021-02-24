@@ -34,7 +34,7 @@ define([
     'css!kbase/css/appCell.css',
     'css!kbase/css/advancedViewCell.css',
     'bootstrap',
-    'custom/custom'
+    'custom/custom',
 ], (
     $,
     Promise,
@@ -66,44 +66,44 @@ define([
      */
     function upgradeToViewCell(cell, appSpec, appTag) {
         return Promise.try(() => {
-                // Create base app cell
-                const meta = cell.metadata;
-                meta.kbase = {
-                    type: 'advancedView',
-                    attributes: {
-                        id: new Uuid(4).format(),
-                        status: 'new',
-                        created: (new Date()).toUTCString(),
-                        icon: 'bar-chart'
+            // Create base app cell
+            const meta = cell.metadata;
+            meta.kbase = {
+                type: 'advancedView',
+                attributes: {
+                    id: new Uuid(4).format(),
+                    status: 'new',
+                    created: new Date().toUTCString(),
+                    icon: 'bar-chart',
+                },
+                cellState: {
+                    icon: 'bar-chart',
+                },
+                viewCell: {
+                    app: {
+                        id: appSpec.info.id,
+                        gitCommitHash: appSpec.info.git_commit_hash,
+                        version: appSpec.info.ver,
+                        tag: appTag,
+                        spec: appSpec,
                     },
-                    cellState: {
-                        icon: 'bar-chart'
-                    },
-                    viewCell: {
-                        app: {
-                            id: appSpec.info.id,
-                            gitCommitHash: appSpec.info.git_commit_hash,
-                            version: appSpec.info.ver,
-                            tag: appTag,
-                            spec: appSpec
-                        },
-                        state: {
-                            edit: 'editing',
-                            params: null,
-                            code: null,
-                            request: null,
-                            result: null
-                        },
+                    state: {
+                        edit: 'editing',
                         params: null,
-                        outputWidgetState: null
-                    }
-                };
-                cell.metadata = meta;
-            })
+                        code: null,
+                        request: null,
+                        result: null,
+                    },
+                    params: null,
+                    outputWidgetState: null,
+                },
+            };
+            cell.metadata = meta;
+        })
             .then(() => {
                 // Add the params
                 const spec = Spec.make({
-                    appSpec: appSpec
+                    appSpec: appSpec,
                 });
                 utils.setCellMeta(cell, 'kbase.viewCell.params', spec.makeDefaultedModel());
             })
@@ -118,11 +118,14 @@ define([
     }
 
     function specializeCell(cell) {
-        cell.minimize = function() {
+        cell.minimize = function () {
             const inputArea = this.input.find('.input_area'),
                 outputArea = this.element.find('.output_wrapper'),
                 viewInputArea = this.element.find('[data-subarea-type="view-cell-input"]'),
-                showCode = utils.getCellMeta(cell, 'kbase.viewCell.user-settings.showCodeInputArea');
+                showCode = utils.getCellMeta(
+                    cell,
+                    'kbase.viewCell.user-settings.showCodeInputArea'
+                );
 
             if (showCode) {
                 inputArea.classList.remove('-show');
@@ -131,11 +134,14 @@ define([
             viewInputArea.addClass('hidden');
         };
 
-        cell.maximize = function() {
+        cell.maximize = function () {
             const inputArea = this.input.find('.input_area'),
                 outputArea = this.element.find('.output_wrapper'),
                 viewInputArea = this.element.find('[data-subarea-type="view-cell-input"]'),
-                showCode = utils.getCellMeta(cell, 'kbase.viewCell.user-settings.showCodeInputArea');
+                showCode = utils.getCellMeta(
+                    cell,
+                    'kbase.viewCell.user-settings.showCodeInputArea'
+                );
 
             if (showCode) {
                 if (!inputArea.classList.contains('-show')) {
@@ -145,19 +151,22 @@ define([
             outputArea.removeClass('hidden');
             viewInputArea.removeClass('hidden');
         };
-        cell.renderIcon = function() {
+        cell.renderIcon = function () {
             const inputPrompt = this.element[0].querySelector('[data-element="prompt"]');
 
             if (inputPrompt) {
-                inputPrompt.innerHTML = div({
-                    style: { textAlign: 'center' }
-                }, [
-                    AppUtils.makeAppIcon(utils.getCellMeta(cell, 'kbase.viewCell.app.spec'))
-                ]);
+                inputPrompt.innerHTML = div(
+                    {
+                        style: { textAlign: 'center' },
+                    },
+                    [AppUtils.makeAppIcon(utils.getCellMeta(cell, 'kbase.viewCell.app.spec'))]
+                );
             }
         };
-        cell.getIcon = function() {
-            const icon = AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.viewCell.app.spec'));
+        cell.getIcon = function () {
+            const icon = AppUtils.makeToolbarAppIcon(
+                utils.getCellMeta(cell, 'kbase.viewCell.app.spec')
+            );
             return icon;
         };
     }
@@ -195,29 +204,32 @@ define([
             // Add custom styles to the cell.
             cell.element[0].classList.add('kb-advanced-view-cell');
 
-
             // The kbase property is only used for managing runtime state of the cell
             // for kbase. Anything to be persistent should be on the metadata.
             cell.kbase = {};
 
             // Update metadata.
-            utils.setMeta(cell, 'attributes', 'lastLoaded', (new Date()).toUTCString());
+            utils.setMeta(cell, 'attributes', 'lastLoaded', new Date().toUTCString());
 
             // TODO: the code cell input widget should instantiate its state
             // from the cell!!!!
-            const cellBus = runtime.bus().makeChannelBus({ description: 'Parent comm for The Cell Bus' }),
+            const cellBus = runtime
+                    .bus()
+                    .makeChannelBus({ description: 'Parent comm for The Cell Bus' }),
                 appId = utils.getMeta(cell, 'viewCell', 'app').id,
                 appTag = utils.getMeta(cell, 'viewCell', 'app').tag,
                 viewCellWidget = ViewCellWidget.make({
                     bus: cellBus,
                     cell: cell,
                     runtime: runtime,
-                    workspaceInfo: workspaceInfo
+                    workspaceInfo: workspaceInfo,
                 }),
                 dom = Dom.make({ node: cell.input[0] }),
-                kbaseNode = dom.createNode(div({
-                    dataSubareaType: 'view-cell-input'
-                }));
+                kbaseNode = dom.createNode(
+                    div({
+                        dataSubareaType: 'view-cell-input',
+                    })
+                );
 
             // Create (above) and place the main container for the input cell.
             cell.input.after($(kbaseNode));
@@ -226,7 +238,8 @@ define([
 
             jupyter.disableKeyListenersForCell(cell);
 
-            return viewCellWidget.init()
+            return viewCellWidget
+                .init()
                 .then(() => {
                     return viewCellWidget.attach(kbaseNode);
                 })
@@ -237,33 +250,34 @@ define([
                     return viewCellWidget.run({
                         appId: appId,
                         appTag: appTag,
-                        authToken: runtime.authToken()
+                        authToken: runtime.authToken(),
                     });
                 })
                 .then(() => {
                     cell.renderMinMax();
                     return {
                         widget: viewCellWidget,
-                        bus: cellBus
+                        bus: cellBus,
                     };
                 });
         });
     }
 
     function setupNotebook() {
-        return Promise.all(jupyter.getCells().map((cell) => {
-            return setupCell(cell);
-        }));
+        return Promise.all(
+            jupyter.getCells().map((cell) => {
+                return setupCell(cell);
+            })
+        );
     }
 
     function setupWorkspace(workspaceUrl) {
         const workspaceRef = { id: runtime.workspaceId() },
             workspace = new Workspace(workspaceUrl, {
-                token: runtime.authToken()
+                token: runtime.authToken(),
             });
 
         return workspace.get_workspace_info(workspaceRef);
-
     }
 
     /*
@@ -299,16 +313,19 @@ define([
                     const cell = payload.cell;
                     const setupData = payload.data;
                     const jupyterCellType = payload.type;
-                    if (setupData &&
+                    if (
+                        setupData &&
                         jupyterCellType === 'code' &&
-                        setupData.type === 'advancedView') {
-                        upgradeToViewCell(cell, setupData.appSpec, setupData.appTag)
-                            .catch((err) => {
+                        setupData.type === 'advancedView'
+                    ) {
+                        upgradeToViewCell(cell, setupData.appSpec, setupData.appTag).catch(
+                            (err) => {
                                 console.error('ERROR creating cell', err);
                                 jupyter.deleteCell(cell);
                                 // TODO proper error dialog
                                 alert('Could not insert cell due to errors.\n' + err.message);
-                            });
+                            }
+                        );
                     }
                 });
             })
@@ -322,8 +339,7 @@ define([
         /* Only initialize after the notebook is fully loaded. */
         if (Jupyter.notebook._fully_loaded) {
             initializeExtension();
-        }
-        else {
+        } else {
             $([Jupyter.events]).one('notebook_loaded.Notebook', () => {
                 initializeExtension();
             });
@@ -331,7 +347,7 @@ define([
     }
 
     return {
-        load_ipython_extension: load
+        load_ipython_extension: load,
     };
 }, (err) => {
     // TODO: use the error reporting mechanism from the app cell

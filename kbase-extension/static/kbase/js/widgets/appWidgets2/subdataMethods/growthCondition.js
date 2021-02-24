@@ -1,12 +1,10 @@
-define([
-], () => {
+define([], () => {
     'use strict';
 
     function factory(config) {
         // PRIVATE
 
         function getData(columnsMetadata) {
-
             const conditions = {};
             Object.keys(columnsMetadata).forEach((columnId) => {
                 columnsMetadata[columnId].forEach((pv) => {
@@ -18,7 +16,7 @@ define([
             return Object.keys(conditions).map((conditionParam) => {
                 return {
                     id: conditionParam,
-                    text: conditionParam
+                    text: conditionParam,
                 };
             });
         }
@@ -35,7 +33,7 @@ define([
             return {
                 params: {
                     referenceObject: 'input_growth_parameters',
-                    dependencies: ['input_growth_parameters']
+                    dependencies: ['input_growth_parameters'],
                 },
                 // use this if the reference object is not what we want
                 // to query, but a sub object. For now we just support
@@ -46,20 +44,19 @@ define([
                 getRef: function (data) {
                     return data[0].data.matrix_id;
                 },
-                included: ["metadata/column_metadata"],
-                extractItems: extractItems
+                included: ['metadata/column_metadata'],
+                extractItems: extractItems,
             };
         }
 
         return {
-            getMethod: getMethod
+            getMethod: getMethod,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
-
 });

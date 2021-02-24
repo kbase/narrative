@@ -10,43 +10,126 @@ const { login, openNarrative, clickWhenReady, waitForClass } = require('../wdioU
 const allTestCases = {
     common: {
         randomTabs: [
-            1, 4, 3, 2, 0, 1, 0, 4, 1, 4, 0, 3,
-            1, 3, 4, 3, 4, 0, 2, 0, 1, 3, 2, 0,
-            2, 4, 3, 0, 4, 2, 3, 2, 0, 4, 1, 0,
-            1, 3, 2, 1, 4, 3, 1, 4, 1, 2, 4, 1,
-            2, 1, 2, 1, 4, 2, 4, 0, 1, 3, 4, 3,
-            2, 1, 2, 3, 0, 3, 1, 2, 3, 0, 1, 4,
-            1, 0, 4, 0, 1, 0, 1, 4, 2, 0, 3, 4
+            1,
+            4,
+            3,
+            2,
+            0,
+            1,
+            0,
+            4,
+            1,
+            4,
+            0,
+            3,
+            1,
+            3,
+            4,
+            3,
+            4,
+            0,
+            2,
+            0,
+            1,
+            3,
+            2,
+            0,
+            2,
+            4,
+            3,
+            0,
+            4,
+            2,
+            3,
+            2,
+            0,
+            4,
+            1,
+            0,
+            1,
+            3,
+            2,
+            1,
+            4,
+            3,
+            1,
+            4,
+            1,
+            2,
+            4,
+            1,
+            2,
+            1,
+            2,
+            1,
+            4,
+            2,
+            4,
+            0,
+            1,
+            3,
+            4,
+            3,
+            2,
+            1,
+            2,
+            3,
+            0,
+            3,
+            1,
+            2,
+            3,
+            0,
+            1,
+            4,
+            1,
+            0,
+            4,
+            0,
+            1,
+            0,
+            1,
+            4,
+            2,
+            0,
+            3,
+            4,
         ],
-        tabs: [{
-            name: 'mydata',
-            label: 'My Data'
-        }, {
-            name: 'sharedwithme',
-            label: "Shared With Me"
-        }, {
-            name: 'public',
-            label: 'Public'
-        }, {
-            name: 'example',
-            label: 'Example'
-        }, {
-            name: 'import',
-            label: 'Import'
-        }]
+        tabs: [
+            {
+                name: 'mydata',
+                label: 'My Data',
+            },
+            {
+                name: 'sharedwithme',
+                label: 'Shared With Me',
+            },
+            {
+                name: 'public',
+                label: 'Public',
+            },
+            {
+                name: 'example',
+                label: 'Example',
+            },
+            {
+                name: 'import',
+                label: 'Import',
+            },
+        ],
     },
     envs: {
         ci: {
             TEST_CASE_1: {
-                narrativeId: 53983
+                narrativeId: 53983,
             },
         },
         'narrative-dev': {
             TEST_CASE_1: {
                 narrativeId: 78050,
-            }
-        }
-    }
+            },
+        },
+    },
 };
 
 function getTestCase(name) {
@@ -78,7 +161,7 @@ async function ensureTabIsActive(slideoutPanel, name) {
     const tabPanel = await slideoutPanel.$(`[data-test-id="panel-${name}"]`);
     await waitForClass(tabPanel, 'active');
 
-    return [tab, tabPanel]
+    return [tab, tabPanel];
 }
 
 async function selectTab(slideoutPanel, name) {
@@ -88,7 +171,9 @@ async function selectTab(slideoutPanel, name) {
 }
 
 async function selectTabByLabel(slideoutPanel, name, label) {
-    const tabLabelElement = await slideoutPanel.$(`[data-test-id="tab-${name}"] [data-test-id="label"]`);
+    const tabLabelElement = await slideoutPanel.$(
+        `[data-test-id="tab-${name}"] [data-test-id="label"]`
+    );
     const tabLabel = await tabLabelElement.getText();
     expect(tabLabel).toEqual(label);
     await clickWhenReady(tabLabelElement);
@@ -97,7 +182,7 @@ async function selectTabByLabel(slideoutPanel, name, label) {
 
 describe('Tabbing within the data panel should work', () => {
     beforeEach(async () => {
-        await browser.setTimeout({ 'implicit': 30000 });
+        await browser.setTimeout({ implicit: 30000 });
         await browser.reloadSession();
     });
 
@@ -212,7 +297,7 @@ describe('Tabbing within the data panel should work', () => {
         const slideoutPanel = await openDataSlideout();
 
         for (const tabIndex of testCase.randomTabs) {
-            const { name } = testCase.tabs[tabIndex]
+            const { name } = testCase.tabs[tabIndex];
             await selectTab(slideoutPanel, name);
         }
     });
@@ -225,7 +310,7 @@ describe('Tabbing within the data panel should work', () => {
         const slideoutPanel = await openDataSlideout();
 
         for (const tabIndex of testCase.randomTabs) {
-            const { name, label } = testCase.tabs[tabIndex]
+            const { name, label } = testCase.tabs[tabIndex];
             await selectTabByLabel(slideoutPanel, name, label);
         }
     });

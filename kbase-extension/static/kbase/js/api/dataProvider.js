@@ -7,14 +7,8 @@ define([
     'narrativeConfig',
     'common/runtime',
     'kbase-generic-client-api',
-    'base/js/namespace'
-], (
-    Promise,
-    Config,
-    Runtime,
-    GenericClient,
-    Jupyter
-) => {
+    'base/js/namespace',
+], (Promise, Config, Runtime, GenericClient, Jupyter) => {
     'use strict';
 
     const DATA_CACHE_TIME = 300000;
@@ -39,18 +33,20 @@ define([
                 return Promise.resolve();
             }
 
-            const serviceClient = new GenericClient(
-                Config.url('service_wizard'),
-                {token: Runtime.make().authToken()}
-            );
+            const serviceClient = new GenericClient(Config.url('service_wizard'), {
+                token: Runtime.make().authToken(),
+            });
 
-            return serviceClient.sync_call('NarrativeService.list_objects_with_sets', [{
-                ws_name: Jupyter.narrative.getWorkspaceName(),
-                includeMetadata: 1
-            }])
-                .then(data => {
+            return serviceClient
+                .sync_call('NarrativeService.list_objects_with_sets', [
+                    {
+                        ws_name: Jupyter.narrative.getWorkspaceName(),
+                        includeMetadata: 1,
+                    },
+                ])
+                .then((data) => {
                     this.initDataCache();
-                    data[0].data.forEach(obj => {
+                    data[0].data.forEach((obj) => {
                         const info = obj.object_info;
                         this.nameToObject[info[1]] = info;
                         const ref = info[6] + '/' + info[2];
@@ -65,7 +61,7 @@ define([
                     });
                     this.lastDataUpdate = new Date().getTime();
                 })
-                .catch(error => {
+                .catch((error) => {
                     console.error('Error while fetching data', error);
                 });
         }
@@ -75,19 +71,16 @@ define([
         }
 
         getData(forceUpdate) {
-            return this.updateData(forceUpdate)
-                .then(() => {
-                    return this.objects;
-                });
+            return this.updateData(forceUpdate).then(() => {
+                return this.objects;
+            });
         }
 
         getDataByName(forceUpdate) {
-            return this.updateData(forceUpdate)
-                .then(() => {
-                    return this.nameToObject;
-                });
+            return this.updateData(forceUpdate).then(() => {
+                return this.nameToObject;
+            });
         }
-
     }
 
     return new DataProvider();

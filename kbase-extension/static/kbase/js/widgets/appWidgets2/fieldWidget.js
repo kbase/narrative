@@ -16,16 +16,8 @@ define([
     'common/ui',
     'common/props',
     './errorControl',
-    'css!google-code-prettify/prettify.css'
-], (
-    Promise,
-    $,
-    PR,
-    html,
-    Events,
-    UI,
-    Props,
-    ErrorControlFactory) => {
+    'css!google-code-prettify/prettify.css',
+], (Promise, $, PR, html, Events, UI, Props, ErrorControlFactory) => {
     'use strict';
     const t = html.tag,
         div = t('div'),
@@ -42,20 +34,20 @@ define([
             standard: {
                 nameColClass: 'col-md-2',
                 inputColClass: 'col-md-5',
-                hintColClass: 'col-md-5'
+                hintColClass: 'col-md-5',
             },
             sidePanel: {
                 nameColClass: 'col-md-12',
                 inputColClass: 'col-md-12',
-                hintColClass: 'col-md-12'
-            }
+                hintColClass: 'col-md-12',
+            },
         };
-
 
     function factory(config) {
         let ui,
             bus = config.bus,
-            places, container,
+            places,
+            container,
             inputControlFactory = config.inputControlFactory,
             inputControl,
             options = {},
@@ -71,11 +63,11 @@ define([
                 workspaceInfo: config.workspaceInfo,
                 workspaceId: config.workspaceId,
                 fieldSpec: config.fieldSpec,
-                referenceType: config.referenceType
+                referenceType: config.referenceType,
             });
         } catch (ex) {
             inputControl = ErrorControlFactory.make({
-                message: ex.message
+                message: ex.message,
             }).make();
         }
 
@@ -86,34 +78,40 @@ define([
         function showMessageDialog(id) {
             ui.showInfoDialog({
                 title: 'MESSAGE TITLE',
-                body: 'Message id: ' + id
+                body: 'Message id: ' + id,
             });
         }
 
         function buildInputMessage(messageDef) {
             const events = Events.make(),
-                content = div({
-                    class: 'alert alert-' + messageDef.type,
-                    role: 'alert'
-                }, [
-                    span({ style: { fontWeight: 'bold' } }, messageDef.title),
-                    ': ',
-                    messageDef.message,
-                    ' ',
-                    button({
-                        type: 'button',
-                        class: 'btn btn-link alert-link',
-                        id: events.addEvent({
-                            type: 'click',
-                            handler: function() {
-                                showMessageDialog(messageDef.id);
-                            }
-                        })
-                    }, ui.buildIcon({ name: 'info-circle' }))
-                ]);
+                content = div(
+                    {
+                        class: 'alert alert-' + messageDef.type,
+                        role: 'alert',
+                    },
+                    [
+                        span({ style: { fontWeight: 'bold' } }, messageDef.title),
+                        ': ',
+                        messageDef.message,
+                        ' ',
+                        button(
+                            {
+                                type: 'button',
+                                class: 'btn btn-link alert-link',
+                                id: events.addEvent({
+                                    type: 'click',
+                                    handler: function () {
+                                        showMessageDialog(messageDef.id);
+                                    },
+                                }),
+                            },
+                            ui.buildIcon({ name: 'info-circle' })
+                        ),
+                    ]
+                );
             return {
                 events: events,
-                content: content
+                content: content,
             };
         }
 
@@ -122,13 +120,10 @@ define([
                 title: 'ERROR',
                 type: 'danger',
                 message: error.message,
-                id: error.id
+                id: error.id,
             });
-            places.$messagePanel
-                .removeClass('hidden');
-            places.$message
-                .html(component.content)
-                .addClass('-error');
+            places.$messagePanel.removeClass('hidden');
+            places.$message.html(component.content).addClass('-error');
             component.events.attachEvents(document.body);
         }
 
@@ -137,27 +132,17 @@ define([
                 title: 'Warning',
                 type: 'warning',
                 message: warning.message,
-                id: warning.id
+                id: warning.id,
             });
-            places.$messagePanel
-                .removeClass('hidden');
-            places.$message
-                .html(component.content)
-                .addClass('-warning');
+            places.$messagePanel.removeClass('hidden');
+            places.$message.html(component.content).addClass('-warning');
             component.events.attachEvents(document.body);
         }
 
-
         function clearError() {
-            places.$field
-                .removeClass('-error')
-                .removeClass('-warning');
-            places.$message
-                .removeClass('-error')
-                .removeClass('-warning')
-                .html('');
-            places.$messagePanel
-                .addClass('hidden');
+            places.$field.removeClass('-error').removeClass('-warning');
+            places.$message.removeClass('-error').removeClass('-warning').html('');
+            places.$messagePanel.addClass('hidden');
         }
 
         function hideError() {
@@ -167,9 +152,7 @@ define([
         }
 
         function feedbackNone() {
-            places.$feedbackIndicator
-                .removeClass()
-                .hide();
+            places.$feedbackIndicator.removeClass().hide();
         }
 
         function feedbackOk() {
@@ -205,7 +188,7 @@ define([
             return div({ style: { padding: '4px' } }, [
                 div({ style: { fontWeight: 'bold' } }, spec.label()),
                 div({ style: { fontStyle: 'italic' } }, spec.name()),
-                div({ style: { fontSize: '80%' } }, spec.description())
+                div({ style: { fontSize: '80%' } }, spec.description()),
             ]);
         }
 
@@ -214,48 +197,76 @@ define([
                 case 'float':
                     return [
                         tr([th('Min'), td(spec.spec.text_options.min_float)]),
-                        tr([th('Max'), td(spec.spec.text_options.max_float)])
+                        tr([th('Max'), td(spec.spec.text_options.max_float)]),
                     ];
                 case 'int':
                     // just for now ...
                     if (spec.spec.field_type === 'checkbox') {
                         return [
-                            tr([th('Value when checked'), td(Props.getDataItem(spec.spec, 'checkbox_options.checked_value', UI.na()))]),
-                            tr([th('Value when un-checked'), td(Props.getDataItem(spec.spec, 'checkbox_options.unchecked_value', UI.na()))])
+                            tr([
+                                th('Value when checked'),
+                                td(
+                                    Props.getDataItem(
+                                        spec.spec,
+                                        'checkbox_options.checked_value',
+                                        UI.na()
+                                    )
+                                ),
+                            ]),
+                            tr([
+                                th('Value when un-checked'),
+                                td(
+                                    Props.getDataItem(
+                                        spec.spec,
+                                        'checkbox_options.unchecked_value',
+                                        UI.na()
+                                    )
+                                ),
+                            ]),
                         ];
                     }
                     return [
                         tr([th('Min'), td(spec.spec.text_options.min_int)]),
-                        tr([th('Max'), td(spec.spec.text_options.max_int)])
+                        tr([th('Max'), td(spec.spec.text_options.max_int)]),
                     ];
             }
         }
 
         function parameterInfoRules(spec) {
-            return table({ class: 'table table-striped' }, [
-                tr([th('Required'), td(spec.required() ? 'yes' : 'no')]),
-                tr([th('Data type'), td(spec.dataType())]),
-                tr([th('Field type'), td(spec.spec.field_type)]),
-                tr([th('Multiple values?'), td(spec.multipleItems() ? 'yes' : 'no')]),
-                (function() {
-                    if (!spec.spec.default_values) {
-                        return;
-                    }
-                    if (spec.spec.default_values.length === 0) {
-                        return;
-                    }
-                    const defaultValues = spec.defaultValue();
-                    if (defaultValues instanceof Array) {
-                        return tr([th('Default value'), td(defaultValues.join('<br>'))]);
-                    }
-                    return tr([th('Default value'), td(defaultValues)]);
-                }()),
-                (function() {
-                    if (spec.spec.text_options && spec.spec.text_options.valid_ws_types && spec.spec.text_options.valid_ws_types.length > 0) {
-                        return tr([th('Valid types'), td(spec.spec.text_options.valid_ws_types.join('<br>'))]);
-                    }
-                }())
-            ].concat(parameterInfoTypeRules(spec)));
+            return table(
+                { class: 'table table-striped' },
+                [
+                    tr([th('Required'), td(spec.required() ? 'yes' : 'no')]),
+                    tr([th('Data type'), td(spec.dataType())]),
+                    tr([th('Field type'), td(spec.spec.field_type)]),
+                    tr([th('Multiple values?'), td(spec.multipleItems() ? 'yes' : 'no')]),
+                    (function () {
+                        if (!spec.spec.default_values) {
+                            return;
+                        }
+                        if (spec.spec.default_values.length === 0) {
+                            return;
+                        }
+                        const defaultValues = spec.defaultValue();
+                        if (defaultValues instanceof Array) {
+                            return tr([th('Default value'), td(defaultValues.join('<br>'))]);
+                        }
+                        return tr([th('Default value'), td(defaultValues)]);
+                    })(),
+                    (function () {
+                        if (
+                            spec.spec.text_options &&
+                            spec.spec.text_options.valid_ws_types &&
+                            spec.spec.text_options.valid_ws_types.length > 0
+                        ) {
+                            return tr([
+                                th('Valid types'),
+                                td(spec.spec.text_options.valid_ws_types.join('<br>')),
+                            ]);
+                        }
+                    })(),
+                ].concat(parameterInfoTypeRules(spec))
+            );
         }
 
         function parameterInfoLittleTip(spec) {
@@ -264,7 +275,6 @@ define([
             //    type = spec.dataType();
             //return mult + type;
         }
-
 
         function renderInfoTip() {
             let infoTipText;
@@ -276,30 +286,34 @@ define([
 
             return div([
                 // div({dataElement: 'little-tip'}, parameterInfoLittleTip(spec)),
-                div({ dataElement: 'big-tip', class: 'hidden' }, html.makeTabs({
-                    alignRight: true,
-                    tabs: [{
-                            label: 'Description',
-                            name: 'description',
-                            content: div({ style: { padding: '4px' } }, infoTipText)
-                        },
-                        {
-                            label: 'About',
-                            name: 'about',
-                            content: parameterInfoContent(spec)
-                        },
-                        {
-                            label: 'Rules',
-                            name: 'rules',
-                            content: parameterInfoRules(spec)
-                        },
-                        {
-                            label: 'Spec',
-                            name: 'spec',
-                            content: rawSpec(spec)
-                        }
-                    ]
-                }))
+                div(
+                    { dataElement: 'big-tip', class: 'hidden' },
+                    html.makeTabs({
+                        alignRight: true,
+                        tabs: [
+                            {
+                                label: 'Description',
+                                name: 'description',
+                                content: div({ style: { padding: '4px' } }, infoTipText),
+                            },
+                            {
+                                label: 'About',
+                                name: 'about',
+                                content: parameterInfoContent(spec),
+                            },
+                            {
+                                label: 'Rules',
+                                name: 'rules',
+                                content: parameterInfoRules(spec),
+                            },
+                            {
+                                label: 'Spec',
+                                name: 'spec',
+                                content: rawSpec(spec),
+                            },
+                        ],
+                    })
+                ),
             ]);
         }
         //        function renderLabelTip() {
@@ -311,7 +325,10 @@ define([
         function render(events) {
             let placeholder = '',
                 fieldContainer,
-                feedbackTip, nameCol, inputCol, hintCol;
+                feedbackTip,
+                nameCol,
+                inputCol,
+                hintCol;
 
             // PLACHOLDER (todo: put it somewhere!)
             if (spec.text_options && spec.text_options.placeholder) {
@@ -323,7 +340,7 @@ define([
                 feedbackTip = span({
                     class: 'kb-app-parameter-required-glyph fa fa-arrow-left',
                     title: 'required field',
-                    dataElement: 'feedback'
+                    dataElement: 'feedback',
                 });
             }
 
@@ -338,16 +355,44 @@ define([
                 advanced = '';
             }
 
-            const content = div({ class: ['form-horizontal', 'kb-app-parameter-row', 'parameter-panel', advanced].join(' '), dataAdvancedParameter: spec.isAdvanced(), style: { marginTop: '8px' }, id: fieldId }, [
-                div({ class: 'form-group kb-app-parameter-input field-panel', dataElement: 'field-panel', style: { marginBottom: '0' } }, [
-                    label({ class: 'col-md-3 xcontrol-label kb-app-parameter-name control-label' }, [
-                        spec.label() || spec.id()
-                    ]),
-                    div({ class: 'input-group col-md-9', style: { xwidth: '100%' } }, [
-                        div({ dataElement: 'input-control' }),
-                        div({ class: 'input-group-addon kb-input-group-addon kb-app-field-feedback', dataElement: 'feedback', style: { width: '30px', padding: '0' } }, [
-                            div({ dataElement: 'indicator' })
-                        ]), /*
+            const content = div(
+                {
+                    class: [
+                        'form-horizontal',
+                        'kb-app-parameter-row',
+                        'parameter-panel',
+                        advanced,
+                    ].join(' '),
+                    dataAdvancedParameter: spec.isAdvanced(),
+                    style: { marginTop: '8px' },
+                    id: fieldId,
+                },
+                [
+                    div(
+                        {
+                            class: 'form-group kb-app-parameter-input field-panel',
+                            dataElement: 'field-panel',
+                            style: { marginBottom: '0' },
+                        },
+                        [
+                            label(
+                                {
+                                    class:
+                                        'col-md-3 xcontrol-label kb-app-parameter-name control-label',
+                                },
+                                [spec.label() || spec.id()]
+                            ),
+                            div({ class: 'input-group col-md-9', style: { xwidth: '100%' } }, [
+                                div({ dataElement: 'input-control' }),
+                                div(
+                                    {
+                                        class:
+                                            'input-group-addon kb-input-group-addon kb-app-field-feedback',
+                                        dataElement: 'feedback',
+                                        style: { width: '30px', padding: '0' },
+                                    },
+                                    [div({ dataElement: 'indicator' })]
+                                ) /*
                         div({ class: 'input-group-addon kb-input-group-addon', style: { width: '30px', padding: '0' } }, [
                             div({ dataElement: 'info' }, button({
                                     class: 'btn btn-link btn-xs',
@@ -362,23 +407,25 @@ define([
                                 },
                                 span({ class: 'fa fa-info-circle' })
                             ))
-                        ])*/
-                    ])
-                ]),
-                div({ class: 'message-panel hidden', dataElement: 'message-panel' }, [
-                    div({ class: 'col-md-3' }),
-                    div({ class: 'col-md-9' }, div({
-                        class: 'message',
-                        dataElement: 'message'
-                    }))
-                ]),
-                div({ class: 'info-panel row', dataElement: 'info-panel' }, [
-                    div({ class: 'col-md-12' }, div({ id: infoId }, [
-                        renderInfoTip()
-                    ]))
-
-                ])
-            ]);
+                        ])*/,
+                            ]),
+                        ]
+                    ),
+                    div({ class: 'message-panel hidden', dataElement: 'message-panel' }, [
+                        div({ class: 'col-md-3' }),
+                        div(
+                            { class: 'col-md-9' },
+                            div({
+                                class: 'message',
+                                dataElement: 'message',
+                            })
+                        ),
+                    ]),
+                    div({ class: 'info-panel row', dataElement: 'info-panel' }, [
+                        div({ class: 'col-md-12' }, div({ id: infoId }, [renderInfoTip()])),
+                    ]),
+                ]
+            );
 
             return content;
         }
@@ -407,11 +454,15 @@ define([
                     $message: $container.find('[data-element="message"]'),
                     $messagePanel: $container.find('[data-element="message-panel"]'),
                     $feedback: $container.find('[data-element="feedback"]'),
-                    $feedbackIndicator: $container.find('[data-element="feedback"][data-element="indicator"]'),
-                    $removalButton: $container.find('[data-element="removal-button"]')
+                    $feedbackIndicator: $container.find(
+                        '[data-element="feedback"][data-element="indicator"]'
+                    ),
+                    $removalButton: $container.find('[data-element="removal-button"]'),
                 };
                 if (inputControl.attach) {
-                    return inputControl.attach($container.find('[data-element="input-control"]').get(0));
+                    return inputControl.attach(
+                        $container.find('[data-element="input-control"]').get(0)
+                    );
                 }
             });
         }
@@ -433,7 +484,7 @@ define([
                             clearError();
                             setWarning({
                                 message: message.shortMessage,
-                                id: message.messageId
+                                id: message.messageId,
                             });
                             break;
                         case 'invalid':
@@ -441,7 +492,7 @@ define([
                             clearError();
                             setError({
                                 id: message.messageId,
-                                message: message.errorMessage
+                                message: message.errorMessage,
                             });
                             break;
                         case 'optional-empty':
@@ -456,18 +507,16 @@ define([
                 });
                 bus.on('changed', () => {
                     places.$feedback.css('background-color', '');
-                })
+                });
                 bus.on('saved', (message) => {
                     console.log('FIELD detected saved');
-
                 });
                 if (inputControl.start) {
-                    return inputControl.start()
-                        .then(() => {
-                            bus.emit('run', {
-                                node: ui.getElement('input-control')
-                            });
+                    return inputControl.start().then(() => {
+                        bus.emit('run', {
+                            node: ui.getElement('input-control'),
                         });
+                    });
                 }
             });
         }
@@ -484,13 +533,13 @@ define([
             // init: init,
             attach: attach,
             start: start,
-            run: run
+            run: run,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

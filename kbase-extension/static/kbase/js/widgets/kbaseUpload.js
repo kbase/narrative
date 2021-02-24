@@ -1,4 +1,4 @@
- /**
+/**
  * File upload widget.
  * Upload objects to the workspace service.
  *
@@ -11,67 +11,60 @@
  */
 
 // Jquery UI widget style
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery'
-	], (
-		KBWidget,
-		bootstrap,
-		$
-	) => {
-    const MissingOptionError = function(argname) {
+define(['kbwidget', 'bootstrap', 'jquery'], (KBWidget, bootstrap, $) => {
+    const MissingOptionError = function (argname) {
         const e = new Error("missing option: '" + argname + "'");
-        e.name = "MissingOptionError";
+        e.name = 'MissingOptionError';
         return e;
-    }
+    };
 
-    const FileReaderError = function(filename) {
+    const FileReaderError = function (filename) {
         const e = new Error("reading file: '" + filename + "'");
-        e.name = "FileReaderError";
+        e.name = 'FileReaderError';
         return e;
-    }
+    };
 
-	return KBWidget({
-        name: "kbaseUploadWidget", 
-        
-		version: "0.0.1",
+    return KBWidget({
+        name: 'kbaseUploadWidget',
+
+        version: '0.0.1',
         isLoggedIn: false,
-		options: { },
+        options: {},
         /**
          * Initialize the widget.
          *
          * @param options
          * @returns {*}
          */
-		init: function(options) {
+        init: function (options) {
             this._super(options);
             // process options
-            if (options.ws_parent === undefined)
-                throw MissingOptionError('ws_parent');
-            this.ws_p = options.ws_parent;            
+            if (options.ws_parent === undefined) throw MissingOptionError('ws_parent');
+            this.ws_p = options.ws_parent;
             // defaults for instance vars
             this.desc_elem = this.type_elem = null;
             // create the dialog
             this.data_types = [];
             this.createDialog();
             const that = this;
-            options.$anchor.on("click", () => {
+            options.$anchor.on('click', () => {
                 that.render();
             });
             return this;
-		},
+        },
 
         /**
          * Create the dialog if data types are accessible.
          */
-        createDialog: function() {
-            const r  = this._getDataTypes(), self = this;
-            console.debug("got from _getDataTypes: ", r);
+        createDialog: function () {
+            const r = this._getDataTypes(),
+                self = this;
+            console.debug('got from _getDataTypes: ', r);
             if (r !== undefined) {
                 // jfc, there has to be an easier way to do this!
-                r.done(() => { self._createDialog(self); });
+                r.done(() => {
+                    self._createDialog(self);
+                });
             }
         },
 
@@ -80,25 +73,27 @@ define (
          *
          * @return jQuery Promise object
          */
-        _getDataTypes: function() {
-            const _fn = "_getDataTypes.";
+        _getDataTypes: function () {
+            const _fn = '_getDataTypes.';
             if (this.data_types.length > 0) {
                 return $.Deferred();
             }
             const _p = this.ws_p; // alias
             if (_p.ws_client == null) {
-                console.error("Cannot get data types because no client");
+                console.error('Cannot get data types because no client');
                 return undefined;
             }
-            console.debug(_fn + "get_types.begin");
+            console.debug(_fn + 'get_types.begin');
             const _this = this;
             const r = _p.ws_client.get_types(
-                (result) => { 
-                    $.each(result, (key, value) => { _this.data_types.push(value);});
+                (result) => {
+                    $.each(result, (key, value) => {
+                        _this.data_types.push(value);
+                    });
                 },
-                (result) => { 
-                    console.error(_fn + "get_types.failed msg=", result.error.message); 
-                }                        
+                (result) => {
+                    console.error(_fn + 'get_types.failed msg=', result.error.message);
+                }
             );
             return r;
         },
@@ -108,42 +103,42 @@ define (
          *
          * @returns {*}
          */
-        _createDialog: function(self) {
+        _createDialog: function (self) {
             self.cur_files = [];
-            const _fn = "createDialog.";
-            console.debug(_fn + "begin", "self=", self);
+            const _fn = 'createDialog.';
+            console.debug(_fn + 'begin', 'self=', self);
             const _p = self.ws_p; // alias
             const opts = {
                 modal: true,
                 closeOnEscape: true,
                 title: 'Upload file',
                 autoOpen: false,
-                width: '50em'
+                width: '50em',
             };
             self.dlg = self.$elem.dialog(opts);
             self.dlg.empty(); // make idempotent
             // Build form programmatically
             const $frm = $('<form>').addClass('form-horizontal');
             const fields = {
-                'filename': {
-                    type:'file',
-                    id:'kb-up-filename',
+                filename: {
+                    type: 'file',
+                    id: 'kb-up-filename',
                     label: 'Filename:',
-                    desc_id: 'kb-up-desc'
+                    desc_id: 'kb-up-desc',
                 },
-                'datatype': {
-                    type:'select',
-                    id:'dataset_type',
-                    label:'Dataset Type:',
-                    options: self.data_types
+                datatype: {
+                    type: 'select',
+                    id: 'dataset_type',
+                    label: 'Dataset Type:',
+                    options: self.data_types,
                 },
-                'dataset': {
-                    type:'text',
-                    id:'dataset_name',
-                    label:'Dataset Name:',
-                    placeholder: "Name or identifying phrase",
-                    modified: false
-                }
+                dataset: {
+                    type: 'text',
+                    id: 'dataset_name',
+                    label: 'Dataset Name:',
+                    placeholder: 'Name or identifying phrase',
+                    modified: false,
+                },
             };
             // Add each field
             const that = self;
@@ -151,48 +146,59 @@ define (
                 const $frm_grp = $('<div>').addClass('control-group');
                 const $frm_controls = $('<div>').addClass('controls');
                 // Build and add the label
-                const $label = $('<label class="control-label" for="' + value.id + '">' + value.label + '</label>');
+                const $label = $(
+                    '<label class="control-label" for="' +
+                        value.id +
+                        '">' +
+                        value.label +
+                        '</label>'
+                );
                 $frm_grp.append($label);
                 // Build and add the control
                 let $control = null;
                 switch (value.type) {
-                    case "file":
+                    case 'file':
                         // This uses Bootstrap file-upload, see: http://jasny.github.io/bootstrap/javascript.html#fileupload
                         // Input and buttons
-                        $control = $('<div/>').addClass('form-group kb-upload')
-                        $control.html('<div class="fileupload fileupload-new" data-provides="fileupload">' +
-                            '<div class="input-group">' +
+                        $control = $('<div/>').addClass('form-group kb-upload');
+                        $control.html(
+                            '<div class="fileupload fileupload-new" data-provides="fileupload">' +
+                                '<div class="input-group">' +
                                 '<div class="form-control uneditable-input"><i class="icon-file fileupload-exists"></i> ' +
-                                    '<span class="fileupload-preview"></span>' +
-                                '</div>'+
-                                '<div class="input-group-btn">'+
-                                    '<a class="btn btn-default btn-file">'+
-                                        '<span class="fileupload-new">Select file</span>'+
-                                        '<span class="fileupload-exists">Change</span>'+
-                                        '<input type="file" class="file-input"/></a>'+
-                                    '<a href="#" class="btn btn-default fileupload-exists" data-dismiss="fileupload">Remove</a>'+
-                                '</div> </div> </div>');
+                                '<span class="fileupload-preview"></span>' +
+                                '</div>' +
+                                '<div class="input-group-btn">' +
+                                '<a class="btn btn-default btn-file">' +
+                                '<span class="fileupload-new">Select file</span>' +
+                                '<span class="fileupload-exists">Change</span>' +
+                                '<input type="file" class="file-input"/></a>' +
+                                '<a href="#" class="btn btn-default fileupload-exists" data-dismiss="fileupload">Remove</a>' +
+                                '</div> </div> </div>'
+                        );
                         break;
-                    case "text":
-                        $control = $('<input>').attr({type:'text', name: value.id,
-                            placeholder: value.placeholder}).addClass('form-control');
+                    case 'text':
+                        $control = $('<input>')
+                            .attr({ type: 'text', name: value.id, placeholder: value.placeholder })
+                            .addClass('form-control');
                         // remember whether this value was modified by the user
                         $control.change(() => {
                             // count as modified if non-empty
-                            const modded = self.value === "" ? false : true;
+                            const modded = self.value === '' ? false : true;
                             fields.dataset.modified = modded;
                         });
                         that.desc_elem = $control;
                         break;
-                    case "select":
-                        $control = $('<select>').attr('name', value.id).addClass("form-control");
+                    case 'select':
+                        $control = $('<select>').attr('name', value.id).addClass('form-control');
                         var keys = [];
-                        $.each(value.options, (k,v)=> {keys.push(v);})
+                        $.each(value.options, (k, v) => {
+                            keys.push(v);
+                        });
                         keys.sort();
                         that.file_type = keys[0];
                         $.each(keys, (index, value) => {
-                           const $opt = $('<option>').text(value);
-                           $control.append($opt);
+                            const $opt = $('<option>').text(value);
+                            $control.append($opt);
                         });
                         that.type_elem = $control;
                         break;
@@ -216,9 +222,9 @@ define (
             self.dlg.append($frm);
             // Put filename in description, unless user entered something
             $frm.on('change.bs.fileinput', (e) => {
-                console.debug("changed", e);
+                console.debug('changed', e);
                 // if the file-input was changed..
-                if (e.target.className === "file-input") {
+                if (e.target.className === 'file-input') {
                     self.cur_files = e.target.files;
                     if (self.cur_files.length > 0 && !fields.dataset.modified) {
                         const $txt = $frm.find(':text');
@@ -227,24 +233,24 @@ define (
                 }
             });
             // Set up response
-            $frm.on("submit", (event) => {
+            $frm.on('submit', (event) => {
                 event.preventDefault();
-                for (let i=0; i < self.cur_files.length; i++) {
+                for (let i = 0; i < self.cur_files.length; i++) {
                     const f = self.cur_files[i];
                     $.extend(f, {
                         desc: that.desc_elem[0].value, // description
-                        dtype: that.type_elem[0].value // data type name
+                        dtype: that.type_elem[0].value, // data type name
                     });
                     const reader = new FileReader();
-                    reader.onload = (function(file_info) {
-                        return function(e) {
-                            that.uploadFile(file_info, e.target.result); 
-                        }
+                    reader.onload = (function (file_info) {
+                        return function (e) {
+                            that.uploadFile(file_info, e.target.result);
+                        };
                     })(f);
-                    reader.onerror = (function(file_info) {
-                        return function(e) { 
-                            throw FileReaderError(file_info); 
-                        }
+                    reader.onerror = (function (file_info) {
+                        return function (e) {
+                            throw FileReaderError(file_info);
+                        };
                     })(f);
                     reader.readAsBinaryString(f);
                 }
@@ -261,7 +267,7 @@ define (
          * Render the dialog.
          * @returns {*}
          */
-        render: function() {
+        render: function () {
             this.dlg.find(':text').val('');
             this.dlg.dialog('open');
             return this;
@@ -271,9 +277,10 @@ define (
          * Get file name from input.
          * Has a workaround for chrome
          */
-        _getFileName: function(path) {
-            return (navigator.userAgent.indexOf('Chrome')) ?
-                path.replace(/C:\\fakepath\\/i, '') : path;
+        _getFileName: function (path) {
+            return navigator.userAgent.indexOf('Chrome')
+                ? path.replace(/C:\\fakepath\\/i, '')
+                : path;
         },
 
         /**
@@ -282,7 +289,7 @@ define (
          * @param values File path and metadata
          * @returns {*}
          */
-        uploadFile: function(file, data) {
+        uploadFile: function (file, data) {
             console.debug("upload file '" + file.name + "' desc: " + file.desc);
             /*
             id has a value which is an object_id
@@ -304,14 +311,14 @@ define (
 
             */
             const meta = {
-                'narrative': IPython.notebook.metadata,
-                'description': file.desc,
+                narrative: IPython.notebook.metadata,
+                description: file.desc,
             };
             const _p = this.ws_p; // parent obj
             const objid = this.sanitizeObjectId(file.desc);
             params = {
                 id: objid,
-                type: file.dtype, 
+                type: file.dtype,
                 workspace: _p.ws_id, // workspace_id
                 command: 'upload', // string
                 metadata: meta,
@@ -319,17 +326,16 @@ define (
                 json: false,
                 compressed: false,
                 retrieveFromURL: false,
-                asHash: false
+                asHash: false,
             };
-            console.debug('upload file params', params)
+            console.debug('upload file params', params);
             // put here, so not in logging
             params.data = {
-                'version': 0.1,
-                'bytes': data
+                version: 0.1,
+                bytes: data,
             };
-            _p.ws_client.save_object(params, this.handleUploadSuccess, 
-                                     this.handleUploadFailure);
-            //this.ws_client.save_object(params, 
+            _p.ws_client.save_object(params, this.handleUploadSuccess, this.handleUploadFailure);
+            //this.ws_client.save_object(params,
             //    function())
             return this;
         },
@@ -339,24 +345,24 @@ define (
          * can be used as a workspace object id.
          * Illegal chars are replaced by '_'.
          */
-         sanitizeObjectId: function(oid) {
+        sanitizeObjectId: function (oid) {
             return oid
-                .replace(/[^\w\|.-]/g,"_") // illegal chars -> "_"
-                .replace(/_+/g,"_");       // multiple "___" -> one "_"
-         },
+                .replace(/[^\w\|.-]/g, '_') // illegal chars -> "_"
+                .replace(/_+/g, '_'); // multiple "___" -> one "_"
+        },
 
         /**
          * Called when an upload succeeds.
          */
-        handleUploadSuccess: function(result) {
-            console.debug("upload success", result);
+        handleUploadSuccess: function (result) {
+            console.debug('upload success', result);
         },
 
         /**
          * Called when an upload fails
          */
-        handleUploadFailure: function(error) {
-            console.debug("upload error", error);
+        handleUploadFailure: function (error) {
+            console.debug('upload error', error);
         },
 
         /**
@@ -365,15 +371,15 @@ define (
          * @param token
          * @returns {*}
          */
-        loggedIn: function(token) {
+        loggedIn: function (token) {
             this.isLoggedIn = true;
             //this.wsClient = new workspaceService(this.options.workspaceURL);
             return this;
         },
 
-        loggedOut: function(token) {
+        loggedOut: function (token) {
             this.isLoggedIn = false;
             return this;
-        }
-	});
+        },
+    });
 });

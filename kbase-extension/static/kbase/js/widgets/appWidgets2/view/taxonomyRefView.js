@@ -15,7 +15,7 @@ define([
 
     'select2',
     'bootstrap',
-    'css!font-awesome'
+    'css!font-awesome',
 ], (
     Promise,
     $,
@@ -29,7 +29,8 @@ define([
     UI,
     Data,
     TimeFormat,
-    GenericClient) => {
+    GenericClient
+) => {
     'use strict';
 
     // Constants
@@ -47,16 +48,19 @@ define([
             channel = bus.channel(config.channelName),
             ui,
             model = {
-                value: undefined
+                value: undefined,
             },
             eventListeners = [];
 
         function makeInputControl() {
             let selectOptions;
-            const selectElem = select({
-                class: 'form-control',
-                dataElement: 'input'
-            }, [option({ value: '' }, '')].concat(selectOptions));
+            const selectElem = select(
+                {
+                    class: 'form-control',
+                    dataElement: 'input',
+                },
+                [option({ value: '' }, '')].concat(selectOptions)
+            );
 
             return selectElem;
         }
@@ -112,7 +116,7 @@ define([
                     diagnosis: 'valid',
                     errorMessage: null,
                     value: value,
-                    parsedValue: value
+                    parsedValue: value,
                 };
             });
         }
@@ -120,26 +124,41 @@ define([
         function doTemplateResult(item) {
             // console.log('template', item);
             if (!item.id) {
-                return $(div({
-                    style: {
-                        display: 'block',
-                        height: '20px'
-                    }
-                }, item.label || ''));
+                return $(
+                    div(
+                        {
+                            style: {
+                                display: 'block',
+                                height: '20px',
+                            },
+                        },
+                        item.label || ''
+                    )
+                );
             }
-            return $(div({
-                style: {
-                    display: 'block'
-                }
-            }, item.label));
+            return $(
+                div(
+                    {
+                        style: {
+                            display: 'block',
+                        },
+                    },
+                    item.label
+                )
+            );
         }
 
         function doTemplateSelection(item) {
-            return $(div({
-                style: {
-                    display: 'block'
-                }
-            }, item.label));
+            return $(
+                div(
+                    {
+                        style: {
+                            display: 'block',
+                        },
+                    },
+                    item.label
+                )
+            );
         }
 
         let totalItems;
@@ -166,21 +185,24 @@ define([
                 url: runtime.config('services.service_wizard.url'),
                 module: 'taxonomy_service',
                 // version: 'dev',
-                token: Runtime.make().authToken()
+                token: Runtime.make().authToken(),
             });
-            return taxonClient.callFunc('search_taxonomy', [{
-                private: 0,
-                public: 1,
-                search: term,
-                limit: pageSize,
-                start: startItem
-            }])
-            .then((result) => {
-                // var elapsed = new Date().getTime() - start;
-                // console.log('Loaded data ' + result[0].hits.length + ' items of ' + result[0].num_of_hits + ' in ' + elapsed + 'ms');
-                totalItems = result[0].num_of_hits;
-                return result[0];
-            });
+            return taxonClient
+                .callFunc('search_taxonomy', [
+                    {
+                        private: 0,
+                        public: 1,
+                        search: term,
+                        limit: pageSize,
+                        start: startItem,
+                    },
+                ])
+                .then((result) => {
+                    // var elapsed = new Date().getTime() - start;
+                    // console.log('Loaded data ' + result[0].hits.length + ' items of ' + result[0].num_of_hits + ' in ' + elapsed + 'ms');
+                    totalItems = result[0].num_of_hits;
+                    return result[0];
+                });
         }
 
         function getTaxonomyItem(taxonObject) {
@@ -190,22 +212,23 @@ define([
                     url: runtime.config('services.service_wizard.url'),
                     module: 'TaxonAPI',
                     // version: 'dev',
-                    token: Runtime.make().authToken()
+                    token: Runtime.make().authToken(),
                 });
-            return taxonClient.callFunc('get_scientific_name', [ref])
-                .then((result) => {
-                    if (result.length === 0) {
-                        throw new Error('Cannot find taxon: ' + ref);
-                    }
-                    if (result.length > 1) {
-                        throw new Error('Too many taxa found for ' + ref);
-                    }
-                    // simulate the result from the taxonomy service
-                    return [{
+            return taxonClient.callFunc('get_scientific_name', [ref]).then((result) => {
+                if (result.length === 0) {
+                    throw new Error('Cannot find taxon: ' + ref);
+                }
+                if (result.length > 1) {
+                    throw new Error('Too many taxa found for ' + ref);
+                }
+                // simulate the result from the taxonomy service
+                return [
+                    {
                         id: taxonObject,
-                        label: result[0]
-                    }];
-                });
+                        label: result[0],
+                    },
+                ];
+            });
         }
 
         function render() {
@@ -229,19 +252,18 @@ define([
                         if (!currentValue) {
                             return;
                         }
-                        getTaxonomyItem(currentValue)
-                            .then((taxon) => {
-                                // console.log('TAXON', taxon);
-                                callback(taxon);
-                            });
+                        getTaxonomyItem(currentValue).then((taxon) => {
+                            // console.log('TAXON', taxon);
+                            callback(taxon);
+                        });
                     },
                     formatMoreResults: function (page) {
-                        return "more???";
+                        return 'more???';
                     },
                     language: {
                         loadingMore: function (arg) {
                             return html.loading('Loading more scientific names');
-                        }
+                        },
                     },
                     ajax: {
                         service: 'myservice',
@@ -250,7 +272,7 @@ define([
                         data: function (params) {
                             return {
                                 q: params.term,
-                                page: params.page
+                                page: params.page,
                             };
                         },
                         processResults: function (data, params) {
@@ -259,12 +281,11 @@ define([
                             return {
                                 results: data.hits,
                                 pagination: {
-                                    more: (params.page * pageSize) < data.num_of_hits
-                                }
+                                    more: params.page * pageSize < data.num_of_hits,
+                                },
                             };
                         },
                         transport: function (options, success, failure) {
-
                             let status = null;
 
                             doTaxonomySearch(options.data)
@@ -278,13 +299,12 @@ define([
                             // console.log('transport got ', options);
 
                             return {
-                                status: status
+                                status: status,
                             };
-                        }
-                    }
+                        },
+                    },
                 });
                 events.attachEvents(container);
-
             });
         }
 
@@ -294,25 +314,25 @@ define([
          * For the objectInput, there is only ever one control.
          */
         function layout(events) {
-            const content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' })
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
         function autoValidate() {
-            return validate()
-                .then((result) => {
-                    channel.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
+            return validate().then((result) => {
+                channel.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
 
         // LIFECYCLE API
@@ -332,23 +352,21 @@ define([
                     model.value = config.initialValue;
                 }
 
-                render()
-                    .then(() => {
-
-                        channel.on('reset-to-defaults', () => {
-                            resetModelValue();
-                        });
-                        channel.on('update', (message) => {
-                            setModelValue(message.value);
-                        });
-                        // bus.channel().on('workspace-changed', function() {
-                        //     doWorkspaceChanged();
-                        // });
-                        // bus.emit('sync');
-
-                        setControlValue(getModelValue());
-                        autoValidate();
+                render().then(() => {
+                    channel.on('reset-to-defaults', () => {
+                        resetModelValue();
                     });
+                    channel.on('update', (message) => {
+                        setModelValue(message.value);
+                    });
+                    // bus.channel().on('workspace-changed', function() {
+                    //     doWorkspaceChanged();
+                    // });
+                    // bus.emit('sync');
+
+                    setControlValue(getModelValue());
+                    autoValidate();
+                });
             });
         }
 
@@ -366,16 +384,15 @@ define([
 
         // INIT
 
-
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

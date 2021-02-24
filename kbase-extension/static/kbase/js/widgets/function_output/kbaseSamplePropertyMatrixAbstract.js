@@ -1,28 +1,26 @@
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'plotly',
-		'kbaseMatrix2DAbstract',
-		'kbaseAuthenticatedWidget',
-		'kbaseTabs',
-		'jquery-dataTables'
-	], (
-		KBWidget,
-		bootstrap,
-		$,
-		Plotly,
-		kbaseMatrix2DAbstract,
-		kbaseAuthenticatedWidget,
-		kbaseTabs,
-		jquery_dataTables
-	) => {
+define([
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+    'plotly',
+    'kbaseMatrix2DAbstract',
+    'kbaseAuthenticatedWidget',
+    'kbaseTabs',
+    'jquery-dataTables',
+], (
+    KBWidget,
+    bootstrap,
+    $,
+    Plotly,
+    kbaseMatrix2DAbstract,
+    kbaseAuthenticatedWidget,
+    kbaseTabs,
+    jquery_dataTables
+) => {
     return KBWidget({
         name: 'kbaseSamplePropertyMatrixAbstract',
-        parent : kbaseMatrix2DAbstract,
+        parent: kbaseMatrix2DAbstract,
         version: '1.0.0',
-
 
         TERM_SAMPLE: 'Sample',
         TERM_PROPERTY: 'Property',
@@ -32,21 +30,22 @@ define (
         TERM_NAME: 'Name',
         TERM_SERIES_ID: 'SeriesID',
 
-
-        buildConstrainedSampleProperties: function(columnIds, columnMetadata, seriesIds, sorted){
-            const series2Columns = this.groupCrowsByPropertyValue(columnIds,
-                    columnMetadata,
-                    this.TERM_DATASERIES,
-                    this.TERM_SERIES_ID);
+        buildConstrainedSampleProperties: function (columnIds, columnMetadata, seriesIds, sorted) {
+            const series2Columns = this.groupCrowsByPropertyValue(
+                columnIds,
+                columnMetadata,
+                this.TERM_DATASERIES,
+                this.TERM_SERIES_ID
+            );
 
             const seriesColumns = [];
-            for(const i in seriesIds){
+            for (const i in seriesIds) {
                 const seriesId = seriesIds[i];
                 const columns = series2Columns[seriesId];
-                if(columns != null){
+                if (columns != null) {
                     seriesColumns.push({
                         seriesId: seriesId,
-                        columns: columns
+                        columns: columns,
                     });
                 }
             }
@@ -54,44 +53,48 @@ define (
             return this.buildSeriesSamplePorperties(seriesColumns, columnMetadata, sorted);
         },
 
-        buildSampleProperties: function(columnIds, columnMetadata){
-            const series2Columns = this.groupCrowsByPropertyValue(columnIds,
-                    columnMetadata,
-                    this.TERM_DATASERIES,
-                    this.TERM_SERIES_ID);
+        buildSampleProperties: function (columnIds, columnMetadata) {
+            const series2Columns = this.groupCrowsByPropertyValue(
+                columnIds,
+                columnMetadata,
+                this.TERM_DATASERIES,
+                this.TERM_SERIES_ID
+            );
 
             const seriesColumns = [];
-            for(const seriesId in series2Columns){
+            for (const seriesId in series2Columns) {
                 const columns = series2Columns[seriesId];
                 seriesColumns.push({
                     seriesId: seriesId,
-                    columns: columns
+                    columns: columns,
                 });
             }
 
             return this.buildSeriesSamplePorperties(seriesColumns, columnMetadata, true);
         },
 
-
-
-        buildSeriesSamplePorperties: function(seriesColumns, columnMetadata, sorted){
+        buildSeriesSamplePorperties: function (seriesColumns, columnMetadata, sorted) {
             const sampleProperties = [];
 
-            for(var i  in seriesColumns){
+            for (var i in seriesColumns) {
                 const seriesId = seriesColumns[i].seriesId;
                 const columns = seriesColumns[i].columns;
 
                 // Build property name
                 const samplePropertyNames = {};
-                for(var i in columns){
-                    var val = this.getPropertyValue(columns[i].properties, this.TERM_PROPERTY, this.TERM_NAME);
-                    if(val != null){
+                for (var i in columns) {
+                    var val = this.getPropertyValue(
+                        columns[i].properties,
+                        this.TERM_PROPERTY,
+                        this.TERM_NAME
+                    );
+                    if (val != null) {
                         samplePropertyNames[val] = true;
                     }
                 }
-                let samplePropertyName = "";
-                for(var val in samplePropertyNames){
-                    if(samplePropertyName != ""){
+                let samplePropertyName = '';
+                for (var val in samplePropertyNames) {
+                    if (samplePropertyName != '') {
                         samplePropertyName += '; ';
                     }
                     samplePropertyName += val;
@@ -99,68 +102,80 @@ define (
 
                 // Build property units
                 const samplePropertyUnits = {};
-                for(var i in columns){
-                    const pv = this.getProperty(columns[i].properties, this.TERM_PROPERTY, this.TERM_MEASUREMENT);
-                    if(pv != null){
+                for (var i in columns) {
+                    const pv = this.getProperty(
+                        columns[i].properties,
+                        this.TERM_PROPERTY,
+                        this.TERM_MEASUREMENT
+                    );
+                    if (pv != null) {
                         samplePropertyUnits[pv.property_unit] = true;
                     }
                 }
-                let samplePropertyUnit = "";
-                for(var val in samplePropertyUnits){
-                    if(val == null || val == '') continue;
-                    if(samplePropertyUnit != ""){
+                let samplePropertyUnit = '';
+                for (var val in samplePropertyUnits) {
+                    if (val == null || val == '') continue;
+                    if (samplePropertyUnit != '') {
                         samplePropertyUnit += '; ';
                     }
                     samplePropertyUnit += val;
                 }
-
 
                 // Build sampleProperty
                 sampleProperties.push({
                     seriesId: seriesId,
                     name: samplePropertyName,
                     unit: samplePropertyUnit,
-                    columns: columns
-                })
+                    columns: columns,
+                });
             }
-            if(sorted){
-                sampleProperties.sort((a, b) => { return a.name > b.name ? 1 :  (a.name < b.name) ? -1 : 0});
+            if (sorted) {
+                sampleProperties.sort((a, b) => {
+                    return a.name > b.name ? 1 : a.name < b.name ? -1 : 0;
+                });
             }
 
             return sampleProperties;
         },
 
-        buildSamples: function(rowIds, rowsMetadata){
+        buildSamples: function (rowIds, rowsMetadata) {
             const samples = [];
-            for(const rIndex in rowIds){
+            for (const rIndex in rowIds) {
                 const rowId = rowIds[rIndex];
                 const rowMetadata = rowsMetadata[rowId];
-                const sampleName = this.getPropertyValue(rowMetadata, this.TERM_SAMPLE, this.TERM_NAME);
-                if(sampleName != null){
+                const sampleName = this.getPropertyValue(
+                    rowMetadata,
+                    this.TERM_SAMPLE,
+                    this.TERM_NAME
+                );
+                if (sampleName != null) {
                     samples.push({
                         name: sampleName,
                         rIndex: rIndex,
-                        rId : rowId
+                        rId: rowId,
                     });
                 }
             }
             return samples;
         },
 
-
-        buildConstrainedSamples: function(rowIds, rowsMetadata, sampleIds){
+        buildConstrainedSamples: function (rowIds, rowsMetadata, sampleIds) {
             const samples = [];
-            for(const sIndex in sampleIds){
+            for (const sIndex in sampleIds) {
                 const sampleName = sampleIds[sIndex];
-                for(const rIndex in rowIds){
+                for (const rIndex in rowIds) {
                     const rowId = rowIds[rIndex];
                     const rowMetadata = rowsMetadata[rowId];
-                    const val = this.getPropertyValue(rowMetadata, this.TERM_SAMPLE, this.TERM_NAME);
-                    if(val != null && val == sampleName){
+                    const val = this.getPropertyValue(
+                        rowMetadata,
+                        this.TERM_SAMPLE,
+                        this.TERM_NAME
+                    );
+                    if (val != null && val == sampleName) {
                         samples.push({
                             name: sampleName,
                             rIndex: rIndex,
-                            rId : rowId
+                            rId: rowId,
                         });
                         // Not perfect; It is because we have several samples for the same well....
                         break;
@@ -170,11 +185,11 @@ define (
             return samples;
         },
 
-        buildSamplePropertyStat: function(matrix, samples, sampleProperties){
+        buildSamplePropertyStat: function (matrix, samples, sampleProperties) {
             const samplePropertyStat = [];
 
             const values = matrix.data.values;
-            for(const i in sampleProperties){
+            for (const i in sampleProperties) {
                 const sampleProperty = sampleProperties[i];
                 const columns = sampleProperty.columns;
 
@@ -183,49 +198,48 @@ define (
                 let s2 = 0;
                 var se = 0;
                 let count = 0;
-                for(const j in samples){
+                for (const j in samples) {
                     const sample = samples[j];
                     const rIndex = sample.rIndex;
 
                     let value = 0;
-                    for(const k in columns){
+                    for (const k in columns) {
                         const cIndex = columns[k].index;
                         value += values[rIndex][cIndex];
                     }
                     value /= columns.length;
 
                     s1 += value;
-                    s2 += value*value;
-                    count ++;
+                    s2 += value * value;
+                    count++;
                 }
 
-
-                const avg = s1/n;
-                const std = n > 1 ? Math.sqrt( (s2*n - s1*s1)/(n-1)/n ): 0;
-                var se  = n > 1 ? Math.sqrt( (s2*n - s1*s1)/(n-1)/n/n ): 0;
+                const avg = s1 / n;
+                const std = n > 1 ? Math.sqrt((s2 * n - s1 * s1) / (n - 1) / n) : 0;
+                var se = n > 1 ? Math.sqrt((s2 * n - s1 * s1) / (n - 1) / n / n) : 0;
 
                 samplePropertyStat.push({
                     name: sampleProperty.name,
                     unit: sampleProperty.unit,
-                    label: sampleProperty.name
-                            + (sampleProperty.unit != null ? " (" + sampleProperty.unit + ")" : ""),
+                    label:
+                        sampleProperty.name +
+                        (sampleProperty.unit != null ? ' (' + sampleProperty.unit + ')' : ''),
                     avg: avg.toFixed(3),
                     std: std.toFixed(3),
                     se: se.toFixed(3),
-                    count: count
-                })
+                    count: count,
+                });
             }
             return samplePropertyStat;
         },
 
-        buildSamplesStat: function(matrix, samples, sampleProperties){
+        buildSamplesStat: function (matrix, samples, sampleProperties) {
             const samplesStat = [];
 
             const values = matrix.data.values;
-            for(const i in samples){
+            for (const i in samples) {
                 const sample = samples[i];
                 const rIndex = sample.rIndex;
-
 
                 let maxValue = null;
                 let maxPropertyName = null;
@@ -234,42 +248,43 @@ define (
                 let minPropertyName = null;
                 let minPrpopertyUnit = null;
 
-                for(const j in sampleProperties){
+                for (const j in sampleProperties) {
                     const sampleProperty = sampleProperties[j];
                     const columns = sampleProperty.columns;
                     let value = 0;
-                    for(const k in columns){
+                    for (const k in columns) {
                         const cIndex = columns[k].index;
                         value += values[rIndex][cIndex];
                     }
                     value /= columns.length;
 
-                    if(maxValue == null || value > maxValue){
+                    if (maxValue == null || value > maxValue) {
                         maxValue = value;
                         maxPropertyName = sampleProperty.name;
                         maxPrpopertyUnit = sampleProperty.unit;
                     }
 
-                    if(minValue == null || value < minValue){
+                    if (minValue == null || value < minValue) {
                         minValue = value;
                         minPropertyName = sampleProperty.name;
                         minPrpopertyUnit = sampleProperty.unit;
                     }
                 }
                 samplesStat.push({
-                    rIndex : rIndex,
+                    rIndex: rIndex,
                     rId: samples[i],
                     name: samples[i].name,
                     maxPropertyValue: maxValue.toFixed(3),
-                    maxPropertyLabel: maxPropertyName
-                            + ( maxPrpopertyUnit != "" ?  " (" + maxPrpopertyUnit + ")": ""),
+                    maxPropertyLabel:
+                        maxPropertyName +
+                        (maxPrpopertyUnit != '' ? ' (' + maxPrpopertyUnit + ')' : ''),
                     minPropertyValue: minValue.toFixed(3),
-                    minPropertyLabel: minPropertyName
-                            + ( minPrpopertyUnit != "" ?  " (" + minPrpopertyUnit + ")": "")
-
+                    minPropertyLabel:
+                        minPropertyName +
+                        (minPrpopertyUnit != '' ? ' (' + minPrpopertyUnit + ')' : ''),
                 });
             }
             return samplesStat;
-        }
-    })
+        },
+    });
 });

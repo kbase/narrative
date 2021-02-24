@@ -1,6 +1,4 @@
-define([
-    '../../jsonRpc-native'
-], (jsonRpc) => {
+define(['../../jsonRpc-native'], (jsonRpc) => {
     'use strict';
 
     /*
@@ -32,21 +30,22 @@ define([
             throw new Error('The service version was not provided');
         }
 
-
         function options() {
             return {
                 timeout: arg.timeout,
                 authorization: auth.token,
-                rpcContext: arg.rpcContext
+                rpcContext: arg.rpcContext,
             };
         }
 
         this.lookupModule = function () {
             const func = 'get_service_status',
-                params = [{
+                params = [
+                    {
                         module_name: module,
-                        version: arg.version || 'dev'
-                    }];
+                        version: arg.version || 'dev',
+                    },
+                ];
             return jsonRpc.request(arg.url, 'ServiceWizard', func, params, 1, options());
         };
 
@@ -57,10 +56,9 @@ define([
             const params = Array.prototype.slice.call(arguments),
                 func = 'get_reads_set_v1';
 
-            return this.lookupModule()
-                .then((serviceStatus) => {
-                    return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
-                });
+            return this.lookupModule().then((serviceStatus) => {
+                return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
+            });
         };
 
         /*
@@ -70,10 +68,9 @@ define([
             const params = Array.prototype.slice.call(arguments),
                 func = 'save_reads_set_v1';
 
-            return this.lookupModule()
-                .then((serviceStatus) => {
-                    return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
-                });
+            return this.lookupModule().then((serviceStatus) => {
+                return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
+            });
         };
 
         /*
@@ -83,10 +80,9 @@ define([
             const params = Array.prototype.slice.call(arguments),
                 func = 'list_sets';
 
-            return this.lookupModule()
-                .then((serviceStatus) => {
-                    return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
-                });
+            return this.lookupModule().then((serviceStatus) => {
+                return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
+            });
         };
 
         /*
@@ -96,10 +92,9 @@ define([
             const params = Array.prototype.slice.call(arguments),
                 func = 'get_set_items';
 
-            return this.lookupModule()
-                .then((serviceStatus) => {
-                    return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
-                });
+            return this.lookupModule().then((serviceStatus) => {
+                return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
+            });
         };
 
         /*
@@ -109,10 +104,9 @@ define([
             const params = Array.prototype.slice.call(arguments),
                 func = 'status';
 
-            return this.lookupModule()
-                .then((serviceStatus) => {
-                    return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
-                });
+            return this.lookupModule().then((serviceStatus) => {
+                return jsonRpc.request(serviceStatus.url, module, func, params, 1, options());
+            });
         };
     }
     return SetAPI;

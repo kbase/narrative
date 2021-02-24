@@ -9,18 +9,21 @@ define([
     'common/props',
 
     'bootstrap',
-    'css!font-awesome'
+    'css!font-awesome',
 ], (Promise, $, Jupyter, html, Validation, Events, UI, Props) => {
     'use strict';
 
     // Constants
     const t = html.tag,
-        div = t('div'), input = t('input'), label = t('label');
+        div = t('div'),
+        input = t('input'),
+        label = t('label');
 
     function factory(config) {
         let options = {},
             spec = config.parameterSpec,
-            parent, container,
+            parent,
+            container,
             bus = config.bus,
             model,
             ui;
@@ -77,7 +80,7 @@ define([
                     return {
                         isValid: true,
                         validated: false,
-                        diagnosis: 'disabled'
+                        diagnosis: 'disabled',
                     };
                 }
 
@@ -86,7 +89,7 @@ define([
                     // make this a validation option, although not specified as
                     // such in the spec.
                     validationOptions = {
-                        required: spec.required()
+                        required: spec.required(),
                     };
 
                 return Validation.validateBoolean(rawValue, validationOptions);
@@ -100,7 +103,7 @@ define([
          */
         function makeInputControl(events, bus) {
             const value = model.getItem('value'),
-                isChecked = (value ? true : false);
+                isChecked = value ? true : false;
 
             return label([
                 input({
@@ -113,32 +116,32 @@ define([
                             {
                                 type: 'change',
                                 handler: function (e) {
-                                    validate()
-                                        .then((result) => {
-                                            if (result.isValid) {
-                                                bus.emit('changed', {
-                                                    newValue: result.parsedValue
-                                                });
-                                                setModelValue(result.parsedValue);
-                                            }
-                                            bus.emit('validation', {
-                                                errorMessage: result.errorMessage,
-                                                diagnosis: result.diagnosis
+                                    validate().then((result) => {
+                                        if (result.isValid) {
+                                            bus.emit('changed', {
+                                                newValue: result.parsedValue,
                                             });
+                                            setModelValue(result.parsedValue);
+                                        }
+                                        bus.emit('validation', {
+                                            errorMessage: result.errorMessage,
+                                            diagnosis: result.diagnosis,
                                         });
-                                }
-                            }
-                        ]})
-                })]);
+                                    });
+                                },
+                            },
+                        ],
+                    }),
+                }),
+            ]);
         }
         function autoValidate() {
-            return validate()
-                .then((result) => {
-                    bus.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
+            return validate().then((result) => {
+                bus.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
         function render() {
             Promise.try(() => {
@@ -147,24 +150,23 @@ define([
 
                 ui.setContent('input-container', inputControl);
                 events.attachEvents(container);
-            })
-                .then(() => {
-                    return autoValidate();
-                });
+            }).then(() => {
+                return autoValidate();
+            });
         }
 
         function layout(events) {
-            const content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({dataElement: 'input-container'})
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
-
 
         // LIFECYCLE API
         function start() {
@@ -173,14 +175,13 @@ define([
                     parent = message.node;
                     container = message.node.appendChild(document.createElement('div'));
 
-                    const events = Events.make({node: container}),
+                    const events = Events.make({ node: container }),
                         theLayout = layout(events);
 
                     container.innerHTML = theLayout.content;
                     events.attachEvents();
 
-                    ui = UI.make({node: container});
-
+                    ui = UI.make({ node: container });
 
                     bus.on('reset-to-defaults', (message) => {
                         resetModelValue();
@@ -202,21 +203,21 @@ define([
 
         model = Props.make({
             data: {
-                value: null
+                value: null,
             },
             onUpdate: function (props) {
                 render();
-            }
+            },
         });
 
         return {
-            start: start
+            start: start,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

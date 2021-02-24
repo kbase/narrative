@@ -5,52 +5,47 @@
  * @public
  */
 
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'narrativeConfig',
-		'kbaseNarrativeInput'
-	], (
-		KBWidget,
-		bootstrap,
-		$,
-		Config,
-		kbaseNarrativeInput
-	) => {
+define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'kbaseNarrativeInput'], (
+    KBWidget,
+    bootstrap,
+    $,
+    Config,
+    kbaseNarrativeInput
+) => {
     'use strict';
     return KBWidget({
-        name: "kbaseBuildMediaInput",
-        parent : kbaseNarrativeInput,
-        version: "1.0.0",
+        name: 'kbaseBuildMediaInput',
+        parent: kbaseNarrativeInput,
+        version: '1.0.0',
         options: {
             loadingImage: Config.get('loading_gif'),
             //fbaURL: "https://kbase.us/services/fba_model_services",
             //fbaURL: "http://140.221.84.183:7036",
             fbaURL: Config.url('fba'),
         },
-        mediaType: "KBaseBiochem.Media",
+        mediaType: 'KBaseBiochem.Media',
         IGNORE_VERSION: false,
 
-        init: function(options) {
+        init: function (options) {
             this._super(options);
             this.fbaClient = new fbaModelServices(this.options.fbaURL);
-            this.trigger("workspaceQuery.Narrative", $.proxy(
-                function(wsId) {
+            this.trigger(
+                'workspaceQuery.Narrative',
+                $.proxy(function (wsId) {
                     this.wsId = wsId;
                     this.$fetchMediaDiv = this.buildFetchMediaDiv();
                     this.$headerInputDiv = this.buildHeaderInputs();
                     this.$mediaTable = this.buildMediaTable();
                     this.addEmptyMediaRow();
 
-                    this.$elem.append(this.$fetchMediaDiv)
-                              .append(this.$headerInputDiv)
-                              .append(this.$mediaTable);
+                    this.$elem
+                        .append(this.$fetchMediaDiv)
+                        .append(this.$headerInputDiv)
+                        .append(this.$mediaTable);
 
                     this.refresh();
-
-                }, this));
+                }, this)
+            );
 
             return this;
         },
@@ -58,102 +53,108 @@ define (
         /**
          * Builds controls to fetch a media set and populate the current list.
          */
-        buildFetchMediaDiv: function() {
+        buildFetchMediaDiv: function () {
             const $fetchMediaDiv = $("<div class='form-inline'>");
-            $fetchMediaDiv.append("Select an existing media to modify (optional): ");
+            $fetchMediaDiv.append('Select an existing media to modify (optional): ');
 
-            const $mediaList = $("<select>")
-                              .addClass('form-control')
-                              .css({'max-width': '80%', 'margin-right' : '10px'});
+            const $mediaList = $('<select>')
+                .addClass('form-control')
+                .css({ 'max-width': '80%', 'margin-right': '10px' });
 
-            const $fetchButton = $("<button>")
-                               .attr("type", "button")
-                               .attr("value", "Fetch")
-                               .addClass("btn btn-primary")
-                               .append("Fetch")
-                               .click($.proxy(
-                                    function(event) {
-                                        const mediaName = this.$elem.find("div > select").val();
+            const $fetchButton = $('<button>')
+                .attr('type', 'button')
+                .attr('value', 'Fetch')
+                .addClass('btn btn-primary')
+                .append('Fetch')
+                .click(
+                    $.proxy(function (event) {
+                        const mediaName = this.$elem.find('div > select').val();
 
-                                        if (!mediaName) {
-                                            this.fetchMediaError({
-                                                status: -1,
-                                                error: {
-                                                    code: -1,
-                                                    error: "Unable to fetch media - no name given",
-                                                    message: "Unable to fetch media - no name given",
-                                                    name: "NoMediaError",
-                                                },
-                                            });
-                                            return;
-                                        }
-                                        if (!this.wsId) {
-                                            this.fetchMediaError({
-                                                status: -2,
-                                                error: {
-                                                    code: -2,
-                                                    error: "Unable to fetch media - no workspace ID given",
-                                                    message: "Unable to fetch media - no workspace ID given",
-                                                    name: "NoWsIdError",
-                                                }
-                                            });
-                                            return;
-                                        }
+                        if (!mediaName) {
+                            this.fetchMediaError({
+                                status: -1,
+                                error: {
+                                    code: -1,
+                                    error: 'Unable to fetch media - no name given',
+                                    message: 'Unable to fetch media - no name given',
+                                    name: 'NoMediaError',
+                                },
+                            });
+                            return;
+                        }
+                        if (!this.wsId) {
+                            this.fetchMediaError({
+                                status: -2,
+                                error: {
+                                    code: -2,
+                                    error: 'Unable to fetch media - no workspace ID given',
+                                    message: 'Unable to fetch media - no workspace ID given',
+                                    name: 'NoWsIdError',
+                                },
+                            });
+                            return;
+                        }
 
-                                        $fetchMediaDiv.find("img").show();
-                                        $fetchMediaDiv.find("button.btn-danger").hide();
-                                        this.fbaClient.get_media({
-                                                auth: this.authToken(),
-                                                medias: [mediaName],
-                                                workspaces: [this.wsId],
-                                            },
-                                            $.proxy(function(media) {
-                                                this.updateMediaTable(media);
-                                                $fetchMediaDiv.find("img").hide();
+                        $fetchMediaDiv.find('img').show();
+                        $fetchMediaDiv.find('button.btn-danger').hide();
+                        this.fbaClient.get_media(
+                            {
+                                auth: this.authToken(),
+                                medias: [mediaName],
+                                workspaces: [this.wsId],
+                            },
+                            $.proxy(function (media) {
+                                this.updateMediaTable(media);
+                                $fetchMediaDiv.find('img').hide();
+                            }, this),
+                            $.proxy(function (error) {
+                                this.fetchMediaError(error);
+                                $fetchMediaDiv.find('img').hide();
+                            }, this)
+                        );
+                    }, this)
+                );
 
-                                            }, this),
-                                            $.proxy(function(error) {
-                                                this.fetchMediaError(error);
-                                                $fetchMediaDiv.find("img").hide();
-                                            }, this)
-                                        );
-                                    },
-                                    this));
+            this.$errorPanel = $('<div>')
+                .css({
+                    margin: '20px 0',
+                    padding: '20px',
+                    'border-left': '3px solid #d9534f',
+                    'background-color': '#fdf7f7',
+                })
+                .append(
+                    $('<p>')
+                        .addClass('text-danger')
+                        .append('<b>An error occurred while fetching media!</b>')
+                )
+                .append(
+                    $('<table>')
+                        .addClass('table table-bordered')
+                        .css({ 'margin-left': 'auto', 'margin-right': 'auto' })
+                )
+                .append($('<div>').attr('id', 'error-accordion'));
 
-            this.$errorPanel = $("<div>")
-                               .css({
-                                   "margin" : "20px 0",
-                                   "padding" : "20px",
-                                   "border-left" : "3px solid #d9534f",
-                                   "background-color" : "#fdf7f7",
-                               })
-                               .append($("<p>")
-                                       .addClass("text-danger")
-                                       .append("<b>An error occurred while fetching media!</b>"))
-                               .append($("<table>")
-                                       .addClass("table table-bordered")
-                                       .css({ 'margin-left' : 'auto', 'margin-right' : 'auto' }))
-                               .append($("<div>")
-                                       .attr("id", "error-accordion"));
+            $fetchMediaDiv
+                .append($mediaList)
+                .append($fetchButton)
+                .append(
+                    $('<img>')
+                        .attr('src', this.options.loadingImage)
+                        .css('margin-left', '10px')
+                        .hide()
+                )
+                .append(this.$errorPanel);
 
-            $fetchMediaDiv.append($mediaList)
-                          .append($fetchButton)
-                          .append($("<img>")
-                                  .attr("src", this.options.loadingImage)
-                                  .css("margin-left", "10px")
-                                  .hide())
-                          .append(this.$errorPanel);
+            new kbaseAccordion(this.$errorPanel.find('#error-accordion'), {
+                elements: [
+                    {
+                        title: 'Error Details',
+                        body: $('<pre>').addClass('kb-err-msg').append("ERROR'D!"),
+                    },
+                ],
+            });
 
-             new kbaseAccordion(this.$errorPanel.find("#error-accordion"), {
-                    elements: [{
-                        title: "Error Details",
-                        body: $("<pre>")
-                              .addClass('kb-err-msg')
-                              .append("ERROR'D!"),
-                    }]
-                });
-
-            $mediaList.append("<option>No media found</option>");
+            $mediaList.append('<option>No media found</option>');
             $fetchButton.hide();
             this.$errorPanel.hide();
 
@@ -163,69 +164,71 @@ define (
         /**
          * name and pH
          */
-        buildHeaderInputs: function() {
-            const $headerInputDiv = $("<div>");
-            $headerInputDiv.append($("<b>")
-                                   .append("Name (required): "))
-                           .append($("<input>")
-                                   .attr("type", "text")
-                                   .attr("id", "media-name")
-                                   .addClass("form-control"));
-            $headerInputDiv.append($("<b>")
-                                   .append("pH (optional): "))
-                           .append($("<input>")
-                                   .attr("type", "text")
-                                   .attr("id", "media-ph")
-                                   .addClass("form-control"));
+        buildHeaderInputs: function () {
+            const $headerInputDiv = $('<div>');
+            $headerInputDiv
+                .append($('<b>').append('Name (required): '))
+                .append(
+                    $('<input>')
+                        .attr('type', 'text')
+                        .attr('id', 'media-name')
+                        .addClass('form-control')
+                );
+            $headerInputDiv
+                .append($('<b>').append('pH (optional): '))
+                .append(
+                    $('<input>')
+                        .attr('type', 'text')
+                        .attr('id', 'media-ph')
+                        .addClass('form-control')
+                );
 
             return $headerInputDiv;
         },
 
-        buildMediaTable: function() {
-            const $mediaTable = $("<table>")
-                              .addClass("table table-striped table-bordered")
-                              .css({"margin-right": "auto", "margin-left": "auto"})
-                              .append($("<tr>")
-                                      .append($("<th>")
-                                              .append("Compound"))
-                                      .append($("<th>")
-                                              .append("Concentration"))
-                                      .append($("<th>")
-                                              .append("Min Flux"))
-                                      .append($("<th>")
-                                              .append("Max Flux"))
-                                      .append($("<th>")));
+        buildMediaTable: function () {
+            const $mediaTable = $('<table>')
+                .addClass('table table-striped table-bordered')
+                .css({ 'margin-right': 'auto', 'margin-left': 'auto' })
+                .append(
+                    $('<tr>')
+                        .append($('<th>').append('Compound'))
+                        .append($('<th>').append('Concentration'))
+                        .append($('<th>').append('Min Flux'))
+                        .append($('<th>').append('Max Flux'))
+                        .append($('<th>'))
+                );
 
             return $mediaTable;
         },
 
-        buildRowControlButton: function(trashOnly) {
+        buildRowControlButton: function (trashOnly) {
             const self = this;
 
-            const deleteRow = function(event) {
-                $(event.currentTarget).closest("tr").remove();
+            const deleteRow = function (event) {
+                $(event.currentTarget).closest('tr').remove();
             };
 
-            const addRow = function(event) {
+            const addRow = function (event) {
                 self.addEmptyMediaRow();
-                $(event.currentTarget).find("span")
-                                      .addClass("glyphicon-trash")
-                                      .removeClass("glyphicon-plus");
+                $(event.currentTarget)
+                    .find('span')
+                    .addClass('glyphicon-trash')
+                    .removeClass('glyphicon-plus');
 
-                $(event.currentTarget).off("click")
-                                      .click(deleteRow);
+                $(event.currentTarget).off('click').click(deleteRow);
             };
 
-            const $button = $("<button>")
-                          .addClass("form-control")
-                          .append($("<span>")
-                                  .addClass("glyphicon")
-                                  .addClass(trashOnly ? "glyphicon-trash" : "glyphicon-plus"));
+            const $button = $('<button>')
+                .addClass('form-control')
+                .append(
+                    $('<span>')
+                        .addClass('glyphicon')
+                        .addClass(trashOnly ? 'glyphicon-trash' : 'glyphicon-plus')
+                );
 
-            if (trashOnly)
-                $button.click(deleteRow);
-            else
-                $button.click(addRow);
+            if (trashOnly) $button.click(deleteRow);
+            else $button.click(addRow);
 
             return $button;
         },
@@ -233,55 +236,66 @@ define (
         /**
          * Just a convenience function to add a media row with no elements.
          */
-        addEmptyMediaRow: function() {
+        addEmptyMediaRow: function () {
             this.addMediaRow();
         },
 
-        addMediaRow: function(cpd) {
+        addMediaRow: function (cpd) {
             const self = this;
             const $newRowBtn = this.buildRowControlButton(cpd);
 
             // little hack to make the ternary operators below a little cleaner.
             if (!cpd) cpd = {};
 
-            const $row = $("<tr>")
-                       .append($("<td>")
-                               .append($("<input>")
-                                       .addClass("form-control")
-                                       .attr("placeholder", "Add Compound")
-                                       .attr("value", (cpd.name ? cpd.name : ""))))
-                       .append($("<td>")
-                               .append($("<input>")
-                                       .addClass("form-control")
-                                       .attr("placeholder", "Add Concentration")
-                                       .attr("value", (cpd.concentration ? cpd.concentration : ""))))
-                       .append($("<td>")
-                               .append($("<input>")
-                                       .addClass("form-control")
-                                       .attr("placeholder", "Add Min Flux")
-                                       .attr("value", (cpd.min_flux ? cpd.min_flux : ""))))
-                       .append($("<td>")
-                               .append($("<input>")
-                                       .addClass("form-control")
-                                       .attr("placeholder", "Add Max Flux")
-                                       .attr("value", (cpd.max_flux ? cpd.max_flux : ""))))
-                       .append($("<td>")
-                               .append($newRowBtn));
+            const $row = $('<tr>')
+                .append(
+                    $('<td>').append(
+                        $('<input>')
+                            .addClass('form-control')
+                            .attr('placeholder', 'Add Compound')
+                            .attr('value', cpd.name ? cpd.name : '')
+                    )
+                )
+                .append(
+                    $('<td>').append(
+                        $('<input>')
+                            .addClass('form-control')
+                            .attr('placeholder', 'Add Concentration')
+                            .attr('value', cpd.concentration ? cpd.concentration : '')
+                    )
+                )
+                .append(
+                    $('<td>').append(
+                        $('<input>')
+                            .addClass('form-control')
+                            .attr('placeholder', 'Add Min Flux')
+                            .attr('value', cpd.min_flux ? cpd.min_flux : '')
+                    )
+                )
+                .append(
+                    $('<td>').append(
+                        $('<input>')
+                            .addClass('form-control')
+                            .attr('placeholder', 'Add Max Flux')
+                            .attr('value', cpd.max_flux ? cpd.max_flux : '')
+                    )
+                )
+                .append($('<td>').append($newRowBtn));
 
             this.$mediaTable.append($row);
         },
 
-        updateMediaTable: function(media) {
+        updateMediaTable: function (media) {
             media = media[0];
-            this.$mediaTable.find("tr > td").closest("tr").remove();
+            this.$mediaTable.find('tr > td').closest('tr').remove();
 
-            for (let i=0; i<media.media_compounds.length; i++) {
+            for (let i = 0; i < media.media_compounds.length; i++) {
                 this.addMediaRow(media.media_compounds[i]);
             }
             this.addEmptyMediaRow();
 
-            this.$headerInputDiv.find("#media-name").val(media.name);
-            this.$headerInputDiv.find("#media-ph").val(media.pH);
+            this.$headerInputDiv.find('#media-name').val(media.name);
+            this.$headerInputDiv.find('#media-ph').val(media.pH);
         },
 
         /**
@@ -291,18 +305,22 @@ define (
          * @public
          * @return
          */
-        getParameters: function() {
-            const mediaName = this.$headerInputDiv.find("#media-name").val().trim().replace(/\s+/g, "_");
+        getParameters: function () {
+            const mediaName = this.$headerInputDiv
+                .find('#media-name')
+                .val()
+                .trim()
+                .replace(/\s+/g, '_');
             if (!mediaName) {
                 // stuuuuuuuuff...
             }
 
             const mediaParams = {
                 // workspace and auth token will be handled by the IPython kernel.
-                name : mediaName,
-                media : mediaName,
-                isDefined : 0,
-                isMinimal : 0
+                name: mediaName,
+                media: mediaName,
+                isDefined: 0,
+                isMinimal: 0,
             };
 
             const cpds = [],
@@ -315,10 +333,10 @@ define (
             // Find all <tr> in the table that has a <td> (e.g., NOT the header row - that has <th>)
             // and iterate over those rows.
             this.$mediaTable.find("tr:has('td')").each((idx, row) => {
-                const cpd = $(row).find("td:nth-child(1) input").val().trim();
-                const conc = $(row).find("td:nth-child(2) input").val().trim();
-                const min = $(row).find("td:nth-child(3) input").val().trim();
-                const max = $(row).find("td:nth-child(4) input").val().trim();
+                const cpd = $(row).find('td:nth-child(1) input').val().trim();
+                const conc = $(row).find('td:nth-child(2) input').val().trim();
+                const min = $(row).find('td:nth-child(3) input').val().trim();
+                const max = $(row).find('td:nth-child(4) input').val().trim();
 
                 if (cpd) {
                     cpds.push(cpd);
@@ -333,7 +351,7 @@ define (
             mediaParams['maxflux'] = maxFluxes;
             mediaParams['minflux'] = minFluxes;
 
-            return [ JSON.stringify(mediaParams) ];
+            return [JSON.stringify(mediaParams)];
         },
 
         /**
@@ -358,18 +376,18 @@ define (
          * The compounds in the structure might contain nulls/blanks. So watch for that.
          * It also gives the compound list in the same order as on the screen. Hopefully.
          */
-        getState: function() {
+        getState: function () {
             const state = {};
-            state['name'] = this.$headerInputDiv.find("#media-name").val();
-            state['ph'] = this.$headerInputDiv.find("#media-ph").val();
+            state['name'] = this.$headerInputDiv.find('#media-name').val();
+            state['ph'] = this.$headerInputDiv.find('#media-ph').val();
 
             const cpds = [];
             this.$mediaTable.find("tr:has('td')").each((idx, row) => {
                 cpds.push({
-                    'name' : $(row).find("td:nth-child(1) input").val(),
-                    'conc' : $(row).find("td:nth-child(2) input").val(),
-                    'min' : $(row).find("td:nth-child(3) input").val(),
-                    'max' : $(row).find("td:nth-child(4) input").val(),
+                    name: $(row).find('td:nth-child(1) input').val(),
+                    conc: $(row).find('td:nth-child(2) input').val(),
+                    min: $(row).find('td:nth-child(3) input').val(),
+                    max: $(row).find('td:nth-child(4) input').val(),
                 });
             });
             state['compounds'] = cpds;
@@ -380,16 +398,15 @@ define (
          * Loads up the previous state into the widget.
          * This expects to see the object generated with this widget's getState function.
          */
-        loadState: function(state) {
-            if (!state)
-                return;
+        loadState: function (state) {
+            if (!state) return;
 
-            this.$headerInputDiv.find("#media-name").val(state['name']);
-            this.$headerInputDiv.find("#media-ph").val(state['ph']);
+            this.$headerInputDiv.find('#media-name').val(state['name']);
+            this.$headerInputDiv.find('#media-ph').val(state['ph']);
 
             const cpds = state['compounds'];
-            this.$mediaTable.find("tr > td").closest("tr").remove();
-            for (let i=0; i<cpds.length; i++) {
+            this.$mediaTable.find('tr > td').closest('tr').remove();
+            for (let i = 0; i < cpds.length; i++) {
                 const cpd = cpds[i];
                 cpd.concentration = cpd.conc;
                 cpd.min_flux = cpd.min;
@@ -397,51 +414,55 @@ define (
                 this.addMediaRow(cpd);
             }
             this.addEmptyMediaRow();
-
         },
 
-        refresh: function() {
-            this.trigger("dataLoadedQuery.Narrative", [ [ this.mediaType ], this.IGNORE_VERSION,
-                $.proxy(function(objects) {
-                    const mediaList = objects[ this.mediaType ];
+        refresh: function () {
+            this.trigger('dataLoadedQuery.Narrative', [
+                [this.mediaType],
+                this.IGNORE_VERSION,
+                $.proxy(function (objects) {
+                    const mediaList = objects[this.mediaType];
                     if (mediaList && mediaList.length > 0) {
                         this.$fetchMediaDiv.find('select').empty();
-                        for (let i=0; i<mediaList.length; i++) {
-                            this.$fetchMediaDiv.find('select').append($('<option>').append(mediaList[i][1]));
+                        for (let i = 0; i < mediaList.length; i++) {
+                            this.$fetchMediaDiv
+                                .find('select')
+                                .append($('<option>').append(mediaList[i][1]));
                         }
                         this.$fetchMediaDiv.find('button').hide();
                         this.$fetchMediaDiv.find('button.btn-primary').show();
-                    }
-                    else {
-                        this.$fetchMediaDiv.find('select').empty().append($('<option>').append('No media found'));
+                    } else {
+                        this.$fetchMediaDiv
+                            .find('select')
+                            .empty()
+                            .append($('<option>').append('No media found'));
                         this.$fetchMediaDiv.find('button').hide();
                     }
-                },
-                this)
+                }, this),
             ]);
         },
 
-        fetchMediaError: function(error) {
-            const addRow = function(name, val) {
-                return "<tr><td><b>" + name + "</b></td><td>" + val + "</td></tr>";
+        fetchMediaError: function (error) {
+            const addRow = function (name, val) {
+                return '<tr><td><b>' + name + '</b></td><td>' + val + '</td></tr>';
             };
 
-            const esc = function(s) {
-                return String(s).replace(/'/g, "&apos;")
-                                .replace(/"/g, "&quot;")
-                                .replace(/</g, "&gt;")
-                                .replace(/>/g, "&lt;");
+            const esc = function (s) {
+                return String(s)
+                    .replace(/'/g, '&apos;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/</g, '&gt;')
+                    .replace(/>/g, '&lt;');
             };
 
-            $( this.$errorPanel.find('table') ).empty()
-                                               .append(addRow('Status', esc(error.status)))
-                                               .append(addRow('Code', esc(error.error.code)))
-                                               .append(addRow('Name', esc(error.error.name)));
-            $( this.$errorPanel.find('.kb-err-msg') ).empty()
-                                                     .append(esc(error.error.error));
+            $(this.$errorPanel.find('table'))
+                .empty()
+                .append(addRow('Status', esc(error.status)))
+                .append(addRow('Code', esc(error.error.code)))
+                .append(addRow('Name', esc(error.error.name)));
+            $(this.$errorPanel.find('.kb-err-msg')).empty().append(esc(error.error.error));
 
             this.$errorPanel.show();
-        }
-
+        },
     });
 });

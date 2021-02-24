@@ -9,17 +9,8 @@ define([
     '../validators/float',
 
     'bootstrap',
-    'css!font-awesome'
-], (
-    Promise,
-    html,
-    Events,
-    UI,
-    Props,
-    Runtime,
-    inputUtils,
-    Validation
-) => {
+    'css!font-awesome',
+], (Promise, html, Events, UI, Props, Runtime, inputUtils, Validation) => {
     'use strict';
 
     // Constants
@@ -77,7 +68,6 @@ define([
             setControlValue(model.getItem('value', null));
         }
 
-
         // VALIDATION
 
         function validate(value) {
@@ -111,27 +101,27 @@ define([
             const editPauseInterval = interval || 100;
             return {
                 type: 'keyup',
-                handler: function(e) {
+                handler: function (e) {
                     channel.emit('touched');
                     cancelTouched();
                     autoChangeTimer = window.setTimeout(() => {
                         autoChangeTimer = null;
                         e.target.dispatchEvent(new Event('change'));
                     }, editPauseInterval);
-                }
+                },
             };
         }
 
         function handleChanged() {
             return {
                 type: 'change',
-                handler: function() {
+                handler: function () {
                     cancelTouched();
                     importControlValue()
                         .then((value) => {
                             model.setItem('value', value);
                             channel.emit('changed', {
-                                newValue: value
+                                newValue: value,
                             });
                             return validate(value);
                         })
@@ -149,7 +139,7 @@ define([
                                         title: 'ERROR',
                                         type: 'danger',
                                         id: result.messageId,
-                                        message: result.errorMessage
+                                        message: result.errorMessage,
                                     });
                                     ui.setContent('input-container.message', message.content);
                                     message.events.attachEvents();
@@ -161,10 +151,10 @@ define([
                             channel.emit('validation', {
                                 isValid: false,
                                 diagnosis: 'invalid',
-                                errorMessage: err.message
+                                errorMessage: err.message,
                             });
                         });
-                }
+                },
             };
         }
 
@@ -180,22 +170,38 @@ define([
 
             return div({ style: { width: '100%' }, dataElement: 'input-wrapper' }, [
                 div({ class: 'input-group', style: { width: '100%' } }, [
-                    (typeof min === 'number' ? div({ class: 'input-group-addon kb-input-group-addon', fontFamily: 'monospace' }, String(min) + ' &#8804; ') : ''),
+                    typeof min === 'number'
+                        ? div(
+                              {
+                                  class: 'input-group-addon kb-input-group-addon',
+                                  fontFamily: 'monospace',
+                              },
+                              String(min) + ' &#8804; '
+                          )
+                        : '',
                     input({
                         id: events.addEvents({
-                            events: [handleChanged(), handleTouched()]
+                            events: [handleChanged(), handleTouched()],
                         }),
                         class: 'form-control',
                         dataElement: 'input',
                         dataType: 'float',
                         style: {
-                            textAlign: 'right'
+                            textAlign: 'right',
                         },
-                        value: initialControlValue
+                        value: initialControlValue,
                     }),
-                    (typeof max === 'number' ? div({ class: 'input-group-addon kb-input-group-addon', fontFamily: 'monospace' }, ' &#8804; ' + String(max)) : '')
+                    typeof max === 'number'
+                        ? div(
+                              {
+                                  class: 'input-group-addon kb-input-group-addon',
+                                  fontFamily: 'monospace',
+                              },
+                              ' &#8804; ' + String(max)
+                          )
+                        : '',
                 ]),
-                div({ dataElement: 'message', style: { backgroundColor: 'red', color: 'white' } })
+                div({ dataElement: 'message', style: { backgroundColor: 'red', color: 'white' } }),
             ]);
         }
 
@@ -210,22 +216,22 @@ define([
         }
 
         function layout(events) {
-            const content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' })
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
         function autoValidate() {
-            return validate(model.getItem('value'))
-                .then((result) => {
-                    channel.emit('validation', result);
-                });
+            return validate(model.getItem('value')).then((result) => {
+                channel.emit('validation', result);
+            });
         }
 
         // LIFECYCLE API
@@ -251,10 +257,9 @@ define([
                 });
                 // bus.emit('sync');
 
-                return render()
-                    .then(() => {
-                        return autoValidate();
-                    })
+                return render().then(() => {
+                    return autoValidate();
+                });
             });
         }
 
@@ -271,21 +276,21 @@ define([
 
         model = Props.make({
             data: {
-                value: spec.data.nullValue
+                value: spec.data.nullValue,
             },
-            onUpdate: function() {}
+            onUpdate: function () {},
         });
         setModelValue(config.initialValue);
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

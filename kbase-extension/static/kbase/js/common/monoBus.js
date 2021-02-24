@@ -14,12 +14,7 @@
  *
  *
  */
-define([
-    'uuid',
-    'bluebird',
-    './lang',
-    './unodep'
-], (Uuid, Promise, lang, utils) => {
+define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) => {
     'use strict';
     let instanceId = 0;
 
@@ -42,7 +37,6 @@ define([
             channels = {},
             doLogMessages = false,
             strictMode = config.strict;
-
 
         function warn(message) {
             if (verbose) {
@@ -88,7 +82,7 @@ define([
                 listeners: {},
                 keyListeners: {},
                 testListeners: [],
-                persistentMessages: {}
+                persistentMessages: {},
             };
             return spec.name;
         }
@@ -198,7 +192,6 @@ define([
             return String(channelName);
         }
 
-
         function listen(spec) {
             let id = new Uuid(4).format(),
                 key,
@@ -208,7 +201,7 @@ define([
                     spec: spec,
                     id: id,
                     created: new Date(),
-                    channelName: channelName
+                    channelName: channelName,
                 };
 
             if (spec.key) {
@@ -244,7 +237,9 @@ define([
 
         function removeListener(id) {
             let listenerToRemove = listenerRegistry[id],
-                channel, listeners, newListeners;
+                channel,
+                listeners,
+                newListeners;
             if (!listenerToRemove) {
                 return;
             }
@@ -258,7 +253,7 @@ define([
                     return;
                 }
                 channel.keyListeners[listenerToRemove.key] = listeners.filter((listener) => {
-                    return (listener.id !== listenerToRemove.id);
+                    return listener.id !== listenerToRemove.id;
                 });
             } else if (listenerToRemove.test) {
                 listeners = channel.testListeners;
@@ -266,7 +261,7 @@ define([
                     return;
                 }
                 channel.testListeners = listeners.filter((listener) => {
-                    return (listener.id !== listenerToRemove.id);
+                    return listener.id !== listenerToRemove.id;
                 });
             }
         }
@@ -294,7 +289,6 @@ define([
             return handled;
         }
 
-
         function processQueueItem(item) {
             let channel = getChannel(item.envelope.channel),
                 handled;
@@ -318,7 +312,6 @@ define([
             }
         }
 
-
         function processQueues() {
             const processingQueue = transientMessages;
             transientMessages = [];
@@ -330,7 +323,6 @@ define([
                     console.error('ERROR processing queue item', ex);
                 }
             });
-
         }
         /*
          *
@@ -369,11 +361,11 @@ define([
 
             channel.persistentMessages[key] = {
                 message: message,
-                envelope: envelope
+                envelope: envelope,
             };
             transientMessages.push({
                 message: message,
-                envelope: envelope
+                envelope: envelope,
             });
             run();
         }
@@ -387,7 +379,7 @@ define([
             envelope.listenerId = id;
             transientMessages.push({
                 message: persistentMessage.message,
-                envelope: envelope
+                envelope: envelope,
             });
             run();
         }
@@ -405,7 +397,7 @@ define([
             const envelope = {
                 created: new Date(),
                 id: new Uuid(4).format(),
-                address: address
+                address: address,
             };
 
             if (address.key) {
@@ -418,7 +410,7 @@ define([
 
             transientMessages.push({
                 message: message,
-                envelope: envelope
+                envelope: envelope,
             });
             run();
         }
@@ -430,7 +422,7 @@ define([
             const envelope = {
                 created: new Date(),
                 id: new Uuid(4).format(),
-                address: address
+                address: address,
             };
 
             if (!address.key) {
@@ -489,7 +481,7 @@ define([
                     const responseMessage = originalHandle(message);
                     send(responseMessage, {
                         channel: envelope.channel,
-                        key: { requestId: envelope.address.requestId }
+                        key: { requestId: envelope.address.requestId },
                     });
                 } catch (ex) {
                     console.error('Error handling in respond', ex);
@@ -518,9 +510,9 @@ define([
                     key: { requestId: requestId },
                     once: true,
                     timeout: address.timeout || 10000,
-                    handle: function(responseMessage) {
+                    handle: function (responseMessage) {
                         resolve(responseMessage);
-                    }
+                    },
                 });
 
                 // NB - respond understands requestId in the envelope.
@@ -553,7 +545,7 @@ define([
                 id = listen({
                     channel: spec.channel,
                     key: spec.key,
-                    handle: function(message, address) {
+                    handle: function (message, address) {
                         if (!initialized) {
                             initialized = true;
                             resolve(message);
@@ -564,25 +556,24 @@ define([
                                 console.error('ERROR in plisten', ex);
                             }
                         }
-                    }
+                    },
                 });
             });
             return {
                 promise: p,
-                id: id
+                id: id,
             };
         }
 
         function when(spec) {
-
             return new Promise((resolve) => {
                 listen({
                     channel: spec.channel,
                     key: spec.key,
                     once: true,
-                    handle: function(message) {
+                    handle: function (message) {
                         resolve(message);
-                    }
+                    },
                 });
             });
         }
@@ -601,7 +592,7 @@ define([
             return listen({
                 channel: channel,
                 key: JSON.stringify({ type: type }),
-                handle: handler
+                handle: handler,
             });
         }
 
@@ -610,7 +601,7 @@ define([
                 message = {};
             }
             send(message, {
-                key: { type: type }
+                key: { type: type },
             });
         }
 
@@ -636,7 +627,7 @@ define([
             if (arg.description) {
                 makeChannel({
                     name: channelName,
-                    description: arg.description
+                    description: arg.description,
                 });
             } else {
                 ensureChannel(channelName);
@@ -646,7 +637,7 @@ define([
                 return listen({
                     channel: channelName,
                     key: { type: type },
-                    handle: handler
+                    handle: handler,
                 });
             }
 
@@ -656,7 +647,7 @@ define([
                 }
                 return send(message, {
                     channel: channelName,
-                    key: { type: type }
+                    key: { type: type },
                 });
             }
 
@@ -676,8 +667,8 @@ define([
                 const address = {
                     channel: channelName,
                     key: {
-                        type: type
-                    }
+                        type: type,
+                    },
                 };
                 return set(message, address);
             }
@@ -686,8 +677,8 @@ define([
                 if (typeof spec === 'string') {
                     spec = {
                         key: {
-                            type: spec
-                        }
+                            type: spec,
+                        },
                     };
                 }
                 spec.channel = channelName;
@@ -713,7 +704,7 @@ define([
             function channelWhen(type) {
                 return when({
                     channel: channelName,
-                    key: { type: type }
+                    key: { type: type },
                 });
             }
 
@@ -736,8 +727,8 @@ define([
                     listeners: {
                         persistent: Object.keys(channel.persistentMessages).length,
                         key: Object.keys(channel.keyListeners).length,
-                        test: channel.testListeners.length
-                    }
+                        test: channel.testListeners.length,
+                    },
                 };
             }
 
@@ -756,7 +747,7 @@ define([
                 plisten: channelPlisten,
                 stop: stop,
                 channelName: channelName,
-                stats: stats
+                stats: stats,
             };
         }
 
@@ -773,14 +764,13 @@ define([
             let listeners = [];
 
             function channel(channelName) {
-
                 // Without a channel name, we use the main bus.
                 if (!channelName) {
                     channelName = new Uuid(4).format();
                 }
 
                 const localChannel = makeChannelBus({
-                    name: channelName
+                    name: channelName,
                 });
 
                 function on() {
@@ -843,7 +833,7 @@ define([
                     set: set,
                     get: get,
                     when: when,
-                    stats: stats
+                    stats: stats,
                 };
             }
 
@@ -857,8 +847,8 @@ define([
             function stats() {
                 return {
                     listeners: {
-                        active: listeners.length
-                    }
+                        active: listeners.length,
+                    },
                 };
             }
 
@@ -871,17 +861,15 @@ define([
                 listeners.push(l);
             }
 
-
             return {
                 channel: channel,
                 genName: genName,
                 stats: stats,
                 stop: stop,
                 // global listeners, etc.
-                listen: connectionListen
+                listen: connectionListen,
             };
         }
-
 
         // MAIN
         makeChannel({ name: 'default', description: 'The Default Channel' });
@@ -903,15 +891,15 @@ define([
             logMessages: logMessages,
             removeListener: removeListener,
             removeListeners: removeListeners,
-            connect: connect
+            connect: connect,
         };
 
         return api;
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

@@ -1,10 +1,8 @@
-define([
-
-], () => {
+define([], () => {
     'use strict';
 
     function factory(config) {
-         const url = config.url,
+        const url = config.url,
             cdnUrl = config.cdn;
         // NB: For prototyping we supply this widget db in code.
         // This is modeling a service which provides widget lookup.
@@ -16,8 +14,8 @@ define([
                         version: '0.1.0',
                         config: {
                             runtime: {
-                                version: '0.1.1'
-                            }
+                                version: '0.1.1',
+                            },
                         },
                         widgets: [
                             {
@@ -28,9 +26,9 @@ define([
                                 input: {
                                     objectRef: {
                                         required: true,
-                                        type: '??'
-                                    }
-                                }
+                                        type: '??',
+                                    },
+                                },
                             },
                             {
                                 widgetName: 'pairedEndLibrary',
@@ -39,11 +37,11 @@ define([
                                 input: {
                                     objects: {
                                         objectRef: {
-                                            required: true
-                                        }
+                                            required: true,
+                                        },
                                     },
-                                    options: {}
-                                }
+                                    options: {},
+                                },
                             },
                             {
                                 widgetName: 'contigSet',
@@ -52,11 +50,11 @@ define([
                                 input: {
                                     objects: {
                                         objectRef: {
-                                            required: true
-                                        }
+                                            required: true,
+                                        },
                                     },
-                                    options: {}
-                                }
+                                    options: {},
+                                },
                             },
                             {
                                 widgetName: 'genomeComparison',
@@ -65,10 +63,10 @@ define([
                                 input: {
                                     objects: {
                                         objectRef: {
-                                            required: true
-                                        }
-                                    }
-                                }
+                                            required: true,
+                                        },
+                                    },
+                                },
                             },
                             {
                                 widgetName: 'objectOverview',
@@ -80,10 +78,10 @@ define([
                                 input: {
                                     objects: {
                                         objectRef: {
-                                            required: true
-                                        }
-                                    }
-                                }
+                                            required: true,
+                                        },
+                                    },
+                                },
                             },
                             {
                                 widgetName: 'pairedEndLibrary',
@@ -95,15 +93,15 @@ define([
                                 input: {
                                     objects: {
                                         objectRef: {
-                                            required: true
-                                        }
-                                    }
-                                }
-                            }
-                        ]
-                    }
-                ]
-            }
+                                            required: true,
+                                        },
+                                    },
+                                },
+                            },
+                        ],
+                    },
+                ],
+            },
         ];
 
         const widgetDb = {};
@@ -112,10 +110,12 @@ define([
             widgetPackage.versions.forEach((version) => {
                 widgetDb[widgetPackage.name][version.version] = {
                     config: version.config,
-                    widgets: {}
+                    widgets: {},
                 };
                 version.widgets.forEach((widget) => {
-                    widgetDb[widgetPackage.name][version.version].widgets[widget.widgetName] = widget;
+                    widgetDb[widgetPackage.name][version.version].widgets[
+                        widget.widgetName
+                    ] = widget;
                 });
             });
         });
@@ -141,13 +141,20 @@ define([
                 widget = versionedPackage.widgets[widgetName];
 
             if (!widget) {
-                throw new Error('Cannot locate widget ' + widgetName + ' in package ' + packageName + ' version ' + version);
+                throw new Error(
+                    'Cannot locate widget ' +
+                        widgetName +
+                        ' in package ' +
+                        packageName +
+                        ' version ' +
+                        version
+                );
             }
 
             return {
                 widget: widget,
                 packageName: packageName,
-                packageVersion: version
+                packageVersion: version,
             };
         }
 
@@ -167,12 +174,11 @@ define([
                             return {
                                 packageName: widgetPackage.name,
                                 packageVersion: version.version,
-                                widget: widget
+                                widget: widget,
                             };
                         }
                     }
                 }
-
             }
         }
 
@@ -185,13 +191,13 @@ define([
             getWidget: getWidget,
             findWidget: findWidget,
             version: '0.1.0',
-            about: 'This is the Widget Service Factory'
+            about: 'This is the Widget Service Factory',
         });
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

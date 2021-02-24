@@ -5,15 +5,8 @@
  *
  */
 
-define([
-    './unodep',
-    'common/runtime'
-], (
-    utils,
-    Runtime
-) => {
+define(['./unodep', 'common/runtime'], (utils, Runtime) => {
     'use strict';
-
 
     function factory(config) {
         let allStates = config.states,
@@ -21,7 +14,8 @@ define([
             fallbackState = config.fallbackState,
             currentState,
             api,
-            timer, newStateHandler = config.onNewState;
+            timer,
+            newStateHandler = config.onNewState;
 
         const runtime = Runtime.make();
 
@@ -35,7 +29,6 @@ define([
          */
         function validate() {
             // find initial state
-
             // ...
         }
 
@@ -67,7 +60,6 @@ define([
                 console.error('state error: multiple states found:', stateToFind, foundStates);
                 throw new Error('state error: multiple states found');
             }
-
         }
 
         function doMessages(changeType) {
@@ -139,7 +131,6 @@ define([
 
             doMessages('enter');
 
-
             run();
         }
 
@@ -174,9 +165,7 @@ define([
             doResumeState();
         }
 
-        function stop() {
-
-        }
+        function stop() {}
 
         // API
 
@@ -187,16 +176,15 @@ define([
             updateState: updateState,
             getCurrentState: getCurrentState,
             findState: findState,
-            bus: bus
+            bus: bus,
         });
 
         return api;
     }
 
-
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

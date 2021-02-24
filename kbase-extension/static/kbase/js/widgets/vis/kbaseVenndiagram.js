@@ -9,56 +9,53 @@ Circles are:
 
 */
 
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'd3',
-		'kbaseVisWidget',
-		'RGBColor',
-		'geometry_rectangle',
-		'geometry_point',
-		'geometry_size'
-	], (
-		KBWidget,
-		bootstrap,
-		$,
-		d3,
-		kbaseVisWidget,
-		RGBColor,
-		geometry_rectangle,
-		geometry_point,
-		geometry_size
-	) => {
-
+define([
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+    'd3',
+    'kbaseVisWidget',
+    'RGBColor',
+    'geometry_rectangle',
+    'geometry_point',
+    'geometry_size',
+], (
+    KBWidget,
+    bootstrap,
+    $,
+    d3,
+    kbaseVisWidget,
+    RGBColor,
+    geometry_rectangle,
+    geometry_point,
+    geometry_size
+) => {
     return KBWidget({
+        name: 'kbaseVenndiagram',
+        parent: kbaseVisWidget,
 
-	    name: "kbaseVenndiagram",
-	  parent : kbaseVisWidget,
-
-        version: "1.0.0",
+        version: '1.0.0',
         options: {
+            xGutter: 0,
+            xPadding: 0,
+            yPadding: 0,
 
-            xGutter     : 0,
-            xPadding    : 0,
-            yPadding    : 0,
+            xOffset: 0,
+            yOffset: 0,
+            overlap: 0.2,
+            fillOpacity: 0.8,
 
-            xOffset : 0,
-            yOffset : 0,
-            overlap : 0.2,
-            fillOpacity : 0.8,
+            startAngle: (2 * Math.PI * 150) / 360,
 
-            startAngle : 2 * Math.PI * 150 /360,
-
-            strokeWidth : 2,
-            strokeColor : function() { return 'black'},
+            strokeWidth: 2,
+            strokeColor: function () {
+                return 'black';
+            },
             //fillColor : d3.scale.category20(),
-            fillColor : function (idx, d, $venn) {
-
+            fillColor: function (idx, d, $venn) {
                 if ($venn.fillScale == undefined) {
                     $venn.fillScale = d3.scale.category20();
-                };
+                }
                 if ($venn.circleColors == undefined) {
                     $venn.circleColors = [];
                 }
@@ -74,31 +71,21 @@ define (
                 }
 
                 if ($.isArray(idx)) {
-
                     const colors = [];
-                    $.each(
-                        idx,
-                        (idx, val) => {
-                            colors.push( d3.rgb($venn.options.fillColor(val, d, $venn) ) );
-                        }
-                    );
+                    $.each(idx, (idx, val) => {
+                        colors.push(d3.rgb($venn.options.fillColor(val, d, $venn)));
+                    });
 
                     const blend = d3.rgb();
                     const diminisher = 2;
-                    $.each(
-                        colors,
-                        (idx, color) => {
-                            blend.r += Math.floor(color.r / diminisher);
-                            blend.g += Math.floor(color.g / diminisher);
-                            blend.b += Math.floor(color.b / diminisher);
-                        }
-                    );
+                    $.each(colors, (idx, color) => {
+                        blend.r += Math.floor(color.r / diminisher);
+                        blend.g += Math.floor(color.g / diminisher);
+                        blend.b += Math.floor(color.b / diminisher);
+                    });
 
                     return blend.toString();
-
-                }
-                else {
-
+                } else {
                     let color = $venn.circleColors[idx];
 
                     if (color == undefined) {
@@ -107,54 +94,50 @@ define (
                     return color;
                 }
             },
-            circleFontSize : '18pt',
-            intersectFontSize : '24pt',
+            circleFontSize: '18pt',
+            intersectFontSize: '24pt',
 
-            drawLabels : true,
-            tooltips : true,
+            drawLabels: true,
+            tooltips: true,
 
-            radiusScale : 1.00,
-
+            radiusScale: 1.0,
         },
 
-        _accessors : [
+        _accessors: [],
 
-        ],
-
-        init : function(options) {
+        init: function (options) {
             this._super(options);
 
             return this;
         },
 
-        intersectCircles : function (c1, c2) {
+        intersectCircles: function (c1, c2) {
             //My life is pain.
 
             //First, we convert the polar coordinates into cartesian.
 
             const cc1 = {
-                x : Math.cos(c1.angle) * c1.originDistance,
-                y : - Math.sin(c1.angle) * c1.originDistance,
+                x: Math.cos(c1.angle) * c1.originDistance,
+                y: -Math.sin(c1.angle) * c1.originDistance,
             };
 
             const cc2 = {
-                x : Math.cos(c2.angle) * c1.originDistance,
-                y : - Math.sin(c2.angle) * c1.originDistance,
+                x: Math.cos(c2.angle) * c1.originDistance,
+                y: -Math.sin(c2.angle) * c1.originDistance,
             };
 
             const lowerLeftPoint = {
-                x : Math.min(cc1.x, cc2.x),
-                y : Math.min(cc1.y, cc2.y),
+                x: Math.min(cc1.x, cc2.x),
+                y: Math.min(cc1.y, cc2.y),
             };
 
             const midPoint = {
-                x : lowerLeftPoint.x + Math.abs(cc1.x - cc2.x) / 2,
-                y : lowerLeftPoint.y + Math.abs(cc1.y - cc2.y) / 2,
+                x: lowerLeftPoint.x + Math.abs(cc1.x - cc2.x) / 2,
+                y: lowerLeftPoint.y + Math.abs(cc1.y - cc2.y) / 2,
             };
 
-            const width  = (cc1.x - cc2.x);
-            const height = (cc1.y - cc2.y);
-
+            const width = cc1.x - cc2.x;
+            const height = cc1.y - cc2.y;
 
             //get the lower right angle. Assume that there is no width by default
             let lowerRightAngle = Math.PI / 2;
@@ -163,41 +146,39 @@ define (
             }
 
             //and the complement, in RADIANS.
-            const complementAngle = (Math.PI / 2 - lowerRightAngle);
+            const complementAngle = Math.PI / 2 - lowerRightAngle;
 
-            const adjacentSide = Math.sqrt( Math.pow(midPoint.x - lowerLeftPoint.x, 2) + Math.pow(midPoint.y - lowerLeftPoint.y, 2) );
+            const adjacentSide = Math.sqrt(
+                Math.pow(midPoint.x - lowerLeftPoint.x, 2) +
+                    Math.pow(midPoint.y - lowerLeftPoint.y, 2)
+            );
 
-
-            const oppSide = Math.sin(Math.acos(adjacentSide / c2.r )) * c2.r;
+            const oppSide = Math.sin(Math.acos(adjacentSide / c2.r)) * c2.r;
             const distance = oppSide;
 
             const i1 = {
-                x : midPoint.x + Math.cos(complementAngle) * distance,//c1.r * Math.sqrt(3) / 2,
-                y : midPoint.y - Math.sin(complementAngle) * distance,//c1.r * Math.sqrt(3) / 2,
+                x: midPoint.x + Math.cos(complementAngle) * distance, //c1.r * Math.sqrt(3) / 2,
+                y: midPoint.y - Math.sin(complementAngle) * distance, //c1.r * Math.sqrt(3) / 2,
             };
 
             const i2 = {
-                x : midPoint.x + Math.cos(complementAngle + Math.PI) * distance,//c1.r * Math.sqrt(3) / 2,
-                y : midPoint.y - Math.sin(complementAngle + Math.PI) * distance,//c1.r * Math.sqrt(3) / 2,
+                x: midPoint.x + Math.cos(complementAngle + Math.PI) * distance, //c1.r * Math.sqrt(3) / 2,
+                y: midPoint.y - Math.sin(complementAngle + Math.PI) * distance, //c1.r * Math.sqrt(3) / 2,
             };
 
             const mag1 = Math.sqrt(Math.pow(i1.x, 2) + Math.pow(i1.y, 2));
             const mag2 = Math.sqrt(Math.pow(i2.x, 2) + Math.pow(i2.y, 2));
 
-            const ret = mag1 > mag2
-                ? [i1, i2, midPoint]
-                : [i2, i1, midPoint];
+            const ret = mag1 > mag2 ? [i1, i2, midPoint] : [i2, i1, midPoint];
 
             return ret;
 
             return [i1, i2, midPoint];
-
         },
 
-
-        renderChart : function() {
+        renderChart: function () {
             const bounds = this.chartBounds();
-            const $venn  = this;
+            const $venn = this;
             const dataset = $venn.dataset();
 
             if (dataset == undefined) {
@@ -207,18 +188,23 @@ define (
             let radius = this.options.radius || Math.min(bounds.size.width, bounds.size.height) / 2;
             radius *= this.options.radiusScale;
 
-            const venn = this.data('D3svg').select( this.region('chart') ).selectAll('.venn').data([0]);
-            venn.enter().append('g')
+            const venn = this.data('D3svg')
+                .select(this.region('chart'))
+                .selectAll('.venn')
+                .data([0]);
+            venn.enter()
+                .append('g')
                 .attr('class', 'venn')
-                .attr('transform',
-                    'translate('
-                        + (bounds.size.width / 2 + this.options.xOffset)
-                        + ','
-                        + (bounds.size.height / 2  + this.options.yOffset)
-                        + ')'
+                .attr(
+                    'transform',
+                    'translate(' +
+                        (bounds.size.width / 2 + this.options.xOffset) +
+                        ',' +
+                        (bounds.size.height / 2 + this.options.yOffset) +
+                        ')'
                 );
 
-            radius = radius * .5;   //basically just guessing at a magic number that looks reasonably good
+            radius = radius * 0.5; //basically just guessing at a magic number that looks reasonably good
 
             radius = this.options.radius || radius;
             const overlap = this.options.overlap;
@@ -228,187 +214,177 @@ define (
             const numCircles = 3;
 
             const circleData = [
-
                 {
-                    id : 0,
-                    angle : $venn.options.startAngle,
-                    r : radius,
-                    originDistance : overlapRadius,
+                    id: 0,
+                    angle: $venn.options.startAngle,
+                    r: radius,
+                    originDistance: overlapRadius,
                 },
                 {
-                    id : 1,
-                    angle : $venn.options.startAngle + (2 * Math.PI / numCircles),
-                    r : radius,
-                    originDistance : overlapRadius,
+                    id: 1,
+                    angle: $venn.options.startAngle + (2 * Math.PI) / numCircles,
+                    r: radius,
+                    originDistance: overlapRadius,
                 },
                 {
-                    id : 2,
-                    angle : $venn.options.startAngle + 2 * (2 * Math.PI / numCircles),
-                    r : radius,
-                    originDistance : overlapRadius,
+                    id: 2,
+                    angle: $venn.options.startAngle + 2 * ((2 * Math.PI) / numCircles),
+                    r: radius,
+                    originDistance: overlapRadius,
                 },
-
             ];
-
 
             const intersects = this.intersectCircles(circleData[0], circleData[1]);
             const intersects2 = this.intersectCircles(circleData[1], circleData[2]);
             const intersects3 = this.intersectCircles(circleData[0], circleData[2]);
 
             const necessary_keys = ['c1', 'c2', 'c3', 'c1c3', 'c1c2', 'c2c3', 'c1c2c3'];
-            $.each(
-              necessary_keys,
-              (i,v) => {
+            $.each(necessary_keys, (i, v) => {
                 if (dataset[v] == undefined) {
-                  dataset[v] = {value : 0, label : ''}
+                    dataset[v] = { value: 0, label: '' };
                 }
-              }
-            );
+            });
 
-
-            const labelData = [//];/*
+            const labelData = [
+                //];/*
                 {
-                    angle : circleData[0].angle,
-                    label : dataset.c1.label,
-                    value : dataset.c1.value,
-                    radius : overlapRadius * 1.3,
-                    anchor : 'end',
-                    fontSize : this.options.circleFontSize,
-                    dy : dataset.c1.ldy
+                    angle: circleData[0].angle,
+                    label: dataset.c1.label,
+                    value: dataset.c1.value,
+                    radius: overlapRadius * 1.3,
+                    anchor: 'end',
+                    fontSize: this.options.circleFontSize,
+                    dy: dataset.c1.ldy,
                 },
                 {
-                    angle : circleData[0].angle,
+                    angle: circleData[0].angle,
                     //label : dataset.c1.label,
-                    value : dataset.c1.value,
-                    radius : overlapRadius * 1.3,
-                    anchor : 'end',
-                    fontSize : this.options.circleFontSize,
-                    dy : dataset.c1.vdy || '1.5em',
+                    value: dataset.c1.value,
+                    radius: overlapRadius * 1.3,
+                    anchor: 'end',
+                    fontSize: this.options.circleFontSize,
+                    dy: dataset.c1.vdy || '1.5em',
                 },
                 {
-                    angle : circleData[1].angle,
-                    label : dataset.c3.label,
-                    value : dataset.c3.value,
-                    radius : overlapRadius * 1.3,
-                    anchor : 'start',
-                    fontSize : this.options.circleFontSize,
-                    dy : dataset.c3.ldy
+                    angle: circleData[1].angle,
+                    label: dataset.c3.label,
+                    value: dataset.c3.value,
+                    radius: overlapRadius * 1.3,
+                    anchor: 'start',
+                    fontSize: this.options.circleFontSize,
+                    dy: dataset.c3.ldy,
                 },
                 {
-                    angle : circleData[1].angle,
+                    angle: circleData[1].angle,
                     //label : dataset.c2.label,
-                    value : dataset.c3.value,
-                    radius : overlapRadius * 1.3,
-                    anchor : 'start',
-                    fontSize : this.options.circleFontSize,
-                    dy : dataset.c3.vdy || '1.5em',
-
+                    value: dataset.c3.value,
+                    radius: overlapRadius * 1.3,
+                    anchor: 'start',
+                    fontSize: this.options.circleFontSize,
+                    dy: dataset.c3.vdy || '1.5em',
                 },
                 {
-                    angle : circleData[2].angle,
-                    label : dataset.c2.label,
-                    value : dataset.c2.value,
-                    radius : overlapRadius * 1.3,
-                    anchor : 'middle',
-                    fontSize : this.options.circleFontSize,
-                    dy : dataset.c2.ldy
+                    angle: circleData[2].angle,
+                    label: dataset.c2.label,
+                    value: dataset.c2.value,
+                    radius: overlapRadius * 1.3,
+                    anchor: 'middle',
+                    fontSize: this.options.circleFontSize,
+                    dy: dataset.c2.ldy,
                 },
                 {
-                    angle : circleData[2].angle,
+                    angle: circleData[2].angle,
                     //label : dataset.c3.label,
-                    value : dataset.c2.value,
-                    radius : overlapRadius * 1.3,
-                    anchor : 'middle',
-                    fontSize : this.options.circleFontSize,
-                    dy : dataset.c2.vdy || '1.5em',
+                    value: dataset.c2.value,
+                    radius: overlapRadius * 1.3,
+                    anchor: 'middle',
+                    fontSize: this.options.circleFontSize,
+                    dy: dataset.c2.vdy || '1.5em',
                 },
                 {
-                    angle : 2 * Math.PI * 90 / 360,
+                    angle: (2 * Math.PI * 90) / 360,
                     //label : dataset.c1c2.label,
-                    value : dataset.c1c2.value,
-                    radius : overlapRadius * 0.7,
-                    fontSize : this.options.intersectFontSize,
-                    dy : dataset.c1c2.vdy
+                    value: dataset.c1c2.value,
+                    radius: overlapRadius * 0.7,
+                    fontSize: this.options.intersectFontSize,
+                    dy: dataset.c1c2.vdy,
                 },
                 {
-                    angle : 2 * Math.PI * 210 / 360,
+                    angle: (2 * Math.PI * 210) / 360,
                     //label : dataset.c1c3.label,
-                    value : dataset.c1c3.value,
-                    radius : overlapRadius * 0.7,
-                    fontSize : this.options.intersectFontSize,
-                    dy : dataset.c1c3.vdy
+                    value: dataset.c1c3.value,
+                    radius: overlapRadius * 0.7,
+                    fontSize: this.options.intersectFontSize,
+                    dy: dataset.c1c3.vdy,
                 },
                 {
-                    angle : 2 * Math.PI * 330 / 360,
+                    angle: (2 * Math.PI * 330) / 360,
                     //label : dataset.c2c3.label,
-                    value : dataset.c2c3.value,
-                    radius : overlapRadius * 0.7,
-                    fontSize : this.options.intersectFontSize,
-                    dy : dataset.c2c3.vdy
+                    value: dataset.c2c3.value,
+                    radius: overlapRadius * 0.7,
+                    fontSize: this.options.intersectFontSize,
+                    dy: dataset.c2c3.vdy,
                 },
 
                 {
-                    angle : 0,
+                    angle: 0,
                     //label : dataset.c1c2c3.label,
-                    value : dataset.c1c2c3.value,
-                    radius : 0,
-                    fontSize : this.options.intersectFontSize,
-                    dy : dataset.c1c2c3.vdy
+                    value: dataset.c1c2c3.value,
+                    radius: 0,
+                    fontSize: this.options.intersectFontSize,
+                    dy: dataset.c1c2c3.vdy,
                 },
             ];
 
-            const transitionTime = this.initialized
-                ? this.options.transitionTime
-                : 0;
+            const transitionTime = this.initialized ? this.options.transitionTime : 0;
 
-            const circleAction = function(d) {
+            const circleAction = function (d) {
+                this.on('mouseover', function (d) {
+                    d3.select(this).attr('fill-opacity', 1);
 
-                this
-                    .on('mouseover', function(d) {
-                        d3.select(this).attr('fill-opacity', 1);
+                    if ($venn.options.tooltips) {
+                        const tooltip = $venn.tooltip(d);
 
-
-                        if ($venn.options.tooltips) {
-                            const tooltip = $venn.tooltip(d);
-
-                            if (tooltip) {
-                                $venn.showToolTip(
-                                    {
-                                        label : tooltip,
-                                        event : {
-                                            pageX : $venn.options.cornerToolTip ? $venn.$elem.prop('offsetLeft') + 5 : d3.event.pageX,
-                                            pageY : $venn.options.cornerToolTip ? $venn.$elem.prop('offsetTop') + 20 : d3.event.pageY
-                                        }
-                                    }
-                                );
-                            }
+                        if (tooltip) {
+                            $venn.showToolTip({
+                                label: tooltip,
+                                event: {
+                                    pageX: $venn.options.cornerToolTip
+                                        ? $venn.$elem.prop('offsetLeft') + 5
+                                        : d3.event.pageX,
+                                    pageY: $venn.options.cornerToolTip
+                                        ? $venn.$elem.prop('offsetTop') + 20
+                                        : d3.event.pageY,
+                                },
+                            });
                         }
-
-                    })
-                    .on('mouseout', function(d) {
-
+                    }
+                })
+                    .on('mouseout', function (d) {
                         const target = d3.event.toElement;
 
                         //assume that if we've moused over text, that that means we're over the label.
                         if (target && target.tagName != 'text') {
-                            d3.select(this).attr('fill-opacity', d.fillOpacity || $venn.options.fillOpacity);
+                            d3.select(this).attr(
+                                'fill-opacity',
+                                d.fillOpacity || $venn.options.fillOpacity
+                            );
                             if ($venn.options.tooltips) {
                                 $venn.hideToolTip();
                             }
                         }
                     })
-                    .on('click', function(d) {
+                    .on('click', function (d) {
                         if (d.data.action) {
                             let func = d.data.action;
                             if (typeof func == 'string') {
-                                func = Function("d", func);
+                                func = Function('d', func);
                             }
 
                             func.call(this, $venn, d.data);
                         }
-                    })
+                    });
             };
-
 
             /*filledCircles
                 .call(circleAction)
@@ -426,114 +402,319 @@ define (
                 })
             ;*/
 
-var arcs = [
-    { d : 'M ' + intersects3[0].x + ' ' + intersects3[0].y
-        + ' A ' + radius + ' ' + radius + ' 0 1 0 ' + intersects[0].x + ' ' + intersects[0].y
-        + ' A ' + radius + ' ' + radius + ' 0 0 1 ' + intersects2[1].x + ' ' + intersects2[1].y
-        + ' A ' + radius + ' ' + radius + ' 0 0 1 ' + intersects3[0].x + ' ' + intersects3[0].y
-        + ' Z',
-    circle : 0, fillColor : '#F00', data : dataset.c1},
-    { d : 'M ' + intersects3[0].x + ' ' + intersects3[0].y
-        + ' A ' + radius + ' ' + radius + ' 0 1 1 ' + intersects2[0].x + ' ' + intersects2[0].y
-        + ' A ' + radius + ' ' + radius + ' 0 0 0 ' + intersects[1].x + ' ' + intersects[1].y
-        + ' A ' + radius + ' ' + radius + ' 0 0 0 ' + intersects3[0].x + ' ' + intersects3[0].y
-        + ' Z',
-    circle : 1, fillColor : '#00F', data : dataset.c2},
-    { d : 'M ' + intersects2[0].x + ' ' + intersects2[0].y
-        + ' A ' + radius + ' ' + radius + ' 0 1 1 ' + intersects[0].x + ' ' + intersects[0].y
-        + ' A ' + radius + ' ' + radius + ' 0 0 0 ' + intersects3[1].x + ' ' + intersects3[1].y
-        + ' A ' + radius + ' ' + radius + ' 0 0 0 ' + intersects2[0].x + ' ' + intersects2[0].y
-        + ' Z',
-    circle : 2, fillColor : '#0F0', data : dataset.c3},
-    { d : 'M ' + intersects[1].x + ' ' + intersects[1].y
-        + ' A ' + radius + ' ' + radius + ' 0 0 0 ' + intersects2[1].x + ' ' + intersects2[1].y
-        + ' A ' + radius + ' ' + radius + ' 0 0 0 ' + intersects3[1].x + ' ' + intersects3[1].y
-        + ' A ' + radius + ' ' + radius + ' 0 0 0 ' + intersects[1].x + ' ' + intersects[1].y
-        + ' Z',
-    circle : [0,1,2], data : dataset.c1c2c3},
-    { d : 'M ' + intersects[0].x + ' ' + intersects[0].y
-        + ' A ' + radius + ' ' + radius + ' 0 0 1 ' + intersects2[1].x + ' ' + intersects2[1].y
-        + ' A ' + radius + ' ' + radius + ' 0 0 0 ' + intersects3[1].x + ' ' + intersects3[1].y
-        + ' A ' + radius + ' ' + radius + ' 0 0 1 ' + intersects[0].x + ' ' + intersects[0].y
-        + ' Z',
-    circle : [0,2], data : dataset.c1c3},
-    { d : 'M ' + intersects3[0].x + ' ' + intersects3[0].y
-        + ' A ' + radius + ' ' + radius + ' 0 0 0 ' + intersects2[1].x + ' ' + intersects2[1].y
-        + ' A ' + radius + ' ' + radius + ' 0 0 1 ' + intersects[1].x + ' ' + intersects[1].y
-        + ' A ' + radius + ' ' + radius + ' 0 0 0 ' + intersects3[0].x + ' ' + intersects3[0].y
-        + ' Z',
-    circle : [0,1], data : dataset.c1c2},
-    { d : 'M ' + intersects2[0].x + ' ' + intersects2[0].y
-        + ' A ' + radius + ' ' + radius + ' 0 0 0 ' + intersects[1].x + ' ' + intersects[1].y
-        + ' A ' + radius + ' ' + radius + ' 0 0 1 ' + intersects3[1].x + ' ' + intersects3[1].y
-        + ' A ' + radius + ' ' + radius + ' 0 0 0 ' + intersects2[0].x + ' ' + intersects2[0].y
-        + ' Z',
-    circle : [1,2], data : dataset.c2c3},
+            var arcs = [
+                {
+                    d:
+                        'M ' +
+                        intersects3[0].x +
+                        ' ' +
+                        intersects3[0].y +
+                        ' A ' +
+                        radius +
+                        ' ' +
+                        radius +
+                        ' 0 1 0 ' +
+                        intersects[0].x +
+                        ' ' +
+                        intersects[0].y +
+                        ' A ' +
+                        radius +
+                        ' ' +
+                        radius +
+                        ' 0 0 1 ' +
+                        intersects2[1].x +
+                        ' ' +
+                        intersects2[1].y +
+                        ' A ' +
+                        radius +
+                        ' ' +
+                        radius +
+                        ' 0 0 1 ' +
+                        intersects3[0].x +
+                        ' ' +
+                        intersects3[0].y +
+                        ' Z',
+                    circle: 0,
+                    fillColor: '#F00',
+                    data: dataset.c1,
+                },
+                {
+                    d:
+                        'M ' +
+                        intersects3[0].x +
+                        ' ' +
+                        intersects3[0].y +
+                        ' A ' +
+                        radius +
+                        ' ' +
+                        radius +
+                        ' 0 1 1 ' +
+                        intersects2[0].x +
+                        ' ' +
+                        intersects2[0].y +
+                        ' A ' +
+                        radius +
+                        ' ' +
+                        radius +
+                        ' 0 0 0 ' +
+                        intersects[1].x +
+                        ' ' +
+                        intersects[1].y +
+                        ' A ' +
+                        radius +
+                        ' ' +
+                        radius +
+                        ' 0 0 0 ' +
+                        intersects3[0].x +
+                        ' ' +
+                        intersects3[0].y +
+                        ' Z',
+                    circle: 1,
+                    fillColor: '#00F',
+                    data: dataset.c2,
+                },
+                {
+                    d:
+                        'M ' +
+                        intersects2[0].x +
+                        ' ' +
+                        intersects2[0].y +
+                        ' A ' +
+                        radius +
+                        ' ' +
+                        radius +
+                        ' 0 1 1 ' +
+                        intersects[0].x +
+                        ' ' +
+                        intersects[0].y +
+                        ' A ' +
+                        radius +
+                        ' ' +
+                        radius +
+                        ' 0 0 0 ' +
+                        intersects3[1].x +
+                        ' ' +
+                        intersects3[1].y +
+                        ' A ' +
+                        radius +
+                        ' ' +
+                        radius +
+                        ' 0 0 0 ' +
+                        intersects2[0].x +
+                        ' ' +
+                        intersects2[0].y +
+                        ' Z',
+                    circle: 2,
+                    fillColor: '#0F0',
+                    data: dataset.c3,
+                },
+                {
+                    d:
+                        'M ' +
+                        intersects[1].x +
+                        ' ' +
+                        intersects[1].y +
+                        ' A ' +
+                        radius +
+                        ' ' +
+                        radius +
+                        ' 0 0 0 ' +
+                        intersects2[1].x +
+                        ' ' +
+                        intersects2[1].y +
+                        ' A ' +
+                        radius +
+                        ' ' +
+                        radius +
+                        ' 0 0 0 ' +
+                        intersects3[1].x +
+                        ' ' +
+                        intersects3[1].y +
+                        ' A ' +
+                        radius +
+                        ' ' +
+                        radius +
+                        ' 0 0 0 ' +
+                        intersects[1].x +
+                        ' ' +
+                        intersects[1].y +
+                        ' Z',
+                    circle: [0, 1, 2],
+                    data: dataset.c1c2c3,
+                },
+                {
+                    d:
+                        'M ' +
+                        intersects[0].x +
+                        ' ' +
+                        intersects[0].y +
+                        ' A ' +
+                        radius +
+                        ' ' +
+                        radius +
+                        ' 0 0 1 ' +
+                        intersects2[1].x +
+                        ' ' +
+                        intersects2[1].y +
+                        ' A ' +
+                        radius +
+                        ' ' +
+                        radius +
+                        ' 0 0 0 ' +
+                        intersects3[1].x +
+                        ' ' +
+                        intersects3[1].y +
+                        ' A ' +
+                        radius +
+                        ' ' +
+                        radius +
+                        ' 0 0 1 ' +
+                        intersects[0].x +
+                        ' ' +
+                        intersects[0].y +
+                        ' Z',
+                    circle: [0, 2],
+                    data: dataset.c1c3,
+                },
+                {
+                    d:
+                        'M ' +
+                        intersects3[0].x +
+                        ' ' +
+                        intersects3[0].y +
+                        ' A ' +
+                        radius +
+                        ' ' +
+                        radius +
+                        ' 0 0 0 ' +
+                        intersects2[1].x +
+                        ' ' +
+                        intersects2[1].y +
+                        ' A ' +
+                        radius +
+                        ' ' +
+                        radius +
+                        ' 0 0 1 ' +
+                        intersects[1].x +
+                        ' ' +
+                        intersects[1].y +
+                        ' A ' +
+                        radius +
+                        ' ' +
+                        radius +
+                        ' 0 0 0 ' +
+                        intersects3[0].x +
+                        ' ' +
+                        intersects3[0].y +
+                        ' Z',
+                    circle: [0, 1],
+                    data: dataset.c1c2,
+                },
+                {
+                    d:
+                        'M ' +
+                        intersects2[0].x +
+                        ' ' +
+                        intersects2[0].y +
+                        ' A ' +
+                        radius +
+                        ' ' +
+                        radius +
+                        ' 0 0 0 ' +
+                        intersects[1].x +
+                        ' ' +
+                        intersects[1].y +
+                        ' A ' +
+                        radius +
+                        ' ' +
+                        radius +
+                        ' 0 0 1 ' +
+                        intersects3[1].x +
+                        ' ' +
+                        intersects3[1].y +
+                        ' A ' +
+                        radius +
+                        ' ' +
+                        radius +
+                        ' 0 0 0 ' +
+                        intersects2[0].x +
+                        ' ' +
+                        intersects2[0].y +
+                        ' Z',
+                    circle: [1, 2],
+                    data: dataset.c2c3,
+                },
+            ];
 
-];
+            var arcs = venn.selectAll('.arc').data(arcs);
+            arcs.enter().append('path').attr('class', 'arc');
+            arcs.call(function (d) {
+                circleAction.call(this, d);
+            })
+                .transition()
+                .duration(transitionTime)
+                .attr('d', (d) => {
+                    return d.d;
+                })
+                .attr('fill', (d, idx) => {
+                    const c = $venn.options.fillColor(d.circle, d, $venn);
+                    return c;
+                })
+                .attr('stroke', 'none')
+                .attr('fill-opacity', (d) => {
+                    return d.fillOpacity || $venn.options.fillOpacity;
+                })
+                .call($venn.endall, () => {
+                    $venn.initialized = true;
+                });
 
-var arcs = venn.selectAll('.arc').data(arcs)
-arcs.enter()
-    .append('path')
-        .attr('class', 'arc')
-;
-arcs
-    .call(function(d) {circleAction.call(this, d)})
-    .transition().duration(transitionTime)
-    .attr('d', (d) => { return d.d})
-    .attr('fill', (d, idx) => { const c =  $venn.options.fillColor(d.circle, d, $venn); return c; })
-    .attr('stroke', 'none')
-    .attr('fill-opacity', (d) => { return d.fillOpacity || $venn.options.fillOpacity })
-    .call($venn.endall, () => {
-        $venn.initialized = true;
-    })
-;
-
-arcs.exit().remove();
+            arcs.exit().remove();
 
             //filledCircles.exit().remove();
 
-            const strokedCircles = venn.selectAll('.strokedCircle').data(circleData );
+            const strokedCircles = venn.selectAll('.strokedCircle').data(circleData);
 
-            strokedCircles.enter()
-                .append('circle')
-                    .attr('class', 'strokedCircle')
-            ;
+            strokedCircles.enter().append('circle').attr('class', 'strokedCircle');
 
             strokedCircles
                 //.call(circleAction)
-                .transition().duration(transitionTime)
-                .attr('cx', (d) => { return d.cx || Math.cos(d.angle) * d.originDistance } )
-                .attr('cy', (d) => { return d.cy || - Math.sin(d.angle) * d.originDistance } )
-                .attr('r', (d) => {return d.r} )
+                .transition()
+                .duration(transitionTime)
+                .attr('cx', (d) => {
+                    return d.cx || Math.cos(d.angle) * d.originDistance;
+                })
+                .attr('cy', (d) => {
+                    return d.cy || -Math.sin(d.angle) * d.originDistance;
+                })
+                .attr('r', (d) => {
+                    return d.r;
+                })
                 .attr('fill', 'none')
-                .attr('stroke', (d, idx) => { return d.strokeColor || $venn.options.strokeColor(idx, d) })
-                .attr('stroke-width', (d) => { return d.strokeWidth || $venn.options.strokeWidth } )
-            ;
+                .attr('stroke', (d, idx) => {
+                    return d.strokeColor || $venn.options.strokeColor(idx, d);
+                })
+                .attr('stroke-width', (d) => {
+                    return d.strokeWidth || $venn.options.strokeWidth;
+                });
 
             strokedCircles.exit().remove();
 
-
-
-            const labelTown = function( opacity ) {
-
+            const labelTown = function (opacity) {
                 if (opacity == undefined) {
                     opacity = 1;
                 }
 
-                this
-                    .attr("text-anchor", "middle")
-                    .attr('dy', (d) => {return d.dy || '0.5em'} )
-                    .attr('cursor', 'default')
-                ;
+                this.attr('text-anchor', 'middle')
+                    .attr('dy', (d) => {
+                        return d.dy || '0.5em';
+                    })
+                    .attr('cursor', 'default');
 
                 if (this.attrTween) {
-
-                    this
-                        .text((d) => {
-                            return d.label || d.value;
-                        })
-                        .attrTween("transform", function(d, idx) {
+                    this.text((d) => {
+                        return d.label || d.value;
+                    })
+                        .attrTween('transform', function (d, idx) {
                             //this._current=  this._current || d;
                             if (this._current == undefined) {
                                 this._current = d;
@@ -548,56 +729,44 @@ arcs.exit().remove();
 
                             this._current = interpolate(0);
 
-                            return function(t) {
+                            return function (t) {
                                 const d2 = interpolate(t);
-                                const pos = [Math.cos(d2.angle) * d2.radius, - Math.sin(d2.angle) * d2.radius];
-                                return "translate("+ pos +")";
+                                const pos = [
+                                    Math.cos(d2.angle) * d2.radius,
+                                    -Math.sin(d2.angle) * d2.radius,
+                                ];
+                                return 'translate(' + pos + ')';
                             };
-
                         })
-                        .attr('font-size', (d) => { return d.fontSize || '12pt'})
-
-                    }
-
+                        .attr('font-size', (d) => {
+                            return d.fontSize || '12pt';
+                        });
+                }
 
                 return this;
-            }
+            };
 
             if ($venn.options.labels) {
+                const labels = venn.selectAll('text').data(labelData);
 
-                const labels = venn.selectAll('text').data(labelData );
+                labels.enter().append('text');
 
-                labels.enter()
-                    .append('text')
-                ;
-
-                labels
-                    .transition().duration(transitionTime)
-                    .call(labelTown)
-                ;
+                labels.transition().duration(transitionTime).call(labelTown);
                 labels.exit().remove();
             }
-
-
-
         },
 
-        tooltip : function(d) {
+        tooltip: function (d) {
             if (d.data.tooltip != undefined) {
                 return d.data.tooltip;
-            }
-            else if (d.data.label != undefined) {
+            } else if (d.data.label != undefined) {
                 return d.data.label;
-            }
-            else {
+            } else {
                 return undefined;
             }
         },
 
-        renderXAxis : function() {},
-        renderYAxis : function() {},
-
-
+        renderXAxis: function () {},
+        renderYAxis: function () {},
     });
-
-} );
+});

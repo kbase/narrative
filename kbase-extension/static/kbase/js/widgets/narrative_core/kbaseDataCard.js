@@ -26,7 +26,7 @@
  *  });
  */
 
-define ([
+define([
     'util/icon',
     'bluebird',
     'util/bootstrapDialog',
@@ -35,17 +35,8 @@ define ([
     'narrativeConfig',
     'jquery',
     'api/dataProvider',
-    'bootstrap'
-], (
-    Icon,
-    Promise,
-    BootstrapDialog,
-    TimeFormat,
-    kbaseCardLayout,
-    Config,
-    $,
-    DataProvider
-) => {
+    'bootstrap',
+], (Icon, Promise, BootstrapDialog, TimeFormat, kbaseCardLayout, Config, $, DataProvider) => {
     'use strict';
     function KbaseDataCard(entry) {
         const objectInfo = entry.object_info;
@@ -56,28 +47,28 @@ define ([
 
         //params
         const name = entry.name ? entry.name : objectInfo[1],
-            version = entry.version ? entry.version : ('v' + objectInfo[4]),
+            version = entry.version ? entry.version : 'v' + objectInfo[4],
             date = entry.date ? entry.date : TimeFormat.getTimeStampStr(objectInfo[3]),
-            editBy = entry.editedBy ? entry.editedBy : (' by ' + objectInfo[5]);
+            editBy = entry.editedBy ? entry.editedBy : ' by ' + objectInfo[5];
 
         // in order - entry.viewType > entry.type > parsing it out of the objectInfo type string.
         const objectType = entry.type ? entry.type : objectInfo[2].split('.')[1].split('-')[0],
-            viewType = (entry.viewType || entry.type) || objectType;
+            viewType = entry.viewType || entry.type || objectType;
 
         //shorten name if applicable
         const $name = $('<span>').addClass('kb-data-list-name');
-        if ((maxNameLength && name) && name.length > maxNameLength) {
+        if (maxNameLength && name && name.length > maxNameLength) {
             $name.append(name.substring(0, maxNameLength - 3) + '...');
             $name.tooltip({
                 title: name,
                 placement: 'bottom',
                 delay: {
                     show: Config.get('tooltip').showDelay,
-                    hide: Config.get('tooltip').hideDelay
-                }
+                    hide: Config.get('tooltip').hideDelay,
+                },
             });
         } else {
-            $name.append(name)
+            $name.append(name);
         }
 
         const $logo = $('<div>');
@@ -91,19 +82,16 @@ define ([
         const $byUser = $('<span>').addClass('kb-data-list-edit-by').append(editBy),
             $narrative = $('<div>').addClass('kb-data-list-narrative').append(entry.narrative),
             $title = $('<div>').append($name),
-            $subcontent = $('<div>')
-                .addClass('narrative-data-list-subcontent');
+            $subcontent = $('<div>').addClass('narrative-data-list-subcontent');
 
         $title.append($version);
-        $subcontent.append($type)
-            .append($narrative)
-            .append($date)
-            .append($byUser);
-        $byUser
-            .click(((objectInfo, e) => {
+        $subcontent.append($type).append($narrative).append($date).append($byUser);
+        $byUser.click(
+            ((objectInfo, e) => {
                 e.stopPropagation();
                 window.open('/#people/' + objectInfo[5]);
-            }).bind(null, objectInfo));
+            }).bind(null, objectInfo)
+        );
 
         /**
          * This is intended to be the function that gets called when the "Copy" button gets
@@ -135,19 +123,22 @@ define ([
                 const thisHolder = e.currentTarget;
                 const $thisBtn = $($(thisHolder).children()[0]);
                 $(thisHolder).html('<img src="' + Config.get('loading_gif') + '">');
-                entry.copyFunction()
+                entry
+                    .copyFunction()
                     .then(() => {
-                        btns.each(function() {
+                        btns.each(function () {
                             $(this).find('div').text(' Copy');
                         });
                         $(thisHolder).html('').append($thisBtn);
                         $(document).trigger('updateDataList.Narrative');
                     })
                     .catch((error) => {
-                        const $importError = $('<div>').css({ 'color': '#F44336', 'width': '500px' });
+                        const $importError = $('<div>').css({ color: '#F44336', width: '500px' });
                         if (error.error && error.error.message) {
                             if (error.error.message.indexOf('may not write to workspace') >= 0) {
-                                $importError.append('Error: you do not have permission to add data to this Narrative.');
+                                $importError.append(
+                                    'Error: you do not have permission to add data to this Narrative.'
+                                );
                             } else {
                                 $importError.append('Error: ' + error.error.message);
                             }
@@ -157,7 +148,7 @@ define ([
                         new BootstrapDialog({
                             title: 'An error occurred while copying.',
                             body: $importError,
-                            alertOnly: true
+                            alertOnly: true,
                         }).show();
                         console.error(error);
                     });
@@ -169,31 +160,29 @@ define ([
                     body: 'Do you want to overwrite the existing copy?',
                     buttons: [
                         $('<a type="button" class="btn btn-default">')
-                        .append('Yes')
-                        .click(() => {
-                            dialog.hide();
-                            doObjectCopy();
-                        }),
+                            .append('Yes')
+                            .click(() => {
+                                dialog.hide();
+                                doObjectCopy();
+                            }),
                         $('<a type="button" class="btn btn-default">')
-                        .append('No')
-                        .click(() => {
-                            dialog.hide();
-                        })
+                            .append('No')
+                            .click(() => {
+                                dialog.hide();
+                            }),
                     ],
-                    closeButton: true
+                    closeButton: true,
                 });
                 dialog.show();
             }
 
-            DataProvider.getDataByName()
-                .then(data => {
-                    if (data.hasOwnProperty(objectInfo[1])) {
-                        showCopyWarningDialog();
-                    }
-                    else {
-                        doObjectCopy();
-                    }
-                });
+            DataProvider.getDataByName().then((data) => {
+                if (data.hasOwnProperty(objectInfo[1])) {
+                    showCopyWarningDialog();
+                } else {
+                    doObjectCopy();
+                }
+            });
         };
         const layout = {
             actionButtonText: entry.actionButtonText,
@@ -201,16 +190,17 @@ define ([
             logo: $logo,
             title: $title,
             subcontent: $subcontent,
-            moreContent : entry.moreContent,
-            onOpen: entry.onOpen
+            moreContent: entry.moreContent,
+            onOpen: entry.onOpen,
         };
 
         const $card = new kbaseCardLayout(layout);
-        $card.find('.narrative-card-action-button')
-             .addClass(() => objectInfo[1].split('.').join('.'))
-             .hide();
+        $card
+            .find('.narrative-card-action-button')
+            .addClass(() => objectInfo[1].split('.').join('.'))
+            .hide();
 
         return $card;
     }
-    return KbaseDataCard;  //end init
+    return KbaseDataCard; //end init
 });

@@ -1,12 +1,4 @@
-define([
-    'jquery',
-    'base/js/namespace',
-    'base/js/dialog'
-], (
-    $,
-    Jupyter,
-    dialog
-) => {
+define(['jquery', 'base/js/namespace', 'base/js/dialog'], ($, Jupyter, dialog) => {
     'use strict';
 
     function deleteCell(cellOrIndex) {
@@ -22,19 +14,19 @@ define([
     function editNotebookMetadata() {
         Jupyter.notebook.edit_metadata({
             notebook: Jupyter.notebook,
-            keyboard_manager: Jupyter.notebook.keyboard_manager
+            keyboard_manager: Jupyter.notebook.keyboard_manager,
         });
     }
 
     function editCellMetadata(cell) {
         dialog.edit_metadata({
             md: cell.metadata,
-            callback: function(md) {
+            callback: function (md) {
                 cell.metadata = md;
             },
             name: 'Cell',
             notebook: Jupyter.notebook,
-            keyboard_manager: Jupyter.keyboard_manager
+            keyboard_manager: Jupyter.keyboard_manager,
         });
     }
 
@@ -55,10 +47,12 @@ define([
             cell;
         for (let i = 0; i < cells.length; i += 1) {
             cell = cells[i];
-            if (cell.metadata.kbase &&
+            if (
+                cell.metadata.kbase &&
                 cell.metadata.kbase.attributes &&
                 cell.metadata.kbase.attributes.id &&
-                cell.metadata.kbase.attributes.id === kbaseId) {
+                cell.metadata.kbase.attributes.id === kbaseId
+            ) {
                 return cell;
             }
         }
@@ -89,9 +83,13 @@ define([
      * specific cells or cell types, and within specific areas.
      */
     function disableKeyListenersForCell(cell) {
-        cell.element[0].addEventListener('focus', () => {
-            Jupyter.keyboard_manager.disable();
-        }, true);
+        cell.element[0].addEventListener(
+            'focus',
+            () => {
+                Jupyter.keyboard_manager.disable();
+            },
+            true
+        );
     }
 
     function onEvent(type, handler) {
@@ -99,7 +97,10 @@ define([
             try {
                 handler(event, data);
             } catch (err) {
-                console.error('Error in Jupyter event handler for ' + type + ':' + err.message, err);
+                console.error(
+                    'Error in Jupyter event handler for ' + type + ':' + err.message,
+                    err
+                );
             }
         });
     }
@@ -124,7 +125,7 @@ define([
      * Returns true if the kernel exists and is ready (e.g., there is a Websocket connection active
      * and in state "WebSocket.OPEN")
      */
-    function isKernelReady () {
+    function isKernelReady() {
         return Jupyter.notebook.kernel && Jupyter.notebook.kernel.is_connected();
     }
 
@@ -140,6 +141,6 @@ define([
         onEvent: onEvent,
         uiModeIs: uiModeIs,
         canEdit: canEdit,
-        isKernelReady: isKernelReady
+        isKernelReady: isKernelReady,
     };
 });

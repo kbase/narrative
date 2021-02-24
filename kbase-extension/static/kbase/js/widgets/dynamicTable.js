@@ -57,7 +57,7 @@ define([
     'util/display',
     'util/string',
     'fileSaver',
-    'jqueryui'
+    'jqueryui',
 ], (
     $,
     Bootstrap,
@@ -65,7 +65,7 @@ define([
     GenericClient,
     Display,
     StringUtil,
-    FileSaver  //enables the saveAs function.
+    FileSaver //enables the saveAs function.
 ) => {
     'use strict';
     const DynamicTable = function (elem, options) {
@@ -78,7 +78,7 @@ define([
             decoration: [],
             data: [],
             enableDownload: false,
-            downloadFileName: 'table_data.csv'
+            downloadFileName: 'table_data.csv',
         };
         $.extend(true, this.options, options);
 
@@ -86,7 +86,7 @@ define([
         this.currentSort = {
             id: null,
             dir: null,
-            sortState: null
+            sortState: null,
         };
         this.currentPage = 0;
         this.sortCol = null;
@@ -110,13 +110,15 @@ define([
      * This doesn't actually set the data or anything, it just inits the various
      * DOM elements and events.
      */
-    DynamicTable.prototype.initialize = function(elem) {
+    DynamicTable.prototype.initialize = function (elem) {
         this.$container = $('<div>').addClass('container-fluid ' + this.options.class);
         this.$container.css(this.options.style);
 
         this.$container.append(this.makeWidgetHeader());
 
-        this.$table = $('<table id="dynamic_table" class="table table-striped table-bordered table-hover">');
+        this.$table = $(
+            '<table id="dynamic_table" class="table table-striped table-bordered table-hover">'
+        );
         this.$tHeader = $('<tr>');
         this.headers.forEach((h) => {
             this.$tHeader.append(this.makeTableHeader(h));
@@ -128,9 +130,7 @@ define([
         this.$notificationArea = $('<div>');
         this.$container
             .append(this.$notificationArea)
-            .append($('<div class="row">')
-                    .append($('<div class="col-md-12">')
-                            .append(this.$table)))
+            .append($('<div class="row">').append($('<div class="col-md-12">').append(this.$table)))
             .append(this.makeWidgetFooter());
         $(elem).append(this.$container);
     };
@@ -139,16 +139,16 @@ define([
      * Builds the footer for the whole widget, sits below the table.
      * Just shows what rows are visible right now.
      */
-    DynamicTable.prototype.makeWidgetFooter = function() {
+    DynamicTable.prototype.makeWidgetFooter = function () {
         // var dropdownId = 'dtable-' + StringUtil.uuid();
         this.$shownText = $('<span></span>');
-        const $footer = $('<div class="row">')
-                      .append($('<div class="col-md-6">')
-                              .append(this.$shownText));
+        const $footer = $('<div class="row">').append(
+            $('<div class="col-md-6">').append(this.$shownText)
+        );
 
         if (this.options.enableDownload) {
             const self = this;
-            const csvRows = function(data) {
+            const csvRows = function (data) {
                 const headerNames = [];
                 self.headers.forEach((h) => {
                     headerNames.push(h.text);
@@ -158,21 +158,27 @@ define([
                     return row.join(',') + '\n';
                 });
             };
-            const $dlBtn = Display.simpleButton('btn-md btn-default dropdown-toggle', 'fa fa-download')
-                .click(() => {
-                    saveAs(new Blob(csvRows(self.currentData)), self.options.downloadFileName);
-                });
-            const $dlAllBtn = Display.simpleButton('btn-md btn-default dropdown-toggle', 'fa fa-cloud-download')
-                .click(() => {
-                    self.options.downloadAllDataFunction(self.currentSort.id, self.currentSort.sortState)
+            const $dlBtn = Display.simpleButton(
+                'btn-md btn-default dropdown-toggle',
+                'fa fa-download'
+            ).click(() => {
+                saveAs(new Blob(csvRows(self.currentData)), self.options.downloadFileName);
+            });
+            const $dlAllBtn = Display.simpleButton(
+                'btn-md btn-default dropdown-toggle',
+                'fa fa-cloud-download'
+            ).click(() => {
+                self.options
+                    .downloadAllDataFunction(self.currentSort.id, self.currentSort.sortState)
                     .then((data) => {
                         saveAs(new Blob(csvRows(data)), self.options.downloadFileName);
                     });
-                });
-            $footer.append($('<div class="col-md-6">')
-                           .append($('<div class="pull-right">')
-                                   .append($dlBtn)
-                                   .append($dlAllBtn)));
+            });
+            $footer.append(
+                $('<div class="col-md-6">').append(
+                    $('<div class="pull-right">').append($dlBtn).append($dlAllBtn)
+                )
+            );
         }
         return $footer;
     };
@@ -182,53 +188,49 @@ define([
      * This includes L/R buttons for table pagination, a hideable spinner for loading,
      * and a search element.
      */
-    DynamicTable.prototype.makeWidgetHeader = function() {
+    DynamicTable.prototype.makeWidgetHeader = function () {
         const self = this;
-        const $leftBtn = Display.simpleButton('btn-md', 'fa fa-caret-left')
-                       .click(() => {
-                           const curP = self.currentPage;
-                           if (self.getPrevPage() !== curP) {
-                               self.getNewData();
-                           }
-                       });
-        const $rightBtn = Display.simpleButton('btn-md', 'fa fa-caret-right')
-                        .click(() => {
-                            const curP = self.currentPage;
-                            if (self.getNextPage() !== curP) {
-                                self.getNewData();
-                            }
-                        });
-        const $pageBtns = $('<div class="col-md-4">')
-                        .append($leftBtn)
-                        .append($rightBtn);
+        const $leftBtn = Display.simpleButton('btn-md', 'fa fa-caret-left').click(() => {
+            const curP = self.currentPage;
+            if (self.getPrevPage() !== curP) {
+                self.getNewData();
+            }
+        });
+        const $rightBtn = Display.simpleButton('btn-md', 'fa fa-caret-right').click(() => {
+            const curP = self.currentPage;
+            if (self.getNextPage() !== curP) {
+                self.getNewData();
+            }
+        });
+        const $pageBtns = $('<div class="col-md-4">').append($leftBtn).append($rightBtn);
 
         self.$loadingElement = $('<div>')
-                               .attr('align', 'center')
-                               .append($('<i>').addClass('fa fa-spinner fa-spin fa-2x'))
-                               .hide();
+            .attr('align', 'center')
+            .append($('<i>').addClass('fa fa-spinner fa-spin fa-2x'))
+            .hide();
         const $loadingDiv = $('<div class="col-md-4">').append(self.$loadingElement);
 
         var $searchElement = $('<input>')
-                             .attr('type', 'text')
-                             .addClass('form-control')
-                             .attr('placeholder', self.options.searchPlaceholder)
-                             .on('keyup', () => {
-                                 self.currentQuery = $.trim($searchElement.val());
-                                 self.currentPage = 0;
-                                 self.getNewData();
-                             });
+            .attr('type', 'text')
+            .addClass('form-control')
+            .attr('placeholder', self.options.searchPlaceholder)
+            .on('keyup', () => {
+                self.currentQuery = $.trim($searchElement.val());
+                self.currentPage = 0;
+                self.getNewData();
+            });
         const $searchDiv = $('<div class="col-md-4 pull-right">').append($searchElement);
 
         return $('<div class="row" style="margin-bottom: 5px">')
-                .append($pageBtns)
-                .append($loadingDiv)
-                .append($searchDiv);
+            .append($pageBtns)
+            .append($loadingDiv)
+            .append($searchDiv);
     };
 
     /**
      * Updates the current page to the previous one, as long as it's >= 0.
      */
-    DynamicTable.prototype.getPrevPage = function() {
+    DynamicTable.prototype.getPrevPage = function () {
         this.currentPage--;
         if (this.currentPage < 0) {
             this.currentPage = 0;
@@ -240,7 +242,7 @@ define([
      * Updates the current page to the next one, if available.
      * If not, nothing changes.
      */
-    DynamicTable.prototype.getNextPage = function() {
+    DynamicTable.prototype.getNextPage = function () {
         this.currentPage++;
         if (this.currentPage * this.rowsPerPage >= this.total) {
             this.currentPage--;
@@ -251,14 +253,12 @@ define([
     /**
      * Displays an error using the Narrative DisplayUtil stuff.
      */
-    DynamicTable.prototype.displayError = function(error) {
+    DynamicTable.prototype.displayError = function (error) {
         let errorObj = error;
         if (error.status && error.error && error.error.error) {
             errorObj = error.error;
         }
-        this.$notificationArea
-        .empty()
-        .append(Display.createError('Table data error', errorObj));
+        this.$notificationArea.empty().append(Display.createError('Table data error', errorObj));
         console.error(error);
     };
 
@@ -266,12 +266,15 @@ define([
      * This fetches a new set of data, by firing the updateFunction
      * with the current table state, including page, etc.
      */
-    DynamicTable.prototype.getNewData = function() {
+    DynamicTable.prototype.getNewData = function () {
         this.$loadingElement.show();
-        return this.options.updateFunction(this.currentPage,
-                                    this.currentQuery,
-                                    this.currentSort.id,
-                                    this.currentSort.sortState)
+        return this.options
+            .updateFunction(
+                this.currentPage,
+                this.currentQuery,
+                this.currentSort.id,
+                this.currentSort.sortState
+            )
             .then((data) => {
                 this.update(data);
             })
@@ -288,12 +291,14 @@ define([
      * This makes each th element bold (with the given header.text value), and adds a sort
      * button if necessary.
      */
-    DynamicTable.prototype.makeTableHeader = function(header) {
+    DynamicTable.prototype.makeTableHeader = function (header) {
         const $header = $('<th>').append($('<b>').append(header.text));
         header.sortState = 0;
         if (header.isSortable) {
             // add sorting.
-            const $sortBtn = Display.simpleButton('btn-xs', 'fa fa-sort text-muted').addClass('pull-right');
+            const $sortBtn = Display.simpleButton('btn-xs', 'fa fa-sort text-muted').addClass(
+                'pull-right'
+            );
             $sortBtn.click(() => {
                 // reset all other sort buttons
                 const curState = header.sortState;
@@ -303,8 +308,7 @@ define([
                 // set this one to sort. if up, then down, if down then up, if neither then up
                 if (curState < 1) {
                     header.sortState = 1;
-                }
-                else {
+                } else {
                     header.sortState = -1;
                 }
                 this.currentSort = header;
@@ -313,7 +317,7 @@ define([
             $header.append($sortBtn);
         }
         $header.resizable({
-            handles: 'e'
+            handles: 'e',
         });
         return $header;
     };
@@ -325,7 +329,7 @@ define([
      * If this DynamicTable was initialized with a decoration on each column, those columns have
      * their decoration applied to them as well, and linked to the clickFunction.
      */
-    DynamicTable.prototype.setData = function(data) {
+    DynamicTable.prototype.setData = function (data) {
         // list of lists. Empty it out, then put it in place in the given order.
         this.currentData = data;
         this.$tBody.empty();
@@ -334,10 +338,13 @@ define([
             const renderedRow = row.slice(); // make a copy by value
             this.options.decoration.forEach((dec) => {
                 if (dec.type == 'link') {
-                    renderedRow[dec.col] = '<a style="cursor:pointer">' + renderedRow[dec.col] + '</a>';
-                }
-                else if (dec.type == 'button') {
-                    renderedRow[dec.col] = '<button class="btn btn-default btn-sm">' + renderedRow[dec.col] + '</button>';
+                    renderedRow[dec.col] =
+                        '<a style="cursor:pointer">' + renderedRow[dec.col] + '</a>';
+                } else if (dec.type == 'button') {
+                    renderedRow[dec.col] =
+                        '<button class="btn btn-default btn-sm">' +
+                        renderedRow[dec.col] +
+                        '</button>';
                 }
             });
             // build the table row elem
@@ -365,7 +372,7 @@ define([
      * start = int, the index of the first value, compared to the total available data
      * total = int, the total available rows (not just in this view)
      */
-    DynamicTable.prototype.update = function(data) {
+    DynamicTable.prototype.update = function (data) {
         // update header sort buttons
         this.headers.forEach((h, idx) => {
             if (h.isSortable) {
@@ -386,14 +393,16 @@ define([
         if (!data) {
             throw {
                 message: 'There was no data or information about it provided for the table.',
-                name: 'no data'
+                name: 'no data',
             };
         }
         this.setData(data.rows);
         this.start = data.start;
         this.end = data.start + data.rows.length;
         this.total = data.total;
-        this.$shownText.text('Showing ' + (this.start+1) + ' to ' + this.end + ' of ' + this.total);
+        this.$shownText.text(
+            'Showing ' + (this.start + 1) + ' to ' + this.end + ' of ' + this.total
+        );
         //  + ' on page ' + this.currentPage);
     };
 
@@ -406,12 +415,14 @@ define([
      *     <td>123</td>
      * </tr>
      */
-    var tableRow = function(data) {
+    var tableRow = function (data) {
         const elem = 'td';
         return $('<tr>').append(
-            data.map((d) => {
-                return '<' + elem + '>' + d + '</' + elem + '>';
-            }).join()
+            data
+                .map((d) => {
+                    return '<' + elem + '>' + d + '</' + elem + '>';
+                })
+                .join()
         );
     };
 

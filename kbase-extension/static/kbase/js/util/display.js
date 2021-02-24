@@ -14,7 +14,7 @@ define([
     'util/string',
     'kbase-client-api',
     'kbaseAccordion',
-    'api/auth'
+    'api/auth',
 ], (
     KBWidget,
     bootstrap,
@@ -31,7 +31,7 @@ define([
     'use strict';
 
     const profileClient = new UserProfile(Config.url('user_profile'));
-    const authClient = Auth.make({url: Config.url('auth')});
+    const authClient = Auth.make({ url: Config.url('auth') });
     const profilePageUrl = Config.url('profile_page');
     const cachedUserIds = {};
 
@@ -58,7 +58,8 @@ define([
      */
     function displayRealName(username, $target, displayName) {
         let safeUser = StringUtil.escape(username),
-            usernameLink = '<a href="' + profilePageUrl + safeUser + '" target="_blank">' + safeUser + '</a>';
+            usernameLink =
+                '<a href="' + profilePageUrl + safeUser + '" target="_blank">' + safeUser + '</a>';
         if (displayName) {
             return new Promise((resolve) => {
                 $target.text(displayName);
@@ -66,7 +67,8 @@ define([
                 resolve();
             });
         }
-        return authClient.getUserNames(null, [username])
+        return authClient
+            .getUserNames(null, [username])
             .then((user) => {
                 if (user[safeUser]) {
                     $target.text(user[safeUser]);
@@ -91,7 +93,7 @@ define([
     function loadingSpinner(caption) {
         let spinner = '<span class="fa fa-spinner fa-pulse fa-2x fa-fw">';
         if (caption) {
-            spinner += caption + '... &nbsp; &nbsp;'
+            spinner += caption + '... &nbsp; &nbsp;';
         }
         spinner += '</span>';
         return spinner;
@@ -99,12 +101,12 @@ define([
 
     function loadingDiv(caption) {
         const $caption = $('<span>');
-        const $loader = $('<div>').addClass('kb-data-loading')
+        const $loader = $('<div>')
+            .addClass('kb-data-loading')
             .append('<img src="' + Config.get('loading_gif') + '" style="margin:auto">')
             .append('<br>')
             .append($caption);
-        if (caption)
-            setText(caption);
+        if (caption) setText(caption);
 
         function setText(caption) {
             $caption.text(caption);
@@ -112,10 +114,9 @@ define([
 
         return {
             div: $loader,
-            setText: setText
+            setText: setText,
         };
     }
-
 
     /**
      * @method
@@ -134,7 +135,6 @@ define([
      * }
      */
     function getAppIcon(params) {
-
         let cursor = 'default';
         if (params.cursor) {
             cursor = params.cursor;
@@ -145,7 +145,11 @@ define([
             if (params.size) {
                 size = params.size;
             }
-            return $('<img src="' + params.url + '">').css({'max-width': size, 'max-height': size, 'cursor': cursor});
+            return $('<img src="' + params.url + '">').css({
+                'max-width': size,
+                'max-height': size,
+                cursor: cursor,
+            });
         }
 
         // no url, so show default
@@ -156,23 +160,22 @@ define([
             isApp = params['isApp'];
         }
 
-        const name = isApp ? "app" : "method";
+        const name = isApp ? 'app' : 'method';
         const icon_color = isApp ? icons.colors[9] : icons.colors[5];
         const icon_class = isApp ? 'app-icon' : 'method-icon';
 
         const icon = icons.methods[name];
         const $icon = $('<i>');
         // background
-        $icon.addClass("fa-stack fa-2x").css({'cursor': cursor});
+        $icon.addClass('fa-stack fa-2x').css({ cursor: cursor });
         const $i = $('<i>').addClass('fa fa-square fa-stack-2x ' + icon_class);
         if (params.setColor) {
-            $i.css({color: icon_color});
+            $i.css({ color: icon_color });
         }
         $icon.append($i);
         // add stack of font-awesome icons
         _.each(icon, (cls) => {
-            $icon.append($('<i>')
-                .addClass("fa fa-inverse fa-stack-1x " + cls));
+            $icon.append($('<i>').addClass('fa fa-inverse fa-stack-1x ' + cls));
         });
         return $icon;
     }
@@ -196,7 +199,11 @@ define([
     function createError(title, error, stackTrace) {
         const $errorPanel = $('<div>')
             .addClass('alert alert-danger')
-            .append('<b>' + title + '</b><br>Please contact the KBase team at <a href="https://www.kbase.us/support/">https://www.kbase.us/support/</a> with the information below.');
+            .append(
+                '<b>' +
+                    title +
+                    '</b><br>Please contact the KBase team at <a href="https://www.kbase.us/support/">https://www.kbase.us/support/</a> with the information below.'
+            );
 
         $errorPanel.append('<br><br>');
 
@@ -213,7 +220,7 @@ define([
                     status: error.status,
                     code: error.error.code,
                     message: error.error.message,
-                    name: error.error.name
+                    name: error.error.name,
                 };
                 if (!stackTrace) {
                     stackTrace = error.error.error;
@@ -222,8 +229,7 @@ define([
             Object.keys(errObj).forEach((key) => {
                 $errorPanel.append($('<div>').append('<b>' + key + ':</b> ' + errObj[key]));
             });
-        }
-        else if (error) {
+        } else if (error) {
             $errorPanel.append('No other information available. Sorry!');
         }
         if (stackTrace) {
@@ -233,10 +239,10 @@ define([
                 elements: [
                     {
                         title: 'Error Details',
-                        body: $('<pre>').addClass('kb-function-error-traceback').append(stackTrace)
-                    }
-                ]}
-            );
+                        body: $('<pre>').addClass('kb-function-error-traceback').append(stackTrace),
+                    },
+                ],
+            });
         }
         return $errorPanel;
     }
@@ -248,8 +254,8 @@ define([
      */
     function simpleButton(sizeClass, iconClass) {
         return $('<button>')
-               .addClass('btn btn-default ' + sizeClass)
-               .append($('<span>').addClass(iconClass));
+            .addClass('btn btn-default ' + sizeClass)
+            .append($('<span>').addClass(iconClass));
     }
 
     /**
@@ -265,8 +271,10 @@ define([
             return false;
         }
         return (
-            (rect.top >= 0 && rect.top <= (window.innerHeight || document.documentElement.clientHeight)) ||
-            (rect.bottom >= 0 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight))
+            (rect.top >= 0 &&
+                rect.top <= (window.innerHeight || document.documentElement.clientHeight)) ||
+            (rect.bottom >= 0 &&
+                rect.bottom <= (window.innerHeight || document.documentElement.clientHeight))
         );
     }
 
@@ -277,6 +285,6 @@ define([
         getAppIcon: getAppIcon,
         createError: createError,
         simpleButton: simpleButton,
-        verticalInViewport: verticalInViewport
+        verticalInViewport: verticalInViewport,
     };
 });

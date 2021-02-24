@@ -1,18 +1,15 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 /* This is a special widget, because it is a factory factory! */
 
 define([
     'kb_common/html',
     'bootstrap'
-], function (html) {
+], (html) => {
     'use strict';
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'), span = t('span');
-    
+
     function factoryFactory(factoryConfig) {
-        
+
         function factory(config) {
 
             function attach(node) {
@@ -32,7 +29,7 @@ define([
             }
         };
     }
-    
+
     return {
         make: function (config) {
             return factoryFactory(config);

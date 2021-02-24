@@ -9,14 +9,14 @@ define (
         'narrativeConfig',
 		'kbaseAuthenticatedWidget',
 		'kbStandaloneTable'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
         Config,
 		kbaseAuthenticatedWidget,
 		kbStandaloneTable
-	) {
+	) => {
     return KBWidget({
         name: 'CollectionView',
         parent : kbaseAuthenticatedWidget,
@@ -35,9 +35,9 @@ define (
         },
 
         render: function() {
-	        var self = this;
+	        const self = this;
 
-	        var container = this.$elem;
+	        const container = this.$elem;
 	        container.empty();
             if (self.token == null) {
                 container.append("<div>[Error] You're not logged in</div>");
@@ -45,25 +45,25 @@ define (
             }
             container.append("<div><img src=\""+self.loading_image+"\">&nbsp;&nbsp;loading data...</div>");
 
-	        var kbws = new Workspace(self.ws_url, {'token': self.token});
-	        kbws.get_objects([{ref: self.options.ws+"/"+self.options.id}], function(data) {
+	        const kbws = new Workspace(self.ws_url, {'token': self.token});
+	        kbws.get_objects([{ref: self.options.ws+"/"+self.options.id}], (data) => {
 		        // parse data
 		        if (data.length == 0) {
-		            var msg = "[Error] Object "+self.options.id+" does not exist in workspace "+self.options.ws;
+		            const msg = "[Error] Object "+self.options.id+" does not exist in workspace "+self.options.ws;
 		            container.empty();
 		            container.append('<div><p>'+msg+'>/p></div>');
 		        } else {
 			        // parse data
-			        var d = data[0]['data'];
-			        var idList = [];
-			        for (var i=0; i<d.members.length; i++) {
+			        const d = data[0]['data'];
+			        const idList = [];
+			        for (let i=0; i<d.members.length; i++) {
 				        idList.push({ ref: d.members[i].URL });
 			        }
 
                     if (idList.length > 0) {
-			            kbws.get_objects(idList, function(resData) {
-                            var tdata = [];
-                            for (var i=0; i<resData.length; i++) {
+			            kbws.get_objects(idList, (resData) => {
+                            const tdata = [];
+                            for (let i=0; i<resData.length; i++) {
                                 tdata.push([
                                     resData[i].data.id,
                                     resData[i].data.name,
@@ -77,32 +77,32 @@ define (
                                 ]);
                             }
 
-				            var tlen = 0;
+				            let tlen = 0;
                             if (window.hasOwnProperty('rendererTable') && rendererTable.length) {
                                 tlen = rendererTable.length;
                             }
 
-				            var html = '<h4>Metagenome Collection '+d.name+'</h4><div id="collectionTable'+tlen+'" style="width: 95%;"></div>';
+				            const html = '<h4>Metagenome Collection '+d.name+'</h4><div id="collectionTable'+tlen+'" style="width: 95%;"></div>';
 		            	    container.empty();
 		            	    container.append(html);
 
-				            var tableCollection = standaloneTable.create({index: tlen});
+				            const tableCollection = standaloneTable.create({index: tlen});
                             tableCollection.settings.target = document.getElementById("collectionTable"+tlen);
                             tableCollection.settings.data = { header: ["ID", "Name", "Project", "PI", "Biome", "Sequence Type", "Sequencing Method", "bp Count", "Created"], data: tdata };
                             tableCollection.render(tlen);
 			            });
 		            } else {
 		                container.empty();
-    		            var main = $('<div>');
+    		            const main = $('<div>');
     		            main.append($('<p>')
     		                .css({'padding': '10px 20px'})
     		                .text('[Error] collection is empty'));
     		            container.append(main);
 		            }
 	            }
-	        }, function(data) {
+	        }, (data) => {
 		        container.empty();
-		        var main = $('<div>');
+		        const main = $('<div>');
 		        main.append($('<p>')
 		            .css({'padding': '10px 20px'})
 		            .text('[Error] '+data.error.message));

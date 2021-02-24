@@ -8,19 +8,19 @@
  * Written as generic JS object for re-usability
  */
 
-var ModelSeedVizConfig = (function() {
+const ModelSeedVizConfig = (function() {
     'use strict';
 
     function ModelSeedVizConfig() {
-        var maxAbsFlux = 41;
+        const maxAbsFlux = 41;
 
-        var negColorMin = 'lightred',
+        const negColorMin = 'lightred',
             negColorMax = 'darkred';
 
-        var posColorMin = 'lightgreen',
+        const posColorMin = 'lightgreen',
             posColorMax = 'darkgreen';
 
-        var gradientCount = 20; // num of colors in gradient
+        const gradientCount = 20; // num of colors in gradient
 
         this.geneColor = '#87CEEB';
         this.negFluxColors = ['#910000', '#e52222', '#ff4444', '#fc8888', '#fcabab'];
@@ -32,16 +32,16 @@ var ModelSeedVizConfig = (function() {
         this.strokeDark = '#000';
         this.highlight = 'steelblue';
 
-        var negRainbow = new Rainbow();
+        const negRainbow = new Rainbow();
         negRainbow.setNumberRange(1, gradientCount);
         negRainbow.setSpectrum(negColorMin, negColorMax);
 
-        var posRainbow = new Rainbow();
+        const posRainbow = new Rainbow();
         posRainbow.setNumberRange(1, gradientCount);
         posRainbow.setSpectrum(posColorMin, posColorMax);
 
         this.getColor = function(v, absFlux) {
-            var c = (Math.abs(v) / 41)*100 ;
+            const c = (Math.abs(v) / 41)*100 ;
 
 
             if (v === 0) return self.geneColor;
@@ -51,7 +51,7 @@ var ModelSeedVizConfig = (function() {
         }
 
 
-        var colourGradient = new ColourGradient();
+        const colourGradient = new ColourGradient();
         this.getNegMinHex = function() {
             return '#'+colourGradient.getHexColour(negColorMin);
         }
@@ -108,10 +108,10 @@ var ModelSeedVizConfig = (function() {
  * https://github.com/anomal/RainbowVis-JS/blob/master/rainbowvis.js
  */
 function Rainbow() {
-    var gradients = null;
-    var minNum = 0;
-    var maxNum = 100;
-    var colours = ['ff0000', 'ffff00', '00ff00', '0000ff'];
+    let gradients = null;
+    let minNum = 0;
+    let maxNum = 100;
+    let colours = ['ff0000', 'ffff00', '00ff00', '0000ff'];
     setColours(colours);
 
     function setColours (spectrum)
@@ -119,14 +119,14 @@ function Rainbow() {
         if (spectrum.length < 2) {
             throw new Error('Rainbow must have two or more colours.');
         } else {
-            var increment = (maxNum - minNum)/(spectrum.length - 1);
-            var firstGradient = new ColourGradient();
+            const increment = (maxNum - minNum)/(spectrum.length - 1);
+            const firstGradient = new ColourGradient();
             firstGradient.setGradient(spectrum[0], spectrum[1]);
             firstGradient.setNumberRange(minNum, minNum + increment);
             gradients = [ firstGradient ];
 
-            for (var i = 1; i < spectrum.length - 1; i++) {
-                var colourGradient = new ColourGradient();
+            for (let i = 1; i < spectrum.length - 1; i++) {
+                const colourGradient = new ColourGradient();
                 colourGradient.setGradient(spectrum[i], spectrum[i + 1]);
                 colourGradient.setNumberRange(minNum + increment * i, minNum + increment * (i + 1));
                 gradients[i] = colourGradient;
@@ -155,8 +155,8 @@ function Rainbow() {
         } else if (gradients.length === 1) {
             return gradients[0].colourAt(number);
         } else {
-            var segment = (maxNum - minNum)/(gradients.length);
-            var index = Math.min(Math.floor((Math.max(number, minNum) - minNum)/segment), gradients.length - 1);
+            const segment = (maxNum - minNum)/(gradients.length);
+            const index = Math.min(Math.floor((Math.max(number, minNum) - minNum)/segment), gradients.length - 1);
             return gradients[index].colourAt(number);
         }
     }
@@ -179,10 +179,10 @@ function Rainbow() {
 function ColourGradient()
 {
     "use strict";
-    var startColour = 'ff0000';
-    var endColour = '0000ff';
-    var minNum = 0;
-    var maxNum = 100;
+    let startColour = 'ff0000';
+    let endColour = '0000ff';
+    let minNum = 0;
+    let maxNum = 100;
 
     this.setGradient = function (colourStart, colourEnd)
     {
@@ -209,18 +209,18 @@ function ColourGradient()
 
     function calcHex(number, channelStart_Base16, channelEnd_Base16)
     {
-        var num = number;
+        let num = number;
         if (num < minNum) {
             num = minNum;
         }
         if (num > maxNum) {
             num = maxNum;
         }
-        var numRange = maxNum - minNum;
-        var cStart_Base10 = parseInt(channelStart_Base16, 16);
-        var cEnd_Base10 = parseInt(channelEnd_Base16, 16);
-        var cPerUnit = (cEnd_Base10 - cStart_Base10)/numRange;
-        var c_Base10 = Math.round(cPerUnit * (num - minNum) + cStart_Base10);
+        const numRange = maxNum - minNum;
+        const cStart_Base10 = parseInt(channelStart_Base16, 16);
+        const cEnd_Base10 = parseInt(channelEnd_Base16, 16);
+        const cPerUnit = (cEnd_Base10 - cStart_Base10)/numRange;
+        const c_Base10 = Math.round(cPerUnit * (num - minNum) + cStart_Base10);
         return formatHex(c_Base10.toString(16));
     }
 
@@ -235,7 +235,7 @@ function ColourGradient()
 
     function isHexColour(string)
     {
-        var regex = /^#?[0-9a-fA-F]{6}$/i;
+        const regex = /^#?[0-9a-fA-F]{6}$/i;
         return regex.test(string);
     }
 
@@ -246,7 +246,7 @@ function ColourGradient()
         if (isHexColour(string)) {
             return string.substring(string.length - 6, string.length);
         } else {
-            var name = string.toLowerCase();
+            const name = string.toLowerCase();
             if (colourNames.hasOwnProperty(name)) {
                 return colourNames[name];
             }

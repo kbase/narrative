@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'require',
@@ -12,7 +10,7 @@ define([
 
     'bootstrap',
     'css!font-awesome'
-], function (
+], (
     Promise,
     require,
     html,
@@ -21,11 +19,11 @@ define([
     UI,
     Props,
     Runtime
-) {
+) => {
     'use strict';
 
     function factory(config) {
-        var spec = config.parameterSpec,
+        let spec = config.parameterSpec,
             runtime = Runtime.make(),
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(config.channelName),
@@ -76,20 +74,20 @@ define([
         // VALIDATION
 
         function importControlValue() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 return Validation.importString(getControlValue());
             });
         }
 
         function validate(value) {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 return Validation.validate(value, spec);
             });
         }
 
         function autoValidate() {
             return validate(model.getItem('value'))
-                .then(function (result) {
+                .then((result) => {
                     channel.emit('validation', result);
                 });
         }
@@ -97,10 +95,10 @@ define([
         // DOM & RENDERING
 
         function prequire(module) {
-            return new Promise(function (resolve, reject) {
-                require([module], function (Module) {
+            return new Promise((resolve, reject) => {
+                require([module], (Module) => {
                     resolve(Module);
-                }, function (err) {
+                }, (err) => {
                     reject(err);
                 });
             });
@@ -108,16 +106,16 @@ define([
 
         function makeCustomWidget(arg) {
 
-            // For now all custom inputs live in the 
+            // For now all custom inputs live in the
             // customInputs directory of the input collection directory
             // and are named like <type>Input.js
             return prequire('./customInputs/' + subtype + 'Input')
-                .then(function (Module) {
-                    var inputWidget = Module.make({
+                .then((Module) => {
+                    const inputWidget = Module.make({
                         runtime: runtime
                     });
 
-                    inputWidget.channel.on('changed', function (message) {
+                    inputWidget.channel.on('changed', (message) => {
                         model.setItem('value', message.newValue);
                         channel.emit('changed', {
                             newValue: message.newValue
@@ -134,7 +132,7 @@ define([
             Focus the input control.
         */
         function doFocus() {
-            var node = ui.getElement('input-container.input');
+            const node = ui.getElement('input-container.input');
             if (node) {
                 node.focus();
             }
@@ -144,35 +142,35 @@ define([
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
                 return makeCustomWidget()
-                    .then(function (customWidget) {
+                    .then((customWidget) => {
                         inputWidget = customWidget;
                         return customWidget.start({
                             node: container,
                             initialValue: model.getItem('value', null)
                         });
                     })
-                    .then(function () {
+                    .then(() => {
 
-                        channel.on('reset-to-defaults', function () {
+                        channel.on('reset-to-defaults', () => {
                             resetModelValue();
                         });
-                        channel.on('update', function (message) {
+                        channel.on('update', (message) => {
                             setModelValue(message.value);
                             syncModelToControl();
                             autoValidate();
                         });
-                        channel.on('focus', function () {
+                        channel.on('focus', () => {
                             doFocus();
                         });
                         // channel.emit('sync');
                     })
-                    .catch(function (err) {
+                    .catch((err) => {
                         UI.showErrorDialog({
                             title: 'Error',
                             error: {
@@ -189,7 +187,7 @@ define([
 
         function stop() {
             return inputWidget.stop()
-            .then(function () {
+            .then(() => {
                 if (container) {
                     parent.removeChild(container);
                 }

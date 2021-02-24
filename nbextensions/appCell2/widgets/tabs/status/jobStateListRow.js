@@ -1,20 +1,20 @@
 define([
     'bluebird',
     'kb_common/html'
-], function(
+], (
     Promise,
     html
-) {
+) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         td = t('td'),
         th = t('th'),
         span = t('span');
 
     function niceState(jobState) {
-        var label, icon, color;
+        let label, icon, color;
         switch (jobState) {
         case 'completed':
             label = 'success';
@@ -66,7 +66,7 @@ define([
     }
 
     function factory() {
-        var container,
+        let container,
             name,
             jobId,
             clickFunction,
@@ -74,12 +74,12 @@ define([
 
         function updateRowStatus(jobStatus) {
             jobStatus = jobStatus ? jobStatus : 'Job still pending.';
-            var jobIdDiv = '';
+            const jobIdDiv = '';
             container.innerHTML = th({}, [div(isParentJob ? name.toUpperCase() : name), jobIdDiv]) + niceState(jobStatus);
         }
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 container = arg.node;               // this is the row (tr) that this renders
                 container.onclick = () => {
                     if (jobId) {
@@ -102,7 +102,7 @@ define([
             if (!jobId) {
                 jobId = newState.job_id;
             }
-            let status = newState.status ? newState.status : null;
+            const status = newState.status ? newState.status : null;
             updateRowStatus(status);
         }
 

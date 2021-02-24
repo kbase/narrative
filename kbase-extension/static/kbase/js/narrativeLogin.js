@@ -1,4 +1,3 @@
-/*jslint white:true,browser:true*/
 /**
  * Uses the user's login information to initialize the IPython environment.
  * This should be one of the very first functions to be run on the page, as it sets up
@@ -14,7 +13,7 @@ define ([
     'api/auth',
     'userMenu',
     'util/bootstrapDialog'
-], function(
+], (
     $,
     Promise,
     kbapi,
@@ -23,7 +22,7 @@ define ([
     Auth,
     UserMenu,
     BootstrapDialog
-) {
+) => {
     'use strict';
     const baseUrl = JupyterUtils.get_body_data('baseUrl');
     const authClient = Auth.make({url: Config.url('auth')});
@@ -51,11 +50,11 @@ define ([
         $.ajax({
             url: JupyterUtils.url_join_encode(baseUrl, 'login')
         }).then(
-            function() {
+            () => {
                 // console.log(ret);
             }
         ).fail(
-            function() {
+            () => {
                 // console.err(err);
             }
         );
@@ -65,11 +64,11 @@ define ([
         $.ajax({
             url: JupyterUtils.url_join_encode(baseUrl, 'logout')
         }).then(
-            function() {
+            () => {
                 // console.log(ret);
             }
         ).fail(
-            function() {
+            () => {
                 // console.err(err);
             }
         );
@@ -77,8 +76,8 @@ define ([
     }
 
     function showTokenInjectionDialog() {
-        var $inputField = $('<input type="text" class="form-control">');
-        var $body = $('<div data-test-id="dev-login">')
+        const $inputField = $('<input type="text" class="form-control">');
+        const $body = $('<div data-test-id="dev-login">')
             .append('<div>You appear to be working on a local development environment of the Narrative Interface, but you don\'t have a valid auth token. You can paste one in below.</div>')
             .append('<div><b>You are operating in the ' + Config.get('environment') + ' environment.')
             .append($('<div>').append($inputField));
@@ -87,9 +86,9 @@ define ([
             'body': $body,
             'buttons': [$('<a type="button" class="btn btn-default">')
                 .append('OK')
-                .click(function () {
+                .click(() => {
                     dialog.hide();
-                    var newToken = $inputField.val();
+                    const newToken = $inputField.val();
                     authClient.setCookie({
                         name: 'kbase_session',
                         value: newToken,
@@ -114,7 +113,7 @@ define ([
             'buttons': [
                 $('<a type="button" class="btn btn-default">')
                     .append('OK')
-                    .click(function () {
+                    .click(() => {
                         dialog.hide();
                     })
             ]
@@ -138,7 +137,7 @@ define ([
             'buttons': [
                 $('<a type="button" class="btn btn-default">')
                     .append('OK')
-                    .click(function () {
+                    .click(() => {
                         aboutToLogoutDialog.hide();
                     })
             ]
@@ -147,13 +146,13 @@ define ([
     }
 
     function initEvents() {
-        $(document).on('loggedInQuery.kbase', function(e, callback) {
+        $(document).on('loggedInQuery.kbase', (e, callback) => {
             if (callback) {
                 callback(sessionInfo);
             }
         });
 
-        $(document).on('logout.kbase', function(e, hideMessage) {
+        $(document).on('logout.kbase', (e, hideMessage) => {
             tokenTimeout(!hideMessage);
         });
     }
@@ -186,7 +185,7 @@ define ([
         let lastCheckTime = Date.now();
         const browserSleepValidateTime = Config.get('auth_sleep_recheck_ms');
 
-        tokenCheckTimer = setInterval(function() {
+        tokenCheckTimer = setInterval(() => {
             if (!isTokenCheckEnabled()) {
                 return;
             }
@@ -201,7 +200,7 @@ define ([
 
             // If the token is expired, force a logout and cookie expunging, even
             // without checking with auth first.
-            let timeUntilExpiration = tokenExpirationTime - currentTime;
+            const timeUntilExpiration = tokenExpirationTime - currentTime;
             if (timeUntilExpiration <= 0) {
                 // already expired! logout!
                 disableTokenCheck();
@@ -298,7 +297,7 @@ define ([
         const sessionToken = authClient.getAuthToken();
         return Promise.all([authClient.getTokenInfo(sessionToken), authClient.getUserProfile(sessionToken)])
             .then((results) => {
-                let tokenInfo = results[0];
+                const tokenInfo = results[0];
                 sessionInfo = tokenInfo;
                 this.sessionInfo = tokenInfo;
                 this.sessionInfo.token = sessionToken;

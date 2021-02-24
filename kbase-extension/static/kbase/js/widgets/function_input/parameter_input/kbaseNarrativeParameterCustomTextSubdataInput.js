@@ -13,17 +13,17 @@ define (
 		'narrativeConfig',
         'kbaseNarrativeParameterInput',
 		'select2'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		Config,
         kbaseNarrativeParameterInput,
 		select2
-	) {
+	) => {
 
-    var workspaceUrl = Config.url('workspace');
-    var loadingImage = Config.get('loading_gif');
+    const workspaceUrl = Config.url('workspace');
+    const loadingImage = Config.get('loading_gif');
 
     return KBWidget({
         name: "kbaseNarrativeParameterCustomTextSubdataInput",
@@ -41,30 +41,30 @@ define (
         $dropdown: null,
 
         render: function() {
-            var self = this;
-            var spec = self.spec;
+            const self = this;
+            const spec = self.spec;
 
             self.$dropdown = $('<input id="' + spec.id + '" type="text" style="width:100%" />')
-                                    .on("change",function() { self.isValid() });
+                                    .on("change",() => { self.isValid() });
 
             self.$feedbackDiv = $("<span>");
 
-            var nameColClass  = "col-md-2";
-            var inputColClass = "col-md-5";
-            var hintColClass  = "col-md-5";
+            const nameColClass  = "col-md-2";
+            const inputColClass = "col-md-5";
+            const hintColClass  = "col-md-5";
 
             self.$rowDiv = $('<div>').addClass("row kb-method-parameter-row")
                             .hover(function(){$(this).toggleClass('kb-method-parameter-row-hover');});
-            var $nameCol = $('<div>').addClass(nameColClass).addClass("kb-method-parameter-name")
+            const $nameCol = $('<div>').addClass(nameColClass).addClass("kb-method-parameter-name")
                                 .append(spec.ui_name);
-            var $inputCol = $('<div>').addClass(inputColClass).addClass("kb-method-parameter-input")
+            const $inputCol = $('<div>').addClass(inputColClass).addClass("kb-method-parameter-input")
                             .append($('<div>').css({"width":"100%","display":"inline-block"}).append(self.$dropdown))
                             .append($('<div>').css({"display":"inline-block"}).append(self.$feedbackDiv));
-            var $hintCol  = $('<div>').addClass(hintColClass).addClass("kb-method-parameter-hint")
+            const $hintCol  = $('<div>').addClass(hintColClass).addClass("kb-method-parameter-hint")
                             .append(spec.short_hint);
             self.$rowDiv.append($nameCol).append($inputCol).append($hintCol);
 
-            var $errorPanel = $('<div>').addClass("kb-method-parameter-error-mssg").hide();
+            const $errorPanel = $('<div>').addClass("kb-method-parameter-error-mssg").hide();
             self.$errorDiv = $('<div>').addClass('row')
                                 .append($('<div>').addClass(nameColClass))
                                 .append($errorPanel.addClass(inputColClass));
@@ -76,19 +76,19 @@ define (
         },
 
         setupSelect2: function ($input) {
-            var self = this;
-            var noMatchesFoundStr = "No matching data found.";
+            const self = this;
+            const noMatchesFoundStr = "No matching data found.";
             $input.select2({
                 minimumResultsForSearch: -1,
                 selectOnBlur: true,
                 multiple:  self.spec.allow_multiple ?  "multiple" : "",
                 formatSelection: function(object, container) {
-                    var display = '<span class="kb-parameter-data-selection">'+object.text+'</span>';
+                    const display = '<span class="kb-parameter-data-selection">'+object.text+'</span>';
                     return display;
                 },
                 query: function (query) {
                     self.options.dataModel.fetchData(
-                        function(dataItems){
+                        (dataItems)=> {
                             query.callback({
                                 results: dataItems,
                                 more: false
@@ -109,10 +109,10 @@ define (
         refresh: function() {
         },
         isValid: function() {
-            var self = this;
-            var value = self.getParameterValue();
-            var errorMessages = [];
-            var valid = !$.isEmptyObject(value);
+            const self = this;
+            const value = self.getParameterValue();
+            const errorMessages = [];
+            let valid = !$.isEmptyObject(value);
             if( this.spec.allow_multiple ){
                 valid = value.length > 1 || value[0] != '';
             }
@@ -155,10 +155,10 @@ define (
 
                 this.$elem.find("#"+this.spec.id).select2("data",value);
             } else{
-                var data = null;
+                let data = null;
                 if(this.spec.allow_multiple){
                     data = [];
-                    for(var i in value){
+                    for(const i in value){
                         data.push({id:value[i], text:value[i]});
                     }
                 } else{
@@ -177,7 +177,7 @@ define (
             this.isValid();
         },
         getParameterValue: function() {
-            var value = this.$elem.find("#"+this.spec.id).val();
+            let value = this.$elem.find("#"+this.spec.id).val();
             if(this.spec.allow_multiple){
                 value = value.split(',');
             }

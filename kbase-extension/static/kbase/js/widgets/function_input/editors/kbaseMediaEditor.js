@@ -22,14 +22,14 @@ define([
     'ModelingAPI',
     'kbaseAuthenticatedWidget',
     'kbaseModal'
-], function (
+], (
     KBWidget,
     bootstrap,
     $,
     ModelingAPI,
     kbaseAuthenticatedWidget,
     kbaseModal
-    ) {
+    ) => {
     'use strict';
 
     return KBWidget({
@@ -39,19 +39,19 @@ define([
         options: {},
         init: function (input) {
             this._super(input);
-            var self = this,
+            const self = this,
                 container = $('<div class="kb-editor">');
 
             self.$elem.append(container);
 
 
-            var modeling = new ModelingAPI(self.authToken()),
+            const modeling = new ModelingAPI(self.authToken()),
                 kbapi = modeling.api,
                 biochem = modeling.biochem,
                 getCpds = modeling.getCpds;
 
             // accept either workspace/object names or workspace/object ids
-            var wsName = input.ws,
+            const wsName = input.ws,
                 objName = input.obj;
 
             if (isNaN(wsName) && isNaN(objName))
@@ -63,29 +63,29 @@ define([
                 return this;
             }
 
-            var table, // main table to be rendered
+            let table, // main table to be rendered
                 media, // actual media data
                 rawData;  // raw workspace object
 
             // some controls for the table
-            var saveBtn = $('<button class="btn btn-primary edit-btn pull-right hide">' +
+            const saveBtn = $('<button class="btn btn-primary edit-btn pull-right hide">' +
                 'Save</button>');
-            var saveAsBtn = $('<button class="btn btn-primary edit-btn pull-right hide">' +
+            const saveAsBtn = $('<button class="btn btn-primary edit-btn pull-right hide">' +
                 'Save as...</button>');
-            var addBtn = $('<button class="btn btn-primary pull-right">' +
+            const addBtn = $('<button class="btn btn-primary pull-right">' +
                 '<i class="fa fa-plus"></i> Add compounds...</button>');
-            var rmBtn = $('<button class="btn btn-danger pull-right hide">');
-            var undoBtn = $('<button class="btn btn-danger edit-btn pull-right hide">' +
+            const rmBtn = $('<button class="btn btn-danger pull-right hide">');
+            const undoBtn = $('<button class="btn btn-danger edit-btn pull-right hide">' +
                 '<i class="fa fa-undo"></i>' +
                 '</button>');
 
             // keep track of edits
-            var _editHistory = new EditHistory();
+            const _editHistory = new EditHistory();
 
             // get media data
             container.loading();
             kbapi('ws', 'get_objects', [param])
-                .done(function (res) {
+                .done((res) => {
                     console.log('get media res:', res)
                     rawData = $.extend(true, {}, res[0]);
                     console.log('raw media data', rawData)
@@ -94,11 +94,11 @@ define([
 
                     // get cpd names from biochem, add to media data
                     // and render table
-                    var ids = getCpdIds(media);
+                    const ids = getCpdIds(media);
                     console.log('ids', ids)
                     getCpds(ids, {select: ['name', 'id']})
-                        .then(function (objs) {
-                            for (var i = 0; i < objs.length; i++) {
+                        .then((objs) => {
+                            for (let i = 0; i < objs.length; i++) {
                                 media[i].name = objs[i].name;
                             }
 
@@ -130,7 +130,7 @@ define([
                 })
 
                 // add controls
-                var controls = container.find('.controls');
+                const controls = container.find('.controls');
 
                 //controls.append(undoBtn); // fixme!
                 controls.append(saveAsBtn);
@@ -139,16 +139,16 @@ define([
                 controls.append(rmBtn);
 
                 addBtn.on('click', cpdModal);
-                saveBtn.on('click', function () {
+                saveBtn.on('click', () => {
                     saveData(getTableData(), wsName, objName)
                 });
                 saveAsBtn.on('click', saveModal);
                 rmBtn.on('click', function () {
                     // get all selected data
-                    var data = getTableData('.row-select');
+                    const data = getTableData('.row-select');
 
                     // edit table
-                    var op = {op: 'rm', data: data};
+                    const op = {op: 'rm', data: data};
                     editTable(op);
                     modeling.notice(container, 'Removed ' + data.length + ' compounds');
 
@@ -156,16 +156,16 @@ define([
                     addBtn.removeClass('hide');
                 })
 
-                undoBtn.on('click', function () {
+                undoBtn.on('click', () => {
                     console.log('undo!')
-                    var op = _editHistory.popOp();
+                    const op = _editHistory.popOp();
                 });
 
                 // event for clicking on table row
                 table.on('click', 'tbody tr td:first-child', function () {
                     $(this).parent().toggleClass('row-select');
 
-                    var count = table.rows('.row-select').data().length;
+                    const count = table.rows('.row-select').data().length;
 
                     if (count > 0) {
                         addBtn.addClass('hide');
@@ -186,7 +186,7 @@ define([
                 })
 
                 table.on('blur', 'td.editable', function () {
-                    var before = table.cell(this).data(),
+                    let before = table.cell(this).data(),
                         after = $(this).text();
 
                     // fixme: add better validation and error handling
@@ -198,7 +198,7 @@ define([
                     table.cell(this).data(after).draw()
 
                     // save in history
-                    var op = {op: 'modify', before: before, after: after};
+                    const op = {op: 'modify', before: before, after: after};
                     editTable(op)
                 })
 
@@ -213,11 +213,11 @@ define([
 
             // takes media data, adds id key/value, and sorts it.
             function sanitizeMedia(media) {
-                var i = media.length;
+                let i = media.length;
                 while (i--) {
                     media[i].id = media[i].compound_ref.split('/').pop();
                 }
-                return media.sort(function (a, b) {
+                return media.sort((a, b) => {
                     if (a.id < b.id)
                         return -1;
                     if (a.id > b.id)
@@ -228,8 +228,8 @@ define([
 
             function getCpdIds(media) {
                 console.log('media', media)
-                var ids = [];
-                for (var i = 0; i < media.length; i++) {
+                const ids = [];
+                for (let i = 0; i < media.length; i++) {
                     ids.push(media[i].id)
                 }
                 return ids;
@@ -240,7 +240,7 @@ define([
                 var table = $('<table class="table table-bordered table-striped kb-editor-table' +
                     ' " style="width: 100% !important;">');
 
-                var modal = new kbaseModal($('<div>'), {
+                const modal = new kbaseModal($('<div>'), {
                     title: 'Add Compounds',
                     subText: 'Select compounds below, then click "add".',
                     body: table,
@@ -255,8 +255,8 @@ define([
                     ajax: function (opts, callback, settings) {
                         biochem('compounds', opts,
                             ['name', 'id', 'mass', 'deltag', 'deltagerr']
-                            ).done(function (res) {
-                            var data = {
+                            ).done((res) => {
+                            const data = {
                                 data: res.docs,
                                 recordsFiltered: res.numFound,
                                 recordsTotal: 27693
@@ -282,8 +282,8 @@ define([
                 })
 
                 // biochem table controls
-                var controls = modal.body().find('.controls');
-                var addBtn = $('<button class="btn btn-primary pull-right hide">');
+                const controls = modal.body().find('.controls');
+                const addBtn = $('<button class="btn btn-primary pull-right hide">');
                 controls.append(addBtn);
 
                 var selectedRows = new SelectedRows();
@@ -292,7 +292,7 @@ define([
                 table.on('click', 'tbody tr', function () {
                     $(this).toggleClass('row-select');
 
-                    var data = table.rows(this).data()[0];
+                    const data = table.rows(this).data()[0];
 
                     if ($(this).hasClass('row-select'))
                         selectedRows.add(data);
@@ -308,8 +308,8 @@ define([
                 });
 
                 // add compounds on click, hide dialog, give notice
-                addBtn.on('click', function () {
-                    var data = setCpdDefaults(selectedRows.getSelected()),
+                addBtn.on('click', () => {
+                    const data = setCpdDefaults(selectedRows.getSelected()),
                         op = {op: 'add', data: data};
                     editTable(op);
                     modal.hide();
@@ -320,8 +320,8 @@ define([
             }
 
             function saveModal() {
-                var name = objName // +'-edited';  save as same name by default.
-                var input = $('<input type="text" class="form-control" placeholder="my-media-name">'),
+                const name = objName // +'-edited';  save as same name by default.
+                const input = $('<input type="text" class="form-control" placeholder="my-media-name">'),
                     form = $('<div class="form-group">' +
                         '<div class="col-sm-10"></div>' +
                         '</div>');
@@ -329,7 +329,7 @@ define([
                 input.val(name);
                 form.find('div').append(input);
 
-                var modal = new kbaseModal($('<div>'), {
+                const modal = new kbaseModal($('<div>'), {
                     title: 'Save Media As...',
                     body: form,
                     buttons: [{
@@ -340,7 +340,7 @@ define([
                         }]
                 })
 
-                modal.button('Save').on('click', function () {
+                modal.button('Save').on('click', () => {
                     saveData(getTableData(), wsName, input.val())
                 })
 
@@ -367,7 +367,7 @@ define([
             // object for selected rows.
             // only used for biochem search engine table.
             function SelectedRows() {
-                var rows = [];
+                let rows = [];
 
                 this.add = function (row) {
                     rows.push(row);
@@ -384,7 +384,7 @@ define([
                 };
 
                 this.isSelected = function (id) {
-                    for (var i = 0; i < rows.length; i++) {
+                    for (let i = 0; i < rows.length; i++) {
                         if (rows[i].id === id)
                             return true;
                     }
@@ -406,7 +406,7 @@ define([
 
             // object for managing edit history
             function EditHistory() {
-                var ops = [];
+                let ops = [];
 
                 this.add = function (row) {
                     ops.push(row);
@@ -423,7 +423,7 @@ define([
 
                 this.popOp = function () {
                     console.log('old ops', ops);
-                    var lastOp = ops.pop();
+                    const lastOp = ops.pop();
                     console.log('new ops', ops);
                     return lastOp;
                 };
@@ -437,13 +437,13 @@ define([
             // list of cpd objects.
             function setCpdDefaults(cpds) {
                 // if not new media, use the same ref
-                var ref = media[0].compound_ref.split('/');
-                var defaultRef = media.length ?
+                const ref = media[0].compound_ref.split('/');
+                const defaultRef = media.length ?
                     ref.slice(0, ref.length - 1).join('/') + '/' : '489/6/1/compounds/id/';
 
-                var newCpds = [];
-                for (var i = 0; i < cpds.length; i++) {
-                    var cpd = cpds[i];
+                const newCpds = [];
+                for (let i = 0; i < cpds.length; i++) {
+                    const cpd = cpds[i];
 
                     newCpds.push({
                         concentration: 0.001,
@@ -462,10 +462,10 @@ define([
             // takes optional selector, returns list of
             // data from datatables (instead of api object)
             function getTableData(selector) {
-                var d = selector ? table.rows(selector).data() : table.rows().data();
+                const d = selector ? table.rows(selector).data() : table.rows().data();
 
-                var data = [];
-                for (var i = 0; i < d.length; i++) {
+                const data = [];
+                for (let i = 0; i < d.length; i++) {
                     data.push(d[i]);
                 }
                 return data;
@@ -488,7 +488,7 @@ define([
                             name: name,
                             meta: rawData.info[10]
                         }]
-                }).done(function (res) {
+                }).done((res) => {
                     saveBtn.text('Save');
                     saveAsBtn.text('Save as...');
                     container.find('.edit-btn').toggleClass('hide');
@@ -496,8 +496,8 @@ define([
                     if (input.onSave) {
                         input.onSave();
                     }
-                }).fail(function (e) {
-                    var error = JSON.stringify(JSON.parse(e.responseText), null, 4);
+                }).fail((e) => {
+                    const error = JSON.stringify(JSON.parse(e.responseText), null, 4);
                     new kbaseModal($('<div>'), {
                         title: 'Oh no! Something seems to have gone awry!',
                         body: '<pre>' + error + '</pre>'

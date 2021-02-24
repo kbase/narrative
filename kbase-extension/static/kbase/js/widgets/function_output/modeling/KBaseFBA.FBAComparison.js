@@ -1,5 +1,5 @@
 function KBaseFBA_FBAComparison(modeltabs) {
-    var self = this;
+    const self = this;
     this.modeltabs = modeltabs;
 
     this.setMetadata = function (data) {
@@ -189,8 +189,8 @@ function KBaseFBA_FBAComparison(modeltabs) {
     }];
 
 	this.ReactionTab = function (info) {
-        var rxn = self.rxnhash[info.id];
-		var output = [{
+        const rxn = self.rxnhash[info.id];
+		const output = [{
 			"label": "Reaction",
 			"data": rxn.dispid,
 		}, {
@@ -214,8 +214,8 @@ function KBaseFBA_FBAComparison(modeltabs) {
     }
 
     this.CompoundTab = function (info) {
-        var cpd = self.cpdhash[info.id];
-		var output = [{
+        const cpd = self.cpdhash[info.id];
+		const output = [{
 			"label": "Compound",
 			"data": cpd.dispid,
 		}, {
@@ -245,8 +245,8 @@ function KBaseFBA_FBAComparison(modeltabs) {
     }
 
     this.CompareTab = function (info) {
-        var cpd = self.cpdhash[info.id];
-		var output = [{
+        const cpd = self.cpdhash[info.id];
+		const output = [{
 			"label": "Compound",
 			"data": cpd.dispid,
 		}, {
@@ -285,7 +285,7 @@ function KBaseFBA_FBAComparison(modeltabs) {
         for (var i=0; i< this.fbas.length; i++) {
         	this.fbacomparisons[i] = {};
         	this.fbahash[this.fbas[i].id] = this.fbas[i];
-        	var item = "F"+(i+1);
+        	const item = "F"+(i+1);
         	this.tabList[2]["columns"].push({
     			"label": item,
             	"key": item
@@ -296,18 +296,18 @@ function KBaseFBA_FBAComparison(modeltabs) {
     		this.fbas[i]["media"] = this.fbas[i]["media_ref"];
     		this.fbas[i]["rxndata"] = "Inactive: "+(this.fbas[i]["reactions"]-this.fbas[i]["active_reactions"])+"<br>Active: "+this.fbas[i]["active_reactions"];
     		this.fbas[i]["exchangedata"] = "Available: "+(this.fbas[i]["compounds"]-this.fbas[i]["uptake_compounds"]-this.fbas[i]["excretion_compounds"])+"<br>Uptake: "+this.fbas[i]["uptake_compounds"]+"<br>Excretion: "+this.fbas[i]["excretion_compounds"];
-    		var fbaabbrev = "F"+(i+1);
+    		let fbaabbrev = "F"+(i+1);
     		this.fbacomparisons[i]["fba"] = this.fbas[i]["fba"];
     		this.fbacomparisons[i]["index"] = fbaabbrev;
     		for (var j=0; j< this.fbas.length; j++) {
     			fbaabbrev = "F"+(j+1);
     			if (j != i) {
     				if (this.fbas[j].id in this.fbas[i]["fba_similarity"]) {
-						var simdata = this.fbas[i]["fba_similarity"][this.fbas[j]["id"]];
+						const simdata = this.fbas[i]["fba_similarity"][this.fbas[j]["id"]];
 						rfraction = Math.round(100*(simdata[1]+simdata[2]+simdata[3])/simdata[0])/100;
 						cfraction = Math.round(100*(simdata[5]+simdata[6]+simdata[7])/simdata[4])/100;
-						var text = "R: "+rfraction+"<br>C: "+cfraction;
-						var tooltip = "Common reactions: "+simdata[0]+"&#013;Common forward: "+simdata[1]+"&#013;Common reverse: "+simdata[2]+"&#013;Common inactive: "+simdata[3]+"&#013;Common compounds: "+simdata[4]+"&#013;Common uptake: "+simdata[5]+"&#013;Common excretion: "+simdata[6]+"&#013;Common inactive: "+simdata[7];
+						const text = "R: "+rfraction+"<br>C: "+cfraction;
+						const tooltip = "Common reactions: "+simdata[0]+"&#013;Common forward: "+simdata[1]+"&#013;Common reverse: "+simdata[2]+"&#013;Common inactive: "+simdata[3]+"&#013;Common compounds: "+simdata[4]+"&#013;Common uptake: "+simdata[5]+"&#013;Common excretion: "+simdata[6]+"&#013;Common inactive: "+simdata[7];
 						this.fbacomparisons[i][fbaabbrev] = "<p title=\""+tooltip+"\">"+text+"</p>";
 					}
     			} else {
@@ -323,16 +323,16 @@ function KBaseFBA_FBAComparison(modeltabs) {
         	this.modelreactions[i]["name"] = namearray[0];
             this.modelreactions[i].dispid = idarray[0]+"["+idarray[1]+"]";
         	this.rxnhash[this.modelreactions[i].id] = this.modelreactions[i];
-        	var reactants = "";
-            var products = "";
-            var sign = "<=>";
+        	let reactants = "";
+            let products = "";
+            let sign = "<=>";
             if (this.modelreactions[i].direction == ">") {
                 sign = "=>";
             } else if (this.modelreactions[i].direction == "<") {
                 sign = "<=";
             }
             for (var j=0; j< this.modelreactions[i].stoichiometry.length; j++) {
-                var rgt = this.modelreactions[i].stoichiometry[j];
+                const rgt = this.modelreactions[i].stoichiometry[j];
                 idarray = rgt[2].split('_');
                 namearray = rgt[1].split('_');
                 if (rgt[0] < 0) {

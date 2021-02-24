@@ -11,13 +11,13 @@ define ([
     'jquery',
     'kbaseExpressionGenesetBaseWidget',
     'kbaseLinechart'
-], function(
+], (
     KBWidget,
     bootstrap,
     $,
     kbaseExpressionGenesetBaseWidget,
     kbaseLinechart
-) {
+) => {
     'use strict';
     
     return KBWidget({
@@ -27,9 +27,9 @@ define ([
 
         // To be overriden to specify additional parameters
         getSubmtrixParams: function(){
-            var self = this;
+            const self = this;
 
-            var features = [];
+            let features = [];
             if(self.options.geneIds) { features = $.map(self.options.geneIds.split(','), $.trim); }
 
             return{
@@ -42,16 +42,16 @@ define ([
         },
 
         buildWidget: function($containerDiv){
-            var submatrixStat = this.submatrixStat;
-            var columnDescriptors = submatrixStat.column_descriptors;
-            var columnSetStats = submatrixStat.column_set_stat;
-            var mtxColumnSetStats = submatrixStat.mtx_column_set_stat;
-            var matrixAvg = [];
-            var clusterAvg = [];
-            var clusterDisp = [];
+            const submatrixStat = this.submatrixStat;
+            const columnDescriptors = submatrixStat.column_descriptors;
+            const columnSetStats = submatrixStat.column_set_stat;
+            const mtxColumnSetStats = submatrixStat.mtx_column_set_stat;
+            const matrixAvg = [];
+            const clusterAvg = [];
+            const clusterDisp = [];
             
-            var condition;
-            for( var i = 0 ; i < columnSetStats.size; i++){
+            let condition;
+            for( let i = 0 ; i < columnSetStats.size; i++){
                 condition = columnDescriptors[i].id;
                 matrixAvg.push({
                     x: i+5,
@@ -72,7 +72,7 @@ define ([
                 });
             }
 
-            var $lineChartDiv = $('<div style = \'width : 700px; height : 300px\'></div>');
+            const $lineChartDiv = $('<div style = \'width : 700px; height : 300px\'></div>');
             $containerDiv.append($lineChartDiv);
             $containerDiv.append('<div style = \'width : 5px; height : 5px\'></div>');
 

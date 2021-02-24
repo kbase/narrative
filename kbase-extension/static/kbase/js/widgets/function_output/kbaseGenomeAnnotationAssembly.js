@@ -9,7 +9,7 @@ define ([
     'kbase-generic-client-api',
     'narrativeConfig',
     'bluebird'
-], function(
+], (
 	KBWidget,
 	bootstrap,
 	$,
@@ -20,7 +20,7 @@ define ([
     GenericClient,
     Config,
     Promise
-) {
+) => {
     'use strict';
 
     return KBWidget({
@@ -35,7 +35,7 @@ define ([
         init: function init(options) {
             this._super(options);
 
-            var self = this;
+            const self = this;
             self.obj_ref = self.options.wsNameOrId + '/' + self.options.objNameOrId;
             self.link_ref = self.obj_ref;
 
@@ -51,23 +51,23 @@ define ([
             self.$elem.append($('<div>').attr('align', 'center').append($('<i class="fa fa-spinner fa-spin fa-2x">')));
 
             // 1) get stats, and show the panel
-            var basicInfoCalls = [];
+            const basicInfoCalls = [];
             basicInfoCalls.push(
                 Promise.resolve(self.client.sync_call('AssemblyAPI.get_stats', [this.obj_ref]))
-                    .then(function(stats) {
+                    .then((stats) => {
                         self.assembly_stats = stats[0];
                     }));
             basicInfoCalls.push(
                 Promise.resolve(self.ws.get_object_info_new({objects: [{'ref':this.obj_ref}], includeMetadata:1}))
-                    .then(function(info) {
+                    .then((info) => {
                         self.assembly_obj_info = info[0];
                         self.link_ref = info[0][6] + '/' + info[0][1] + '/' + info[0][4];
                     }));
             Promise.all(basicInfoCalls)
-                .then(function() {
+                .then(() => {
                     self.renderBasicTable();
                 })
-                .catch(function(err) {
+                .catch((err) => {
                     console.error('an error occurred! ' + err);
                     self.$elem.empty();
                     self.$elem.append('Error' + JSON.stringify(err));
@@ -78,16 +78,16 @@ define ([
 
 
         processContigData: function() {
-            var self = this;
+            const self = this;
 
-            var contig_table = [];
-            for (var id in self.contig_lengths) {
+            const contig_table = [];
+            for (const id in self.contig_lengths) {
                 if (self.contig_lengths.hasOwnProperty(id)) {
-                    var gc='unknown';
+                    let gc='unknown';
                     if(self.contig_lengths.hasOwnProperty(id)) {
                         gc = String((self.contig_gc[id]*100).toFixed(2)) + '%';
                     }
-                    var contig = {
+                    const contig = {
                         id: id,
                         len: '<!--' + self.contig_lengths[id] + '-->' + String(self.numberWithCommas(self.contig_lengths[id]))+' bp',
                         gc:  gc
@@ -101,16 +101,16 @@ define ([
 
 
         renderBasicTable: function() {
-            var self = this;
-            var $container = this.$elem;
+            const self = this;
+            const $container = this.$elem;
             $container.empty();
 
-            var $tabPane = $('<div>');
+            const $tabPane = $('<div>');
             $container.append($tabPane);
 
 
             // Build the overview table
-            var $overviewTable = $('<table class="table table-striped table-bordered table-hover" style="margin-left: auto; margin-right: auto;"/>');
+            const $overviewTable = $('<table class="table table-striped table-bordered table-hover" style="margin-left: auto; margin-right: auto;"/>');
 
             function get_table_row(key, value) {
                 return $('<tr>').append($('<td>').append(key)).append($('<td>').append(value));
@@ -126,7 +126,7 @@ define ([
 
 
             // Build the tabs
-            var $tabs = new kbaseTabs($tabPane, {
+            const $tabs = new kbaseTabs($tabPane, {
                 tabPosition : 'top',
                 canDelete : true, //whether or not the tab can be removed.
                 tabs : [
@@ -147,8 +147,8 @@ define ([
         },
 
         addContigList: function() {
-            var self = this;
-            var $content = $('<div>');
+            const self = this;
+            const $content = $('<div>');
             new DynamicTable($content, {
                 headers: [{
                     id: 'contig_id',
@@ -165,7 +165,7 @@ define ([
                 }],
                 searchPlaceholder: 'Search contigs',
                 updateFunction: function(pageNum, query, sortColId, sortColDir) {
-                    var sortBy = [];
+                    const sortBy = [];
                     if (sortColId && sortColDir !== 0) {
                         sortBy.push([sortColId, sortColDir < 0 ? 0 : 1]);
                     }
@@ -175,10 +175,10 @@ define ([
                         sort_by: sortBy,
                         start: pageNum * self.options.pageLimit
                     }]))
-                    .then(function(results) {
+                    .then((results) => {
                         results = results[0];
-                        var rows = [];
-                        results.contigs.forEach(function(contig) {
+                        const rows = [];
+                        results.contigs.forEach((contig) => {
                             rows.push([contig.contig_id, contig.length, contig.gc]);
                         });
                         return {

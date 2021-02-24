@@ -1,19 +1,17 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'kb_common/html',
     'bootstrap',
     'css!font-awesome'
-], function (Promise, html) {
+], (Promise, html) => {
     'use strict';
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div');
 
     function factory(config) {
-        var options = {},
+        let options = {},
             spec = config.parameterSpec,
             container,
             bus = config.bus,
@@ -41,7 +39,7 @@ define([
         }
 
         function attach(node) {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 parent = node;
                 container = node.appendChild(document.createElement('div'));
 
@@ -49,7 +47,7 @@ define([
         }
 
         function start() {
-            return Promise.try(function () {
+            return Promise.try(() => {
 //                bus.on('update', function (message) {
 //                    model.value = message.value;
 //                });
@@ -59,9 +57,9 @@ define([
         }
 
         function run(params) {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 model.value = params.value;
-                var result = render();
+                const result = render();
                 container.innerHTML = result.content;
             });
         }

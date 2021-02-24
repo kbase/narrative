@@ -8,24 +8,24 @@ define([
 
     'bootstrap',
     'css!font-awesome'
-], function(
+], (
     Promise,
     html,
     Events,
     UI,
     Runtime,
     Validation
-) {
+) => {
     'use strict';
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         input = t('input'),
         label = t('label');
 
     function factory(config) {
-        var spec = config.parameterSpec,
+        let spec = config.parameterSpec,
             runtime = Runtime.make(),
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(config.channelName),
@@ -54,7 +54,7 @@ define([
         // CONTROL
 
         function getControlValue() {
-            var checkbox = ui.getElement('input-container.input');
+            const checkbox = ui.getElement('input-container.input');
             if (checkbox.checked) {
                 return 1;
             }
@@ -62,7 +62,7 @@ define([
         }
 
         function syncModelToControl() {
-            var control = ui.getElement('input-control.input');
+            const control = ui.getElement('input-control.input');
             if (model.value === 1) {
                 control.checked = true;
             } else {
@@ -73,8 +73,8 @@ define([
         // VALIDATION
 
         function validate() {
-            return Promise.try(function() {
-                var rawValue = getControlValue(),
+            return Promise.try(() => {
+                const rawValue = getControlValue(),
                     validationOptions = {
                         required: spec.data.constraints.required,
                         values: [0, 1]
@@ -85,7 +85,7 @@ define([
 
         function autoValidate() {
             return validate()
-                .then(function(result) {
+                .then((result) => {
                     channel.emit('validation', {
                         errorMessage: result.errorMessage,
                         diagnosis: result.diagnosis
@@ -97,7 +97,7 @@ define([
 
         function makeInputControl(events) {
             // CONTROL
-            var checked = false;
+            let checked = false;
             if (model.value === 1) {
                 checked = true;
             }
@@ -108,7 +108,7 @@ define([
                             type: 'change',
                             handler: function() {
                                 validate()
-                                    .then(function(result) {
+                                    .then((result) => {
                                         if (config.showOwnMessages) {
                                             ui.setContent('input-container.message', '');
                                         }
@@ -146,7 +146,7 @@ define([
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
 
@@ -154,7 +154,7 @@ define([
                     node: container
                 });
 
-                var events = Events.make({
+                const events = Events.make({
                     node: container
                 });
 
@@ -166,11 +166,11 @@ define([
 
                 // Listen for events from the containing environment.
 
-                channel.on('reset-to-defaults', function() {
+                channel.on('reset-to-defaults', () => {
                     resetModelValue();
                 });
 
-                channel.on('update', function(message) {
+                channel.on('update', (message) => {
                     setModelValue(message.value);
                     syncModelToControl();
                 });
@@ -182,7 +182,7 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (container) {
                     parent.removeChild(container);
                 }

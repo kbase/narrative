@@ -1,5 +1,3 @@
-/*global define */
-/*jslint white:true,browser:true*/
 define([
     'jquery',
     'base/js/namespace',
@@ -7,28 +5,28 @@ define([
     'common/props',
     'common/clock',
     './monoBus'
-], function (
+], (
     $,
     Jupyter,
     Config,
     Props,
     Clock,
     Bus
-) {
+) => {
     'use strict';
-    var narrativeConfig = Props.make({ data: Config.getConfig() });
+    const narrativeConfig = Props.make({ data: Config.getConfig() });
 
     function factory(config) {
         function createRuntime() {
-            var bus = Bus.make();
+            const bus = Bus.make();
 
-            var clock = Clock.make({
+            const clock = Clock.make({
                 bus: bus,
                 resolution: 1000
             });
             clock.start();
 
-            $(document).on('dataUpdated.Narrative', function () {
+            $(document).on('dataUpdated.Narrative', () => {
                 bus.emit('workspace-changed');
             });
 
@@ -68,7 +66,7 @@ define([
         }
 
         function getUserSetting(settingKey, defaultValue) {
-            var settings = Jupyter.notebook.metadata.kbase.userSettings,
+            let settings = Jupyter.notebook.metadata.kbase.userSettings,
                 setting;
             if (!settings) {
                 return defaultValue;

@@ -26,24 +26,24 @@ function ModelSeedPathway(params) {
         return
     }
 
-    var self = this;
+    const self = this;
 
     self.models = params.models || null;
     self.fbas = params.fbas || null;
 
-    var usingImage = params.usingImage || false,
+    const usingImage = params.usingImage || false,
         useAbsFlux = params.absFlux || false;
 
-    var config = new ModelSeedVizConfig();
+    const config = new ModelSeedVizConfig();
 
     // globals
-    var mapData = params.mapData;
-    var groups = mapData.groups,      // groups of reactions
+    const mapData = params.mapData;
+    const groups = mapData.groups,      // groups of reactions
         rxns = mapData.reactions,            // reactions
         cpds = mapData.compounds,            // compounds
         mapLinks = mapData.linkedmaps;        // lines from reactions to maps and visa versa
 
-    var oset = 12,       // off set for arrows
+    let oset = 12,       // off set for arrows
         r = 12,          // radial offset from circle.  Hooray for math degrees.
         max_x = 0,       // used to compute canvas size (width) based on data
         max_y = 0,       // used to compute canvas size (height) based on data
@@ -99,15 +99,15 @@ function ModelSeedPathway(params) {
 
     // draw reactions
     function drawReactions() {
-        var count = self.models ? self.models.length : 1;
+        const count = self.models ? self.models.length : 1;
 
         // for each rxn on the map
-        for (var i=0; i<rxns.length; i++) {
+        for (let i=0; i<rxns.length; i++) {
             var color = '#fff',
                 lightLabel = undefined;
 
             // reaction object listed in map
-            var rxn = rxns[i];
+            const rxn = rxns[i];
 
             // adjust boxes
             var x = rxn.x - rxn.w/2 - 1,
@@ -119,7 +119,7 @@ function ModelSeedPathway(params) {
             if (x > max_x) max_x = x+2*w+c_pad;
             if (y > max_y) max_y = y+2*h+c_pad;
 
-            var group = svg.append('g').attr('class', 'rect');
+            const group = svg.append('g').attr('class', 'rect');
 
             // draw enzymes (rectangles)
             /*var outer_rect = group.append('rect')
@@ -129,7 +129,7 @@ function ModelSeedPathway(params) {
                               .attr('width', w)
                               .attr('height', h);*/
 
-            var found_rxns = getModelRxns(rxn.rxns);
+            const found_rxns = getModelRxns(rxn.rxns);
 
             // divide box for number of models being displayed
             if (self.models) {
@@ -140,12 +140,12 @@ function ModelSeedPathway(params) {
 
                     var rect = group.append('rect')
                                 .attr('class', 'rxn-divider-stroke')
-                                .attr('x', function() {
+                                .attr('x', () => {
                                     if (j == 0) return x + (w*j) + 1;
                                     return x + (w*j)
                                 })
                                 .attr('y', y+1)
-                                .attr('width', function() {
+                                .attr('width', () => {
                                     if (j == count) return w;
                                     return w + 2
                                 })
@@ -193,12 +193,12 @@ function ModelSeedPathway(params) {
                     var found_rxn = fba_rxns[j];
                     var rect = group.append('rect')
                                 .attr('class', 'rxn-divider-stroke')
-                                .attr('x', function() {
+                                .attr('x', () => {
                                     if (j == 0) return x + (w*j) + 1;
                                     return x + (w*j)
                                 })
                                 .attr('y', y+1)
-                                .attr('width', function() {
+                                .attr('width', () => {
                                     if (j == count) return w;
                                     return w + 1
                                 })
@@ -210,7 +210,7 @@ function ModelSeedPathway(params) {
                     // so find the largest magnitude flux
                     if (found_rxn.length > 0) {
                         var flux = found_rxn[0].value;
-                        for (var k=1; k<found_rxn.length; k++) {
+                        for (let k=1; k<found_rxn.length; k++) {
                             if (Math.abs(found_rxn[k].value) > Math.abs(flux) ) {
                                 flux = found_rxn[k].value;
                             }
@@ -235,7 +235,7 @@ function ModelSeedPathway(params) {
                 }
             }  // end fbas rects
 
-            var text = group.append('text')
+            const text = group.append('text')
                             .attr('x', x+2)
                             .attr('y', y+h/2+6)
                             .text(rxn.name)
@@ -252,17 +252,17 @@ function ModelSeedPathway(params) {
 
     function tooltip(container, title, mapRxn, flux, obj) {
         // get substrates and products
-        var subs = [];
+        const subs = [];
         for (var i in mapRxn.substrate_refs) {
             subs.push(mapRxn.substrate_refs[i].compound_ref);
         }
-        var prods = [];
+        const prods = [];
         for (var i in mapRxn.product_refs) {
             prods.push(mapRxn.product_refs[i].compound_ref);
         }
 
         //content for tooltip
-        var content = '<table class="table table-condensed">'+
+        const content = '<table class="table table-condensed">'+
                           (typeof flux != 'undefined' ?
                           '<tr><td><b>Flux</b></td><td>'+flux+'</td></tr>' : '')+
                           '<tr><td><b>Map RXN ID</b></td><td>'+mapRxn.id+'</td></tr>'+
@@ -276,17 +276,17 @@ function ModelSeedPathway(params) {
     }
 
     function drawCompounds() {
-        for (var i in cpds) {
-            var cpd = cpds[i];
-            var r = cpd.w;
-            var g = svg.append('g').attr('class', 'circle');
-            var circle = g.append('circle')
+        for (const i in cpds) {
+            const cpd = cpds[i];
+            const r = cpd.w;
+            const g = svg.append('g').attr('class', 'circle');
+            const circle = g.append('circle')
                               .attr('class', 'cpd')
                               .attr('cx', cpd.x)
                               .attr('cy', cpd.y)
                               .attr('r', r);
 
-            var content = 'ID: ' + cpd.id+'<br>'+
+            const content = 'ID: ' + cpd.id+'<br>'+
                           'kegg id: ' + cpd.name;
             //$(circle.node()).popover({html: true, content: content, animation: false,
             //                        container: 'body', trigger: 'hover'});
@@ -294,19 +294,19 @@ function ModelSeedPathway(params) {
     }
 
     function drawConnections() {
-        var node_ids =[]
-        var nodes = []
-        var links = []
+        const node_ids =[]
+        const nodes = []
+        const links = []
 
         // draw connections from substrate to products
-        for (var j in groups) {
-            var group = groups[j];
-            var group_rxn_ids = group.rxn_ids;
-            var x = group.x
-            var y = group.y
+        for (const j in groups) {
+            const group = groups[j];
+            const group_rxn_ids = group.rxn_ids;
+            const x = group.x
+            const y = group.y
 
             // get all model rxn objects for each rxn id in map
-            var model_rxns = []
+            let model_rxns = []
             for (var i in rxns) {
                 if (group_rxn_ids.indexOf(rxns[i].id) != -1) {
                     var rxn = rxns[i];
@@ -316,12 +316,12 @@ function ModelSeedPathway(params) {
 
             // only need rxn object to get product_refs and substrate_refs
             // since there are groups of reactions
-            var prods = rxn.product_refs;
-            var subs = rxn.substrate_refs;
+            const prods = rxn.product_refs;
+            const subs = rxn.substrate_refs;
 
             // create substrate line (links)
             for (var i in subs) {
-                var sub_id = subs[i].id
+                const sub_id = subs[i].id
 
                 // find associated compound (for position)
                 for (var k in cpds) {
@@ -372,7 +372,7 @@ function ModelSeedPathway(params) {
 
             // create product lines (links)
             for (var i in prods) {
-                var prod_id = prods[i].id
+                const prod_id = prods[i].id
 
                 for (var k in cpds) {
                     var cpd = cpds[k];
@@ -419,7 +419,7 @@ function ModelSeedPathway(params) {
         }
 
         // the following does all the drawing
-        var force = d3.layout.force()
+        const force = d3.layout.force()
                       .nodes(nodes)
                       .links(links)
                       .charge(-400)
@@ -428,7 +428,7 @@ function ModelSeedPathway(params) {
                       .start()
 
         // define connections between compounds and reactions (nodes)
-        var link = svg.selectAll(".link")
+        const link = svg.selectAll(".link")
               .data(links)
             .enter().append("g").append('line')
               .attr("class", "link")
@@ -464,7 +464,7 @@ function ModelSeedPathway(params) {
                     }
               })*/
 
-        var node = svg.selectAll(".node")
+        const node = svg.selectAll(".node")
               .data(nodes)
             .enter().append('g')
             .attr("class", "node")
@@ -479,19 +479,19 @@ function ModelSeedPathway(params) {
             .attr("x", 10)
             .attr("dy", ".35em")
             .style('font-size', '8pt')
-            .attr("transform", function(d) {
+            .attr("transform", (d) => {
                 if (d.label_x || d.label_y)
                     return "translate(" + d.label_x + "," + d.label_y + ")";
             })
-            .text(function(d) { return d.name; });
+            .text((d) => { return d.name; });
 
 
         function tick() {
-            link.attr("x1", function(d) { return d.source.x; })
-                .attr("y1", function(d) { return d.source.y; })
-                .attr("x2", function(d) { return d.target.x; })
-                .attr("y2", function(d) { return d.target.y; })
-                .attr('marker-end', function(d) {
+            link.attr("x1", (d) => { return d.source.x; })
+                .attr("y1", (d) => { return d.source.y; })
+                .attr("x2", (d) => { return d.target.x; })
+                .attr("y2", (d) => { return d.target.y; })
+                .attr('marker-end', (d) => {
                       if (d.type == 'arrow') {
                           return 'url(#end-arrow)'
                       } else {
@@ -499,10 +499,10 @@ function ModelSeedPathway(params) {
                       }
                 });
 
-            node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
+            node.attr("transform", (d) => { return "translate(" + d.x + "," + d.y + ")"; })
 
             // size the circles depending on kind of point
-            node.select('circle').attr("r", function(d) {
+            node.select('circle').attr("r", (d) => {
                     if (d.style == "point")
                         return 0;
                     else if (d.style == "reaction")
@@ -515,10 +515,10 @@ function ModelSeedPathway(params) {
     } // end draw connections
 
     function drawMapLinks() {
-        for (var i=0; i<mapLinks.length; i++) {
-            var map = mapLinks[i];
+        for (let i=0; i<mapLinks.length; i++) {
+            const map = mapLinks[i];
 
-            var x = map.x - map.w/2,
+            const x = map.x - map.w/2,
                 y = map.y - map.h/2,
                 w = parseInt(map.w)+2,
                 h = parseInt(map.h)+2;
@@ -526,17 +526,17 @@ function ModelSeedPathway(params) {
             if (x > max_x) max_x = x+w+c_pad;
             if (y > max_y) max_y = y+h+c_pad;
 
-            var group = svg.append('g');
+            const group = svg.append('g');
 
             // draw reactions (rectangles)
-            var rect = group.append('rect')
+            const rect = group.append('rect')
                               .attr('class', 'map')
                               .attr('x', x)
                               .attr('y', y)
                               .attr('width', w)
                               .attr('height', h)
 
-            var text = group.append('text')
+            const text = group.append('text')
                               .attr('class', 'map-label')
                               .style('font-size', '8pt')
                               .text(map.name)
@@ -551,10 +551,10 @@ function ModelSeedPathway(params) {
 
     function wrap(text, width) {
         //var dy = 3;
-        var dy = 0;
+        const dy = 0;
 
         text.each(function() {
-            var text = d3.select(this),
+            let text = d3.select(this),
                 words = text.text().split(/\s+/).reverse(),
                 word,
                 line = [],
@@ -584,17 +584,17 @@ function ModelSeedPathway(params) {
 
         // this is a list of lists, where is list are rxnobjs
         // for each model for a given set of rxn_ids.  phew.
-        var found_rxns = [];
+        const found_rxns = [];
 
         // for each model, look for model data
-        for (var j in self.models) {
-            var model = self.models[j];
-            var rxn_objs = model.modelreactions;
+        for (const j in self.models) {
+            const model = self.models[j];
+            const rxn_objs = model.modelreactions;
 
             // see if we can find the rxn in that model's list of reactions
-            var found_rxn = [];
-            for (var i in rxn_objs) {
-                var rxn_obj = rxn_objs[i];
+            const found_rxn = [];
+            for (const i in rxn_objs) {
+                const rxn_obj = rxn_objs[i];
                 if (rxn_ids.indexOf(rxn_obj.id.split('_')[0]) != -1) {
                     found_rxn.push(rxn_obj);
                 }
@@ -609,19 +609,19 @@ function ModelSeedPathway(params) {
     function getFbaRxns(rxn_ids) {
         // get a list of fba arrays (or undefined)
         // for each model supplied
-        var found_rxns = [];
+        const found_rxns = [];
 
         // for each fba, look for model data
-        for (var j=0; j<self.fbas.length; j++) {
-            var fba = self.fbas[j];
+        for (let j=0; j<self.fbas.length; j++) {
+            const fba = self.fbas[j];
             //if (!fba) continue;
-            var fba_objs = fba.FBAReactionVariables;
+            const fba_objs = fba.FBAReactionVariables;
 
             // see if we can find the rxn in that fbas's list of reactions
-            var found_rxn = [];
+            const found_rxn = [];
 
-            for (var i in fba_objs) {
-                var fba_obj = fba_objs[i];
+            for (const i in fba_objs) {
+                const fba_obj = fba_objs[i];
 
                 // yeeeeep...
                 if (rxn_ids.indexOf(fba_obj.modelreaction_ref.split('/').pop().split('_')[0]) != -1)
@@ -635,16 +635,16 @@ function ModelSeedPathway(params) {
 
 
     function zoom() {
-        var margin = {top: -5, right: -5, bottom: -5, left: -5},
+        const margin = {top: -5, right: -5, bottom: -5, left: -5},
             width = 960 - margin.left - margin.right,
             height = 500 - margin.top - margin.bottom;
 
-        var zoom = d3.behavior.zoom()
+        const zoom = d3.behavior.zoom()
             .scaleExtent([1, 10])
             .on("zoom", zoomed);
 
-        var drag = d3.behavior.drag()
-            .origin(function(d) { return d; })
+        const drag = d3.behavior.drag()
+            .origin((d) => { return d; })
             .on("dragstart", dragstarted)
             .on("drag", dragged)
             .on("dragend", dragended);
@@ -657,22 +657,22 @@ function ModelSeedPathway(params) {
          //   .call(zoom);
          svg.call(zoom)
 
-        var rect = svg.append("rect")
+        const rect = svg.append("rect")
             .attr("width", width)
             .attr("height", height)
             .style("fill", "none")
             .style("pointer-events", "all");
 
-        var container = svg.append("g");
+        const container = svg.append("g");
 
         container.append("g")
             .attr("class", "x axis")
           .selectAll("line")
             .data(d3.range(0, width, 10))
           .enter().append("line")
-            .attr("x1", function(d) { return d; })
+            .attr("x1", (d) => { return d; })
             .attr("y1", 0)
-            .attr("x2", function(d) { return d; })
+            .attr("x2", (d) => { return d; })
             .attr("y2", height);
 
         container.append("g")
@@ -681,9 +681,9 @@ function ModelSeedPathway(params) {
             .data(d3.range(0, height, 10))
           .enter().append("line")
             .attr("x1", 0)
-            .attr("y1", function(d) { return d; })
+            .attr("y1", (d) => { return d; })
             .attr("x2", width)
-            .attr("y2", function(d) { return d; });
+            .attr("y2", (d) => { return d; });
 
             /*
         d3.tsv("dots.tsv", dottype, function(error, dots) {
@@ -724,7 +724,7 @@ function ModelSeedPathway(params) {
 
 
     function editable() {
-        var edit_opts = $('<div class="map-opts pull-left">\
+        const edit_opts = $('<div class="map-opts pull-left">\
                               <!--<button class="btn btn-primary btn-edit-map">Edit Map</button>-->\
                               <button class="btn btn-default btn-map-opts">Options <div class="caret"></div></button>\
                               <!--<button class="btn btn-default btn-map-cancel">Done</button>-->\
@@ -737,7 +737,7 @@ function ModelSeedPathway(params) {
                            </span>\
                            <br><br>');
 
-        var opts = $('<div class="opts-dd">Display:\
+        const opts = $('<div class="opts-dd">Display:\
                     <div class="checkbox">\
                         <label><input type="checkbox" data-type="rxn-label" checked="checked">Enzymes Labels</label>\
                     </div>\
@@ -758,8 +758,8 @@ function ModelSeedPathway(params) {
         // display x, y coordinates (on top left)
         svg.on('mousemove', function () {
             c = d3.mouse(this);
-            var x = c[0];
-            var y = c[1];
+            const x = c[0];
+            const y = c[1];
             $('#x-pos').html(x);
             $('#y-pos').html(y);
         });
@@ -768,11 +768,11 @@ function ModelSeedPathway(params) {
         // event for options
         $('.btn-map-opts').popover({html: true, content: opts, animation: false,
                                    container: 'body', trigger: 'click', placement: 'bottom'});
-        $('.btn-map-opts').click(function() {
+        $('.btn-map-opts').click(() => {
             opts.find('input').unbind('change')
             opts.find('input').change(function() {
-                var type = $(this).data('type');
-                var checked = ($(this).attr('checked') == 'checked' ? true : false);
+                const type = $(this).data('type');
+                const checked = ($(this).attr('checked') == 'checked' ? true : false);
 
                 if (checked) {
                     svg.selectAll('.'+type).style('display', 'none')
@@ -795,8 +795,8 @@ function ModelSeedPathway(params) {
         })*/
 
         // drag event
-        var drag = d3.behavior.drag()
-          .on("dragstart", function() {
+        const drag = d3.behavior.drag()
+          .on("dragstart", () => {
               d3.event.sourceEvent.stopPropagation()
           })
           .on("drag", function(){
@@ -816,12 +816,12 @@ function ModelSeedPathway(params) {
             edit_opts.find('.btn-map-save').addClass('btn-primary')
         })
 
-        edit_opts.find('.btn-map-cancel').click(function() {
+        edit_opts.find('.btn-map-cancel').click(() => {
             //$('.first, .second, .middle').remove()
         })
 
 
-        edit_opts.find('.btn-map-save').click(function() {
+        edit_opts.find('.btn-map-save').click(() => {
             saveMap();
         })
 
@@ -842,14 +842,14 @@ function ModelSeedPathway(params) {
                 .attr('stroke-width', 2);
 
             // getting start and end of line
-            var x1 = line.attr('x1'),
+            const x1 = line.attr('x1'),
                 y1 = line.attr('y1'),
                 x2 = line.attr('x2'),
                 y2 = line.attr('y2');
-            var g = line.node().parentNode
+            const g = line.node().parentNode
 
             // start, draggalbe circle
-            var start = d3.select(g).append("g")
+            const start = d3.select(g).append("g")
              .attr("transform", "translate(" + x1 + "," + y1 + ")")
              .attr("class", "first")
              .call(drag)
@@ -863,7 +863,7 @@ function ModelSeedPathway(params) {
 
 
             // end, dragable circle
-            var end = d3.select(g).append("g")
+            const end = d3.select(g).append("g")
              .attr("transform", "translate(" + x2 + "," + y2 + ")")
              .attr("class", "last")
              .call(drag)
@@ -883,23 +883,23 @@ function ModelSeedPathway(params) {
 
                 d3.event.stopPropagation();
                 // get position of new circle
-                var x = d3.mouse(this)[0];
-                var y = d3.mouse(this)[1];
+                const x = d3.mouse(this)[0];
+                const y = d3.mouse(this)[1];
 
-                var type = d3.select(this).data()[0].type
+                const type = d3.select(this).data()[0].type
 
                 // remove old line
                 d3.select(this).remove()
 
                 // add new lines
-                var line1 = d3.select(g).append("line")
+                const line1 = d3.select(g).append("line")
                              .attr('class', 'line1')
                              .attr("x1", x1)
                              .attr("y1", y1)
                              .attr("x2", x)
                              .attr("y2", y)
 
-                var line2 = d3.select(g).append("line")
+                const line2 = d3.select(g).append("line")
                              .attr('class', 'line2')
                              .attr("x1", x)
                              .attr("y1", y)
@@ -911,10 +911,10 @@ function ModelSeedPathway(params) {
                 }
 
                 // to be stored
-                var wayPoints = [[x1, y1], [x,y], [x2,y2]]
+                const wayPoints = [[x1, y1], [x,y], [x2,y2]]
 
                 // mid, draggable circle
-                var mid = d3.select(g).append("g")
+                const mid = d3.select(g).append("g")
                      .attr("transform", "translate(" + x + "," + y + ")")
                      .attr("class", "middle")
                      .call(drag)
@@ -931,28 +931,28 @@ function ModelSeedPathway(params) {
 
 
     function saveMap() {
-        var new_map = $.extend({}, self.map_data)
+        const new_map = $.extend({}, self.map_data)
 
         // get data on edited lines
-        var g = svg.selectAll('.edited-line');
+        const g = svg.selectAll('.edited-line');
         g.each(function(d, i){
-            var l1 = d3.select(this).select('.line1');
-            var l2 = d3.select(this).select('.line2');
-            var cpd_id = l1.data()[0].cpd_id
-            var group_index = l1.data()[0].group_index
-            var line_type = l1.data()[0].line_type
+            const l1 = d3.select(this).select('.line1');
+            const l2 = d3.select(this).select('.line2');
+            const cpd_id = l1.data()[0].cpd_id
+            const group_index = l1.data()[0].group_index
+            const line_type = l1.data()[0].line_type
 
 
-            var x1 = parseInt(l1.attr('x1'))
-            var y1 = parseInt(l1.attr('y1'))
-            var x = parseInt(l1.attr('x2'))
-            var y = parseInt(l1.attr('y2'))
-            var x2 = parseInt(l2.attr('x2'))
-            var y2 = parseInt(l2.attr('y2'))
+            const x1 = parseInt(l1.attr('x1'))
+            const y1 = parseInt(l1.attr('y1'))
+            const x = parseInt(l1.attr('x2'))
+            const y = parseInt(l1.attr('y2'))
+            const x2 = parseInt(l2.attr('x2'))
+            const y2 = parseInt(l2.attr('y2'))
 
-            var path = [[x1, y1], [x, y], [x2, y2]];
+            const path = [[x1, y1], [x, y], [x2, y2]];
 
-            var groups = new_map.groups;
+            const groups = new_map.groups;
             if (line_type == 'substrate') {
                 groups[group_index]['substrate_path'] = path;
             } else if (line_type == 'product') {
@@ -962,40 +962,40 @@ function ModelSeedPathway(params) {
         })
 
         // get data on edited compound labels
-        var labels = svg.selectAll('.edited-label');
+        const labels = svg.selectAll('.edited-label');
         labels.each(function(d, i){
-            var l = d3.select(this)
+            const l = d3.select(this)
 
-            var transform = l.attr('transform')
+            const transform = l.attr('transform')
 
             // if label hasn't been moved, don't save
             if (!transform) return;
 
-            var x = parseInt(transform.split(',')[0].split('(')[1] )
-            var y = parseInt(transform.split(',')[1].split(')')[0] )
-            var cpd_index = l.data()[0].cpd_index
+            const x = parseInt(transform.split(',')[0].split('(')[1] )
+            const y = parseInt(transform.split(',')[1].split(')')[0] )
+            const cpd_index = l.data()[0].cpd_index
 
 
-            var cpds = new_map.compounds;
+            const cpds = new_map.compounds;
             cpds[cpd_index].label_x = x
             cpds[cpd_index].label_y = y
         })
 
         // have to get meta data to resave object
-        var prom = kb.ws.get_object_info([{workspace: self.workspace,
+        const prom = kb.ws.get_object_info([{workspace: self.workspace,
                                            name: self.map_name}], 1)
-        $.when(prom).done(function(data) {
-            var metadata = data[0][10];
+        $.when(prom).done((data) => {
+            const metadata = data[0][10];
             // saving object to workspace
-            var p = kb.ws.save_object({'workspace': self.workspace,
+            const p = kb.ws.save_object({'workspace': self.workspace,
                     'data': new_map,
                     'id': self.map_name,
                     'type': 'KBaseBiochem.MetabolicMap',
                     'metadata': metadata
                     })
 
-            $.when(p).done(function(d) {
-                var msg = $('<div class="alert alert-success pull-left">Saved.</div>')
+            $.when(p).done((d) => {
+                const msg = $('<div class="alert alert-success pull-left">Saved.</div>')
                 msg.css('padding', '7px');  // one exception for putting this in js
                 msg.css('margin-left', '10px')
                 msg.css('margin-bottom', 0);
@@ -1005,7 +1005,7 @@ function ModelSeedPathway(params) {
                 // redraw map
                 self.drawMap();
 
-            }).fail(function(e){
+            }).fail((e)=> {
                 container.prepend('<div class="alert alert-danger">'+
                                 e.error.message+'</div>')
             })
@@ -1016,8 +1016,8 @@ function ModelSeedPathway(params) {
     //Drag handler
     function dragmove(d) {
 
-        var x = d3.event.x;
-        var y = d3.event.y;
+        const x = d3.event.x;
+        const y = d3.event.y;
         d3.select(d).attr("transform", "translate(" + x + "," + y + ")");
 
 
@@ -1038,12 +1038,12 @@ function ModelSeedPathway(params) {
 
     function splines() {
 
-        var width = 960,
+        const width = 960,
             height = 500;
 
-        var points = d3.select('line').each(function() {
-            var x1 = d3.select(this).attr('x1')
-            var y1 = d3.select(this).attr('y1')
+        const points = d3.select('line').each(function() {
+            const x1 = d3.select(this).attr('x1')
+            const y1 = d3.select(this).attr('y1')
             svg.append()
             d3.select(this).attr('class', 'special')
             return [x1, y1];
@@ -1055,10 +1055,10 @@ function ModelSeedPathway(params) {
         });*/
 
 
-        var dragged = null,
+        let dragged = null,
             selected = points[0];
 
-        var line = d3.select('line');
+        const line = d3.select('line');
 
         /*
         var svg = d3.select('.panel-body').append("svg")
@@ -1102,8 +1102,8 @@ function ModelSeedPathway(params) {
               "monotone"
             ])
           .enter().append("option")
-            .attr("value", function(d) { return d; })
-            .text(function(d) { return d; });
+            .attr("value", (d) => { return d; })
+            .text((d) => { return d; });
 
         svg.node().focus();
 
@@ -1111,21 +1111,21 @@ function ModelSeedPathway(params) {
 
           svg.select("path").attr("d", line);
 
-          var circle = svg.selectAll(".special")
-              .data(points, function(d) { return d; });
+          const circle = svg.selectAll(".special")
+              .data(points, (d) => { return d; });
 
           circle.enter().append("circle")
               .attr("r", 1e-6)
-              .on("mousedown", function(d) { selected = dragged = d; redraw(); })
+              .on("mousedown", (d) => { selected = dragged = d; redraw(); })
             .transition()
               .duration(750)
               .ease("elastic")
               .attr("r", 6.5);
 
           circle
-              .classed("selected", function(d) { return d === selected; })
-              .attr("cx", function(d) { return d[0]; })
-              .attr("cy", function(d) { return d[1]; });
+              .classed("selected", (d) => { return d === selected; })
+              .attr("cx", (d) => { return d[0]; })
+              .attr("cy", (d) => { return d[1]; });
 
           circle.exit().remove();
 
@@ -1147,7 +1147,7 @@ function ModelSeedPathway(params) {
 
         function mousemove() {
           if (!dragged) return;
-          var m = d3.mouse(svg.node());
+          const m = d3.mouse(svg.node());
           dragged[0] = Math.max(0, Math.min(width, m[0]));
           dragged[1] = Math.max(0, Math.min(height, m[1]));
           redraw();
@@ -1164,7 +1164,7 @@ function ModelSeedPathway(params) {
           switch (d3.event.keyCode) {
             case 8: // backspace
             case 46: { // delete
-              var i = points.indexOf(selected);
+              const i = points.indexOf(selected);
               points.splice(i, 1);
               selected = points.length ? points[i > 0 ? i - 1 : 0] : null;
               redraw();

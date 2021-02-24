@@ -8,13 +8,13 @@ define([
     'common/runtime',
     'kbase-generic-client-api',
     'base/js/namespace'
-], function (
+], (
     Promise,
     Config,
     Runtime,
     GenericClient,
     Jupyter
-) {
+) => {
     'use strict';
 
     const DATA_CACHE_TIME = 300000;
@@ -39,7 +39,7 @@ define([
                 return Promise.resolve();
             }
 
-            let serviceClient = new GenericClient(
+            const serviceClient = new GenericClient(
                 Config.url('service_wizard'),
                 {token: Runtime.make().authToken()}
             );

@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 define([
     'bluebird',
     'jquery',
@@ -19,7 +16,7 @@ define([
     'narrativeConfig'
     // All the input widgets
 
-], function (
+], (
     Promise,
     $,
     html,
@@ -34,17 +31,17 @@ define([
     Config
 
     // Input widgets
-) {
+) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         form = t('form'),
         span = t('span'),
         div = t('div'),
         b = t('b');
 
     function factory(config) {
-        var runtime = Runtime.make(),
+        let runtime = Runtime.make(),
             paramsBus = config.bus,
             workspaceInfo = config.workspaceInfo,
             initialParams = config.initialParams,
@@ -105,8 +102,8 @@ define([
         */
         function makeFieldWidget(appSpec, parameterSpec, value, closeParameters) {
             return paramResolver.loadInputControl(parameterSpec)
-                .then(function (inputWidget) {
-                    var fieldWidget = FieldWidget.make({
+                .then((inputWidget) => {
+                    const fieldWidget = FieldWidget.make({
                         inputControlFactory: inputWidget,
                         showHint: true,
                         useRowHighight: true,
@@ -120,7 +117,7 @@ define([
                     });
 
                     // Forward all changed parameters to the controller. That is our main job!
-                    fieldWidget.bus.on('changed', function (message) {
+                    fieldWidget.bus.on('changed', (message) => {
                         paramsBus.send({
                             parameter: parameterSpec.id,
                             newValue: message.newValue,
@@ -139,7 +136,7 @@ define([
                         });
                     });
 
-                    fieldWidget.bus.on('touched', function () {
+                    fieldWidget.bus.on('touched', () => {
                         paramsBus.emit('parameter-touched', {
                             parameter: parameterSpec.id
                         });
@@ -147,20 +144,20 @@ define([
 
 
                     // An input widget may ask for the current model value at any time.
-                    fieldWidget.bus.on('sync', function () {
+                    fieldWidget.bus.on('sync', () => {
                         paramsBus.emit('parameter-sync', {
                             parameter: parameterSpec.id
                         });
                     });
 
-                    fieldWidget.bus.on('sync-params', function (message) {
+                    fieldWidget.bus.on('sync-params', (message) => {
                         paramsBus.emit('sync-params', {
                             parameters: message.parameters,
                             replyToChannel: fieldWidget.bus.channelName
                         });
                     });
 
-                    fieldWidget.bus.on('set-param-state', function (message) {
+                    fieldWidget.bus.on('set-param-state', (message) => {
                         paramsBus.emit('set-param-state', {
                             id: parameterSpec.id,
                             state: message.state
@@ -184,13 +181,13 @@ define([
                     /*
                      * Or in fact any parameter value at any time...
                      */
-                    fieldWidget.bus.on('get-parameter-value', function (message) {
+                    fieldWidget.bus.on('get-parameter-value', (message) => {
                         paramsBus.request({
                                 parameter: message.parameter
                             }, {
                                 key: 'get-parameter-value'
                             })
-                            .then(function (message) {
+                            .then((message) => {
                                 bus.emit('parameter-value', {
                                     parameter: message.parameter
                                 });
@@ -230,14 +227,14 @@ define([
                                             }
                                         })
                                         .then((value) => {
-                                            let returnVal = {};
+                                            const returnVal = {};
                                             returnVal[paramName] = value.value;
                                             return returnVal;
                                         });
                                     })
                                 )
                                     .then((results) => {
-                                        let combined = {};
+                                        const combined = {};
                                         results.forEach((res) => {
                                             Object.keys(res).forEach((key) => {
                                                 combined[key] = res[key];
@@ -269,7 +266,7 @@ define([
         function renderAdvanced(area) {
             // area is either "input" or "parameter"
 
-            var areaElement = area + '-area',
+            const areaElement = area + '-area',
                 areaSelector = '[data-element="' + areaElement + '"]',
                 advancedInputs = container.querySelectorAll(areaSelector + ' [data-advanced-parameter]');
 
@@ -278,24 +275,24 @@ define([
                 return;
             }
 
-            var removeClass = (settings.showAdvanced ? 'advanced-parameter-hidden' : 'advanced-parameter-showing'),
+            const removeClass = (settings.showAdvanced ? 'advanced-parameter-hidden' : 'advanced-parameter-showing'),
                 addClass = (settings.showAdvanced ? 'advanced-parameter-showing' : 'advanced-parameter-hidden');
-            for (var i = 0; i < advancedInputs.length; i += 1) {
-                var input = advancedInputs[i];
+            for (let i = 0; i < advancedInputs.length; i += 1) {
+                const input = advancedInputs[i];
                 input.classList.remove(removeClass);
                 input.classList.add(addClass);
 
-                var actualInput = input.querySelector('[data-element="input"]');
+                const actualInput = input.querySelector('[data-element="input"]');
                 if (actualInput) {
                     $(actualInput).trigger('advanced-shown.kbase');
                 }
             }
 
             // Also update the count in the paramters.
-            var events = Events.make({ node: container });
+            const events = Events.make({ node: container });
 
-            var message;
-            var showAdvancedButton;
+            let message;
+            let showAdvancedButton;
             if (settings.showAdvanced) {
                 if (advancedInputs.length > 1) {
                     message = String(advancedInputs.length) + ' advanced parameters showing';
@@ -353,7 +350,7 @@ define([
         }
 
         function renderLayout(batchMode) {
-            var events = Events.make(),
+            let events = Events.make(),
                 formContent = [];
             if (batchMode) {
                 formContent.push(renderBatchModeMessage());
@@ -390,7 +387,7 @@ define([
                     // ui.makePanel('Output Report', 'output-report')
                 ]);
             }
-            var content = form({ dataElement: 'input-widget-form' }, formContent);
+            const content = form({ dataElement: 'input-widget-form' }, formContent);
             return {
                 content: content,
                 events: events
@@ -405,7 +402,7 @@ define([
                 node: container,
                 bus: bus
             });
-            var layout = renderLayout(batchMode);
+            const layout = renderLayout(batchMode);
             container.innerHTML = layout.content;
             layout.events.attachEvents(container);
             if (!batchMode) {
@@ -421,12 +418,12 @@ define([
         // EVENTS
 
         function attachEvents() {
-            bus.on('reset-to-defaults', function () {
-                widgets.forEach(function (widget) {
+            bus.on('reset-to-defaults', () => {
+                widgets.forEach((widget) => {
                     widget.bus.emit('reset-to-defaults');
                 });
             });
-            bus.on('toggle-advanced', function () {
+            bus.on('toggle-advanced', () => {
                 // we can just do that here? Or defer to the inputs?
                 // I don't know ...
                 //inputBusses.forEach(function (bus) {
@@ -438,26 +435,26 @@ define([
                 renderAdvanced('input-objects');
                 renderAdvanced('parameters');
             });
-            runtime.bus().on('workspace-changed', function () {
+            runtime.bus().on('workspace-changed', () => {
                 // tell each input widget about this amazing event!
-                widgets.forEach(function (widget) {
+                widgets.forEach((widget) => {
                     widget.bus.emit('workspace-changed');
                 });
             });
-            bus.on('toggle-batch-mode', function () {
+            bus.on('toggle-batch-mode', () => {
                 alert('batch mode toggled!');
             });
         }
 
         function makeParamsLayout(params) {
-            var view = {};
-            var paramMap = {};
-            var orderedParams = params.map(function (param) {
+            const view = {};
+            const paramMap = {};
+            const orderedParams = params.map((param) => {
                 paramMap[param.id] = param;
                 return param.id;
             });
-            var layout = orderedParams.map(function (parameterId) {
-                var id = html.genId();
+            const layout = orderedParams.map((parameterId) => {
+                const id = html.genId();
                 view[parameterId] = {
                     id: id
                 };
@@ -483,34 +480,34 @@ define([
             // First get the app specs, which is stashed in the model,
             // with the parameters returned.
             // Separate out the params into the primary groups.
-            var appSpec = model.getItem('appSpec');
+            const appSpec = model.getItem('appSpec');
 
-            return Promise.try(function () {
-                var params = model.getItem('parameters'),
+            return Promise.try(() => {
+                const params = model.getItem('parameters'),
                     inputParams = makeParamsLayout(
-                        params.layout.filter(function (id) {
+                        params.layout.filter((id) => {
                             return (params.specs[id].ui.class === 'input');
                         })
-                        .map(function (id) {
+                        .map((id) => {
                             return params.specs[id];
                         })),
                     outputParams = makeParamsLayout(
-                        params.layout.filter(function (id) {
+                        params.layout.filter((id) => {
                             return (params.specs[id].ui.class === 'output');
                         })
-                        .map(function (id) {
+                        .map((id) => {
                             return params.specs[id];
                         })),
                     parameterParams = makeParamsLayout(
-                        params.layout.filter(function (id) {
+                        params.layout.filter((id) => {
                             return (params.specs[id].ui.class === 'parameter');
                         })
-                        .map(function (id) {
+                        .map((id) => {
                             return params.specs[id];
                         }));
 
                 return Promise.resolve()
-                    .then(function () {
+                    .then(() => {
                         if (inputParams.layout.length === 0) {
                             ui.getElement('input-objects-area').classList.add('hidden');
                             // places.inputFields.innerHTML = span({
@@ -520,11 +517,11 @@ define([
                             // }, 'This app does not have input objects');
                         } else {
                             places.inputFields.innerHTML = inputParams.content;
-                            return Promise.all(inputParams.layout.map(function (parameterId) {
-                                var spec = inputParams.paramMap[parameterId];
+                            return Promise.all(inputParams.layout.map((parameterId) => {
+                                const spec = inputParams.paramMap[parameterId];
                                 try {
                                     return makeFieldWidget(appSpec, spec, initialParams[spec.id])
-                                        .then(function (widget) {
+                                        .then((widget) => {
                                             widgets.push(widget);
 
                                             return widget.start({
@@ -533,7 +530,7 @@ define([
                                         });
                                 } catch (ex) {
                                     console.error('Error making input field widget', ex);
-                                    var errorDisplay = div({
+                                    const errorDisplay = div({
                                         style: {
                                             border: '1px red solid'
                                         }
@@ -545,17 +542,17 @@ define([
                             }));
                         }
                     })
-                    .then(function () {
+                    .then(() => {
                         if (outputParams.layout.length === 0) {
                             ui.getElement('output-objects-area').classList.add('hidden');
                             // places.outputFields.innerHTML = span({ style: { fontStyle: 'italic' } }, 'This app does not create any named output objects');
                         } else {
                             places.outputFields.innerHTML = outputParams.content;
-                            return Promise.all(outputParams.layout.map(function (parameterId) {
-                                var spec = outputParams.paramMap[parameterId];
+                            return Promise.all(outputParams.layout.map((parameterId) => {
+                                const spec = outputParams.paramMap[parameterId];
                                 try {
                                     return makeFieldWidget(appSpec, spec, initialParams[spec.id], outputParams.layout)
-                                        .then(function (widget) {
+                                        .then((widget) => {
                                             widgets.push(widget);
 
                                             return widget.start({
@@ -564,7 +561,7 @@ define([
                                         });
                                 } catch (ex) {
                                     console.error('Error making input field widget', ex);
-                                    var errorDisplay = div({ style: { border: '1px red solid' } }, [
+                                    const errorDisplay = div({ style: { border: '1px red solid' } }, [
                                         ex.message
                                     ]);
                                     document.getElementById(outputParams.view[parameterId].id).innerHTML = errorDisplay;
@@ -572,7 +569,7 @@ define([
                             }));
                         }
                     })
-                    .then(function () {
+                    .then(() => {
                         if (parameterParams.layout.length === 0) {
                             // TODO: should be own node
                             ui.getElement('parameters-area').classList.add('hidden');
@@ -580,11 +577,11 @@ define([
                         } else {
                             places.parameterFields.innerHTML = parameterParams.content;
 
-                            return Promise.all(parameterParams.layout.map(function (parameterId) {
-                                var spec = parameterParams.paramMap[parameterId];
+                            return Promise.all(parameterParams.layout.map((parameterId) => {
+                                const spec = parameterParams.paramMap[parameterId];
                                 try {
                                     return makeFieldWidget(appSpec, spec, initialParams[spec.id])
-                                        .then(function (widget) {
+                                        .then((widget) => {
                                             widgets.push(widget);
 
                                             return widget.start({
@@ -593,7 +590,7 @@ define([
                                         });
                                 } catch (ex) {
                                     console.error('Error making input field widget', ex);
-                                    var errorDisplay = div({ style: { border: '1px red solid' } }, [
+                                    const errorDisplay = div({ style: { border: '1px red solid' } }, [
                                         ex.message
                                     ]);
                                     document.getElementById(parameterParams.view[spec.id].id).innerHTML = errorDisplay;
@@ -601,7 +598,7 @@ define([
                             }));
                         }
                     })
-                    .then(function () {
+                    .then(() => {
                         renderAdvanced('input-objects');
                         renderAdvanced('parameters');
                     });
@@ -609,7 +606,7 @@ define([
         }
 
         function start(arg) {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 // send parent the ready message
 
                 paramsBus.request({}, {key: {type: 'get-batch-mode'}})
@@ -619,11 +616,11 @@ define([
                         model.setItem('appSpec', arg.appSpec);
                         model.setItem('parameters', arg.parameters);
 
-                        paramsBus.on('parameter-changed', function (message) {
+                        paramsBus.on('parameter-changed', (message) => {
                             // Also, tell each of our inputs that a param has changed.
                             // TODO: use the new key address and subscription
                             // mechanism to make this more efficient.
-                            widgets.forEach(function (widget) {
+                            widgets.forEach((widget) => {
                                 widget.bus.send(message, {
                                     key: {
                                         type: 'parameter-changed',
@@ -634,7 +631,7 @@ define([
                             });
                         });
 
-                        var retPromise;
+                        let retPromise;
                         if (batchMode) {
                             retPromise = Promise.resolve();
                         }
@@ -642,11 +639,11 @@ define([
                             retPromise = renderParameters();
                         }
                         return retPromise
-                            .then(function () {
+                            .then(() => {
                                 // do something after success
                                 attachEvents();
                             })
-                            .catch(function (err) {
+                            .catch((err) => {
                                 // do somethig with the error.
                                 console.error('ERROR in start', err);
                             });
@@ -656,7 +653,7 @@ define([
         }
 
         function stop() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 // really unhook things here.
             });
         }

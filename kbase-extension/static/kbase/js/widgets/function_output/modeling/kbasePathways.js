@@ -1,27 +1,27 @@
 
 define(['kbwidget', 'jquery', 'bootstrap', 'kbaseTabTableTabs'],
-function(KBWidget, $, bootstrap, kbaseTabTableTabs) {
+(KBWidget, $, bootstrap, kbaseTabTableTabs) => {
 return KBWidget({
     name: "kbasePathways",
     version: "1.0.0",
     init: function(options) {
-        var self = this;
+        const self = this;
 
-        var imageWorkspace = 'nconrad:kegg',
+        const imageWorkspace = 'nconrad:kegg',
             mapWorkspace = 'nconrad:pathwaysjson',
             container = $.jqElem('div');
         this.$elem.append(container);
 
-        var kbapi = new KBModeling().kbapi;
+        const kbapi = new KBModeling().kbapi;
 
-        var models = options.models,
+        const models = options.models,
             fbas = options.fbas;
 
         // add tabs
-        var selectionTable = $('<table cellpadding="0" cellspacing="0" border="0" \
+        const selectionTable = $('<table cellpadding="0" cellspacing="0" border="0" \
             class="table table-bordered table-striped">');
 
-        var tabs = new kbaseTabTableTabs(container, {tabs: [
+        const tabs = new kbaseTabTableTabs(container, {tabs: [
                                         {name: 'Selection', content: selectionTable, active: true}
                                     ]});
 
@@ -31,10 +31,10 @@ return KBWidget({
             this.$elem.loading();
 
             kbapi('ws', 'list_objects', {workspaces: [mapWorkspace], includeMetadata: 1})
-            .done(function(d){
+            .done((d)=> {
                 self.$elem.rmLoading();
 
-                var tableSettings = {
+                const tableSettings = {
                     "drawCallback": events,
                     "sorting": [[ 1, "asc" ]],
                     "columns": [
@@ -66,10 +66,10 @@ return KBWidget({
                     }
                 }
 
-                var table = selectionTable.DataTable(tableSettings);
+                const table = selectionTable.DataTable(tableSettings);
                 table.rows.add(d).draw();
 
-            }).fail(function(e){
+            }).fail((e)=> {
                 container.prepend('<div class="alert alert-danger">'+
                             e.error.message+'</div>')
             });
@@ -83,11 +83,11 @@ return KBWidget({
             // event for clicking on pathway link
             container.find('.pathway-link').unbind('click')
             container.find('.pathway-link').click(function() {
-                var map_id = $(this).data('map_id');
-                var name = $(this).text();
+                const map_id = $(this).data('map_id');
+                const name = $(this).text();
 
-                var elemID = map_id+'-'+self.uuid();
-                var container = $('<div id="path-container-'+elemID+'" style="position:relative;">');
+                const elemID = map_id+'-'+self.uuid();
+                const container = $('<div id="path-container-'+elemID+'" style="position:relative;">');
                 container.loading();
                 tabs.addTab({name: name, removable: true, content: container});
 
@@ -104,11 +104,11 @@ return KBWidget({
 
 
         function load_map(map, container, elemID) {
-            var p1 = kbapi('ws', 'get_objects', [{workspace: imageWorkspace, name: map+'.png'}]),
+            const p1 = kbapi('ws', 'get_objects', [{workspace: imageWorkspace, name: map+'.png'}]),
                 p2 = kbapi('ws', 'get_objects', [{workspace: mapWorkspace, name: map}])
             $.when(p1, p2)
-                .then(function(imgRes, mapRes) {
-                    var image = imgRes[0].data.id,
+                .then((imgRes, mapRes) => {
+                    const image = imgRes[0].data.id,
                         mapData = mapRes[0].data;
 
                     // no need to decode...

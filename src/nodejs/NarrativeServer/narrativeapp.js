@@ -1,9 +1,9 @@
 'use strict';
 
-var http = require('http');
-var httpProxy = require('http-proxy');
-var Docker = require('dockerode');
-var Auth = require('./auth').Auth;
+const http = require('http');
+const httpProxy = require('http-proxy');
+const Docker = require('dockerode');
+const Auth = require('./auth').Auth;
 
 /*
  * Docker control
@@ -61,21 +61,21 @@ module.exports.NarrativeApp = Object.create({}, {
     
     tryContainerService: {
         value: function (userContainer, done) {
-            var start = new Date().getTime();
-            var timeout = 10000;
+            const start = new Date().getTime();
+            const timeout = 10000;
             var fun = function () {
-                http.get(userContainer.target + '/narrative/static/style/style.min.css', function (res) {
+                http.get(userContainer.target + '/narrative/static/style/style.min.css', (res) => {
                     userContainer.status = 'ready';
                     done();
-                }).on('error', function (err) {
-                    var elapsed = (new Date().getTime()) - start;
+                }).on('error', (err) => {
+                    const elapsed = (new Date().getTime()) - start;
                     console.log('try container startup loop ' + elapsed);
                     if (err.code === 'ECONNRESET') {
                         if (elapsed > timeout) {
                             console.log('Timedout waiting for container to be ready');
                             userContainer.status = 'timedout';
                         } else {
-                            setTimeout(function () {
+                            setTimeout(() => {
                                 fun();
                             }, 1000);
                         }
@@ -91,17 +91,17 @@ module.exports.NarrativeApp = Object.create({}, {
     },
     tryUntil: {
         value: function (test, done, err, timeout) {
-            var start = new Date().getTime();
+            const start = new Date().getTime();
             var fun = function () {
                 if (test()) {
                     done();
                 } else {
-                    var elapsed = (new Date()).getTime() - start;
+                    const elapsed = (new Date()).getTime() - start;
                     console.log('try loop ' + elapsed);
                     if (elapsed > timeout) {
                         err();
                     } else {
-                        setTimeout(function () { 
+                        setTimeout(() => { 
                            fun();
                         }, 1000);
                     }
@@ -118,11 +118,11 @@ module.exports.NarrativeApp = Object.create({}, {
     
     getContainers: {
         value: function (done) {
-            var docker = new Docker({socketPath: '/var/run/docker.sock'});
-            var usernames = Object.keys(this.containers);
-            var that = this;
-            var containers = usernames.map(function (username) {
-                var userContainer = that.containers[username];
+            const docker = new Docker({socketPath: '/var/run/docker.sock'});
+            const usernames = Object.keys(this.containers);
+            const that = this;
+            const containers = usernames.map((username) => {
+                const userContainer = that.containers[username];
                 return {
                     username: username,
                     id: userContainer.id,
@@ -134,9 +134,9 @@ module.exports.NarrativeApp = Object.create({}, {
                 };
             });
             
-            containers.forEach(function (c) {
-                var container = docker.getContainer(c.id);
-                container.inspect(function (err, data) {
+            containers.forEach((c) => {
+                const container = docker.getContainer(c.id);
+                container.inspect((err, data) => {
                     c.docker = {};
                     if (err) {
                         c.docker.stats = 'ERROR';
@@ -144,7 +144,7 @@ module.exports.NarrativeApp = Object.create({}, {
                     } else {
                         c.docker.inspection = data;
                     }
-                    if (containers.reduce(function (red, c) {
+                    if (containers.reduce((red, c) => {
                         if (!c.docker) {
                             return false;
                         }
@@ -159,18 +159,18 @@ module.exports.NarrativeApp = Object.create({}, {
     
     getUserContainer: {
         value: function (req, done) {
-            var userId = Auth.getSession(req);
-            var that = this;
-            var docker = new Docker({socketPath: '/var/run/docker.sock'});
-            var userContainer = this.containers[userId];
+            const userId = Auth.getSession(req);
+            const that = this;
+            const docker = new Docker({socketPath: '/var/run/docker.sock'});
+            let userContainer = this.containers[userId];
             if (userContainer) {
-                this.tryUntil(function () {
+                this.tryUntil(() => {
                     return (userContainer.status === 'ready');
-                }, function () {
+                }, () => {
                     userContainer.lastAccessedAt = new Date();
                     userContainer.accessCount += 1;
                     return done(userContainer);
-                }, function () {
+                }, () => {
                     console.log('Timed out waiting for container to be ready.');
                     return null;
                 }, 10000);
@@ -184,28 +184,28 @@ module.exports.NarrativeApp = Object.create({}, {
             };
             this.containers[userId] = userContainer;
 
-            var dockerConfig = this.dockerBaseConfig();
+            const dockerConfig = this.dockerBaseConfig();
             dockerConfig.Image = this.repositoryImage + ':' + this.repositoryVersion;
             dockerConfig.PortSpecs = [this.privatePort + ''];
             console.log('Creating container for ' + userId + '...');
-            docker.createContainer(dockerConfig, function (err, container) {
+            docker.createContainer(dockerConfig, (err, container) => {
                 if (err) {
                     throw new Error('ERROR creating docker container');
                     userContainer.status = 'error';
                 }
                 container.defaultOptions.start.PublishAllPorts = true;
-                container.start(function (err, data) {
+                container.start((err, data) => {
                     if (err) {
                         throw new Error('ERROR starting docker container');
                         return done(null);
                     }
-                    container.inspect(function (err, data) {
+                    container.inspect((err, data) => {
                         if (err) {
                             throw new Error('ERROR inspecting container');
                             return done(null);
                         }
-                        var thePort = data.NetworkSettings.Ports['8888/tcp'][0].HostPort;
-                        var target = 'http://127.0.0.1:' + thePort;
+                        const thePort = data.NetworkSettings.Ports['8888/tcp'][0].HostPort;
+                        const target = 'http://127.0.0.1:' + thePort;
                         userContainer.id = container.id;
                         userContainer.port = thePort;
                         userContainer.status = 'starting';
@@ -215,7 +215,7 @@ module.exports.NarrativeApp = Object.create({}, {
                             ws: true,
                             xfwd: true
                         });
-                        that.tryContainerService(userContainer, function () {
+                        that.tryContainerService(userContainer, () => {
                             return done(userContainer);
                         });
                     });

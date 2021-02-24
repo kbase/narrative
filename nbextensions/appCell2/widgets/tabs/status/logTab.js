@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true,nomen:true*/
-
 /**
  * This is the entrypoint module for the job status / log viewer tab of the app cell.
  */
@@ -14,7 +11,7 @@ define([
     './jobStateList',
     './jobInputParams',
     'css!kbase/css/batchMode'
-], function (
+], (
     Promise,
     html,
     UI,
@@ -23,10 +20,10 @@ define([
     JobStateViewer,
     JobStateList,
     JobInputParams
-) {
+) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div');
 
     function factory(config) {
@@ -46,7 +43,7 @@ define([
          * Used only if we're in Batch mode.
          */
         function batchLayout() {
-            var list = div({ class: 'col-md-3 batch-mode-col', dataElement: 'kb-job-list-wrapper' }, [
+            const list = div({ class: 'col-md-3 batch-mode-col', dataElement: 'kb-job-list-wrapper' }, [
                 ui.buildPanel({
                     title: 'Job Batch',
                     name: 'subjobs',
@@ -56,7 +53,7 @@ define([
                 })
             ]);
 
-            var jobStatus = div({ class: 'col-md-9 batch-mode-col',  dataElement: 'kb-job-status-wrapper' },[
+            const jobStatus = div({ class: 'col-md-9 batch-mode-col',  dataElement: 'kb-job-status-wrapper' },[
                 ui.buildCollapsiblePanel({
                     title: 'Job Params',
                     name: 'job-params-section-toggle',
@@ -140,7 +137,7 @@ define([
         }
 
         function startBatch(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 container.innerHTML = batchLayout();
 
                 //display widgets
@@ -157,7 +154,7 @@ define([
                     model: model
                 });
 
-                let childJobs = model.getItem('exec.jobState.child_jobs');
+                const childJobs = model.getItem('exec.jobState.child_jobs');
                 if (childJobs.length > 0) {
                     selectedJobId = childJobs.job_id;
                 }
@@ -167,7 +164,7 @@ define([
                 });
 
                 function startDetails(arg) {
-                    var selectedJobId = arg.jobId ? arg.jobId : model.getItem('exec.jobState.job_id');
+                    const selectedJobId = arg.jobId ? arg.jobId : model.getItem('exec.jobState.job_id');
                     config.clickedId = selectedJobId;
                     return Promise.all([
                         widgets.params.start({
@@ -237,7 +234,7 @@ define([
         }
 
         function startNonQueued(arg) {
-            let childJobs = model.getItem('exec.jobState.child_jobs');
+            const childJobs = model.getItem('exec.jobState.child_jobs');
             if ((childJobs && childJobs.length > 0) || model.getItem('user-settings.batchMode')) {
                 startBatch(arg);
             }
@@ -247,7 +244,7 @@ define([
         }
 
         function startSingle(arg) {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 container.innerHTML = singleLayout();
                 widgets.log = LogViewer.make();
                 widgets.jobState = JobStateViewer.make({
@@ -267,9 +264,9 @@ define([
         }
 
         function stop() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 if (widgets) {
-                    return Promise.all(Object.keys(widgets).map(function (key) {
+                    return Promise.all(Object.keys(widgets).map((key) => {
                         return widgets[key].stop();
                     }));
                 }

@@ -12,7 +12,7 @@ define ([
     'kbase-generic-client-api',
     'narrativeConfig',
     'bluebird'
-], function(
+], (
 	KBWidget,
 	bootstrap,
 	$,
@@ -23,7 +23,7 @@ define ([
     GenericClient,
     Config,
     Promise
-) {
+) => {
     'use strict';
 
     return KBWidget({
@@ -54,7 +54,7 @@ define ([
             this.$elem.append($('<div>').attr('align', 'center').append($('<i class="fa fa-spinner fa-spin fa-2x">')));
 
             // 1) get stats, and show the panel
-            var basicInfoCalls = [];
+            const basicInfoCalls = [];
             basicInfoCalls.push(
                 Promise.resolve(this.ws.get_objects2({objects: [{'ref': this.obj_ref}]}))
                     .then((obj) => {
@@ -77,16 +77,16 @@ define ([
         },
 
         renderBasicTable: function() {
-            var self = this;
-            var $container = this.$elem;
+            const self = this;
+            const $container = this.$elem;
             $container.empty();
 
-            var $tabPane = $('<div>');
+            const $tabPane = $('<div>');
             $container.append($tabPane);
 
 
             // Build the overview table
-            var $overviewTable = $('<table class="table table-striped table-bordered table-hover" style="margin-left: auto; margin-right: auto;"/>');
+            const $overviewTable = $('<table class="table table-striped table-bordered table-hover" style="margin-left: auto; margin-right: auto;"/>');
 
             function get_table_row(key, value) {
                 return $('<tr>').append($('<td>').append(key)).append($('<td>').append(value));
@@ -108,10 +108,10 @@ define ([
             // get the metadata_keys
             self.client.sync_call('SampleService.get_sample', [{
                 id: self.ss_obj_data['samples'][0]['id']
-            }]).then(function(sample){
+            }]).then((sample)=> {
                 if (sample.length > 0 && 'node_tree' in sample[0] && sample[0]['node_tree'].length > 0){
-                    var node_tree = sample[0]['node_tree'][0]
-                    Object.keys(node_tree['meta_controlled']).concat(Object.keys(node_tree['meta_user'])).forEach( function(metakey){
+                    const node_tree = sample[0]['node_tree'][0]
+                    Object.keys(node_tree['meta_controlled']).concat(Object.keys(node_tree['meta_user'])).forEach( (metakey)=> {
                         self.metadata_headers.push({
                             id: metakey.split(" ").join('_'),
                             text: metakey,
@@ -123,7 +123,7 @@ define ([
                 }
             })
             // Build the tabs
-            var $tabs = new kbaseTabs($tabPane, {
+            const $tabs = new kbaseTabs($tabPane, {
                 tabPosition : 'top',
                 canDelete : false, //whether or not the tab can be removed.
                 tabs : [
@@ -143,8 +143,8 @@ define ([
 
 
         addSamplesList: function() {
-            var self = this;
-            var $content = $('<div>');
+            const self = this;
+            const $content = $('<div>');
             new DynamicTable($content, {
                 headers: [{
                     id: 'name',
@@ -157,22 +157,22 @@ define ([
                 }].concat(self.metadata_headers),
                 searchPlaceholder: 'Search samples',
                 updateFunction: function(pageNum, query, sortColId, sortColDir) {
-                    var rows = [];
-                    var sample_slice = self.ss_obj_data['samples'].slice(
+                    const rows = [];
+                    const sample_slice = self.ss_obj_data['samples'].slice(
                         pageNum * self.options.pageLimit, (pageNum + 1) * self.options.pageLimit
                     );
-                    var sample_queries = [];
-                    var sample_data = [];
-                    sample_slice.forEach(function (sample_info) {
-                        var sample_query_params = {
+                    const sample_queries = [];
+                    const sample_data = [];
+                    sample_slice.forEach((sample_info) => {
+                        const sample_query_params = {
                             id: sample_info['id']
                         }
                         if ("version" in sample_info){
                             sample_query_params['version'] = sample_info['version']
                         }
                         sample_queries.push(
-                            Promise.resolve(self.client.sync_call('SampleService.get_sample', [sample_query_params])).then(function(sample){
-                                let samp_data = {};
+                            Promise.resolve(self.client.sync_call('SampleService.get_sample', [sample_query_params])).then((sample)=> {
+                                const samp_data = {};
                                 samp_data['version'] = String(sample[0]['version'])
                                 for (let i = 0; i < sample[0]['node_tree'].length; i++){
                                     for (const meta_key in sample[0]['node_tree'][i]['meta_controlled']){
@@ -189,15 +189,15 @@ define ([
                                 sample_data.push(samp_data)
                             })
                         )
-                        var row = [sample_info['name'], sample_info['id']];
+                        const row = [sample_info['name'], sample_info['id']];
                         rows.push(row);
                     });
-                    return Promise.all(sample_queries).then(function(){
+                    return Promise.all(sample_queries).then(()=> {
                         for (let j = 0; j < rows.length; j++){
-                            var row = rows[j];
+                            const row = rows[j];
                             for (const meta_idx in self.metadata_headers){
-                                var meta_header = self.metadata_headers[meta_idx]
-                                var row_str = self.options.default_blank_value;
+                                const meta_header = self.metadata_headers[meta_idx]
+                                let row_str = self.options.default_blank_value;
                                 if (meta_header.text in sample_data[j]){
                                     row_str = sample_data[j][meta_header.text]
                                 }
@@ -219,7 +219,7 @@ define ([
         },
 
         unpack_metadata_to_string: function(metadata){
-            var metastr = String(metadata['value']);
+            let metastr = String(metadata['value']);
             if ('units' in metadata){
                 metastr += " " + String(metadata['units']);
             }

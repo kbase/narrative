@@ -1,8 +1,6 @@
-/*global define,require*/
-/*jslint white:true,browser:true */
 /*
  * Narrative Data Widget
- * 
+ *
  * Embodies a KBase data widget which can be safely displayed in a Narrative.
  * Handles
  * - fetching widget
@@ -19,10 +17,10 @@ define([
     'narrativeConfig',
     // Use our locally defined widget service for protyping the iframe stuff, then merge that in
     'widgetService2'
-], function (Promise, RuntimeManager, MessageManager, NarrativeConfig, WidgetService) {
+], (Promise, RuntimeManager, MessageManager, NarrativeConfig, WidgetService) => {
     'use strict';
     function factory(config) {
-        var widgetTitle = config.title,
+        const widgetTitle = config.title,
             widgetParentNode = config.parent,
             authRequired = config.authRequired,
             narrativeConfig = NarrativeConfig.getConfig(),
@@ -36,9 +34,9 @@ define([
         }
 
         function runWidget(objectRefs, options) {
-            return new Promise(function (resolve, reject) {
+            return new Promise((resolve, reject) => {
                 try {
-                    var runtimeManager = RuntimeManager.make({
+                    const runtimeManager = RuntimeManager.make({
                         cdnUrl: narrativeConfig.services.cdn.url
                     }),
                         // This runtime object is provided for the boot up of the widget invocation
@@ -55,65 +53,65 @@ define([
                         'kb_common/html',
                         'uuid'
                     ],
-                        function (Props, Session, Html, Uuid) {
+                        (Props, Session, Html, Uuid) => {
                             // just a little synchronous auth token business for now
                             function getAuthToken() {
-                                var session = Session.make({cookieName: 'kbase_session'});
+                                const session = Session.make({cookieName: 'kbase_session'});
                                 return session.getAuthToken();
                             }
                             function makeWidgetHostAdapter(objectRefs, options) {
-                                var configProps = Props.make({data: NarrativeConfig.getConfig()});
+                                const configProps = Props.make({data: NarrativeConfig.getConfig()});
                                 return function (bus) {
-                                    bus.subscribe('ready', function () {
+                                    bus.subscribe('ready', () => {
                                         bus.publish('start', {
                                             objectRefs: objectRefs,
                                             options: options
                                         });
                                     });
 
-                                    bus.subscribe('config', function (data) {
+                                    bus.subscribe('config', (data) => {
                                         return {
                                             value: configProps.getItem(data.property, data.defaultValue)
                                         };
                                     });
 
-                                    bus.subscribe('authToken', function () {
-                                        var token = getAuthToken();
+                                    bus.subscribe('authToken', () => {
+                                        const token = getAuthToken();
                                         return {
                                             value: token
                                         };
                                     });
 
-                                    bus.subscribe('error', function (data) {
+                                    bus.subscribe('error', (data) => {
                                         showErrorMessage(data.message);
 
                                     });
                                 };
                             }
-                            var waitingPartners = {};
+                            const waitingPartners = {};
                             function findWaiting(frameWindow) {
-                                var keys = Object.keys(waitingPartners), i;
+                                let keys = Object.keys(waitingPartners), i;
                                 for (i = 0; i < keys.length; i += 1) {
-                                    var key = keys[i], partner = waitingPartners[key];
+                                    const key = keys[i], partner = waitingPartners[key];
                                     if (frameWindow === partner.window) {
                                         return partner;
                                     }
                                 }
                             }
-                            
+
                             function urlToHost(urlString) {
-                                var url = new URL(urlString);
+                                const url = new URL(urlString);
                                 return url.protocol + '//' + url.host;
                             }
-                            
+
                             function renderIFrameWidget(node, url, host) {
-                                var div = Html.tag('div'),
+                                const div = Html.tag('div'),
                                     iframe = Html.tag('iframe'),
                                     iframeId = (new Uuid(4)).format(),
                                     iframeNodeId = 'frame_' + iframeId,
                                     iframeHost = urlToHost(url);
-                                
-                               
+
+
                                 node.innerHTML = div({class: 'row'}, [
                                     div({class: 'col-md-12'}, [
                                         Html.makePanel({
@@ -131,7 +129,7 @@ define([
                                     ])
                                 ]);
                                 // Note that this listener needs to be effective before the iframe loads.
-                                // This is not a problem since although the iframe will be present in the DOM 
+                                // This is not a problem since although the iframe will be present in the DOM
                                 // at this point in the code, the content will not have loaded yet.
                                 waitingPartners[iframeId] = {
                                     name: iframeId,
@@ -146,7 +144,7 @@ define([
                                     // Now we only add the parter after the initial handshake.
 
                                     // Do we have the partner?
-                                    var source = event.source,
+                                    const source = event.source,
                                         waitingPartner = findWaiting(source);
 
                                     if (!waitingPartner) {
@@ -167,7 +165,7 @@ define([
                                     messageManager.send(waitingPartner.name, {
                                         name: 'start',
                                         config: {
-                                            frameId: waitingPartner.name,                            
+                                            frameId: waitingPartner.name,
                                             host: 'http://localhost:8888'
                                         },
                                         params: {
@@ -176,7 +174,7 @@ define([
                                     });
                                 }
                             });
-                            
+
                             messageManager.listen({
                                 name: 'authStatus',
                                 handler: function (message) {
@@ -193,7 +191,7 @@ define([
                             messageManager.listen({
                                 name: 'config',
                                 handler: function (message) {
-                                    var configProps = Props.make({data: NarrativeConfig.getConfig()});
+                                    const configProps = Props.make({data: NarrativeConfig.getConfig()});
                                     messageManager.send(message.from, {
                                         name: 'config',
                                         id: message.id,
@@ -207,12 +205,12 @@ define([
                                 handler: function (message, event) {
                                     // adjust height of source window...
                                     console.log('rendering ...' + message.from);
-                                    var height = message.height; // event.source.contentWindow.height;
-                                    var iframe = document.querySelector('[data-frame="frame_' + message.from + '"]');
+                                    const height = message.height; // event.source.contentWindow.height;
+                                    const iframe = document.querySelector('[data-frame="frame_' + message.from + '"]');
                                     iframe.style.height = height + 'px';
                                 }
                             });
-                            
+
                             /*
                              * Loading...
                              */
@@ -233,16 +231,16 @@ define([
                              * This function creates a function which, given a pubsub bus object, creates
                              * the necessary hooks for implementing the interface.
                              */
-                            
+
                             // use raw widget service for now.
-                            var widgetService = WidgetService.make({
+                            const widgetService = WidgetService.make({
                                 url: 'http://widget.kbase.us/wsvc'
                             });
-                            var widget = widgetService.getWidget(config.package, config.version, config.widget);
+                            const widget = widgetService.getWidget(config.package, config.version, config.widget);
                             if (!widget) {
                                 throw new Error('Cannot find widget: ' + config.package + ', ' + config.version + ', ' + config.widget);
                             }
-                            
+
 //                            var widgetManager = WidgetManager.make({
 //                                widgetServiceUrl: config.services.widget.url,
 //                                cdnUrl: config.services.cdn.url
@@ -255,10 +253,10 @@ define([
 //                                title: widgetTitle
 //                            });
 
-                            // The "widget" is provided as simple markup (string) with an id set and mapped 
+                            // The "widget" is provided as simple markup (string) with an id set and mapped
                             // internally to the right widget invocation stuff.
                             renderIFrameWidget(widgetParentNode, widget.widget.url, 'http://localhost:8888');
-                            
+
                             messageManager.listen({
                                 name: 'ready',
                                 handler: function (message, event) {
@@ -266,7 +264,7 @@ define([
                                     // Now we only add the parter after the initial handshake.
 
                                     // Do we have the partner?
-                                    var source = event.source,
+                                    const source = event.source,
                                         waitingPartner = findWaiting(source);
 
                                     if (!waitingPartner) {
@@ -287,7 +285,7 @@ define([
                                     messageManager.send(waitingPartner.name, {
                                         name: 'start',
                                         config: {
-                                            frameId: waitingPartner.name,                            
+                                            frameId: waitingPartner.name,
                                             host: 'http://localhost:8080'
                                         },
                                         params: {

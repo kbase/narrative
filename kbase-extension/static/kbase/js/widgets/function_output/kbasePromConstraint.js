@@ -13,26 +13,26 @@
 
         init: function(options) {
             this._super(options);
-            var self = this;
-            var ws = options.ws;
-            var name = options.name;            
+            const self = this;
+            const ws = options.ws;
+            const name = options.name;            
 
             console.log('ws/name', ws, name)
-            var container = this.$elem;
+            const container = this.$elem;
 
             container.loading();
-            var p = kb.ws.get_objects([{workspace: ws, name: name}]);
-            $.when(p).done(function(data){
-                var reflist = data[0].refs;
+            const p = kb.ws.get_objects([{workspace: ws, name: name}]);
+            $.when(p).done((data)=> {
+                const reflist = data[0].refs;
                 reflist.push(data[0].data.genome_ref);
 
-                var prom = kb.ui.translateRefs(reflist);
-                $.when(prom).done(function(refhash) {
+                const prom = kb.ui.translateRefs(reflist);
+                $.when(prom).done((refhash) => {
                     container.rmLoading();
 
                     buildTable(data, refhash)
                 })
-            }).fail(function(e){
+            }).fail((e)=> {
                 container.rmLoading();
                 container.append('<div class="alert alert-danger">'+
                                 e.error.message+'</div>')
@@ -41,15 +41,15 @@
 
             function buildTable(data, refhash) {
                 // setup tabs
-                var pcTable = $('<table class="table table-bordered table-striped" style="width: 100%;">');
+                const pcTable = $('<table class="table table-bordered table-striped" style="width: 100%;">');
 
-                var tabs = container.kbaseTabTableTabs({tabs: [
+                const tabs = container.kbaseTabTableTabs({tabs: [
                                             {name: 'Overview', active: true},
                                             {name: 'PROM Constraint', content: pcTable}]
                                           })
 
                 // Code to displaying overview data
-                var keys = [
+                const keys = [
                     {key: 'wsid'},
                     {key: 'ws'},
                     {key: 'kbid'},
@@ -62,7 +62,7 @@
                     {key: 'owner'},
                     {key: 'date'}
                 ];
-                var phenooverdata = {
+                const phenooverdata = {
                     wsid: data[0].info[1],
                     ws: data[0].info[7],
                     kbid: data[0].data.id,
@@ -75,26 +75,26 @@
                     owner: data[0].creator,
                     date: data[0].created,
                 };
-                var labels = ['Name','Workspace','KBID','Source','Genome','Expression Series','Regulome','Type','Errors','Owner','Creation date'];
+                const labels = ['Name','Workspace','KBID','Source','Genome','Expression Series','Regulome','Type','Errors','Owner','Creation date'];
                 var table = kb.ui.objTable('overview-table',phenooverdata,keys,labels);
                 tabs.tabContent('Overview').append(table)
 
 		    // reformat the promconstraint into one row per TF/TG pair
-                var promc = data[0].data;
-		var pcdata = [];
+                const promc = data[0].data;
+		const pcdata = [];
 
 		console.log(promc);
-		for (var i=0; i < promc.transcriptionFactorMaps.length; i++) {
-		    var pair = promc.transcriptionFactorMaps[i];
-		    for (var j=0; j < pair.targetGeneProbs.length; j++) {
-			var tgProbs = pair.targetGeneProbs[j];
+		for (let i=0; i < promc.transcriptionFactorMaps.length; i++) {
+		    const pair = promc.transcriptionFactorMaps[i];
+		    for (let j=0; j < pair.targetGeneProbs.length; j++) {
+			const tgProbs = pair.targetGeneProbs[j];
 			pcdata.push([pair.transcriptionFactor_ref,tgProbs.target_gene_ref,tgProbs.probTGonGivenTFoff,tgProbs.probTGonGivenTFon]);
 		    }
 		}
 		console.log(pcdata);
 
 		// create a table from the reformatted promconstraint data
-                var tableSettings = {
+                const tableSettings = {
                      "sPaginationType": "bootstrap",
                      "iDisplayLength": 10,
                      "aaData": pcdata,

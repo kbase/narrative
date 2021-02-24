@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'jquery',
     'kb_common/html',
@@ -10,7 +8,7 @@ define([
     'kbase/js/widgets/appInfoPanel',
     'narrativeConfig',
     'custom/custom'
-], function (
+], (
     $,
     html,
     Events,
@@ -19,10 +17,10 @@ define([
     BootstrapDialog,
     AppInfoPanel,
     Config
-) {
+) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         a = t('a'),
         button = t('button'),
@@ -45,7 +43,7 @@ define([
     }
 
     function factory(config) {
-        var container,
+        let container,
             cell,
             readOnly = Jupyter.narrative.readonly;
 
@@ -62,7 +60,7 @@ define([
         }
 
         function getCellTitle(cell) {
-            var title = getMeta(cell, 'attributes', 'title'),
+            const title = getMeta(cell, 'attributes', 'title'),
                 showTitle = utils.getCellMeta(cell, 'kbase.cellState.showTitle', true);
 
             if (showTitle) {
@@ -72,7 +70,7 @@ define([
         }
 
         function getCellSubtitle(cell) {
-            var subTitle = getMeta(cell, 'attributes', 'subtitle'),
+            const subTitle = getMeta(cell, 'attributes', 'subtitle'),
                 showTitle = utils.getCellMeta(cell, 'kbase.cellState.showTitle', true),
                 showSubtitle = utils.getCellMeta(cell, 'kbase.cellState.showSubtitle', true);
 
@@ -83,7 +81,7 @@ define([
         }
 
         function getCellInfoLink(cell, events) {
-            var url = utils.getCellMeta(cell, 'kbase.attributes.info.url'),
+            const url = utils.getCellMeta(cell, 'kbase.attributes.info.url'),
                 label = utils.getCellMeta(cell, 'kbase.attributes.info.label');
 
             if (url) {
@@ -102,7 +100,7 @@ define([
 
         function doToggleMinMaxCell(e) {
             if (e.getModifierState) {
-                var modifier = e.getModifierState('Alt');
+                const modifier = e.getModifierState('Alt');
                 if (modifier) {
                     console.log('I want to toggle all cells!');
                 }
@@ -123,7 +121,7 @@ define([
 
         function doShowInfoModal(e) {
             e.preventDefault();
-            var version = utils.getCellMeta(cell, 'kbase.appCell.app.version'),
+            const version = utils.getCellMeta(cell, 'kbase.appCell.app.version'),
                 authors = utils.getCellMeta(cell, 'kbase.appCell.app.spec.info.authors'),
                 title = getMeta(cell, 'attributes', 'title') + ' v' + version,
                 appStoreUrl = utils.getCellMeta(cell, 'kbase.attributes.info.url'),
@@ -134,7 +132,7 @@ define([
                 body: $('<div class="container"></div>'),
                 buttons: [
                     $('<a href="' + appStoreUrl + '" target="_blank" type="button" class="btn btn-default">View on App Store</a>'),
-                    $('<button type="button" class="btn btn-primary">Close</button>').click(function () {
+                    $('<button type="button" class="btn btn-primary">Close</button>').click(() => {
                         dialog.hide();
                     })
                 ],
@@ -142,7 +140,7 @@ define([
                 closeButton: true
             });
 
-            var infoPanel = AppInfoPanel.make({
+            const infoPanel = AppInfoPanel.make({
                 appId: utils.getCellMeta(cell, 'kbase.appCell.app.id'),
                 appVersion: version,
                 appAuthors: authors,
@@ -151,7 +149,7 @@ define([
             });
             infoPanel.start({node: dialog.getBody()});
 
-            dialog.getElement().on('hidden.bs.modal', function () {
+            dialog.getElement().on('hidden.bs.modal', () => {
                 dialog.destroy();
             });
             dialog.show();
@@ -199,7 +197,7 @@ define([
         }
 
         function renderOptions(cell, events) {
-            var toggleMinMax = utils.getCellMeta(cell, 'kbase.cellState.toggleMinMax', 'maximized'),
+            const toggleMinMax = utils.getCellMeta(cell, 'kbase.cellState.toggleMinMax', 'maximized'),
                 toggleIcon = (toggleMinMax === 'maximized' ? 'minus' : 'plus'),
                 dropdownId = html.genId(),
                 menuItems = [];
@@ -286,7 +284,7 @@ define([
                     class: 'dropdown-menu dropdown-menu-right',
                     ariaLabelledby: dropdownId
                 }, [
-                    menuItems.map(function (item) {
+                    menuItems.map((item) => {
                         switch (item.type) {
                             case 'separator':
                                 return li({
@@ -366,7 +364,7 @@ define([
             const appStatePretty = minimizedStatus(fsmMode, fsmStage);
             const collapsedCellStatus = cellCollapsed ? appStatePretty : '';
 
-            var events = Events.make({node: container}),
+            const events = Events.make({node: container}),
                 buttons = [
                     div({class: 'buttons pull-right'}, [
                         renderOptions(cell, events),
@@ -403,7 +401,7 @@ define([
                         ])),
 
                         (function () {
-                            var toggleMinMax = utils.getCellMeta(cell, 'kbase.cellState.toggleMinMax', 'maximized'),
+                            const toggleMinMax = utils.getCellMeta(cell, 'kbase.cellState.toggleMinMax', 'maximized'),
                                 toggleIcon = (toggleMinMax === 'maximized' ? 'minus' : 'plus'),
                                 color = (toggleMinMax === 'maximized' ? '#000' : 'rgba(255,137,0,1)');
                             return button({
@@ -548,14 +546,14 @@ define([
             try {
                 container = toolbarDiv[0];
                 cell = parentCell;
-                var rendered = render(parentCell);
+                const rendered = render(parentCell);
                 container.innerHTML = rendered.content;
                 $(container).find('button').tooltip();
                 $(container).find('[data-toggle="popover"]').popover();
                 rendered.events.attachEvents();
 
                 // try this...
-                container.addEventListener('dblclick', function (e) {
+                container.addEventListener('dblclick', (e) => {
                     doToggleMinMaxCell(e);
                 });
             } catch (ex) {

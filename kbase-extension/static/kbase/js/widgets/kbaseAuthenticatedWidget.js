@@ -7,11 +7,11 @@ define (
 		'kbwidget',
 		'bootstrap',
 		'jquery'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$
-	) {
+	) => {
 
 
 

@@ -13,7 +13,7 @@ define (
 		'geometry_rectangle',
 		'geometry_point',
 		'geometry_size'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -23,7 +23,7 @@ define (
 		geometry_rectangle,
 		geometry_point,
 		geometry_size
-	) {
+	) => {
 
     return KBWidget({
 
@@ -79,13 +79,13 @@ define (
 
     calculateNodeDepths : function(nodes) {
         //we need to know the distance of all nodes from a leaf, in order to use leaf bias. Dammit.
-        nodes.forEach(function (node) {
+        nodes.forEach((node) => {
             if (! node.children) {
 
                 node.nodeDepth = 0;
 
-                var parent = node.parent;
-                var nodeDepth = 1;
+                let parent = node.parent;
+                let nodeDepth = 1;
 
                 while (parent != undefined) {
                     if (parent.nodeDepth == undefined || parent.nodeDepth < nodeDepth) {
@@ -101,7 +101,7 @@ define (
     },
 
     afterInArray: function (val, array) {
-        var idx = array.indexOf(val) + 1;
+        let idx = array.indexOf(val) + 1;
         if (idx >= array.length) {
             idx = 0;
         }
@@ -110,9 +110,9 @@ define (
     },
 
     countVisibleLeaves: function (nodes) {
-        var num = 0;
+        let num = 0;
         if (nodes.children != undefined && (nodes.open == true || nodes.open == undefined)) {
-            for (var idx = 0; idx < nodes.children.length; idx++) {
+            for (let idx = 0; idx < nodes.children.length; idx++) {
                 num += this.countVisibleLeaves(nodes.children[idx]);
             }
         } else {
@@ -127,7 +127,7 @@ define (
             return true;
         }
         if (search != undefined && search.children != undefined) {
-            for (var idx = 0; idx < search.children.length; idx++) {
+            for (let idx = 0; idx < search.children.length; idx++) {
                 if (this.findInChildren(target, search.children[idx])) {
                     return true;
                 }
@@ -138,7 +138,7 @@ define (
     },
 
     redBlue: function (node, d) {
-        var $tree = this;
+        const $tree = this;
         if ($tree.options.red == d) {
             $tree.options.red = undefined;
             $tree.options.redNode = undefined;
@@ -149,7 +149,7 @@ define (
             $tree.options.blueNode = undefined;
         }
 
-        var colors = ['red', 'black'];
+        let colors = ['red', 'black'];
 
         if ($tree.options.red != undefined && $tree.options.blue != undefined) {
             $tree.options.red.fill = 'black';
@@ -229,7 +229,7 @@ define (
 
     defaultDepth : function(d, rootOffset, chartOffset) {
 
-        var distance = this.options.distance;
+        let distance = this.options.distance;
         if (d.distance != undefined) {
             distance *= d.distance;
         }
@@ -249,7 +249,7 @@ define (
 
         if (d.id == undefined) {
 
-            var name = d.name;
+            let name = d.name;
             if (name == undefined && this.options.nameFunction != undefined) {
                 name = this.options.nameFunction.call(this, d);
             }
@@ -267,32 +267,32 @@ define (
 
     updateTree: function (source) {
     console.log("CHART REGION IS ", this.region(this.options.chartRegion));
-        var chart = this.D3svg().select(this.region(this.options.chartRegion));
+        const chart = this.D3svg().select(this.region(this.options.chartRegion));
 
-        var $tree = this;
+        const $tree = this;
 
-        var duration = this.initialized ? this.options.transitionTime : 0;
+        const duration = this.initialized ? this.options.transitionTime : 0;
 
-        var rootOffset = 0;
+        let rootOffset = 0;
 
-        var bounds = this.chartBounds();
+        const bounds = this.chartBounds();
 
         //okay. This is going to suck. Figure out the appropriate depth of the root element. Create a fake SVG element,
         // toss the root node into there, and yank out its width.
-        var fakeDiv = document.createElement('div');
+        const fakeDiv = document.createElement('div');
 
-        var root = source;
+        let root = source;
         while (root.parent != undefined) {
             root = root.parent;
         }
 
-        var rootText = chart.append('text')
+        const rootText = chart.append('text')
             .attr('style', 'visibility : hidden; font-size : 11px;cursor : pointer;-webkit-touch-callout: none;-webkit-user-select: none;-khtml-user-select: none;-moz-user-select: none;-ms-user-select: none;user-select: none;')
             .attr('class', 'fake')
             .text(root.name);
         rootOffset = rootText[0][0].getBBox().width + $tree.options.labelSpace + bounds.origin.x;
 
-        var newHeight = this.options.nodeHeight * this.countVisibleLeaves(this.dataset());
+        let newHeight = this.options.nodeHeight * this.countVisibleLeaves(this.dataset());
 
         //this.$elem.animate({'height' : newHeight + this.options.yGutter + this.options.yPadding}, 500);
         //            this.$elem.height(newHeight);
@@ -305,19 +305,19 @@ define (
         this.nodes = this.treeLayout.nodes(this.dataset()).reverse();
         this.calculateNodeDepths(this.nodes);
 
-        var chartOffset = 0;
+        let chartOffset = 0;
 
 
 
-        var maxOffset = 0;
-        var minOffset = 5000000000;
+        let maxOffset = 0;
+        let minOffset = 5000000000;
 
         function findWidth(text, d) {
-            var box = text[0][0].getBBox();
-            var right = d.children || d._children
+            const box = text[0][0].getBBox();
+            const right = d.children || d._children
                 ? d.y + $tree.options.labelSpace
                 : d.y + box.width + $tree.options.labelSpace;
-            var left = d.children || d._children
+            const left = d.children || d._children
                 ? d.y + $tree.options.labelSpace - box.width
                 : d.y + $tree.options.labelSpace;
 
@@ -327,7 +327,7 @@ define (
         $tree.options.fixedDepth = 0;
 
         this.nodes.forEach(
-            function (d) {
+            (d) => {
                 d.y = $tree.depth(d, rootOffset, chartOffset);
 
                 if (d.y > $tree.options.fixedDepth) {
@@ -337,7 +337,7 @@ define (
         );
 
         this.nodes.forEach(
-            function (d) {
+            (d) => {
                 d.y = $tree.depth(d, rootOffset, chartOffset);
 
                 d.y = $tree.options.fixed && (!d.children || d.children.length == 0)
@@ -348,22 +348,22 @@ define (
                     d.name = $tree.options.nameFunction.call($tree, d);
                 }
 
-                var fakeText = chart.append('text')
+                const fakeText = chart.append('text')
                     .attr('style', 'visibility : hidden;font-size : 11px;cursor : pointer;-webkit-touch-callout: none;-webkit-user-select: none;-khtml-user-select: none;-moz-user-select: none;-ms-user-select: none;user-select: none;')
                     .attr('class', 'fake')
                     .text(d.name);
 
-                var fakeBounds = findWidth(fakeText, d);
-                var fakeLeft = fakeBounds[0];
-                var fakeRight = fakeBounds[1];
+                const fakeBounds = findWidth(fakeText, d);
+                const fakeLeft = fakeBounds[0];
+                const fakeRight = fakeBounds[1];
                 d.width = fakeBounds[2];
 
                 if ($tree.options.labelWidth && d.width > $tree.options.labelWidth) {
-                    var words = d.name.split(/\s+/);
-                    var shortWords = [words.shift()];
+                    const words = d.name.split(/\s+/);
+                    const shortWords = [words.shift()];
 
                     fakeText.text(shortWords.join(' '));
-                    var throttle = 0
+                    let throttle = 0
                     while (findWidth(fakeText, d)[2] < $tree.options.labelWidth && throttle++ < 40) {
                         shortWords.push(words.shift());
                         fakeText.text(shortWords.join(' '));
@@ -386,7 +386,7 @@ define (
             }
         );
 
-        var widthDelta = 0;
+        let widthDelta = 0;
         if (minOffset < bounds.origin.x) {
             widthDelta += bounds.origin.x - minOffset;
             chartOffset = widthDelta;
@@ -397,7 +397,7 @@ define (
 
         chart.selectAll('.fake').remove();
 
-        var newWidth = this.options.xGutter + this.options.yGutter + widthDelta + bounds.size.width;
+        let newWidth = this.options.xGutter + this.options.yGutter + widthDelta + bounds.size.width;
 
         if (newWidth < $tree.options.originalWidth && ! $tree.options.canShrinkWidth) {
             newWidth = $tree.options.originalWidth;
@@ -414,23 +414,23 @@ define (
                     duration
                 );
 
-        var node = chart.selectAll("g.tree-node")
-            .data(this.nodes, function(d) { return $tree.uniqueness(d) });
+        const node = chart.selectAll("g.tree-node")
+            .data(this.nodes, (d) => { return $tree.uniqueness(d) });
 
         // Enter any new nodes at the parent's previous position.
-        var nodeEnter = node.enter().append("g")
+        const nodeEnter = node.enter().append("g")
                 .attr("class", "tree-node")
-                .attr('data-node-id', function (d) { return $tree.uniqueness(d) } )
+                .attr('data-node-id', (d) => { return $tree.uniqueness(d) } )
                 .attr('opacity', 0)
-                .attr("transform", function (d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
+                .attr("transform", (d) => { return "translate(" + source.y0 + "," + source.x0 + ")"; })
             ;
 
                         nodeEnter.append("circle")
                                 .attr("class", "circle")
                                 .attr("r", 1e-6)
                                 .attr('style', 'cursor : pointer;')
-                                .attr('stroke', function(d) { return d.stroke || $tree.options.circleStroke})
-                                .style("fill", function(d) { return d._children ? $tree.options.openCircleFill : $tree.options.closedCircleFill; })
+                                .attr('stroke', (d) => { return d.stroke || $tree.options.circleStroke})
+                                .style("fill", (d) => { return d._children ? $tree.options.openCircleFill : $tree.options.closedCircleFill; })
                                 .on("click", function(d) {
 
                 if ($tree.oneClick) {
@@ -477,18 +477,18 @@ define (
         nodeEnter.append("text")
             //.attr('style', 'font-size : 11px')
             .attr('class', 'tree-nodeText')
-            .attr('data-text-id', function (d) { return $tree.uniqueness(d) } )
+            .attr('data-text-id', (d) => { return $tree.uniqueness(d) } )
             .attr('style', 'font-size : 11px;cursor : pointer;-webkit-touch-callout: none;-webkit-user-select: none;-khtml-user-select: none;-moz-user-select: none;-ms-user-select: none;user-select: none;')
             .attr("dy", ".35em")
             .text(function (d) {
-                var name = d.name;
+                let name = d.name;
                 if (d.width > $tree.options.labelWidth && $tree.options.truncationFunction) {
                     name = $tree.options.truncationFunction(d, this, $tree);
                 }
                 return name;
             })
             .style("fill-opacity", 1e-6)
-            .attr('fill', function (d) { return d.fill || 'black'})
+            .attr('fill', (d) => { return d.fill || 'black'})
             .on("click", function (d) {
 
                 if ($tree.oneClick) {
@@ -535,11 +535,11 @@ define (
 
 
         // Transition nodes to their new position.
-        var nodeUpdate = node.transition()
+        const nodeUpdate = node.transition()
                 .duration(duration)
                 .attr('opacity', 1)
-                .attr("transform", function (d) {
-                    var y = $tree.options.fixed && (!d.children || d.length == 0)
+                .attr("transform", (d) => {
+                    let y = $tree.options.fixed && (!d.children || d.length == 0)
                         ? $tree.options.fixedDepth
                         : d.y;
                     if ($tree.options.bias == 'leaf' && d.parent != undefined) {
@@ -550,12 +550,12 @@ define (
             ;
 
         nodeUpdate.select("circle")
-            .attr("r", function (d) { return d.radius || $tree.options.circleRadius})
-            .attr('stroke', function (d) { return d.stroke || $tree.options.circleStroke})
-            .style("fill", function (d) { return d._children ? $tree.options.openCircleFill : $tree.options.closedCircleFill; })
+            .attr("r", (d) => { return d.radius || $tree.options.circleRadius})
+            .attr('stroke', (d) => { return d.stroke || $tree.options.circleStroke})
+            .style("fill", (d) => { return d._children ? $tree.options.openCircleFill : $tree.options.closedCircleFill; })
 
-            .attr('visibility', function (d) {
-                var isLeaf = true;
+            .attr('visibility', (d) => {
+                let isLeaf = true;
                 if (d.children && d.children.length) {
                     isLeaf = false;
                 }
@@ -579,10 +579,10 @@ define (
 
         nodeUpdate.select("text")
             .style("fill-opacity", 1)
-            .attr("x", function (d) { return d.children ? 0 - $tree.options.labelSpace : $tree.options.labelSpace; })
-            .attr("text-anchor", function (d) { return d.children ? "end" : "start"; })
-            .attr('visibility', function (d) {
-                var isLeaf = true;
+            .attr("x", (d) => { return d.children ? 0 - $tree.options.labelSpace : $tree.options.labelSpace; })
+            .attr("text-anchor", (d) => { return d.children ? "end" : "start"; })
+            .attr('visibility', (d) => {
+                let isLeaf = true;
                 if (d.children && d.children.length) {
                     isLeaf = false;
                 }
@@ -605,10 +605,10 @@ define (
         });
 
         // Transition exiting nodes to the parent's new position.
-        var nodeExit = node.exit().transition()
+        const nodeExit = node.exit().transition()
                 .duration(duration)
                 .attr('opacity', 0)
-                .attr("transform", function (d) { return "translate(" + source.y + "," + source.x + ")"; })
+                .attr("transform", (d) => { return "translate(" + source.y + "," + source.x + ")"; })
                 .remove()
             ;
 
@@ -625,17 +625,17 @@ define (
         });
 
         // Update the links
-        var link = chart.selectAll("path.tree-link")
-            .data($tree.treeLayout.links($tree.nodes), function(d) { return $tree.uniqueness(d.target) });
+        const link = chart.selectAll("path.tree-link")
+            .data($tree.treeLayout.links($tree.nodes), (d) => { return $tree.uniqueness(d.target) });
 
                         // Enter any new links at the parent's previous position.
                         link.enter().insert("path", "g")
                                 .attr("class", "tree-link")
-                                .attr('data-link-id', function (d) { return $tree.uniqueness(d.target) } )
+                                .attr('data-link-id', (d) => { return $tree.uniqueness(d.target) } )
                                 .attr('fill', 'none')
-                                .attr('stroke', function (d) { return d.target.lineStroke || $tree.options.lineStroke})
-                                .attr("d", function(d) {
-                                    var o = {x: source.x0, y: source.y0};
+                                .attr('stroke', (d) => { return d.target.lineStroke || $tree.options.lineStroke})
+                                .attr("d", (d) => {
+                                    const o = {x: source.x0, y: source.y0};
                                     return $tree.diagonal({source: o, target: o});
                                 })
                                 .on('mouseover', function (d) {
@@ -655,8 +655,8 @@ define (
                         // Transition links to their new position.
                         link.transition()
                                 .duration(duration)
-                                .attr('stroke-width', function (d) {
-                                        var weight = d.target.weight || $tree.options.strokeWidth;
+                                .attr('stroke-width', (d) => {
+                                        let weight = d.target.weight || $tree.options.strokeWidth;
                                         if (typeof(weight) === 'function') {
                                                 weight = weight.call($tree, d);
                                         }
@@ -669,14 +669,14 @@ define (
         link.exit().transition()
             .duration(duration)
             .attr('opacity', 0)
-            .attr("d", function (d) {
-                var o = {x: source.x, y: source.y};
+            .attr("d", (d) => {
+                const o = {x: source.x, y: source.y};
                 return $tree.diagonal({source: o, target: o});
             })
             .remove();
 
         // Stash the old positions for transition.
-        $tree.nodes.forEach(function (d) {
+        $tree.nodes.forEach((d) => {
             d.x0 = d.x;
             d.y0 = d.y;
         });
@@ -708,19 +708,19 @@ define (
         this.options.originalWidth = this.$elem.width();
         this.options.originalHeight = this.$elem.height();
 
-        var i = 0;
-        var bounds = this.chartBounds();
+        const i = 0;
+        const bounds = this.chartBounds();
 
         if (this.treeLayout == undefined) {
             this.treeLayout = this.layoutType()
                 .size([bounds.size.height, bounds.size.width]);
         }
 
-        var $tree = this;
+        const $tree = this;
 
-        var getYCoords = function(d) {
-            var sourceY = d.source.y;
-            var targetY = $tree.options.fixed && (! d.target.children || d.target.children.length == 0)
+        const getYCoords = function(d) {
+            let sourceY = d.source.y;
+            let targetY = $tree.options.fixed && (! d.target.children || d.target.children.length == 0)
                 ? $tree.options.fixedDepth
                 : d.target.y;
 
@@ -742,8 +742,8 @@ define (
 
         if (this.options.lineStyle == 'curve') {
             this.diagonal = d3.svg.diagonal()
-                .projection(function(d) {
-                    var y = $tree.options.fixed && (! d.children || d.length == 0)
+                .projection((d) => {
+                    const y = $tree.options.fixed && (! d.children || d.length == 0)
                         ? $tree.options.fixedDepth
                         : d.y;
                     return [y, d.x];
@@ -752,7 +752,7 @@ define (
         else if (this.options.lineStyle == 'straight') {
             this.diagonal = function(d) {
 
-                var yCoords = getYCoords(d);
+                const yCoords = getYCoords(d);
 
                 return "M" + yCoords.source + ',' + d.source.x + 'L' + yCoords.target + ',' + d.target.x;
             }
@@ -760,7 +760,7 @@ define (
         else if (this.options.lineStyle == 'square') {
             this.diagonal = function(d) {
 
-                var yCoords = getYCoords(d);
+                const yCoords = getYCoords(d);
 
                 return "M" + yCoords.source + ',' + d.source.x +
                        'L' + yCoords.source + ',' + d.target.x +
@@ -771,9 +771,9 @@ define (
         else if (this.options.lineStyle == 'step') {
             this.diagonal = function(d) {
 
-                var yCoords = getYCoords(d);
+                const yCoords = getYCoords(d);
 
-                var halfY = (yCoords.target - yCoords.source ) / 2 + yCoords.source;
+                const halfY = (yCoords.target - yCoords.source ) / 2 + yCoords.source;
 
                 return "M" + yCoords.source + ',' + d.source.x +
                        'L' + halfY + ',' + d.source.x +
@@ -799,7 +799,7 @@ define (
             }
         }
 
-        var root = this.dataset();
+        const root = this.dataset();
         if (root.children) {
             root.children.forEach(toggleAll);
         }

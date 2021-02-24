@@ -17,46 +17,46 @@
             return this;
         },
         render: function() {
-            var self = this;
-        	var pref = this.uuid();
-            var div = this.$elem;
+            const self = this;
+        	const pref = this.uuid();
+            const div = this.$elem;
         	
-            var tbl = $('<table style="border: 0px; margin: 0px; cellpadding: 0px; cellspacing: 0px;"/>');
+            const tbl = $('<table style="border: 0px; margin: 0px; cellpadding: 0px; cellspacing: 0px;"/>');
             div.append(tbl);
-            var tr = $('<tr/>');
-            var cellCss = { 'border' : 'none', 'vertical-align' : 'middle' };
+            const tr = $('<tr/>');
+            const cellCss = { 'border' : 'none', 'vertical-align' : 'middle' };
             tr.css(cellCss);
             tbl.append(tr);
             			
-            var nameText = $('<input>')
+            const nameText = $('<input>')
             	.addClass('form-control')
             	.css({'width' : '300px'})
             	.attr('type', 'text');
 
-            var prcText = $('<input>')
+            const prcText = $('<input>')
             	.addClass('form-control')
             	.css({'width' : '45px', 'padding': '2px'})
             	.attr('type', 'text');
 
             // create a file upload button and hide it and store it
-            var realButton = document.createElement('input');
+            const realButton = document.createElement('input');
             realButton.setAttribute('type', 'file');
             realButton.setAttribute('style', 'display: none;');
-            realButton.addEventListener('change', function() { 
+            realButton.addEventListener('change', () => { 
             	self.fileSelected(nameText, prcText, realButton); 
             });
             realButton.uploader = this;
             //this.fileBrowse = realButton;
             div.append(realButton);
             
-            var td = $('<td/>');
+            let td = $('<td/>');
             td.css(cellCss);
             td.css({'width' : '300px'});
             tr.append(td);
             td.append(nameText);
             
             // create the visible upload button
-            var fakeButton = document.createElement('button');
+            const fakeButton = document.createElement('button');
             fakeButton.setAttribute('class', 'btn btn-primary');
             fakeButton.innerHTML = "Select file";
             fakeButton.fb = realButton;
@@ -78,18 +78,18 @@
             return this;
         },
         fileSelected: function (nameText, prcText, realButton) {
-            var self = this;
+            const self = this;
             self.shockNodeId = null;
             self.uploadIsReady = false;
         	// get the selected file
-        	var file = realButton.files[0];
+        	const file = realButton.files[0];
         	console.log(file);
         	nameText.val(file.name);
         	
     		console.log("Before upload");
-            var SHOCK = new ShockClient({ token: self.token, url: self.options.url });
+            const SHOCK = new ShockClient({ token: self.token, url: self.options.url });
 
-            SHOCK.upload_node(file, function(info) {
+            SHOCK.upload_node(file, (info) => {
             	if (info.uploaded_size) {
             		console.log(info);
             		self.shockNodeId = info['incomplete_id'];
@@ -97,10 +97,10 @@
                 		self.uploadIsReady = true;
                 		console.log("Finish");
             		}
-            		var percent = Math.floor(info.uploaded_size * 1000 / info.file_size) / 10;
+            		const percent = Math.floor(info.uploaded_size * 1000 / info.file_size) / 10;
             		prcText.val(percent + "%");
             	}
-            }, function(error) {
+            }, (error) => {
             	console.log("Shock error:");
             	console.log(error);
             	alert("Error: " + error);
@@ -129,8 +129,8 @@
         
         uuid: function() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, 
-                function(c) {
-                    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+                (c) => {
+                    const r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                     return v.toString(16);
                 });
         }

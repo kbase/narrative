@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 define([
     'bluebird',
     // CDN
@@ -16,7 +13,7 @@ define([
     './model'
     // All the input widgets
 
-], function(
+], (
     Promise,
     html,
     UI,
@@ -29,16 +26,16 @@ define([
     ReadsSetModel
 
     // Input widgets
-) {
+) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         form = t('form'),
         div = t('div');
     // bus = runtime.bus().makeChannelBus({ description: 'A app params widget' });
 
     function factory(config) {
-        var runtime = Runtime.make(),
+        let runtime = Runtime.make(),
             parentBus = config.bus,
             workspaceInfo = config.workspaceInfo,
             appId = config.appId,
@@ -59,9 +56,9 @@ define([
         function makeFieldWidget(appSpec, parameterSpec, value) {
 
             return paramResolver.loadInputControl(parameterSpec)
-                .then(function(inputWidget) {
+                .then((inputWidget) => {
 
-                    var fieldWidget = FieldWidget.make({
+                    const fieldWidget = FieldWidget.make({
                         inputControlFactory: inputWidget,
                         showHint: true,
                         useRowHighight: true,
@@ -75,14 +72,14 @@ define([
                     fieldWidgets.push(fieldWidget);
 
                     // Forward all changed parameters to the controller. That is our main job!
-                    fieldWidget.bus.on('changed', function(message) {
+                    fieldWidget.bus.on('changed', (message) => {
                         parentBus.emit('parameter-changed', {
                             parameter: parameterSpec.id,
                             newValue: message.newValue
                         });
                     });
 
-                    fieldWidget.bus.on('touched', function() {
+                    fieldWidget.bus.on('touched', () => {
                         parentBus.emit('parameter-touched', {
                             parameter: parameterSpec.id
                         });
@@ -90,13 +87,13 @@ define([
 
 
                     // An input widget may ask for the current model value at any time.
-                    fieldWidget.bus.on('sync', function() {
+                    fieldWidget.bus.on('sync', () => {
                         parentBus.emit('parameter-sync', {
                             parameter: parameterSpec.id
                         });
                     });
 
-                    fieldWidget.bus.on('sync-params', function(message) {
+                    fieldWidget.bus.on('sync-params', (message) => {
                         parentBus.emit('sync-params', {
                             parameters: message.parameters,
                             replyToChannel: fieldWidget.bus.channelName
@@ -107,13 +104,13 @@ define([
                     /*
                      * Or in fact any parameter value at any time...
                      */
-                    fieldWidget.bus.on('get-parameter-value', function(message) {
+                    fieldWidget.bus.on('get-parameter-value', (message) => {
                         parentBus.request({
                                 parameter: message.parameter
                             }, {
                                 key: 'get-parameter-value'
                             })
-                            .then(function(message) {
+                            .then((message) => {
                                 channel.emit('parameter-value', {
                                     parameter: message.parameter
                                 });
@@ -181,8 +178,8 @@ define([
         // EVENTS
 
         function attachEvents() {
-            channel.on('reset-to-defaults', function() {
-                fieldWidgets.forEach(function(fieldWidget) {
+            channel.on('reset-to-defaults', () => {
+                fieldWidgets.forEach((fieldWidget) => {
                     fieldWidget.bus.emit('reset-to-defaults');
                 });
             });
@@ -208,7 +205,7 @@ define([
         }
 
         function validateParameterSpecs(params) {
-            return params.map(function(spec) {
+            return params.map((spec) => {
                 return validateParameterSpec(spec);
             });
         }
@@ -217,10 +214,10 @@ define([
 
         // Just a simple row layout.
         function renderEditorLayout() {
-            var view = {};
-            var parameterLayout = model.getItem('parameters.parameters.layout');
-            var layout = parameterLayout.map(function(parameterId) {
-                var id = html.genId();
+            const view = {};
+            const parameterLayout = model.getItem('parameters.parameters.layout');
+            const layout = parameterLayout.map((parameterId) => {
+                const id = html.genId();
                 view[parameterId] = {
                     id: id
                 };
@@ -238,17 +235,17 @@ define([
         }
 
         function renderParameters() {
-            var appSpec = model.getItem('appSpec');
-            var parameterSpecs = model.getItem('parameters');
-            var layout = renderEditorLayout();
+            const appSpec = model.getItem('appSpec');
+            const parameterSpecs = model.getItem('parameters');
+            const layout = renderEditorLayout();
 
             ui.setContent('fields', layout.content);
 
-            return Promise.all(parameterSpecs.parameters.layout.map(function(parameterId) {
-                var spec = parameterSpecs.parameters.specs[parameterId];
+            return Promise.all(parameterSpecs.parameters.layout.map((parameterId) => {
+                const spec = parameterSpecs.parameters.specs[parameterId];
                 try {
                     return makeFieldWidget(appSpec, spec, model.getItem(['params', spec.id]))
-                        .then(function(result) {
+                        .then((result) => {
                             widgets.push(result);
 
                             return result.widget.start({
@@ -257,7 +254,7 @@ define([
                         });
                 } catch (ex) {
                     console.error('Error making input field widget', ex);
-                    var errorDisplay = div({ style: { border: '1px red solid' } }, [
+                    const errorDisplay = div({ style: { border: '1px red solid' } }, [
                         ex.message
                     ]);
                     document.getElementById(layout.view[parameterId].id).innerHTML = errorDisplay;
@@ -272,7 +269,7 @@ define([
                 node: container,
                 bus: channel
             });
-            var events = Events.make({
+            const events = Events.make({
                 node: container
             });
             container.innerHTML = buildLayout(events);
@@ -286,7 +283,7 @@ define([
                 appTag: appTag
             });
             return readsSetModel.start()
-                .then(function() {
+                .then(() => {
 
                     doAttach(arg.node);
 
@@ -296,22 +293,22 @@ define([
 
                     // we then create our widgets
                     renderParameters()
-                        .then(function() {
+                        .then(() => {
                             // do something after success
                             attachEvents();
                         })
-                        .catch(function(err) {
+                        .catch((err) => {
                             // do somethig with the error.
                             console.error('ERROR in start', err);
                         });
 
                     // TODO: probably unused, unnecessary.
                     // Used to communicate changes to a parameter from outside,
-                    channel.on('parameter-changed', function(message) {
+                    channel.on('parameter-changed', (message) => {
                         // Also, tell each of our inputs that a param has changed.
                         // TODO: use the new key address and subscription
                         // mechanism to make this more efficient.
-                        fieldWidgets.forEach(function(fieldWidget) {
+                        fieldWidgets.forEach((fieldWidget) => {
                             fieldWidget.bus.send(message, {
                                 key: {
                                     type: 'parameter-changed',
@@ -325,20 +322,20 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                     // stop our comm bus
                     busConnection.stop();
 
                     // Stop all of the param field widgets.
-                    return Promise.all(fieldWidgets.map(function(fieldWidget) {
+                    return Promise.all(fieldWidgets.map((fieldWidget) => {
                             return fieldWidget.stop();
                         }))
-                        .then(function() {
+                        .then(() => {
                             fieldWidgets = [];
                         });
 
                 })
-                .then(function() {
+                .then(() => {
                     if (hostNode && container) {
                         try {
                             hostNode.removeChild(container);

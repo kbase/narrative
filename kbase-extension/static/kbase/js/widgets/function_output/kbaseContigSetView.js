@@ -12,14 +12,14 @@ define (
 		'kbaseAuthenticatedWidget',
 		'kbaseTabs',
 		'jquery-dataTables'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		kbaseAuthenticatedWidget,
 		kbaseTabs,
 		jquery_dataTables
-	) {
+	) => {
     return KBWidget({
         name: "kbaseContigSetView",
         parent : kbaseAuthenticatedWidget,
@@ -49,42 +49,42 @@ define (
         },
 
         render: function() {
-            var self = this;
-        	var pref = this.uuid();
+            const self = this;
+        	const pref = this.uuid();
 
-            var container = this.$elem;
+            const container = this.$elem;
             if (self.token == null) {
             	container.empty();
             	container.append("<div>[Error] You're not logged in</div>");
             	return;
             }
 
-            var kbws = new Workspace(self.wsUrl, {'token': self.token});
+            const kbws = new Workspace(self.wsUrl, {'token': self.token});
 
-            var ready = function() {
+            const ready = function() {
             	container.empty();
             	container.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;loading genome data...</div>");
 
-            	kbws.get_object_subset([{ref: self.ws_name +"/"+ self.ws_id, included: ['contigs/[*]/id', 'contigs/[*]/length', 'id', 'name', 'source', 'source_id', 'type']}], function(data) {
+            	kbws.get_object_subset([{ref: self.ws_name +"/"+ self.ws_id, included: ['contigs/[*]/id', 'contigs/[*]/length', 'id', 'name', 'source', 'source_id', 'type']}], (data) => {
             		container.empty();
-            		var cs = data[0].data;
+            		const cs = data[0].data;
             		console.log(cs);
-            		var tabPane = $('<div id="'+pref+'tab-content">');
+            		const tabPane = $('<div id="'+pref+'tab-content">');
             		container.append(tabPane);
-            		var tabWidget = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
-            		var tabNames = ['Overview', 'Contigs'];
-            		var tabIds = ['overview', 'contigs'];
+            		const tabWidget = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
+            		const tabNames = ['Overview', 'Contigs'];
+            		const tabIds = ['overview', 'contigs'];
             		for (var i=0; i<tabIds.length; i++) {
-            			var tabDiv = $('<div id="'+pref+tabIds[i]+'"> ');
+            			const tabDiv = $('<div id="'+pref+tabIds[i]+'"> ');
             			tabWidget.addTab({tab: tabNames[i], content: tabDiv, canDelete : false, show: (i == 0)});
             		}
 
             		////////////////////////////// Overview Tab //////////////////////////////
             		$('#'+pref+'overview').append('<table class="table table-striped table-bordered" \
             				style="margin-left: auto; margin-right: auto;" id="'+pref+'overview-table"/>');
-            		var overviewLabels = ['KBase ID', 'Name', 'Object ID', 'Source', "Source ID", "Type"];
-            		var overviewData = [cs.id, cs.name, self.ws_id, cs.source, cs.source_id, cs.type];
-            		var overviewTable = $('#'+pref+'overview-table');
+            		const overviewLabels = ['KBase ID', 'Name', 'Object ID', 'Source', "Source ID", "Type"];
+            		const overviewData = [cs.id, cs.name, self.ws_id, cs.source, cs.source_id, cs.type];
+            		const overviewTable = $('#'+pref+'overview-table');
             		for (var i=0; i<overviewData.length; i++) {
             			overviewTable.append('<tr><td>'+overviewLabels[i]+'</td> \
             					<td>'+overviewData[i]+'</td></tr>');
@@ -93,13 +93,13 @@ define (
             		////////////////////////////// Contigs Tab //////////////////////////////
             		$('#'+pref+'contigs').append('<table cellpadding="0" cellspacing="0" border="0" id="'+pref+'contigs-table" \
             		class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;"/>');
-            		var contigsData = [];
+            		const contigsData = [];
 
-            		for (var pos in cs.contigs) {
-            			var contig = cs.contigs[pos];
+            		for (const pos in cs.contigs) {
+            			const contig = cs.contigs[pos];
             			contigsData.push({name: contig.id, length: contig.length});
             		}
-            		var contigsSettings = {
+            		const contigsSettings = {
             				"sPaginationType": "full_numbers",
             				"iDisplayLength": 10,
             				"aaSorting": [[ 1, "desc" ]],
@@ -113,10 +113,10 @@ define (
             				            	  "sEmptyTable": "No contigs found."
             				              }
             		};
-            		var contigsTable = $('#'+pref+'contigs-table').dataTable(contigsSettings);
+            		const contigsTable = $('#'+pref+'contigs-table').dataTable(contigsSettings);
             		contigsTable.fnAddData(contigsData);
 
-            	}, function(data) {
+            	}, (data) => {
             		container.empty();
             		container.append('<p>[Error] ' + data.error.message + '</p>');
             	});
@@ -148,8 +148,8 @@ define (
 
         uuid: function() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
-                function(c) {
-                    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+                (c) => {
+                    const r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                     return v.toString(16);
                 });
         }

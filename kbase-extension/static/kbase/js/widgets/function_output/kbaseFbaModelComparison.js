@@ -6,14 +6,14 @@ define (
 		'kbaseAuthenticatedWidget',
         'kbaseTabs',
 		'jquery-dataTables'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		kbaseAuthenticatedWidget,
         kbaseTabs,
 		jquery_dataTables
-	) {
+	) => {
 return KBWidget({
     name: "FbaModelComparisonWidget",
     parent : kbaseAuthenticatedWidget,
@@ -55,8 +55,8 @@ return KBWidget({
     },
 
     render: function() {
-        var self = this;
-        var container = this.$elem;
+        const self = this;
+        const container = this.$elem;
     	container.empty();
         if (!self.authToken()) {
             container.append("<div>[Error] You're not logged in</div>");
@@ -65,13 +65,13 @@ return KBWidget({
 
     	container.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;Loading models and comparison data...</div>");
 
-    	var pref = this.uuid();
-        var kbws = new Workspace(this.wsUrl, {'token': self.authToken()});
-        var get_object_input = [{ref: self.ws_name + "/" + self.fba_model1_id},{ref: self.ws_name + "/" + self.fba_model2_id}];
+    	const pref = this.uuid();
+        const kbws = new Workspace(this.wsUrl, {'token': self.authToken()});
+        const get_object_input = [{ref: self.ws_name + "/" + self.fba_model1_id},{ref: self.ws_name + "/" + self.fba_model2_id}];
         if (self.proteome_cmp) {
         	get_object_input.push({ref: self.ws_name + "/" + self.proteome_cmp});
         }
-        kbws.get_objects(get_object_input, function(data) {
+        kbws.get_objects(get_object_input, (data) => {
         	self.fba_model1 = data[0].data;
         	self.fba_model2 = data[1].data;
         	prepare_model(self.fba_model1);
@@ -79,7 +79,7 @@ return KBWidget({
         	self.genome1_ref = self.fba_model1.genome_ref;
         	self.genome2_ref = self.fba_model2.genome_ref;
         	if (data[2]) {
-        		var ftrs = data[2].data.proteome1names;
+        		let ftrs = data[2].data.proteome1names;
         		for (var i=0; i< ftrs.length; i++) {
         			var hits = data[2].data.data1[i];
         			for (var j=0; j < hits.length; j++) {
@@ -107,19 +107,19 @@ return KBWidget({
         	kbws.get_object_subset([
         		{ref: self.genome1_ref, included: ["scientific_name"]},
 				{ref: self.genome2_ref, included: ["scientific_name"]}
-			], function(data) {
+			], (data) => {
 				self.genome1_id = data[0].info[1];
 				self.genome2_id = data[1].info[1];
 				self.genome1_name = data[0].data.scientific_name;
 				self.genome2_name = data[1].data.scientific_name;
 				dataIsReady();
-			}, function(data) {
+			}, (data) => {
 				if (!error)
 					container.empty();
 				error = true;
 				container.append('<p>[Error] ' + data.error.message + '</p>');
 			});
-        }, function(data) {
+        }, (data) => {
         	if (!error)
         		container.empty();
         	error = true;
@@ -131,11 +131,11 @@ return KBWidget({
         	model.rxnhash = {};
         	model.cmphash = {};
 			for (var i=0; i< model.modelcompartments.length; i++) {
-        		var cmp = model.modelcompartments[i];
+        		const cmp = model.modelcompartments[i];
         		model.cmphash[cmp.id] = cmp;
         	}
         	for (var i=0; i< model.modelcompounds.length; i++) {
-        		var cpd = model.modelcompounds[i];
+        		const cpd = model.modelcompounds[i];
         		cpd.cmpkbid = cpd.modelcompartment_ref.split("/").pop();
         		cpd.cpdkbid = cpd.compound_ref.split("/").pop();
         		if (cpd.name === undefined) {
@@ -148,7 +148,7 @@ return KBWidget({
         		}
         	}
         	for (var i=0; i< model.modelreactions.length; i++) {
-        		var rxn = model.modelreactions[i];
+        		const rxn = model.modelreactions[i];
         		rxn.rxnkbid = rxn.reaction_ref.split("/").pop();
         		rxn.cmpkbid = rxn.modelcompartment_ref.split("/").pop();
         		rxn.dispid = rxn.id.replace(/_[a-zA-z]\d+$/, '')+"["+rxn.cmpkbid+"]";
@@ -163,16 +163,16 @@ return KBWidget({
         				rxn.dispid += "<br>("+rxn.rxnkbid+")";
         			}
         		}
-        		var reactants = "";
-        		var products = "";
-        		var sign = "<=>";
+        		let reactants = "";
+        		let products = "";
+        		let sign = "<=>";
         		if (rxn.direction == ">") {
 					sign = "=>";
 				} else if (rxn.direction == "<") {
 					sign = "<=";
 				}
         		for (var j=0; j< rxn.modelReactionReagents.length; j++) {
-        			var rgt = rxn.modelReactionReagents[j];
+        			const rgt = rxn.modelReactionReagents[j];
         			rgt.cpdkbid = rgt.modelcompound_ref.split("/").pop();
         			if (rgt.coefficient < 0) {
 						if (reactants.length > 0) {
@@ -196,16 +196,16 @@ return KBWidget({
         		}
         		rxn.ftrhash = {};
         		for (var j=0; j< rxn.modelReactionProteins.length; j++) {
-        			var prot = rxn.modelReactionProteins[j];
-        			for (var k=0; k< prot.modelReactionProteinSubunits.length; k++) {
-        				var subunit = prot.modelReactionProteinSubunits[k];
-        				for (var m=0; m< subunit.feature_refs.length; m++) {
+        			const prot = rxn.modelReactionProteins[j];
+        			for (let k=0; k< prot.modelReactionProteinSubunits.length; k++) {
+        				const subunit = prot.modelReactionProteinSubunits[k];
+        				for (let m=0; m< subunit.feature_refs.length; m++) {
         					rxn.ftrhash[subunit.feature_refs[m].split("/").pop()] = 1;
         				}
         			}
         		}
         		rxn.dispfeatures = "";
-        		for (var gene in rxn.ftrhash) {
+        		for (const gene in rxn.ftrhash) {
         			if (rxn.dispfeatures.length > 0) {
         				rxn.dispfeatures += "<br>";
         			}
@@ -215,7 +215,7 @@ return KBWidget({
         	}
         }
 
-        var compare_models = function() {
+        const compare_models = function() {
         	model1 = self.fba_model1;
         	model2 = self.fba_model2;
         	self.overlap_rxns = [];
@@ -380,13 +380,13 @@ return KBWidget({
         	compare_models();
             ///////////////////////////////////// Instantiating Tabs ////////////////////////////////////////////
 			container.empty();
-			var tabPane = $('<div id="'+self.pref+'tab-content">');
+			const tabPane = $('<div id="'+self.pref+'tab-content">');
 			container.append(tabPane);
-			var tabWidget = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
+			const tabWidget = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
             //////////////////////////////////////////// Statistics tab /////////////////////////////////////////////
-        	var tabStats = $("<div/>");
+        	const tabStats = $("<div/>");
 			tabWidget.addTab({tab: 'Statistics', content: tabStats, canDelete : false, show: true});
-			var tableStats = $('<table class="table table-striped table-bordered" '+
+			const tableStats = $('<table class="table table-striped table-bordered" '+
 					'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'modelcomp-stats"/>');
 			tabStats.append(tableStats);
 			tableStats.append('<tr><td><b>'+self.fba_model1_id+'</b> genome</td><td>'+self.genome1_id+'<br>('+self.genome1_name+')</td></tr>');
@@ -398,9 +398,9 @@ return KBWidget({
 			tableStats.append('<tr><td>Unique reactions in <b>'+self.fba_model1_id+'</b></td><td>'+self.fba_model1.unique_rxn.length+'</td></tr>');
 			tableStats.append('<tr><td>Unique reactions in <b>'+self.fba_model2_id+'</b></td><td>'+self.fba_model2.unique_rxn.length+'</td></tr>');
         	//////////////////////////////////////////// Common tab /////////////////////////////////////////////
-        	var tabCommon = $("<div/>");
+        	const tabCommon = $("<div/>");
     		tabWidget.addTab({tab: 'Common reactions', content: tabCommon, canDelete : false, show: false});
-        	var tableCommon = $('<table class="table table-striped table-bordered" '+
+        	const tableCommon = $('<table class="table table-striped table-bordered" '+
         			'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'modelcomp-common"/>');
         	tabCommon.append(tableCommon);
 			tableCommon.dataTable({
@@ -425,9 +425,9 @@ return KBWidget({
 			tabCommon.append($('<table><tr><td>(*) color legend: sub-best bidirectional hits are marked<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;by <font color="blue">blue</font>, '+
             		'orphan features are marked by <font color="red">red</font>.</td></tr></table>'));
         	//////////////////////////////////////////// Model1 only tab /////////////////////////////////////////////
-        	var tabModel1 = $("<div/>");
+        	const tabModel1 = $("<div/>");
     		tabWidget.addTab({tab: self.fba_model1_id+" only", content: tabModel1, canDelete : false, show: false});
-        	var tableModel1 = $('<table class="table table-striped table-bordered" '+
+        	const tableModel1 = $('<table class="table table-striped table-bordered" '+
         			'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'modelcomp-model1"/>');
         	tabModel1.append(tableModel1);
 			tableModel1.dataTable({
@@ -448,9 +448,9 @@ return KBWidget({
 					'fnDrawCallback': events
 			});
         	//////////////////////////////////////////// Model2 only tab /////////////////////////////////////////////
-        	var tabModel2 = $("<div/>");
+        	const tabModel2 = $("<div/>");
     		tabWidget.addTab({tab: self.fba_model2_id+" only", content: tabModel2, canDelete : false, show: false});
-        	var tableModel2 = $('<table class="table table-striped table-bordered" '+
+        	const tableModel2 = $('<table class="table table-striped table-bordered" '+
         			'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'modelcomp-model2"/>');
         	tabModel2.append(tableModel2);
 			tableModel2.dataTable({
@@ -475,7 +475,7 @@ return KBWidget({
 				// event for clicking on ortholog count
 				$('.show-reaction'+self.pref).unbind('click');
 				$('.show-reaction'+self.pref).click(function() {
-					var id = $(this).data('id');
+					const id = $(this).data('id');
                     if (tabWidget.hasTab(id)) {
                         tabWidget.showTab(id);
                         return;
@@ -484,7 +484,7 @@ return KBWidget({
 				});
 				$('.show-gene'+self.pref).unbind('click');
 				$('.show-gene'+self.pref).click(function() {
-					var id = $(this).data('id');
+					const id = $(this).data('id');
                     if (tabWidget.hasTab(id)) {
                         tabWidget.showTab(id);
                         return;
@@ -510,8 +510,8 @@ return KBWidget({
 
     uuid: function() {
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
-            function(c) {
-                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+            (c) => {
+                const r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                 return v.toString(16);
             });
     }

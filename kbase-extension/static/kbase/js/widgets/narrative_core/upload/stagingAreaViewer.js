@@ -18,7 +18,7 @@ define([
     'kb_service/client/workspace',
     'jquery-dataTables',
     'select2',
-], function (
+], (
     $,
     KBaseTabs,
     StagingServiceClient,
@@ -36,7 +36,7 @@ define([
     FtpFileHeaderHtml,
     FilePathHtml,
     Workspace
-) {
+) => {
     'use strict';
     return new KBWidget({
         name: 'StagingAreaViewer',
@@ -49,7 +49,7 @@ define([
         init: function (options) {
             this._super(options);
 
-            var runtime = Runtime.make();
+            const runtime = Runtime.make();
 
             this.workspaceClient = new Workspace(Config.url('workspace'), {
                 token: runtime.authToken(),
@@ -103,7 +103,7 @@ define([
             }))
                 .then(data => {
                     //list is recursive, so it'd show all files in all subdirectories. This filters 'em out.
-                    let files = JSON.parse(data).filter(f => {
+                    const files = JSON.parse(data).filter(f => {
                         // this is less complicated than you think. The path is the username,
                         // subpath, and name concatenated. The subpath may be empty so we
                         // filter it out and only join defined things. If that's the same as
@@ -117,7 +117,7 @@ define([
                             f.imported = {};
                         }
                     });
-                    var scrollTop = this.$elem.parent().scrollTop();
+                    const scrollTop = this.$elem.parent().scrollTop();
                     $('.staging-area-file-metadata').detach();
                     this.$elem.empty();
                     this.renderFileHeader();
@@ -143,8 +143,8 @@ define([
         setPath: function (path) {
             this.path = path;
             // factor out the current subdirectory path into its own variable
-            var subpath = path.split('/');
-            var subpathTokens = subpath.length - 1;
+            const subpath = path.split('/');
+            let subpathTokens = subpath.length - 1;
             if (this.path.startsWith('/')) {
                 subpathTokens--;
             }
@@ -167,9 +167,9 @@ define([
 
             // Add ACL before going to the staging area
             // If it fails, it'll just do so silently.
-            var $globusLink = this.$elem.find('.globus_acl_link');
+            const $globusLink = this.$elem.find('.globus_acl_link');
             $globusLink.click((e) => {
-                var globusWindow = window.open('', 'globus');
+                const globusWindow = window.open('', 'globus');
                 globusWindow.document.write('<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>');
                 this.stagingServiceClient.addAcl()
                     .done(
@@ -187,16 +187,16 @@ define([
         },
 
         renderPath: function () {
-            var splitPath = this.path;
+            let splitPath = this.path;
             if (splitPath.startsWith('/')) {
                 splitPath = splitPath.substring(1);
             }
             // the staging service doesn't want the username as part of the path, but we still want to display it to the user for navigation purposes
             splitPath = splitPath.split('/').filter(p => p.length);
             splitPath.unshift(this.userInfo.user);
-            var pathTerms = [];
-            for (var i = 0; i < splitPath.length; i++) {
-                var prevPath = '';
+            const pathTerms = [];
+            for (let i = 0; i < splitPath.length; i++) {
+                let prevPath = '';
                 if (i > 0) {
                     prevPath = pathTerms[i - 1].subpath;
                 }
@@ -249,7 +249,7 @@ define([
         renderFiles: function (files) {
             files = files || [];
             const emptyMsg = 'No files found.';
-            var $fileTable = $(this.ftpFileTableTmpl({
+            const $fileTable = $(this.ftpFileTableTmpl({
                 files: files,
                 uploaders: this.uploaders.dropdown_order
             }));
@@ -267,9 +267,9 @@ define([
                     aTargets: [0],
                     mRender: function (data, type, full) {
                         if (type === 'display') {
-                            var isFolder = data === 'true' ? true : false;
-                            var icon = isFolder ? 'folder' : 'file-o';
-                            var disp = '<span><i class="fa fa-' + icon + '"></i></span>';
+                            const isFolder = data === 'true' ? true : false;
+                            const icon = isFolder ? 'folder' : 'file-o';
+                            let disp = '<span><i class="fa fa-' + icon + '"></i></span>';
                             if (isFolder) {
                                 disp = '<button data-name="' + full[1] + '" class="btn btn-xs btn-default">' + disp + '</button>';
                             } else {
@@ -323,8 +323,8 @@ define([
                     sType: 'numeric'
                 }],
                 rowCallback: function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {
-                    var getFileFromName = function (fileName) {
-                        return files.filter(function (file) {
+                    const getFileFromName = function (fileName) {
+                        return files.filter((file) => {
                             return file.name === fileName;
                         })[0];
                     };
@@ -345,8 +345,8 @@ define([
                         placeholder: 'Select format'
                     });
                     $('td:eq(4)', nRow).find('button[data-import]').off('click').on('click', e => {
-                        var importType = $(e.currentTarget).prevAll('#import-type').val();
-                        var importFile = getFileFromName($(e.currentTarget).data().import);
+                        const importType = $(e.currentTarget).prevAll('#import-type').val();
+                        const importFile = getFileFromName($(e.currentTarget).data().import);
                         this.initImportApp(importType, importFile);
                         this.updateView();
                     });
@@ -361,7 +361,7 @@ define([
                     });
 
                     $('td:eq(4)', nRow).find('button[data-delete]').off('click').on('click', e => {
-                        var file = $(e.currentTarget).data('delete');
+                        const file = $(e.currentTarget).data('delete');
                         if (window.confirm('Really delete ' + file + '?')) {
                             this.stagingServiceClient.delete({
                                 path: this.subpath + '/' + file
@@ -382,7 +382,7 @@ define([
                     $('td:eq(0)', nRow).find('i[data-caret]').off('click');
 
                     // What a @#*$!ing PITA. First, we find the expansion caret in the first cell.
-                    var $caret = $('td:eq(0)', nRow).find('i[data-caret]'),
+                    let $caret = $('td:eq(0)', nRow).find('i[data-caret]'),
                         fileName,
                         myFile;
                     if ($caret.length) {
@@ -410,7 +410,7 @@ define([
                     $('td:eq(0)', nRow).find('i[data-caret]').on('click', e => {
 
                         $(e.currentTarget).toggleClass('fa-caret-down fa-caret-right');
-                        var $tr = $(e.currentTarget).parent().parent();
+                        const $tr = $(e.currentTarget).parent().parent();
 
                         if ($(e.currentTarget).hasClass('fa-caret-down')) {
                             $('.kb-dropzone').css('min-height', '75px');
@@ -427,8 +427,8 @@ define([
 
                     $('td:eq(1)', nRow).find('button[data-decompress]').off('click');
                     $('td:eq(1)', nRow).find('button[data-decompress]').on('click', e => {
-                        var fileName = $(e.currentTarget).data().decompress;
-                        var myFile = getFileFromName(fileName);
+                        const fileName = $(e.currentTarget).data().decompress;
+                        const myFile = getFileFromName(fileName);
 
                         $(e.currentTarget).replaceWith($.jqElem('i').addClass('fa fa-spinner fa-spin'));
 
@@ -448,16 +448,16 @@ define([
 
         renderMoreFileInfo: function (fileData) {
 
-            var self = this;
+            const self = this;
 
             if (fileData.loaded) {
                 return fileData.loaded;
             }
 
-            var $tabsDiv = $.jqElem('div')
+            const $tabsDiv = $.jqElem('div')
                 .append('<i class="fa fa-spinner fa-spin"></i> Loading file info...please wait');
 
-            var filePath = this.subpath;
+            let filePath = this.subpath;
             if (filePath.length) {
                 filePath += '/';
             }
@@ -468,19 +468,19 @@ define([
             // the UI after they're completed. It's a smidgen slower this way (maybe 0.25 seconds) - we could load the metadata and display
             // it to the user immediately, then add the JGI tab if it exists. But that causes a brief blink where the JGI tab isn't there and
             // pops into being later. This way, it all shows up fully built. It seemed like the lesser of the evils.
-            var $tabs;
+            let $tabs;
 
             this.stagingServiceClient.metadata({
                 path: filePath
             })
-                .then(function (dataString, status, xhr) {
-                    var $tabsContainer = $.jqElem('div');
-                    var data = JSON.parse(dataString);
+                .then((dataString, status, xhr) => {
+                    const $tabsContainer = $.jqElem('div');
+                    const data = JSON.parse(dataString);
 
-                    var $upaField = $.jqElem('span')
+                    const $upaField = $.jqElem('span')
                         .append('<i class="fa fa-spinner fa-spin">');
 
-                    var $upa = data.UPA ?
+                    const $upa = data.UPA ?
                         $.jqElem('li').append($.jqElem('span').addClass('kb-data-staging-metadata-list').append('Imported as')).append($upaField) :
                         '';
 
@@ -489,7 +489,7 @@ define([
                             ref: data.UPA
                         }]
                     })
-                        .then(function (name) {
+                        .then((name) => {
                             $upaField.empty();
                             $upaField.append(
                                 $.jqElem('a')
@@ -498,7 +498,7 @@ define([
                                     .append(name[0][1])
                             );
                         })
-                        .catch(function (xhr) {
+                        .catch((xhr) => {
                             $upaField.empty();
                             $upaField.addClass('alert alert-danger');
                             $upaField.css({
@@ -508,7 +508,7 @@ define([
                             $upaField.append(xhr.error.message);
                         });
 
-                    var lineCount = parseInt(data.lineCount, 10);
+                    let lineCount = parseInt(data.lineCount, 10);
                     if (!Number.isNaN(lineCount)) {
                         lineCount = lineCount.toLocaleString()
                     } else {
@@ -547,11 +547,11 @@ define([
                     self.stagingServiceClient.jgi_metadata({
                         path: filePath
                     })
-                        .then(function (dataString, status, xhr) {
+                        .then((dataString, status, xhr) => {
                             // XXX - while doing this, I ran into a NaN issue in the file, specifically on the key illumina_read_insert_size_avg_insert.
                             //       So we nuke any NaN fields to make it valid again.
-                            var metadataJSON = JSON.parse(dataString.replace(/NaN/g, '\"\"'));
-                            var metadataContents = JSON.stringify(metadataJSON, null, 2)
+                            const metadataJSON = JSON.parse(dataString.replace(/NaN/g, '\"\"'));
+                            const metadataContents = JSON.stringify(metadataJSON, null, 2)
 
                             $tabs.addTab({
                                 tab: 'JGI Metadata',
@@ -561,14 +561,14 @@ define([
                             });
                         })
                         // there's nothing to catch here - if the jgi_metadata method errors, we just assume the file doesn't have any.
-                        .always(function () {
+                        .always(() => {
                             // finally, empty and append the tabs container. no matter what
                             $tabsDiv.empty();
                             $tabsDiv.append($tabsContainer);
                         });
 
                 })
-                .fail(function (xhr) {
+                .fail((xhr) => {
                     $tabsDiv.empty();
                     $tabsDiv.append(
                         $.jqElem('div')
@@ -594,9 +594,9 @@ define([
          *   name = string, name of the file
          */
         initImportApp: function (type, file) {
-            var appInfo = this.uploaders.app_info[type];
+            const appInfo = this.uploaders.app_info[type];
             if (appInfo) {
-                var tag = APIUtil.getAppVersionTag(),
+                let tag = APIUtil.getAppVersionTag(),
                     fileParam = file ? file.name : '',
                     inputs = {};
                 if (this.subpath) {
@@ -612,7 +612,7 @@ define([
                     inputs[appInfo.app_output_param] = file.name.replace(/\s/g, '_') + appInfo.app_output_suffix;
                 }
                 if (appInfo.app_static_params) {
-                    for (var p in appInfo.app_static_params) {
+                    for (const p in appInfo.app_static_params) {
                         if (appInfo.app_static_params.hasOwnProperty(p)) {
                             inputs[p] = appInfo.app_static_params[p];
                         }
@@ -624,7 +624,7 @@ define([
         },
 
         startTour: function () {
-            var tourStartFn = function () {}
+            const tourStartFn = function () {}
 
             if (!this.tour) {
                 this.tour = new UploadTour.Tour(

@@ -142,30 +142,30 @@ define (
 	[
 		'jquery',
 		'handlebars'
-	], function(
+	], (
 		$,
 		Handlebars
-	) {
+	) => {
 
     //'use strict';
 
-    var ucfirst = function(string) {
+    const ucfirst = function(string) {
         if (string !== undefined && string.length) {
             return string.charAt(0).toUpperCase() + string.slice(1);
         }
     };
 
-    var willChangeNoteForName = function(name) {
+    const willChangeNoteForName = function(name) {
         return 'willChangeValueFor' + ucfirst(name);
     }
 
-    var didChangeNoteForName = function(name) {
+    const didChangeNoteForName = function(name) {
         return 'didChangeValueFor' + ucfirst(name);
     }
 
-    var defaultBindingAccessors = function(elem) {
+    const defaultBindingAccessors = function(elem) {
 
-        var tagName = $(elem).prop('tagName').toLowerCase();
+        const tagName = $(elem).prop('tagName').toLowerCase();
 
         if (tagName.match(/^(input|select|textarea)$/)) {
             if ($(elem).attr('type') === 'checkbox') {
@@ -189,13 +189,13 @@ define (
         }
     };
 
-    var makeBindingCallback = function(elem, $target, attribute, transformers, accessors) {
+    const makeBindingCallback = function(elem, $target, attribute, transformers, accessors) {
 
-        return $.proxy(function (e, vals) {
+        return $.proxy((e, vals) => {
             e.preventDefault();
             e.stopPropagation();
 
-            var newVal = vals.newValue;
+            let newVal = vals.newValue;
 
             if (transformers.transformedValue !== undefined) {
                 newVal = transformers.transformedValue(newVal);
@@ -211,7 +211,7 @@ define (
         }, $(elem))
     };
 
-    var makeBindingBlurCallback = function(elem, $target, attribute, transformers, accessors) {
+    const makeBindingBlurCallback = function(elem, $target, attribute, transformers, accessors) {
 
         return $.proxy(function (e, vals) {
 
@@ -222,7 +222,7 @@ define (
             e.preventDefault();
             e.stopPropagation();
 
-            var newVal;
+            let newVal;
 
             if (accessors.getter === 'checked') {
                 newVal = this.is(':checked')
@@ -236,7 +236,7 @@ define (
             if (newVal !== this.data('kbase_bindingValue')) {
 
                 if (transformers.validator !== undefined) {
-                    var validation = transformers.validator(newVal);
+                    const validation = transformers.validator(newVal);
 
                     if (! validation.success) {
                         $(elem).data('validationError.kbaseBinding', validation.msg);
@@ -265,7 +265,7 @@ define (
                     newVal = transformers.reverseTransformedValue(newVal);
                 }
 
-                var setter = $target.__attributes[attribute].setter;
+                const setter = $target.__attributes[attribute].setter;
 
                 $target[setter](newVal);
                 this.data('kbase_bindingValue', this[accessors.getter]());
@@ -274,7 +274,7 @@ define (
         }, $(elem))
     };
 
-    var makeBindingFocusCallback = function(elem, transformers, accessors) {
+    const makeBindingFocusCallback = function(elem, transformers, accessors) {
 
         return $.proxy( function (e) {
             e.preventDefault();
@@ -289,10 +289,10 @@ define (
     $.fn.kb_bind = function($target, attribute, transformers, accessors) {
 
         if (this.length > 1) {
-            var methodArgs = arguments;
+            const methodArgs = arguments;
             $.each(
                 this,
-                function (idx, elem) {
+                (idx, elem) => {
                     $.fn.kb_bind.apply($(elem), methodArgs);
                 }
             )
@@ -307,7 +307,7 @@ define (
             transformers = {};
         }
 
-        var event = didChangeNoteForName(attribute);
+        const event = didChangeNoteForName(attribute);
         $target.on(
             event,
             makeBindingCallback(this, $target, attribute, transformers, accessors)
@@ -323,7 +323,7 @@ define (
             makeBindingFocusCallback(this, transformers, accessors)
         );
 
-        var tagName = $(this).prop('tagName').toLowerCase();
+        const tagName = $(this).prop('tagName').toLowerCase();
         if (tagName.match(/^(input)$/)) {
             $(this).on(
                 'keypress.kbaseBinding',
@@ -338,8 +338,8 @@ define (
             }
         }
 
-        var target_getter = $target.__attributes[attribute].getter;
-        var newVal = $target[target_getter]();
+        const target_getter = $target.__attributes[attribute].getter;
+        let newVal = $target[target_getter]();
 
         if (transformers.transformedValue !== undefined) {
             newVal = transformers.transformedValue(newVal);
@@ -358,10 +358,10 @@ define (
     $.fn.kb_unbind = function($target, attribute, callback, transformers, accessors) {
 
         if (this.length > 1) {
-            var methodArgs = arguments;
+            const methodArgs = arguments;
             $.each(
                 this,
-                function (idx, elem) {
+                (idx, elem) => {
                     $.fn.kb_unbind.apply($(elem), methodArgs);
                 }
             )
@@ -376,7 +376,7 @@ define (
             transformers = {};
         }
 
-        var event = didChangeNoteForName(attribute);
+        const event = didChangeNoteForName(attribute);
         $target.off(
             event,
             makeBindingCallback(this, $target, attribute, transformers, accessors)
@@ -393,7 +393,7 @@ define (
         );
 
 
-        var tagName = $(this).prop('tagName').toLowerCase();
+        const tagName = $(this).prop('tagName').toLowerCase();
         if (tagName.match(/^(input)$/)) {
             $(this).off(
                 'keypress.kbaseBinding',
@@ -411,7 +411,7 @@ define (
 
     };
 
-    var accessors = {
+    const accessors = {
 
         getter :
             function getter(name) {
@@ -446,26 +446,26 @@ define (
 
         surrogateConstructor.prototype = superConstructor.prototype;
 
-        var prototypeObject = new surrogateConstructor();
+        const prototypeObject = new surrogateConstructor();
         prototypeObject.constructor = constructor;
 
         constructor.prototype = prototypeObject;
     }
 
     $.jqElem = function (tagName) {
-        var tag = "<" + tagName + ">";
+        let tag = "<" + tagName + ">";
         if (! tag.match(/^(area|base|br|col|command|embed|hr|img|input|keygen|link|meta|param|source|track)/) ) {
             tag += '</' + tagName + '>';
         }
         return $(tag);
     }
 
-    var KBWidget = function (def) {
+    const KBWidget = function (def) {
         def = (def || {});
 
         var Widget = function ($elem) {
 
-          var self = this;
+          let self = this;
 
           //XXX THIS IS FOR BACKWARDS COMPATIBILITY WITH JQUERY PLUGIN SYNTAX __ONLY__
           if (! (this instanceof Widget)) {
@@ -506,7 +506,7 @@ define (
 
         Widget.options = $.extend(true, {}, def.options);
 
-        var parent = def.parent
+        const parent = def.parent
           ? def.parent
           : kbaseWidget
             ? kbaseWidget
@@ -515,7 +515,7 @@ define (
         subclass(Widget, parent);
 
 
-        var defCopy = $.extend(true, {}, def);
+        const defCopy = $.extend(true, {}, def);
 
         Widget.prototype.__attributes = {};
 
@@ -524,8 +524,8 @@ define (
             //for (var accessor in defCopy._accessors) {
             $.each(
                 defCopy._accessors,
-                $.proxy(function (idx, accessor) {
-                    var info = {
+                $.proxy((idx, accessor) => {
+                    const info = {
                         name   : accessor,
                         setter : accessor,
                         getter : accessor,
@@ -537,7 +537,7 @@ define (
                         info.setter = accessor.name;
                         info.getter = accessor.name;
 
-                        for (var key in accessor) {
+                        for (const key in accessor) {
                             info[key] = accessor[key];
                         }
 
@@ -568,10 +568,10 @@ define (
             defCopy._accessors = undefined;
         }
 
-        var extension = $.extend(true, {}, Widget.prototype.__attributes, parent.prototype.__attributes);
+        const extension = $.extend(true, {}, Widget.prototype.__attributes, parent.prototype.__attributes);
         Widget.prototype.__attributes = extension;
 
-        for (var prop in defCopy) {
+        for (const prop in defCopy) {
             //hella slick closure based _super method adapted from JQueryUI.
 
             if ($.isFunction(defCopy[prop])) {
@@ -595,12 +595,12 @@ define (
                     }
 
                     return function super_closure() {
-                        var _oSuper = this._super;
-                        var _oSuperMethod = this._superMethod;
+                        const _oSuper = this._super;
+                        const _oSuperMethod = this._superMethod;
                         this._super = _super;
                         this._superMethod = _superMethod;
 
-                        var retValue = method.apply(this, arguments);
+                        const retValue = method.apply(this, arguments);
 
                         this._super = _oSuper;
                         this._superMethod = _oSuperMethod;
@@ -639,10 +639,10 @@ define (
 
 
             callAfterInit : function callAfterInit (func) {
-                var $me = this;
-                var delayer = function () {
+                const $me = this;
+                const delayer = function () {
 
-                    var recursion = arguments.callee;
+                    const recursion = arguments.callee;
 
                     if ($me._init) {
                         func();
@@ -664,20 +664,20 @@ define (
 
                 this._attributes = {};
 
-                var opts = $.extend(true, {}, this.options);
+                const opts = $.extend(true, {}, this.options);
                 this.options = $.extend(true, {}, opts, args);
 
-                var arg;
+                let arg;
                 for (arg in args) {
                     if (args[arg] === undefined && this.options[arg] !== undefined) {
                         delete this.options[arg];
                     }
                 }
 
-                var attribute;
+                let attribute;
                 for (attribute in this.__attributes) {
                     if (this.options[attribute] !== undefined) {
-                        var setter = this.__attributes[attribute].setter;
+                        const setter = this.__attributes[attribute].setter;
                         this[setter](this.options[attribute]);
                     }
                 }
@@ -705,13 +705,13 @@ define (
 
             templateSuccess : function(templateString) {
 
-                var template = Handlebars.compile(templateString);
+                const template = Handlebars.compile(templateString);
 
-                var html = template();
+                const html = template();
 
-                var res = template( this.templateContent() );
+                const res = template( this.templateContent() );
 
-                var $res = $.jqElem('span').append(res);
+                const $res = $.jqElem('span').append(res);
                 this._rewireIds($res, this);
 
                 this.$elem.append( $res  );
@@ -752,12 +752,12 @@ define (
 
                 function setValueForKey(attribute, newVal) {
 
-                    var triggerValues = undefined;
-                    var oldVal = this.valueForKey(attribute);
+                    let triggerValues = undefined;
+                    const oldVal = this.valueForKey(attribute);
 
                     if (newVal !== oldVal) {
 
-                        var willChangeNote = willChangeNoteForName(attribute);
+                        const willChangeNote = willChangeNoteForName(attribute);
 
                         triggerValues = {
                             oldValue : oldVal,
@@ -768,7 +768,7 @@ define (
                         this._attributes[attribute] = triggerValues.newValue;
 
                         if (triggerValues.newValue !== oldVal) {
-                            var didChangeNote  = didChangeNoteForName(attribute);
+                            const didChangeNote  = didChangeNoteForName(attribute);
 
                             this.trigger(didChangeNote, triggerValues);
                         }
@@ -779,11 +779,11 @@ define (
 
             setValuesForKeys : function setValuesForKeys (obj) {
 
-                var objCopy = $.extend({}, obj);
+                const objCopy = $.extend({}, obj);
 
                 for (attribute in this.__attributes) {
                     if (objCopy[attribute] !== undefined) {
-                        var setter = this.__attributes[attribute].setter;
+                        const setter = this.__attributes[attribute].setter;
                         this[setter](objCopy[attribute]);
                         delete objCopy[attribute];
                     }
@@ -904,19 +904,19 @@ define (
             },
 
             kb_bind : function($target, attribute, callback) {
-                var event = didChangeNoteForName(attribute);
+                const event = didChangeNoteForName(attribute);
                 this.observe($target, event, callback);
             },
 
             kb_unbind : function($target, attribute, callback) {
-                var event = didChangeNoteForName(attribute);
+                const event = didChangeNoteForName(attribute);
                 //$target.off(event, callback);
                 this.unobserve($target, event, callback);
             },
 
             uuid : function uuid () {
-                var result = '';
-                for (var i = 0; i < 32; i++) {
+                let result = '';
+                for (let i = 0; i < 32; i++) {
                     result += Math.floor(Math.random()*16).toString(16).toUpperCase();
                 }
 

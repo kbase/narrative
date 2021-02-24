@@ -13,15 +13,15 @@ Point.prototype.offset = function(dx, dy) {
 
 Point.prototype.rectWithPoint = function(point) {
 
-    var ux = this.x < point.x
+    const ux = this.x < point.x
         ? this.x
         : point.x;
-    var uy = this.y < point.y
+    const uy = this.y < point.y
         ? this.y
         : point.y;
 
-    var width = Math.abs(this.x - point.x);
-    var height = Math.abs(this.y - point.y);
+    const width = Math.abs(this.x - point.x);
+    const height = Math.abs(this.y - point.y);
 
     return new Rectangle(
         new Point(ux, uy),

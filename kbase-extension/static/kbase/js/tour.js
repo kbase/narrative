@@ -7,11 +7,11 @@ define([
     'handlebars',
     'text!kbase/templates/tour/tour_panel.html',
     'css!kbase/css/kbaseTour.css'
-], function($, Tour, Handlebars, TourTmpl) {
+], ($, Tour, Handlebars, TourTmpl) => {
     "use strict";
 
-    var NarrativeTour = function(narrative, notebook, events) {
-        var that = this;
+    const NarrativeTour = function(narrative, notebook, events) {
+        const that = this;
         this.notebook = notebook;
         this.narrative = narrative;
         this.step_duration = 0;

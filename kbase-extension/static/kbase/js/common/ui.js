@@ -9,7 +9,7 @@ define([
     'google-code-prettify/prettify',
     'css!google-code-prettify/prettify.css',
     'bootstrap'
-], function (
+], (
     $,
     Promise,
     html,
@@ -17,9 +17,9 @@ define([
     Runtime,
     Events,
     PR
-) {
+) => {
     'use strict';
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         p = t('p'),
         span = t('span'),
@@ -41,7 +41,7 @@ define([
     }
 
     function renderInfoDialog(title, content, okLabel, type) {
-        var extraClass = '';
+        let extraClass = '';
         if (type) {
             extraClass = ' bg-' + type;
         }
@@ -66,7 +66,7 @@ define([
     }
 
     function showInfoDialog(arg) {
-        var dialog = renderInfoDialog(arg.title, arg.body, arg.okLabel || 'OK'),
+        let dialog = renderInfoDialog(arg.title, arg.body, arg.okLabel || 'OK'),
             dialogId = html.genId(),
             confirmNode = document.createElement('div'),
             kbaseNode, modalNode, modalDialogNode;
@@ -94,12 +94,12 @@ define([
 
         modalDialogNode = modalNode.querySelector('.modal');
         $(modalDialogNode).modal('show');
-        return new Promise(function (resolve) {
-            modalDialogNode.querySelector('[data-element="ok"]').addEventListener('click', function () {
+        return new Promise((resolve) => {
+            modalDialogNode.querySelector('[data-element="ok"]').addEventListener('click', () => {
                 confirmNode.parentElement.removeChild(confirmNode);
                 resolve(false);
             });
-            modalDialogNode.addEventListener('hide.bs.modal', function () {
+            modalDialogNode.addEventListener('hide.bs.modal', () => {
                 resolve(false);
             });
         });
@@ -133,9 +133,9 @@ define([
     }
 
     function showErrorDialog(arg) {
-        var body = buildError(arg.error);
+        const body = buildError(arg.error);
 
-        var dialog = renderInfoDialog(arg.title, body, 'OK', 'danger'),
+        let dialog = renderInfoDialog(arg.title, body, 'OK', 'danger'),
             dialogId = html.genId(),
             confirmNode = document.createElement('div'),
             kbaseNode, modalNode, modalDialogNode;
@@ -163,19 +163,19 @@ define([
 
         modalDialogNode = modalNode.querySelector('.modal');
         $(modalDialogNode).modal('show');
-        return new Promise(function (resolve) {
-            modalDialogNode.querySelector('[data-element="ok"]').addEventListener('click', function () {
+        return new Promise((resolve) => {
+            modalDialogNode.querySelector('[data-element="ok"]').addEventListener('click', () => {
                 confirmNode.parentElement.removeChild(confirmNode);
                 resolve(false);
             });
-            modalDialogNode.addEventListener('hide.bs.modal', function () {
+            modalDialogNode.addEventListener('hide.bs.modal', () => {
                 resolve(false);
             });
         });
     }
 
     function renderDialog(title, content, cancelLabel, buttons, options) {
-        var style = {};
+        const style = {};
         if (options && options.width) {
             style.width = options.width;
         }
@@ -191,7 +191,7 @@ define([
                     div({ class: 'modal-body' }, [
                         content
                     ]),
-                    div({ class: 'modal-footer' }, buttons.map(function (btn) {
+                    div({ class: 'modal-footer' }, buttons.map((btn) => {
                         return button({
                             type: 'button',
                             class: 'btn btn-' + (btn.type || 'default'),
@@ -212,7 +212,7 @@ define([
 
     function showDialog(args) {
         args.buttons = args.buttons || [];
-        var dialog = renderDialog(args.title, args.body, args.cancelLabel || 'Cancel', args.buttons, args.options),
+        let dialog = renderDialog(args.title, args.body, args.cancelLabel || 'Cancel', args.buttons, args.options),
             dialogId = html.genId(),
             confirmNode = document.createElement('div'),
             kbaseNode, modalNode, modalDialogNode;
@@ -240,17 +240,17 @@ define([
 
         modalDialogNode = modalNode.querySelector('.modal');
         $(modalDialogNode).modal('show');
-        return new Promise(function (resolve, reject) {
-            modalDialogNode.querySelector('[data-element="cancel"]').addEventListener('click', function (e) {
+        return new Promise((resolve, reject) => {
+            modalDialogNode.querySelector('[data-element="cancel"]').addEventListener('click', (e) => {
                 confirmNode.parentElement.removeChild(confirmNode);
                 resolve({
                     action: 'cancel'
                 });
             });
-            args.buttons.forEach(function (btn) {
-                modalDialogNode.querySelector('[data-element="' + btn.action + '"]').addEventListener('click', function (e) {
+            args.buttons.forEach((btn) => {
+                modalDialogNode.querySelector('[data-element="' + btn.action + '"]').addEventListener('click', (e) => {
                     try {
-                        var result = btn.handler(e);
+                        const result = btn.handler(e);
                         if (result) {
                             $(modalDialogNode).modal('hide');
                             confirmNode.parentElement.removeChild(confirmNode);
@@ -265,7 +265,7 @@ define([
                 });
             });
 
-            modalDialogNode.addEventListener('hide.bs.modal', function (e) {
+            modalDialogNode.addEventListener('hide.bs.modal', (e) => {
                 resolve({
                     action: 'cancel'
                 });
@@ -275,7 +275,7 @@ define([
 
 
     function factory(config) {
-        var container = config.node,
+        const container = config.node,
             bus = config.bus,
             runtime = Runtime.make();
 
@@ -289,7 +289,7 @@ define([
             if (names.length === 0) {
                 return container;
             }
-            var selector = names.map(function (name) {
+            const selector = names.map((name) => {
                 return '[data-element="' + name + '"]';
             }).join(' ');
 
@@ -304,7 +304,7 @@ define([
             if (typeof names === 'string') {
                 names = names.split('.');
             }
-            var selector = names.map(function (name) {
+            const selector = names.map((name) => {
                 return '[data-element="' + name + '"]';
             }).join(' ');
 
@@ -317,7 +317,7 @@ define([
                 // TODO: support a path of elements up to the button.
                 throw new Error('Currently only a single string supported to get a button');
             }
-            var selector = '[data-button="' + name + '"]',
+            const selector = '[data-button="' + name + '"]',
                 buttonNode = container.querySelector(selector);
 
             if (!buttonNode) {
@@ -337,7 +337,7 @@ define([
             if (typeof names === 'string') {
                 names = [names];
             }
-            var selector = names.map(function (dataSelector) {
+            const selector = names.map((dataSelector) => {
                 return '[data-' + dataSelector.type + '="' + dataSelector.name + '"]';
             }).join(' ');
 
@@ -351,9 +351,9 @@ define([
          * concatenated
          */
         function findNode(nodePath) {
-            var selector = nodePath.map(function (pathElement) {
-                return Object.keys(pathElement).map(function (dataKey) {
-                    var dataValue = pathElement[dataKey];
+            const selector = nodePath.map((pathElement) => {
+                return Object.keys(pathElement).map((dataKey) => {
+                    const dataValue = pathElement[dataKey];
                     return '[data-' + dataKey + '="' + dataValue + '"]';
                 }).join('');
             }).join(' ');
@@ -366,9 +366,9 @@ define([
         }
 
         function renderConfirmDialog(arg) {
-            var yesLabel = arg.yesLabel || 'Yes',
+            const yesLabel = arg.yesLabel || 'Yes',
                 noLabel = arg.noLabel || 'No';
-            var dialog =
+            const dialog =
                 div({ class: 'modal fade', tabindex: '-1', role: 'dialog' }, [
                     div({ class: 'modal-dialog' }, [
                         div({ class: 'modal-content' }, [
@@ -392,7 +392,7 @@ define([
         }
 
         function showConfirmDialog(arg) {
-            var dialog = renderConfirmDialog(arg),
+            let dialog = renderConfirmDialog(arg),
                 dialogId = html.genId(),
                 confirmNode = document.createElement('div'),
                 kbaseNode, modalNode, modalDialogNode;
@@ -421,24 +421,24 @@ define([
             modalDialogNode = modalNode.querySelector('.modal');
 
             $(modalDialogNode).modal('show');
-            return new Promise(function (resolve) {
-                modalDialogNode.querySelector('[data-element="yes"]').addEventListener('click', function () {
+            return new Promise((resolve) => {
+                modalDialogNode.querySelector('[data-element="yes"]').addEventListener('click', () => {
                     $(modalDialogNode).modal('hide');
                     confirmNode.parentElement.removeChild(confirmNode);
                     resolve(true);
                 });
-                modalDialogNode.addEventListener('keyup', function (e) {
+                modalDialogNode.addEventListener('keyup', (e) => {
                     if (e.keyCode === 13) {
                         $(modalDialogNode).modal('hide');
                         confirmNode.parentElement.removeChild(confirmNode);
                         resolve(true);
                     }
                 });
-                modalDialogNode.querySelector('[data-element="no"]').addEventListener('click', function () {
+                modalDialogNode.querySelector('[data-element="no"]').addEventListener('click', () => {
                     confirmNode.parentElement.removeChild(confirmNode);
                     resolve(false);
                 });
-                modalDialogNode.addEventListener('hide.bs.modal', function () {
+                modalDialogNode.addEventListener('hide.bs.modal', () => {
                     resolve(false);
                 });
             });
@@ -462,7 +462,7 @@ define([
         }
 
         function makeButton(label, name, options) {
-            var klass = options.type || 'default',
+            const klass = options.type || 'default',
                 events = options.events;
             return button({
                 type: 'button',
@@ -473,7 +473,7 @@ define([
         }
 
         function buildButton(arg) {
-            var klass = arg.type || 'default',
+            let klass = arg.type || 'default',
                 buttonClasses = ['btn', 'btn-' + klass],
                 events = arg.events,
                 icon,
@@ -508,7 +508,7 @@ define([
             };
 
             if (arg.features) {
-                arg.features.forEach(function (feature) {
+                arg.features.forEach((feature) => {
                     attribs['data-feature-' + feature] = true;
                 });
             }
@@ -517,14 +517,14 @@ define([
         }
 
         function enableButton(name) {
-            var button = getButton(name);
+            const button = getButton(name);
             button.classList.remove('hidden');
             button.classList.remove('disabled');
             button.removeAttribute('disabled');
         }
 
         function disableButton(name) {
-            var button = getButton(name);
+            const button = getButton(name);
             button.classList.remove('hidden');
             button.classList.add('disabled');
             button.setAttribute('disabled', true);
@@ -551,7 +551,7 @@ define([
         }
 
         function hideElement(name) {
-            var el = getElement(name);
+            const el = getElement(name);
             if (!el) {
                 return;
             }
@@ -559,7 +559,7 @@ define([
         }
 
         function showElement(name) {
-            var el = getElement(name);
+            const el = getElement(name);
             if (!el) {
                 return;
             }
@@ -578,7 +578,7 @@ define([
         }
 
         function buildPanel(args) {
-            var type = args.type || 'primary',
+            let type = args.type || 'primary',
                 classes = ['panel', 'panel-' + type],
                 icon;
             if (args.hidden) {
@@ -611,7 +611,7 @@ define([
         }
 
         function makeCollapsiblePanel(title, elementName) {
-            var collapseId = html.genId();
+            const collapseId = html.genId();
 
             return div({ class: 'panel panel-default' }, [
                 div({ class: 'panel-heading' }, [
@@ -633,7 +633,7 @@ define([
         }
 
         function buildCollapsiblePanel(args) {
-            var panelId = args.id || html.genId(),
+            let panelId = args.id || html.genId(),
                 collapseId = html.genId(),
                 type = args.type || 'primary',
                 classes = ['panel', 'panel-' + type],
@@ -679,22 +679,22 @@ define([
         }
 
         function collapsePanel(path) {
-            var node = getElement(path);
+            const node = getElement(path);
             if (!node) {
                 return;
             }
-            var collapseToggle = node.querySelector('[data-toggle="collapse"]'),
+            const collapseToggle = node.querySelector('[data-toggle="collapse"]'),
                 targetSelector = collapseToggle.getAttribute('data-target'),
                 collapseTarget = node.querySelector(targetSelector);
             $(collapseTarget).collapse('hide');
         }
 
         function expandPanel(path) {
-            var node = getElement(path);
+            const node = getElement(path);
             if (!node) {
                 return;
             }
-            var collapseToggle = node.querySelector('[data-toggle="collapse"]'),
+            const collapseToggle = node.querySelector('[data-toggle="collapse"]'),
                 targetSelector = collapseToggle.getAttribute('data-target'),
                 collapseTarget = node.querySelector(targetSelector);
             $(collapseTarget).collapse('show');
@@ -711,37 +711,37 @@ define([
         }
 
         function createNode(markup) {
-            var node = document.createElement('div');
+            const node = document.createElement('div');
             node.innerHTML = markup;
             return node.firstChild;
         }
 
         function setContent(path, content) {
-            var node = getElements(path);
-            node.forEach(function (node) {
+            const node = getElements(path);
+            node.forEach((node) => {
                 node.innerHTML = content;
             });
         }
 
         function setText(path, text) {
-            var node = getElements(path);
-            node.forEach(function (node) {
+            const node = getElements(path);
+            node.forEach((node) => {
                 node.innerText = text;
             });
         }
 
         function enableTooltips(path) {
-            var node = getElement(path);
+            const node = getElement(path);
             if (!node) {
                 return;
             }
-            qsa(node, '[data-toggle="tooltip"]').forEach(function (node) {
+            qsa(node, '[data-toggle="tooltip"]').forEach((node) => {
                 $(node).tooltip();
             });
         }
 
         function addClass(path, klass) {
-            var node = getElement(path);
+            const node = getElement(path);
             if (node) {
                 if (!node.classList.contains(klass)) {
                     node.classList.add(klass);
@@ -750,14 +750,14 @@ define([
         }
 
         function removeClass(path, klass) {
-            var node = getElement(path);
+            const node = getElement(path);
             if (node) {
                 node.classList.remove(klass);
             }
         }
 
         function getUserSetting(settingKey, defaultValue) {
-            var settings = Jupyter.notebook.metadata.kbase.userSettings,
+            let settings = Jupyter.notebook.metadata.kbase.userSettings,
                 setting;
             if (!settings) {
                 return defaultValue;
@@ -770,21 +770,21 @@ define([
         }
 
         function ifAdvanced(fun) {
-            var isAdvanced = getUserSetting('advanced', runtime.config('features.advanced'));
+            const isAdvanced = getUserSetting('advanced', runtime.config('features.advanced'));
             if (isAdvanced) {
                 return fun();
             }
         }
 
         function ifDeveloper(fun) {
-            var isDeveloper = getUserSetting('developer', runtime.config('features.developer'));
+            const isDeveloper = getUserSetting('developer', runtime.config('features.developer'));
             if (isDeveloper) {
                 return fun();
             }
         }
 
         function isAdvanced() {
-            var isAdvanced = getUserSetting('advanced', runtime.config('features.advanced'));
+            const isAdvanced = getUserSetting('advanced', runtime.config('features.advanced'));
             if (isAdvanced) {
                 return true;
             }
@@ -792,7 +792,7 @@ define([
         }
 
         function isDeveloper(fun) {
-            var isDeveloper = getUserSetting('developer', runtime.config('features.developer'));
+            const isDeveloper = getUserSetting('developer', runtime.config('features.developer'));
             if (isDeveloper) {
                 return true;
             }
@@ -800,7 +800,7 @@ define([
         }
 
         function buildIcon(arg) {
-            var klasses = ['fa'],
+            const klasses = ['fa'],
                 style = { verticalAlign: 'middle' };
             klasses.push('fa-' + arg.name);
             if (arg.rotate) {
@@ -817,12 +817,12 @@ define([
                 }
             }
             if (arg.classes) {
-                arg.classes.forEach(function (klass) {
+                arg.classes.forEach((klass) => {
                     klasses.push(klass);
                 });
             }
             if (arg.style) {
-                Object.keys(arg.style).forEach(function (key) {
+                Object.keys(arg.style).forEach((key) => {
                     style[key] = arg.style[key];
                 });
             }
@@ -838,7 +838,7 @@ define([
         }
 
         function reverse(arr) {
-            var newArray = [],
+            let newArray = [],
                 i, len = arr.length;
             for (i = len - 1; i >= 0; i -= 1) {
                 newArray.push(arr[i]);
@@ -847,20 +847,20 @@ define([
         }
 
         function updateTab(tabId, tabName, updates) {
-            var node = document.getElementById(tabId);
+            const node = document.getElementById(tabId);
             if (!node) {
                 return;
             }
 
             // Update tab label
-            var tabTab = findNode([{
+            const tabTab = findNode([{
                 element: 'tab',
                 name: tabName
             }]);
 
             // Update tab label 
             if (updates.label) {
-                var labelNode = tabTab.querySelector('[data-element="label"]');
+                const labelNode = tabTab.querySelector('[data-element="label"]');
                 if (labelNode) {
                     labelNode.innerHTML = updates.label;
                 }
@@ -868,11 +868,11 @@ define([
 
             // update the tab icon
             if (updates.icon) {
-                var iconNode = tabTab.querySelector('[data-element="icon"]');
+                const iconNode = tabTab.querySelector('[data-element="icon"]');
                 if (iconNode) {
                     // remove any icons.
-                    var classList = iconNode.classList;
-                    for (var i = classList.length; classList > 0; classList -= 1) {
+                    let classList = iconNode.classList;
+                    for (let i = classList.length; classList > 0; classList -= 1) {
                         if (classList.item[i].substring(0, 3) === 'fa-') {
                             classList.remove(classList.item[i]);
                         }
@@ -894,12 +894,12 @@ define([
         }
 
         function buildTabs(arg) {
-            var tabsId = arg.id,
+            let tabsId = arg.id,
                 tabsAttribs = {},
                 tabClasses = ['nav', 'nav-tabs'],
                 tabStyle = {},
                 activeIndex, tabTabs,
-                tabs = arg.tabs.filter(function (tab) {
+                tabs = arg.tabs.filter((tab) => {
                     return (tab ? true : false);
                 }),
                 events = [],
@@ -920,14 +920,14 @@ define([
                 tabsAttribs.id = tabsId;
             }
 
-            tabs.forEach(function (tab) {
+            tabs.forEach((tab) => {
                 tab.panelId = html.genId();
                 tab.tabId = html.genId();
                 if (tab.name) {
                     tabMap[tab.name] = tab.tabId;
                 }
                 if (tab.events) {
-                    tab.events.forEach(function (event) {
+                    tab.events.forEach((event) => {
                         events.push({
                             id: tab.tabId,
                             jquery: true,
@@ -951,8 +951,8 @@ define([
             }
             content = div(tabsAttribs, [
                 ul({ class: tabClasses.join(' '), role: 'tablist' },
-                    tabTabs.map(function (tab, index) {
-                        var tabAttribs = {
+                    tabTabs.map((tab, index) => {
+                        let tabAttribs = {
                                 role: 'presentation'
                             },
                             linkAttribs = {
@@ -983,8 +983,8 @@ define([
                         return li(tabAttribs, a(linkAttribs, [icon, label].join(' ')));
                     })),
                 div({ class: 'tab-content' },
-                    tabs.map(function (tab, index) {
-                        var attribs = {
+                    tabs.map((tab, index) => {
+                        const attribs = {
                             role: 'tabpanel',
                             class: panelClasses.join(' '),
                             id: tab.panelId,
@@ -1009,12 +1009,12 @@ define([
         // TURN THIS INTO A MINI WIDGET!
         function jsonBlockWidget() {
             function factory(cfg) {
-                var config = cfg || {},
+                const config = cfg || {},
                     indent = config.indent || 3,
                     fontSize = config.fontSize || 0.8;
 
                 function render(obj) {
-                    var specText = JSON.stringify(obj, false, indent),
+                    const specText = JSON.stringify(obj, false, indent),
                         fixedText = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
                     return pre({
                         class: 'prettyprint lang-json',
@@ -1025,7 +1025,7 @@ define([
                 }
 
                 function start(arg) {
-                    return Promise.try(function () {
+                    return Promise.try(() => {
                         arg.node.innerHTML = render(arg.obj);
                         PR.prettyPrint(null, arg.node);
                     });
@@ -1048,15 +1048,15 @@ define([
         }
 
         function buildGridTable(arg) {
-            return arg.table.map(function (row) {
-                return div({ class: 'row', style: arg.row.style }, arg.cols.map(function (col, index) {
+            return arg.table.map((row) => {
+                return div({ class: 'row', style: arg.row.style }, arg.cols.map((col, index) => {
                     return div({ class: 'col-md-' + String(col.width), style: col.style }, row[index]);
                 }));
             });
         }
 
         function camelToHyphen(s) {
-            return s.replace(/[A-Z]/g, function (m) {
+            return s.replace(/[A-Z]/g, (m) => {
                 return '-' + m.toLowerCase();
             });
         }
@@ -1065,7 +1065,7 @@ define([
             if (!path) {
                 path = [];
             }
-            var node = getElement(path);
+            const node = getElement(path);
             if (!node) {
                 return;
             }
@@ -1076,11 +1076,11 @@ define([
             } else if (viewModel === null) {
                 setContent(path, '');
             } else {
-                Object.keys(viewModel).forEach(function (key) {
-                    var value = viewModel[key];
+                Object.keys(viewModel).forEach((key) => {
+                    const value = viewModel[key];
                     if (key === '_attrib') {
-                        Object.keys(value).forEach(function (attribKey) {
-                            var attribValue = value[attribKey];
+                        Object.keys(value).forEach((attribKey) => {
+                            const attribValue = value[attribKey];
                             // console.log('attrib?', attribKey, attribValue);
                             switch (attribKey) {
                             case 'hidden':
@@ -1092,7 +1092,7 @@ define([
                                 }
                                 break;
                             case 'style':
-                                Object.keys(attribValue).forEach(function (key) {
+                                Object.keys(attribValue).forEach((key) => {
                                     node.style[camelToHyphen(key)] = attribValue[key];
                                 });
                             }
@@ -1118,7 +1118,7 @@ define([
                 }
                 if (data instanceof Array) {
                     return table({ class: 'table table-striped' },
-                        data.map(function (datum, index) {
+                        data.map((datum, index) => {
                             return tr([
                                 th(String(index)),
                                 td(buildPresentableJson(datum))
@@ -1127,7 +1127,7 @@ define([
                     );
                 }
                 return table({ class: 'table table-striped' },
-                    Object.keys(data).map(function (key) {
+                    Object.keys(data).map((key) => {
                         return tr([th(key), td(buildPresentableJson(data[key]))]);
                     }).join('\n')
                 );
@@ -1181,7 +1181,7 @@ define([
         function buildErrorStacktrace(err) {
             return div([
                 ol({}, err.stack.split(/\n/)
-                    .map(function (item) {
+                    .map((item) => {
                         return li({
                             style: {
                                 marginTop: '6px'
@@ -1240,15 +1240,15 @@ define([
         }
 
         function loading(arg) {
-            var prompt;
+            let prompt;
             if (arg.message) {
                 prompt = arg.message + '... &nbsp &nbsp';
             }
-            var sizeClass;
+            let sizeClass;
             if (arg.size) {
                 sizeClass = 'fa-' + arg.size;
             }
-            var style = {};
+            const style = {};
             if (arg.color) {
                 style.color = arg.color;
             }

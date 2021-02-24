@@ -7,13 +7,13 @@ define (
 		'jquery',
 		'kbaseTable',
 		'kbaseAuthenticatedWidget'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		kbaseTable,
 		kbaseAuthenticatedWidget
-	) {
+	) => {
 
     'use strict';
 
@@ -39,23 +39,23 @@ define (
 
             this.setDataset(this.options.SetupRNASeqAnalysis);
 
-            var $rna = this;
+            const $rna = this;
 
             this.appendUI(this.$elem);
 
-            var ws = new Workspace(window.kbconfig.urls.workspace, {token : $rna.authToken()});
+            const ws = new Workspace(window.kbconfig.urls.workspace, {token : $rna.authToken()});
 
-            var ws_params = {
+            const ws_params = {
                 workspace : this.options.workspaceName || this.options.associateReads.workspace,
                 name : this.options.ws_sample_id || this.options.associateReads.output
             };
 
-            ws.get_objects([ws_params]).then(function (d) {
+            ws.get_objects([ws_params]).then((d) => {
 
                 $.when(
                     ws.get_objects([{ ref : d[0].data.analysis_id}]),
                     ws.get_objects([{ ref : d[0].data.metadata.genome_id}])
-                ).then(function (analysis, genome) {
+                ).then((analysis, genome) => {
 
                     $rna.setDataset(
                         {
@@ -74,7 +74,7 @@ define (
 
                     $rna.updateUI();
                 })
-                .fail(function(d) {
+                .fail((d) => {
                     $rna.$elem.empty();
                     $rna.$elem
                         .addClass('alert alert-danger')
@@ -82,7 +82,7 @@ define (
                 })
 
             })
-            .fail(function(d) {
+            .fail((d) => {
 
                 $rna.$elem.empty();
                 $rna.$elem

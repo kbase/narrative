@@ -107,7 +107,7 @@ define (
 		'geometry_rectangle',
 		'geometry_point',
 		'geometry_size'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -117,7 +117,7 @@ define (
 		geometry_rectangle,
 		geometry_point,
 		geometry_size
-	) {
+	) => {
 
     'use strict';
 
@@ -168,9 +168,9 @@ define (
 
         extractLegend : function (dataset) {
 
-            var legend = [];
+            const legend = [];
             dataset.forEach(
-                function(line, idx) {
+                (line, idx) => {
                     legend.push(
                         {
                             color       : line.strokeColor,
@@ -188,22 +188,22 @@ define (
 
         setDataset : function(dataset) {
 
-            var $line = this;
+            const $line = this;
 
             dataset.forEach(
-                function(line, idx) {
+                (line, idx) => {
                     if (line.values) {
 
-                        var revLine = [];
+                        const revLine = [];
 
-                        var numPoints = line.values.length;
+                        const numPoints = line.values.length;
 
-                        var xInc = $line.options.xIncrementor;
+                        const xInc = $line.options.xIncrementor;
 
-                        var xIdx = xInc();
+                        let xIdx = xInc();
 
                         for (var i = 0; i < numPoints; i++) {
-                            var point = line.values[i];
+                            const point = line.values[i];
 
                             if (! $.isPlainObject(point)) {
                                 line.values[i] = {x : xIdx, y : point}
@@ -244,22 +244,22 @@ define (
             }
 
 
-            var ret = [
+            const ret = [
                 d3.min(
                     this.dataset(),
-                    function (l) {
-                        return d3.min(l.values.map(function(d) { return d.x }))
+                    (l) => {
+                        return d3.min(l.values.map((d) => { return d.x }))
                     }
                 ),
                 d3.max(
                     this.dataset(),
-                    function (l) {
-                        return d3.max(l.values.map(function(d) { return d.x }))
+                    (l) => {
+                        return d3.max(l.values.map((d) => { return d.x }))
                     }
                 )
             ];
 
-            var delta = Math.max(this.options.xInset * ret[0], this.options.xInset * ret[1]);
+            const delta = Math.max(this.options.xInset * ret[0], this.options.xInset * ret[1]);
             ret[0] -= delta;
             ret[1] += delta;
 console.log("DXD", ret);
@@ -273,22 +273,22 @@ console.log("DXD", ret);
                 return [0,0];
             }
 
-            var ret = [
+            const ret = [
                 d3.min(
                     this.dataset(),
-                    function (l) {
-                        return d3.min(l.values.map(function(d) { return d.y }))
+                    (l) => {
+                        return d3.min(l.values.map((d) => { return d.y }))
                     }
                 ),
                 d3.max(
                     this.dataset(),
-                    function (l) {
-                        return d3.max(l.values.map(function(d) { return d.y }))
+                    (l) => {
+                        return d3.max(l.values.map((d) => { return d.y }))
                     }
                 )
             ];
 
-            var delta = Math.max(this.options.yInset * ret[0], this.options.yInset * ret[1]);
+            const delta = Math.max(this.options.yInset * ret[0], this.options.yInset * ret[1]);
             ret[0] -= delta;
             ret[1] += delta;
 console.log("DYD", ret);
@@ -301,31 +301,31 @@ console.log("DYD", ret);
                 return;
             }
 
-            var bounds = this.chartBounds();
-            var $line  = this;
+            const bounds = this.chartBounds();
+            const $line  = this;
 console.log("BOUNDS ", bounds);
-            var lineMaker = d3.svg.line()
-                .x(function(d) { return $line.xScale()(d.x) })
-                .y(function(d) { return $line.yScale()(d.y) });
+            const lineMaker = d3.svg.line()
+                .x((d) => { return $line.xScale()(d.x) })
+                .y((d) => { return $line.yScale()(d.y) });
 
-            var funkyTown = function() {
+            const funkyTown = function() {
 
                 this
-                    .attr('d',              function(d) {return lineMaker(d.values) })
-                    .attr('stroke',         function (d) { return d.strokeColor || $line.options.strokeColor } )
-                    .attr('fill',           function(d) { return d.fillColor || $line.options.fillColor} )
-                    .attr('fill-opacity',        function (d) { return d.fillOpacity || $line.options.fillOpacity} )
-                    .attr('stroke-opacity',        function (d) { return d.strokeOpacity || $line.options.strokeOpacity} )
-                    .attr('stroke-width',   function (d) {return d.width != undefined ? d.width : $line.options.lineWidth} )
-                    .attr('stroke-linecap',   function (d) {return d.linecap || $line.options.lineCap} )
-                    .attr('stroke-dasharray',   function (d) {return d.dasharray } )
+                    .attr('d',              (d) => {return lineMaker(d.values) })
+                    .attr('stroke',         (d) => { return d.strokeColor || $line.options.strokeColor } )
+                    .attr('fill',           (d) => { return d.fillColor || $line.options.fillColor} )
+                    .attr('fill-opacity',        (d) => { return d.fillOpacity || $line.options.fillOpacity} )
+                    .attr('stroke-opacity',        (d) => { return d.strokeOpacity || $line.options.strokeOpacity} )
+                    .attr('stroke-width',   (d) => {return d.width != undefined ? d.width : $line.options.lineWidth} )
+                    .attr('stroke-linecap',   (d) => {return d.linecap || $line.options.lineCap} )
+                    .attr('stroke-dasharray',   (d) => {return d.dasharray } )
                 ;
 
                 return this;
 
             };
 
-            var mouseAction = function() {
+            const mouseAction = function() {
 
                 //if (! $line.options.useOverLine) {
                 //    return;
@@ -354,8 +354,8 @@ console.log("BOUNDS ", bounds);
                 .on('mouseout', function(d) {
                     if ($line.options.useOverLine && $line.options.overColor) {
                         d3.select(this)
-                            .attr('stroke',         function (d) { return d.strokeColor || $line.options.strokeColor } )
-                            .attr('stroke-width',   function (d) {return d.width != undefined ? d.width : $line.options.lineWidth} );
+                            .attr('stroke',         (d) => { return d.strokeColor || $line.options.strokeColor } )
+                            .attr('stroke-width',   (d) => {return d.width != undefined ? d.width : $line.options.lineWidth} );
                     }
 
                     if ($line.options.useLineLabelToolTip) {
@@ -367,7 +367,7 @@ console.log("BOUNDS ", bounds);
             };
 
             if (this.options.hGrid && this.yScale) {
-                var yAxis =
+                const yAxis =
                     d3.svg.axis()
                     .scale(this.yScale())
                     .orient('left')
@@ -375,7 +375,7 @@ console.log("BOUNDS ", bounds);
                     .outerTickSize(0)
                     .tickFormat('');
 
-                var gyAxis = this.D3svg().select(this.region('chart')).select('.yAxis');
+                let gyAxis = this.D3svg().select(this.region('chart')).select('.yAxis');
 
                 if (gyAxis[0][0] == undefined) {
                     gyAxis = this.D3svg().select(this.region('chart'))
@@ -388,7 +388,7 @@ console.log("BOUNDS ", bounds);
                 gyAxis.selectAll('line').style('stroke', 'lightgray');
             }
 
-            var chart = this.data('D3svg').select(this.region('chart')).selectAll('.line').data(this.dataset(), function (d) {return d.label});
+            const chart = this.data('D3svg').select(this.region('chart')).selectAll('.line').data(this.dataset(), (d) => {return d.label});
 
             chart
                 .enter()
@@ -412,16 +412,16 @@ console.log("BOUNDS ", bounds);
                     .exit()
                         .remove();
 
-            var time = $line.linesDrawn ? $line.options.transitionTime : 0;
+            const time = $line.linesDrawn ? $line.options.transitionTime : 0;
 
-            var pointsData = [];
-            this.dataset().forEach(function(line, i) {
+            const pointsData = [];
+            this.dataset().forEach((line, i) => {
 
-                line.values.forEach(function (point, i) {
+                line.values.forEach((point, i) => {
 
                     if (line.shape || point.shape) {
-                        var newPoint = {};
-                        for (var key in point) {
+                        const newPoint = {};
+                        for (const key in point) {
                             newPoint[key] = point[key];
                         };
 
@@ -437,13 +437,13 @@ console.log("BOUNDS ", bounds);
                 })
             })
 
-            var points = $line.data('D3svg').select($line.region('chart')).selectAll('.point').data(pointsData, function (d) { return d.id});
+            const points = $line.data('D3svg').select($line.region('chart')).selectAll('.point').data(pointsData, (d) => { return d.id});
 
             points.enter()
                 .append('path')
                     .attr('class', 'point')
                     .attr('opacity', 0)
-                    .attr("transform", function(d) { return "translate(" + $line.xScale()(d.x) + "," + $line.yScale()(d.y) + ")"; })
+                    .attr("transform", (d) => { return "translate(" + $line.xScale()(d.x) + "," + $line.yScale()(d.y) + ")"; })
                     .on('mouseover', function(d) {
 
                         if ($line.options.overColor) {
@@ -465,7 +465,7 @@ console.log("BOUNDS ", bounds);
                     .on('mouseout', function(d) {
                         if ($line.options.overColor) {
                             d3.select(this)
-                                .attr('fill', function(d) {return d.color})
+                                .attr('fill', (d) => {return d.color})
                         }
 
                         if (d.label) {
@@ -478,9 +478,9 @@ console.log("BOUNDS ", bounds);
 
             points
                 .transition().duration(time)
-                .attr("transform", function(d) { return "translate(" + $line.xScale()(d.x) + "," + $line.yScale()(d.y) + ")"; })
-                .attr('d', function (d) {return d3.svg.symbol().type(d.shape).size(d.shapeArea)() } )
-                .attr('fill', function(d) {return d.color})
+                .attr("transform", (d) => { return "translate(" + $line.xScale()(d.x) + "," + $line.yScale()(d.y) + ")"; })
+                .attr('d', (d) => {return d3.svg.symbol().type(d.shape).size(d.shapeArea)() } )
+                .attr('fill', (d) => {return d.color})
                 .attr('opacity', 1)
             ;
 
@@ -490,7 +490,7 @@ console.log("BOUNDS ", bounds);
                 .remove();
 
             if (this.options.useHighlightLine) {
-                var highlight = this.data('D3svg').select(this.region('chart')).selectAll('.highlight').data([0]);
+                const highlight = this.data('D3svg').select(this.region('chart')).selectAll('.highlight').data([0]);
 
                 highlight.enter()
                     .append('line')
@@ -505,17 +505,17 @@ console.log("BOUNDS ", bounds);
                 ;
 
                 this.data('D3svg').select(this.region('chart'))
-                    .on('mouseover', function(d) {
+                    .on('mouseover', (d) => {
                         highlight.attr('opacity', 1);
                     })
                     .on('mousemove', function(d) {
-                        var coords = d3.mouse(this);
+                        const coords = d3.mouse(this);
                         highlight
                             .attr('x1', coords[0])
                             .attr('x2', coords[0])
                             .attr('opacity', 1)
                     })
-                    .on('mouseout', function(d) {
+                    .on('mouseout', (d) => {
                         highlight.attr('opacity', 0);
                     })
                 ;

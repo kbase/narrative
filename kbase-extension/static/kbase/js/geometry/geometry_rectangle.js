@@ -35,7 +35,7 @@ Rectangle.prototype.insetRect = function insetRect (dx,dy) {
 }
 
 Rectangle.prototype.fromString = function fromString (string) {
-    var results;
+    let results;
     if (results = string.match(/{{(.+),\s*(.+)},\s*{(.+),\s*(.+)}}/)) {
         return new Rectangle(
             new Point(parseInt(results[1]), parseInt(results[2])),
@@ -63,16 +63,16 @@ Rectangle.prototype.intersects = function intersects (r2) {
 
 Rectangle.prototype.unionRect = function unionRect (r2, padding) {
 
-    var union = new Rectangle();
+    const union = new Rectangle();
 
-    var myLL = this.lowerRight();
-    var r2LL = r2.lowerRight();
+    const myLL = this.lowerRight();
+    const r2LL = r2.lowerRight();
 
     union.origin.x = Math.min(this.origin.x, r2.origin.x);
     union.origin.y = Math.min(this.origin.y, r2.origin.y);
 
-    var rightX = Math.max(myLL.x, r2LL.x);
-    var rightY = Math.max(myLL.y, r2LL.y);
+    const rightX = Math.max(myLL.x, r2LL.x);
+    const rightY = Math.max(myLL.y, r2LL.y);
 
     union.size.width = union.origin.x + rightX;
     union.size.height = union.origin.Y + rightY;
@@ -103,16 +103,16 @@ Rectangle.prototype.isValidRect = function isValidRect () {
 
 Rectangle.prototype.intersectRect = function intersectRect (r2) {
 
-    var intersect = new Rectangle();
+    const intersect = new Rectangle();
 
-    var myLL = this.lowerRight();
-    var r2LL = r2.lowerRight();
+    const myLL = this.lowerRight();
+    const r2LL = r2.lowerRight();
 
     intersect.origin.x = Math.max(this.origin.x, r2.origin.x);
     intersect.origin.y = Math.max(this.origin.y, r2.origin.y);
 
-    var rightX = Math.min(myLL.x, r2LL.x);
-    var rightY = Math.min(myLL.y, r2LL.y);
+    const rightX = Math.min(myLL.x, r2LL.x);
+    const rightY = Math.min(myLL.y, r2LL.y);
 
     intersect.size.width = rightX - intersect.origin.x;
     intersect.size.height = rightY - intersect.origin.y;
@@ -130,8 +130,8 @@ Rectangle.prototype.intersectRect = function intersectRect (r2) {
 }
 
 Rectangle.prototype.containsPoint = function containsPoint (p) {
-    var ux = this.origin.x + this.size.width;
-    var uy = this.origin.y + this.size.height;
+    const ux = this.origin.x + this.size.width;
+    const uy = this.origin.y + this.size.height;
     if (p.x >= this.origin.x && p.x <= ux
         && p.y >= this.origin.y && p.y <= uy) {
             return true;

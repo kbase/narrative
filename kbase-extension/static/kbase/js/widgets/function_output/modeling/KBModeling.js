@@ -3,25 +3,25 @@
  *  Base class for workspace objects related to modeling
 */
 function KBModeling(token) {
-    var self = this;
+    const self = this;
 
     this.token = token;
 
     this.kbapi = function(service, method, params) {
-        var call_ajax = function(_url, _method, _params, _callback) {
+        const call_ajax = function(_url, _method, _params, _callback) {
             if (! _callback){
                 _callback = function(data) {
                     return data.result[0];
                 }
             }
-            var rpc = {
+            const rpc = {
                 params: [_params],
                 method: _method,
                 version: "1.1",
                 id: String(Math.random()).slice(2),
             };
 
-            var prom = $.ajax({
+            const prom = $.ajax({
                 url: _url,
                 type: 'POST',
                 processData: false,

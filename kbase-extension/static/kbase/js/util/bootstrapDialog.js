@@ -1,10 +1,9 @@
-/*jslint white: true*/
 define ([
     'jquery',
     'bootstrap'
-], function (
+], (
     $
-) {
+) => {
     'use strict';
 
     /**
@@ -19,7 +18,7 @@ define ([
      *     alertOnly: create as an "alert" with a single "Close" button in the footer
      * }
      */
-    var BootstrapDialog = function (options) {
+    const BootstrapDialog = function (options) {
         this.$modal = $('<div class="modal fade" role="dialog">');
         this.$dialog = $('<div class="modal-dialog">');
         this.$dialogContent = $('<div class="modal-content">');
@@ -52,7 +51,7 @@ define ([
             return;
         }
         if (options.closeButton === true) {
-            var $closeButton = $('<button type="button" class="close" data-dismiss="modal" aria-label="Close">')
+            const $closeButton = $('<button type="button" class="close" data-dismiss="modal" aria-label="Close">')
                 .append($('<span aria-hidden="true">')
                     .append('&times;'));
             this.$header.append($closeButton);
@@ -91,20 +90,20 @@ define ([
         else {
             this.$footer.css({'border-top': ''});
         }
-        for (var i=0; i<buttonList.length; i++) {
-            var $btn = buttonList[i];
+        for (let i=0; i<buttonList.length; i++) {
+            const $btn = buttonList[i];
             this.$footer.append($btn);
         }
         if (this.enterToTrigger) {
             this.$modal
                 .off('keypress')
-                .on('keypress', (function(e) {
+                .on('keypress', ((e) => {
                     if (e.keyCode === 13) {
                         e.stopPropagation();
                         e.preventDefault();
                         this.$footer.find('button:last').trigger('click');
                     }
-                }.bind(this)));
+                }));
         }
     };
 

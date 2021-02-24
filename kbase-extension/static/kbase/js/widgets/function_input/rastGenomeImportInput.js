@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white: true*/
 /**
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
@@ -11,13 +9,13 @@ define (
 		'jquery',
 		'narrativeConfig',
 		'kbaseNarrativeInput'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		Config,
 		kbaseNarrativeInput
-	) {
+	) => {
     return KBWidget({
         name: "rastGenomeImportInput",
         parent : kbaseNarrativeInput,
@@ -48,7 +46,7 @@ define (
 
             this.$rastCreds = this.makeRastCredsBlock();
 
-            var $inputDiv = $('<div>').addClass('kb-cell-params')
+            const $inputDiv = $('<div>').addClass('kb-cell-params')
                                      .append('<p><b>RAST Genome Ids:</b></p>')
                                      .append(this.$genomeIdTable)
                                      .append(this.$rastCreds);
@@ -60,13 +58,13 @@ define (
         },
 
         makeGenomeIdTable: function() {
-            var $table = $('<form class="form-horizontal">');
+            const $table = $('<form class="form-horizontal">');
             return $table;
         },
 
         addGenomeIdRow: function(id) {
-            var $newRowBtn = this.makeAddIdButton(id ? true : false);
-            var $row = $('<div class="form-group" style="margin-bottom:5px">')
+            const $newRowBtn = this.makeAddIdButton(id ? true : false);
+            const $row = $('<div class="form-group" style="margin-bottom:5px">')
                        .append($('<div class="col-sm-10">')
                                .append($('<input>')
                                        .addClass('form-control')
@@ -80,16 +78,16 @@ define (
         },
 
         makeAddIdButton: function(trashOnly) {
-            var self = this;
+            const self = this;
 
-            var deleteRow = function(event) {
+            const deleteRow = function(event) {
                 event.preventDefault();
                 $(event.currentTarget).closest(".form-group").remove();
             };
 
-            var addRow = function(event) {
+            const addRow = function(event) {
                 event.preventDefault();
-                var $newRow = self.addGenomeIdRow();
+                const $newRow = self.addGenomeIdRow();
 
                 $(event.currentTarget).find("span")
                                       .addClass("glyphicon-trash")
@@ -101,7 +99,7 @@ define (
                 $newRow.find('input').focus();
             };
 
-            var $button = $("<button>")
+            const $button = $("<button>")
                           .addClass("btn")
                           .append($("<span>")
                                   .addClass("glyphicon")
@@ -120,7 +118,7 @@ define (
                 return;
 
             this.$genomeIdTable.empty();
-            for (var i=0; i<ids.length; i++) {
+            for (let i=0; i<ids.length; i++) {
                 this.addGenomeIdRow(ids[i]);
             }
             this.addGenomeIdRow();
@@ -161,32 +159,32 @@ define (
          */
         getParameters: function() {
             // First, the genome ids.
-            var idList = [];
-            
-            this.$genomeIdTable.find('input').each(function(idx, elem) {
-                var id = $(elem).val().trim();
+            const idList = [];
+
+            this.$genomeIdTable.find('input').each((idx, elem) => {
+                const id = $(elem).val().trim();
                 if (id)
                     idList.push(id);
             });
 
-            var genomeIds = idList.join(',');
+            const genomeIds = idList.join(',');
 
-            var user = this.$elem.find('#rast-id').val();
-            var pw = this.$elem.find('#rast-pw').val();
+            const user = this.$elem.find('#rast-id').val();
+            const pw = this.$elem.find('#rast-pw').val();
             return [genomeIds, user, pw];
         },
 
         /**
          * Returns an object representing the state of this widget.
          * In this particular case, it is a list of key-value pairs, like this:
-         * { 
+         * {
          *   'param0' : 'parameter value',
          *   'param1' : 'parameter value'
          * }
          * with one key/value for each parameter in the defined method.
          */
         getState: function() {
-            var paramsList = this.getParameters();
+            const paramsList = this.getParameters();
 
             return { idList : paramsList[0],
                      user : paramsList[1] };
@@ -202,7 +200,7 @@ define (
                 return;
 
             if (state.hasOwnProperty('idList')) {
-                var ids = state['idList'].split(',');
+                const ids = state['idList'].split(',');
                 this.refreshIdTable(ids);
             }
 

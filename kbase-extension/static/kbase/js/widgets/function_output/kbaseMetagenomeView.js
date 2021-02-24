@@ -11,7 +11,7 @@ define (
 		'RGBColor',
 		'kbStandaloneTable',
 		'kbStandaloneGraph'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -20,7 +20,7 @@ define (
 		RGBColor,
 		kbStandaloneTable,
 		kbStandaloneGraph
-	) {
+	) => {
     return KBWidget({
         name: 'MetagenomeView',
         parent : kbaseAuthenticatedWidget,
@@ -39,10 +39,10 @@ define (
         },
 
         render: function() {
-	        var self = this;
-	        var pref = this.uuidv4();
+	        const self = this;
+	        const pref = this.uuidv4();
 
-	        var container = this.$elem;
+	        const container = this.$elem;
 	        container.empty();
             if (self.token == null) {
                 container.append("<div>[Error] You're not logged in</div>");
@@ -50,35 +50,35 @@ define (
             }
             container.append("<div><img src=\""+self.loading_image+"\">&nbsp;&nbsp;loading data...</div>");
 
-	        var kbws = new Workspace(self.ws_url, {'token': self.token});
-	        kbws.get_objects([{ref: self.options.ws+"/"+self.options.id}], function(data) {
+	        const kbws = new Workspace(self.ws_url, {'token': self.token});
+	        kbws.get_objects([{ref: self.options.ws+"/"+self.options.id}], (data) => {
 	            container.empty();
 		        // parse data
 		        if (data.length == 0) {
-		            var msg = "[Error] Object "+self.options.id+" does not exist in workspace "+self.options.ws;
+		            const msg = "[Error] Object "+self.options.id+" does not exist in workspace "+self.options.ws;
 		            container.append('<div><p>'+msg+'>/p></div>');
 		        } else {
 				    // parse data
-				    var d = data[0]['data'];
+				    const d = data[0]['data'];
 
 				    // get base numbers
-        		    var stats  = d.statistics.sequence_stats;
-        		    var is_rna = (d.sequence_type == 'Amplicon') ? 1 : 0;
-        		    var raw_seqs    = ('sequence_count_raw' in stats) ? parseFloat(stats.sequence_count_raw) : 0;
-        		    var qc_rna_seqs = ('sequence_count_preprocessed_rna' in stats) ? parseFloat(stats.sequence_count_preprocessed_rna) : 0;
-        		    var qc_seqs     = ('sequence_count_preprocessed' in stats) ? parseFloat(stats.sequence_count_preprocessed) : 0;
-        		    var rna_sims    = ('sequence_count_sims_rna' in stats) ? parseFloat(stats.sequence_count_sims_rna) : 0;
-        		    var r_clusts    = ('cluster_count_processed_rna' in stats) ? parseFloat(stats.cluster_count_processed_rna) : 0;
-        		    var r_clust_seq = ('clustered_sequence_count_processed_rna' in stats) ? parseFloat(stats.clustered_sequence_count_processed_rna) : 0;
-        		    var ann_reads   = ('read_count_annotated' in stats) ? parseFloat(stats.read_count_annotated) : 0;
-        		    var aa_reads    = ('read_count_processed_aa' in stats) ? parseFloat(stats.read_count_processed_aa) : 0;
+        		    const stats  = d.statistics.sequence_stats;
+        		    const is_rna = (d.sequence_type == 'Amplicon') ? 1 : 0;
+        		    const raw_seqs    = ('sequence_count_raw' in stats) ? parseFloat(stats.sequence_count_raw) : 0;
+        		    const qc_rna_seqs = ('sequence_count_preprocessed_rna' in stats) ? parseFloat(stats.sequence_count_preprocessed_rna) : 0;
+        		    const qc_seqs     = ('sequence_count_preprocessed' in stats) ? parseFloat(stats.sequence_count_preprocessed) : 0;
+        		    const rna_sims    = ('sequence_count_sims_rna' in stats) ? parseFloat(stats.sequence_count_sims_rna) : 0;
+        		    const r_clusts    = ('cluster_count_processed_rna' in stats) ? parseFloat(stats.cluster_count_processed_rna) : 0;
+        		    const r_clust_seq = ('clustered_sequence_count_processed_rna' in stats) ? parseFloat(stats.clustered_sequence_count_processed_rna) : 0;
+        		    const ann_reads   = ('read_count_annotated' in stats) ? parseFloat(stats.read_count_annotated) : 0;
+        		    const aa_reads    = ('read_count_processed_aa' in stats) ? parseFloat(stats.read_count_processed_aa) : 0;
 
 				    // first round math
-        		    var qc_fail_seqs  = raw_seqs - qc_seqs;
-        		    var ann_rna_reads = rna_sims ? (rna_sims - r_clusts) + r_clust_seq : 0;
-        		    var ann_aa_reads  = (ann_reads && (ann_reads > ann_rna_reads)) ? ann_reads - ann_rna_reads : 0;
-        		    var unkn_aa_reads = aa_reads - ann_aa_reads;
-        		    var unknown_all   = raw_seqs - (qc_fail_seqs + unkn_aa_reads + ann_aa_reads + ann_rna_reads);
+        		    let qc_fail_seqs  = raw_seqs - qc_seqs;
+        		    let ann_rna_reads = rna_sims ? (rna_sims - r_clusts) + r_clust_seq : 0;
+        		    let ann_aa_reads  = (ann_reads && (ann_reads > ann_rna_reads)) ? ann_reads - ann_rna_reads : 0;
+        		    let unkn_aa_reads = aa_reads - ann_aa_reads;
+        		    let unknown_all   = raw_seqs - (qc_fail_seqs + unkn_aa_reads + ann_aa_reads + ann_rna_reads);
         		    if (raw_seqs < (qc_fail_seqs + ann_rna_reads)) {
             		    var diff = (qc_fail_seqs + ann_rna_reads) - raw_seqs;
             		    unknown_all = (diff > unknown_all) ? 0 : unknown_all - diff;
@@ -107,14 +107,14 @@ define (
         		    }
 
                     // set tabs
-                    var tabPane = $('<div id="'+pref+'tab-content">');
+                    const tabPane = $('<div id="'+pref+'tab-content">');
         		    container.append(tabPane);
-        		    var tabWidget = new kbaseTabs(tabPane, {canDelete : false, tabs : []});
+        		    const tabWidget = new kbaseTabs(tabPane, {canDelete : false, tabs : []});
 
                     // overview tab
                     var oTabDiv = $('<div id="'+pref+'overview">');
                     tabWidget.addTab({tab: 'Overview', content: oTabDiv, canDelete : false, show: true});
-				    var html = '<h4>Info</h4>';
+				    let html = '<h4>Info</h4>';
 				    html += '<p><table class="table table-striped table-bordered" style="width: 50%;">';
 				    html += '<tr><td style="padding-right: 25px; width: 165px;"><b>Metagenome ID</b></td><td>'+d.id+'</td></tr>';
 				    html += '<tr><td style="padding-right: 25px; width: 165px;"><b>Metagenome Name</b></td><td>'+d.name+'</td></tr>';
@@ -126,28 +126,28 @@ define (
 				    html += '</table></p>';
 				    html += '<h4>Summary</h4>';
 				    html += '<p>The dataset '+d.name+' was uploaded on '+d.created+' and contains '+stats.sequence_count_raw+' sequences totaling '+stats.bp_count_raw+' basepairs with an average length of '+stats.average_length_raw+' bps.</p>';
-        		    var ptext  = " Of the remainder, "+ann_aa_reads+" sequences ("+(ann_aa_reads / raw_seqs * 100).toFixed(2)+"%) contain predicted proteins with known functions and "+unkn_aa_reads+" sequences ("+(unkn_aa_reads / raw_seqs * 100).toFixed(2)+"%) contain predicted proteins with unknown function.";
-        		    var ftext  = " "+unknown_all+" sequences ("+(unknown_all / raw_seqs * 100).toFixed(2)+"%) have no rRNA genes"+(is_rna ? '.' : " or predicted proteins");
+        		    const ptext  = " Of the remainder, "+ann_aa_reads+" sequences ("+(ann_aa_reads / raw_seqs * 100).toFixed(2)+"%) contain predicted proteins with known functions and "+unkn_aa_reads+" sequences ("+(unkn_aa_reads / raw_seqs * 100).toFixed(2)+"%) contain predicted proteins with unknown function.";
+        		    const ftext  = " "+unknown_all+" sequences ("+(unknown_all / raw_seqs * 100).toFixed(2)+"%) have no rRNA genes"+(is_rna ? '.' : " or predicted proteins");
 				    html += '<p>'+qc_fail_seqs+' sequences ('+(qc_fail_seqs / raw_seqs * 100).toFixed(2)+'%) failed to pass the QC pipeline. Of the sequences that passed QC, '+ann_rna_reads+' sequences ('+(ann_rna_reads / raw_seqs * 100).toFixed(2)+'%) containe ribosomal RNA genes.'+(is_rna ? '' : ptext)+ftext+'</p>';
                     $('#'+pref+'overview').append(html);
 
                     // metadata tab
-                    var mTabDiv = $('<div id="'+pref+'metadata" style="width: 95%;">');
+                    const mTabDiv = $('<div id="'+pref+'metadata" style="width: 95%;">');
                     tabWidget.addTab({tab: 'Metadata', content: mTabDiv, canDelete : false, show: true});
-                    var tlen = 0;
+                    let tlen = 0;
     		        if (window.hasOwnProperty('rendererTable') && rendererTable.length) {
 			            tlen = rendererTable.length;
 		            }
-		            var mdata = [];
-		            var cats = ['project', 'sample', 'library', 'env_package'];
-		            for (var c in cats) {
+		            const mdata = [];
+		            const cats = ['project', 'sample', 'library', 'env_package'];
+		            for (const c in cats) {
                         if (d.metadata[cats[c]]) {
-                            for (var key in d.metadata[cats[c]]['data']) {
+                            for (const key in d.metadata[cats[c]]['data']) {
                                 mdata.push([ cats[c], key, d.metadata[cats[c]]['data'][key] ]);
                             }
                         }
                     }
-		            var tableMeta = standaloneTable.create({index: tlen});
+		            const tableMeta = standaloneTable.create({index: tlen});
   		            tableMeta.settings.target = document.getElementById(pref+'metadata');
     		        tableMeta.settings.data = { header: ['Category', 'Field', 'Value'], data: mdata };
 		            tableMeta.settings.width = 400;
@@ -180,22 +180,22 @@ define (
                     $('#'+pref+'stats').append(html);
 
 		            // drisee tab
-		            var drisee_cols = d.statistics.qc.drisee.percents.columns;
-		            var drisee_data = d.statistics.qc.drisee.percents.data;
+		            const drisee_cols = d.statistics.qc.drisee.percents.columns;
+		            const drisee_data = d.statistics.qc.drisee.percents.data;
 		            if ((! is_rna) && drisee_cols && drisee_data && (drisee_cols.length > 0) && (drisee_data.length > 0)) {
-		                var dTabDiv = $('<div id="'+pref+'drisee" style="width: 95%;">');
+		                const dTabDiv = $('<div id="'+pref+'drisee" style="width: 95%;">');
                         tabWidget.addTab({tab: 'DRISEE', content: dTabDiv, canDelete : false, show: true});
-		                var dlen = 0;
+		                let dlen = 0;
     		            if (window.hasOwnProperty('rendererPlot') && rendererPlot.length) {
 			                dlen = rendererPlot.length;
 		                }
 		                var x = 0;
-		                var y = [1,2,3,4,5,6,7];
-		                var series = [];
-                        var points = [];
+		                const y = [1,2,3,4,5,6,7];
+		                const series = [];
+                        const points = [];
                         var x_all  = [];
                         var y_all  = [];
-                        var annMax = 0;
+                        let annMax = 0;
                         var colors = GooglePalette(y.length);
                         for (var i = 0; i < y.length; i++) {
                             series.push({'name': drisee_cols[y[i]], 'color': colors[i]});
@@ -214,7 +214,7 @@ define (
                         var lheight = series.length * 23;
                         var width = pwidth+lwidth;
                         var height = (lheight > pheight) ? Math.min(lheight, pheight+(pheight/2)) : pheight;
-                        var plotDrisee = standalonePlot.create({index: dlen});
+                        const plotDrisee = standalonePlot.create({index: dlen});
                         plotDrisee.settings.target = document.getElementById(pref+'drisee');
                         plotDrisee.settings.data = {'series': series, 'points': points};
                         plotDrisee.settings.x_titleOffset = 40;
@@ -236,11 +236,11 @@ define (
 		            }
 
 		            // kmer tab
-		            var kmer_data = d.statistics.qc.kmer['15_mer']['data'];
+		            const kmer_data = d.statistics.qc.kmer['15_mer']['data'];
 		            if ((! is_rna) && kmer_data && (kmer_data.length > 0)) {
-		                var kTabDiv = $('<div id="'+pref+'kmer" style="width: 95%;">');
+		                const kTabDiv = $('<div id="'+pref+'kmer" style="width: 95%;">');
                         tabWidget.addTab({tab: 'Kmer Profile', content: kTabDiv, canDelete : false, show: true});
-		                var klen = 0;
+		                let klen = 0;
     		            if (window.hasOwnProperty('rendererPlot') && rendererPlot.length) {
 			                klen = rendererPlot.length;
 		                }
@@ -254,12 +254,12 @@ define (
 		                }
 		                var pwidth = 750;
                         var pheight = 300;
-                        var ymax = Math.max.apply(Math, y_all);
+                        let ymax = Math.max.apply(Math, y_all);
                         ymax = ymax + (0.25 * ymax)
-                        var pot = ymax.toString().indexOf('.') || ymax.toString.length;
+                        let pot = ymax.toString().indexOf('.') || ymax.toString.length;
                         pot = Math.pow(10, pot - 1);
                         ymax = Math.floor((ymax + pot) / pot) * pot;
-		                var plotKmer = standalonePlot.create({index: klen});
+		                const plotKmer = standalonePlot.create({index: klen});
 		                plotKmer.settings.target = document.getElementById(pref+'kmer');
                         plotKmer.settings.data = {'series': [{'name': ''}], 'points': [xy]};
 		                plotKmer.settings.x_titleOffset = 40;
@@ -282,17 +282,17 @@ define (
 	                }
 
 	                // bp data
-	                var bp_cols = d.statistics.qc.bp_profile.percents.columns;
-	                var bp_data = d.statistics.qc.bp_profile.percents.data;
-	                var gTabDiv = $('<div id="'+pref+'bp_plot" style="width: 95%;">');
+	                const bp_cols = d.statistics.qc.bp_profile.percents.columns;
+	                const bp_data = d.statistics.qc.bp_profile.percents.data;
+	                const gTabDiv = $('<div id="'+pref+'bp_plot" style="width: 95%;">');
                     tabWidget.addTab({tab: 'Nucleotide Histogram', content: gTabDiv, canDelete : false, show: true});
-	                var glen = 0;
+	                let glen = 0;
                     if (window.hasOwnProperty('rendererGraph') && rendererGraph.length) {
                         glen = rendererGraph.length;
                     }
-                    var names = bp_cols.slice(1);
+                    const names = bp_cols.slice(1);
                     var colors = GooglePalette(names.length);
-                    var areaData = [];
+                    const areaData = [];
                     for (var x = 0; x < names.length; x++) {
                         areaData.push({ name: names[x], data: [], fill: colors[x] });
                     }
@@ -307,7 +307,7 @@ define (
                     var lheight = areaData.length * 23;
                     var width = pwidth+lwidth;
                     var height = (lheight > pheight) ? Math.min(lheight, pheight+(pheight/2)) : pheight;
-                    var graphBP = standaloneGraph.create({index: glen});
+                    const graphBP = standaloneGraph.create({index: glen});
 	                graphBP.settings.target = document.getElementById(pref+'bp_plot');
                     graphBP.settings.data = areaData;
 		            graphBP.settings.x_title = 'bp '+bp_cols[0];
@@ -325,9 +325,9 @@ define (
 		            // set active
 		            tabWidget.showTab('Overview');
 		        }
-	        }, function(data) {
+	        }, (data) => {
 		        container.empty();
-		        var main = $('<div>');
+		        const main = $('<div>');
 		        main.append($('<p>')
 		            .css({'padding': '10px 20px'})
 		            .text('[Error] '+data.error.message));

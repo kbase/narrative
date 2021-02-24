@@ -10,7 +10,7 @@ define (
 		'kbaseAuthenticatedWidget',
 		'kbaseTable',
 		'kbaseTabs',
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -20,7 +20,7 @@ define (
 		kbaseAuthenticatedWidget,
 		kbaseTable,
 		kbaseTabs
-	) {
+	) => {
     'use strict';
 
     return KBWidget({
@@ -43,7 +43,7 @@ define (
             if (text === undefined) {
                 return text;
             }
-            var mappings = {
+            const mappings = {
                 "(EC:([\\w.-]+))": "<a target = '_blank' href = 'http://enzyme.expasy.org/EC/$2'>$1</a>",
                 "(PMID:([\\w.-]+))": "<a target = '_blank' href = 'http://www.ncbi.nlm.nih.gov/pubmed/$2'>$1</a>",
                 "(GOC:([\\w.-]+))": "<a target = '_blank' href = 'http://www.geneontology.org/doc/GO.curator_dbxrefs'>$1</a>",
@@ -61,8 +61,8 @@ define (
                 "(GC_ID:([\\w.-]+))": "<a target = '_blank' href = 'http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi#SG$2'>$1</a>"
             };
 
-            for (var map in mappings) {
-                var regex = new RegExp(map, 'g');
+            for (const map in mappings) {
+                const regex = new RegExp(map, 'g');
                 text = text.replace(regex, mappings[map]);
             }
 
@@ -90,7 +90,7 @@ define (
               this.objKey = 'name';
               this.options.wsNameOrId = 'KBaseOntology';
 
-              var m = this.options.term_id.match(/^([^:]+)/);
+              const m = this.options.term_id.match(/^([^:]+)/);
               if (m.length) {
                 this.options.objNameOrId = this.options.dictionaryMap[m[1]]
               };
@@ -100,11 +100,11 @@ define (
             this.colorMap = {};
             this.termCache = {};
 
-            var $self = this;
+            const $self = this;
 
             $self.ws = new Workspace(window.kbconfig.urls.workspace, {token : this.authToken()});
 
-            var dictionary_params = {
+            const dictionary_params = {
                 //wsid: this.options.workspaceId,
                 //objid: this.options.objectId,
                 //workspace: this.options.workspace_name,
@@ -131,17 +131,17 @@ define (
 
             //$self.ws.get_objects([dictionary_params]).then(function(data) {
             $self.ws.get_object_subset([dictionary_params])
-              .then(function (data) {
+              .then((data) => {
 
                     var data = data[0].data;
 
                     $self.dataset = data;
 
-                    var $metaElem = $self.data('metaElem');
+                    const $metaElem = $self.data('metaElem');
 
                     $metaElem.empty();
 
-                    var $metaTable =  new kbaseTable($.jqElem('div'), {
+                    const $metaTable =  new kbaseTable($.jqElem('div'), {
                             allowNullRows: false,
                             structure: {
                                 keys: [
@@ -176,15 +176,15 @@ define (
 
                     $metaElem.append($metaTable.$elem);
 
-                    var $typeDefElem = $self.data('typeDefElem');
-                    var typedef_data = [];
+                    const $typeDefElem = $self.data('typeDefElem');
+                    const typedef_data = [];
                     $.each(
                         data.typedef_hash || {},
-                        function (k, v) {
+                        (k, v) => {
 
-                            var $subtable =  new kbaseTable($.jqElem('div'), {
+                            const $subtable =  new kbaseTable($.jqElem('div'), {
                                     structure: {
-                                        keys: Object.keys(v).sort().map(function (v) {
+                                        keys: Object.keys(v).sort().map((v) => {
                                             return {value: v, label: v, style: 'width : 200px'};
                                         }),
                                         rows: v
@@ -204,7 +204,7 @@ define (
                     );
 
 
-                    var $tt = $typeDefElem.DataTable({
+                    const $tt = $typeDefElem.DataTable({
                         columns: [
                             {title: 'TypeDef', 'class': 'ontology-top'},
                             {title: 'Info'}
@@ -213,11 +213,11 @@ define (
 
                     $tt.rows.add(typedef_data).draw();
 
-                    var table_data = [];
+                    const table_data = [];
 
                     $.each(
                         data.term_hash,
-                        function (k, v) {
+                        (k, v) => {
 
                             table_data.push(
                                 [
@@ -231,7 +231,7 @@ define (
                         }
                     );
 
-                    var $dt = $self.data('tableElem').DataTable({
+                    const $dt = $self.data('tableElem').DataTable({
                         columns: [
                             {title: 'Term ID', 'class': 'ontology-top'},
                             {title: 'Term name'},
@@ -239,14 +239,14 @@ define (
                         ],
                         createdRow: function (row, data, index) {
 
-                            var $linkCell = $('td', row).eq(0);
+                            const $linkCell = $('td', row).eq(0);
                             $linkCell.empty();
 
                             $linkCell.append($self.termLink(data[0]));
 
-                            var $nameCell = $('td', row).eq(1);
+                            const $nameCell = $('td', row).eq(1);
 
-                            var color = $self.colorMap[data[0].namespace];
+                            let color = $self.colorMap[data[0].namespace];
                             if (color === undefined) {
                                 color = $self.colorMap[data[0].namespace] = $self.colors.shift();
                             }
@@ -262,7 +262,7 @@ define (
 
                     $.each(
                         $self.colorMap,
-                        function (k, v) {
+                        (k, v) => {
                             $self.data('colorMapElem').append(
                                 $.jqElem('span')
                                 .css('padding-left', '25px')
@@ -273,7 +273,7 @@ define (
                         }
                     );
 
-                    var m;
+                    let m;
 
                     if (m = location.href.match(/term_id=([^&]+)/)) {
                       $self.appendTerm(m[1]);
@@ -288,7 +288,7 @@ define (
                     $self.data('globalContainerElem').show();
 
                 })
-                .fail(function (d) {
+                .fail((d) => {
                     $self.$elem.empty();
                     $self.$elem
                         .addClass('alert alert-danger')
@@ -299,10 +299,10 @@ define (
             return this;
         },
         termLink: function (term, withName) {
-            var $self = this;
+            const $self = this;
             return $.jqElem('a')
                 .append(term.id + (withName ? ' [' + term.name + ']' : ''))
-                .on('click', function (e) {
+                .on('click', (e) => {
                     e.preventDefault();
                     $self.appendTerm(term.id);
                 });
@@ -312,12 +312,12 @@ define (
         },
         parseISA: function (isa) {
 
-            var ids = [];
+            const ids = [];
 
             $.each(
                 isa,
-                function (i, v) {
-                    var parts = v.split(/\s*!\s*/);
+                (i, v) => {
+                    const parts = v.split(/\s*!\s*/);
                     ids.push(parts[0]);
                 }
             );
@@ -326,7 +326,7 @@ define (
         },
         getLineage: function (term_id, recursive, circular_breaker) {
 
-            var $self = this;
+            const $self = this;
 
             if (circular_breaker === undefined) {
                 circular_breaker = {};
@@ -338,13 +338,13 @@ define (
 
             circular_breaker[term_id] = 1;
 
-            var term = this.getTerm(term_id);
+            const term = this.getTerm(term_id);
 
-            var parents = {};
+            const parents = {};
             if (term.is_a) {
                 $.each(
                     this.parseISA(term.is_a),
-                    function (i, v) {
+                    (i, v) => {
                         parents[v] = undefined;
                     }
                 );
@@ -354,7 +354,7 @@ define (
 
             $.each(
                 parents,
-                function (k, v) {
+                (k, v) => {
                     parents[k] = $self.getLineage(k, true, circular_breaker);
                 }
             );
@@ -372,25 +372,25 @@ define (
                 return '';
             }
 
-            var $self = this;
+            const $self = this;
 
-            var $ul = $.jqElem('ul')
+            const $ul = $.jqElem('ul')
                 .css('padding-left', '10px')
                 .css('list-style-position', 'inside')
                 //.css('list-style-type', 'none')
                 ;
 
-            var ret = {root: $ul, parent: $ul};
+            let ret = {root: $ul, parent: $ul};
 
-            $.each(lineage, function (k, v) {
+            $.each(lineage, (k, v) => {
                 //if ($li.html().length) {
                 //  $li.append(',')
                 //}
 
-                var $li = $.jqElem('li');
+                const $li = $.jqElem('li');
                 $ul.append($li);
 
-                var term = $self.getTerm(k);
+                const term = $self.getTerm(k);
 
                 $li.append($self.termLink(term));
                 $li.append(' ');
@@ -411,7 +411,7 @@ define (
 
         },
         lineageAsNodes: function (parent, lineage, nodes, edges, cache, depth) {
-            var $self = this;
+            const $self = this;
             if (nodes === undefined) {
                 nodes = [];
             }
@@ -430,7 +430,7 @@ define (
                 nodes.push({node: parent, tag: parent, color: $self.colorMap[$self.getTerm(parent).namespace]});
                 cache[parent] = nodes.length - 1;
             }
-            $.each(lineage, function (k, v) {
+            $.each(lineage, (k, v) => {
                 if (cache[k] === undefined) {
                     nodes.push({name: k, tag: k, color: $self.colorMap[$self.getTerm(k).namespace]});
                     cache[k] = nodes.length - 1;
@@ -444,9 +444,9 @@ define (
             return {nodes: nodes, edges: edges};
         },
         appendTerm: function (term_id) {
-            var $self = this;
+            const $self = this;
 
-            var $termElem = $self.options.isNarrativeWidget
+            const $termElem = $self.options.isNarrativeWidget
               ? $.jqElem('div')
               : $self.data('termElem');
             $termElem.empty();
@@ -463,7 +463,7 @@ define (
                 $termElem.append($self.data('loaderElem'));
                 $self.data('loaderElem').show();
 
-                var dictionary_params = {
+                const dictionary_params = {
                     //wsid: this.options.workspaceId,
                     //objid: this.options.objectId,
                     included: [
@@ -476,8 +476,8 @@ define (
                 dictionary_params[this.objKey] = this.options.objNameOrId;
 
                 $self.ws.get_object_subset([dictionary_params])
-                    .then(function (data) {
-                        var term = data[0].data.term_hash[term_id];
+                    .then((data) => {
+                        const term = data[0].data.term_hash[term_id];
 
                         $self.termCache[term_id] = term;
 
@@ -487,9 +487,9 @@ define (
                         $self.reallyAppendTerm(term);
 
                     })
-                    .fail(function (d) {
+                    .fail((d) => {
                         console.error(d);
-                        var message;
+                        let message;
                         if (d.message) {
                             message = d.message;
                         } else if (d.error) {
@@ -506,21 +506,21 @@ define (
             }
         },
         reallyAppendTerm: function (term) {
-            var $self = this;
+            const $self = this;
 
-            var $termElem = $self.options.isNarrativeWidget
+            const $termElem = $self.options.isNarrativeWidget
               ? $.jqElem('div')
               : $self.data('termElem');
 
-            var lineage = $self.getLineage(term.id);
+            const lineage = $self.getLineage(term.id);
 
-            var $lineageElem;
-            var $force;
+            let $lineageElem;
+            let $force;
 
             if ($lineageElem = $self.buildLineageElem(lineage)) {
                 $lineageElem.root.css('padding-left', '0px');
 
-                var dataset = $self.lineageAsNodes(term.id, lineage);
+                const dataset = $self.lineageAsNodes(term.id, lineage);
                 dataset.nodes[0].stroke = 'yellow';
 
                 $force =  new kbaseForcedNetwork($.jqElem('div').css({width: '500px', height: '500px'}), {
@@ -530,7 +530,7 @@ define (
                 );
             }
 
-            var $closureElem = undefined;
+            let $closureElem = undefined;
             if (term.relationship_closure !== undefined) {
                 $closureElem = $.jqElem('ul').css('style', 'float : left');
 
@@ -589,7 +589,7 @@ define (
                  });*/
 
 
-                for (var type in term.relationship_closure) {
+                for (const type in term.relationship_closure) {
                     $closureElem
                         .append(
                             $.jqElem('li')
@@ -602,9 +602,9 @@ define (
 
                     $.each(
                         term.relationship_closure[type],
-                        function (i, elem) {
+                        (i, elem) => {
 
-                            var term = $self.getTerm(elem[0]);
+                            const term = $self.getTerm(elem[0]);
 
                             $subUL.append(
                                 $.jqElem('li')
@@ -622,13 +622,13 @@ define (
                 }
             }
 
-            var $relationship = $.jqElem('div');
+            const $relationship = $.jqElem('div');
 
             if (term.relationship !== undefined) {
                 $.each(
                     term.relationship,
-                    function (i, rel) {
-                        var parts = rel.split(/ ! /);
+                    (i, rel) => {
+                        const parts = rel.split(/ ! /);
                         $self.extractLink(parts[0]);
                         $relationship
                             .append(parts[0])
@@ -640,7 +640,7 @@ define (
                 );
             }
 
-            var $table =  new kbaseTable($.jqElem('div'), {
+            const $table =  new kbaseTable($.jqElem('div'), {
                     allowNullRows: false,
                     structure: {
                         keys: [{value: 'id', label: 'ID'}, 'name', 'def', 'namespace', 'synonym', 'comment', {value: 'is_a', label: 'Is A'}, 'relationship', 'xref'],
@@ -682,9 +682,9 @@ define (
 
             $elem.append($.jqElem('style').text('.ontology-top { vertical-align : top }'));
 
-            var $self = this;
+            const $self = this;
 
-            var $loaderElem = $.jqElem('div')
+            const $loaderElem = $.jqElem('div')
                 .append('<br>&nbsp;Loading data...<br>&nbsp;please wait...<br>&nbsp;Data parsing may take upwards of 30 seconds, during which time this page may be unresponsive.')
                 .append($.jqElem('br'))
                 .append(
@@ -697,7 +697,7 @@ define (
             $self.data('loaderElem', $loaderElem);
             $elem.append($loaderElem);
 
-            var $globalContainer = $self.data('globalContainerElem', $.jqElem('div').css('display', 'none'));
+            const $globalContainer = $self.data('globalContainerElem', $.jqElem('div').css('display', 'none'));
             $elem.append($globalContainer);
 
             if (this.options.isNarrativeWidget) {
@@ -705,9 +705,9 @@ define (
             }
 
 
-            var $metaElem = $self.data('metaElem', $.jqElem('div'));
+            const $metaElem = $self.data('metaElem', $.jqElem('div'));
 
-            var $metaContainerElem = $self.createContainerElem('Overview', [$metaElem]);
+            const $metaContainerElem = $self.createContainerElem('Overview', [$metaElem]);
 
             $self.data('metaContainerElem', $metaContainerElem);
             if (this.options.isNarrativeWidget) {
@@ -720,15 +720,15 @@ define (
               $globalContainer.append($metaContainerElem);
             }
 
-            var $tableElem = $.jqElem('table')
+            const $tableElem = $.jqElem('table')
                 .addClass('display')
                 .css({ 'width' : '100%', 'border': '1px solid #ddd'});
                 ;
 
             $self.data('tableElem', $tableElem);
-            var $colorMapElem = $self.data('colorMapElem', $.jqElem('div'));
+            const $colorMapElem = $self.data('colorMapElem', $.jqElem('div'));
 
-            var $containerElem = $self.createContainerElem('Term Dictionary', [$tableElem, $colorMapElem]);
+            const $containerElem = $self.createContainerElem('Term Dictionary', [$tableElem, $colorMapElem]);
 
             $self.data('containerElem', $containerElem);
             if (this.options.isNarrativeWidget) {
@@ -741,9 +741,9 @@ define (
               $globalContainer.append($containerElem);
             }
 
-            var $termElem = $self.data('termElem', $.jqElem('div'));
+            const $termElem = $self.data('termElem', $.jqElem('div'));
 
-            var $termContainerElem = $self.createContainerElem('Term', [$termElem], 'none');
+            const $termContainerElem = $self.createContainerElem('Term', [$termElem], 'none');
 
             $self.data('termContainerElem', $termContainerElem);
 
@@ -751,9 +751,9 @@ define (
               $globalContainer.append($termContainerElem);
             }
 
-            var $typeDefElem = $self.data('typeDefElem', $.jqElem('table').addClass('display')).css({ 'width' : '100%', 'border': '1px solid #ddd'});
+            const $typeDefElem = $self.data('typeDefElem', $.jqElem('table').addClass('display')).css({ 'width' : '100%', 'border': '1px solid #ddd'});
 
-            var $typeDefContainerElem = $self.createContainerElem('Type Definitions', [$typeDefElem]).css('display', 'none');
+            const $typeDefContainerElem = $self.createContainerElem('Type Definitions', [$typeDefElem]).css('display', 'none');
 
             $self.data('typeDefContainerElem', $typeDefContainerElem);
             $globalContainer.append($typeDefContainerElem);
@@ -763,16 +763,16 @@ define (
         },
         createContainerElem: function (name, content, display) {
 
-            var $panelBody = $.jqElem('div');
+            const $panelBody = $.jqElem('div');
 
             $.each(
                 content,
-                function (i, v) {
+                (i, v) => {
                     $panelBody.append(v);
                 }
             );
 
-            var $containerElem;
+            let $containerElem;
 
             if (this.options.isNarrativeWidget) {
               $containerElem = $panelBody.css('display', display);

@@ -1,8 +1,8 @@
 define([
     'bluebird'
-], function (
+], (
     Promise
-) {
+) => {
     function copyValue(obj) {
         if (obj !== undefined) {
             return JSON.parse(JSON.stringify(obj));
@@ -10,10 +10,10 @@ define([
     }
 
     function pRequire(require, module) {
-        return new Promise(function (resolve, reject) {
+        return new Promise((resolve, reject) => {
             require(module, function () {
                 resolve(arguments);
-            }, function (err) {
+            }, (err) => {
                 reject(err);
             });
         });

@@ -21,12 +21,12 @@ define ([
     'bootstrap',
     'jquery',
     'kbaseAuthenticatedWidget'
-], function(
+], (
     KBWidget,
     bootstrap,
     $,
     kbaseAuthenticatedWidget
-) {
+) => {
     'use strict';
     return KBWidget({
         name: 'kbaseNarrativeControlPanel',
@@ -61,9 +61,9 @@ define ([
 
         userCollapse: false,
         toggleCollapse: function (override) {
-            var $toggleIcon = this.$elem.find('.kb-narr-panel-toggle');
+            const $toggleIcon = this.$elem.find('.kb-narr-panel-toggle');
 
-            var collapse;
+            let collapse;
             if (override) {
                 switch (override) {
                 case 'collapse':
@@ -135,7 +135,7 @@ define ([
                 .attr('role', 'toolbar')
                 .css({'margin-top' : '-2px'});
 
-            var $titleSpan = $('<span>');
+            const $titleSpan = $('<span>');
             if(this.options.showTitle) {
                 $titleSpan
                     .append($('<span>')
@@ -198,7 +198,7 @@ define ([
          */
         addButtonList: function(btnList) {
             this.$buttonPanel.empty();
-            for (var i=0; i<btnList.length; i++) {
+            for (let i=0; i<btnList.length; i++) {
                 this.addButton(btnList[i]);
             }
         },

@@ -211,8 +211,8 @@ define([
          * @param {object} msg
          */
         handleCommMessages(msg) {
-            const msgType = msg.content.data.msg_type,
-                msgData = msg.content.data.content;
+            const msgType = msg.content.data.msg_type;
+            const msgData = msg.content.data.content;
             let jobId = null;
             switch (msgType) {
             case 'start':
@@ -470,7 +470,7 @@ define([
                     return;
                 }
                 return Promise.try(() => {
-                    Jupyter.notebook.kernel.comm_manager.register_target(COMM_NAME, (comm, msg) => {
+                    Jupyter.notebook.kernel.comm_manager.register_target(COMM_NAME, (comm) => {
                         _this.comm = comm;
                         comm.on_msg(_this.handleCommMessages.bind(_this));
                         commSemaphore.set('comm', 'ready');

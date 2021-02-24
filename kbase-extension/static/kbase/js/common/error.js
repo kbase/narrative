@@ -1,8 +1,5 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 define([
-], function () {
+], () => {
     'use strict';
 
 

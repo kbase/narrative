@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 define([
     'require',
     'bluebird',
@@ -27,7 +24,7 @@ define([
 
     'css!google-code-prettify/prettify.css',
     'css!font-awesome.css'
-], function(
+], (
     require,
     Promise,
     Uuid,
@@ -50,9 +47,9 @@ define([
     editorCellFsm,
     loadingWidget,
     MessageWidget
-) {
+) => {
     'use strict';
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         span = t('span'),
         a = t('a'),
@@ -72,7 +69,7 @@ define([
     CancellationError.prototype.name = 'ClientException';
 
     function factory(config) {
-        var cell = config.cell,
+        let cell = config.cell,
             parentBus = config.bus,
 
             hostNode, container, ui,
@@ -130,7 +127,7 @@ define([
         function syncAppSpec(appId, appTag) {
             env.appId = appId;
             env.appTag = appTag;
-            var appRef = {
+            const appRef = {
                     ids: [appId],
                     tag: appTag
                 },
@@ -139,7 +136,7 @@ define([
                 });
 
             return nms.get_method_spec(appRef)
-                .then(function(data) {
+                .then((data) => {
                     if (!data[0]) {
                         throw new Error('App not found');
                     }
@@ -164,7 +161,7 @@ define([
         }
 
         function renderSetting(settingName) {
-            var setting = settings[settingName],
+            let setting = settings[settingName],
                 value;
 
             if (!setting) {
@@ -191,7 +188,7 @@ define([
         }
 
         function buildLayout(events) {
-            var readOnlyStyle = {};
+            const readOnlyStyle = {};
             if (Jupyter.narrative.readonly) {
                 readOnlyStyle.display = 'none';
             }
@@ -355,13 +352,13 @@ define([
         }
 
         function buildPython() {
-            var cellId = utils.getCellMeta(cell, 'kbase.attributes.id');
-            var app = editorState.getItem('app');
-            var params = modelToParams();
-            var runId = editorState.getItem('editorState.currentRunId');
+            const cellId = utils.getCellMeta(cell, 'kbase.attributes.id');
+            const app = editorState.getItem('app');
+            const params = modelToParams();
+            const runId = editorState.getItem('editorState.currentRunId');
 
-            var fixedApp = fixApp(app);
-            var code = PythonInterop.buildEditorRunner(cellId, runId, fixedApp, params);
+            const fixedApp = fixApp(app);
+            const code = PythonInterop.buildEditorRunner(cellId, runId, fixedApp, params);
             // TODO: do something with the runId
             cell.set_text(code);
         }
@@ -371,7 +368,7 @@ define([
         }
 
         function initializeFSM() {
-            var currentState = editorState.getItem('fsm.currentState');
+            let currentState = editorState.getItem('fsm.currentState');
             if (!currentState) {
                 // TODO: evaluate the state of things to try to guess the state?
                 // Or is this just an error unless it is a new cell?
@@ -399,7 +396,7 @@ define([
         }
 
         function showCodeInputArea() {
-            var codeInputArea = cell.input.find('.input_area').get(0);
+            const codeInputArea = cell.input.find('.input_area').get(0);
             if (editorState.getItem('user-settings.showCodeInputArea')) {
                 if (!codeInputArea.classList.contains('-show')) {
                     codeInputArea.classList.add('-show');
@@ -422,16 +419,16 @@ define([
         }
 
         function doRemoveNotification(index) {
-            var notifications = editorState.getItem('notifications') || [];
+            const notifications = editorState.getItem('notifications') || [];
             notifications.splice(index, 1);
             editorState.setItem('notifications', notifications);
             renderNotifications();
         }
 
         function renderNotifications() {
-            var events = Events.make(),
+            const events = Events.make(),
                 notifications = editorState.getItem('notifications') || [],
-                content = notifications.map(function(notification, index) {
+                content = notifications.map((notification, index) => {
                     return div({ class: 'row' }, [
                         div({ class: 'col-md-10' }, notification),
                         div({ class: 'col-md-2', style: { textAlign: 'right' } }, span({}, [
@@ -452,7 +449,7 @@ define([
         }
 
         function addNotification(notification) {
-            var notifications = editorState.getItem('notifications') || [];
+            const notifications = editorState.getItem('notifications') || [];
             notifications.push(notification);
             editorState.setItem('notifications', notifications);
             renderNotifications();
@@ -465,7 +462,7 @@ define([
         // WIDGETS
 
         function showWidget(name, widgetModule, path) {
-            var bus = runtime.bus().makeChannelBus({ description: 'Bus for showWidget' }),
+            const bus = runtime.bus().makeChannelBus({ description: 'Bus for showWidget' }),
                 widget = widgetModule.make({
                     bus: bus,
                     workspaceInfo: workspaceInfo
@@ -487,22 +484,22 @@ define([
          */
         function renderUI() {
             renderNotifications();
-            var state = fsm.getCurrentState();
+            const state = fsm.getCurrentState();
 
             // Button state
-            state.ui.buttons.enabled.forEach(function(button) {
+            state.ui.buttons.enabled.forEach((button) => {
                 ui.enableButton(button);
             });
-            state.ui.buttons.disabled.forEach(function(button) {
+            state.ui.buttons.disabled.forEach((button) => {
                 ui.disableButton(button);
             });
 
 
             // Element state
-            state.ui.elements.show.forEach(function(element) {
+            state.ui.elements.show.forEach((element) => {
                 ui.showElement(element);
             });
-            state.ui.elements.hide.forEach(function(element) {
+            state.ui.elements.hide.forEach((element) => {
                 ui.hideElement(element);
             });
 
@@ -510,7 +507,7 @@ define([
         }
 
         function doDeleteCell() {
-            var content = div([
+            const content = div([
                 p([
                     'Deleting this cell will remove the editor from the Narrative, ',
                     'but will not delete the associated Reads Sets, which will still be available ',
@@ -519,7 +516,7 @@ define([
                 p('Continue to delete this cell?')
             ]);
             ui.showConfirmDialog({ title: 'Confirm Cell Deletion', body: content })
-                .then(function(confirmed) {
+                .then((confirmed) => {
                     if (!confirmed) {
                         return;
                     }
@@ -538,10 +535,10 @@ define([
             editorState.setItem('editorState.currentRunId', new Uuid(4).format());
             buildPython();
             doSaveReadsSet()
-                .then(function() {
+                .then(() => {
                     renderUI();
                 })
-                .catch(function(err) {
+                .catch((err) => {
                     console.error('ERROR!', err);
                 });
         }
@@ -552,7 +549,7 @@ define([
                 output_object_name: model.getItem('params.name'),
                 data: {
                     description: model.getItem('params.description'),
-                    items: model.getItem('params.items', []).map(function(item) {
+                    items: model.getItem('params.items', []).map((item) => {
                         return {
                             label: item.label,
                             ref: item.ref
@@ -567,14 +564,14 @@ define([
         function loadErrorWidget(error) {
             console.error('ERROR', error);
             console.error(error.detail.replace('\n', '<br>'));
-            var detail;
+            let detail;
             if (error.detail) {
                 detail = error.detail.replace('\n', '<br>');
             } else {
                 detail = '';
             }
 
-            var content = div({
+            const content = div({
                 style: { border: '1px red solid' }
             }, [
                 div({ style: { color: 'red' } }, 'Error'),
@@ -597,7 +594,7 @@ define([
         }
 
         function setStatusFlag(flag, value) {
-            var flagNode = ui.getElement('editor-status.flags.' + flag);
+            const flagNode = ui.getElement('editor-status.flags.' + flag);
             if (flagNode) {
                 if (value) {
                     flagNode.style.backgroundColor = 'green';
@@ -608,10 +605,10 @@ define([
         }
 
         function loadUpdateEditor(controller) {
-            return new Promise(function(resolve, reject) {
-                require(['./update'], function(Widget) {
+            return new Promise((resolve, reject) => {
+                require(['./update'], (Widget) => {
                     // TODO: widget should make own bus.
-                    var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' }),
+                    const bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' }),
                         widget = Widget.make({
                             bus: bus,
                             workspaceInfo: workspaceInfo,
@@ -628,8 +625,8 @@ define([
                         instance: widget
                     };
 
-                    bus.on('parameter-sync', function(message) {
-                        var value = model.getItem(['params', message.parameter, 'value']);
+                    bus.on('parameter-sync', (message) => {
+                        const value = model.getItem(['params', message.parameter, 'value']);
                         bus.send({
                             parameter: message.parameter,
                             value: value
@@ -642,8 +639,8 @@ define([
                         });
                     });
 
-                    bus.on('sync-params', function(message) {
-                        message.parameters.forEach(function(paramId) {
+                    bus.on('sync-params', (message) => {
+                        message.parameters.forEach((paramId) => {
                             bus.send({
                                 parameter: paramId,
                                 value: model.getItem(['params', message.parameter, 'value'])
@@ -668,13 +665,13 @@ define([
                         }
                     });
 
-                    bus.on('parameter-changed', function(message) {
+                    bus.on('parameter-changed', (message) => {
                         model.setItem(['params', message.parameter], message.newValue);
                         evaluateAppState();
                     });
 
-                    bus.on('parameter-touched', function(message) {
-                        var state = fsm.getCurrentState(),
+                    bus.on('parameter-touched', (message) => {
+                        const state = fsm.getCurrentState(),
                             newState = JSON.parse(JSON.stringify(state.state));
                         newState.data = 'touched';
                         fsm.newState(newState);
@@ -686,15 +683,15 @@ define([
                             appSpec: env.appSpec,
                             parameters: spec.getSpec()
                         })
-                        .then(function() {
+                        .then(() => {
                             resolve();
                             return null;
                         })
-                        .catch(function(err) {
+                        .catch((err) => {
                             console.error('ERROR starting editor widget', err);
                             reject(err);
                         });
-                }, function(err) {
+                }, (err) => {
                     console.error('ERROR', err);
                     reject(err);
                 });
@@ -702,7 +699,7 @@ define([
         }
 
         function doShowMessage(message) {
-            var messageWidget = MessageWidget.make();
+            const messageWidget = MessageWidget.make();
             widgets.editor.instance = messageWidget;
             return messageWidget.start({
                 content: message,
@@ -713,8 +710,8 @@ define([
 
 
         function renderCurrentlyEditing() {
-            var info = editorState.getItem('current.set.info');
-            var content = table({ class: 'table table-striped' }, [
+            const info = editorState.getItem('current.set.info');
+            const content = table({ class: 'table table-striped' }, [
                 tr([th('Name'), td({ style: { fontWeight: 'bold' } }, info.name)]),
                 tr([th('Ref'), td(info.ref)]),
                 tr([th('Last saved'), td(info.saveDate.toLocaleDateString() + ' at ' + info.saveDate.toLocaleTimeString())]),
@@ -732,7 +729,7 @@ define([
         function loadData(objectRef) {
             // TODO: check if the editor has unsaved changed, and
             // show an error message if so, and refuse to switch.
-            var setApiClient = new GenericClient({
+            const setApiClient = new GenericClient({
                     url: runtime.config('services.service_wizard.url'),
                     token: runtime.authToken(),
                     module: 'SetAPI',
@@ -744,7 +741,7 @@ define([
                 };
 
             return setApiClient.callFunc('get_reads_set_v1', [params])
-                .spread(function(setObject) {
+                .spread((setObject) => {
                     // After getting the reads set object, we populate our
                     // view model (data model-ish) with the results.
                     // The editor will sync up with the model, and pick up the
@@ -756,14 +753,14 @@ define([
                     // *** removed the .value
                     model.setItem('params.name', setObject.info[1]);
                     model.setItem('params.description', setObject.data.description);
-                    model.setItem('params.items', setObject.data.items.map(function(item) {
+                    model.setItem('params.items', setObject.data.items.map((item) => {
                         return {
                             ref: item.ref,
                             label: item.label
                         };
                     }));
 
-                    var objectInfo = serviceUtils.objectInfoToObject(setObject.info);
+                    const objectInfo = serviceUtils.objectInfoToObject(setObject.info);
 
                     // Might as well set here.
                     editorState.setItem('current.set.ref', objectInfo.ref);
@@ -787,7 +784,7 @@ define([
         }
 
         function doCreateNewSet(name) {
-            var setApiClient = new GenericClient({
+            const setApiClient = new GenericClient({
                     url: runtime.config('services.service_wizard.url'),
                     token: runtime.authToken(),
                     module: 'SetAPI',
@@ -805,10 +802,10 @@ define([
                     }
                 };
             return setApiClient.callFunc('save_reads_set_v1', [params])
-                .spread(function(result) {
+                .spread((result) => {
                     doEditObject(serviceUtils.objectInfoToObject(result.set_info));
                 })
-                .catch(function(err) {
+                .catch((err) => {
                     console.error('ERROR getting reads set ', err);
                     console.error(err.detail ? err.detail.replace('\n', '<br>') : '');
                     loadErrorWidget(err);
@@ -816,33 +813,33 @@ define([
         }
 
         function doSaveReadsSet() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 cell.execute();
-                var state = JSON.parse(JSON.stringify(fsm.getCurrentState().state));
+                const state = JSON.parse(JSON.stringify(fsm.getCurrentState().state));
                 state.data = 'clean';
                 fsm.newState(state);
             });
         }
 
-        var editorControllers = {};
+        const editorControllers = {};
 
         function unloadEditorController(controller) {
-            var originalStatus = controller.status;
+            const originalStatus = controller.status;
             controller.status = 'unloading';
             controller.cancelled = true;
-            return Promise.try(function() {
+            return Promise.try(() => {
                     // stop the widget if there is one.
                     if (controller.widget) {
                         controller.status = 'stopping';
                         return controller.widget.stop()
-                            .then(function() {
+                            .then(() => {
                                 controller.status = 'stopped';
                                 controller.widget = null;
                             });
                     }
                 })
-                .then(function() {
-                    var editorNode = ui.getElement('editor.widget');
+                .then(() => {
+                    const editorNode = ui.getElement('editor.widget');
                     try {
                         editorNode.removeChild(controller.node);
                     } catch (ex) {
@@ -852,10 +849,10 @@ define([
         }
 
         function unloadEditors() {
-            return Promise.all(Object.keys(editorControllers).map(function(id) {
-                var controller = editorControllers[id];
+            return Promise.all(Object.keys(editorControllers).map((id) => {
+                const controller = editorControllers[id];
                 return unloadEditorController(controller)
-                    .then(function() {
+                    .then(() => {
                         delete editorControllers[id];
                     });
             }));
@@ -864,22 +861,22 @@ define([
         // Widget controller
 
         function unloadWidgetController(controller) {
-            var originalStatus = controller.status;
+            const originalStatus = controller.status;
             controller.status = 'unloading';
             controller.cancelled = true;
-            return Promise.try(function() {
+            return Promise.try(() => {
                     // stop the widget if there is one.
                     if (controller.widget) {
                         controller.status = 'stopping';
                         return controller.widget.stop()
-                            .then(function() {
+                            .then(() => {
                                 controller.status = 'stopped';
                                 controller.widget = null;
                             });
                     }
                 })
-                .then(function() {
-                    var editorNode = ui.getElement('editor.widget');
+                .then(() => {
+                    const editorNode = ui.getElement('editor.widget');
                     try {
                         editorNode.removeChild(controller.node);
                     } catch (ex) {
@@ -889,10 +886,10 @@ define([
         }
 
         function unloadWidgets() {
-            return Promise.all(Object.keys(editorControllers).map(function(id) {
-                var controller = editorControllers[id];
+            return Promise.all(Object.keys(editorControllers).map((id) => {
+                const controller = editorControllers[id];
                 return unloadWidgetController(controller)
-                    .then(function() {
+                    .then(() => {
                         delete editorControllers[id];
                     });
             }));
@@ -900,7 +897,7 @@ define([
 
         function doShowWidget(widgetFactory, arg) {
             // New, create control object.
-            var controller = {
+            const controller = {
                 id: new Uuid(4).format(),
                 node: document.createElement('div'),
                 widget: null,
@@ -911,7 +908,7 @@ define([
             arg.node = controller.node;
 
             return unloadWidgets()
-                .then(function() {
+                .then(() => {
                     editorControllers[controller.id] = controller;
                     controller.widget = widgetFactory.make();
                     controller.desc = '?? widget ??';
@@ -919,17 +916,17 @@ define([
                     ui.getElement('editor.widget').appendChild(controller.node);
                     return controller.widget.start(arg);
                 })
-                .catch(CancellationError, function(err) {
+                .catch(CancellationError, (err) => {
                     console.warn('editor loading was cancelled', err);
                 })
-                .catch(function(err) {
+                .catch((err) => {
                     alert('internal error: ' + err.message);
                 });
         }
 
         function doEditObject(objectInfo) {
             // New, create control object.
-            var controller = {
+            const controller = {
                 id: new Uuid(4).format(),
                 node: document.createElement('div'),
                 widget: null,
@@ -942,7 +939,7 @@ define([
             editorState.setItem('current.set.info', objectInfo);
 
             return unloadEditors()
-                .then(function() {
+                .then(() => {
                     editorControllers[controller.id] = controller;
                     controller.widget = loadingWidget.make();
                     controller.desc = 'loading widget.';
@@ -953,25 +950,25 @@ define([
                         message: 'Loading Reads Set'
                     })
                 })
-                .then(function() {
+                .then(() => {
                     if (controller.cancelled) {
                         throw new CancellationError();
                     }
                     return loadData(objectInfo.ref);
                 })
-                .then(function() {
+                .then(() => {
                     if (controller.cancelled) {
                         throw new CancellationError();
                     }
                     return controller.widget.stop();
                 })
-                .then(function() {
+                .then(() => {
                     if (controller.cancelled) {
                         throw new CancellationError();
                     }
                     return loadUpdateEditor(controller);
                 })
-                .then(function() {
+                .then(() => {
                     if (controller.cancelled) {
                         throw new CancellationError();
                     }
@@ -979,20 +976,20 @@ define([
                     ui.collapsePanel('edit-object-selector');
                     evaluateAppState(true);
                 })
-                .catch(CancellationError, function(err) {
+                .catch(CancellationError, (err) => {
                     console.warn('editor loading was cancelled', err);
                 })
-                .catch(function(err) {
+                .catch((err) => {
                     alert('internal error: ' + err.message);
                 });
         }
 
         function loadEditObjectSelector() {
-            return new Promise(function(resolve, reject) {
+            return new Promise((resolve, reject) => {
                 require([
                     './selector'
-                ], function(Widget) {
-                    var widget = Widget.make({
+                ], (Widget) => {
+                    const widget = Widget.make({
                         workspaceInfo: workspaceInfo,
                         objectType: 'KBaseSets.ReadsSet'
                     });
@@ -1001,12 +998,12 @@ define([
                         instance: widget
                     };
                     // When the user selects a reads set to edit.
-                    widget.channel.on('changed', function(message) {
+                    widget.channel.on('changed', (message) => {
                         // Call this when we have a new object to edit. It will
                         // take care of updating the cell state as well as
                         // rendering the object.
-                        var currentObject = editorState.getItem('current.set.info');
-                        var newObject = message.objectInfo;
+                        const currentObject = editorState.getItem('current.set.info');
+                        const newObject = message.objectInfo;
                         if (!newObject) {
                             if (currentObject) {
                                 return doShowWidget(MessageWidget, {
@@ -1033,10 +1030,10 @@ define([
                             }
                         }
                     });
-                    widget.channel.on('create-new-set', function(message) {
+                    widget.channel.on('create-new-set', (message) => {
                         doCreateNewSet(message.name);
                     });
-                    widget.channel.on('fatal-error', function(message) {
+                    widget.channel.on('fatal-error', (message) => {
                         setFatalError({
                             title: 'Fatal error from ' + message.location,
                             message: message.error.message,
@@ -1050,14 +1047,14 @@ define([
                             appSpec: env.appSpec,
                             selectedSet: editorState.getItem('current.set.ref')
                         })
-                        .then(function() {
+                        .then(() => {
                             resolve();
                             return null;
                         })
-                        .catch(function(err) {
+                        .catch((err) => {
                             reject(err);
                         });
-                }, function(err) {
+                }, (err) => {
                     console.error('ERROR', err);
                     reject(err);
                 });
@@ -1065,11 +1062,11 @@ define([
         }
 
         function gatherValidationMessages(validationResult) {
-            var messages = [];
+            const messages = [];
 
             function harvestErrors(validations) {
                 if (validations instanceof Array) {
-                    validations.forEach(function(result, index) {
+                    validations.forEach((result, index) => {
                         if (!result.isValid) {
                             messages.push(String(index) + ':' + result.errorMessage);
                         }
@@ -1078,8 +1075,8 @@ define([
                         }
                     });
                 } else {
-                    Object.keys(validations).forEach(function(id) {
-                        var result = validations[id];
+                    Object.keys(validations).forEach((id) => {
+                        const result = validations[id];
                         if (!result.isValid) {
                             messages.push(id + ':' + result.errorMessage);
                         }
@@ -1094,8 +1091,8 @@ define([
         }
 
         function evaluateAppState() {
-            return Promise.try(function() {
-                    var currentEditorSetInfo = editorState.getItem('current.set.info');
+            return Promise.try(() => {
+                    const currentEditorSetInfo = editorState.getItem('current.set.info');
 
                     if (!currentEditorSetInfo) {
                         // nothing being edited.
@@ -1106,10 +1103,10 @@ define([
                     }
 
                     return validateModel()
-                        .then(function(result) {
+                        .then((result) => {
                             // we have a tree of validations, so we need to walk the tree to see if anything
                             // does not validate.
-                            var messages = gatherValidationMessages(result);
+                            const messages = gatherValidationMessages(result);
 
 
                             if (messages.length === 0) {
@@ -1131,10 +1128,10 @@ define([
                         });
 
                 })
-                .then(function() {
+                .then(() => {
                     renderUI();
                 })
-                .catch(function(err) {
+                .catch((err) => {
                     alert('internal error'),
                         console.error('INTERNAL ERROR', err);
                 });
@@ -1154,29 +1151,29 @@ define([
         // LIFECYCLE
 
         function registerEvents() {
-            bus.on('toggle-code-view', function() {
-                var showing = toggleCodeInputArea(),
+            bus.on('toggle-code-view', () => {
+                const showing = toggleCodeInputArea(),
                     label = showing ? 'Hide Code' : 'Show Code';
                 ui.setButtonLabel('toggle-code-view', label);
             });
-            bus.on('show-notifications', function() {
+            bus.on('show-notifications', () => {
                 doShowNotifications();
             });
-            bus.on('save', function() {
+            bus.on('save', () => {
                 doSave();
             });
 
-            bus.on('on-success', function() {
+            bus.on('on-success', () => {
                 doOnSuccess();
             });
 
             // Events from widgets...
 
-            parentBus.on('newstate', function(message) {
+            parentBus.on('newstate', (message) => {
                 console.log('GOT NEWSTATE', message);
             });
 
-            parentBus.on('reset-to-defaults', function() {
+            parentBus.on('reset-to-defaults', () => {
                 bus.emit('reset-to-defaults');
             });
 
@@ -1187,11 +1184,11 @@ define([
                 description: 'A cell channel'
             });
 
-            eventManager.add(cellBus.on('delete-cell', function() {
+            eventManager.add(cellBus.on('delete-cell', () => {
                 doDeleteCell();
             }));
 
-            eventManager.add(cellBus.on('result', function(message) {
+            eventManager.add(cellBus.on('result', (message) => {
                 // Verify that the run id is the same.
                 if (message.address.run_id !== editorState.getItem('editorState.currentRunId')) {
                     setStatus(div([
@@ -1213,14 +1210,14 @@ define([
 
                     // Now we need to reload the editor with the NEW item.
                     editorState.setItem('current.set.ref', message.message.result.set_ref);
-                    var objectInfo = serviceUtils.objectInfoToObject(message.message.result.set_info);
+                    const objectInfo = serviceUtils.objectInfoToObject(message.message.result.set_info);
                     editorState.setItem('current.set.info', objectInfo);
                     JupyterProxy.saveNotebook();
 
                     return doEditObject(objectInfo);
                 } else if (message.message.error) {
                     // cheap as heck error message
-                    var errorMessage = div({ class: 'alert alert-danger' }, [
+                    const errorMessage = div({ class: 'alert alert-danger' }, [
                         'Error saving reads set: ',
                         message.message.error.message
                     ]);
@@ -1232,9 +1229,9 @@ define([
         }
 
         function loadSpec() {
-            return new Promise(function(resolve) {
-                require(['./spec'], function(editorSpec) {
-                    var spec = Spec.make({
+            return new Promise((resolve) => {
+                require(['./spec'], (editorSpec) => {
+                    const spec = Spec.make({
                         spec: editorSpec
                     });
                     resolve(spec);
@@ -1252,7 +1249,7 @@ define([
                 bus: bus
             });
 
-            var events = Events.make({
+            const events = Events.make({
                 node: container
             });
             container.innerHTML = buildLayout(events);
@@ -1262,16 +1259,16 @@ define([
             initCodeInputArea();
 
             return loadSpec()
-                .then(function(loadedSpec) {
+                .then((loadedSpec) => {
                     spec = loadedSpec;
                     registerEvents();
                     showCodeInputArea();
                     return syncAppSpec(arg.appId, arg.appTag)
                 })
-                .then(function() {
+                .then(() => {
                     // Should not need to do this each time...
-                    var appRef = [editorState.getItem('app').id, editorState.getItem('app').tag].filter(toBoolean).join('/');
-                    var url = '/#appcatalog/app/' + appRef;
+                    const appRef = [editorState.getItem('app').id, editorState.getItem('app').tag].filter(toBoolean).join('/');
+                    const url = '/#appcatalog/app/' + appRef;
                     utils.setCellMeta(cell, 'kbase.attributes.title', env.appSpec.info.name);
                     utils.setCellMeta(cell, 'kbase.attributes.subtitle', env.appSpec.info.subtitle);
                     utils.setCellMeta(cell, 'kbase.attributes.info.url', url);
@@ -1279,7 +1276,7 @@ define([
 
                     return loadEditObjectSelector();
                 })
-                .then(function() {
+                .then(() => {
                     // only load the editor up if we have an existing set.
                     // NEW: get the most recent one, not just the most recently selected one.
                     if (editorState.getItem('current.set.info')) {
@@ -1295,11 +1292,11 @@ define([
                         });
                     }
                 })
-                .then(function() {
+                .then(() => {
                     // this will not change, so we can just render it here.
                     PR.prettyPrint(null, container);
                 })
-                .then(function() {
+                .then(() => {
                     // if we start out in 'new' state, then we need to promote to
                     // editing...
                     if (fsm.getCurrentState().state.mode === 'new') {
@@ -1307,7 +1304,7 @@ define([
                     }
                     renderUI();
                 })
-                .catch(function(err) {
+                .catch((err) => {
                     console.error('ERROR loading main widgets', err);
                     addNotification('Error loading main widgets: ' + err.message);
                     setFatalError({
@@ -1321,8 +1318,8 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
-                return Promise.all(Object.keys(widgets).map(function(key) {
+            return Promise.try(() => {
+                return Promise.all(Object.keys(widgets).map((key) => {
                     return widgets[key].stop();
                 }));
             });
@@ -1356,6 +1353,6 @@ define([
             return factory(config);
         }
     };
-}, function(err) {
+}, (err) => {
     console.error('ERROR loading editorCell editorCellWidget', err);
 });

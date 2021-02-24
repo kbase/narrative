@@ -1,43 +1,41 @@
-/*global define */
-/*jslint white:true,global:true*/
 /*
  * MiniBus
  * A lightweight message bus implementation.
  * The metaphor of the bus, is that of the hardware bus ... a set of devices
  * connected over a communication channel (wires) which can send and receive
  * data over the channel.
- * As with hardware buses, this requires that each thing on the bus -- components -- 
- * need to have the smarts to deal with the bus. However, in our case those 
+ * As with hardware buses, this requires that each thing on the bus -- components --
+ * need to have the smarts to deal with the bus. However, in our case those
  * requirements are very minimal.
- * 
+ *
  * bus - the object which manages the communication and to which components may send and receive messages
  * message - a piece of data sent from one component to another, a plain javascript object
  * envelope - an internal container for the message which acts both as a wrapper and
  *            place to retain message state.
  * timeout - each message may provide a timeout
- * 
+ *
  * api
  * send - a component places a message onto the bus
  * listen - a component requests that messages meeting a certain pattern invoke a function it provides
  *
  */
 define([
-], function () {
+], () => {
     'use strict';
-    var instanceId = 0;
+    let instanceId = 0;
     function newInstance() {
         instanceId += 1;
         return instanceId;
     }
-    
+
     function factory(config) {
-        var listeners = [],
+        let listeners = [],
             queue = [],
             interval = 0,
             timer,
             instanceId = newInstance();
-        
-        
+
+
         function testListener(message, tester) {
             try {
                 return tester(message);
@@ -54,11 +52,11 @@ define([
             }
         }
         function processPending() {
-            var processing = queue;
+            const processing = queue;
             queue = [];
-            processing.forEach(function (item) {
+            processing.forEach((item) => {
                 //console.log('processing ' + item.message.type, instanceId, item);
-                listeners.forEach(function (listener) {
+                listeners.forEach((listener) => {
                     if (testListener(item.message, listener.test)) {
                         //console.log('handling ' + item.message.type, instanceId, item);
                         letListenerHandle(item.message, listener.handle);
@@ -68,14 +66,14 @@ define([
             });
         }
         /*
-         * 
+         *
          * running the bus queue is as
          */
         function run() {
             if (timer) {
                 return;
             }
-            timer = window.setTimeout(function () {
+            timer = window.setTimeout(() => {
                 timer = null;
                 try {
                     processPending();
@@ -87,7 +85,7 @@ define([
         /*
          * Listening registers a function which when true given a message,
          * invokes the receiving function.
-         * 
+         *
          */
         function listen(spec) {
             listeners.push({
@@ -115,7 +113,7 @@ define([
                 options.type = message;
                 message = options;
             }
-            
+
             queue.push({
                 message: message,
                 envelope: {
@@ -131,7 +129,7 @@ define([
             on: on
         };
     }
-    
+
     return {
         make: function (config) {
             return factory(config);

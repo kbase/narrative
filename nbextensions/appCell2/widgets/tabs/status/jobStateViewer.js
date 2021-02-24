@@ -9,16 +9,16 @@ define([
     'common/ui',
     'common/format',
     'kb_common/html'
-], function(
+], (
     Promise,
     Runtime,
     UI,
     format,
     html
-) {
+) => {
     'use strict';
 
-    let t = html.tag,
+    const t = html.tag,
         div = t('div'),
         p = t('p'),
         span = t('span');
@@ -278,7 +278,7 @@ define([
             jobId,
             parentJobId;
 
-        let viewModel = {
+        const viewModel = {
             lastUpdated: {
                 elapsed: null,
                 time: null
@@ -485,7 +485,7 @@ define([
          * On widget stop, this removes all listeners for job status to clean itself up.
          */
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 stopListeningForJobStatus();
             });
         }

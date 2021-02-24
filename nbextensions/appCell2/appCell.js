@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true,nomen:true */
-
 define([
     'bluebird',
     'uuid',
@@ -14,7 +11,7 @@ define([
     './widgets/appInfoDialog',
     './widgets/appCellWidget',
     'common/spec'
-], function(
+], (
     Promise,
     Uuid,
     utils,
@@ -27,10 +24,10 @@ define([
     appInfoDialog,
     AppCellWidget,
     Spec
-) {
+) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         p = t('p'),
         b = t('b');
@@ -51,7 +48,7 @@ define([
     }
 
     function factory(config) {
-        var cell = config.cell,
+        let cell = config.cell,
             workspaceInfo = config.workspaceInfo,
             runtime = Runtime.make(),
             spec,
@@ -60,7 +57,7 @@ define([
 
         function specializeCell() {
             cell.minimize = function() {
-                var inputArea = this.input.find('.input_area').get(0),
+                const inputArea = this.input.find('.input_area').get(0),
                     outputArea = this.element.find('.output_wrapper'),
                     viewInputArea = this.element.find('[data-subarea-type="app-cell-input"]'),
                     showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
@@ -73,7 +70,7 @@ define([
             };
 
             cell.maximize = function() {
-                var inputArea = this.input.find('.input_area').get(0),
+                const inputArea = this.input.find('.input_area').get(0),
                     outputArea = this.element.find('.output_wrapper'),
                     viewInputArea = this.element.find('[data-subarea-type="app-cell-input"]'),
                     showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
@@ -91,13 +88,13 @@ define([
                 return AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.appCell.app.spec'));
             };
             cell.renderIcon = function() {
-                var iconNode = this.element[0].querySelector('.celltoolbar [data-element="icon"]');
+                const iconNode = this.element[0].querySelector('.celltoolbar [data-element="icon"]');
                 if (iconNode) {
                     iconNode.innerHTML = AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.appCell.app.spec'));
                 }
             };
             cell.showInfo = function() {
-                var app = utils.getCellMeta(cell, 'kbase.appCell.app');
+                const app = utils.getCellMeta(cell, 'kbase.appCell.app');
                 appInfoDialog.show({
                     id: app.spec.info.id,
                     version: app.spec.info.ver,
@@ -111,13 +108,13 @@ define([
         }
 
         function setupCell() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 // Only handle kbase cells.
                 if (!isAppCell(cell)) {
                     return;
                 }
 
-                var cellElement = cell.element;
+                const cellElement = cell.element;
                 cellElement.addClass('kb-cell').addClass('kb-app-cell');
 
                 // Just ide the code area. If it is to be displayed due to the cell
@@ -139,7 +136,7 @@ define([
                 cellBus = runtime.bus().makeChannelBus({
                     description: 'Parent comm for The Cell Bus'
                 });
-                var dom = Dom.make({ node: cell.input[0] }),
+                const dom = Dom.make({ node: cell.input[0] }),
                     kbaseNode = dom.createNode(div({ dataSubareaType: 'app-cell-input' }));
                 appCellWidget = AppCellWidget.make({
                     bus: cellBus,
@@ -167,18 +164,18 @@ define([
                 cell.kbase.node = kbaseNode;
 
                 return appCellWidget.init()
-                    .then(function() {
+                    .then(() => {
                         return appCellWidget.attach(kbaseNode);
                     })
-                    .then(function() {
+                    .then(() => {
                         return appCellWidget.start();
                     })
-                    .then(function() {
+                    .then(() => {
                         return appCellWidget.run({
                             authToken: runtime.authToken()
                         });
                     })
-                    .then(function() {
+                    .then(() => {
                         cell.renderMinMax();
 
                         return {
@@ -186,17 +183,17 @@ define([
                             bus: cellBus
                         };
                     })
-                    .catch(function(err) {
+                    .catch((err) => {
                         console.error('ERROR starting app cell', err);
                         return appCellWidget.stop()
-                            .then(function() {
+                            .then(() => {
                                 return appCellWidget.detach();
                             })
-                            .catch(function(err) {
+                            .catch((err) => {
                                 console.log('ERR in ERR', err);
                             })
-                            .finally(function() {
-                                var ui = UI.make({
+                            .finally(() => {
+                                const ui = UI.make({
                                     node: document.body
                                 });
                                 kbaseNode.innerHTML = div({
@@ -224,7 +221,7 @@ define([
          * appType = a string, typically 'app', also 'devapp' for spec edit mode.
          */
         function upgradeToAppCell(appSpec, appTag, appType) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 // Create base app cell
 
                 // TODO: this should capture the entire app spec, so don't need
@@ -233,7 +230,7 @@ define([
                     appSpec: appSpec
                 });
 
-                var meta = {
+                const meta = {
                     kbase: {
                         type: appType,
                         attributes: {
@@ -265,7 +262,7 @@ define([
                 // Complete the cell setup.
                 return setupCell();
             })
-                .then(function(cellStuff) {
+                .then((cellStuff) => {
                     // Initialize the cell to its default state.
                     // cellStuff.bus.emit('reset-to-defaults');
                 });

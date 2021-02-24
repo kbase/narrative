@@ -1,11 +1,8 @@
-/*global define*/
-/*jslint browser:true,white:true,single:true,multivar:true */
-
 /*
  * Provides app spec functionality.
  */
 
-define([], function() {
+define([], () => {
     'use strict';
 
     function toInteger(value) {
@@ -36,7 +33,7 @@ define([], function() {
     }
 
     function validateWorkspaceObjectNameString(spec, value) {
-        var parsedValue,
+        let parsedValue,
             messageId, shortMessage, errorMessage, diagnosis = 'valid';
 
         if (typeof value !== 'string') {
@@ -82,7 +79,7 @@ define([], function() {
     }
 
     function validateString(spec, value) {
-        var parsedValue,
+        let parsedValue,
             errorMessage, diagnosis = 'valid',
             c = spec.data.constraints,
             regexp = c.regexp ? new RegExp(c.regexp) : false;
@@ -132,7 +129,7 @@ define([], function() {
     }
 
     function validateStruct(spec, value) {
-        var parsedValue,
+        let parsedValue,
             errorMessage, diagnosis = 'valid',
             c = spec.data.constraints;
 
@@ -142,11 +139,11 @@ define([], function() {
         // each member is empty.
 
         // use the spec to validate each member
-        var result = {};
+        const result = {};
 
-        spec.parameters.layout.forEach(function(id) {
-            var fieldValue = value[id];
-            var fieldSpec = spec.parameters.specs[id];
+        spec.parameters.layout.forEach((id) => {
+            const fieldValue = value[id];
+            const fieldSpec = spec.parameters.specs[id];
             result[id] = {
                 id: id,
                 result: validateModel(fieldSpec, fieldValue)
@@ -157,7 +154,7 @@ define([], function() {
     }
 
     function validateStructList(spec, value) {
-        var parsedValue,
+        let parsedValue,
             errorMessage, diagnosis = 'valid',
             c = spec.data.constraints;
 
@@ -167,7 +164,7 @@ define([], function() {
 
         // is it empty? what does it mean for it to be empty?
         // each member is empty.
-        var empty = false;
+        let empty = false;
         if (value === undefined || value === null) {
             empty = true;
         } else if (value.length === 0) {
@@ -196,9 +193,9 @@ define([], function() {
 
         // validate eacn item in the value.
 
-        var results = value.map(function(item) {
-            // yes, the spec for a struct list is identical (for now) to 
-            // a struct. 
+        const results = value.map((item) => {
+            // yes, the spec for a struct list is identical (for now) to
+            // a struct.
             // TODO: we need an ordered set type to wrap the struct!!!!!!
             return validateStruct(spec.parameters.specs.item, item);
         });
@@ -217,7 +214,7 @@ define([], function() {
     }
 
     function resolveValidator(spec) {
-        var fun;
+        let fun;
         switch (spec.data.type) {
             case 'text':
             case 'string':
@@ -240,7 +237,7 @@ define([], function() {
     }
 
     function validateModel(spec, value) {
-        var validator = resolveValidator(spec),
+        const validator = resolveValidator(spec),
             result = validator(value);
 
         return result;

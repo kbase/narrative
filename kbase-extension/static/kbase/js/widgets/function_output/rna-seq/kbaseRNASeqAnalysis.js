@@ -7,13 +7,13 @@ define (
 		'jquery',
 		'kbaseTable',
 		'kbaseAuthenticatedWidget'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		kbaseTable,
 		kbaseAuthenticatedWidget
-	) {
+	) => {
 
     'use strict';
 
@@ -60,21 +60,21 @@ define (
 
         loadAnalysis : function(ws, analysis) {
 
-            var $rna = this;
+            const $rna = this;
 
-            var all_promises = [
+            const all_promises = [
                 ws.get_objects([{ ref : analysis.annotation_id}]),
                 ws.get_objects([{ ref : analysis.genome_id}])
             ];
 
-            var external_ids = {};
-            var num_sample_ids = 0;
+            const external_ids = {};
+            let num_sample_ids = 0;
 
             if (analysis.sample_ids) {
 
                 $.each(
                     analysis.sample_ids,
-                    function (i, v) {
+                    (i, v) => {
                         num_sample_ids++;
                         all_promises.push(
                             ws.get_object_info([{ref : v}])
@@ -87,10 +87,10 @@ define (
             if (analysis.alignments) {
 
                 this.options.tableColumns.push('Alignments');
-                var alignment_ids = [];
+                const alignment_ids = [];
                 $.each(
                     analysis.alignments,
-                    function (k,v) {
+                    (k,v) => {
 
                         if (external_ids[k] == undefined) {
 
@@ -118,10 +118,10 @@ define (
             if (analysis.expression_values) {
 
                 this.options.tableColumns.push('Expression Values');
-                var ev_ids = [];
+                const ev_ids = [];
                 $.each(
                     analysis.expression_values,
-                    function (k,v) {
+                    (k,v) => {
                         if (external_ids[k] == undefined) {
                             ev_ids.push(k);
                             all_promises.push(
@@ -157,23 +157,23 @@ define (
             }
 
             $.when.apply($, all_promises).then(function (annotation, genome) {
-                var args = Array.prototype.slice.call(arguments);
+                const args = Array.prototype.slice.call(arguments);
 
                 if (args.length > 2) {
 
-                    var extra_args = args.slice(2, args.length);
+                    const extra_args = args.slice(2, args.length);
 
-                    var info_keys = ['id', 'name', 'type', 'save_date', 'version', 'saved_by', 'ws_id', 'ws_name', 'chsum', 'size', 'meta'];
+                    const info_keys = ['id', 'name', 'type', 'save_date', 'version', 'saved_by', 'ws_id', 'ws_name', 'chsum', 'size', 'meta'];
 
-                    var ref_map = {};
+                    const ref_map = {};
                     $.each(
                         extra_args,
-                        function(i, v) {
+                        (i, v) => {
 
-                            var info_obj = {};
+                            const info_obj = {};
                             $.each(
                                 info_keys,
-                                function(i,key) {
+                                (i,key) => {
                                     info_obj[key] = v[0][i];
                                 }
                             );
@@ -208,7 +208,7 @@ define (
 
                 $rna.updateUI();
             })
-            .fail(function(d) {
+            .fail((d) => {
 
                 $rna.$elem.empty();
                 $rna.$elem
@@ -219,21 +219,21 @@ define (
         },
 
         ulFromData : function(ids, ref_map) {
-            var $ul = $.jqElem('ul').css('list-style-type', 'none');
+            const $ul = $.jqElem('ul').css('list-style-type', 'none');
 
             $.each(
                 ids,
-                function(k, v) {
-                    var $li = $.jqElem('li');
+                (k, v) => {
+                    const $li = $.jqElem('li');
                     if (ref_map[k]) {
                         $li.append(
                             $.jqElem('li')
                                 .append(
                                     $.jqElem('a')
                                         .append(ref_map[k]['name'])
-                                        .on('click', function(e) {
-                                            var $cell = $rna.$elem.nearest('.cell');
-                                            var near_idx = IPython.notebook.find_cell_index($cell.data().cell);
+                                        .on('click', (e) => {
+                                            const $cell = $rna.$elem.nearest('.cell');
+                                            const near_idx = IPython.notebook.find_cell_index($cell.data().cell);
 
                                             $rna.trigger('createViewerCell.Narrative', {
                                                 'nearCellIdx': near_idx,
@@ -255,9 +255,9 @@ define (
                             .append(
                                 $.jqElem('a')
                                     .append(ref_map[v]['name'])
-                                    .on('click', function(e) {
-                                        var $cell = $rna.$elem.nearest('.cell');
-                                        var near_idx = IPython.notebook.find_cell_index($cell.data().cell);
+                                    .on('click', (e) => {
+                                        const $cell = $rna.$elem.nearest('.cell');
+                                        const near_idx = IPython.notebook.find_cell_index($cell.data().cell);
 
                                         $rna.trigger('createViewerCell.Narrative', {
                                             'nearCellIdx': near_idx,
@@ -281,9 +281,9 @@ define (
 
             this._super(options);
 
-            var $rna = this;
+            const $rna = this;
 
-            var ws = new Workspace(window.kbconfig.urls.workspace, {token : this.authToken()});
+            const ws = new Workspace(window.kbconfig.urls.workspace, {token : this.authToken()});
 
             if (this.options.SetupRNASeqAnalysis) {
                 this.setDataset(this.options.SetupRNASeqAnalysis);
@@ -295,11 +295,11 @@ define (
                         workspace : this.options.workspace,
                         name : this.options.output
                     }]
-                ).then(function(d) {
+                ).then((d) => {
                     $rna.setDataset(d[0].data);
                     $rna.loadAnalysis(ws, d[0].data);
                 })
-                .fail(function(d) {
+                .fail((d) => {
 
                     $rna.$elem.empty();
                     $rna.$elem

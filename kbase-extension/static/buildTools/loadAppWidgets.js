@@ -103,4 +103,4 @@ define([
     'common/unodep',
     'common/utils',
     'common/validation'
-], function () { return; });
+], () => { return; });

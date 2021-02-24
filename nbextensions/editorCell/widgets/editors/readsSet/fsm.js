@@ -1,8 +1,5 @@
-/*global define*/
-/*jslint browser:true,white:true*/
-
-define([], function() {
-    var fsm = [{
+define([], () => {
+    const fsm = [{
             // The 'new' state is the initial entry point for the editor.
             // When the editor is first instantiated and the editor state loaded,
             // it is evaluated and the next state selected.
@@ -139,7 +136,7 @@ define([], function() {
         },
         // In the incomplete changed state, the editor has no pending
         // changes (touched), the model has been updated,
-        // but we can't save it yet because it is incomplete. 
+        // but we can't save it yet because it is incomplete.
         {
             state: {
                 mode: 'editing',

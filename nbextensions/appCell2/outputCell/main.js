@@ -1,22 +1,19 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 define([
     'bluebird',
     'jquery',
     'base/js/namespace',
     'common/utils'
-], function (
+], (
     Promise,
     $,
     Jupyter,
     utils
-    ) {
+    ) => {
     'use strict';
 
     function specializeCell(cell) {
         cell.minimize = function () {
-            var inputArea = this.input.find('.input_area'),
+            const inputArea = this.input.find('.input_area'),
                 outputArea = this.element.find('.output_wrapper'),
                 showCode = utils.getCellMeta(cell, 'kbase.outputCell.user-settings.showCodeInputArea');
 
@@ -27,7 +24,7 @@ define([
         };
 
         cell.maximize = function () {
-            var inputArea = this.input.find('.input_area'),
+            const inputArea = this.input.find('.input_area'),
                 outputArea = this.element.find('.output_wrapper'),
                 showCode = utils.getCellMeta(cell, 'kbase.outputCell.user-settings.showCodeInputArea');
 
@@ -75,18 +72,18 @@ define([
     }
 
     function load() {
-        $([Jupyter.events]).on('insertedAtIndex.Cell', function (event, payload) {
-            var cell = payload.cell;
-            var setupData = payload.data;
-            var jupyterCellType = payload.type;
+        $([Jupyter.events]).on('insertedAtIndex.Cell', (event, payload) => {
+            const cell = payload.cell;
+            const setupData = payload.data;
+            const jupyterCellType = payload.type;
             if (jupyterCellType === 'code' &&
-                setupData && 
+                setupData &&
                 setupData.type === 'output') {
                 upgradeCell(cell)
-                    .then(function () {
+                    .then(() => {
                         console.log('OUTPUT: Cell created?');
                     })
-                    .catch(function (err) {
+                    .catch((err) => {
                         console.error('ERROR creating cell', err);
                         // delete cell.
                         $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
@@ -94,8 +91,8 @@ define([
                     });
             }
         });
-        
-        Jupyter.notebook.get_cells().forEach(function (cell) {
+
+        Jupyter.notebook.get_cells().forEach((cell) => {
             try {
                 setupCell(cell);
             } catch (ex) {
@@ -108,7 +105,7 @@ define([
         // This is the sole ipython/jupyter api call
         load_ipython_extension: load
     };
-}, function (err) {
+}, (err) => {
     'use strict';
     console.log('ERROR loading viewCell main', err);
 });

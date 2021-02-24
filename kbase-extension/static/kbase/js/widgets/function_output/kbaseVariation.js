@@ -12,14 +12,14 @@ define (
         'narrativeConfig',
         'kbaseAuthenticatedWidget',
         'kb_common/jsonRpc/dynamicServiceClient'
-    ], function(
+    ], (
         KBWidget,
         bootstrap,
         $,
         Config,
         kbaseAuthenticatedWidget,
         DynamicServiceClient
-) {
+) => {
     return KBWidget({
         name: "kbaseVariation",
         parent : kbaseAuthenticatedWidget,
@@ -43,22 +43,22 @@ define (
             return this;
         },
         getLinks: function () {
-           var client =  new DynamicServiceClient({
+           const client =  new DynamicServiceClient({
                 module: 'JbrowseServer',
                 url: Config.url('service_wizard'),
                 token: this.token,
                 version: 'dev'
             })
             return client.lookupModule()
-                .spread(function(status) {
+                .spread((status) => {
                     return status.url;
                 });
         },
         buildIframe: function(url){
-            var variation_ref = this.options.upas.variationID
+            const variation_ref = this.options.upas.variationID
             this.$elem.append("<b>Genome browser view</b>")
-            var jbrowse_url = [url, "jbrowse", variation_ref, "index.html"].join("/")
-            var iframe_code = '<iframe  src="' + jbrowse_url + '" style="height:500px;width:100%;" allowfullscreen></iframe>'
+            const jbrowse_url = [url, "jbrowse", variation_ref, "index.html"].join("/")
+            const iframe_code = '<iframe  src="' + jbrowse_url + '" style="height:500px;width:100%;" allowfullscreen></iframe>'
             this.$elem.append(iframe_code)
         },
         render: function() {

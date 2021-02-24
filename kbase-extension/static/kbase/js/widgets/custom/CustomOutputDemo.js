@@ -1,16 +1,16 @@
 define([
     'bluebird',
     'kb_common/html'
-], function (
+], (
     Promise,
     html
-) {
-    var t = html.tag,
+) => {
+    const t = html.tag,
         div = t('div'),
         input = t('input');
 
     function factory(config) {
-        var hostNode = config.node,
+        const hostNode = config.node,
             container = hostNode.appendChild(document.createElement('div')),
             places = {
                 main: {
@@ -50,7 +50,7 @@ define([
         renderLayout();
 
         function doChange() {
-            var value = places.input.node.value;
+            const value = places.input.node.value;
 
             // save the value into the input metadata ...
 
@@ -85,7 +85,7 @@ define([
                 ])
             ]);
             places.input.node = document.getElementById(places.input.id);
-            places.input.node.addEventListener('change', function (e) {
+            places.input.node.addEventListener('change', (e) => {
                 doChange();
             });
         }
@@ -95,10 +95,10 @@ define([
         // LIFECYCLE API
 
         function start(params) {
-            return Promise.try(function () {
+            return Promise.try(() => {
                     render();
                     // var state = config.api.getState();
-                    var state = config.state;
+                    let state = config.state;
                     if (state && typeof state === 'object') {
                         places.input.node.value = state.input;
                     }
@@ -107,13 +107,13 @@ define([
                         places.input.node.value = state.input;
                     }
                 })
-                .catch(function (err) {
+                .catch((err) => {
                     places.error.node.innerHTML = 'Oops: ' + err.message;
                 });
         }
 
         function stop() {
-            return Promise.try(function () {});
+            return Promise.try(() => {});
         }
         return {
             start: start,

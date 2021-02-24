@@ -1,8 +1,8 @@
 function NarrativeJobService(url, auth, auth_cb) {
 
     this.url = url;
-    var _url = url;
-    var deprecationWarningSent = false;
+    const _url = url;
+    let deprecationWarningSent = false;
 
     function deprecationWarning() {
         if (!deprecationWarningSent) {
@@ -15,8 +15,8 @@ function NarrativeJobService(url, auth, auth_cb) {
         }
     }
 
-    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
-    var _auth_cb = auth_cb;
+    const _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    const _auth_cb = auth_cb;
 
 
     this.list_config = function (_callback, _errorCallback) {
@@ -114,7 +114,7 @@ function NarrativeJobService(url, auth, auth_cb) {
      * JSON call using jQuery method.
      */
     function json_call_ajax(method, params, numRets, callback, errorCallback) {
-        var deferred = $.Deferred();
+        const deferred = $.Deferred();
 
         if (typeof callback === 'function') {
            deferred.done(callback);
@@ -124,15 +124,15 @@ function NarrativeJobService(url, auth, auth_cb) {
            deferred.fail(errorCallback);
         }
 
-        var rpc = {
+        const rpc = {
             params : params,
             method : method,
             version: "1.1",
             id: String(Math.random()).slice(2),
         };
 
-        var beforeSend = null;
-        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+        let beforeSend = null;
+        const token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
         if (token != null) {
             beforeSend = function (xhr) {
@@ -140,7 +140,7 @@ function NarrativeJobService(url, auth, auth_cb) {
             }
         }
 
-        var xhr = jQuery.ajax({
+        const xhr = jQuery.ajax({
             url: _url,
             dataType: "text",
             type: 'POST',
@@ -148,9 +148,9 @@ function NarrativeJobService(url, auth, auth_cb) {
             data: JSON.stringify(rpc),
             beforeSend: beforeSend,
             success: function (data, status, xhr) {
-                var result;
+                let result;
                 try {
-                    var resp = JSON.parse(data);
+                    const resp = JSON.parse(data);
                     result = (numRets === 1 ? resp.result[0] : resp.result);
                 } catch (err) {
                     deferred.reject({
@@ -164,10 +164,10 @@ function NarrativeJobService(url, auth, auth_cb) {
                 deferred.resolve(result);
             },
             error: function (xhr, textStatus, errorThrown) {
-                var error;
+                let error;
                 if (xhr.responseText) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        const resp = JSON.parse(xhr.responseText);
                         error = resp.error;
                     } catch (err) { // Not JSON
                         error = "Unknown error - " + xhr.responseText;
@@ -182,7 +182,7 @@ function NarrativeJobService(url, auth, auth_cb) {
             }
         });
 
-        var promise = deferred.promise();
+        const promise = deferred.promise();
         promise.xhr = xhr;
         return promise;
     }

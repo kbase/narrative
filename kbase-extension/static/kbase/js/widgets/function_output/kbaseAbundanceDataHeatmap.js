@@ -9,14 +9,14 @@ define (
         'narrativeConfig',
 		'kbaseAuthenticatedWidget',
 		'kbStandaloneHeatmap'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
         Config,
 		kbaseAuthenticatedWidget,
 		kbStandaloneHeatmap
-	) {
+	) => {
     return KBWidget({
             name: 'AbundanceDataHeatmap',
             parent : kbaseAuthenticatedWidget,
@@ -36,10 +36,10 @@ define (
         },
 
         render: function() {
-	        var self = this;
-	        var pref = this.uuidv4();
+	        const self = this;
+	        const pref = this.uuidv4();
 
-	        var container = this.$elem;
+	        const container = this.$elem;
 	        container.empty();
             if (self.token == null) {
                 container.append("<div>[Error] You're not logged in</div>");
@@ -47,30 +47,30 @@ define (
             }
             container.append("<div><img src=\""+self.loading_image+"\">&nbsp;&nbsp;loading data...</div>");
 
-	        var kbws = new Workspace(self.ws_url, {'token': self.token});
-	        kbws.get_objects([{ref: self.options.ws+"/"+self.options.id}], function(data) {
+	        const kbws = new Workspace(self.ws_url, {'token': self.token});
+	        kbws.get_objects([{ref: self.options.ws+"/"+self.options.id}], (data) => {
 	            container.empty();
 		        // parse data
 		        if (data.length == 0) {
-		            var msg = "[Error] Object "+self.options.id+" does not exist in workspace "+self.options.ws;
+		            const msg = "[Error] Object "+self.options.id+" does not exist in workspace "+self.options.ws;
 		            container.append('<div><p>'+msg+'>/p></div>');
 		        } else {
-		            var heatdata = data[0]['data'];
+		            const heatdata = data[0]['data'];
 		            console.log(heatdata);
 			        // HEATMAP
-                    var hlen = 0;
+                    let hlen = 0;
                     if (window.hasOwnProperty('rendererHeatmap') && rendererHeatmap.length) {
                         hlen = rendererHeatmap.length;
                     }
                     container.append("<div id='outputHeatmap"+hlen+"' style='width: 95%;'></div>");
-                    var heatTest = standaloneHeatmap.create({index: hlen});
+                    const heatTest = standaloneHeatmap.create({index: hlen});
                     heatTest.settings.target = document.getElementById("outputHeatmap"+hlen);
                     heatTest.settings.data = heatdata;
                     heatTest.render(hlen);
 		        }
-	        }, function(data) {
+	        }, (data) => {
 		        container.empty();
-		        var main = $('<div>');
+		        const main = $('<div>');
 		        main.append($('<p>')
 		            .css({'padding': '10px 20px'})
 		            .text('[Error] '+data.error.message));

@@ -1,14 +1,14 @@
 define([
     'bluebird',
     'kb_common/html'
-], function(Promise, html) {
+], (Promise, html) => {
     'use strict';
 
     function factory() {
-        var hostNode, container;
+        let hostNode, container;
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 hostNode = arg.node;
                 container = hostNode.appendChild(document.createElement('div'));
                 container.innerHTML = html.loading(arg.message);
@@ -16,7 +16,7 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (hostNode && container) {
                     hostNode.removeChild(container);
                 }

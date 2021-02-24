@@ -16,20 +16,20 @@ define([
     'bootstrap',
     'jquery',
     'narrativeConfig'
-], function (
+], (
     KBWidget,
     bootstrap,
     $,
     config
-    ) {
+    ) => {
 
     function ModelingAPI(token) {
-        var self = this;
+        const self = this;
 
         this.token = token;
 
         // Used for ModelSEED/Patric Biochem
-        var SOLR_ENDPOINT = 'https://www.patricbrc.org/api/';
+        const SOLR_ENDPOINT = 'https://www.patricbrc.org/api/';
 
         this.api = function (service, method, params) {
             var url, method;
@@ -41,14 +41,14 @@ define([
                 method = 'fbaModelServices.' + method;
             }
 
-            var rpc = {
+            const rpc = {
                 params: [params],
                 method: method,
                 version: "1.1",
                 id: String(Math.random()).slice(2),
             };
 
-            var prom = $.ajax({
+            const prom = $.ajax({
                 url: url,
                 type: 'POST',
                 processData: false,
@@ -57,7 +57,7 @@ define([
                     if (self.token)
                         xhr.setRequestHeader("Authorization", self.token);
                 }
-            }).then(function (data) {
+            }).then((data) => {
                 return data.result[0];
             })
 
@@ -67,7 +67,7 @@ define([
         // Takes a type 'compounds' or 'reactions', along with
         // options for querying.  Works particularly well with datatables.
         this.biochem = function (type, opts, select) {
-            var url = SOLR_ENDPOINT;
+            let url = SOLR_ENDPOINT;
 
             if (type === 'compounds')
                 url += 'model_compound/';
@@ -88,22 +88,22 @@ define([
             url += '&limit(' + opts.length + ',' + opts.start + ')';
 
             // sorting (assume single sort)
-            var sort = opts.order[0],
+            const sort = opts.order[0],
                 colIndex = sort.column,
                 dir = sort.dir == 'asc' ? '+' : '-';
 
-            var colName = opts.columns[colIndex].data;
+            const colName = opts.columns[colIndex].data;
             url += '&sort(' + dir + colName + ')';
 
             // search
-            var q = opts.search.value;
+            const q = opts.search.value;
             url += q ? '&keyword(' + q + ')' : '&keyword(*)';
 
             // let's do this
             return $.ajax({
                 url: url,
                 type: 'GET'
-            }).then(function (res) {
+            }).then((res) => {
                 return res.response;
             });
         }
@@ -111,7 +111,7 @@ define([
         // This is a temporary helper function for media data, which will be removed.
         // DO NOT USE ELSEWHERE.  You've been warned :)
         this.getCpds = function (id, opts) {
-            var url = SOLR_ENDPOINT + 'model_compound/?http_accept=application/json';
+            let url = SOLR_ENDPOINT + 'model_compound/?http_accept=application/json';
 
             if (opts && 'select' in opts) {
                 if (Array.isArray(opts.select))
@@ -128,14 +128,14 @@ define([
 
             //url += "&sort(id)"
 
-            return $.get(url).done(function (res) {
+            return $.get(url).done((res) => {
                 return Array.isArray(id) ? res.data : res.data[0];
             })
         }
 
         this.notice = function (container, text, duration) {
             container.css('position', 'relative');
-            var notice = $('<div class="kb-notify kb-notify-success">' + text + '</div>');
+            const notice = $('<div class="kb-notify kb-notify-success">' + text + '</div>');
             notice.css({
                 'position': 'absolute',
                 'bottom': '10px',

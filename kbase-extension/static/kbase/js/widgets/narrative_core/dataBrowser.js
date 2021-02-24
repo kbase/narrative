@@ -10,7 +10,7 @@ define([
     'util/timeFormat',
     'kbase/js/widgets/narrative_core/kbaseDataCard',
     'api/dataProvider'
-], function(
+], (
     Promise,
     Config,
     GenericClient,
@@ -18,7 +18,7 @@ define([
     TimeFormat,
     kbaseDataCard,
     DataProvider
-) {
+) => {
     'use strict';
 
     const OBJECT_COUNT_LIMIT = Config.get('data_panel').ws_max_objs_to_fetch || 30000;
@@ -65,8 +65,8 @@ define([
         }
 
         createLoadingDiv() {
-            var minValue = 5;
-            var $progressBar = $('<div>')
+            const minValue = 5;
+            const $progressBar = $('<div>')
                 .addClass('progress-bar progress-bar-striped active')
                 .attr({
                     'role': 'progressbar',
@@ -79,20 +79,20 @@ define([
                     'transition': 'none'
                 });
 
-            var $loadingDiv = $('<div>')
+            const $loadingDiv = $('<div>')
                 .addClass('row')
                 .css({margin: '15px', 'margin-left': '35px', 'height': '550px'})
                 .append($('<div class="progress">').append($progressBar))
                 .hide();
 
-            var setValue = function (value) {
+            const setValue = function (value) {
                 if (value >= minValue) {
                     $progressBar.css('width', value + '%')
                         .attr('aria-valuenow', value);
                 }
             };
 
-            var reset = function () {
+            const reset = function () {
                 setValue(minValue);
             };
 
@@ -167,7 +167,7 @@ define([
          * @param {object} typeCounts
          */
         processTypes(typeCounts) {
-            let types = {};
+            const types = {};
             Object.keys(typeCounts).forEach(t => {
                 const unversioned = t.split('-')[0];
                 const typeName = unversioned.split('.')[1];
@@ -224,7 +224,7 @@ define([
          * @param {*} template - not used?
          */
         render() {
-            var headerMessage = '';
+            let headerMessage = '';
             if (this.data.limit_reached && this.data.limit_reached === 1) {
                 headerMessage = 'You have access to over <b>' + OBJECT_COUNT_LIMIT + '</b> data objects, so we\'re only showing a sample. Please use the Types or Narratives selectors above to filter.';
             }
@@ -267,11 +267,11 @@ define([
          */
         buildNextRows() { //}, start, numRows) {
             // add each set of items to container to be added to DOM
-            var rows = $('<div class="kb-import-items">');
+            const rows = $('<div class="kb-import-items">');
             return DataProvider.getDataByName()
                 .then((loadedData) => {
                     for (let count=0; this.state.objectPointer < this.data.objects.length && count < RENDER_CHUNK; this.state.objectPointer++) {
-                        let obj = this.data.objects[this.state.objectPointer];
+                        const obj = this.data.objects[this.state.objectPointer];
                         if (this.testFilter(obj)) {
                             obj.relativeTime = TimeFormat.getTimeStampStr(obj.timestamp);
                             obj.narrativeName = this.data.workspace_display[obj.ws_id].display;
@@ -319,11 +319,11 @@ define([
                 }
                 wsInput.append($option);
             });
-            var wsFilter = $('<div class="col-sm-4">').append(wsInput);
+            const wsFilter = $('<div class="col-sm-4">').append(wsInput);
 
             // event for ws dropdown
             wsInput.change((e) => {
-                let wsId = $(e.target).children('option:selected').data('id');
+                const wsId = $(e.target).children('option:selected').data('id');
                 this.changeState({wsIdFilter: wsId, typeFilter: null});
             });
             return wsFilter;
@@ -388,9 +388,9 @@ define([
          * @param {boolean} nameExists true if an object with this name already exists in the current Narrative
          */
         rowTemplate(obj, nameExists) {
-            var btnClasses = 'btn btn-xs btn-default';
-            var $btnToolbar = $('<div>').addClass('btn-toolbar narrative-data-panel-btnToolbar');
-            var $openLandingPage = $('<span>')
+            const btnClasses = 'btn btn-xs btn-default';
+            const $btnToolbar = $('<div>').addClass('btn-toolbar narrative-data-panel-btnToolbar');
+            const $openLandingPage = $('<span>')
                 .addClass(btnClasses)
                 .append($('<span>').addClass('fa fa-binoculars'))
                 .click((e) => {
@@ -398,7 +398,7 @@ define([
                     window.open(Config.url('landing_pages') + obj.ws_id + '/' + obj.obj_id);
                 });
 
-            var $openProvenance = $('<span>')
+            const $openProvenance = $('<span>')
                 .addClass(btnClasses)
                 //.tooltip({title:'View data provenance and relationships', 'container':'body'})
                 .append($('<span>').addClass('fa fa-sitemap fa-rotate-90'))

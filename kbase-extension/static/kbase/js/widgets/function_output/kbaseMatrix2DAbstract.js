@@ -8,17 +8,17 @@ define (
 		'narrativeConfig',
 		'kbaseAuthenticatedWidget',
 		'jquery-dataTables'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		Config,
 		kbaseAuthenticatedWidget,
 		jquery_dataTables
-	) {
+	) => {
 
-    var workspaceURL = Config.url('workspace');
-    var loadingImage = Config.get('loading_gif');
+    const workspaceURL = Config.url('workspace');
+    const loadingImage = Config.get('loading_gif');
     return KBWidget({
         name: 'kbaseMatrix2DAbstract',
         parent : kbaseAuthenticatedWidget,
@@ -66,17 +66,17 @@ define (
         },
 
         loadAndRender: function(){
-            var self = this;
+            const self = this;
             self.loading(true);
 
 //            self.setTestParameters();
-            var ref = self.buildObjectIdentity(this.options.workspaceID, this.options.matrixID);
+            const ref = self.buildObjectIdentity(this.options.workspaceID, this.options.matrixID);
             self.wsClient.get_objects([ref],
-                function(data) {
+                (data) => {
                     self.matrix = data[0].data;
                     self.render();
                 },
-                function(error){
+                (error)=> {
                     self.clientError(error);
 //                    self.clientError('Can not load the matrix');
                 }
@@ -99,8 +99,8 @@ define (
             boolean
         */
         hasProperty: function(properties, category, propertyName, propertyUnit, propertyValue){
-            for(var i in properties){
-                var pv = properties[i];
+            for(const i in properties){
+                const pv = properties[i];
                 if(pv.category != category) continue;
                 if(pv.property_name != propertyName) continue;
                 if(pv.property_unit != propertyUnit) continue;
@@ -118,9 +118,9 @@ define (
             [PropertyValue]
         */
         getProperties: function(properties, category){
-            var selectedProperties = [];
-            for(var i in properties){
-                var pv = properties[i];
+            const selectedProperties = [];
+            for(const i in properties){
+                const pv = properties[i];
                 if(pv.category != category) continue;
                 selectedProperties.push(pv);
             }
@@ -135,8 +135,8 @@ define (
             PropertyValue
         */
         getProperty: function(properties, category, propertyName){
-            for(var i in properties){
-                var pv = properties[i];
+            for(const i in properties){
+                const pv = properties[i];
                 if(pv.category != category) continue;
                 if(pv.property_name != propertyName) continue;
                 return pv;
@@ -152,8 +152,8 @@ define (
             scalar - property_value
         */
         getPropertyValue: function(properties, category, propertyName){
-            for(var i in properties){
-                var pv = properties[i];
+            for(const i in properties){
+                const pv = properties[i];
                 if(pv.category != category) continue;
                 if(pv.property_name != propertyName) continue;
                 return pv.property_value;
@@ -169,10 +169,10 @@ define (
             [scalar] - list of property_value
         */
         getPropertyValues: function(crsMetadata, category, propertyName){
-            var values = [];
-            for(var id in crsMetadata){
-                var properties = crsMetadata[id];
-                var val = this.getPropertyValue(properties, category, propertyName);
+            const values = [];
+            for(const id in crsMetadata){
+                const properties = crsMetadata[id];
+                const val = this.getPropertyValue(properties, category, propertyName);
                 if(val != null){
                     values.push(val);
                 }
@@ -197,13 +197,13 @@ define (
         }
         */
         groupCrowsByPropertyValue: function(crowsIds, crowsMetadata, category, propertyName){
-            var groupId2CrowsMetadata = {};
-            for(var crowIndex in crowsIds){
-                var crowId = crowsIds[crowIndex];
-                var crowMetadata = crowsMetadata[crowId];
-                var groupValue = this.getPropertyValue(crowMetadata, category, propertyName);
+            const groupId2CrowsMetadata = {};
+            for(const crowIndex in crowsIds){
+                const crowId = crowsIds[crowIndex];
+                const crowMetadata = crowsMetadata[crowId];
+                const groupValue = this.getPropertyValue(crowMetadata, category, propertyName);
                 if( groupValue != null){
-                    var crowList = groupId2CrowsMetadata[groupValue];
+                    let crowList = groupId2CrowsMetadata[groupValue];
                     if( crowList == null){
                         crowList = [];
                         groupId2CrowsMetadata[groupValue] = crowList;
@@ -243,15 +243,15 @@ define (
 
         */
         getNumericPropertyCourse: function(crowsIds, crowsMetadata, category, propertyName){
-            var points = [];
+            const points = [];
 
-            for(var crowIndex in crowsIds){
-                var crowId = crowsIds[crowIndex];
-                var crowMetadata = crowsMetadata[crowId];
+            for(const crowIndex in crowsIds){
+                const crowId = crowsIds[crowIndex];
+                const crowMetadata = crowsMetadata[crowId];
 
-                var value = null;
-                for(var i in crowMetadata){
-                    var pv = crowMetadata[i];
+                let value = null;
+                for(const i in crowMetadata){
+                    const pv = crowMetadata[i];
                     if(pv.category != category) continue;
                     if(propertyName != null && pv.property_name != propertyName) continue;
                     value = parseFloat(pv.property_value);
@@ -265,7 +265,7 @@ define (
                 });
             }
 
-            points.sort(function (a, b) {
+            points.sort((a, b) => {
                 return a.value > b.value ? 1 : ( a.value < b.value ? -1 : 0);
             });
             return points;
@@ -293,15 +293,15 @@ define (
 
         */
         getNumericProperyStat: function(crowsMetadata, category, propertyName){
-            var valueMin = null;
-            var valueMax = null;
-            var pointsCount = 0;
-            var valueUnit = null;
-            for(var crId in crowsMetadata){
-                var crMetadata = crowsMetadata[crId];
-                var value = null;
-                for(var i in crMetadata){
-                    var pv = crMetadata[i];
+            let valueMin = null;
+            let valueMax = null;
+            let pointsCount = 0;
+            let valueUnit = null;
+            for(const crId in crowsMetadata){
+                const crMetadata = crowsMetadata[crId];
+                let value = null;
+                for(const i in crMetadata){
+                    const pv = crMetadata[i];
                     if(pv.category != category) {
                         continue;
                     }
@@ -352,9 +352,9 @@ define (
 
         */
         buildColumnIds2ColumnIndex: function(matrix){
-            var columnIds2ColumnIndex = {};
-            var columnIds = matrix.data.col_ids;
-            for(var columnIndex in columnIds){
+            const columnIds2ColumnIndex = {};
+            const columnIds = matrix.data.col_ids;
+            for(const columnIndex in columnIds){
                 columnIds2ColumnIndex[ columnIds[columnIndex] ] = columnIndex;
             }
             return columnIds2ColumnIndex;
@@ -367,9 +367,9 @@ define (
             string
         */
         propertiesToString: function(properties){
-            var str = "";
-            for(var i in properties){
-                var pv  = properties[i];
+            let str = "";
+            for(const i in properties){
+                const pv  = properties[i];
                 if(str){
                     str += "; ";
                 }
@@ -396,13 +396,13 @@ define (
         ////////////////// WIDGETS /////////////////////////////////////////////
 
         buildTable: function($container, data, columns, emptyTableMessage){
-            var pref = self.pref;
+            const pref = self.pref;
 
-            var iDisplayLength = 10;
-            var style = 'lftip';
+            const iDisplayLength = 10;
+            let style = 'lftip';
             if(data.length <= iDisplayLength) { style = 'fti'; }
 
-            var table = $('<table>')
+            const table = $('<table>')
                 .attr('id', pref+'conditions-table')
                 .addClass('table table-bordered table-striped')
                 .css('width', '100%')
@@ -423,10 +423,10 @@ define (
         },
 
         buildMatrixOverview: function($container){
-            var pref = self.pref;
+            const pref = self.pref;
 
 
-            var $tableOverview = $('<table>')
+            const $tableOverview = $('<table>')
                 .attr('id',pref+'overview-table')
                 .addClass('table table-striped table-bordered')
                 .css('width','100%')
@@ -434,10 +434,10 @@ define (
                 .css('margin-right','0px')
                 .appendTo($container);
 
-            for(var i in this.matrix.metadata.matrix_metadata){
-                var md = this.matrix.metadata.matrix_metadata[i];
+            for(const i in this.matrix.metadata.matrix_metadata){
+                const md = this.matrix.metadata.matrix_metadata[i];
 
-                var label = md.category;
+                let label = md.category;
                 if( md.property_name != undefined && md.property_name != ''){
                     label += "." + md.property_name;
                 }
@@ -449,7 +449,7 @@ define (
         },
 
         makeRow: function(name, value) {
-            var $row = $("<tr/>")
+            const $row = $("<tr/>")
                        .append($("<th />").css('width','20%').append(name))
                        .append($("<td />").append(value));
             return $row;
@@ -463,7 +463,7 @@ define (
         },
 
         showMessage: function(message) {
-            var span = $("<span/>").append(message);
+            const span = $("<span/>").append(message);
 
             this.$messagePane.append(span);
             this.$messagePane.show();
@@ -481,14 +481,14 @@ define (
 
         uuid: function() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
-                function(c) {
-                    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+                (c) => {
+                    const r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                     return v.toString(16);
                 });
         },
 
         buildObjectIdentity: function(workspaceID, objectID, objectVer, wsRef) {
-            var obj = {};
+            const obj = {};
             if (wsRef) {
                 obj['ref'] = wsRef;
             } else {

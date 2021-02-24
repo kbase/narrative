@@ -45,15 +45,15 @@
         },
 
         render: function(options) {
-            var self = this;
-            var pref = this.uuid();
-            var container = this.$elem;
-            var job_data = options.job_data
-            var kbws = new workspaceService(this.wsUrl);
+            const self = this;
+            const pref = this.uuid();
+            const container = this.$elem;
+            const job_data = options.job_data
+            const kbws = new workspaceService(this.wsUrl);
             if (job_data.id) {
-                     var panel = $('<div class="loader-table"/>');
+                     const panel = $('<div class="loader-table"/>');
                      container.append(panel);
-                     var table = $('<table class="table table-striped table-bordered" \
+                     const table = $('<table class="table table-striped table-bordered" \
                                      style="margin-left: auto; margin-right: auto;" id="'+pref+'overview-table"/>');
                      panel.append(table);
                      table.append('<tr><td>Gapfill Job was created with id:</td><td>'+job_data.id+'</td></tr>');
@@ -61,14 +61,14 @@
                      
                      table.append('<tr><td>Based on your input parameters, the estimated runtime is:</td><td>'+options.estimated_time_str+'</td></tr>');
                      table.append('<tr><td>Current job state is</td><td id="'+pref+'job">'+job_data.status+'</td></tr>');
-                     var timeLst = function(event) {
-                            kbws.get_jobs({auth: self.authToken(), jobids: [job_data.id]}, function(data) {
+                     const timeLst = function(event) {
+                            kbws.get_jobs({auth: self.authToken(), jobids: [job_data.id]}, (data) => {
                                     if (data.length == 0) {
                                         var tdElem = $('#'+pref+'job');
                                         tdElem.html("<span class=\"label label-danger\">Error retrieving job status!</span>");
                                         clearInterval(timer);
                                     } else {
-                                        var status = data[0]['status'];
+                                        const status = data[0]['status'];
                                             if (status === 'done') {
                                                 clearInterval(timer);
                                                 var tdElem = self.$elem.find('#'+pref+'job');
@@ -85,9 +85,9 @@
                                                     console.error("Error in kbaseGapfillStatus widget: "+ JSON.stringify(data, null, 4));
                                                     clearInterval(timer);
                                                     tdElem.html("<span class=\"label label-danger\">Error</span>");
-                                                    var mssg = data[0].jobdata.error;
-                                                    var errorRegex = /_ERROR_[^]+_ERROR_/gm
-                                                    var errormssg = mssg.match(errorRegex);
+                                                    const mssg = data[0].jobdata.error;
+                                                    const errorRegex = /_ERROR_[^]+_ERROR_/gm
+                                                    let errormssg = mssg.match(errorRegex);
                                                     errormssg = errormssg.join("\n\n").replace(/_ERROR_/gm,'')
                                                      new kbaseNarrativeError(self.$elem, {'error': {
                                                                                         'msg' :  errormssg +"\n\n"+mssg,
@@ -98,8 +98,8 @@
                                             }
                                         }
                                     }
-                            }, function(data) {
-                                    var tdElem = self.$elem.find('#'+pref+'job');
+                            }, (data) => {
+                                    const tdElem = self.$elem.find('#'+pref+'job');
                                     tdElem.html("<span class=\"label label-danger\">Error connecting to jobs server!</span>");
                                     console.error("Error in kbaseGapfillStatus widget: "+ JSON.stringify(data, null, 4));
                                     clearInterval(timer);
@@ -117,8 +117,8 @@
 
         uuid: function() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, 
-                function(c) {
-                    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+                (c) => {
+                    const r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                     return v.toString(16);
                 });
         }

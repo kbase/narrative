@@ -9,7 +9,7 @@ define([
     'kbaseTabs',
     'common/runtime',
     'kbase-client-api'
-], function (
+], (
     Promise,
     $,
     KBWidget,
@@ -19,7 +19,7 @@ define([
     html,
     KBaseTabs,
     Runtime
-) {
+) => {
     'use strict';
     return KBWidget({
         name: 'kbaseDefaultObjectView',
@@ -41,7 +41,7 @@ define([
          * Renders upas. With magic sauce.
          */
         render: function(upas) {
-            var htmlProm = null;
+            let htmlProm = null;
             if (!this.token) {
                 // some generic not-logged-in message
                 htmlProm = this.renderMessage('Not logged in.');
@@ -53,7 +53,7 @@ define([
             else {
                 htmlProm = this.fetchObjectInfo(upas)
                     .then((objectList) => {
-                        let renderedObjects = [],
+                        const renderedObjects = [],
                             renderedMetadata = [],
                             objectInfos = objectList.infos.map((info) => {
                                 return ServiceUtils.objectInfoToObject(info);
@@ -64,7 +64,7 @@ define([
                             renderedMetadata.push(this.renderObjectMeta(info.metadata));
                         });
 
-                        let $tabDiv = $('<div>'),
+                        const $tabDiv = $('<div>'),
                             $tabWidget = new KBaseTabs($tabDiv, {
                                 tabs: [{
                                     tab: 'Overview',
@@ -89,7 +89,7 @@ define([
             if (!meta || Object.keys(meta).length === 0) {
                 return 'No metadata found for this object.';
             }
-            let t = html.tag,
+            const t = html.tag,
                 div = t('div'),
                 table = t('table'),
                 tr = t('tr'),
@@ -140,7 +140,7 @@ define([
          * Fetches object info from a list of upas.
          */
         fetchObjectInfo: function(upas) {
-            let ws = new Workspace(Config.url('workspace'), {token: this.token}),
+            const ws = new Workspace(Config.url('workspace'), {token: this.token}),
                      objInfoInputs = upas.map((upa) => {
                         return {'ref': upa};
                      });
@@ -151,7 +151,7 @@ define([
         },
 
         renderWarningAlert: function(objType) {
-            let t = html.tag,
+            const t = html.tag,
                 div = t('div'),
                 b = t('b');
             return div({
@@ -167,7 +167,7 @@ define([
          * Takes in the result of a successful get_object_info3 call and renders the thing.
          */
         renderObjectInfo: function(objInfo) {
-            let t = html.tag,
+            const t = html.tag,
                 div = t('div'),
                 span = t('span'),
                 b = t('b'),

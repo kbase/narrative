@@ -25,11 +25,11 @@ define (
 		'kbwidget',
 		'bootstrap',
 		'jquery'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$
-	) {
+	) => {
     return KBWidget({
         name: "kbaseModal",
         version: "1.0.0",
@@ -37,16 +37,16 @@ define (
         },
         init: function(options) {
             this._super(options);
-            var self = this;
+            const self = this;
 
-            var title = options.title;
-            var subtext = options.subText;
-            var right_label = options.rightLabel;
-            var body = options.body;
-            var buttons = options.buttons;
-            var width = options.width;
+            const title = options.title;
+            const subtext = options.subText;
+            const right_label = options.rightLabel;
+            const body = options.body;
+            const buttons = options.buttons;
+            const width = options.width;
 
-            var modal = $('<div class="modal">'+
+            const modal = $('<div class="modal">'+
                                 '<div class="modal-dialog" ' + (width ? 'style="width: '+width+';"' : '') + '>'+
                                     '<div class="modal-content">'+
                                         '<div class="modal-header">'+
@@ -62,7 +62,7 @@ define (
                                 '</div>'+
                           '</div>');
 
-            var modalHeader = modal.find('.modal-header'),
+            const modalHeader = modal.find('.modal-header'),
                 modalTitle = modal.find('.modal-title'),
                 modalSubtext = modal.find('.modal-subtext'),
                 modalBody = modal.find('.modal-body'),
@@ -101,8 +101,8 @@ define (
 
             this.buttons = function(buttons) {
                 modalFooter.html('')
-                buttons.forEach(function(btn) {
-                    var text = btn.text;
+                buttons.forEach((btn) => {
+                    const text = btn.text;
 
                     // make modal dismiss by default
                     if (!btn.dismiss) {

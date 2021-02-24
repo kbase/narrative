@@ -13,7 +13,7 @@ define (
 		'geometry_rectangle',
 		'geometry_point',
 		'geometry_size'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -23,7 +23,7 @@ define (
 		geometry_rectangle,
 		geometry_point,
 		geometry_size
-	) {
+	) => {
 
     return KBWidget({
 
@@ -41,11 +41,11 @@ define (
 
         xTickValues : function() {
 
-            var $ls = this;
+            const $ls = this;
 
-            var m = d3.merge(
-                this.dataset().map( function(d) {
-                    return d.values.map(function(l) { return l.x })
+            let m = d3.merge(
+                this.dataset().map( (d) => {
+                    return d.values.map((l) => { return l.x })
                 } )
             );
 

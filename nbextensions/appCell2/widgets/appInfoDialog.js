@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 /**
  * Creates an informational panel for Apps, based on some general app info.
  * Needs the following keys in its config:
@@ -15,18 +13,18 @@ define([
     'common/ui',
     'kb_service/client/catalog',
     'kb_service/client/narrativeMethodStore'
-], function(
+], (
     Promise,
     Runtime,
     html,
     UI,
     Catalog,
     NarrativeMethodStore
-) {
+) => {
     'use strict';
 
     function render(data) {
-        var t = html.tag,
+        const t = html.tag,
             div = t('div'),
             span = t('span'),
             ul = t('ul'),
@@ -54,7 +52,7 @@ define([
                 ]),
                 //div([
                 //    'ID: ', span({class: 'value'}, data.id)
-                //]),                
+                //]),
                 div([
                     'Tag: ', span({ class: 'value' }, data.tag)
                 ]),
@@ -72,7 +70,7 @@ define([
     }
 
     function show(arg) {
-        var runtime = Runtime.make(),
+        const runtime = Runtime.make(),
             nms = new NarrativeMethodStore(runtime.config('services.narrative_method_store.url')),
             catalog = new Catalog(runtime.config('services.catalog.url'));
         return Promise.all([
@@ -80,9 +78,9 @@ define([
                 catalog.get_exec_aggr_stats({ full_app_ids: [arg.id] }),
                 catalog.get_module_info({ module_name: arg.module })
             ])
-            .spread(function(methodInfo, aggregateStats, moduleInfo) {
+            .spread((methodInfo, aggregateStats, moduleInfo) => {
                 // if any of these results are unexpected, we just show an error message.
-                var title = [
+                const title = [
                         methodInfo[0].name
                     ].join(''),
                     info = {
@@ -115,14 +113,14 @@ define([
                     }
                 });
             })
-            .then(function(result) {
+            .then((result) => {
                 switch (result.action) {
                     case 'link':
                         window.open(result.result.url, result.result.name);
                         break;
                 }
             })
-            .catch(function(err) {
+            .catch((err) => {
                 console.error('ERROR', err);
                 return UI.showInfoDialog({
                     title: 'Error fetching app info',

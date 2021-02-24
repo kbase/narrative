@@ -1,5 +1,5 @@
 function KBaseFBA_FBAModelSet(modeltabs) {
-    var self = this;
+    const self = this;
     this.modeltabs = modeltabs;
 
     this.setMetadata = function (data) {
@@ -17,7 +17,7 @@ function KBaseFBA_FBAModelSet(modeltabs) {
     this.setData = function (indata) {
 		this.data = indata;
 		this.models = [];
-		for (var obj in indata.elements) {
+		for (const obj in indata.elements) {
 	    	this.models.push({"ref":indata.elements[obj]["ref"]});
 		}
     }

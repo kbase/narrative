@@ -10,7 +10,7 @@ define([
 
     'bootstrap',
     'css!font-awesome'
-], function(
+], (
     Promise,
     html,
     Validation,
@@ -19,18 +19,18 @@ define([
     lang,
     Resolver,
     FieldWidget
-) {
+) => {
     'use strict';
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         button = t('button'),
         p = t('p'),
         resolver = Resolver.make();
 
     function factory(config) {
-        var spec = config.parameterSpec,
+        let spec = config.parameterSpec,
             bus = config.bus,
             container,
             hostNode,
@@ -54,16 +54,16 @@ define([
         }
 
         function setModelValue(value) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                     viewModel.data = value;
                 })
-                .catch(function(err) {
+                .catch((err) => {
                     console.error('Error setting model value', err);
                 });
         }
 
         function unsetModelValue() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 viewModel.data = {};
             });
         }
@@ -77,7 +77,7 @@ define([
         }
 
         function validate(rawValue) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 // var validationOptions = {
                 //     required: spec.data.constraints.required
                 // };
@@ -86,7 +86,7 @@ define([
         }
 
         function doToggleEnableControl() {
-            var button = document.querySelector('#' + places.enableControl + ' button');
+            const button = document.querySelector('#' + places.enableControl + ' button');
             if (viewModel.state.enabled) {
                 // Note this spins off as an orphaned promise.
                 ui.showConfirmDialog({
@@ -99,7 +99,7 @@ define([
                         yesLabel: 'Yes',
                         noLabel: 'No'
                     })
-                    .then(function(confirmed) {
+                    .then((confirmed) => {
                         if (!confirmed) {
                             return;
                         }
@@ -133,7 +133,7 @@ define([
         }
 
         function enableControl(events) {
-            var required = spec.data.constraints.required;
+            const required = spec.data.constraints.required;
 
             places.enableControl = html.genId();
 
@@ -142,7 +142,7 @@ define([
                 return '';
             }
 
-            var label;
+            let label;
             if (viewModel.state.enabled) {
                 label = 'Disable';
             } else {
@@ -163,9 +163,9 @@ define([
         }
 
         function makeInputControl(events, bus) {
-            var promiseOfFields = fieldLayout.map(function(fieldName) {
-                var fieldSpec = struct.specs[fieldName];
-                var fieldValue = viewModel.data[fieldName];
+            const promiseOfFields = fieldLayout.map((fieldName) => {
+                const fieldSpec = struct.specs[fieldName];
+                const fieldValue = viewModel.data[fieldName];
 
                 return makeSingleInputControl(fieldValue, fieldSpec, events, bus);
             });
@@ -174,10 +174,10 @@ define([
             // one for now.
 
             return Promise.all(promiseOfFields)
-                .then(function(fields) {
-                    var layout = div({
+                .then((fields) => {
+                    const layout = div({
                         class: 'row'
-                    }, fields.map(function(field) {
+                    }, fields.map((field) => {
                         return div({ id: field.id, style: { border: '0px orange dashed', padding: '0px' } });
                     }).join('\n'));
                     return {
@@ -200,7 +200,7 @@ define([
             // (at present) to have yet another one...
 
             validate(viewModel.data)
-                .then(function(result) {
+                .then((result) => {
                     bus.emit('validation', result);
                 });
         }
@@ -211,8 +211,8 @@ define([
          */
         function makeSingleInputControl(value, fieldSpec, events) {
             return resolver.loadInputControl(fieldSpec)
-                .then(function(widgetFactory) {
-                    var id = html.genId(),
+                .then((widgetFactory) => {
+                    const id = html.genId(),
                         fieldWidget = FieldWidget.make({
                             inputControlFactory: widgetFactory,
                             showHint: true,
@@ -225,26 +225,26 @@ define([
 
 
                     // set up listeners for the input
-                    fieldWidget.bus.on('sync', function() {
-                        var value = viewModel.data[fieldSpec.id];
+                    fieldWidget.bus.on('sync', () => {
+                        const value = viewModel.data[fieldSpec.id];
                         if (value) {
                             fieldWidget.bus.emit('update', {
                                 value: value
                             });
                         }
                     });
-                    fieldWidget.bus.on('validation', function(message) {
+                    fieldWidget.bus.on('validation', (message) => {
                         if (message.diagnosis === 'optional-empty') {
                             bus.emit('changed', {
                                 newValue: lang.copy(viewModel.data)
                             });
                         }
                     });
-                    fieldWidget.bus.on('changed', function(message) {
+                    fieldWidget.bus.on('changed', (message) => {
                         doChanged(fieldSpec.id, message.newValue);
                     });
 
-                    fieldWidget.bus.on('touched', function() {
+                    fieldWidget.bus.on('touched', () => {
                         bus.emit('touched', {
                             parameter: fieldSpec.id
                         });
@@ -264,21 +264,21 @@ define([
          */
         function renderSubcontrols() {
             if (viewModel.state.enabled) {
-                var events = Events.make({
+                const events = Events.make({
                     node: container
                 });
                 return makeInputControl(events)
-                    .then(function(result) {
+                    .then((result) => {
                         ui.setContent('input-container.subcontrols', result.content);
                         events.attachEvents();
                         structFields = {};
-                        result.fields.forEach(function(field) {
+                        result.fields.forEach((field) => {
                             structFields[field.fieldName] = field;
                         });
                         // Start up all the widgets
 
                         return Promise.all(
-                            result.fields.map(function(field) {
+                            result.fields.map((field) => {
                                 return field.instance.start({
                                     node: document.getElementById(field.id)
                                 });
@@ -286,10 +286,10 @@ define([
                     });
             } else {
                 return Promise.all(
-                        Object.keys(structFields).map(function(fieldName) {
+                        Object.keys(structFields).map((fieldName) => {
                             return structFields[fieldName].instance.stop();
                         }))
-                    .then(function() {
+                    .then(() => {
                         ui.setContent('input-container.subcontrols', '');
                         structFields = {};
                     });
@@ -297,7 +297,7 @@ define([
         }
 
         function renderStruct(events) {
-            var layout = div({
+            const layout = div({
                 style: {
                     'border-left': '5px silver solid',
                     padding: '2px',
@@ -332,7 +332,7 @@ define([
 
         function autoValidate() {
             validate(viewModel.data)
-                .then(function(results) {
+                .then((results) => {
                     bus.emit('validation', results);
 
                 });
@@ -341,8 +341,8 @@ define([
         // LIFECYCLE API
 
         function start(arg) {
-            var events;
-            var init = Promise.try(function() {
+            let events;
+            const init = Promise.try(() => {
                 hostNode = arg.node;
                 container = hostNode.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
@@ -350,27 +350,27 @@ define([
                 viewModel.data = lang.copy(config.initialValue);
             });
             return init
-                .then(function() {
+                .then(() => {
                     return render(events);
                 })
-                .then(function() {
+                .then(() => {
                     return renderSubcontrols();
                 })
-                .then(function() {
+                .then(() => {
                     events.attachEvents(container);
 
-                    bus.on('reset-to-defaults', function() {
+                    bus.on('reset-to-defaults', () => {
                         resetModelValue();
                     });
 
-                    bus.on('update', function(message) {
+                    bus.on('update', (message) => {
                         // Update the model, and since we have sub widgets,
                         // we should send the individual data to them.
                         // TODO: container environment should know about enable/disabled state?
                         // FORNOW: just ignore
                         if (viewModel.state.enabled) {
                             viewModel.data = lang.copy(message.value);
-                            Object.keys(message.value).forEach(function(id) {
+                            Object.keys(message.value).forEach((id) => {
                                 structFields[id].instance.bus.emit('update', {
                                     value: message.value[id]
                                 });
@@ -379,7 +379,7 @@ define([
 
                     });
 
-                    bus.on('submit', function() {
+                    bus.on('submit', () => {
                         bus.emit('submitted', {
                             value: lang.copy(viewModel.data)
                         });
@@ -387,21 +387,21 @@ define([
 
                     return autoValidate();
                 })
-                .catch(function(err) {
+                .catch((err) => {
                     console.error('ERROR', err);
                     container.innerHTML = err.message;
                 });
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                     if (structFields) {
-                        return Promise.all(Object.keys(structFields).map(function(id) {
+                        return Promise.all(Object.keys(structFields).map((id) => {
                             return structFields[id].instance.stop();
                         }));
                     }
                 })
-                .then(function() {
+                .then(() => {
                     if (hostNode && container) {
                         hostNode.removeChild(container);
                     }

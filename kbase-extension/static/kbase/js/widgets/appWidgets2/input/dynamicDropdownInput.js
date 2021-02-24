@@ -17,7 +17,7 @@ define([
     'select2',
     'bootstrap',
     'css!font-awesome'
-], function(
+], (
     Promise,
     $,
     html,
@@ -33,11 +33,11 @@ define([
     StringUtil,
     GenericClient,
     Props
-) {
+) => {
     'use strict';
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         span = t('span'),
         b = t('b'),
@@ -45,7 +45,7 @@ define([
         option = t('option');
 
     function factory(config) {
-        var spec = config.parameterSpec,
+        let spec = config.parameterSpec,
             parent,
             container,
             runtime = Runtime.make(),
@@ -73,13 +73,13 @@ define([
          * handlebar replacement for example {"foo":{"bar": "meh"}} becomes {"foo.bar": "meh"}
          */
         var flattenObject = function(ob) {
-            var toReturn = {};
-            for (var i in ob) {
+            const toReturn = {};
+            for (const i in ob) {
                 if (!Object.prototype.hasOwnProperty.call(ob, i)) continue;
 
                 if ((typeof ob[i]) === 'object') {
-                    var flatObject = flattenObject(ob[i]);
-                    for (var x in flatObject) {
+                    const flatObject = flattenObject(ob[i]);
+                    for (const x in flatObject) {
                         if (!Object.prototype.hasOwnProperty.call(flatObject, x)) continue;
                         toReturn[i + '.' + x] = flatObject[x];
                     }
@@ -91,8 +91,8 @@ define([
         };
 
         function makeInputControl() {
-            var selectOptions;
-            var selectElem = select({
+            let selectOptions;
+            const selectElem = select({
                 class: 'form-control',
                 dataElement: 'input',
                 style: {
@@ -107,14 +107,14 @@ define([
 
         // CONTROL
         function getControlValue() {
-            var control = ui.getElement('input-container.input'),
+            const control = ui.getElement('input-container.input'),
                 selected = $(control).select2('data')[0];
 
-            var selection_val = selected[dd_options.selection_id] || selected.subpath;
+            const selection_val = selected[dd_options.selection_id] || selected.subpath;
             if (!selected || !selection_val) {
                 // might have just started up, and we don't have a selection value, but
                 // we might have a model value.
-                var modelVal = getModelValue();
+                const modelVal = getModelValue();
                 if (modelVal) {
                     return modelVal;
                 }
@@ -130,11 +130,11 @@ define([
          * be unique enough to apply to the dropdown.
          */
         function setControlValue(value) {
-            var control = ui.getElement('input-container.input');
+            const control = ui.getElement('input-container.input');
             if ($(control).find('option[value="' + value + '"]').length) {
                 $(control).val(value).trigger('change');
             } else {
-                var newOption = new Option(value, value, true, true);
+                const newOption = new Option(value, value, true, true);
                 $(control).append(newOption).trigger('change');
             }
         }
@@ -161,8 +161,8 @@ define([
         // VALIDATION
 
         function validate() {
-            return Promise.try(function() {
-                var selectedItem = getControlValue(),
+            return Promise.try(() => {
+                let selectedItem = getControlValue(),
                     validationConstraints = {
                         min_length: spec.data.constraints.min_length,
                         max_length: spec.data.constraints.max_length,
@@ -180,7 +180,7 @@ define([
         }
 
         function genericClientCall(call_params) {
-            var swUrl = runtime.config('services.service_wizard.url'),
+            const swUrl = runtime.config('services.service_wizard.url'),
                 genericClient = new GenericClient(swUrl, {
                     token: runtime.authToken()
                 });
@@ -196,11 +196,11 @@ define([
             }
             if (dataSource === 'ftp_staging') {
                 return Promise.resolve(stagingService.search({query: searchTerm}))
-                    .then(function(results) {
-                        results = JSON.parse(results).filter(function(file) {
+                    .then((results) => {
+                        results = JSON.parse(results).filter((file) => {
                             return !file.isFolder;
                         });
-                        results.forEach(function(file) {
+                        results.forEach((file) => {
                             file.text = file.path;
                             file.subdir = file.path.substring(0, file.path.length - file.name.length);
                             file.subpath = file.path.substring(userId.length + 1);
@@ -209,12 +209,12 @@ define([
                         return results;
                     });
             } else {
-                var call_params = JSON.stringify(dd_options.service_params).replace('{{dynamic_dropdown_input}}', searchTerm);
+                let call_params = JSON.stringify(dd_options.service_params).replace('{{dynamic_dropdown_input}}', searchTerm);
                 call_params =  JSON.parse(call_params);
                 
                 return Promise.resolve(genericClientCall(call_params))
-                    .then(function (results) {
-                        var index = dd_options.result_array_index;
+                    .then((results) => {
+                        let index = dd_options.result_array_index;
                         if (!index) {
                             index = 0;
                         }
@@ -225,7 +225,7 @@ define([
                             return [];
                         }
                         results = results[index];
-                        var path = dd_options.path_to_selection_items;
+                        let path = dd_options.path_to_selection_items;
                         if (!path) {
                             path = [];
                         }
@@ -236,7 +236,7 @@ define([
                                     `in postion ${index} of the returned list are not an array`);
                             return [];
                         } else {
-                            results.forEach(function(obj, index) {
+                            results.forEach((obj, index) => {
                                 // could check here that each item is a map? YAGNI
                                 obj = flattenObject(obj);
                                 if (!('id' in obj)) {
@@ -255,9 +255,9 @@ define([
 
         function doChange() {
             validate()
-                .then(function(result) {
+                .then((result) => {
                     if (result.isValid) {
-                        var newValue = result.parsedValue === undefined ? result.value : result.parsedValue;
+                        const newValue = result.parsedValue === undefined ? result.value : result.parsedValue;
                         model.value = newValue;
                         channel.emit('changed', {
                             newValue: newValue
@@ -303,8 +303,8 @@ define([
                     ])
                 ]));
             } else {
-                var replacer = function (match, p1) {return ret_obj[p1];};
-                var formatted_string;
+                const replacer = function (match, p1) {return ret_obj[p1];};
+                let formatted_string;
                 if (dd_options.description_template) {
                     // use slice to avoid modifying global description_template
                     formatted_string = dd_options.description_template.slice().replace(/{{(.+?)}}/g, replacer);
@@ -334,8 +334,8 @@ define([
          * Hooks up event listeners
          */
         function render() {
-            return Promise.try(function() {
-                var events = Events.make(),
+            return Promise.try(() => {
+                const events = Events.make(),
                     inputControl = makeInputControl(events),
                     content = div({ class: 'input-group', style: { width: '100%' } }, inputControl);
 
@@ -348,16 +348,16 @@ define([
                         delay: 250,
                         transport: function(params, success, failure) {
                             return fetchData(params.data.term)
-                                .then(function(data) {
+                                .then((data) => {
                                     success({results: data});
                                 })
-                                .catch(function(err) {
+                                .catch((err) => {
                                     console.error(err);
                                     failure(err);
                                 });
                         }
                     }
-                }).on('change', function() {
+                }).on('change', () => {
                     doChange();
                 });
                 events.attachEvents(container);
@@ -370,7 +370,7 @@ define([
          * For the objectInput, there is only ever one control.
          */
         function layout(events) {
-            var content = div({
+            const content = div({
                 dataElement: 'main-panel'
             }, [
                 div({ dataElement: 'input-container' })
@@ -383,7 +383,7 @@ define([
 
         function autoValidate() {
             return validate()
-                .then(function(result) {
+                .then((result) => {
                     channel.emit('validation', {
                         errorMessage: result.errorMessage,
                         diagnosis: result.diagnosis
@@ -393,12 +393,12 @@ define([
 
         // LIFECYCLE API
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
-                var events = Events.make(),
+                const events = Events.make(),
                     theLayout = layout(events);
 
                 container.innerHTML = theLayout.content;
@@ -410,11 +410,11 @@ define([
                 }
 
                 return render()
-                    .then(function() {
-                        channel.on('reset-to-defaults', function() {
+                    .then(() => {
+                        channel.on('reset-to-defaults', () => {
                             resetModelValue();
                         });
-                        channel.on('update', function(message) {
+                        channel.on('update', (message) => {
                             setModelValue(message.value);
                         });
                         setControlValue(getModelValue());
@@ -424,12 +424,12 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (container) {
                     parent.removeChild(container);
                 }
                 bus.stop();
-                eventListeners.forEach(function(id) {
+                eventListeners.forEach((id) => {
                     runtime.bus().removeListener(id);
                 });
             });

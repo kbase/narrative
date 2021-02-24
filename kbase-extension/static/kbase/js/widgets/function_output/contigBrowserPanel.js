@@ -5,13 +5,13 @@ define (
 		'jquery',
 		'd3',
 		'kbaseContigBrowserButtons'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		d3,
 		KBaseContigBrowserButtons
-	) {
+	) => {
     return function() {
         this.data = {
             name: "ContigBrowserPanel",
@@ -64,7 +64,7 @@ define (
 
                 this.render();
 
-                var self = this;
+                const self = this;
                 if (this.options.showButtons) {
                     new KBaseContigBrowserButtons(this.$elem, { browser: self });
                 }
@@ -111,8 +111,8 @@ define (
                                    .attr("transform", "translate(0, " + this.options.topMargin + ")")
                                    .call(this.xAxis);
 
-                var self = this;
-                $(window).on("resize", function() {
+                const self = this;
+                $(window).on("resize", () => {
                     self.resize();
                 });
 
@@ -133,7 +133,7 @@ define (
              * This is only used internally to shuffle the features and avoid visual overlapping.
              */
             track: function() {
-                var that = {};
+                const that = {};
 
                 that.regions = [];
                 that.min = Infinity;
@@ -141,14 +141,14 @@ define (
                 that.numRegions = 0;
 
                 that.addRegion = function(feature_location) {
-                    for (var i=0; i<feature_location.length; i++) {
+                    for (let i=0; i<feature_location.length; i++) {
 
-                        var start = Number(feature_location[i][1]);
-                        var length = Number(feature_location[i][3]);
-                        var end = (feature_location[i][2] === "+" ? start + length - 1
+                        let start = Number(feature_location[i][1]);
+                        const length = Number(feature_location[i][3]);
+                        let end = (feature_location[i][2] === "+" ? start + length - 1
                                                                   : start - length + 1);
                         if (start > end) {
-                            var x = end;
+                            const x = end;
                             end = start;
                             start = x;
                         }
@@ -163,15 +163,15 @@ define (
                 };
 
                 that.hasOverlap = function(feature_location) {
-                    for (var i=0; i<feature_location.length; i++) {
-                        var start = Number(feature_location[i][1]);
-                        var length = Number(feature_location[i][3]);
-                        var end = (feature_location[i][2] === "+" ? start + length - 1 :
+                    for (let i=0; i<feature_location.length; i++) {
+                        let start = Number(feature_location[i][1]);
+                        const length = Number(feature_location[i][3]);
+                        let end = (feature_location[i][2] === "+" ? start + length - 1 :
                                                                     start - length + 1);
 
                         // double check the orientation
                         if (start > end) {
-                            var x = end;
+                            const x = end;
                             end = start;
                             start = x;
                         }
@@ -183,8 +183,8 @@ define (
                          * less simple:
                          *  look over all regions
                          */
-                        for (var ii=0; ii<this.regions.length; ii++) {
-                            var region = this.regions[ii];
+                        for (let ii=0; ii<this.regions.length; ii++) {
+                            const region = this.regions[ii];
                             // region = [start,end] pair
                             if (! ( (start <= region[0] && end <= region[0]) ||
                                      start >= region[1] && end >= region[1]))
@@ -208,7 +208,7 @@ define (
              * Updates the internal representation of a contig to match what should be displayed.
              */
             setContig : function() {
-            	var self = this;
+            	const self = this;
                 self.contigLength = self.options.contig.length;
                 if(!self.options.start)
                     self.options.start = 0;
@@ -255,14 +255,14 @@ define (
              * Figures out which track each feature should be on, based on starting point and length.
              */
             processFeatures : function(features) {
-                var tracks = [];
+                const tracks = [];
                 tracks[0] = this.track(); //init with one track.
 
                 // First, transform features into an array instead of an object.
                 // eg., take it from {'fid' : <feature object>, 'fid' : <feature object> }
                 // to [<feature object>, <feature object> ... ]
 
-                var feature_arr = [];
+                const feature_arr = [];
                 for (fid in features) {
                     feature_arr.push(features[fid]);
                 }
@@ -270,21 +270,21 @@ define (
                 features = feature_arr;
 
                 // First, sort the features by their start location (first pass = features[fid].feature_location[0][1], later include strand)
-                features.sort(function(a, b) {
+                features.sort((a, b) => {
                     return a.feature_location[0][1] - b.feature_location[0][1];
                 });
 
 
                 // Foreach feature...
-                for (var j=0; j<features.length; j++) {
-                    var feature = features[j];
+                for (let j=0; j<features.length; j++) {
+                    const feature = features[j];
 
                     // Look for an open spot in each track, fill it in the first one we get to, and label that feature with the track.
                     // var start = Number(feature.feature_location[0][1]);
                     // var length = Number(feature.feature_location[0][3]);
                     // var end;
 
-                    for (var i=0; i<tracks.length; i++) {
+                    for (let i=0; i<tracks.length; i++) {
                         if (!(tracks[i].hasOverlap(feature.feature_location))) {
                             tracks[i].addRegion(feature.feature_location);
                             feature.track = i;
@@ -294,7 +294,7 @@ define (
                     // if our feature doesn't have a track yet, then they're all full in that region.
                     // So make a new track and this feature to it!
                     if (feature.track === undefined) {
-                        var next = tracks.length;
+                        const next = tracks.length;
                         tracks[next] = this.track();
                         tracks[next].addRegion(feature.feature_location);
                         feature.track = next;
@@ -312,9 +312,9 @@ define (
                 // otherwise 'this' refers to the state within the closure.
                 // ... i think. This kinda tangle makes my head hurt.
                 // Either way, this is the deepest chain of callbacks in here, so it should be okay.
-                var self = this;
+                const self = this;
 
-                var renderFromCenter = function(feature) {
+                const renderFromCenter = function(feature) {
                     if (feature) {
                         feature = feature[self.options.centerFeature];
                         self.options.start = Math.max(0, Math.floor(parseInt(feature.feature_location[0][1]) + (parseInt(feature.feature_location[0][3])/2) - (self.options.length/2)));
@@ -325,10 +325,10 @@ define (
                     self.cdmiClient.region_to_fids([self.options.contig, self.options.start, '+', self.options.length], getFeatureData);
                 };
 
-                var getOperonData = function(features) {
+                const getOperonData = function(features) {
                     if(self.options.centerFeature) {
-                        for (var j in features) {
-                            for (var i in self.operonFeatures) {
+                        for (const j in features) {
+                            for (const i in self.operonFeatures) {
                                 if (features[j].feature_id === self.operonFeatures[i])
                                     features[j].isInOperon = 1;
                             }
@@ -346,13 +346,13 @@ define (
             },
 
             region_to_fids : function(input, callback) {
-            	var minStop = input[1];
-            	var maxStart = input[1] + input[3];
-            	var features = [];
-            	for (var genePos in this.options.contig.genes) {
-            		var gene = this.options.contig.genes[genePos];
-            		var start = gene.location[0][1];
-            		var stop = start;
+            	const minStop = input[1];
+            	const maxStart = input[1] + input[3];
+            	const features = [];
+            	for (const genePos in this.options.contig.genes) {
+            		const gene = this.options.contig.genes[genePos];
+            		const start = gene.location[0][1];
+            		let stop = start;
             		if (gene.location[0][2] === "-") {
             			stop = stop - gene.location[0][3];
             		} else {
@@ -368,7 +368,7 @@ define (
             },
 
             adjustHeight : function() {
-                var neededHeight = this.numTracks *
+                const neededHeight = this.numTracks *
                                    (this.options.trackThickness + this.options.trackMargin) +
                                    this.options.topMargin + this.options.trackMargin;
 
@@ -381,20 +381,20 @@ define (
                 features = this.processFeatures(features);
 
                 // expose 'this' to d3 anonymous functions through closure
-                var self = this;
+                const self = this;
 
                 if (this.options.allowResize)
                     this.adjustHeight();
 
-                var trackSet = this.trackContainer.selectAll("path")
-                                                  .data(features, function(d) { return d.feature_id; });
+                const trackSet = this.trackContainer.selectAll("path")
+                                                  .data(features, (d) => { return d.feature_id; });
 
                 trackSet.enter()
                         .append("path")
                              .classed("kbcb-feature", true)  // incl feature_type later (needs call to get_entity_Feature?)
-                             .classed("kbcb-operon", function(d) { return self.isOperonFeature(d); })
-                             .classed("kbcb-center", function(d) { return self.isCenterFeature(d); })
-                             .attr("id", function(d) { return d.feature_id; })
+                             .classed("kbcb-operon", (d) => { return self.isOperonFeature(d); })
+                             .classed("kbcb-center", (d) => { return self.isCenterFeature(d); })
+                             .attr("id", (d) => { return d.feature_id; })
                              .on("mouseover",
                                     function(d) {
                                         d3.select(this).style("fill", d3.rgb(d3.select(this).style("fill")).darker());
@@ -411,7 +411,7 @@ define (
                                     }
                                 )
                              .on("mousemove",
-                                    function() {
+                                    () => {
                                         return self.tooltip.style("top", (d3.event.pageY+15) + "px").style("left", (d3.event.pageX-10)+"px");
                                     }
                                 )
@@ -429,7 +429,7 @@ define (
                 trackSet.exit()
                         .remove();
 
-                trackSet.attr("d", function(d) { return self.featurePath(d); });
+                trackSet.attr("d", (d) => { return self.featurePath(d); });
 
 
 
@@ -448,18 +448,18 @@ define (
             },
 
             featurePath : function(feature) {
-                var path = "";
+                let path = "";
 
-                var coords = [];
+                const coords = [];
 
                 // draw an arrow for each location.
                 for (var i=0; i<feature.feature_location.length; i++) {
-                    var location = feature.feature_location[i];
+                    const location = feature.feature_location[i];
 
-                    var left = this.calcXCoord(location);
-                    var top = this.calcYCoord(location, feature.track);
-                    var height = this.calcHeight(location);
-                    var width = this.calcWidth(location);
+                    const left = this.calcXCoord(location);
+                    const top = this.calcYCoord(location, feature.track);
+                    const height = this.calcHeight(location);
+                    const width = this.calcWidth(location);
 
                     coords.push([left, left+width]);
 
@@ -472,11 +472,11 @@ define (
                 // if there's more than one path, connect the arrows with line segments
                 if (feature.feature_location.length > 1) {
                     // sort them
-                    coords.sort(function(a, b) {
+                    coords.sort((a, b) => {
                         return a[0] - b[0];
                     });
 
-                    var mid = this.calcYCoord(feature.feature_location[0], feature.track) +
+                    const mid = this.calcYCoord(feature.feature_location[0], feature.track) +
                               this.calcHeight(feature.feature_location[0])/2;
 
                     for (var i=0; i<coords.length-1; i++) {
@@ -489,7 +489,7 @@ define (
 
             featurePathRight : function(left, top, height, width) {
                 // top left
-                var path = "M" + left + " " + top;
+                let path = "M" + left + " " + top;
 
                 if (width > this.options.arrowSize) {
                     // line to arrow top-back
@@ -512,7 +512,7 @@ define (
 
             featurePathLeft : function(left, top, height, width) {
                 // top right
-                var path = "M" + (left+width) + " " + top;
+                let path = "M" + (left+width) + " " + top;
 
                 if (width > this.options.arrowSize) {
                     // line to arrow top-back
@@ -534,7 +534,7 @@ define (
             },
 
             calcXCoord : function(location) {
-                var x = location[1];
+                let x = location[1];
                 if (location[2] === "-")
                     x = location[1] - location[3] + 1;
 
@@ -602,7 +602,7 @@ define (
             },
 
             resize : function() {
-                var newWidth = Math.min(this.$elem.parent().width(), this.options.svgWidth);
+                const newWidth = Math.min(this.$elem.parent().width(), this.options.svgWidth);
                 this.svg.attr("width", newWidth);
             },
 
@@ -653,7 +653,7 @@ define (
             },
 
             showMessage: function(message) {
-                var span = $("<span/>").append(message);
+                const span = $("<span/>").append(message);
 
                 this.$messagePane.append(span);
                 this.$messagePane.removeClass("kbwidget-hide-message");

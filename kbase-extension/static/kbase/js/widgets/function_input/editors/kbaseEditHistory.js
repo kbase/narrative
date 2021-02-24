@@ -25,28 +25,28 @@
  *
  */
 
-define([], function() {
+define([], () => {
 
     function EditHistory() {
-        var ops = [];
+        let ops = [];
 
         // master copy
-        var added = {};
-        var removed = {};
-        var edits = {};  // has form {<id>: {<kind>: {before: <before>, after: <after>}}}
+        const added = {};
+        const removed = {};
+        const edits = {};  // has form {<id>: {<kind>: {before: <before>, after: <after>}}}
 
         this.add = function(newOp) {
             ops.push(newOp);
 
             if (newOp.op === 'add') {
-                newOp.ids.forEach(function(id, i) {
+                newOp.ids.forEach((id, i) => {
                     added[id] = newOp.data[i];
 
                     // remove any removed ids in master
                     if (id in removed) delete removed[id];
                 })
             } else if (newOp.op === 'rm') {
-                newOp.ids.forEach(function(id, i) {
+                newOp.ids.forEach((id, i) => {
                     removed[id] = newOp.data[i];
 
                     // remove any edited ids or added ids from master
@@ -56,7 +56,7 @@ define([], function() {
             } else if (newOp.op === 'edit') {
                 // for all ids in edit, if edit already exists,
                 // replace with latest edit.  if not, add edit.
-                newOp.ids.forEach(function(id) {
+                newOp.ids.forEach((id) => {
                     if ( !(id in edits) ) edits[id] = {};
 
                     // if this type of edit is already there, use same "before" and new "after"

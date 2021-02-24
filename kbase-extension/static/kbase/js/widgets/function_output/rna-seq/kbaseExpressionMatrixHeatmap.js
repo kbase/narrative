@@ -7,14 +7,14 @@ define ([
     'kb_common/jsonRpc/genericClient',
     // for effect
     'bootstrap',
-], function(
+], (
     $,
     KBWidget,
     Config,
     kbaseAuthenticatedWidget,
     kbaseHeatmap,
     GenericClient
-) {
+) => {
     'use strict';
 
     return KBWidget({
@@ -40,9 +40,9 @@ define ([
                     .addClass('alert alert-danger')
                     .html('Could not load object : ' + newDataset.description);
             } else {
-                var $heatElem = $.jqElem('div').css({width : 800, height : newDataset.data.row_ids.length * 10 + 100});
+                const $heatElem = $.jqElem('div').css({width : 800, height : newDataset.data.row_ids.length * 10 + 100});
 
-                var $heatmap = new kbaseHeatmap($heatElem, {
+                const $heatmap = new kbaseHeatmap($heatElem, {
                     xPadding : 170,
                 });
                 this.data('heatmap', $heatmap);
@@ -65,11 +65,11 @@ define ([
         init : function init(options) {
             this._super(options);
 
-            var self = this;
+            const self = this;
 
             this.appendUI(this.$elem);
 
-            var ws = new GenericClient({
+            const ws = new GenericClient({
                 module: 'Workspace',
                 url: Config.url('workspace'),
                 token: self.authToken()
@@ -81,13 +81,13 @@ define ([
                     name : this.options.expression_object
                 }]
             }])
-                .spread(function (result) {
+                .spread((result) => {
                     // crazy? The result from get_objects2 is a structure with one field "data",
                     // which is an array of objects, in which the associated object data of interest
                     // here is also ... data.
                     self.setDataset(result.data[0].data);
                 })
-                .catch(function (err) {
+                .catch((err) => {
                     console.error('ERROR', err);
                     self.$elem.empty();
                     self.$elem

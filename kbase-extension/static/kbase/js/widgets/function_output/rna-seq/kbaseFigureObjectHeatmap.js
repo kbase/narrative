@@ -7,13 +7,13 @@ define (
 		'jquery',
 		'kbaseAuthenticatedWidget',
 		'kbaseHeatmap'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		kbaseAuthenticatedWidget,
 		kbaseHeatmap
-	) {
+	) => {
 
     'use strict';
 
@@ -35,10 +35,10 @@ define (
         ],
 
         transpose : function transpose(arr,arrLen) {
-          for (var i = 0; i < arrLen; i++) {
-            for (var j = 0; j <i; j++) {
+          for (let i = 0; i < arrLen; i++) {
+            for (let j = 0; j <i; j++) {
               //swap element[i,j] and element[j,i]
-              var temp = arr[i][j];
+              const temp = arr[i][j];
               arr[i][j] = arr[j][i];
               arr[j][i] = temp;
             }
@@ -47,7 +47,7 @@ define (
 
         setDataset : function setDataset(newDataset, groupInfo) {
 
-            var $self = this;
+            const $self = this;
 
             this.data('loader').hide();
 
@@ -59,13 +59,13 @@ define (
             }
             else {
 
-                var calculatedHeight = newDataset.column_labels.length * this.options.magicHeight;
+                const calculatedHeight = newDataset.column_labels.length * this.options.magicHeight;
 
-                var heatHeight = Math.max(calculatedHeight, this.options.minHeight);
+                const heatHeight = Math.max(calculatedHeight, this.options.minHeight);
 
-                var $heatElem = $.jqElem('div').css({width : 800, height : heatHeight});
+                const $heatElem = $.jqElem('div').css({width : 800, height : heatHeight});
 
-                var $heatmap =
+                const $heatmap =
                      new kbaseHeatmap($heatElem, {
                             colors : ['#0000FF', '#FFFFFF', '#FF0000'],
                             xPadding : 170,
@@ -103,20 +103,20 @@ define (
                 //
                 // http://dilbert.com/strip/2012-12-05
 
-                var invertedData = [];
+                const invertedData = [];
                 for (var i = 0; i < newDataset.column_labels.length; i++) {
                     invertedData[i] = [];
-                    for (var j = 0; j < newDataset.row_labels.length; j++) {
+                    for (let j = 0; j < newDataset.row_labels.length; j++) {
                         invertedData[i][j] = newDataset.data[j][i];
                     }
                 }
 
-                var rows_by_cluster = {};
-                var groupStartIdx = 0;
+                const rows_by_cluster = {};
+                let groupStartIdx = 0;
                 for (var i = 0; i < groupInfo.ygroup.length; i++) {
-                  var label = groupInfo.ygtick_labels[i];
-                  var count = groupInfo.ygroup[i];
-                  var groupEndIdx = groupStartIdx + count;
+                  const label = groupInfo.ygtick_labels[i];
+                  const count = groupInfo.ygroup[i];
+                  const groupEndIdx = groupStartIdx + count;
                   if (rows_by_cluster[label] === undefined) {
                     rows_by_cluster[label] = { };
                   }
@@ -129,9 +129,9 @@ define (
 
                   //okay, now we slice out the rows associated with this cluster.
                   rows_by_cluster[label].data   = invertedData.slice(groupStartIdx, groupEndIdx)
-                    .filter( function(r, i) {
+                    .filter( (r, i) => {
                       //here's where we filter. We take a row and iterate through it, if all of the values are null it gets tossed.
-                      var keep_this_row = r.reduce( function (keep_this_row, v) {
+                      const keep_this_row = r.reduce( (keep_this_row, v) => {
                         return keep_this_row || v !== null;
                       }, false);
 
@@ -143,7 +143,7 @@ define (
 
                   //peel out the appropriate subarray of labels, filtering out the indexes we removed up above.
                   rows_by_cluster[label].labels = newDataset.column_labels.slice(groupStartIdx, groupEndIdx)
-                    .filter(function(l, i) { return ! filteredIndexes[i] });
+                    .filter((l, i) => { return ! filteredIndexes[i] });
 
                   //next group starts where ours left off
                   groupStartIdx = groupEndIdx;
@@ -154,17 +154,17 @@ define (
                 //
                 // This is where I'd love to use the spread syntax on the push, but since I wasn't sure our environment supported it
                 // I went old school.
-                var sortedRows   = [];
-                var sortedLabels = [];
-                Object.keys(rows_by_cluster).sort().forEach( function(label) {
-                  var clusterRows = rows_by_cluster[label].data;
+                const sortedRows   = [];
+                const sortedLabels = [];
+                Object.keys(rows_by_cluster).sort().forEach( (label) => {
+                  const clusterRows = rows_by_cluster[label].data;
                   sortedRows.push.apply(sortedRows, clusterRows);
 
-                  var clusterLabels = rows_by_cluster[label].labels;
+                  const clusterLabels = rows_by_cluster[label].labels;
                   sortedLabels.push.apply(sortedLabels, clusterLabels);
                 });
 
-                var heatmap_dataset = {
+                const heatmap_dataset = {
                     row_ids : sortedLabels,
                     column_ids : newDataset.row_labels,
                     row_labels : sortedLabels,
@@ -179,7 +179,7 @@ define (
 
                 //okay now do some extra BS to add in grouping.
 
-                var chartBounds = $heatmap.chartBounds();
+                const chartBounds = $heatmap.chartBounds();
 
                 //this one assumes that all genes will always be in the dataset. They will not be.
                 //var total_groups = groupInfo.ygroup.reduce(function(p,v) { return p + v} );
@@ -189,17 +189,17 @@ define (
 
                 // First thing we're going to do is a little bit of bounds checking and see if we actually need to decrement at all.
 
-                var needs_decrement = Object.keys(rows_by_cluster).reduce( function(needs_it, label) {
+                const needs_decrement = Object.keys(rows_by_cluster).reduce( (needs_it, label) => {
                   if (label === 'Cluster_0') { needs_it = false };
                   return needs_it;
                 }, true);
 
-                var ygtick_labels = Object.keys(rows_by_cluster).sort().map( function(label) {
+                const ygtick_labels = Object.keys(rows_by_cluster).sort().map( (label) => {
                   // yes, I know that I don't need to loop and map to nothing if needs_decrement is false.
                   // I'm mapping invalid data from the server anyway. I put in the bounds check at all.
                   // Let me have this little protest.
                   if (needs_decrement) {
-                    label = label.replace(/(\d+)$/, function(m,d) { return d - 1 });
+                    label = label.replace(/(\d+)$/, (m,d) => { return d - 1 });
                   }
                   return label;
                 });
@@ -207,10 +207,10 @@ define (
                 // it's a maxim in CS that side-effects are wonderful and should always be used as much as possible, right?
                 // in this case, we need to find out the total number of groups. While we're iterating over our list of groups
                 // to get each group's count, we just peel that off into a running total.
-                var total_groups = 0;
+                let total_groups = 0;
 
                 // Super. We've got our labels in sorted order. Now we peel out our new counts in sorted order.
-                var ygroup = Object.keys(rows_by_cluster).sort().map( function(label) {
+                const ygroup = Object.keys(rows_by_cluster).sort().map( (label) => {
                   total_groups += rows_by_cluster[label].labels.length;
                   return rows_by_cluster[label].labels.length;
                 });
@@ -218,16 +218,16 @@ define (
                 // finally, also just note that the "Results" tab of View Multi-Cluster Heatmap will, of course, still display the ygtick_labels
                 // as they were originally generated on the server, and so will not be in sync with the data in the heatmap itself.
 
-                var groups = $heatmap.D3svg().select( $heatmap.region('xPadding') ).selectAll('.groupBox').data(ygtick_labels);
+                const groups = $heatmap.D3svg().select( $heatmap.region('xPadding') ).selectAll('.groupBox').data(ygtick_labels);
 
-                var groupsEnter = groups.enter().insert('g', ':first-child');
+                const groupsEnter = groups.enter().insert('g', ':first-child');
 
-                var yIdxFunc =
+                const yIdxFunc =
                     function(d,i) {
 
-                        var prior = 0;
+                        let prior = 0;
 
-                        for (var j = 0; j < i; j++) {
+                        for (let j = 0; j < i; j++) {
                             prior += ygroup[j];
                         }
                         return chartBounds.size.height * (prior / total_groups);
@@ -240,16 +240,16 @@ define (
                         .attr('y', yIdxFunc )
                         .attr('width', $heatmap.xPaddingBounds().size.width)
                         .attr('height',
-                            function (d, i) {
+                            (d, i) => {
                                 return chartBounds.size.height * (ygroup[i] / total_groups);
                             }
                         )
                         .attr('stroke', 'black')
-                        .attr('fill', function (d, i) {return i % 2 ? '#EEEEEE' : 'none'} )
+                        .attr('fill', (d, i) => {return i % 2 ? '#EEEEEE' : 'none'} )
                         .attr('stroke-width', '.5px')
                         .attr('opacity',
-                            function(d,i) {
-                                var y = yIdxFunc(d,i);
+                            (d,i) => {
+                                const y = yIdxFunc(d,i);
 
                                 return y < chartBounds.size.height
                                     ? 1
@@ -263,8 +263,8 @@ define (
                         .attr('y', 0)
                         .text(function (d,i) { this.idx = i; return d })
                         .attr('opacity',
-                            function(d,i) {
-                                var y = yIdxFunc(d,i);
+                            (d,i) => {
+                                const y = yIdxFunc(d,i);
 
                                 return y < chartBounds.size.height
                                     ? 1
@@ -278,9 +278,9 @@ define (
                 //so we need to decrease its size. That way, in the next step when we select for the transform, we can properly place it.
                 groups.selectAll('text')
                     .attr('font-size', function(d, i) {
-                        var width = d3.select(this).node().getComputedTextLength();
+                        const width = d3.select(this).node().getComputedTextLength();
 
-                        var groupHeight = chartBounds.size.height * (ygroup[this.idx] / total_groups);
+                        const groupHeight = chartBounds.size.height * (ygroup[this.idx] / total_groups);
 
                         if (width > groupHeight && width > 60) {   //magic numbers abound in KBase!
                             this.tinySize = true;
@@ -291,9 +291,9 @@ define (
                     .attr('transform',
                         function(d, i) {
 
-                            var width = d3.select(this).node().getComputedTextLength();
+                            const width = d3.select(this).node().getComputedTextLength();
 
-                            var groupHeight = chartBounds.size.height * (ygroup[this.idx] / total_groups);
+                            const groupHeight = chartBounds.size.height * (ygroup[this.idx] / total_groups);
 
                             if (width < groupHeight) {
 
@@ -304,12 +304,12 @@ define (
                                 }
 
 
-                                var hOffset = 12;//this.idx % 2 ? 30 : 12;
+                                const hOffset = 12;//this.idx % 2 ? 30 : 12;
                                 this.v = true;
                                 return 'rotate(270) translate(' + vOffset + ',' + hOffset + ')'
                             }
                             else {
-                                var box = this.getBBox();
+                                const box = this.getBBox();
                                 vOffset = box.height + yIdxFunc(d,this.idx) + 1;
                                 this.h = true;
 
@@ -322,10 +322,10 @@ define (
                         }
                     )
                     .each(function(d,i) {
-                        var box = this.getBBox();
+                        const box = this.getBBox();
                         //magic width number! Ooo!
                         if (this.h && box.width > 70) {
-                            var label = d3.select(this).text();
+                            const label = d3.select(this).text();
                             if (label.length > 10) {
                                 d3.select(this).text(label.substring(0,7) + '...');
                                 d3.select(this)
@@ -351,8 +351,8 @@ define (
         },
 
         load_data_ref : function(ws, dataset) {
-          var $self = this;
-          ws.get_objects([{ref : dataset.data_ref}]).then(function(b) {
+          const $self = this;
+          ws.get_objects([{ref : dataset.data_ref}]).then((b) => {
 
               $self.setDataset(b[0].data, dataset);
 
@@ -363,29 +363,29 @@ define (
 
             this._super(options);
 
-            var $self = this;
+            const $self = this;
 
             this.appendUI(this.$elem);
 
-            var ws = new Workspace(window.kbconfig.urls.workspace, {token : $self.authToken()});
+            const ws = new Workspace(window.kbconfig.urls.workspace, {token : $self.authToken()});
             //var ws = new Workspace('https://ci.kbase.us/services/ws', {token : $self.authToken()});
 
-            var ws_params = {
+            const ws_params = {
                 workspace : this.options.workspace,
                 name : this.options.expression_object
             };
 
-            ws.get_objects([ws_params]).then(function (d) {
+            ws.get_objects([ws_params]).then((d) => {
 
                 if (d[0].data.figure_obj) {
-                  ws.get_objects([{ref : d[0].data.figure_obj}]).then(function(d) {
+                  ws.get_objects([{ref : d[0].data.figure_obj}]).then((d) => {
                     $self.load_data_ref(ws, d[0].data);
                   });
                 }
                 else {
                     $self.load_data_ref(ws, d[0].data);
                 }
-            }).fail(function(d) {
+            }).fail((d) => {
 
                 $self.$elem.empty();
                 $self.$elem
@@ -398,7 +398,7 @@ define (
 
         appendUI : function appendUI($elem) {
 
-            var $me = this;
+            const $me = this;
 
 
             $elem

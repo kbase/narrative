@@ -4,12 +4,12 @@ define (
 		'bootstrap',
 		'jquery',
 		'kbaseGrowthMatrixAbstract',
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		kbaseGrowthMatrixAbstract
-	) {
+	) => {
     return KBWidget({
         name: 'kbaseGrowthParametersAbstract',
         parent : kbaseGrowthMatrixAbstract,
@@ -23,37 +23,37 @@ define (
 
         //@Overriride
         loadAndRender: function(){
-            var self = this;
+            const self = this;
             self.loading(true);
 
-            var refGrowthParams = self.buildObjectIdentity(this.options.workspaceID, this.options.growthParametersID);
+            const refGrowthParams = self.buildObjectIdentity(this.options.workspaceID, this.options.growthParametersID);
             self.wsClient.get_objects([refGrowthParams],
-                function(data) {
+                (data) => {
                     self.growthParams = data[0].data;
-                    var matrixRef = self.growthParams.matrix_id;
+                    const matrixRef = self.growthParams.matrix_id;
 
-                    var ref = self.buildObjectIdentity('', '', '', matrixRef);
+                    const ref = self.buildObjectIdentity('', '', '', matrixRef);
                     // Load metadata
                     self.wsClient.get_objects([ref],
-                        function(data) {
+                        (data) => {
                             self.matrix = data[0].data;
                             self.render();
                         },
-                        function(error){
+                        (error)=> {
                             self.clientError(error);
                         }
                     );
                 },
-                function(error){
+                (error)=> {
                     self.clientError(error);
                 }
             );
         } ,
 
         buildColumnId2ParamsHash: function(){
-            var columnId2Params = {};
-            var params = this.growthParams.parameters;
-            for(var i in params){
+            const columnId2Params = {};
+            const params = this.growthParams.parameters;
+            for(const i in params){
                 columnId2Params[params[i].mtx_column_id] = params[i];
             }
             return columnId2Params;
@@ -61,19 +61,19 @@ define (
 
         buildSamplesWithParameters: function(){
 
-            var samples = [];
-            var columnId2Params = this.buildColumnId2ParamsHash();
+            const samples = [];
+            const columnId2Params = this.buildColumnId2ParamsHash();
 
-            var columnsMetadata = this.matrix.metadata.column_metadata;
-            for(var columnId in columnsMetadata){
-                var columnMetadata = columnsMetadata[columnId];
-                var seriesId = this.getPropertyValue(columnMetadata, 'DataSeries', 'SeriesID');
-                var sampleProperties = this.getProperties(columnMetadata, 'Condition');
-                var sampleLabel = this.propertiesToString(sampleProperties);
+            const columnsMetadata = this.matrix.metadata.column_metadata;
+            for(const columnId in columnsMetadata){
+                const columnMetadata = columnsMetadata[columnId];
+                const seriesId = this.getPropertyValue(columnMetadata, 'DataSeries', 'SeriesID');
+                const sampleProperties = this.getProperties(columnMetadata, 'Condition');
+                const sampleLabel = this.propertiesToString(sampleProperties);
 
-                var grp = columnId2Params[columnId];
+                const grp = columnId2Params[columnId];
 
-                var sample = {
+                const sample = {
                     columnId: columnId,
                     seriesId: seriesId,
                     label: sampleLabel,
@@ -92,9 +92,9 @@ define (
         },
 
         groupSamplesWithParametersIntoSeries: function(samplesWithParams){
-            var seriesHash = {};
+            const seriesHash = {};
             for(var i in samplesWithParams){
-                var sample = samplesWithParams[i];
+                const sample = samplesWithParams[i];
                 var seriesId = sample.seriesId;
                 var series = seriesHash[seriesId];
                 if(series == null){
@@ -124,14 +124,14 @@ define (
                 series.samples.push(sample);
 
                 for(var i in sample.conditions){
-                    var pv = sample.conditions[i];
+                    const pv = sample.conditions[i];
                     series.conditionHash[pv.property_name] = pv;
                 }
 
             }
 
             // Convert hash into list and fill out the number of samples (to be used in the jtables)
-            var seriesList = [];
+            const seriesList = [];
             for(var seriesId in seriesHash){
                 var series = seriesHash[seriesId];
                 series.samplesCount = series.samples.length;
@@ -144,24 +144,24 @@ define (
         },
 
         updateGrowthParamStat: function(series){
-            var samples = series.samples;
+            const samples = series.samples;
 
-            var s1_area_under_curve = 0;
-            var s2_area_under_curve = 0;
+            let s1_area_under_curve = 0;
+            let s2_area_under_curve = 0;
 
-            var s1_growth_rate = 0;
-            var s2_growth_rate = 0;
+            let s1_growth_rate = 0;
+            let s2_growth_rate = 0;
 
-            var s1_lag_phase = 0;
-            var s2_lag_phase = 0;
+            let s1_lag_phase = 0;
+            let s2_lag_phase = 0;
 
-            var s1_max_growth = 0;
-            var s2_max_growth = 0;
+            let s1_max_growth = 0;
+            let s2_max_growth = 0;
 
-            var method = 'NA';
-            var n = 0;
-            for(var i in samples){
-                var sample = samples[i];
+            let method = 'NA';
+            let n = 0;
+            for(const i in samples){
+                const sample = samples[i];
 
                 if(sample.grp_method != 'NA'){
                     n += 1;

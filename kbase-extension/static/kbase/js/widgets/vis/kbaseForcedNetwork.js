@@ -14,7 +14,7 @@ define (
 		'geometry_rectangle',
 		'geometry_point',
 		'geometry_size'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -25,7 +25,7 @@ define (
 		geometry_rectangle,
 		geometry_point,
 		geometry_size
-	) {
+	) => {
 
     return KBWidget({
 
@@ -85,14 +85,14 @@ define (
                 return [0,0];
             }
 
-            var min = 2.0 * d3.min(this.dataset().nodes.map( function(d) {return d.x}));
+            let min = 2.0 * d3.min(this.dataset().nodes.map( (d) => {return d.x}));
             if (min > 0) {
                 min = 0;
             }
 
             return [
                 min,
-                2.0 * d3.max(this.dataset().nodes.map( function(d) {return d.x}))
+                2.0 * d3.max(this.dataset().nodes.map( (d) => {return d.x}))
             ];
         },
 
@@ -102,27 +102,27 @@ define (
                 return [0,0];
             }
 
-            var min = 2.0 * d3.min(this.dataset().nodes.map( function(d) {return d.y}));
+            let min = 2.0 * d3.min(this.dataset().nodes.map( (d) => {return d.y}));
             if (min > 0) {
                 min = 0;
             }
 
             return [
                 min,
-                2.0 * d3.max(this.dataset().nodes.map( function(d) {return d.y}))
+                2.0 * d3.max(this.dataset().nodes.map( (d) => {return d.y}))
             ];
         },
 
         appendUI : function ($elem) {
             this._super($elem);
 
-            var mousedown = undefined;
-            var chart = this.data('D3svg').select('.chart');
-            var chartBounds = this.chartBounds();
-            var selectionBox = undefined;
+            let mousedown = undefined;
+            const chart = this.data('D3svg').select('.chart');
+            const chartBounds = this.chartBounds();
+            let selectionBox = undefined;
 
-            var $force = this;
-            var selectedNodes = [];
+            const $force = this;
+            let selectedNodes = [];
 
             chart
                 .on('mousedown', function() {
@@ -130,7 +130,7 @@ define (
                     if (d3.select(d3.event.target).attr('class') != 'background') {
                         return;
                     }
-                    var coords = d3.mouse(this);
+                    const coords = d3.mouse(this);
                     mousedown = new Point(coords[0] + chartBounds.origin.x,coords[1] + chartBounds.origin.y);
 
                     selectionBox = chart.append('rect')
@@ -145,10 +145,10 @@ define (
                 })
                 .on('mousemove', function() {
                     if (mousedown != undefined) {
-                        var coords = d3.mouse(this);
-                        var mouseCoords = new Point(coords[0] + chartBounds.origin.x,coords[1] + chartBounds.origin.y);
+                        const coords = d3.mouse(this);
+                        const mouseCoords = new Point(coords[0] + chartBounds.origin.x,coords[1] + chartBounds.origin.y);
 
-                        var boxRect = mousedown.rectWithPoint(mouseCoords);
+                        const boxRect = mousedown.rectWithPoint(mouseCoords);
 
                         boxRect.origin.x -= chartBounds.origin.x;
                         boxRect.origin.y -= chartBounds.origin.y;
@@ -159,12 +159,12 @@ define (
                         selectionBox.attr('height', boxRect.size.height);
 
                         if (1){//! selectedNodes.length) {
-                            var nodes = $force.forceLayout().nodes();
+                            const nodes = $force.forceLayout().nodes();
 
                             nodes.forEach(
-                                function (node, idx) {
+                                (node, idx) => {
 
-                                    var nodeRect = new Rectangle(
+                                    const nodeRect = new Rectangle(
                                         new Point(node.x - node.radius, node.y - node.radius),
                                         new Size(node.radius * 2, node.radius * 2)
                                     );
@@ -191,16 +191,16 @@ define (
                         return;
                     }
 
-                    var coords = d3.mouse(this);
-                    var mouseCoords = new Point(coords[0] + chartBounds.origin.x,coords[1] + chartBounds.origin.y);
-                    var boxRect = mousedown.rectWithPoint(mouseCoords);
+                    const coords = d3.mouse(this);
+                    const mouseCoords = new Point(coords[0] + chartBounds.origin.x,coords[1] + chartBounds.origin.y);
+                    const boxRect = mousedown.rectWithPoint(mouseCoords);
 
                     mousedown = undefined;
                     selectionBox = undefined;
                     chart.select('.selectionBox').remove();
 
                     selectedNodes.forEach(
-                        function (node, idx) {
+                        (node, idx) => {
                             node.highlighted = false;
                         }
                     );
@@ -233,17 +233,17 @@ define (
                 this.$elem.data('searchControls').addClass('col-md-6');
             }
 
-            var bounds = this.chartBounds();
-            var $force  = this;
+            const bounds = this.chartBounds();
+            const $force  = this;
 
-            var nodes = this.data('D3svg').select('.chart').selectAll('.node');
-            var tags  = this.data('D3svg').select('.chart').selectAll('.tag');
-            var links = this.data('D3svg').select('.chart').selectAll('.edge');
+            let nodes = this.data('D3svg').select('.chart').selectAll('.node');
+            let tags  = this.data('D3svg').select('.chart').selectAll('.tag');
+            let links = this.data('D3svg').select('.chart').selectAll('.edge');
 
-            var forceLayout = this.forceLayout();
+            let forceLayout = this.forceLayout();
             if (forceLayout == undefined) {
 
-                var tick = function() {
+                const tick = function() {
 
 /*                    links.attr("x1", function(d) { return d.source.x; })
                          .attr("y1", function(d) { return d.source.y; })
@@ -251,25 +251,25 @@ define (
                          .attr("y2", function(d) { return d.target.y; });
 */
 
-                      links.attr("d", function(d) {
+                      links.attr("d", (d) => {
 
                             if (d.curveStrength) {
 
-                                var xDelta = d.target.x - d.source.x;
-                                var yDelta = d.target.y - d.source.y;
+                                const xDelta = d.target.x - d.source.x;
+                                const yDelta = d.target.y - d.source.y;
 
-                                var xCurveScale = d3.scale.linear()
+                                const xCurveScale = d3.scale.linear()
                                     .domain([-$force.options.maxCurveWeight,$force.options.maxCurveWeight])
                                     .range([0,xDelta]);
 
-                                var yCurveScale = d3.scale.linear()
+                                const yCurveScale = d3.scale.linear()
                                     .domain([-$force.options.maxCurveWeight,$force.options.maxCurveWeight])
                                     .range([0,yDelta]);
 
-                                var ctrlX = d.source.x + xCurveScale(d.curveStrength);
-                                var ctrlY = d.target.y - yCurveScale(d.curveStrength);
+                                const ctrlX = d.source.x + xCurveScale(d.curveStrength);
+                                const ctrlY = d.target.y - yCurveScale(d.curveStrength);
 
-                                var curve =
+                                const curve =
                                       " M" + d.source.x  + ',' + d.source.y
                                     + " Q" + ctrlX       + ',' + ctrlY
                                     + "  " + d.target.x  + ',' + d.target.y;
@@ -281,16 +281,16 @@ define (
                             }
                       });
 
-                    nodes.attr("cx", function(d) { return d.x; })
-                         .attr("cy", function(d) { return d.y; });
+                    nodes.attr("cx", (d) => { return d.x; })
+                         .attr("cy", (d) => { return d.y; });
 
-                     tags.attr("x", function(d) { return d.x + (d.tagOffsetX || 0); })
-                         .attr("y", function(d) { return d.y + (d.tagOffsetY || 0); });
+                     tags.attr("x", (d) => { return d.x + (d.tagOffsetX || 0); })
+                         .attr("y", (d) => { return d.y + (d.tagOffsetY || 0); });
 
                      tags.attr(
                         'fill-opacity',
-                            function(d) {
-                                var searchVal = d.search;
+                            (d) => {
+                                let searchVal = d.search;
                                 if (searchVal == undefined ) {
                                     searchVal = d.tag;
                                 }
@@ -311,12 +311,12 @@ define (
                     .links($force.dataset().edges)
                     .size([bounds.size.width, bounds.size.height])
                     .charge(
-                        function(link, index) {
+                        (link, index) => {
                             return link.charge || $force.options.charge;
                         }
                     )
                     .linkDistance(
-                        function(link, index) {
+                        (link, index) => {
                             return link.linkDistance || $force.options.linkDistance;
                         }
                     )
@@ -338,13 +338,13 @@ define (
                     //function(d) { return d.source.name + "-" + d.target.name }
                 );
 
-                var mouseEdgeAction = function() {
+                const mouseEdgeAction = function() {
                     this.on('mouseover', function(d) {
 
-                        var coordinates = [0, 0];
+                        let coordinates = [0, 0];
                         coordinates = d3.mouse(this);
-                        var x = coordinates[0];
-                        var y = coordinates[1];
+                        const x = coordinates[0];
+                        const y = coordinates[1];
 
                         $force.showToolTip(
                             {
@@ -361,7 +361,7 @@ define (
                         d.highlighted = 2;
 
                         $force.forceLayout().links().forEach(
-                            function(link, idx) {
+                            (link, idx) => {
                                 if (link.highlighted != 2) {
                                     link.highlighted = -1;
                                 }
@@ -369,7 +369,7 @@ define (
                         );
 
                         $force.forceLayout().nodes().forEach(
-                            function(node, idx) {
+                            (node, idx) => {
                                 if (node.highlighted != 2 && node.highlighted != 1) {
                                     node.highlighted = -1;
                                 }
@@ -378,10 +378,10 @@ define (
 
                         start();
                     })
-                    .on('mouseout', function(d) {
+                    .on('mouseout', (d) => {
                         $force.hideToolTip();
                         $force.forceLayout().links().forEach(
-                            function(link, idx) {
+                            (link, idx) => {
                                 link.highlighted = 0;
                                 link.source.highlighted = 0;
                                 link.target.highlighted = 0;
@@ -389,7 +389,7 @@ define (
                         );
 
                         $force.forceLayout().nodes().forEach(
-                            function(node, idx) {
+                            (node, idx) => {
                                 node.highlighted = 0;
                             }
                         );
@@ -399,12 +399,12 @@ define (
                     return this;
                 };
 
-                var edgeTown = function() {
+                const edgeTown = function() {
                     this.attr("class", "edge")
-                    .attr('stroke', function(d) {
+                    .attr('stroke', (d) => {
                         return d.color || $force.options.lineColor
                     })
-                    .attr('stroke-width', function(d) {
+                    .attr('stroke-width', (d) => {
 /*                        if (d.highlighted == 2) {
                             return $force.options.edgeHighlightStrokeWeight;
                         }
@@ -418,7 +418,7 @@ define (
                     .attr('fill', 'none')
                     .attr(
                         'stroke-opacity',
-                        function(d) {
+                        (d) => {
 
                             if ($force.options.filterVal != undefined || d.highlighted == -1) {
                                 if (d.highlighted == -1 || ! d.source.tag.match($force.options.filterVal) || ! d.target.tag.match($force.options.filterVal)) {
@@ -455,13 +455,13 @@ define (
                     //function(d) { return d.name}
                 );
 
-                var mouseNodeAction = function() {
+                const mouseNodeAction = function() {
                     this.on('mouseover', function(d) {
 
-                        var coordinates = [0, 0];
+                        let coordinates = [0, 0];
                         coordinates = d3.mouse(this);
-                        var x = coordinates[0];
-                        var y = coordinates[1];
+                        const x = coordinates[0];
+                        const y = coordinates[1];
 
                         $force.showToolTip(
                             {
@@ -474,7 +474,7 @@ define (
                         );
 
                         $force.forceLayout().links().forEach(
-                            function(link, idx) {
+                            (link, idx) => {
                                 if (link.source == d) {
                                     link.target.highlighted = 1;
                                     link.highlighted = 1;
@@ -492,7 +492,7 @@ define (
                         );
 
                         $force.forceLayout().nodes().forEach(
-                            function(node, idx) {
+                            (node, idx) => {
                                 if (node.highlighted != 1) {
                                     node.highlighted = -1;
                                 }
@@ -503,12 +503,12 @@ define (
 
                         start();
                     })
-                    .on('mouseout', function(d) {
+                    .on('mouseout', (d) => {
                         $force.hideToolTip();
                         d.highlighted = 0;
 
                         $force.forceLayout().links().forEach(
-                            function(link, idx) {
+                            (link, idx) => {
                                 link.highlighted = 0;
                                 link.source.highlighted = 0;
                                 link.target.highlighted = 0;
@@ -516,17 +516,17 @@ define (
                         );
 
                         $force.forceLayout().nodes().forEach(
-                            function(node, idx) {
+                            (node, idx) => {
                                 node.highlighted = 0;
                             }
                         );
 
                         start();
                     })
-                    .on('mousedown', function(d) { d.fixed = false } )
-                    .on('dblclick', function(d) { d.fixed = false } )
+                    .on('mousedown', (d) => { d.fixed = false } )
+                    .on('dblclick', (d) => { d.fixed = false } )
                     .on('mouseup',
-                        function(d) {
+                        (d) => {
                             if (d.x < bounds.origin.x || d.y < bounds.origin.y
                                 || d.x > bounds.origin.x + bounds.size.width || d.y > bounds.origin.y + bounds.size.height) {
                                     d.fixed = false;
@@ -573,12 +573,12 @@ define (
                     return this;
                 };
 
-                var nodeTown = function() {
+                const nodeTown = function() {
                     this
-                        .attr('r', function(d) { return d.radius || $force.options.nodeRadius })
-                        .attr('fill', function (d) {
+                        .attr('r', (d) => { return d.radius || $force.options.nodeRadius })
+                        .attr('fill', (d) => {
 
-                            var searchVal = d.search;
+                            let searchVal = d.search;
                             if (searchVal == undefined ) {
                                 searchVal = d.tag;
                             }
@@ -598,9 +598,9 @@ define (
                                 || d.highlighted == -1)
                             ) {
                                 //return $force.options.filteredNodeColor;
-                                var rgb = RGBColor.prototype.rgbFromString(d.color || $force.options.nodeColor);
+                                const rgb = RGBColor.prototype.rgbFromString(d.color || $force.options.nodeColor);
                                 if (rgb) {
-                                    var color = new RGBColor(rgb.r,rgb.g,rgb.b);
+                                    const color = new RGBColor(rgb.r,rgb.g,rgb.b);
                                     return color.lightenBy(191).asString();
                                 }
                                 else {
@@ -612,7 +612,7 @@ define (
                                 return d.color || $force.options.nodeColor;
                             }
                         })
-                        .attr('stroke', function(d) {
+                        .attr('stroke', (d) => {
                             //if (d.highlighted == 3) {
                             //    return d.selectedHighlightColor || $force.options.selectedNodeHighlightColor;
                             //}
@@ -620,7 +620,7 @@ define (
                                 return d.stroke || $force.options.nodeStrokeColor
                             //}
                         })
-                        .attr('stroke-width', function(d) {
+                        .attr('stroke-width', (d) => {
                             /*if (d.highlighted == 3) {
                                 return d.selectedStrokeWeight || $force.options.selectedNodeStrokeWeight;
                             }
@@ -628,7 +628,7 @@ define (
                                 return d.strokeWidth || $force.options.nodeStrokeWeight;
                             //}
                         })
-                        .attr('data-name', function(d) { return d.name })
+                        .attr('data-name', (d) => { return d.name })
                     ;
 
                     return this;
@@ -657,12 +657,12 @@ define (
                 );
 
 
-                var tagTown = function() {
+                const tagTown = function() {
                     this
-                        .text(function (d) { return d.tag })
+                        .text((d) => { return d.tag })
                         .attr('text-anchor', 'middle')
                         .attr('alignment-baseline', 'middle')
-                        .attr('style', function(d) { return d.tagStyle} )
+                        .attr('style', (d) => { return d.tagStyle} )
                     ;
 
                     return this;

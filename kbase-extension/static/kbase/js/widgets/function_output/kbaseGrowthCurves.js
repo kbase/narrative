@@ -8,7 +8,7 @@ define (
 		'kbaseGrowthMatrixAbstract',
 		'kbaseTabs',
 		'jquery-dataTables'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -16,7 +16,7 @@ define (
 		kbaseGrowthMatrixAbstract,
 		kbaseTabs,
 		jquery_dataTables
-	) {
+	) => {
     return KBWidget({
         name: 'kbaseGrowthCurves',
         parent : kbaseGrowthMatrixAbstract,
@@ -41,13 +41,13 @@ define (
         },
 
         getSampleIds: function(){
-            var valueType = this.options.valueType;
-            var sampleSeriesIds = this.options.sampleSeriesIds;
+            const valueType = this.options.valueType;
+            const sampleSeriesIds = this.options.sampleSeriesIds;
 
             console.log('kbaseGrowthCurves this.options', this.options);
 
 
-            var sampleIds = [];
+            let sampleIds = [];
             if(valueType == this.TYPE_SAMPLES){
                 if(sampleSeriesIds == null){
                     sampleIds = this.matrix.data.col_ids;
@@ -60,17 +60,17 @@ define (
                     sampleIds = this.matrix.data.col_ids;
                 } else {
                     // Build hash of seriesIds for the lookup
-                    var seriesIdsSet = {};
+                    const seriesIdsSet = {};
 //                    var seriesIds = sampleSeriesIds.split(',');
-                    var seriesIds = sampleSeriesIds;
-                    for(var i in seriesIds){
+                    const seriesIds = sampleSeriesIds;
+                    for(const i in seriesIds){
                         seriesIdsSet[seriesIds[i]] = true;
                     }
 
-                    var columnsMetadata = this.matrix.metadata.column_metadata;
-                    for(var cId in columnsMetadata){
-                        var columnMetadata = columnsMetadata[cId];
-                        var seriesId = this.getPropertyValue(columnMetadata, 'DataSeries', 'SeriesID');
+                    const columnsMetadata = this.matrix.metadata.column_metadata;
+                    for(const cId in columnsMetadata){
+                        const columnMetadata = columnsMetadata[cId];
+                        const seriesId = this.getPropertyValue(columnMetadata, 'DataSeries', 'SeriesID');
                         if (seriesId == null) continue;
                         if (seriesId in seriesIdsSet){
                             sampleIds.push(cId);
@@ -85,58 +85,58 @@ define (
 
         renderSamplesMatrix: function(){
 
-            var timePoints = this.getTimePoints(this.matrix);
-            var sampleIds = this.getSampleIds();
-            var samples = this.buildSamples(this.matrix, sampleIds, timePoints);
-            var timeSeriesStat = this.getNumericProperyStat(this.matrix.metadata.row_metadata, 'TimeSeries', 'Time');
+            const timePoints = this.getTimePoints(this.matrix);
+            const sampleIds = this.getSampleIds();
+            const samples = this.buildSamples(this.matrix, sampleIds, timePoints);
+            const timeSeriesStat = this.getNumericProperyStat(this.matrix.metadata.row_metadata, 'TimeSeries', 'Time');
             this.loading(false);
 
-            var $overviewContainer = $("<div/>");
+            const $overviewContainer = $("<div/>");
             this.$elem.append( $overviewContainer );
             this.buildOverviewDiv( $overviewContainer, samples, this.TYPE_SAMPLES );
 
 
-            var $vizContainer = $("<div/>");
+            const $vizContainer = $("<div/>");
             this.$elem.append( $vizContainer );
             this.buildSamplesWidget( $vizContainer, samples, timePoints, timeSeriesStat);
         },
 
         renderSeriesMatrix: function(){
 
-            var timePoints = this.getTimePoints(this.matrix);
-            var sampleIds = this.getSampleIds();
-            var samples = this.buildSamples(this.matrix, sampleIds, timePoints);
-            var series = this.groupSamplesIntoSeries(this.matrix, samples, timePoints);
-            var timeSeriesStat = this.getNumericProperyStat(this.matrix.metadata.row_metadata, 'TimeSeries', 'Time');
+            const timePoints = this.getTimePoints(this.matrix);
+            const sampleIds = this.getSampleIds();
+            const samples = this.buildSamples(this.matrix, sampleIds, timePoints);
+            const series = this.groupSamplesIntoSeries(this.matrix, samples, timePoints);
+            const timeSeriesStat = this.getNumericProperyStat(this.matrix.metadata.row_metadata, 'TimeSeries', 'Time');
 
             this.loading(false);
 
-            var $overviewContainer = $("<div/>");
+            const $overviewContainer = $("<div/>");
             this.$elem.append( $overviewContainer );
             this.buildOverviewDiv( $overviewContainer, series, this.TYPE_SERIES );
 
             // // Separator
             // this.$elem.append( $('<div style="margin-top:1em"></div>') );
 
-            var $vizContainer = $("<div/>");
+            const $vizContainer = $("<div/>");
             this.$elem.append( $vizContainer );
             this.buildSeriesWidget( $vizContainer, series, timePoints, timeSeriesStat);
         },
 
         buildOverviewDiv: function($containerDiv, conditions, valuesType){
-            var self = this;
-            var pref = this.pref;
+            const self = this;
+            const pref = this.pref;
 
-            var msg = "";
+            let msg = "";
             if(valuesType == this.TYPE_SAMPLES){
                 msg = '[Show/Hide Samples]';
             } else if (valuesType == this.TYPE_SERIES){
                 msg = '[Show/Hide Series]';
             }
-            var $overviewSwitch = $("<a/>").html( msg);
+            const $overviewSwitch = $("<a/>").html( msg);
             $containerDiv.append($overviewSwitch);
 
-            var $overvewContainer = $('<div hidden style="margin:1em 0 4em 0"/>');
+            const $overvewContainer = $('<div hidden style="margin:1em 0 4em 0"/>');
             $containerDiv.append($overvewContainer);
 
             if(valuesType == this.TYPE_SAMPLES){
@@ -145,44 +145,44 @@ define (
                 self.buildSeriesTable($overvewContainer, conditions);
             }
 
-            $overviewSwitch.click(function(){
+            $overviewSwitch.click(()=> {
                 $overvewContainer.toggle();
             });
         },
 
         buildSamplesWidget: function($containerDiv, samples, timePoints, timeSeriesStat){
 
-            var data = [];
+            const data = [];
 
             console.log('samples', samples);
 
-            var values = this.matrix.data.values;
-            for(var i in samples){
+            const values = this.matrix.data.values;
+            for(const i in samples){
 
-                var sample = samples[i];
+                const sample = samples[i];
 
                 // Build xValues
-                var xValues = [];
+                const xValues = [];
                 for(var j in timePoints){
-                    var timePoint = timePoints[j];
+                    const timePoint = timePoints[j];
                     xValues.push( timePoint.value );
                 }
 
 
                 // Build yValues
-                var yValues = [];
+                const yValues = [];
                 for(var j in timePoints){
-                    var rIndex = timePoints[j].index;
+                    const rIndex = timePoints[j].index;
                     yValues.push( values[rIndex][sample.columnIndex] );
                 }
 
-                var label = sample.columnId + " - " +  sample.label;
+                let label = sample.columnId + " - " +  sample.label;
                 if(label.length > this.MAX_LABEL_LENGTH){
                     label = label.substring(0,this.MAX_LABEL_LENGTH) + "...";
                 }
 
                 // Build track
-                var dataTrack = {
+                const dataTrack = {
                     x : xValues,
                     y : yValues,
                     name: label
@@ -197,37 +197,37 @@ define (
         },
 
         buildSeriesWidget: function($containerDiv, seriesList, timePoints, timeSeriesStat){
-            var options = this.options;
-            var data = [];
+            const options = this.options;
+            const data = [];
 
 
             console.log('seriesList', seriesList);
-            var values = this.matrix.data.values;
-            for(var i in seriesList){
+            const values = this.matrix.data.values;
+            for(const i in seriesList){
 
-                var series = seriesList[i];
+                const series = seriesList[i];
 
                 // Build xValues
-                var xValues = [];
+                const xValues = [];
                 for(var j in timePoints){
-                    var timePoint = timePoints[j];
+                    const timePoint = timePoints[j];
                     xValues.push( timePoint.value );
                 }
 
 
                 // Build yValues
-                var yValues = [];
-                var yErrors = [];
+                const yValues = [];
+                const yErrors = [];
                 for(var j in timePoints){
-                    var rIndex = timePoints[j].index;
+                    const rIndex = timePoints[j].index;
 
 
-                    var samples = series.samples;
-                    var s1 = 0;
-                    var s2 = 0;
-                    var n = samples.length;
-                    for(var k in samples){
-                        var cIndex = samples[k].columnIndex;
+                    const samples = series.samples;
+                    let s1 = 0;
+                    let s2 = 0;
+                    const n = samples.length;
+                    for(const k in samples){
+                        const cIndex = samples[k].columnIndex;
                         s1 += values[rIndex][cIndex];
                         s2 += values[rIndex][cIndex]*values[rIndex][cIndex];
                     }
@@ -238,13 +238,13 @@ define (
                     yErrors.push( se );
                 }
 
-                var label = series.seriesId + " - " +  series.label;
+                let label = series.seriesId + " - " +  series.label;
                 if(label.length > this.MAX_LABEL_LENGTH){
                     label = label.substring(0,this.MAX_LABEL_LENGTH) + "...";
                 }
 
                 // Build track
-                var dataTrack = {
+                const dataTrack = {
                     x : xValues,
                     y : yValues,
                     name: label,
@@ -270,8 +270,8 @@ define (
         // Build widget to visualize growth curves
         buildWidget: function($containerDiv, data, title, xAxisTitle, yAxisTitle){
 
-            var options = this.options;
-            var layout = {
+            const options = this.options;
+            const layout = {
                 autosize: true,
                 margin: {
                     l: 50,

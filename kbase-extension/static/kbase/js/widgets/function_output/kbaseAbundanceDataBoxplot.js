@@ -8,13 +8,13 @@ define (
 		'jquery',
 		'RGBColor',
 		'kbStandaloneGraph'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		RGBColor,
 		kbStandaloneGraph
-	) {
+	) => {
     return KBWidget({
         name: 'AbundanceDataBoxplot',
         version: '1.0.0',
@@ -33,25 +33,25 @@ define (
         },
 	
         render: function() {
-	        var self = this;
-	        var pref = this.uuidv4();
-	        var container = this.$elem;
-	        var kbws = new Workspace(self.ws_url, {'token': self.options.auth});
+	        const self = this;
+	        const pref = this.uuidv4();
+	        const container = this.$elem;
+	        const kbws = new Workspace(self.ws_url, {'token': self.options.auth});
             
 	        container.empty();
 	        container.append("<div><img src=\""+self.loading_image+"\">&nbsp;&nbsp;loading data...</div>");
 
-	        kbws.get_objects([{ref: self.options.ws+"/"+self.options.id}], function(data) {
+	        kbws.get_objects([{ref: self.options.ws+"/"+self.options.id}], (data) => {
 	            container.empty();
 		        // parse data
 		        if (data.length == 0) {
-		            var msg = "[Error] Object "+self.options.id+" does not exist in workspace "+self.options.ws;
+		            const msg = "[Error] Object "+self.options.id+" does not exist in workspace "+self.options.ws;
 		            container.append('<div><p>'+msg+'>/p></div>');
 		        } else {
-		            var biom = data[0]['data'];
-		            var matrix = [];
-		            var colnum = biom['columns'].length;
-		            var rownum = biom['rows'].length;
+		            const biom = data[0]['data'];
+		            let matrix = [];
+		            const colnum = biom['columns'].length;
+		            const rownum = biom['rows'].length;
 		            // get matrix
 		            if (biom['matrix_type'] == 'sparse') {
 			            matrix = self.sparse2dense(biom['data'], biom['shape'][0], biom['shape'][1]);
@@ -59,8 +59,8 @@ define (
 			            matrix = biom['data'];
 		            }
 		            // build data
-		            var divdata = new Array(colnum);
-		            var colors = GooglePalette(colnum);
+		            const divdata = new Array(colnum);
+		            const colors = GooglePalette(colnum);
 		            // names
 		            for (var c = 0; c < colnum; c++) {
 		                if (self.options.name == 0) {
@@ -70,24 +70,24 @@ define (
 	                    }
 	                }
 		            // values
-		            var maxval = 0;
-		            for (var r = 0; r < rownum; r++) {
+		            let maxval = 0;
+		            for (let r = 0; r < rownum; r++) {
 		                for (var c = 0; c < colnum; c++) {
                             maxval = Math.max(maxval, matrix[r][c]);
                             divdata[c]['data'].push(matrix[r][c]);
 	                    }
 	                }
                     // DEVIATION PLOT
-			        var glen = 0;
+			        let glen = 0;
                     if (window.hasOwnProperty('rendererGraph') && rendererGraph.length) {
                         glen = rendererGraph.length;
                     }
 			        container.append("<div id='outputGraph"+glen+"' style='width: 95%;'></div>");
-			        var ab_type = 'normalized';
+			        let ab_type = 'normalized';
 			        if (maxval > 1) {
 			            ab_type = 'raw';
 			        }
-                    var devTest = standaloneGraph.create({index: glen});
+                    const devTest = standaloneGraph.create({index: glen});
                     devTest.settings.target = document.getElementById("outputGraph"+glen);
                     devTest.settings.data = divdata;
                     devTest.settings.y_title = ab_type+' abundance';
@@ -97,9 +97,9 @@ define (
                     devTest.settings.chartArea = [ 0.1, 0.1, 0.95, 0.8 ];
                     devTest.render(glen);
 		        }
-	        }, function(data) {
+	        }, (data) => {
 		        container.empty();
-		        var main = $('<div>');
+		        const main = $('<div>');
 		        main.append($('<p>')
 		            .css({'padding': '10px 20px'})
 		            .text('[Error] '+data.error.message));
@@ -109,7 +109,7 @@ define (
         },
 
 	    sparse2dense: function(sparse, rmax, cmax) {
-	        var dense = new Array(rmax);
+	        const dense = new Array(rmax);
 	        for (var i = 0; i < rmax; i++) {
 		        dense[i] = Array.apply(null, new Array(cmax)).map(Number.prototype.valueOf, 0);
 	        }

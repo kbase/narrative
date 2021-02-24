@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 define([
     'handlebars',
     'common/runtime',
@@ -13,7 +10,7 @@ define([
     './samplePropertyHistogram',
     './growthCondition'
 
-], function (
+], (
     Handlebars,
     Runtime,
     Props,
@@ -23,14 +20,14 @@ define([
     GrowthCurves,
     SampleProperty,
     SamplePropertyHistogram,
-    GrowthCondition) {
+    GrowthCondition) => {
     'use strict';
 
-    let t = html.tag,
+    const t = html.tag,
         div = t('div');
 
     function factory() {
-        let runtime = Runtime.make();
+        const runtime = Runtime.make();
 
         function workspaceCall(subObjectIdentity) {
             return new Workspace(runtime.config('services.workspace.url'), {
@@ -64,7 +61,7 @@ define([
 
         function sortData (data) {
             // sort by id now.
-            data.sort(function (a, b) {
+            data.sort((a, b) => {
                 if (a.id > b.id) {
                     return 1;
                 }
@@ -86,7 +83,7 @@ define([
                 },
                 dataCall;
 
-            let parseData = function (results) {
+            const parseData = function (results) {
                 let values = [],
                     selectionId = subdataSelection.selection_id,
                     descriptionFields = subdataSelection.selection_description || [],
@@ -94,13 +91,13 @@ define([
                     descriptionTemplate;
 
                 if (!descriptionTemplateText) {
-                    descriptionTemplateText = descriptionFields.map(function (field) {
+                    descriptionTemplateText = descriptionFields.map((field) => {
                         return '{{' + field + '}}';
                     }).join(' - ');
                 }
 
                 descriptionTemplate = Handlebars.compile(descriptionTemplateText);
-                results.forEach(function (result) {
+                results.forEach((result) => {
                     if (!result) {
                         return;
                     }
@@ -110,7 +107,7 @@ define([
                         result = result[0];
                     }
 
-                    let subdata = Props.getDataItem(result.data, subdata_path);
+                    const subdata = Props.getDataItem(result.data, subdata_path);
 
                     if (!subdata) {
                         return;
@@ -119,7 +116,7 @@ define([
                     if (subdata instanceof Array) {
                         // For arrays we pluck off the "selectionId" property from
                         // each item.
-                        subdata.forEach(function (datum) {
+                        subdata.forEach((datum) => {
                             let id = datum;
                             if (selectionId && typeof id === 'object') {
                                 id = datum[selectionId];
@@ -132,8 +129,8 @@ define([
                             });
                         });
                     } else if (subdata instanceof Object) {
-                        Object.keys(subdata).forEach(function (key) {
-                            let datum = subdata[key];
+                        Object.keys(subdata).forEach((key) => {
+                            const datum = subdata[key];
                             let id = key;
 
                             if (selectionId) {
@@ -153,11 +150,11 @@ define([
                             });
                         });
                     } else  {
-                        console.error(`subdata must be should be either an array or object 
+                        console.error(`subdata must be should be either an array or object
                                        but was ${typeof subdata}`)
                     }
                 });
-                return values.map(function (item) {
+                return values.map((item) => {
                     item.text = makeLabel(item, arg.spec.ui.showSourceObject);
                     return item;
                 });
@@ -176,8 +173,8 @@ define([
                 const ref_loc = subdataSelection.path_to_subdata.slice(0, ref_index);
                 subdata_path = subdataSelection.path_to_subdata.slice(ref_index + 1);
                 return dataCall
-                    .then(function (results) {
-                        let reference = Props.getDataItem(results[0].data, [ref_loc]);
+                    .then((results) => {
+                        const reference = Props.getDataItem(results[0].data, [ref_loc]);
                         return workspaceCall({
                                 ref: reference,
                                 included: subdataSelection.subdata_included
@@ -234,26 +231,26 @@ define([
                     included: arg.included
                 }];
             return workspace.get_object_subset(query)
-                .then(function (result) {
+                .then((result) => {
                     return arg.extractItems(result, arg.params);
                 });
         }
 
         function customFetchFromReference(arg) {
-            var referenceObjectRef = arg.referenceObjectRef,
+            const referenceObjectRef = arg.referenceObjectRef,
                 workspace = new Workspace(runtime.config('services.workspace.url'), {
                     token: runtime.authToken()
                 });
             return workspace.get_objects([{ ref: referenceObjectRef }])
-                .then(function (data) {
-                    var nextRef = arg.getRef(data),
+                .then((data) => {
+                    const nextRef = arg.getRef(data),
                         query = [{
                             ref: nextRef,
                             included: arg.included
                         }];
                     return workspace.get_object_subset(query);
                 })
-                .then(function (result) {
+                .then((result) => {
                     return arg.extractItems(result, arg.params);
                 });
         }

@@ -8,24 +8,24 @@ define([
     'kbase-generic-client-api',
     'narrativeConfig',
     'base/js/namespace'
-], function (
+], (
     Promise,
     KBaseClient,
     GenericClient,
     Config,
     Jupyter
-) {
+) => {
 
     function getAppSpec (id, tag) {
-        return getAppSpecs([id], tag).then(function(result) {
-            return Promise.try(function() {
+        return getAppSpecs([id], tag).then((result) => {
+            return Promise.try(() => {
                 return result[0];
             });
         });
     }
 
     function getAppVersionTag () {
-        var tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag;
+        let tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag;
         if (!tag) {
             tag = "release";
         }
@@ -40,7 +40,7 @@ define([
         if (!tag) {
             tag = getAppVersionTag();
         }
-        var nms = new NarrativeMethodStore(Config.url('narrative_method_store'));
+        const nms = new NarrativeMethodStore(Config.url('narrative_method_store'));
         return Promise.resolve(nms.get_method_spec({ids: idList, tag: tag}));
     }
 
@@ -55,10 +55,10 @@ define([
         if (!ref) {
             return false;
         }
-        var refRegex = /^\S+\/\S+(\/\d+)?$/;
-        var refList = ref.split(';');
-        var validRef = true;
-        refList.forEach(function(r) {
+        const refRegex = /^\S+\/\S+(\/\d+)?$/;
+        const refList = ref.split(';');
+        let validRef = true;
+        refList.forEach((r) => {
             if (!refRegex.exec(r)) {
                 validRef = false;
             }

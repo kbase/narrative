@@ -4,16 +4,16 @@ define([
     'kb_common/utils',
     'kb_common/jsonRpc/dynamicServiceClient',
     './common'
-], function (
+], (
     Promise,
     Handlebars,
     Utils,
     DynamicServiceClient,
     common
-) {
+) => {
     'use strict';
 
-    var WorkspaceDataSource = Object.create({}, {
+    const WorkspaceDataSource = Object.create({}, {
         init: {
             value: function (arg) {
                 common.requireArg(arg, 'config');
@@ -63,7 +63,7 @@ define([
         },
         setPage: {
             value: function(newPage) {
-                var page;
+                let page;
                 if (newPage) {
                     page = newPage - 1;
                 } else {
@@ -74,13 +74,13 @@ define([
         },
         search: {
             value: function (query) {
-                return Promise.try(function () {
+                return Promise.try(() => {
                     if (this.searchState.inProgress) {
                         return null;
                     }
                     this.searchState.inProgress = true;
-                    var now = new Date().getTime();
-                    var queryState = {
+                    const now = new Date().getTime();
+                    const queryState = {
                         query: query,
                         page: query.page,
                         started: now,
@@ -91,29 +91,29 @@ define([
                     this.searchState.queryState = queryState;
 
                     queryState.promise = this.loadData()
-                        .then(function () {
+                        .then(() => {
                             // Prepare page number
                             this.setPage(query.page);
 
                             // Prepare search input
-                            var searchExpression = this.parseQuery(query.input);
+                            const searchExpression = this.parseQuery(query.input);
 
                             this.applyQuery(searchExpression);
 
-                            var paged = this.applyPage();
+                            const paged = this.applyPage();
 
                             this.fetchedDataCount = this.page * this.pageSize + paged.length;
 
                             return this.transform();
-                        }.bind(this))
-                        .finally(function () {
+                        })
+                        .finally(() => {
                             queryState.promise = null;
                             this.searchState.queryState = null;
                             this.searchState.inProgress = false;
-                        }.bind(this));
+                        });
 
                     return queryState.promise;
-                }.bind(this));                        
+                });                        
             }
         },        
         applyQuery: {
@@ -129,15 +129,15 @@ define([
                 if (queryExpression === this.currentQueryExpression) {
                     return this.filteredData;
                 }
-                this.filteredData = this.availableData.filter(function (item) {
-                    return (this.config.searchFields.some(function (field) {
-                        var value = Utils.getProp(item, field);
+                this.filteredData = this.availableData.filter((item) => {
+                    return (this.config.searchFields.some((field) => {
+                        const value = Utils.getProp(item, field);
                         if (value && value.toLowerCase().indexOf(queryExpression) >= 0) {
                             return true;
                         }
                         return false;
-                    }.bind(this)));
-                }.bind(this));
+                    }));
+                });
                 this.filteredDataCount = this.filteredData.length;
                 return this.filteredData;
             }
@@ -145,8 +145,8 @@ define([
         applyPage: {
             value: function() {
                 // get page range.
-                var start = this.pageSize * this.page;
-                var end = start + this.pageSize;
+                const start = this.pageSize * this.page;
+                const end = start + this.pageSize;
 
                 this.currentResultData = this.filteredData.slice(start, end);
                 return this.currentResultData;
@@ -165,10 +165,10 @@ define([
                             this.availableDataCount = this.availableData.length;
                             return this.availableData
                                 .sort((a, b) => {
-                                    var sortField = this.config.sort[0].field;
-                                    var direction = this.config.sort[0].ascending ? 1 : -1;
-                                    var aValue = Utils.getProp(a, sortField);
-                                    var bValue = Utils.getProp(b, sortField);
+                                    const sortField = this.config.sort[0].field;
+                                    const direction = this.config.sort[0].ascending ? 1 : -1;
+                                    const aValue = Utils.getProp(a, sortField);
+                                    const bValue = Utils.getProp(b, sortField);
                                     if (aValue < bValue) {
                                         return direction * -1;
                                     } else if (aValue === bValue) {
@@ -184,10 +184,10 @@ define([
         // TODO: look at this structure, fold into above.
         transform: {
             value: function () {
-                return this.currentResultData.map(function (item) {
-                    var name = this.titleTemplate(item);
-                    var metadata = common.applyMetadataTemplates(this.metadataTemplates, item);
-                    var ref = {
+                return this.currentResultData.map((item) => {
+                    const name = this.titleTemplate(item);
+                    const metadata = common.applyMetadataTemplates(this.metadataTemplates, item);
+                    const ref = {
                         workspaceId: item.info[6],
                         objectId: item.info[0],
                         version: item.info[4]                      
@@ -206,7 +206,7 @@ define([
                         attached: false,
                         workspaceReference: ref
                     };
-                }.bind(this));
+                });
             }
         }
     });

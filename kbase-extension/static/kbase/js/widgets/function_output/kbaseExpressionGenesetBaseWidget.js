@@ -24,7 +24,7 @@ define([
     // Loaded for effect
     'jquery-dataTables',
     'kbaseFeatureValues-client-api'
-], function (
+], (
     KBWidget,
     bootstrap,
     $,
@@ -33,7 +33,7 @@ define([
     Config,
     DynamicServiceClient,
     ServiceClient
-) {
+) => {
     'use strict';
 
     return KBWidget({
@@ -90,9 +90,9 @@ define([
         },
         // To be overriden to specify additional parameters
         getSubmtrixParams: function () {
-            var self = this;
+            const self = this;
             self.setTestParameters();
-            var features = [];
+            let features = [];
             if (self.options.geneIds) {
                 features = $.map(self.options.geneIds.split(','), $.trim);
             }
@@ -103,11 +103,11 @@ define([
             };
         },
         loadAndRender: function () {
-            var self = this;
+            const self = this;
             self.loading(true);
 
             function getSubmatrixStatsAndRender() {
-                var smParams = self.getSubmtrixParams();
+                const smParams = self.getSubmtrixParams();
 
                 // some parameter checking
                 if (!smParams.row_ids || smParams.row_ids.length === 0) {
@@ -115,12 +115,12 @@ define([
                     return;
                 }
                 self.featureValues.callFunc('get_submatrix_stat', [smParams])
-                    .spread(function (data) {
+                    .spread((data) => {
                         self.submatrixStat = data;
                         self.render();
                         self.loading(false);
                     })
-                    .catch(function (error) {
+                    .catch((error) => {
                         self.clientError(error);
                     });
             }
@@ -130,13 +130,13 @@ define([
                 self.ws.callFunc('get_objects', [[{
                     ref: self.options.workspaceID + '/' + self.options.featureset
                 }]])
-                    .spread(function (fdata) {
-                        var fs = fdata[0].data;
+                    .spread((fdata) => {
+                        const fs = fdata[0].data;
                         if (!self.options.geneIds) {
                             self.options.geneIds = '';
                         }
 
-                        for (var fid in fs.elements) {
+                        for (const fid in fs.elements) {
                             if (fs.elements.hasOwnProperty(fid)) {
                                 if (self.options.geneIds) {
                                     self.options.geneIds += ',';
@@ -150,7 +150,7 @@ define([
                         }
                         getSubmatrixStatsAndRender();
                     })
-                    .catch(function (error) {
+                    .catch((error) => {
                         self.clientError(error);
                     });
             } else {
@@ -158,30 +158,30 @@ define([
             }
         },
         render: function () {
-            var $overviewContainer = $('<div/>');
+            const $overviewContainer = $('<div/>');
             this.$elem.append($overviewContainer);
             this.buildOverviewDiv($overviewContainer);
 
             // Separator
             this.$elem.append($('<div style="margin-top:1em"></div>'));
 
-            var $vizContainer = $('<div/>');
+            const $vizContainer = $('<div/>');
             this.$elem.append($vizContainer);
             this.buildWidget($vizContainer);
         },
         buildOverviewDiv: function ($containerDiv) {
-            var self = this;
-            var pref = this.pref;
+            const self = this;
+            const pref = this.pref;
 
-            var $overviewSwitch = $('<a/>').html('[Show/Hide Selected Features]');
+            const $overviewSwitch = $('<a/>').html('[Show/Hide Selected Features]');
             $containerDiv.append($overviewSwitch);
 
-            var $overvewContainer = $('<div hidden style="margin:1em 0 4em 0"/>');
+            const $overvewContainer = $('<div hidden style="margin:1em 0 4em 0"/>');
             $containerDiv.append($overvewContainer);
 
-            var geneData = self.buildGenesTableData();
-            var iDisplayLength = 10;
-            var style = 'lftip';
+            const geneData = self.buildGenesTableData();
+            const iDisplayLength = 10;
+            let style = 'lftip';
             if (geneData.length <= iDisplayLength) {
                 style = 'fti';
             }
@@ -208,18 +208,18 @@ define([
                     }
                 }));
 
-            $overviewSwitch.click(function () {
+            $overviewSwitch.click(() => {
                 $overvewContainer.toggle();
             });
         },
         buildGenesTableData: function () {
-            var submatrixStat = this.submatrixStat;
-            var tableData = [];
-            var stat = submatrixStat.row_set_stats;
-            for (var i = 0; i < submatrixStat.row_descriptors.length; i++) {
-                var desc = submatrixStat.row_descriptors[i];
+            const submatrixStat = this.submatrixStat;
+            const tableData = [];
+            const stat = submatrixStat.row_set_stats;
+            for (let i = 0; i < submatrixStat.row_descriptors.length; i++) {
+                const desc = submatrixStat.row_descriptors[i];
 
-                var gene_function = desc.properties['function'];
+                const gene_function = desc.properties['function'];
                 tableData.push(
                     {
                         'index': desc.index,
@@ -240,7 +240,7 @@ define([
         buildWidget: null,
 
         makeRow: function (name, value) {
-            var $row = $('<tr/>')
+            const $row = $('<tr/>')
                 .append($('<th />').css('width', '20%').append(name))
                 .append($('<td />').append(value));
             return $row;
@@ -252,7 +252,7 @@ define([
                 this.hideMessage();
         },
         showMessage: function (message) {
-            var span = $('<span/>').append(message);
+            const span = $('<span/>').append(message);
 
             this.$messagePane.append(span);
             this.$messagePane.show();
@@ -263,7 +263,7 @@ define([
         },
         clientError: function (error) {
             this.loading(false);
-            var errString = 'Unknown error.';
+            let errString = 'Unknown error.';
             console.error(error);
             if (typeof error === 'string')
                 errString = error;
@@ -282,7 +282,7 @@ define([
                 }
             }
 
-            var $errorDiv = $('<div>')
+            const $errorDiv = $('<div>')
                 .addClass('alert alert-danger')
                 .append('<b>Error:</b>')
                 .append('<br>' + errString);
@@ -291,13 +291,13 @@ define([
         },
         uuid: function () {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
-                function (c) {
-                    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                (c) => {
+                    const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
                     return v.toString(16);
                 });
         },
         buildObjectIdentity: function (workspaceID, objectID, objectVer, wsRef) {
-            var obj = {};
+            const obj = {};
             if (wsRef) {
                 obj['ref'] = wsRef;
             } else {

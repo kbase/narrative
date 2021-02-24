@@ -20,7 +20,7 @@
 		'kbaseEditHistory',
 		'kbaseAuthenticatedWidget',
 		'kbaseModal'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
@@ -28,7 +28,7 @@
 		EditHistory,
 		kbaseAuthenticatedWidget,
 		kbaseModal
-	) {
+	) => {
 
 'use strict';
 
@@ -40,19 +40,19 @@ return KBWidget({
     init: function(input) {
 
         this._super(input);
-        var self = this,
+        const self = this,
             container = $('<div class="kb-editor">');
 
         self.$elem.append(container);
 
         // APIs
-        var modeling = new ModelingAPI( self.authToken() ),
+        const modeling = new ModelingAPI( self.authToken() ),
             api = modeling.api,
             biochem = modeling.biochem,
             getCpds = modeling.getCpds;
 
         // accept either workspace/object names or workspace/object ids
-        var wsName = input.ws,
+        const wsName = input.ws,
             objName = input.obj;
 
         if (isNaN(wsName) && isNaN(objName) )
@@ -64,7 +64,7 @@ return KBWidget({
             return this;
         }
 
-        var table,          // main table to be edited (reactions for now)
+        let table,          // main table to be edited (reactions for now)
             modelObj,
             model,          // actual model data
             modelreactions, // edited table
@@ -73,23 +73,23 @@ return KBWidget({
 
 
         // some controls for the table
-        var saveBtn = $('<button class="btn btn-primary btn-save hide">'+
+        const saveBtn = $('<button class="btn btn-primary btn-save hide">'+
                         'Save</button>');
         //var saveAsBtn = $('<button class="btn btn-primary btn-save hide">'+
         //                'Save as...</button>');
-        var addBtn = $('<button class="btn btn-primary">'+
+        const addBtn = $('<button class="btn btn-primary">'+
                        '<i class="fa fa-plus"></i> Add reactions...</button>');
-        var rmBtn = $('<button class="btn btn-danger hide">');
+        const rmBtn = $('<button class="btn btn-danger hide">');
 
         // keep track of edits
-        var _editHistory = new EditHistory();
+        const _editHistory = new EditHistory();
 
-        var allowedTabs = ['Reactions', 'Compounds', 'Compartments', 'Biomass'];
+        const allowedTabs = ['Reactions', 'Compounds', 'Compartments', 'Biomass'];
 
         // get media data
         container.loading();
         api('ws', 'get_objects', [param])
-            .done(function(res){
+            .done((res)=> {
                 rawData = $.extend(true, {}, res[0]);
 
                 modelObj = new KBaseFBA_FBAModel(self);
@@ -102,13 +102,13 @@ return KBWidget({
                 modelreactions = model.modelreactions;
 
                 // skip overview
-                var tabList = modelObj.tabList.slice(1);
+                const tabList = modelObj.tabList.slice(1);
 
-                var uiTabs = [];
+                const uiTabs = [];
 
-                var i = tabList.length;
+                let i = tabList.length;
                 while (i--) {
-                    var tab = tabList[i];
+                    const tab = tabList[i];
 
                     // skip viz not needed
                     if (allowedTabs.indexOf(tab.name) === -1) {
@@ -117,7 +117,7 @@ return KBWidget({
                     }
 
                     // add loading status
-                    var placeholder = $('<div>')
+                    const placeholder = $('<div>')
                     placeholder.loading();
 
                     uiTabs.unshift({name: tabList[i].name, content: placeholder});
@@ -133,9 +133,9 @@ return KBWidget({
 
         function buildContent(tabList) {
             //5) Iterates over the entries in the spec and instantiate things
-            for (var i = 0; i < tabList.length; i++) {
-                var tabSpec = tabList[i];
-                var tabPane = tabs.tabContent(tabSpec.name);
+            for (let i = 0; i < tabList.length; i++) {
+                const tabSpec = tabList[i];
+                const tabPane = tabs.tabContent(tabSpec.name);
 
                 // skip any vertical tables for now
                 if (tabSpec.type === 'verticaltbl') continue;
@@ -148,7 +148,7 @@ return KBWidget({
         }
 
         function createDataTable(tabSpec, tabPane) {
-            var settings = getTableSettings(tabSpec, model);
+            const settings = getTableSettings(tabSpec, model);
             tabPane.rmLoading();
 
             // the 'style' here is a hack for narrative styling :/
@@ -160,7 +160,7 @@ return KBWidget({
 
         // creates a datatable on a tabPane
         function createRxnTable(tabSpec, tabPane) {
-            var settings = getTableSettings(tabSpec, model);
+            const settings = getTableSettings(tabSpec, model);
             tabPane.rmLoading();
 
             // the 'style' here is a hack for narrative styling :/
@@ -169,21 +169,21 @@ return KBWidget({
             table = table.DataTable(settings);
 
             // add controls
-            var controls = tabPane.find('.controls');
+            const controls = tabPane.find('.controls');
 
             controls.append(addBtn, rmBtn, saveBtn);
 
             addBtn.on('click', rxnModal);
-            saveBtn.on('click', function() { saveData(_editHistory.getMaster(), wsName, objName) });
+            saveBtn.on('click', () => { saveData(_editHistory.getMaster(), wsName, objName) });
             //saveAsBtn.on('click', saveModal);
-            rmBtn.on('click', function() {
+            rmBtn.on('click', () => {
                 // get all selected data
-                var data = getTableData('.row-select');
+                const data = getTableData('.row-select');
 
                 // edit table
-                var ids = data.map(function(obj){ return obj.id }) ;
+                const ids = data.map((obj)=> { return obj.id }) ;
 
-                var op = {op: 'rm', data: data, ids: ids};
+                const op = {op: 'rm', data: data, ids: ids};
                 editTable(op);
                 modeling.notice(container, 'Removed '+data.length+' reactions')
 
@@ -195,7 +195,7 @@ return KBWidget({
             table.on('click', 'tbody tr td:first-child', function() {
                 $(this).parent().toggleClass('row-select');
 
-                var count = table.rows('.row-select').data().length;
+                const count = table.rows('.row-select').data().length;
 
                 if (count > 0){
                     addBtn.addClass('hide');
@@ -212,11 +212,11 @@ return KBWidget({
             table.on('click', '.editable-direction', function(e) {
                 if ($(e.target).is('select')) return;
 
-                var cell = table.cell(this);
-                var cellContent = cell.data();
-                var rowData = table.row( $(this).parents('tr') ).data();
+                const cell = table.cell(this);
+                const cellContent = cell.data();
+                const rowData = table.row( $(this).parents('tr') ).data();
 
-                var direction = rowData.direction;
+                const direction = rowData.direction;
 
                 // render again with dropdown
                 if ( cellContent.indexOf('<=>') !== -1 )
@@ -226,12 +226,12 @@ return KBWidget({
                 else if ( cellContent.indexOf('<=') !== -1 )
                     var sides = cellContent.split('<=');
 
-                var dd = $('<select class="form-control">'+
+                const dd = $('<select class="form-control">'+
                                 '<option value="="><=></option>'+
                                 '<option value="<"><=</option>'+
                                 '<option value=">">=></option>'+
                             '</select>')
-                var eq = $('<span>');
+                const eq = $('<span>');
                 dd.find('option[value="'+direction+'"]').attr('selected', 'selected');
 
                 eq.append(sides[0], dd, sides[1]);
@@ -240,7 +240,7 @@ return KBWidget({
 
                 // event for when direction dropdown changes
                 $(this).find('select').on('blur', function(){
-                    var newDirection = $(this).val();
+                    const newDirection = $(this).val();
 
                     if (newDirection === '=')
                         var dir = '<=>';
@@ -249,7 +249,7 @@ return KBWidget({
                     else if (newDirection === '<')
                         var dir = '<=';
 
-                    var newContent = sides[0]+dir+sides[1];
+                    const newContent = sides[0]+dir+sides[1];
 
                     // set data in datable memory
                     cell.data( newContent ).draw();
@@ -257,7 +257,7 @@ return KBWidget({
                     if (direction === newDirection) return;
 
                     // save in history
-                    var op = {
+                    const op = {
                         op: 'edit',
                         kind: 'direction',
                         ids: [rowData.id],
@@ -314,7 +314,7 @@ return KBWidget({
 
         // takes table spec and prepared data, returns datatables settings object
         function getTableSettings(tab, data) {
-            var tableColumns = getColSettings(tab);
+            const tableColumns = getColSettings(tab);
 
             return {
                 dom: '<"top col-sm-6 controls"><"top col-sm-6"f>rt<"bottom"ip><"clear">',
@@ -330,8 +330,8 @@ return KBWidget({
 
         // takes table spec, returns datatables column settings
         function getColSettings(tab) {
-            var settings = [];
-            var cols = tab.columns;
+            const settings = [];
+            const cols = tab.columns;
 
             // add checkbox
             if (tab.name == 'Reactions') {
@@ -343,15 +343,15 @@ return KBWidget({
                 })
             }
 
-            for (var i=0; i<cols.length; i++) {
-                var col = cols[i];
-                var key = col.key,
+            for (let i=0; i<cols.length; i++) {
+                const col = cols[i];
+                const key = col.key,
                     type = col.type,
                     format = col.linkformat,
                     method = col.method,
                     action = col.action
 
-                var config = {
+                const config = {
                     title: col.label,
                     name: col.label,
                     defaultContent: '-',
@@ -365,8 +365,8 @@ return KBWidget({
 
                 if ( key === 'genes' ) {
                     config.data = function(row) {
-                        var items = [];
-                        for (var i=0; i<row.genes.length; i++) {
+                        const items = [];
+                        for (let i=0; i<row.genes.length; i++) {
                             items.push(row.genes[i].id);
                         }
                         return items.join('<br>');
@@ -388,7 +388,7 @@ return KBWidget({
             var table = $('<table class="table table-bordered table-striped kb-editor-table'+
                 ' " style="width: 100% !important;">');
 
-            var modal =  new kbaseModal($('<div>'), {
+            const modal =  new kbaseModal($('<div>'), {
                 title: 'Add Reactions',
                 subText: 'Select reactions below, then click "add".',
                 body: table,
@@ -403,9 +403,9 @@ return KBWidget({
                 ajax: function (opts, callback, settings) {
                     biochem('reactions', opts,
                         ['id', 'name', 'definition']
-                    ).done(function(res){
+                    ).done((res)=> {
                         if (res) {
-                            var data = {
+                            const data = {
                                 data: res.docs,
                                 recordsFiltered: res.numFound,
                                 recordsTotal: 27693
@@ -430,8 +430,8 @@ return KBWidget({
             })
 
             // biochem table controls
-            var controls = modal.body().find('.controls');
-            var addBtn = $('<button class="btn btn-primary pull-right hide">');
+            const controls = modal.body().find('.controls');
+            const addBtn = $('<button class="btn btn-primary pull-right hide">');
             controls.append(addBtn);
 
             var selectedRows = new SelectedRows();
@@ -440,7 +440,7 @@ return KBWidget({
             table.on('click', 'tbody tr', function() {
                 $(this).toggleClass('row-select');
 
-                var data = table.rows( this ).data()[0];
+                const data = table.rows( this ).data()[0];
 
                 if ($(this).hasClass('row-select'))
                     selectedRows.add(data);
@@ -456,9 +456,9 @@ return KBWidget({
             });
 
             // add reactions on click, hide dialog, give notice
-            addBtn.on('click' , function() {
-                var data = setRxnDefaults( selectedRows.getSelected() ),
-                    ids = data.map(function(obj) { return obj.id }),
+            addBtn.on('click' , () => {
+                const data = setRxnDefaults( selectedRows.getSelected() ),
+                    ids = data.map((obj) => { return obj.id }),
 
                     op = {op: 'add', data: data, ids: ids};
                 editTable(op);
@@ -471,8 +471,8 @@ return KBWidget({
 
         // not currently used
         function saveModal() {
-            var name = objName // +'-edited';  save as same name by default.
-            var input = $('<input type="text" class="form-control" placeholder="my-media-name">'),
+            const name = objName // +'-edited';  save as same name by default.
+            const input = $('<input type="text" class="form-control" placeholder="my-media-name">'),
                 form = $('<div class="form-group">'+
                             '<div class="col-sm-10"></div>' +
                           '</div>');
@@ -480,7 +480,7 @@ return KBWidget({
             input.val(name);
             form.find('div').append(input);
 
-            var modal =  new kbaseModal($('<div>'), {
+            const modal =  new kbaseModal($('<div>'), {
                 title: 'Save Media As...',
                 body: form,
                 buttons: [{
@@ -491,7 +491,7 @@ return KBWidget({
                 }]
             })
 
-            modal.button('Save').on('click', function() {
+            modal.button('Save').on('click', () => {
                 saveData(getTableData(), wsName, input.val())
             })
 
@@ -518,7 +518,7 @@ return KBWidget({
         // object for selected rows.
         // only used for biochem search engine table.
         function SelectedRows() {
-            var rows = [];
+            let rows = [];
 
             this.add = function(row) {
                 rows.push(row);
@@ -535,7 +535,7 @@ return KBWidget({
             }
 
             this.isSelected = function(id) {
-                for (var i=0; i<rows.length; i++) {
+                for (let i=0; i<rows.length; i++) {
                     if (rows[i].id === id) return true;
                 }
                 return false;
@@ -558,13 +558,13 @@ return KBWidget({
         // list of cpd objects.
         function setRxnDefaults(rxns) {
             // if not new model, use the same ref
-            var ref = modelreactions[0].reaction_ref.split('/');
-            var defaultRef = modelreactions.length ?
+            const ref = modelreactions[0].reaction_ref.split('/');
+            const defaultRef = modelreactions.length ?
                 ref.slice(0, ref.length-1).join('/')+'/' : '489/6/1/reactions/id/';
 
-            var newRxns = [];
-            for (var i=0; i<rxns.length; i++) {
-                var rxn = rxns[i];
+            const newRxns = [];
+            for (let i=0; i<rxns.length; i++) {
+                const rxn = rxns[i];
 
                 newRxns.push({
                     equation: rxn.definition,
@@ -582,10 +582,10 @@ return KBWidget({
         // takes optional selector, returns list of
         // data from datatables (instead of api object)
         function getTableData(selector) {
-            var d = selector ? table.rows( selector ).data() : table.rows().data();
+            const d = selector ? table.rows( selector ).data() : table.rows().data();
 
-            var data = [];
-            for (var i=0; i<d.length; i++) {
+            const data = [];
+            for (let i=0; i<d.length; i++) {
                 data.push(d[i]);
             }
             return data;
@@ -595,15 +595,15 @@ return KBWidget({
             saveBtn.text('saving...');
 
             // there are 3 requests: added, removed, and edited
-            var prom;
-            var rxnsToAdd = Object.keys(master.added),
+            let prom;
+            const rxnsToAdd = Object.keys(master.added),
                 rxnsToRemove = Object.keys(master.removed),
                 rxnsToEdit = Object.keys(master.edits);
 
 
             if (rxnsToAdd.length && rxnsToRemove.length) {
                 prom = addReactions(ws, name, rxnsToAdd)
-                    .then(function() {
+                    .then(() => {
                         return rmReactions(ws, name, rxnsToRemove);
                     })
             } else if ( rxnsToAdd.length  && !rxnsToRemove.length ) {
@@ -613,13 +613,13 @@ return KBWidget({
             }
 
             if (rxnsToEdit.length) {
-                var directions = [];
-                rxnsToEdit.forEach(function(id) {
+                const directions = [];
+                rxnsToEdit.forEach((id) => {
                     directions.push(master.edits[id].direction.after);
                 })
 
                 if (prom) {
-                    prom = prom.then(function() {
+                    prom = prom.then(() => {
                         return editReactions(ws, name, rxnsToEdit, directions);
                     })
                 } else {
@@ -627,7 +627,7 @@ return KBWidget({
                 }
             }
 
-            prom.done(function(res) {
+            prom.done((res) => {
                 saveBtn.text('Save').hide();
                 //saveAsBtn.text('Save as...').hide();
                 modeling.notice(container, 'Saved as '+name, 5000);
@@ -643,8 +643,8 @@ return KBWidget({
                 model: name,
                 reaction: ids,
                 addReaction: true,
-            }).fail(function(e) {
-                var error = JSON.stringify(JSON.parse(e.responseText), null,4);
+            }).fail((e) => {
+                const error = JSON.stringify(JSON.parse(e.responseText), null,4);
                  new kbaseModal($('<div>'), {
                     title: 'Oh no! Something seems to have went wrong with the reactions you wanted to add'+
                            'Please contact KBase and we would be glad to help.',
@@ -659,8 +659,8 @@ return KBWidget({
                 model: name,
                 reaction: ids,
                 removeReaction: true,
-            }).fail(function(e) {
-                var error = JSON.stringify(JSON.parse(e.responseText), null,4);
+            }).fail((e) => {
+                const error = JSON.stringify(JSON.parse(e.responseText), null,4);
                  new kbaseModal($('<div>'), {
                     title: 'Oh no! Something seems to have went wrong with the reactions you wanted to remove.'+
                            'Please contact KBase and we would be glad to help.',
@@ -675,8 +675,8 @@ return KBWidget({
                 model: name,
                 reaction: ids,
                 direction: directions
-            }).fail(function(e) {
-                var error = JSON.stringify(JSON.parse(e.responseText), null,4);
+            }).fail((e) => {
+                const error = JSON.stringify(JSON.parse(e.responseText), null,4);
                  new kbaseModal($('<div>'), {
                     title: 'Oh no! Something seems to have went wrong with the reactions you wanted to edit.'+
                            'Please contact KBase and we would be glad to help.',

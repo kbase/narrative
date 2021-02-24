@@ -1,9 +1,7 @@
-/*global define,console*/
-/*jslint white:true,browser:true*/
 define([
     'jquery',
     'kb_common/html'
-], function ($, html) {
+], ($, html) => {
     'use strict';
 
     function factory(config) {
@@ -11,7 +9,7 @@ define([
             config = config || {},
             globalRoot = config.node;
         function addEvent(event) {
-            var selector, id;
+            let selector, id;
             if (event.id) {
                 id = event.id;
                 selector = '#' + event.id;
@@ -33,7 +31,7 @@ define([
             return id;
         }
         function addEvents(newEvents) {
-            var selector, id;
+            let selector, id;
             if (newEvents.id) {
                 id = newEvents.id;
                 selector = '#' + newEvents.id;
@@ -44,7 +42,7 @@ define([
                 id = html.genId();
                 selector = '#' + id;
             }
-            newEvents.events.forEach(function (event) {
+            newEvents.events.forEach((event) => {
                 events.push({
                     type: event.type,
                     selector: selector,
@@ -56,9 +54,9 @@ define([
             return id;
         }
         function attachEvents(eventsRoot) {
-            var root = globalRoot || eventsRoot;            
-            events.forEach(function (event) {
-                var node = root.querySelector(event.selector);
+            const root = globalRoot || eventsRoot;
+            events.forEach((event) => {
+                const node = root.querySelector(event.selector);
                 if (!node) {
                     // console.error('could not find node', event.selector, root);
                     throw new Error('could not find node for ' + event.selector);

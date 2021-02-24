@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 define([
     'bluebird',
     // CDN
@@ -16,7 +13,7 @@ define([
     'common/runtime'
     // All the input widgets
 
-], function(
+], (
     Promise,
     html,
     UI,
@@ -29,16 +26,16 @@ define([
     Runtime
 
     // Input widgets
-) {
+) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         form = t('form'),
         span = t('span'),
         div = t('div');
 
     function factory(config) {
-        var runtime = Runtime.make(),
+        let runtime = Runtime.make(),
             parentBus = config.bus,
             workspaceInfo = config.workspaceInfo,
             container,
@@ -88,13 +85,13 @@ define([
         // RENDERING
 
         function makeFieldWidget(appSpec, parameterSpec, value) {
-            var fieldBus = runtime.bus().makeChannelBus({ description: 'A field widget' }),
+            const fieldBus = runtime.bus().makeChannelBus({ description: 'A field widget' }),
                 inputWidget = paramResolver.loadInputControl(parameterSpec);
 
             inputBusses.push(fieldBus);
 
             // Forward all changed parameters to the controller. That is our main job!
-            fieldBus.on('changed', function(message) {
+            fieldBus.on('changed', (message) => {
                 parentBus.emit('parameter-changed', {
                     parameter: parameterSpec.id(),
                     newValue: message.newValue
@@ -103,13 +100,13 @@ define([
 
 
             // An input widget may ask for the current model value at any time.
-            fieldBus.on('sync', function() {
+            fieldBus.on('sync', () => {
                 parentBus.emit('parameter-sync', {
                     parameter: parameterSpec.id()
                 });
             });
 
-            fieldBus.on('sync-params', function(message) {
+            fieldBus.on('sync-params', (message) => {
                 console.log('request sync params', message);
                 parentBus.emit('sync-params', {
                     parameters: message.parameters,
@@ -121,13 +118,13 @@ define([
             /*
              * Or in fact any parameter value at any time...
              */
-            fieldBus.on('get-parameter-value', function(message) {
+            fieldBus.on('get-parameter-value', (message) => {
                 parentBus.request({
                         parameter: message.parameter
                     }, {
                         key: 'get-parameter-value'
                     })
-                    .then(function(message) {
+                    .then((message) => {
                         bus.emit('parameter-value', {
                             parameter: message.parameter
                         });
@@ -181,7 +178,7 @@ define([
         }
 
         function renderLayout() {
-            var events = Events.make(),
+            const events = Events.make(),
                 content = form({ dataElement: 'input-widget-form' }, [
                     // Toolbar area
                     ui.buildPanel({
@@ -197,7 +194,7 @@ define([
                         div({ dataElement: 'fields' })
                     ])
                     //                    ui.buildPanel({
-                    //                        title: span(['EDITOR', span({dataElement: 'advanced-hidden-message', style: {marginLeft: '6px', fontStyle: 'italic'}})]), 
+                    //                        title: span(['EDITOR', span({dataElement: 'advanced-hidden-message', style: {marginLeft: '6px', fontStyle: 'italic'}})]),
                     //                        name: 'field-area',
                     //                        body: div({dataElement: 'fields'}),
                     //                        classes: ['kb-panel-light']
@@ -218,7 +215,7 @@ define([
                 node: container,
                 bus: bus
             });
-            var layout = renderLayout();
+            const layout = renderLayout();
             container.innerHTML = layout.content;
             layout.events.attachEvents(container);
             places = {
@@ -229,16 +226,16 @@ define([
         // EVENTS
 
         function attachEvents() {
-            bus.on('reset-to-defaults', function() {
+            bus.on('reset-to-defaults', () => {
                 console.log('resetting...');
-                inputBusses.forEach(function(inputBus) {
+                inputBusses.forEach((inputBus) => {
                     console.log('resetting param...');
                     inputBus.emit('reset-to-defaults');
                 });
             });
-            runtime.bus().on('workspace-changed', function() {
+            runtime.bus().on('workspace-changed', () => {
                 // tell each input widget about this amazing event!
-                widgets.forEach(function(widget) {
+                widgets.forEach((widget) => {
                     widget.bus.emit('workspace-changed');
                 });
             });
@@ -258,7 +255,7 @@ define([
         }
 
         function validateParameterSpecs(params) {
-            return params.map(function(spec) {
+            return params.map((spec) => {
                 return validateParameterSpec(spec);
             });
         }
@@ -282,26 +279,26 @@ define([
             // First get the app spec, which is stashed in the model,
             // with the parameters returned.
 
-            var appSpec = model.getItem('appSpec');
+            const appSpec = model.getItem('appSpec');
 
-            return Promise.try(function() {
-                var params = validateParameterSpecs(model.getItem('parameters'));
+            return Promise.try(() => {
+                const params = validateParameterSpecs(model.getItem('parameters'));
 
                 return Promise.resolve()
-                    .then(function() {
+                    .then(() => {
                         if (params.length === 0) {
                             places.fields.innerHTML = span({ style: { fontStyle: 'italic' } }, 'No input objects for this app');
                         } else {
                             // The "fields" becomes the layout.
                             places.fields.innerHTML = renderEditorLayout();
 
-                            return Promise.all(params.map(function(spec) {
+                            return Promise.all(params.map((spec) => {
                                 try {
-                                    var result = makeFieldWidget(appSpec, spec, model.getItem(['params', spec.name()])),
+                                    const result = makeFieldWidget(appSpec, spec, model.getItem(['params', spec.name()])),
                                         rowWidget = RowWidget.make({ widget: result.widget, spec: spec }),
                                         rowNode = document.createElement('div');
                                     // places.fields.appendChild(rowNode);
-                                    var rowPlace = document.querySelector('[data-parameter="' + spec.name() + '"]');
+                                    const rowPlace = document.querySelector('[data-parameter="' + spec.name() + '"]');
                                     if (!rowPlace) {
                                         console.warn('Parameter not found in layout', spec);
                                         return;
@@ -316,7 +313,7 @@ define([
                                     console.error('Error making input field widget', ex);
                                     // TRY Throwing up
                                     // or not: throw new Error('Error making input field widget: ' + ex.message);
-                                    var errorDisplay = div({ style: { border: '1px red solid' } }, [
+                                    const errorDisplay = div({ style: { border: '1px red solid' } }, [
                                         ex.message
                                     ]);
                                     places.fields.appendChild(ui.createNode(errorDisplay));
@@ -325,13 +322,13 @@ define([
                         }
                     })
 
-                .then(function() {
-                        return Promise.all(widgets.map(function(widget) {
+                .then(() => {
+                        return Promise.all(widgets.map((widget) => {
                             return widget.widget.start();
                         }));
                     })
-                    .then(function() {
-                        return Promise.all(widgets.map(function(widget) {
+                    .then(() => {
+                        return Promise.all(widgets.map((widget) => {
                             return widget.widget.run(params);
                         }));
                     });
@@ -340,35 +337,35 @@ define([
 
         function start() {
 
-            return Promise.try(function() {
+            return Promise.try(() => {
                 // parent will send us our initial parameters
-                parentBus.on('run', function(message) {
+                parentBus.on('run', (message) => {
                     doAttach(message.node);
 
                     model.setItem('appSpec', message.appSpec);
                     model.setItem('parameters', message.parameters);
 
-                    // TODO: this should be a promise, or emit an event at the 
+                    // TODO: this should be a promise, or emit an event at the
                     // conclusion which triggers a render.
                     bus.emit('reset-to-defaults');
 
                     // we then create our widgetsfrend
                     renderParameters()
-                        .then(function() {
+                        .then(() => {
                             // do something after success
                             attachEvents();
                         })
-                        .catch(function(err) {
+                        .catch((err) => {
                             // do somethig with the error.
                             console.error('ERROR in start', err);
                         });
                 });
 
-                parentBus.on('parameter-changed', function(message) {
+                parentBus.on('parameter-changed', (message) => {
                     // Also, tell each of our inputs that a param has changed.
                     // TODO: use the new key address and subscription
                     // mechanism to make this more efficient.
-                    inputBusses.forEach(function(bus) {
+                    inputBusses.forEach((bus) => {
                         bus.send(message, {
                             key: {
                                 type: 'parameter-changed',

@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 /*
  * Okay, I give in.
  * Lets just do MVC
@@ -8,20 +5,20 @@
  * Our models are aware of the app spec, though, that is how they
  * configure their properties, validation, and relationships.
  * Data operations are custom coded here, though.
- * 
+ *
  */
 
 define([
     'kb_common/props',
     'kb_service/client/narrativeMethodStore'
-], function(
+], (
     Props,
     NarrativeMethodStore
-) {
+) => {
     'use strict';
 
     function factory(config) {
-        var model = Props.make(),
+        const model = Props.make(),
             runtime = config.runtime,
             appId = config.appId,
             appTag = config.appTag,
@@ -30,7 +27,7 @@ define([
         // SUPPORT
 
         function fetchAppSpec(appId, appTag) {
-            var appRef = {
+            const appRef = {
                     ids: [appId],
                     tag: appTag
                 },
@@ -39,16 +36,16 @@ define([
                 });
 
             return nms.get_method_spec(appRef)
-                .then(function(data) {
+                .then((data) => {
                     if (!data[0]) {
                         throw new Error('App not found');
                     }
-                    // Just keep a copy around for debugging.                    
+                    // Just keep a copy around for debugging.
                     // appSpec = data[0];
 
                     return data[0];
 
-                    // Now 
+                    // Now
 
                     // Get an input field widget per parameter
 
@@ -62,16 +59,16 @@ define([
                     //                        });
                     //                    env.parameters = parameters;
                     //                    env.parameterMap = parameterMap;
-                    //                    
-                    //                    
-                    //                   
+                    //
+                    //
+                    //
                     //                    return parameters;
                 });
         }
 
         function fetchAppSpec_fake(appId, appTag) {
 
-            var appSpec = {
+            const appSpec = {
                 parameters: [{
                         id: 'name',
                         description: 'Name of the reads set',
@@ -136,7 +133,7 @@ define([
 
         function createModelForApp(appId, appTag) {
             fetchAppSpec(appId, appTag)
-                .then(function() {
+                .then(() => {
                     // For each parameter, we build up our model.
 
                     // Now we layer on relationships
@@ -182,7 +179,7 @@ define([
          */
         function start() {
             return fetchAppSpec(appId, appTag)
-                .then(function(appSpec) {
+                .then((appSpec) => {
                     return true;
                 });
         }

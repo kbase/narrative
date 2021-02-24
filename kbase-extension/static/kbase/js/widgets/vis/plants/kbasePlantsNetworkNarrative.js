@@ -11,14 +11,14 @@ define (
 		'kbasePlantsNetworkTable',
 		'kbaseForcedNetwork',
 		'kbaseTable'
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		kbasePlantsNetworkTable,
 		kbaseForcedNetwork,
 		kbaseTable
-	) {
+	) => {
         return KBWidget(
         {
 
@@ -49,18 +49,18 @@ define (
                 };
 
 
-                var colorCats = d3.scale.category20();
+                const colorCats = d3.scale.category20();
 
                 this.setValueForKey('input', newInput);
 
-                var records = {};
-                var datasets = [];
+                const records = {};
+                const datasets = [];
                 $.each(
                     newInput.datasets,
-                    function (idx, rec) {
+                    (idx, rec) => {
                         datasets.push(rec.id);
 
-                        var description = rec.description;
+                        let description = rec.description;
                         if (rec.name != rec.id) {
                             description = rec.name + ' (' + rec.description + ')';
                         }
@@ -81,17 +81,17 @@ define (
                     }
                 );
 
-                var linkScale = d3.scale.pow()
+                const linkScale = d3.scale.pow()
                     .domain([0, datasets.length])
                     .range([-100,100]);
-                var nodes = {};
-                var edges = {};
+                const nodes = {};
+                const edges = {};
 
                 $.each(
                     newInput.nodes,
-                    function (idx, node) {
+                    (idx, node) => {
 
-                        var nodeObj = nodes[node.name];
+                        let nodeObj = nodes[node.name];
                         if (nodeObj == undefined) {
 
                             node.func = node.user_annotations.functions || '';
@@ -127,11 +127,11 @@ define (
 
                 $.each(
                     newInput.edges,
-                    function (idx, edge) {
+                    (idx, edge) => {
 
-                        var node1 = nodes[edge.node_id1];
-                        var node2 = nodes[edge.node_id2];
-                        var datasetRec = records[edge.dataset_id];
+                        const node1 = nodes[edge.node_id1];
+                        const node2 = nodes[edge.node_id2];
+                        const datasetRec = records[edge.dataset_id];
 
                         node1.name = node1.name.replace(/\.CDS$/, '');
                         node2.name = node2.name.replace(/\.CDS$/, '');
@@ -146,10 +146,10 @@ define (
                             datasetRec.nodes.push(node2);
                         }
 
-                        var edgeName = [edge.dataset_id, node1.name, node2.name].sort().join('-');//node1.name + '-' + node2.name;
-                        var edgeObj = edges[edgeName];
+                        const edgeName = [edge.dataset_id, node1.name, node2.name].sort().join('-');//node1.name + '-' + node2.name;
+                        let edgeObj = edges[edgeName];
 
-                        var dataset_idx = datasets.indexOf(edge.dataset_id);
+                        const dataset_idx = datasets.indexOf(edge.dataset_id);
 
                         if (edge.name == 'is interact with') {
                             edge.name = 'interacts with';
@@ -168,7 +168,7 @@ define (
                             };
                         }
 
-                        var color = colorCats(datasets.indexOf(edge.dataset_id) % 20);
+                        const color = colorCats(datasets.indexOf(edge.dataset_id) % 20);
                         edgeObj.colors[edge.dataset_id] = color;
 
                         if (! datasetRec.edgesByName[edgeName]) {
@@ -181,10 +181,10 @@ define (
                     }
                 );
 
-                var tabularData = [];
+                const tabularData = [];
                 $.each(
                     records,
-                    function(idx, val) {
+                    (idx, val) => {
                         if (val.nodes.length) {
 
                             tabularData.push(
@@ -221,7 +221,7 @@ define (
                 $elem.css('border', '1px solid gray');
 
                 $elem.empty();
-                var $loader = $.jqElem('div')
+                const $loader = $.jqElem('div')
                             .append('<br>&nbsp;Loading data...<br>&nbsp;please wait...')
                             .append($.jqElem('br'))
                             .append(
@@ -234,7 +234,7 @@ define (
 
                 this.data('loader', $loader);
 
-                var $networkGraph = $.jqElem('div')
+                const $networkGraph = $.jqElem('div')
                     .css({width : 700, height : 600})
                     .attr('align', 'center');
                 new kbaseForcedNetwork($networkGraph, {
@@ -246,13 +246,13 @@ define (
 
                 this.networkGraph($networkGraph);
 
-                var $msgBox = $.jqElem('div')
+                const $msgBox = $.jqElem('div')
                     .attr('align', 'center')
                     .css('font-style', 'italic')
                     .html("No datasets with nodes selected");
                 this.data('msgBox', $msgBox);
 
-                var $networkTable =  new kbasePlantsNetworkTable($.jqElem('div'), {
+                const $networkTable =  new kbasePlantsNetworkTable($.jqElem('div'), {
                         $terminal       : this.options.$terminal,
                         networkGraph    : $networkGraph,
                         msgBox          : $msgBox,

@@ -2,40 +2,40 @@ define([
     'bluebird',
     'kb_common/html',
     'common/monoBus'
-], function (
+], (
     Promise,
     html
-) {
+) => {
     // This is a functional html composition and generation library.
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         input = t('input'),
         label = t('label');
 
     function factory(config) {
         // The node provided by the invoker of this widget.
-        var hostNode;
+        let hostNode;
         
         // A node created and owned by this widget. It is typically 
         // simply the only child of the host node.
-        var container;
+        let container;
 
         // The runtime is provided by the caller, but may also be created
         // directly from the runtime module.
-        var runtime = config.runtime;
+        const runtime = config.runtime;
 
         // This creates a bus "connection", which basically keeps any 
         // listener ids created by "on" or "listen" calls on 
         // channels it provides, the benefit being that they will all 
         // be closed when the connection is closed
-        var busConnection = runtime.bus().connect();
+        const busConnection = runtime.bus().connect();
 
         // This creates a new channel with a randomized (uuid) name.
-        var channel = busConnection.channel();
+        const channel = busConnection.channel();
 
         // This is NOT required for a widget. It is only a simple 
         // structure this widget uses for association DOM and state.
-        var vm = {
+        const vm = {
             layout: {
                 id: html.genId(),
                 node: null
@@ -70,8 +70,8 @@ define([
 
         // UI
 
-        var autoChangeTimer;
-        var editPauseInterval = 100;
+        let autoChangeTimer;
+        const editPauseInterval = 100;
 
         function cancelTouched() {
             if (autoChangeTimer) {
@@ -83,7 +83,7 @@ define([
         function doTouched(e) {
             channel.emit('touched');
             cancelTouched();
-            autoChangeTimer = window.setTimeout(function () {
+            autoChangeTimer = window.setTimeout(() => {
                 autoChangeTimer = null;
                 e.target.dispatchEvent(new Event('change'));
             }, editPauseInterval);
@@ -99,7 +99,7 @@ define([
 
             if (vm.vm) {
                 if (typeof data === 'object' && data !== null) {
-                    Object.keys(data).forEach(function (key) {
+                    Object.keys(data).forEach((key) => {
                         updateVm(vm.vm[key], data[key]);
                     });
                 }
@@ -116,8 +116,8 @@ define([
 
         function exportVm(vm) {
             if (vm.vm) {
-                var exported = {};
-                Object.keys(vm.vm).forEach(function (key) {
+                const exported = {};
+                Object.keys(vm.vm).forEach((key) => {
                     exported[key] = exportVm(vm.vm[key]);
                 });
                 return exported;
@@ -126,7 +126,7 @@ define([
         }
 
         function doChanged() {
-            var value = exportVm(vm.inputControl);
+            const value = exportVm(vm.inputControl);
             channel.emit('changed', {
                 newValue: value
             });
@@ -141,7 +141,7 @@ define([
 
         function setupInputNode(vmNode) {
             vmNode.node = document.getElementById(vmNode.id);
-            vmNode.node.addEventListener('change', function () {
+            vmNode.node.addEventListener('change', () => {
                 vmNode.value = vmNode.node.value;
                 doChanged();
             });
@@ -181,7 +181,7 @@ define([
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 hostNode = arg.node;
                 container = hostNode.appendChild(document.createElement('div'));
                 renderLayout();
@@ -191,7 +191,7 @@ define([
         }
 
         function stop() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 if (hostNode && container) {
                     hostNode.removeChild(container);
                 }

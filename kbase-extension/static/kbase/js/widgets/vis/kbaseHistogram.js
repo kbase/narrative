@@ -10,14 +10,14 @@ define (
 		'd3',
 		'kbaseBarchart',
 		'kbaseAuthenticatedWidget',
-	], function(
+	], (
 		KBWidget,
 		bootstrap,
 		$,
 		d3,
 		kbaseBarchart,
 		kbaseAuthenticatedWidget
-	) {
+	) => {
 
     return KBWidget({
 
@@ -85,11 +85,11 @@ define (
 
         appendUI : function appendUI($elem) {
 
-            var $me = this;
+            const $me = this;
 
-            var $barElem = $.jqElem('div').css({width : 800, height : 500});
+            const $barElem = $.jqElem('div').css({width : 800, height : 500});
 
-            var $barContainer = $.jqElem('div')
+            const $barContainer = $.jqElem('div')
                 .append(
                     $.jqElem('div')
                         .attr('class', 'col-md-10')
@@ -184,7 +184,7 @@ define (
                 .append( $barContainer )
             ;
 
-            var $barchart =
+            const $barchart =
                 $barElem.kbaseBarchart( this.options )
             ;
 
@@ -195,10 +195,10 @@ define (
                 $barchart.D3svg()
                     .selectAll('.xAxis .tick text')
                     .attr('fill', this.options.tickColor)
-                    .on('mouseover', function(L, i) {
+                    .on('mouseover', (L, i) => {
                         $.each(
                             $barchart.dataset(),
-                            function (i, d) {
+                            (i, d) => {
                                 if (d.bar == L) {
                                     $barchart.showToolTip({ label : d.tooltip })
                                 }
@@ -206,7 +206,7 @@ define (
                         );
 
                     })
-                    .on('mouseout', function(d) {
+                    .on('mouseout', (d) => {
                         $barchart.hideToolTip();
                     })
             };
@@ -219,19 +219,19 @@ define (
 
         renderHistogram : function renderHistogram(bins) {
 
-            var $me = this;
+            const $me = this;
 
             if (bins === undefined) {
                 bins = this.options.numBins;
             }
 
-            var filteredDataset = this.dataset();
+            let filteredDataset = this.dataset();
 
             if (! isNaN(this.options.minCutoff) || ! isNaN(this.options.maxCutoff)) {
                 filteredDataset = [];
 
                 $.each(this.dataset(),
-                    function(i, v) {
+                    (i, v) => {
                         if (
                             (isNaN($me.options.minCutoff) || v >= $me.options.minCutoff)
                             &&
@@ -244,14 +244,14 @@ define (
 
             }
 
-            var barData = d3.layout.histogram().bins(bins)( filteredDataset );
+            const barData = d3.layout.histogram().bins(bins)( filteredDataset );
 
-            var bars = [];
-            var sigDigits = 1000;
+            const bars = [];
+            const sigDigits = 1000;
             $.each(
                 barData,
-                function (i,bin) {
-                    var range = Math.round(bin.x * sigDigits) / sigDigits + ' to ' + (Math.round((bin.x + bin.dx) * sigDigits) / sigDigits);
+                (i,bin) => {
+                    const range = Math.round(bin.x * sigDigits) / sigDigits + ' to ' + (Math.round((bin.x + bin.dx) * sigDigits) / sigDigits);
 
                     bars.push(
                         {

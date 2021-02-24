@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 /*
  Object selector
  The object selector's jobs is to provide access to existing editable objects of the
@@ -26,7 +23,7 @@ define([
     'common/error',
     'common/data'
 
-], function(
+], (
     Promise,
     html,
     GenericClient,
@@ -39,10 +36,10 @@ define([
     Props,
     kbError,
     Data
-) {
+) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         span = t('span'),
         select = t('select'),
@@ -52,7 +49,7 @@ define([
         button = t('button');
 
     function factory(config) {
-        var runtime = Runtime.make(),
+        let runtime = Runtime.make(),
             workspaceInfo = config.workspaceInfo,
             parent, container,
             ui,
@@ -66,7 +63,7 @@ define([
         function doCreate(e) {
             e.preventDefault();
             e.stopPropagation();
-            var name = ui.getElement('new-object-name').value;
+            const name = ui.getElement('new-object-name').value;
             // value = ui.getElement('new-object-type').value;
             channel.emit('create-new-set', {
                 name: name
@@ -82,7 +79,7 @@ define([
         }
 
         function renderLayout() {
-            var events = Events.make(),
+            const events = Events.make(),
                 content = div([
                     div({ class: 'form-inline' }, [
                         'Select a Reads Set to edit: ',
@@ -116,7 +113,7 @@ define([
             parent = node;
             container = parent.appendChild(document.createElement('div'));
             ui = UI.make({ node: container });
-            var layout = renderLayout();
+            const layout = renderLayout();
             container.innerHTML = layout.content;
             layout.events.attachEvents(container);
         }
@@ -126,10 +123,10 @@ define([
             // unselect any selected item and
             // find the matching option and select it
             //console.log('autoselect', ref);
-            var control = ui.getElement('object-selector').querySelector('select');
+            const control = ui.getElement('object-selector').querySelector('select');
 
-            var selected = Array.prototype.slice.call(control.selectedOptions);
-            selected.forEach(function(option) {
+            const selected = Array.prototype.slice.call(control.selectedOptions);
+            selected.forEach((option) => {
                 option.selected = false;
             })
 
@@ -141,7 +138,7 @@ define([
             //     }
             // }
 
-            for (var i = 0; i < control.options.length; i += 1) {
+            for (let i = 0; i < control.options.length; i += 1) {
                 if (control.options.item(i).value === ref) {
                     control.options.item(i).selected = true;
                     break;
@@ -167,7 +164,7 @@ define([
         }
 
         function selectCurrentItem() {
-            var ref = model.getItem('objectRef');
+            const ref = model.getItem('objectRef');
             if (!ref) {
                 return;
             }
@@ -190,14 +187,14 @@ define([
         }
 
         function fetchData() {
-            var types = ['KBaseSets.ReadsSet'];
-            return Data.getObjectsByTypes(types, bus, function(newData) {
+            const types = ['KBaseSets.ReadsSet'];
+            return Data.getObjectsByTypes(types, bus, (newData) => {
                     doDataUpdated(newData.data);
                 })
-                .then(function(result) {
+                .then((result) => {
                     availableReadsSetsMap = {};
                     availableReadsSets = result.data;
-                    result.data.forEach(function(resultItem) {
+                    result.data.forEach((resultItem) => {
                         // var info = serviceUtils.objectInfoToObject(resultItem);
                         availableReadsSetsMap[resultItem.ref] = resultItem;
                     });
@@ -206,7 +203,7 @@ define([
         }
 
         function fetchDatax() {
-            var setApiClient = new GenericClient({
+            const setApiClient = new GenericClient({
                     url: runtime.config('services.service_wizard.url'),
                     token: runtime.authToken(),
                     module: 'SetAPI',
@@ -218,10 +215,10 @@ define([
                 };
 
             return setApiClient.callFunc('list_sets', [params])
-                .then(function(result) {
+                .then((result) => {
                     availableReadsSetsMap = {};
-                    availableReadsSets = result[0].sets.map(function(resultItem) {
-                        var info = serviceUtils.objectInfoToObject(resultItem.info);
+                    availableReadsSets = result[0].sets.map((resultItem) => {
+                        const info = serviceUtils.objectInfoToObject(resultItem.info);
                         availableReadsSetsMap[info.ref] = info;
                         return info;
                     });
@@ -229,7 +226,7 @@ define([
         }
 
         function renderAvailableObjects() {
-            var events = Events.make({
+            const events = Events.make({
                     node: container
                 }),
                 controlNode = ui.getElement('object-selector'),
@@ -238,8 +235,8 @@ define([
             controlNode.innerHTML = html.loading();
 
             return fetchData()
-                .then(function() {
-                    var content = (function() {
+                .then(() => {
+                    const content = (function() {
                         if (availableReadsSets.length === 0) {
                             return span({ style: { fontWeight: 'bold', fontStyle: 'italic', color: '#CCC' } }, [
                                 'No Reads Sets yet in this Narrative -- you can create one below'
@@ -249,8 +246,8 @@ define([
                                 class: 'form-control',
                                 id: events.addEvent({ type: 'change', handler: doItemSelected })
                             }, [option({ value: '' }, '-- No reads set selected --')]
-                            .concat(availableReadsSets.map(function(objectInfo) {
-                                var selected = false;
+                            .concat(availableReadsSets.map((objectInfo) => {
+                                let selected = false;
                                 if (selectedItem === objectInfo.ref) {
                                     selected = true;
                                 }
@@ -262,7 +259,7 @@ define([
                     events.attachEvents();
                     return availableReadsSets.length;
                 })
-                .catch(sdkClientExceptions.RequestError, function(err) {
+                .catch(sdkClientExceptions.RequestError, (err) => {
                     throw new kbError.KBError({
                         type: 'GeneralError',
                         original: err,
@@ -314,14 +311,14 @@ define([
          * Now
          */
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 doAttach(arg.node);
                 model.setItem('objectRef', arg.selectedSet);
                 renderAvailableObjects()
-                    .then(function() {
+                    .then(() => {
                         selectCurrentItem();
                     })
-                    .catch(function(err) {
+                    .catch((err) => {
                         console.log('ERROR', err);
                         channel.emit('fatal-error', {
                             location: 'render-available-objects',
@@ -332,10 +329,10 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 // TODO: stop the bus!
                 bus.stop()
-                    .then(function() {
+                    .then(() => {
                         if (parent && container) {
                             parent.removeChild(container);
                         }

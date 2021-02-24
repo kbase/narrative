@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white: true*/
 /**
  * A few string utility functions. These are kinda unrelated, but used in several places.
  *
@@ -17,7 +15,7 @@ define([
     'kbase-client-api',
     'kbaseAccordion',
     'api/auth'
-], function (
+], (
     KBWidget,
     bootstrap,
     $,
@@ -29,13 +27,13 @@ define([
     kbase_client_api,
     KBaseAccordion,
     Auth
-) {
+) => {
     'use strict';
 
-    var profileClient = new UserProfile(Config.url('user_profile'));
-    var authClient = Auth.make({url: Config.url('auth')});
-    var profilePageUrl = Config.url('profile_page');
-    var cachedUserIds = {};
+    const profileClient = new UserProfile(Config.url('user_profile'));
+    const authClient = Auth.make({url: Config.url('auth')});
+    const profilePageUrl = Config.url('profile_page');
+    const cachedUserIds = {};
 
     function lookupUserProfile(username) {
         if (!cachedUserIds[username]) {
@@ -91,7 +89,7 @@ define([
      * caption centered below.
      */
     function loadingSpinner(caption) {
-        var spinner = '<span class="fa fa-spinner fa-pulse fa-2x fa-fw">';
+        let spinner = '<span class="fa fa-spinner fa-pulse fa-2x fa-fw">';
         if (caption) {
             spinner += caption + '... &nbsp; &nbsp;'
         }
@@ -100,8 +98,8 @@ define([
     }
 
     function loadingDiv(caption) {
-        var $caption = $('<span>');
-        var $loader = $('<div>').addClass('kb-data-loading')
+        const $caption = $('<span>');
+        const $loader = $('<div>').addClass('kb-data-loading')
             .append('<img src="' + Config.get('loading_gif') + '" style="margin:auto">')
             .append('<br>')
             .append($caption);
@@ -137,13 +135,13 @@ define([
      */
     function getAppIcon(params) {
 
-        var cursor = 'default';
+        let cursor = 'default';
         if (params.cursor) {
             cursor = params.cursor;
         }
 
         if (params.url) {
-            var size = '50px';
+            let size = '50px';
             if (params.size) {
                 size = params.size;
             }
@@ -151,28 +149,28 @@ define([
         }
 
         // no url, so show default
-        var icons = Config.get('icons'); // icon default parameters are set in a config
+        const icons = Config.get('icons'); // icon default parameters are set in a config
 
-        var isApp = false;
+        let isApp = false;
         if (params['isApp']) {
             isApp = params['isApp'];
         }
 
-        var name = isApp ? "app" : "method";
-        var icon_color = isApp ? icons.colors[9] : icons.colors[5];
-        var icon_class = isApp ? 'app-icon' : 'method-icon';
+        const name = isApp ? "app" : "method";
+        const icon_color = isApp ? icons.colors[9] : icons.colors[5];
+        const icon_class = isApp ? 'app-icon' : 'method-icon';
 
-        var icon = icons.methods[name];
-        var $icon = $('<i>');
+        const icon = icons.methods[name];
+        const $icon = $('<i>');
         // background
         $icon.addClass("fa-stack fa-2x").css({'cursor': cursor});
-        var $i = $('<i>').addClass('fa fa-square fa-stack-2x ' + icon_class);
+        const $i = $('<i>').addClass('fa fa-square fa-stack-2x ' + icon_class);
         if (params.setColor) {
             $i.css({color: icon_color});
         }
         $icon.append($i);
         // add stack of font-awesome icons
-        _.each(icon, function (cls) {
+        _.each(icon, (cls) => {
             $icon.append($('<i>')
                 .addClass("fa fa-inverse fa-stack-1x " + cls));
         });
@@ -196,7 +194,7 @@ define([
      *                         hidden behind an accordion.
      */
     function createError(title, error, stackTrace) {
-        var $errorPanel = $('<div>')
+        const $errorPanel = $('<div>')
             .addClass('alert alert-danger')
             .append('<b>' + title + '</b><br>Please contact the KBase team at <a href="https://www.kbase.us/support/">https://www.kbase.us/support/</a> with the information below.');
 
@@ -209,7 +207,7 @@ define([
 
         // If it's an object, expect an error object
         else if (typeof error === 'object') {
-            var errObj = error;
+            let errObj = error;
             if (error.status && error.error && error.error.error) {
                 errObj = {
                     status: error.status,
@@ -221,7 +219,7 @@ define([
                     stackTrace = error.error.error;
                 }
             }
-            Object.keys(errObj).forEach(function(key) {
+            Object.keys(errObj).forEach((key) => {
                 $errorPanel.append($('<div>').append('<b>' + key + ':</b> ' + errObj[key]));
             });
         }
@@ -229,7 +227,7 @@ define([
             $errorPanel.append('No other information available. Sorry!');
         }
         if (stackTrace) {
-            var $traceAccordion = $('<div>');
+            const $traceAccordion = $('<div>');
             $errorPanel.append($traceAccordion);
             new KBaseAccordion($traceAccordion, {
                 elements: [
@@ -262,7 +260,7 @@ define([
         if (!element) {
             return true;
         }
-        let rect = element.getBoundingClientRect();
+        const rect = element.getBoundingClientRect();
         if (rect.top === 0 && rect.bottom === 0) {
             return false;
         }

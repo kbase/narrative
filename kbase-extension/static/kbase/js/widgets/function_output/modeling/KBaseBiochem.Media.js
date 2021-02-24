@@ -1,5 +1,5 @@
 function KBaseBiochem_Media(tabwidget) {
-    var self = this;
+    const self = this;
     this.tabwidget = tabwidget;
 
     this.setMetadata = function (data) {
@@ -20,21 +20,21 @@ function KBaseBiochem_Media(tabwidget) {
         this.mediacompounds = this.data.mediacompounds;
         this.reagents = this.data.reagents;
         this.cpdhash = {};
-        var cpdarray = [];
+        const cpdarray = [];
 
-        for (var i=0; i< this.mediacompounds.length; i++) {
-            var cpd = this.mediacompounds[i];
+        for (let i=0; i< this.mediacompounds.length; i++) {
+            const cpd = this.mediacompounds[i];
             cpd.id = cpd.compound_ref.split("/").pop();
 
             this.cpdhash[cpd.id] = cpd;
             cpdarray.push(cpd.id);
         }
 
-        var p = this.tabwidget.getBiochemCompounds(cpdarray)
-                    .done(function(cpds) {
+        const p = this.tabwidget.getBiochemCompounds(cpdarray)
+                    .done((cpds) => {
 
-                        for (var i=0; i< self.mediacompounds.length; i++) {
-                            var cpd = self.mediacompounds[i];
+                        for (let i=0; i< self.mediacompounds.length; i++) {
+                            const cpd = self.mediacompounds[i];
                             cpd.img = tabwidget.compoundImage(cpd.id);
                             if (cpds[i]){
                                 cpd.name = cpds[i].name;
@@ -51,7 +51,7 @@ function KBaseBiochem_Media(tabwidget) {
     };
 
     this.CompoundTab = function (info) {
-        var cpd = this.cpdhash[info.id];
+        const cpd = this.cpdhash[info.id];
         console.log('info', cpd)
 
         return [{

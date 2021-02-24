@@ -24,8 +24,8 @@ return KBWidget({
     },
     
     render: function() {
-        var self = this;
-        var container = this.$elem;
+        const self = this;
+        const container = this.$elem;
     	container.empty();
 
         if (!self.authToken()) {
@@ -33,12 +33,12 @@ return KBWidget({
         	return;
         }
 
-        var dataIsReady = function(data) {
-        	var table = $('<table/>')
+        const dataIsReady = function(data) {
+        	const table = $('<table/>')
         	.addClass('table table-striped table-bordered')
         	.css({'margin-left': 'auto', 'margin-right': 'auto'});
 
-        	var createTableRow = function(name, value) {
+        	const createTableRow = function(name, value) {
         		return "<tr><td>" + name + "</td><td>" + value + "</td></tr>";
         	};
 
@@ -60,30 +60,30 @@ return KBWidget({
         	//container.append(" " + glammLink);
         };
         
-    	var data = self.options.data;
+    	const data = self.options.data;
     	if (data) {
     		dataIsReady(data);
     	} else {
-            var kbws = new workspaceService(this.wsUrl);
-        	var panel = $('<div class="loader-table"/>');
+            const kbws = new workspaceService(this.wsUrl);
+        	const panel = $('<div class="loader-table"/>');
         	container.append(panel);
-        	var table = $('<table class="table table-striped table-bordered" \
+        	const table = $('<table class="table table-striped table-bordered" \
         			style="margin-left: auto; margin-right: auto;" id="'+pref+'overview-table"/>');
         	panel.append(table);
         	table.append('<tr><td>Job was created with id</td><td>'+self.options.job_id+'</td></tr>');
         	table.append('<tr><td>Output model will have the id</td><td>'+self.options.model_id+'</td></tr>');
         	table.append('<tr><td>Current job state is</td><td id="'+pref+'job"></td></tr>');
-        	var timeLst = function(event) {
-        		kbws.get_jobs({auth: self.authToken(), jobids: [self.options.job_id]}, function(data) {
-        			var status = data[0]['status'];
-    				var tdElem = $('#'+pref+'job');
+        	const timeLst = function(event) {
+        		kbws.get_jobs({auth: self.authToken(), jobids: [self.options.job_id]}, (data) => {
+        			const status = data[0]['status'];
+    				const tdElem = $('#'+pref+'job');
     				tdElem.html(status);
         			if (status === 'done') {
         				clearInterval(self.timer);
-        	            kbws.get_object({auth: self.authToken(), workspace: self.options.ws_name, id: self.options.model_id, type: 'Model'}, function(ret) {
+        	            kbws.get_object({auth: self.authToken(), workspace: self.options.ws_name, id: self.options.model_id, type: 'Model'}, (ret) => {
         	            	$('.loader-table').remove();
         	            	dataIsReady(ret.data);
-        	            }, function(data) {
+        	            }, (data) => {
                 			alert("Error: " + data.error.message)
         	            });
         			} else {
@@ -91,7 +91,7 @@ return KBWidget({
         					clearInterval(self.timer);
         				}
         			}
-        		}, function(data) {
+        		}, (data) => {
         			alert("Error: " + data.error.message)
         		});
         	};

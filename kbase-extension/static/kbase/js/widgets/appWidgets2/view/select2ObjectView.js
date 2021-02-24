@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'jquery',
@@ -17,7 +15,7 @@ define([
     'select2',
     'bootstrap',
     'css!font-awesome'
-], function(
+], (
     Promise,
     $,
     html,
@@ -31,11 +29,11 @@ define([
     Data,
     TimeFormat,
     WidgetCommon,
-) {
+) => {
     'use strict';
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         button = t('button'),
         div = t('div'),
         span = t('span'),
@@ -44,7 +42,7 @@ define([
         option = t('option');
 
     function factory(config) {
-        var spec = config.parameterSpec,
+        let spec = config.parameterSpec,
             objectRefType = config.referenceType || 'name',
             parent,
             container,
@@ -75,13 +73,13 @@ define([
         }
 
         function makeInputControl() {
-            var selectOptions;
+            let selectOptions;
             if (model.availableValues) {
-                var filteredOptions = [];
+                const filteredOptions = [];
                 selectOptions = model.availableValues
-                    .filter(function(objectInfo, idx) {
+                    .filter((objectInfo, idx) => {
                         if (model.blacklistValues) {
-                            return !model.blacklistValues.some(function(value) {
+                            return !model.blacklistValues.some((value) => {
                                 if (objectInfoHasRef(objectInfo, value)) {
                                     // if (value === getObjectRef(objectInfo)) {
                                     filteredOptions.push(idx);
@@ -91,8 +89,8 @@ define([
                             });
                         }
                     })
-                    .map(function(objectInfo, idx) {
-                        var selected = false,
+                    .map((objectInfo, idx) => {
+                        let selected = false,
                             ref = idx; //getObjectRef(objectInfo);
                         if (objectInfoHasRef(objectInfo, model.value)) {
                             // if (getObjectRef(objectInfo) === model.value) {
@@ -108,7 +106,7 @@ define([
 
             // CONTROL
 
-            var selectElem = select({
+            const selectElem = select({
                 id: html.genId(),
                 class: 'form-control',
                 style: {
@@ -124,7 +122,7 @@ define([
         // CONTROL
 
         function getControlValue() {
-            var control = ui.getElement('input-container.input'),
+            const control = ui.getElement('input-container.input'),
                 selected = control.selectedOptions;
             if (selected.length === 0) {
                 return;
@@ -136,18 +134,18 @@ define([
 
 
         function setControlValue(value) {
-            var stringValue;
+            let stringValue;
             if (value === null) {
                 stringValue = '';
             } else {
                 stringValue = value;
             }
 
-            var control = ui.getElement('input-container.input');
+            const control = ui.getElement('input-container.input');
 
             // NB id used as String since we are comparing it below to the actual dom
             // element id
-            var currentSelectionId = String(model.availableValuesMap[stringValue]);
+            const currentSelectionId = String(model.availableValuesMap[stringValue]);
 
             $(control).val(currentSelectionId).trigger('change.select2');
         }
@@ -174,8 +172,8 @@ define([
         // VALIDATION
 
         function validate() {
-            return Promise.try(function() {
-                var objInfo = model.availableValues[getControlValue()],
+            return Promise.try(() => {
+                let objInfo = model.availableValues[getControlValue()],
                     processedValue = '',
                     validationOptions = {
                         required: spec.data.constraints.required,
@@ -202,20 +200,20 @@ define([
         }
 
         function getObjectsByTypes_datalist(types) {
-            return Data.getObjectsByTypes(types, bus, function(result) {
+            return Data.getObjectsByTypes(types, bus, (result) => {
                     doWorkspaceUpdated(result.data);
                 })
-                .then(function(result) {
+                .then((result) => {
                     return result.data;
                 });
         }
 
 
         function fetchData() {
-            var types = spec.data.constraints.types;
+            const types = spec.data.constraints.types;
             return getObjectsByTypes_datalist(types)
-                .then(function(objects) {
-                    objects.sort(function(a, b) {
+                .then((objects) => {
+                    objects.sort((a, b) => {
                         if (a.saveDate < b.saveDate) {
                             return 1;
                         }
@@ -235,7 +233,7 @@ define([
             if (!object.id) {
                 return $('<div style="display:block; height:20px">').append(object.text);
             }
-            var objectInfo = model.availableValues[object.id];
+            const objectInfo = model.availableValues[object.id];
             return $(div([
                 span({ style: 'word-wrap: break-word' }, [
                     b(objectInfo.name)
@@ -255,8 +253,8 @@ define([
          * Hooks up event listeners
          */
         function render() {
-            return Promise.try(function() {
-                var events = Events.make(),
+            return Promise.try(() => {
+                const events = Events.make(),
                     inputControl = makeInputControl(events);
 
                 ui.setContent('input-container', '');
@@ -276,7 +274,7 @@ define([
                             return model.availableValues[object.id].name;
                         }
                     })
-                    .on('advanced-shown.kbase', function(e) {
+                    .on('advanced-shown.kbase', (e) => {
                         $(e.target).select2({ width: 'resolve' });
                     });
                 events.attachEvents(container);
@@ -290,7 +288,7 @@ define([
          * For the objectInput, there is only ever one control.
          */
         function layout(events) {
-            var content = div({
+            const content = div({
                 dataElement: 'main-panel'
             }, [
                 div({ dataElement: 'input-container' })
@@ -303,7 +301,7 @@ define([
 
         function autoValidate() {
             return validate()
-                .then(function(result) {
+                .then((result) => {
                     channel.emit('validation', {
                         errorMessage: result.errorMessage,
                         diagnosis: result.diagnosis
@@ -338,12 +336,12 @@ define([
                 // our map is a little strange.
                 // we have dataPaletteRefs, which are always ref paths
                 // we have object ref or names otherwise.
-                // whether we are using refs or names depends on the 
+                // whether we are using refs or names depends on the
                 // config setting. This is because some apps don't yet accept
-                // names... 
+                // names...
                 // So our key is either dataPaletteRef or (ref or name)
-                model.availableValues.forEach(function(objectInfo, index) {
-                    var id;
+                model.availableValues.forEach((objectInfo, index) => {
+                    let id;
                     if (objectInfo.dataPaletteRef) {
                         id = objectInfo.dataPaletteRef;
                     } else if (objectRefType === 'ref') {
@@ -354,7 +352,7 @@ define([
                     model.availableValuesMap[id] = index;
                 });
                 return render()
-                    .then(function() {
+                    .then(() => {
                         setControlValue(getModelValue());
                         autoValidate();
                     });
@@ -363,12 +361,12 @@ define([
 
         // LIFECYCLE API
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
-                var events = Events.make(),
+                const events = Events.make(),
                     theLayout = layout(events);
 
                 container.innerHTML = theLayout.content;
@@ -379,16 +377,16 @@ define([
                 }
 
                 return fetchData()
-                    .then(function(data) {
+                    .then((data) => {
                         doWorkspaceUpdated(data);
                         return render();
                     })
-                    .then(function() {
+                    .then(() => {
 
-                        channel.on('reset-to-defaults', function() {
+                        channel.on('reset-to-defaults', () => {
                             resetModelValue();
                         });
-                        channel.on('update', function(message) {
+                        channel.on('update', (message) => {
                             setModelValue(message.value);
                         });
 
@@ -399,12 +397,12 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (container) {
                     parent.removeChild(container);
                 }
                 bus.stop();
-                eventListeners.forEach(function(id) {
+                eventListeners.forEach((id) => {
                     runtime.bus().removeListener(id);
                 });
             });

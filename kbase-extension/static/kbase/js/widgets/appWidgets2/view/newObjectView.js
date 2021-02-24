@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'kb_common/html',
@@ -9,15 +7,15 @@ define([
     'common/dom',
     'bootstrap',
     'css!font-awesome'
-], function(Promise, html, Validation, Events, Runtime, Dom) {
+], (Promise, html, Validation, Events, Runtime, Dom) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         input = t('input');
 
     function factory(config) {
-        var options = {},
+        let options = {},
             spec = config.parameterSpec,
             parent,
             container,
@@ -30,23 +28,23 @@ define([
         options.enabled = true;
 
         function setModelValue(value) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                     if (model.value !== value) {
                         model.value = value;
                         return true;
                     }
                     return false;
                 })
-                .then(function(changed) {
+                .then((changed) => {
                     render();
                 });
         }
 
         function unsetModelValue() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                     model.value = undefined;
                 })
-                .then(function(changed) {
+                .then((changed) => {
                     render();
                 });
         }
@@ -75,8 +73,8 @@ define([
         }
 
         function render() {
-            Promise.try(function() {
-                var events = Events.make(),
+            Promise.try(() => {
+                const events = Events.make(),
                     inputControl = makeInputControl(model.value, events, bus);
 
                 dom.setContent('input-container', inputControl);
@@ -85,7 +83,7 @@ define([
         }
 
         function layout(events) {
-            var content = div({
+            const content = div({
                 dataElement: 'main-panel'
             }, [
                 div({ dataElement: 'input-container' })
@@ -99,26 +97,26 @@ define([
         // LIFECYCLE API
 
         function start() {
-            return Promise.try(function() {
-                bus.on('run', function(message) {
+            return Promise.try(() => {
+                bus.on('run', (message) => {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
                     dom = Dom.make({ node: container });
 
-                    var events = Events.make(),
+                    const events = Events.make(),
                         theLayout = layout(events);
 
                     container.innerHTML = theLayout.content;
                     events.attachEvents(container);
 
 
-                    bus.on('reset-to-defaults', function(message) {
+                    bus.on('reset-to-defaults', (message) => {
                         resetModelValue();
                     });
-                    bus.on('update', function(message) {
+                    bus.on('update', (message) => {
                         setModelValue(message.value);
                     });
-                    bus.on('refresh', function() {
+                    bus.on('refresh', () => {
 
                     });
 

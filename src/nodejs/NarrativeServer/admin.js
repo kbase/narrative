@@ -11,7 +11,7 @@
  * 
  */
 
-var Nunjucks = require('nunjucks');
+const Nunjucks = require('nunjucks');
 
 module.exports.Admin = Object.create({}, {
     init: {
@@ -19,7 +19,7 @@ module.exports.Admin = Object.create({}, {
             this.App = cfg.app;
             
             this.templates = {};
-            var loaders = [
+            const loaders = [
                 new Nunjucks.FileSystemLoader('templates')
             ];
             this.templates.env = new Nunjucks.Environment(loaders, {
@@ -31,7 +31,7 @@ module.exports.Admin = Object.create({}, {
     },
     renderTemplate: {
         value: function (name, context) {
-            var template = this.getTemplate(name);
+            const template = this.getTemplate(name);
             if (!template) {
                 throw 'Template ' + name + ' not found';
             }
@@ -41,12 +41,12 @@ module.exports.Admin = Object.create({}, {
     },
     route: {
         value: function (req, res, url, path) {
-            var handled = false;
+            let handled = false;
             if (path.match(/containers/)) {
                 // list all
-                this.App.getContainers(function (containers) {
+                this.App.getContainers((containers) => {
                     res.setHeader('Content-Type', 'application/json');
-                    var context = {containers: containers};
+                    const context = {containers: containers};
                     //var template = this.templates.env.getTemplate('containers.html');
                     //var content = template.render(context);
                     //res.write(content);

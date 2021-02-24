@@ -59,8 +59,7 @@ Because of how Karma is configured, it doesn't start running tests once the conf
 3. Additional RequireJS configuration is done at this time.
 4. Once RequireJS is configured, it starts the Karma-loaded test suite.
 
-Individual test specs aren't necessarily run in the same order each time.
-
+Test specs are configured to run in a random order, grouped by module. This encourages keeping individual test specs encapsulated and try to avoid relying on side effects left behind by other tests.
 
 ## Writing test specs
 There should be one test module per Javascript module. These all use Jasmine testing idioms, mixed with RequireJS.
@@ -124,7 +123,7 @@ This also makes use of a Javascript closure. The `runtime` variable is declared 
 
 ### Asynchrony
 
-The nature of modern Javascript is asynchronous code. Most of the interesting things will be interacting with either KBase services, or with the user, and so we don't want those to run synchronously and locking up the browser while processing.
+The nature of modern Javascript is asynchronous code. Most of the interesting things will be interacting with either KBase services, or with the user, and so we don't want those to run synchronously and lock up the browser while processing.
 
 Jasmine is capable of testing asynchronous code as well. There are 3 idioms that can be used.
 
@@ -170,7 +169,7 @@ it('calls "done" when done', (done) => {
 ```
 In this test, `runCodeThatTakesACallback` does some kind of code execution, then calls the callback with the result. The only way we can test the result of that code is to write our own callback in the tester that then calls `done` when it's done running.
 
-Examples of where this is needed are jQuery event listeners (e.g. `$x.trigger('someEvent', input)`) or the messages that use the `monoBus` (most messaging that goes through the app cell, input widgets, etc.).
+Examples of where this is needed are jQuery event listeners (e.g. `$x.trigger('someEvent', input)`) or the messages that use the `monoBus` (i.e. most messaging that goes through the app cell, input widgets, etc.).
 
 
 ### Mocking and Spies
@@ -355,7 +354,7 @@ define([
 ```
 This test is, again, contrived. It just tests that we get back what we expect to see. But it illustrates how to use `jasmine.Ajax` to return an async, mocked network call. Make sure to uninstall `jasmine.Ajax` before you set up a separate mock, and that you only have one call to `jasmine.Ajax.install()` at a time.
 
-Also, this might look like a lot of boilerplate that could be copied and pasted. It is. Fortunately, there's a `narrativeMocks` library available for use!
+Also, this might look like a lot of boilerplate that could be copied and pasted. It is. Fortunately, there's a `narrativeMocks` library available for use! See [below](#narrative-mocks-library) for more information, or [this document](./unit-test-mock-library.md) for details.
 
 ## Testing modules that use the factory pattern
 There are a number of modules in the Narrative codebase, particularly in the app cell portion, that follow a the factory pattern. These modules generally only export a single `make` function which creates the object. The object, then, often only supports a few functions to have it "start" doing its work, and "stop" and shut itself down. It can be challenging to exercise these in a unit test framework while not relying in implementation details to write tests.

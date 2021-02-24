@@ -30,11 +30,28 @@ define([
 
 ## buildMockCell
 `buildMockCell(cellType, kbaseCellType, data)`  
-This function builds a mock Jupyter notebook cell, given a Jupyter notebook cell type and an optional KBase cell type. It includes the full structure needed to portray a cell, including DOM elements.
+This function builds a mock Jupyter notebook cell, given a Jupyter notebook cell type and an optional KBase cell type. It includes a minimal structure needed to portray a cell, including minimum required DOM elements. The returned object has these attributes:
+* `metadata`: object, with some basic metadata,
+* `cell_type`: string, the given cellType,
+* `renderMinMax`: a no-op function,
+* `celltoolbar`: an object with a rebuild function, that's a no-op
+* `element`: a jQuery node with a single div
+* `input`: a jQuery node with the DOM structure:  
+```
+  <div class="input">
+    <div class="input_area"></div>
+  </div>
+```
+* `output`: a jQuery node with the DOM structure:  
+```
+  <div class="output_wrapper">
+    <div class="output"></div>
+  </div>
+```
 
 **parameters**
 * `cellType` - string - the type of cell it should be, one of "code", "markdown", "raw". For mocking KBase cell types, this should be "code"
-* `kbaseCellType` - optional string - if present, mock up an extended cell by adding some base metadata. One of "app", "app-bulk-import", "codeWithUserSettings", "code". If more needed, please add them to the `buildMockExtensionCellMetadata` function that isn't exported.
+* `kbaseCellType` - optional string - if present, mock up an extended cell by adding some base metadata. One of "app", "app-bulk-import", "codeWithUserSettings", "code". If more are needed, please add them to the `buildMockExtensionCellMetadata` function that isn't exported.
 * `data` - object - if present, will populate the cell's metadata.
 
 **example**
@@ -247,7 +264,7 @@ Requires that `jasmine.Ajax.install()` has been run first.
 
 **parameters**
 * `path` - string - the path to request from the Auth2 service. See the Auth2 docs for details, but likely one of `token`, `me`
-* `reponse` - object - the response object that the test expects to see
+* `response` - object - the response object that the test expects to see
 * `statusCode` - int - the HTTP status code to return
 
 **example**  

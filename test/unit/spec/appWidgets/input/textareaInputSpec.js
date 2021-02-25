@@ -1,23 +1,20 @@
 define(['common/runtime', 'widgets/appWidgets2/input/textareaInput'], (Runtime, TextareaInput) => {
     'use strict';
-    let bus,
-        testConfig,
-        required = false,
-        runtime,
-        node,
+    let bus, testConfig, node;
+    const required = false,
         defaultValue = 'some test text',
         numRows = 3;
 
-    function buildTestConfig(required, defaultValue, bus) {
+    function buildTestConfig(_required, _defaultValue, _bus) {
         return {
-            bus: bus,
+            bus: _bus,
             parameterSpec: {
                 data: {
-                    defaultValue: defaultValue,
+                    defaultValue: _defaultValue,
                     nullValue: null,
                     constraints: {
-                        required: required,
-                        defaultValue: defaultValue,
+                        required: _required,
+                        defaultValue: _defaultValue,
                     },
                 },
                 ui: {
@@ -31,7 +28,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/textareaInput'], (Runtime, 
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('Textarea Input tests', () => {
         beforeEach(() => {
-            runtime = Runtime.make();
+            const runtime = Runtime.make();
             node = document.createElement('div');
             bus = runtime.bus().makeChannelBus({
                 description: 'textarea testing',
@@ -44,8 +41,16 @@ define(['common/runtime', 'widgets/appWidgets2/input/textareaInput'], (Runtime, 
             window.kbaseRuntime = null;
         });
 
-        it('Should load the widget', () => {
+        it('should be defined', () => {
             expect(TextareaInput).not.toBeNull();
+        });
+
+        it('should be instantiable', () => {
+            const widget = TextareaInput.make(testConfig);
+            expect(widget).toEqual(jasmine.any(Object));
+            ['start', 'stop'].forEach((fn) => {
+                expect(widget[fn]).toEqual(jasmine.any(Function));
+            });
         });
 
         it('Should start and stop a widget', (done) => {
@@ -122,19 +127,19 @@ define(['common/runtime', 'widgets/appWidgets2/input/textareaInput'], (Runtime, 
             });
         });
 
-        xit('Should respond to keyup change events with "changed"', (done) => {
+        xit('Should respond to keyup change events with "changed"', () => {
             const widget = TextareaInput.make(testConfig);
             const inputText = 'here is some text';
+            // event does not have e.target defined, so running this test emits
+            // Uncaught TypeError: Cannot read property 'dispatchEvent' of null thrown
             bus.on('changed', (message) => {
                 // expect(message.newValue).toBe(inputText);
                 expect(message.isValid).toBeTruthy();
                 // ...detect something?
-                console.log('Caught a change message!');
                 // done();
             });
             widget.start({ node: node }).then(() => {
                 const inputElem = node.querySelector('textarea');
-                console.log('here is the elem', inputElem);
                 inputElem.value = inputText;
                 inputElem.dispatchEvent(new Event('keyup'));
             });

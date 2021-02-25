@@ -1,4 +1,6 @@
 define(['bluebird'], (Promise) => {
+    'use strict';
+
     function toInteger(value) {
         switch (typeof value) {
             case 'number':
@@ -17,36 +19,20 @@ define(['bluebird'], (Promise) => {
     }
 
     function importString(value) {
-        let plainValue, parsedValue;
-
         if (value === undefined || value === null) {
             return null;
         }
 
         if (typeof value !== 'string') {
             throw new Error('value must be a string (it is of type "' + typeof value + '")');
-        } else {
-            plainValue = value.trim();
-            if (plainValue === '') {
-                return null;
-            }
-            parsedValue = toInteger(plainValue);
         }
 
-        return parsedValue;
+        const plainValue = value.trim();
+        if (plainValue === '') {
+            return null;
+        }
+        return toInteger(plainValue);
     }
-
-    // function validateInt(value, min, max) {
-    //     if (isNaN(value)) {
-    //         return 'value must be numeric';
-    //     }
-    //     if (max && max < value) {
-    //         return 'the maximum value for this parameter is ' + max;
-    //     }
-    //     if (min && min > value) {
-    //         return 'the minimum value for this parameter is ' + min;
-    //     }
-    // }
 
     function validateInt(value, min, max) {
         if (typeof value !== 'number') {
@@ -58,10 +44,6 @@ define(['bluebird'], (Promise) => {
                     message: 'value must be numeric',
                 };
             }
-            // return {
-            //     id: 'non-numeric',
-            //     message: 'value must be numeric'
-            // };
         }
         if (isNaN(value)) {
             return {
@@ -108,8 +90,6 @@ define(['bluebird'], (Promise) => {
                 errorMessage = error.message;
                 messageId = error.id;
                 diagnosis = 'invalid';
-            } else {
-                diagnosis = 'valid';
             }
         }
 
@@ -127,29 +107,6 @@ define(['bluebird'], (Promise) => {
         });
     }
 
-    // function validate(value, constraints) {
-    //     try {
-    //         var nativeValue = importString(value);
-    //         return {
-    //             value: {
-    //                 original: value,
-    //                 parsed: nativeValue
-    //             },
-    //             validation: applyConstraints(nativeValue, constraints)
-    //         };
-    //     } catch (ex) {
-    //         return {
-    //             value: {
-    //                 original: value
-    //             },
-    //             validation: {
-    //                 isValid: false,
-    //                 errorMessage: ex.message,
-    //                 diagnosis: 'invalid'
-    //             }
-    //         };
-    //     }
-    // }
     return {
         importString: importString,
         applyConstraints: applyConstraints,

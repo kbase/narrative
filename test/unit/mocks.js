@@ -12,10 +12,26 @@
 define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config) => {
     'use strict';
     /**
-     * Creates a mock Jupyter notebook cell of some type.
+     * Creates a mock Jupyter notebook cell of some type. When returned, it will have the following
+     * attributes:
+     * - metadata: object, with some basic metadata,
+     * - cell_type: string, the given cellType,
+     * - renderMinMax: a no-op function,
+     * - celltoolbar: an object with a rebuild function, that's a no-op
+     * - element: a jQuery node with a single div
+     * - input: a jQuery node with the DOM structure:
+     *   <div class="input">
+     *     <div class="input_area"></div>
+     *   </div>
+     * - output: a jQuery node with the DOM structure:
+     *   <div class="output_wrapper">
+     *     <div class="output"></div>
+     *   </div>
+     *
      * @param {string} cellType the type of cell it should be
      * @param {string} kbaseCellType if present, mock up an extended cell by adding some
      *      base metadata.
+     * @param {object} data if present, will populate the cell's metadata.
      */
     function buildMockCell(cellType, kbaseCellType, data) {
         const $cellContainer = $(document.createElement('div'));
@@ -206,7 +222,9 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
      * - body - optional, default = empty string
      *   something from the body to identify the request, either a string or regex. For a KBase
      *   service call, this can be a function method
-     * -
+     * - statusCode - int, default = 200 - the HTTP status code your request should return
+     * - statusText - string, default = "HTTP/1.1 200 OK" - a status string your request will return
+     * - response - object - the data your request should return as an object.
      */
     function mockJsonRpc1Call(args) {
         const requestBody = args.body || '';
@@ -243,12 +261,19 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
 
     const cookieKeys = ['kbase_session'];
 
+    /**
+     * Sets an arbitrary string in the test browser's auth token cookie.
+     * @param {string} token
+     */
     function setAuthToken(token) {
         cookieKeys.forEach((key) => {
             document.cookie = `${key}=${token}`;
         });
     }
 
+    /**
+     * Clears any set auth token cookie.
+     */
     function clearAuthToken() {
         cookieKeys.forEach((key) => {
             document.cookie = `${key}=`;
@@ -256,12 +281,12 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
     }
 
     return {
-        buildMockCell: buildMockCell,
-        buildMockNotebook: buildMockNotebook,
-        mockServiceWizardLookup: mockServiceWizardLookup,
-        mockJsonRpc1Call: mockJsonRpc1Call,
-        mockAuthRequest: mockAuthRequest,
-        setAuthToken: setAuthToken,
-        clearAuthToken: clearAuthToken,
+        buildMockCell,
+        buildMockNotebook,
+        mockServiceWizardLookup,
+        mockJsonRpc1Call,
+        mockAuthRequest,
+        setAuthToken,
+        clearAuthToken
     };
 });

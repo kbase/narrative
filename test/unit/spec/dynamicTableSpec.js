@@ -1,10 +1,10 @@
 define(['jquery', 'bluebird', 'widgets/dynamicTable'], ($, Promise, DynamicTable) => {
     'use strict';
-    let dummyRows = [
+    const rows = [
             [1, 2, 3],
             [4, 5, 6],
         ],
-        dummyHeaders = [
+        headers = [
             {
                 id: 'col1',
                 text: 'Column 1',
@@ -20,19 +20,19 @@ define(['jquery', 'bluebird', 'widgets/dynamicTable'], ($, Promise, DynamicTable
                 text: 'Column 3',
                 isSortable: false,
             },
-        ],
-        $dummyDiv = $('<div>'),
-        dummyTable;
+        ];
 
-    describe('Test the DynamicTable widget', () => {
-        beforeEach(() => {
-            dummyTable = new DynamicTable($dummyDiv, {
-                headers: dummyHeaders,
-                updateFunction: function (pageNum, query, sortColId, sortColDir) {
+    describe('The DynamicTable widget', () => {
+        beforeEach(function () {
+            this.div = document.createElement('div');
+            this.dt = new DynamicTable($(this.div), {
+                headers: headers,
+                // args to updateFunction: pageNum, query, sortColId, sortColDir
+                updateFunction: function () {
                     return Promise.resolve({
                         start: 0,
-                        total: dummyRows.length,
-                        rows: dummyRows,
+                        total: rows.length,
+                        rows: rows,
                     });
                 },
             });
@@ -50,24 +50,35 @@ define(['jquery', 'bluebird', 'widgets/dynamicTable'], ($, Promise, DynamicTable
                 },
             });
             expect(dt).toEqual(jasmine.any(Object));
+            const table = $container[0].querySelector('table');
+            expect(table.id).toBe('dynamic_table');
         });
 
-        it('Should display data', () => {
-            expect(dummyTable).toEqual(jasmine.any(Object));
+        it('should have headers set correctly', function () {
+            expect(this.dt).toEqual(jasmine.any(Object));
+            const table = this.div.querySelector('table');
+            expect(table.id).toBe('dynamic_table');
+            const thElements = table.querySelectorAll('thead th');
+            expect(thElements.length).toBe(headers.length);
+            headers.forEach((header, index) => {
+                expect(thElements[index].innerHTML).toContain(header.text);
+            });
         });
 
-        it('Should paginate and show which page', () => {});
+        xit('Should display data', () => {});
 
-        it('Should show an error when pagination fails', () => {});
+        xit('Should paginate and show which page', () => {});
 
-        it('Should sort properly', () => {});
+        xit('Should show an error when pagination fails', () => {});
 
-        it('Should decorate rows properly', () => {});
+        xit('Should sort properly', () => {});
 
-        it('Should add outer widget classes properly', () => {});
+        xit('Should decorate rows properly', () => {});
 
-        it('Should add table styles properly', () => {});
+        xit('Should add outer widget classes properly', () => {});
 
-        it('Should have optional download buttons', () => {});
+        xit('Should add table styles properly', () => {});
+
+        xit('Should have optional download buttons', () => {});
     });
 });

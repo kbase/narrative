@@ -5,7 +5,7 @@ define(['msPathway', 'jquery'], (Widget, $) => {
             expect(ModelSeedPathway).toEqual(jasmine.any(Function));
         });
 
-        it('Should do something or other', () => {
+        xit('Should do something or other', () => {
             const nodeName = 'path-node';
             $('body').append('<div id="' + nodeName + '">');
             const pathwayWidget = new ModelSeedPathway({

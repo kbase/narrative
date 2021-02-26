@@ -120,7 +120,8 @@ define([
             expect(stagingViewer.tour).not.toBeNull();
         });
 
-        it('Should update its view with a proper subpath', async () => {
+        // FIXME: test requires expectations
+        xit('Should update its view with a proper subpath', async () => {
             await stagingViewer.updateView();
         });
 

@@ -406,7 +406,7 @@ define([
                 dummySpec = {
                     info: {
                         id: appId,
-                        name: appName
+                        name: appName,
                     },
                 },
                 appTag = 'release';

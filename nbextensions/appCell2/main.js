@@ -27,19 +27,8 @@ define([
     './appCell',
     'css!kbase/css/appCell.css',
     'bootstrap',
-    'custom/custom'
-], (
-    $,
-    Jupyter,
-    Promise,
-    Runtime,
-    Clock,
-    UI,
-    html,
-    serviceUtils,
-    Workspace,
-    AppCell
-) => {
+    'custom/custom',
+], ($, Jupyter, Promise, Runtime, Clock, UI, html, serviceUtils, Workspace, AppCell) => {
     'use strict';
     const runtime = Runtime.make();
     const t = html.tag,
@@ -48,52 +37,57 @@ define([
 
     function setupNotebook(workspaceInfo) {
         // console.log(Jupyter.notebook.get_cells());
-        return Promise.all(Jupyter.notebook.get_cells().map((cell) => {
-            if (AppCell.isAppCell(cell)) {
-                const appCell = AppCell.make({
-                    cell: cell,
-                    workspaceInfo: workspaceInfo
-                });
-                return appCell.setupCell(cell)
-                    .catch((err) => {
+        return Promise.all(
+            Jupyter.notebook.get_cells().map((cell) => {
+                if (AppCell.isAppCell(cell)) {
+                    const appCell = AppCell.make({
+                        cell: cell,
+                        workspaceInfo: workspaceInfo,
+                    });
+                    return appCell.setupCell(cell).catch((err) => {
                         // If we have an error here, there is a serious problem setting up the cell and it is not usable.
                         // What to do? The safest thing to do is inform the user, and then strip out the cell, leaving
                         // in it's place a markdown cell with the error info.
                         // For now, just pop up an error dialog;
                         const ui = UI.make({
-                            node: document.body
+                            node: document.body,
                         });
                         ui.showInfoDialog({
                             title: 'Error',
-                            body: div({
-                                style: {
-                                    margin: '10px'
-                                }
-                            }, [
-                                ui.buildPanel({
-                                    title: 'Error Starting App Cell',
-                                    type: 'danger',
-                                    body: ui.buildErrorTabs({
-                                        preamble: p('There was an error starting the app cell.'),
-                                        error: err
-                                    })
-                                })
-                            ])
+                            body: div(
+                                {
+                                    style: {
+                                        margin: '10px',
+                                    },
+                                },
+                                [
+                                    ui.buildPanel({
+                                        title: 'Error Starting App Cell',
+                                        type: 'danger',
+                                        body: ui.buildErrorTabs({
+                                            preamble: p(
+                                                'There was an error starting the app cell.'
+                                            ),
+                                            error: err,
+                                        }),
+                                    }),
+                                ]
+                            ),
                         });
                     });
-            }
-        }));
+                }
+            })
+        );
     }
 
     function setupWorkspace(workspaceUrl) {
         // TODO where to get config from generally?
         const workspaceRef = { id: runtime.workspaceId() },
             workspace = new Workspace(workspaceUrl, {
-                token: runtime.authToken()
+                token: runtime.authToken(),
             });
 
         return workspace.get_workspace_info(workspaceRef);
-
     }
 
     /*
@@ -142,41 +136,48 @@ define([
                         setupData.type = 'app';
                     }
 
-                    if (jupyterCellType !== 'code' ||
+                    if (
+                        jupyterCellType !== 'code' ||
                         !setupData ||
-                        !(setupData.type === 'app'  ||
-                          setupData.type === 'devapp')) {
+                        !(setupData.type === 'app' || setupData.type === 'devapp')
+                    ) {
                         return;
                     }
 
                     const appCell = AppCell.make({
                         cell: cell,
-                        workspaceInfo: workspaceInfo
+                        workspaceInfo: workspaceInfo,
                     });
-                    appCell.upgradeToAppCell(setupData.appSpec, setupData.appTag, setupData.type)
+                    appCell
+                        .upgradeToAppCell(setupData.appSpec, setupData.appTag, setupData.type)
                         .catch((err) => {
                             console.error('ERROR creating cell', err);
                             Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(cell));
                             // For now, just pop up an error dialog;
                             const ui = UI.make({
-                                node: document.body
+                                node: document.body,
                             });
                             ui.showInfoDialog({
                                 title: 'Error',
-                                body: div({
-                                    style: {
-                                        margin: '10px'
-                                    }
-                                }, [
-                                    ui.buildPanel({
-                                        title: 'Error Inserting App Cell',
-                                        type: 'danger',
-                                        body: ui.buildErrorTabs({
-                                            preamble: p('Could not insert the App Cell due to errors.'),
-                                            error: err
-                                        })
-                                    })
-                                ])
+                                body: div(
+                                    {
+                                        style: {
+                                            margin: '10px',
+                                        },
+                                    },
+                                    [
+                                        ui.buildPanel({
+                                            title: 'Error Inserting App Cell',
+                                            type: 'danger',
+                                            body: ui.buildErrorTabs({
+                                                preamble: p(
+                                                    'Could not insert the App Cell due to errors.'
+                                                ),
+                                                error: err,
+                                            }),
+                                        }),
+                                    ]
+                                ),
                             });
                         });
                 });
@@ -194,7 +195,7 @@ define([
     // TODO: move this to a another location!!
     const clock = Clock.make({
         bus: runtime.bus(),
-        resolution: 1000
+        resolution: 1000,
     });
     clock.start();
 
@@ -202,8 +203,7 @@ define([
         /* Only initialize after the notebook is fully loaded. */
         if (Jupyter.notebook._fully_loaded) {
             load_ipython_extension();
-        }
-        else {
+        } else {
             $([Jupyter.events]).one('notebook_loaded.Notebook', () => {
                 load_ipython_extension();
             });
@@ -212,7 +212,7 @@ define([
 
     return {
         // This is the sole ipython/jupyter api call
-        load_ipython_extension: load
+        load_ipython_extension: load,
     };
 }, (err) => {
     console.error('ERROR loading appCell main', err);

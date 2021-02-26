@@ -1,16 +1,11 @@
-define([
-    './messages'
-], (IFrameMessages) => {
-
-
-// interface ConstructorParams {
-//     interval: number,
-//     messageManager: IFrameMessages,
-//     nodeGetter: Function
-// }
+define(['./messages'], (IFrameMessages) => {
+    // interface ConstructorParams {
+    //     interval: number,
+    //     messageManager: IFrameMessages,
+    //     nodeGetter: Function
+    // }
 
     function factory(config) {
-
         const resizeCheckInterval = config.interval;
         const messageManager = config.messageManager;
         const nodeGetter = config.nodeGetter;
@@ -30,7 +25,7 @@ define([
         function sendSize() {
             messageManager.send('parent', {
                 name: 'rendered',
-                height: getHeight()
+                height: getHeight(),
             });
         }
 
@@ -61,13 +56,13 @@ define([
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

@@ -1,34 +1,30 @@
-define([
-    'handlebars'
-], (
-    Handlebars
-) => {
+define(['handlebars'], (Handlebars) => {
     'use strict';
 
     function compileTemplates(templates) {
-        return templates.map(({template, id, label}) => {
+        return templates.map(({ template, id, label }) => {
             if (typeof template === 'string') {
                 return {
                     id,
                     label,
-                    template: Handlebars.compile(template)
+                    template: Handlebars.compile(template),
                 };
             } else if (template instanceof Array) {
                 return {
-                    template: compileTemplates(template)
+                    template: compileTemplates(template),
                 };
             } else {
                 return {
                     id,
                     label,
-                    template: Handlebars.compile('')
+                    template: Handlebars.compile(''),
                 };
             }
         });
     }
 
     function applyMetadataTemplates(templates, data) {
-        return templates.map(({template, id, label}) => {
+        return templates.map(({ template, id, label }) => {
             let value;
             if (template instanceof Array) {
                 value = applyMetadataTemplates(template, data);
@@ -38,7 +34,7 @@ define([
             return {
                 id: id,
                 label,
-                value: value
+                value: value,
             };
         });
     }
@@ -48,7 +44,9 @@ define([
         for (let i = 0; i < argPath.length; i += 1) {
             const key = argPath[i];
             if (!(key in arg)) {
-                throw new Error('Required argument "' + key + '" in "' + name +  '" is required but missing');
+                throw new Error(
+                    'Required argument "' + key + '" in "' + name + '" is required but missing'
+                );
             }
             arg = arg[key];
         }
@@ -56,11 +54,14 @@ define([
     }
 
     function listObjectsWithSets(narrativeService, workspaceName, type) {
-        return narrativeService.callFunc('list_objects_with_sets', [{
-            ws_name: workspaceName,
-            types: [type],
-            includeMetadata: 1
-        }])
+        return narrativeService
+            .callFunc('list_objects_with_sets', [
+                {
+                    ws_name: workspaceName,
+                    types: [type],
+                    includeMetadata: 1,
+                },
+            ])
             .then(([data]) => {
                 return data.data.map((item) => {
                     const info = item.object_info;
@@ -69,7 +70,7 @@ define([
                     return {
                         info,
                         objectName,
-                        metadata
+                        metadata,
                     };
                 });
             });
@@ -79,6 +80,6 @@ define([
         compileTemplates,
         applyMetadataTemplates,
         requireArg,
-        listObjectsWithSets
+        listObjectsWithSets,
     });
 });

@@ -1,27 +1,24 @@
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'bluebird',
-		'jquery'
-	], (
-		KBWidget,
-		bootstrap,
-		Promise,
-		$
-	) => {
+define(['kbwidget', 'bootstrap', 'bluebird', 'jquery'], (KBWidget, bootstrap, Promise, $) => {
     'use strict';
 
     // favorites callback should accept:
-    //  
+    //
     //  favoritesCallback(this.info)
-    //    info = 
+    //    info =
     //      id:
     //      module_name:
     //      ...
-    //     
-    function AppCard(type, info, tag, nms_base_url, favoritesCallback, callbackParams, isLoggedIn, clickedCallback) {
-
+    //
+    function AppCard(
+        type,
+        info,
+        tag,
+        nms_base_url,
+        favoritesCallback,
+        callbackParams,
+        isLoggedIn,
+        clickedCallback
+    ) {
         this.$divs = [];
         this.info = info;
         this.type = type;
@@ -38,47 +35,43 @@ define (
 
         // only an SDK module if it has a module name
         this.isSdk = false;
-        if(this.info.module_name) {
+        if (this.info.module_name) {
             this.isSdk = true;
         }
 
-
-
-        this.show = function() {
-            for(let k=0; k<this.$divs.length; k++) {
+        this.show = function () {
+            for (let k = 0; k < this.$divs.length; k++) {
                 this.$divs[k].show();
             }
         };
 
-        this.hide = function() {
-            for(let k=0; k<this.$divs.length; k++) {
+        this.hide = function () {
+            for (let k = 0; k < this.$divs.length; k++) {
                 this.$divs[k].hide();
             }
         };
 
         /* get a new card that can be added to a DOM element */
-        this.getNewCardDiv = function() {
+        this.getNewCardDiv = function () {
             this.cardsAdded += 1;
-            if(this.$divs.length<this.cardsAdded) {
+            if (this.$divs.length < this.cardsAdded) {
                 const $newCard = this._renderAppCard();
                 this.$divs.push($newCard);
                 return $newCard;
             } else {
-                return this.$divs[this.cardsAdded-1];
+                return this.$divs[this.cardsAdded - 1];
             }
-
         };
 
         /* assumes the cards have been detached from DOM*/
-        this.clearCardsAddedCount = function() {
+        this.clearCardsAddedCount = function () {
             this.cardsAdded = 0;
         };
 
-        this.clearCardsFromMemory = function() {
+        this.clearCardsFromMemory = function () {
             this.cardsAdded = 0;
-            this.$divs=0;
+            this.$divs = 0;
         };
-
 
         this.starCount = null;
         this.onStar = false;
@@ -86,53 +79,61 @@ define (
         this.onStarTime = 0;
 
         /* timestamp => the time at which this was favorited, optional */
-        this.turnOnStar = function(timestamp) {
+        this.turnOnStar = function (timestamp) {
             this.onStar = true;
-            for(let k=0; k<this.$divs.length; k++) {
-                this.$divs[k].find('.kbcb-star')
-                    .removeClass('kbcb-star-nonfavorite').addClass('kbcb-star-favorite');
+            for (let k = 0; k < this.$divs.length; k++) {
+                this.$divs[k]
+                    .find('.kbcb-star')
+                    .removeClass('kbcb-star-nonfavorite')
+                    .addClass('kbcb-star-favorite');
             }
-            if(timestamp) {
+            if (timestamp) {
                 this.onStarTime = timestamp;
             }
         };
-        this.turnOffStar = function() {
+        this.turnOffStar = function () {
             this.onStar = false;
-            for(let k=0; k<this.$divs.length; k++) {
-                this.$divs[k].find('.kbcb-star')
-                    .removeClass('kbcb-star-favorite').addClass('kbcb-star-nonfavorite');
+            for (let k = 0; k < this.$divs.length; k++) {
+                this.$divs[k]
+                    .find('.kbcb-star')
+                    .removeClass('kbcb-star-favorite')
+                    .addClass('kbcb-star-nonfavorite');
             }
         };
 
-        this.isStarOn = function() {
+        this.isStarOn = function () {
             return this.onStar;
-        }
-        this.getStarTime = function() {
+        };
+        this.getStarTime = function () {
             return this.onStarTime;
-        }
+        };
 
-        this.deactivateStar = function() {
+        this.deactivateStar = function () {
             this.deactivatedStar = true;
-            for(let k=0; k<this.$divs.length; k++) {
-                this.$divs[k].find('.kbcb-star')
-                    .removeClass('kbcb-star-favorite').removeClass('kbcb-star-nonfavorite');
+            for (let k = 0; k < this.$divs.length; k++) {
+                this.$divs[k]
+                    .find('.kbcb-star')
+                    .removeClass('kbcb-star-favorite')
+                    .removeClass('kbcb-star-nonfavorite');
             }
         };
 
-        this.getStarCount = function(count) {
-            if(this.starCount) return this.starCount;
+        this.getStarCount = function (count) {
+            if (this.starCount) return this.starCount;
             return 0;
         };
 
-        this.setStarCount = function(count) {
+        this.setStarCount = function (count) {
             this.starCount = count;
-            if(this.starCount<=0) { this.starCount = null; }
-            if(this.starCount) {
-                for(var k=0; k<this.$divs.length; k++) {
+            if (this.starCount <= 0) {
+                this.starCount = null;
+            }
+            if (this.starCount) {
+                for (var k = 0; k < this.$divs.length; k++) {
                     this.$divs[k].find('.kbcb-star-count').html(count);
                 }
             } else {
-                for(var k=0; k<this.$divs.length; k++) {
+                for (var k = 0; k < this.$divs.length; k++) {
                     this.$divs[k].find('.kbcb-star-count').empty();
                 }
             }
@@ -140,27 +141,31 @@ define (
 
         this.runCount = null;
 
-        this.setRunCount = function(runs) {
+        this.setRunCount = function (runs) {
             this.runCount = runs;
-            if(this.runCount) {
-                for(let k=0; k<this.$divs.length; k++) {
-                    this.$divs[k].find('.kbcb-runs').empty()
+            if (this.runCount) {
+                for (let k = 0; k < this.$divs.length; k++) {
+                    this.$divs[k]
+                        .find('.kbcb-runs')
+                        .empty()
                         .append('<i class="fa fa-share"></i>')
                         .append($('<span>').addClass('kbcb-run-count').append(this.runCount))
-                        .tooltip({title:'Ran in a Narrative '+this.runCount+' times.', placement:'bottom',container:'body',
-                                        delay:{show: 400, hide: 40}});;
+                        .tooltip({
+                            title: 'Ran in a Narrative ' + this.runCount + ' times.',
+                            placement: 'bottom',
+                            container: 'body',
+                            delay: { show: 400, hide: 40 },
+                        });
                 }
             }
         };
-        this.getRunCount = function() {
-            if(this.runCount) return this.runCount;
+        this.getRunCount = function () {
+            if (this.runCount) return this.runCount;
             return 0;
-        }
-
+        };
 
         /* rendering methods that are shared in multiple places */
-        this._renderAppCard = function() {
-
+        this._renderAppCard = function () {
             const info = this.info;
             const type = this.type;
             const tag = this.tag;
@@ -173,136 +178,171 @@ define (
             const $topDiv = $('<div>').addClass('row kbcb-app-card-header');
             const $logoSpan = $('<div>').addClass('col-xs-3 kbcb-app-card-logo');
 
-            if(type === 'method') {
-                $logoSpan.append('<div class="fa-stack fa-3x"><i class="fa fa-square fa-stack-2x method-icon"></i><i class="fa fa-inverse fa-stack-1x fa-cube"></i></div>')
+            if (type === 'method') {
+                $logoSpan.append(
+                    '<div class="fa-stack fa-3x"><i class="fa fa-square fa-stack-2x method-icon"></i><i class="fa fa-inverse fa-stack-1x fa-cube"></i></div>'
+                );
             } else if (type === 'app') {
-                $logoSpan.append('<span class="fa-stack fa-3x"><span class="fa fa-square fa-stack-2x app-icon"></span><span class="fa fa-inverse fa-stack-1x fa-cubes" style=""></span></span>');
+                $logoSpan.append(
+                    '<span class="fa-stack fa-3x"><span class="fa fa-square fa-stack-2x app-icon"></span><span class="fa fa-inverse fa-stack-1x fa-cubes" style=""></span></span>'
+                );
             }
 
             // add actual logos here
-            if(info.icon && nms_base_url) {
-                if(info.icon.url) {
-                    $logoSpan.html($('<img src="'+nms_base_url + info.icon.url+'">')
-                                        .css({'max-width':'85%', 'padding':'6px 3px 3px 8px',
-                                              'max-height': '85%'}));
+            if (info.icon && nms_base_url) {
+                if (info.icon.url) {
+                    $logoSpan.html(
+                        $('<img src="' + nms_base_url + info.icon.url + '">').css({
+                            'max-width': '85%',
+                            padding: '6px 3px 3px 8px',
+                            'max-height': '85%',
+                        })
+                    );
                 }
             }
 
             const $titleSpan = $('<div>').addClass('col-xs-9 kbcb-app-card-title-panel');
-                
+
             $titleSpan.append($('<div>').addClass('kbcb-app-card-title').append(info.name));
-            if(info['module_name']) {
-                $titleSpan.append($('<div>').addClass('kbcb-app-card-module').append(
-                                        $('<a href="/#catalog/modules/'+info.module_name+'" target="_blank">')
-                                            .append(info.module_name)
-                                            .on('click',(event) => {
-                                                // have to stop propagation so we don't go to the app page first
-                                                event.stopPropagation();
-                                            })));
+            if (info['module_name']) {
+                $titleSpan.append(
+                    $('<div>')
+                        .addClass('kbcb-app-card-module')
+                        .append(
+                            $(
+                                '<a href="/#catalog/modules/' +
+                                    info.module_name +
+                                    '" target="_blank">'
+                            )
+                                .append(info.module_name)
+                                .on('click', (event) => {
+                                    // have to stop propagation so we don't go to the app page first
+                                    event.stopPropagation();
+                                })
+                        )
+                );
             }
 
-            if(type==='method') {
-                if(info.authors.length>0) {
+            if (type === 'method') {
+                if (info.authors.length > 0) {
                     const $authorDiv = $('<div>').addClass('kbcb-app-card-authors').append('by ');
-                    for(let k=0; k<info.authors.length; k++) {
-                        if(k>=1) {
+                    for (let k = 0; k < info.authors.length; k++) {
+                        if (k >= 1) {
                             $authorDiv.append(', ');
                         }
-                        if(k>=2) {
-                            $authorDiv.append(' +'+(info.authors.length-2)+' more');
+                        if (k >= 2) {
+                            $authorDiv.append(' +' + (info.authors.length - 2) + ' more');
                             break;
                         }
-                        $authorDiv.append($('<a href="/#people/'+info.authors[k]+'" target="_blank">')
-                                            .append(info.authors[k])
-                                            .on('click',(event) => {
-                                                // have to stop propagation so we don't go to the app page first
-                                                event.stopPropagation();
-                                            }));
+                        $authorDiv.append(
+                            $('<a href="/#people/' + info.authors[k] + '" target="_blank">')
+                                .append(info.authors[k])
+                                .on('click', (event) => {
+                                    // have to stop propagation so we don't go to the app page first
+                                    event.stopPropagation();
+                                })
+                        );
                     }
                     $titleSpan.append($authorDiv);
                 }
             }
 
-
-            $appDiv.append(
-                $topDiv
-                    .append($logoSpan)
-                    .append($titleSpan));
-
+            $appDiv.append($topDiv.append($logoSpan).append($titleSpan));
 
             // SUBTITLE - on mouseover of info, show subtitle information
-            const $subtitle = $('<div>').addClass('kbcb-app-card-subtitle').append(info.subtitle).hide()
+            const $subtitle = $('<div>')
+                .addClass('kbcb-app-card-subtitle')
+                .append(info.subtitle)
+                .hide();
             $appDiv.append($subtitle);
 
             // FOOTER - stars, number of runs, and info mouseover area
             const $footer = $('<div>').addClass('clearfix kbcb-app-card-footer');
 
-            if(type==='method') {
-                const $starDiv = $('<div>').addClass('col-xs-3').css('text-align','left');
-                const $star = $('<span>').addClass('kbcb-star').append('<i class="fa fa-star"></i>');
+            if (type === 'method') {
+                const $starDiv = $('<div>').addClass('col-xs-3').css('text-align', 'left');
+                const $star = $('<span>')
+                    .addClass('kbcb-star')
+                    .append('<i class="fa fa-star"></i>');
                 var self = this;
-                if(self.isLoggedIn) {
+                if (self.isLoggedIn) {
                     $star.addClass('kbcb-star-nonfavorite');
                     $star.on('click', (event) => {
                         event.stopPropagation();
-                        if(!self.deactivatedStar && self.favoritesCallback) {
-                            self.favoritesCallback(self.info, self.callbackParams)
+                        if (!self.deactivatedStar && self.favoritesCallback) {
+                            self.favoritesCallback(self.info, self.callbackParams);
                         }
                     });
-                    $starDiv.tooltip({title:'Click on the star to add/remove from your favorites', placement:'bottom', container: 'body',
-                                        delay:{show: 400, hide: 40}});
+                    $starDiv.tooltip({
+                        title: 'Click on the star to add/remove from your favorites',
+                        placement: 'bottom',
+                        container: 'body',
+                        delay: { show: 400, hide: 40 },
+                    });
                 }
                 const $starCount = $('<span>').addClass('kbcb-star-count');
-                if(this.starCount) { $starCount.html(this.starCount); }
-                if(this.onStar) { $star.removeClass('kbcb-star-nonfavorite').addClass('kbcb-star-favorite'); }
+                if (this.starCount) {
+                    $starCount.html(this.starCount);
+                }
+                if (this.onStar) {
+                    $star.removeClass('kbcb-star-nonfavorite').addClass('kbcb-star-favorite');
+                }
                 $footer.append($starDiv.append($star).append($starCount));
-                
             } else {
-                $footer.append($('<div>').addClass('col-xs-3'))
+                $footer.append($('<div>').addClass('col-xs-3'));
             }
 
-            if(this.isSdk) {
-                const nRuns = Math.floor(Math.random()*10000);
-                const $nRuns = $('<div>').addClass('col-xs-3').css('text-align','left');
+            if (this.isSdk) {
+                const nRuns = Math.floor(Math.random() * 10000);
+                const $nRuns = $('<div>').addClass('col-xs-3').css('text-align', 'left');
                 $nRuns.append($('<span>').addClass('kbcb-runs'));
-                if(this.nRuns) {
+                if (this.nRuns) {
                     $nRuns
                         .append('<i class="fa fa-share"></i>')
                         .append($('<span>').addClass('kbcb-run-count').append(this.nRuns))
-                        .tooltip({title:'Ran in a Narrative '+nRuns+' times.', container: 'body', placement:'bottom',
-                                        delay:{show: 400, hide: 40}});
+                        .tooltip({
+                            title: 'Ran in a Narrative ' + nRuns + ' times.',
+                            container: 'body',
+                            placement: 'bottom',
+                            delay: { show: 400, hide: 40 },
+                        });
                 }
                 $footer.append($nRuns);
             } else {
-                $footer.append($('<div>').addClass('col-xs-3'))
+                $footer.append($('<div>').addClass('col-xs-3'));
             }
 
-
-
             let moreLink = info.id;
-            if(type === 'method') {
-                if(info.module_name) {
+            if (type === 'method') {
+                if (info.module_name) {
                     // module name right now is encoded in the ID
                     //window.location.href = '#appcatalog/app/'.info.module_name+'/'+app.info.id;
-                    if(tag) {
-                        moreLink = '/#appcatalog/app/'+info.id + '/'+tag;
+                    if (tag) {
+                        moreLink = '/#appcatalog/app/' + info.id + '/' + tag;
                     } else {
-                        moreLink = '/#appcatalog/app/'+info.id;
+                        moreLink = '/#appcatalog/app/' + info.id;
                     }
                 } else {
                     // legacy method, encoded as l.m
-                    moreLink = '/#appcatalog/app/l.m/'+info.id;
+                    moreLink = '/#appcatalog/app/l.m/' + info.id;
                 }
             } else {
                 // apps still go to old style page
-                moreLink = '/#narrativestore/app/'+info.id;
+                moreLink = '/#narrativestore/app/' + info.id;
             }
 
             // buffer
-            $footer.append($('<div>').addClass('col-xs-4').css('text-align','left')
-                            .append($('<a href="'+moreLink+'" target="_blank">').append('more...')));
+            $footer.append(
+                $('<div>')
+                    .addClass('col-xs-4')
+                    .css('text-align', 'left')
+                    .append($('<a href="' + moreLink + '" target="_blank">').append('more...'))
+            );
 
-            const $moreInfoDiv = $('<div>').addClass('col-xs-1').addClass('kbcb-info').css('text-align','right');
+            const $moreInfoDiv = $('<div>')
+                .addClass('col-xs-1')
+                .addClass('kbcb-info')
+                .css('text-align', 'right');
             $moreInfoDiv
                 .on('mouseenter', () => {
                     $topDiv.hide();
@@ -315,7 +355,7 @@ define (
                 .on('click', (event) => {
                     // do this the JS way because wrapping just in <a> messes up the styles!
                     event.stopPropagation();
-                    window.open(moreLink)
+                    window.open(moreLink);
                 });
             $moreInfoDiv.append($('<span>').append('<i class="fa fa-info"></i>'));
             $footer.append($moreInfoDiv);
@@ -323,7 +363,7 @@ define (
 
             var self = this;
             $appDiv.on('click', () => {
-                if(self.clickedCallback) {
+                if (self.clickedCallback) {
                     self.clickedCallback(self);
                 }
             });
@@ -332,9 +372,6 @@ define (
             const $appCardContainer = $('<div>').addClass('kbcb-app-card-container');
             return $appCardContainer.append($appDiv);
         };
-
-
-
     }
 
     return AppCard;

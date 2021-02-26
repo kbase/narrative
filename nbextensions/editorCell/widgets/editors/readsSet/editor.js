@@ -23,7 +23,7 @@ define([
     './message',
 
     'css!google-code-prettify/prettify.css',
-    'css!font-awesome.css'
+    'css!font-awesome.css',
 ], (
     require,
     Promise,
@@ -71,11 +71,11 @@ define([
     function factory(config) {
         let cell = config.cell,
             parentBus = config.bus,
-
-            hostNode, container, ui,
+            hostNode,
+            container,
+            ui,
             workspaceInfo = config.workspaceInfo,
             runtime = Runtime.make(),
-
             // TODO: the cell bus should be created and managed through main.js,
             // that is, the extension.
             cellBus,
@@ -84,21 +84,21 @@ define([
             editorState,
             model,
             eventManager = BusEventManager.make({
-                bus: runtime.bus()
+                bus: runtime.bus(),
             }),
             // HMM. Sync with metadata, or just keep everything there?
             settings = {
                 showAdvanced: {
                     label: 'Show advanced parameters',
                     defaultValue: false,
-                    type: 'custom'
+                    type: 'custom',
                 },
                 showNotifications: {
                     label: 'Show the notifications panel',
                     defaultValue: false,
                     type: 'toggle',
-                    element: 'notifications'
-                }
+                    element: 'notifications',
+                },
             },
             widgets = {},
             spec,
@@ -109,12 +109,11 @@ define([
                 label: 'Show developer features',
                 defaultValue: false,
                 type: 'toggle',
-                element: 'developer-options'
+                element: 'developer-options',
             };
         }
 
         // DATA API
-
 
         /*
          * Fetch the app spec for a given app and store the spec in the model.
@@ -129,25 +128,26 @@ define([
             env.appTag = appTag;
             const appRef = {
                     ids: [appId],
-                    tag: appTag
+                    tag: appTag,
                 },
-                nms = new NarrativeMethodStore(runtime.config('services.narrative_method_store.url'), {
-                    token: runtime.authToken()
-                });
-
-            return nms.get_method_spec(appRef)
-                .then((data) => {
-                    if (!data[0]) {
-                        throw new Error('App not found');
+                nms = new NarrativeMethodStore(
+                    runtime.config('services.narrative_method_store.url'),
+                    {
+                        token: runtime.authToken(),
                     }
-                    // TODO: really the best way to store state?
-                    env.appSpec = data[0];
-                    // Get an input field widget per parameter
-                });
+                );
+
+            return nms.get_method_spec(appRef).then((data) => {
+                if (!data[0]) {
+                    throw new Error('App not found');
+                }
+                // TODO: really the best way to store state?
+                env.appSpec = data[0];
+                // Get an input field widget per parameter
+            });
         }
 
         // RENDER API
-
 
         function syncFatalError() {
             ui.setContent('fatal-error.title', editorState.getItem('fatalError.title'));
@@ -192,129 +192,194 @@ define([
             if (Jupyter.narrative.readonly) {
                 readOnlyStyle.display = 'none';
             }
-            return div({ class: 'kbase-extension kb-editor-cell', style: { display: 'flex', alignItems: 'stretch' } }, [
-                div({ class: 'prompt', dataElement: 'prompt', style: { display: 'flex', alignItems: 'stretch', flexDirection: 'column' } }, [
-                    div({ dataElement: 'status' })
-                ]),
-                div({
-                    class: 'body',
-                    dataElement: 'body',
-                    style: { display: 'flex', alignItems: 'stretch', flexDirection: 'column', flex: '1', width: '100%' }
-                }, [
-                    div({ dataElement: 'widget', style: { display: 'block', width: '100%' } }, [
-                        div({ class: 'container-fluid' }, [
-                            ui.buildPanel({
-                                title: 'Error',
-                                name: 'fatal-error',
-                                hidden: true,
-                                type: 'danger',
-                                classes: ['kb-panel-container'],
-                                body: div([
-                                    table({ class: 'table table-striped' }, [
-                                        tr([
-                                            th('Title'), td({ dataElement: 'title' })
-                                        ]),
-                                        tr([
-                                            th('Message'), td({ dataElement: 'message' })
-                                        ]),
-                                        tr([
-                                            th('Details'), td({ dataElement: 'details' })
-                                        ])
-                                    ])
-                                ])
-                            }),
-                            ui.buildPanel({
-                                title: 'Cell Settings',
-                                name: 'settings',
-                                hidden: true,
-                                type: 'default',
-                                classes: ['kb-panel-container'],
-                                body: div({ dataElement: 'content' })
-                            }),
-                            ui.buildCollapsiblePanel({
-                                title: 'Notifications',
-                                name: 'notifications',
-                                hidden: true,
-                                type: 'default',
-                                classes: ['kb-panel-container'],
-                                body: [
-                                    div({ dataElement: 'content' })
-                                ]
-                            }),
-                            ui.buildCollapsiblePanel({
-                                title: 'Dev',
-                                name: 'developer-options',
-                                hidden: true,
-                                type: 'default',
-                                classes: ['kb-panel-container'],
-                                body: [
-                                    div({ dataElement: 'fsm-display', style: { marginBottom: '4px' } }, [
-                                        span({ style: { marginRight: '4px' } }, 'FSM'),
-                                        span({ dataElement: 'content' })
+            return div(
+                {
+                    class: 'kbase-extension kb-editor-cell',
+                    style: { display: 'flex', alignItems: 'stretch' },
+                },
+                [
+                    div(
+                        {
+                            class: 'prompt',
+                            dataElement: 'prompt',
+                            style: {
+                                display: 'flex',
+                                alignItems: 'stretch',
+                                flexDirection: 'column',
+                            },
+                        },
+                        [div({ dataElement: 'status' })]
+                    ),
+                    div(
+                        {
+                            class: 'body',
+                            dataElement: 'body',
+                            style: {
+                                display: 'flex',
+                                alignItems: 'stretch',
+                                flexDirection: 'column',
+                                flex: '1',
+                                width: '100%',
+                            },
+                        },
+                        [
+                            div(
+                                {
+                                    dataElement: 'widget',
+                                    style: { display: 'block', width: '100%' },
+                                },
+                                [
+                                    div({ class: 'container-fluid' }, [
+                                        ui.buildPanel({
+                                            title: 'Error',
+                                            name: 'fatal-error',
+                                            hidden: true,
+                                            type: 'danger',
+                                            classes: ['kb-panel-container'],
+                                            body: div([
+                                                table({ class: 'table table-striped' }, [
+                                                    tr([th('Title'), td({ dataElement: 'title' })]),
+                                                    tr([
+                                                        th('Message'),
+                                                        td({ dataElement: 'message' }),
+                                                    ]),
+                                                    tr([
+                                                        th('Details'),
+                                                        td({ dataElement: 'details' }),
+                                                    ]),
+                                                ]),
+                                            ]),
+                                        }),
+                                        ui.buildPanel({
+                                            title: 'Cell Settings',
+                                            name: 'settings',
+                                            hidden: true,
+                                            type: 'default',
+                                            classes: ['kb-panel-container'],
+                                            body: div({ dataElement: 'content' }),
+                                        }),
+                                        ui.buildCollapsiblePanel({
+                                            title: 'Notifications',
+                                            name: 'notifications',
+                                            hidden: true,
+                                            type: 'default',
+                                            classes: ['kb-panel-container'],
+                                            body: [div({ dataElement: 'content' })],
+                                        }),
+                                        ui.buildCollapsiblePanel({
+                                            title: 'Dev',
+                                            name: 'developer-options',
+                                            hidden: true,
+                                            type: 'default',
+                                            classes: ['kb-panel-container'],
+                                            body: [
+                                                div(
+                                                    {
+                                                        dataElement: 'fsm-display',
+                                                        style: { marginBottom: '4px' },
+                                                    },
+                                                    [
+                                                        span(
+                                                            { style: { marginRight: '4px' } },
+                                                            'FSM'
+                                                        ),
+                                                        span({ dataElement: 'content' }),
+                                                    ]
+                                                ),
+                                                div([
+                                                    ui.makeButton('Show Code', 'toggle-code-view', {
+                                                        events: events,
+                                                    }),
+                                                    ui.makeButton(
+                                                        'Edit Metadata',
+                                                        'edit-cell-metadata',
+                                                        { events: events }
+                                                    ),
+                                                    ui.makeButton(
+                                                        'Edit Notebook Metadata',
+                                                        'edit-notebook-metadata',
+                                                        { events: events }
+                                                    ),
+                                                ]),
+                                            ],
+                                        }),
+                                        ui.buildCollapsiblePanel({
+                                            title: 'Select Object to Edit',
+                                            name: 'edit-object-selector',
+                                            hidden: false,
+                                            type: 'default',
+                                            classes: ['kb-panel-container'],
+                                            body: div({ dataElement: 'widget' }),
+                                        }),
+                                        ui.buildCollapsiblePanel({
+                                            title: span([
+                                                'Currently Editing ',
+                                                span({
+                                                    dataElement: 'name',
+                                                    style: {
+                                                        textDecoration: 'underline',
+                                                    },
+                                                }),
+                                            ]),
+                                            name: 'currently-editing',
+                                            collapsed: true,
+                                            hidden: false,
+                                            type: 'default',
+                                            classes: ['kb-panel-container'],
+                                            body: div({ dataElement: 'widget' }),
+                                        }),
+                                        ui.buildPanel({
+                                            title:
+                                                span({
+                                                    class: 'fa fa-pencil',
+                                                    style: { marginLeft: '3px', width: '20px' },
+                                                }) + 'Editor ',
+                                            name: 'editor',
+                                            hidden: false,
+                                            type: 'default',
+                                            classes: ['kb-panel-container'],
+                                            body: div({ dataElement: 'widget' }),
+                                        }),
+                                        div(
+                                            {
+                                                dataElement: 'available-actions',
+                                                style: readOnlyStyle,
+                                            },
+                                            [
+                                                div(
+                                                    {
+                                                        class:
+                                                            'btn-toolbar kb-btn-toolbar-cell-widget',
+                                                    },
+                                                    [
+                                                        div({ class: 'btn-group' }, [
+                                                            ui.makeButton('Save', 'save', {
+                                                                events: events,
+                                                                type: 'primary',
+                                                            }),
+                                                            div({
+                                                                dataElement: 'status',
+                                                                class: 'xbtn ',
+                                                                style: {
+                                                                    display: 'inline-block',
+                                                                    marginLeft: '6px',
+                                                                    xborder: '1px red dotted',
+                                                                    padding: '6px 12px',
+                                                                    lineHeight: '1.43',
+                                                                },
+                                                            }),
+                                                        ]),
+                                                    ]
+                                                ),
+                                            ]
+                                        ),
                                     ]),
-                                    div([
-                                        ui.makeButton('Show Code', 'toggle-code-view', { events: events }),
-                                        ui.makeButton('Edit Metadata', 'edit-cell-metadata', { events: events }),
-                                        ui.makeButton('Edit Notebook Metadata', 'edit-notebook-metadata', { events: events })
-                                    ])
                                 ]
-                            }),
-                            ui.buildCollapsiblePanel({
-                                title: 'Select Object to Edit',
-                                name: 'edit-object-selector',
-                                hidden: false,
-                                type: 'default',
-                                classes: ['kb-panel-container'],
-                                body: div({ dataElement: 'widget' })
-                            }),
-                            ui.buildCollapsiblePanel({
-                                title: span(['Currently Editing ', span({
-                                    dataElement: 'name',
-                                    style: {
-                                        textDecoration: 'underline'
-                                    }
-                                })]),
-                                name: 'currently-editing',
-                                collapsed: true,
-                                hidden: false,
-                                type: 'default',
-                                classes: ['kb-panel-container'],
-                                body: div({ dataElement: 'widget' })
-                            }),
-                            ui.buildPanel({
-                                title: span({ class: 'fa fa-pencil', style: { marginLeft: '3px', width: '20px' } }) + 'Editor ',
-                                name: 'editor',
-                                hidden: false,
-                                type: 'default',
-                                classes: ['kb-panel-container'],
-                                body: div({ dataElement: 'widget' })
-                            }),
-                            div({
-                                dataElement: 'available-actions',
-                                style: readOnlyStyle
-                            }, [
-                                div({ class: 'btn-toolbar kb-btn-toolbar-cell-widget' }, [
-                                    div({ class: 'btn-group' }, [
-                                        ui.makeButton('Save', 'save', { events: events, type: 'primary' }),
-                                        div({
-                                            dataElement: 'status',
-                                            class: 'xbtn ',
-                                            style: {
-                                                display: 'inline-block',
-                                                marginLeft: '6px',
-                                                xborder: '1px red dotted',
-                                                padding: '6px 12px',
-                                                lineHeight: '1.43'
-
-                                            }
-                                        })
-                                    ])
-                                ])
-                            ])
-                        ])
-                    ])
-                ])
-            ]);
+                            ),
+                        ]
+                    ),
+                ]
+            );
         }
 
         function validateModel() {
@@ -332,19 +397,18 @@ define([
         // for a beta or release tag ...
         function fixApp(app) {
             switch (app.tag) {
-                case 'release':
-                    {
-                        return {
-                            id: app.id,
-                            tag: app.tag,
-                            version: app.version
-                        };
-                    }
+                case 'release': {
+                    return {
+                        id: app.id,
+                        tag: app.tag,
+                        version: app.version,
+                    };
+                }
                 case 'beta':
                 case 'dev':
                     return {
                         id: app.id,
-                        tag: app.tag
+                        tag: app.tag,
                     };
                 default:
                     throw new Error('Invalid tag for app ' + app.id);
@@ -378,13 +442,13 @@ define([
             fsm = Fsm.make({
                 states: appStates,
                 initialState: {
-                    mode: 'new'
+                    mode: 'new',
                 },
-                onNewState: function(fsm) {
+                onNewState: function (fsm) {
                     editorState.setItem('fsm.currentState', fsm.getCurrentState().state);
                     // save the narrative!
                 },
-                bus: bus
+                bus: bus,
             });
             fsm.start(currentState);
         }
@@ -428,22 +492,30 @@ define([
         function renderNotifications() {
             const events = Events.make(),
                 notifications = editorState.getItem('notifications') || [],
-                content = notifications.map((notification, index) => {
-                    return div({ class: 'row' }, [
-                        div({ class: 'col-md-10' }, notification),
-                        div({ class: 'col-md-2', style: { textAlign: 'right' } }, span({}, [
-                            a({
-                                class: 'btn btn-default',
-                                id: events.addEvent({
-                                    type: 'click',
-                                    handler: function() {
-                                        doRemoveNotification(index);
-                                    }
-                                })
-                            }, 'X')
-                        ]))
-                    ]);
-                }).join('\n');
+                content = notifications
+                    .map((notification, index) => {
+                        return div({ class: 'row' }, [
+                            div({ class: 'col-md-10' }, notification),
+                            div(
+                                { class: 'col-md-2', style: { textAlign: 'right' } },
+                                span({}, [
+                                    a(
+                                        {
+                                            class: 'btn btn-default',
+                                            id: events.addEvent({
+                                                type: 'click',
+                                                handler: function () {
+                                                    doRemoveNotification(index);
+                                                },
+                                            }),
+                                        },
+                                        'X'
+                                    ),
+                                ])
+                            ),
+                        ]);
+                    })
+                    .join('\n');
             ui.setContent('notifications.content', content);
             events.attachEvents(container);
         }
@@ -465,16 +537,16 @@ define([
             const bus = runtime.bus().makeChannelBus({ description: 'Bus for showWidget' }),
                 widget = widgetModule.make({
                     bus: bus,
-                    workspaceInfo: workspaceInfo
+                    workspaceInfo: workspaceInfo,
                 });
             widgets[name] = {
                 path: path,
                 module: widgetModule,
-                instance: widget
+                instance: widget,
             };
             widget.start();
             bus.emit('attach', {
-                node: ui.getElement(path)
+                node: ui.getElement(path),
             });
         }
 
@@ -494,7 +566,6 @@ define([
                 ui.disableButton(button);
             });
 
-
             // Element state
             state.ui.elements.show.forEach((element) => {
                 ui.showElement(element);
@@ -511,12 +582,12 @@ define([
                 p([
                     'Deleting this cell will remove the editor from the Narrative, ',
                     'but will not delete the associated Reads Sets, which will still be available ',
-                    'in the data panel.'
+                    'in the data panel.',
                 ]),
-                p('Continue to delete this cell?')
+                p('Continue to delete this cell?'),
             ]);
-            ui.showConfirmDialog({ title: 'Confirm Cell Deletion', body: content })
-                .then((confirmed) => {
+            ui.showConfirmDialog({ title: 'Confirm Cell Deletion', body: content }).then(
+                (confirmed) => {
                     if (!confirmed) {
                         return;
                     }
@@ -524,7 +595,8 @@ define([
                     bus.emit('stop');
 
                     JupyterProxy.deleteCell(cell);
-                });
+                }
+            );
         }
 
         function doSave() {
@@ -544,19 +616,21 @@ define([
         }
 
         function modelToParams() {
-            return [{
-                workspace: workspaceInfo.id,
-                output_object_name: model.getItem('params.name'),
-                data: {
-                    description: model.getItem('params.description'),
-                    items: model.getItem('params.items', []).map((item) => {
-                        return {
-                            label: item.label,
-                            ref: item.ref
-                        };
-                    })
-                }
-            }];
+            return [
+                {
+                    workspace: workspaceInfo.id,
+                    output_object_name: model.getItem('params.name'),
+                    data: {
+                        description: model.getItem('params.description'),
+                        items: model.getItem('params.items', []).map((item) => {
+                            return {
+                                label: item.label,
+                                ref: item.ref,
+                            };
+                        }),
+                    },
+                },
+            ];
         }
 
         // TODO: this should be a the error area -- and we should switch the
@@ -571,24 +645,24 @@ define([
                 detail = '';
             }
 
-            const content = div({
-                style: { border: '1px red solid' }
-            }, [
-                div({ style: { color: 'red' } }, 'Error'),
-                table({
-                    class: 'table table-bordered'
-                }, [
-                    tr([
-                        th('Type'), td(error.name || 'Unknown')
-                    ]),
-                    tr([
-                        th('Message'), td(error.message || '')
-                    ]),
-                    tr([
-                        th('Details'), td(error.detail.replace('\n', '<br>'))
-                    ])
-                ])
-            ]);
+            const content = div(
+                {
+                    style: { border: '1px red solid' },
+                },
+                [
+                    div({ style: { color: 'red' } }, 'Error'),
+                    table(
+                        {
+                            class: 'table table-bordered',
+                        },
+                        [
+                            tr([th('Type'), td(error.name || 'Unknown')]),
+                            tr([th('Message'), td(error.message || '')]),
+                            tr([th('Details'), td(error.detail.replace('\n', '<br>'))]),
+                        ]
+                    ),
+                ]
+            );
 
             ui.setContent('editor.widget', content);
         }
@@ -608,13 +682,15 @@ define([
             return new Promise((resolve, reject) => {
                 require(['./update'], (Widget) => {
                     // TODO: widget should make own bus.
-                    const bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' }),
+                    const bus = runtime
+                            .bus()
+                            .makeChannelBus({ description: 'Parent comm bus for input widget' }),
                         widget = Widget.make({
                             bus: bus,
                             workspaceInfo: workspaceInfo,
                             appId: env.appId,
                             appTag: env.appTag,
-                            initialValue: model.getItem('params')
+                            initialValue: model.getItem('params'),
                         });
                     controller.widget = widget;
                     controller.desc = 'update editor widget';
@@ -622,47 +698,53 @@ define([
                         path: ['editor', 'widget'],
                         type: 'update',
                         bus: bus,
-                        instance: widget
+                        instance: widget,
                     };
 
                     bus.on('parameter-sync', (message) => {
                         const value = model.getItem(['params', message.parameter, 'value']);
-                        bus.send({
-                            parameter: message.parameter,
-                            value: value
-                        }, {
-                            // This points the update back to a listener on this key
-                            key: {
-                                type: 'update',
-                                parameter: message.parameter
+                        bus.send(
+                            {
+                                parameter: message.parameter,
+                                value: value,
+                            },
+                            {
+                                // This points the update back to a listener on this key
+                                key: {
+                                    type: 'update',
+                                    parameter: message.parameter,
+                                },
                             }
-                        });
+                        );
                     });
 
                     bus.on('sync-params', (message) => {
                         message.parameters.forEach((paramId) => {
-                            bus.send({
-                                parameter: paramId,
-                                value: model.getItem(['params', message.parameter, 'value'])
-                            }, {
-                                key: {
-                                    type: 'parameter-value',
-                                    parameter: paramId
+                            bus.send(
+                                {
+                                    parameter: paramId,
+                                    value: model.getItem(['params', message.parameter, 'value']),
                                 },
-                                channel: message.replyToChannel
-                            });
+                                {
+                                    key: {
+                                        type: 'parameter-value',
+                                        parameter: paramId,
+                                    },
+                                    channel: message.replyToChannel,
+                                }
+                            );
                         });
                     });
 
                     bus.respond({
                         key: {
-                            type: 'get-parameter'
+                            type: 'get-parameter',
                         },
-                        handle: function(message) {
+                        handle: function (message) {
                             return {
-                                value: model.getItem(['params', message.parameterName, 'value'])
+                                value: model.getItem(['params', message.parameterName, 'value']),
                             };
-                        }
+                        },
                     });
 
                     bus.on('parameter-changed', (message) => {
@@ -678,10 +760,11 @@ define([
                         evaluateAppState();
                     });
 
-                    return widget.start({
+                    return widget
+                        .start({
                             node: controller.node,
                             appSpec: env.appSpec,
-                            parameters: spec.getSpec()
+                            parameters: spec.getSpec(),
                         })
                         .then(() => {
                             resolve();
@@ -703,19 +786,24 @@ define([
             widgets.editor.instance = messageWidget;
             return messageWidget.start({
                 content: message,
-                node: ui.getElement('editor.widget')
+                node: ui.getElement('editor.widget'),
             });
         }
-
-
 
         function renderCurrentlyEditing() {
             const info = editorState.getItem('current.set.info');
             const content = table({ class: 'table table-striped' }, [
                 tr([th('Name'), td({ style: { fontWeight: 'bold' } }, info.name)]),
                 tr([th('Ref'), td(info.ref)]),
-                tr([th('Last saved'), td(info.saveDate.toLocaleDateString() + ' at ' + info.saveDate.toLocaleTimeString())]),
-                tr([th('By'), td(info.saved_by)])
+                tr([
+                    th('Last saved'),
+                    td(
+                        info.saveDate.toLocaleDateString() +
+                            ' at ' +
+                            info.saveDate.toLocaleTimeString()
+                    ),
+                ]),
+                tr([th('By'), td(info.saved_by)]),
             ]);
 
             ui.setContent('currently-editing.widget', content);
@@ -733,42 +821,44 @@ define([
                     url: runtime.config('services.service_wizard.url'),
                     token: runtime.authToken(),
                     module: 'SetAPI',
-                    version: 'dev'
+                    version: 'dev',
                 }),
                 params = {
                     ref: objectRef,
-                    include_item_info: 1
+                    include_item_info: 1,
                 };
 
-            return setApiClient.callFunc('get_reads_set_v1', [params])
-                .spread((setObject) => {
-                    // After getting the reads set object, we populate our
-                    // view model (data model-ish) with the results.
-                    // The editor will sync up with the model, and pick up the
-                    // values.
-                    model.setItem('params', {});
+            return setApiClient.callFunc('get_reads_set_v1', [params]).spread((setObject) => {
+                // After getting the reads set object, we populate our
+                // view model (data model-ish) with the results.
+                // The editor will sync up with the model, and pick up the
+                // values.
+                model.setItem('params', {});
 
-                    // TODO: move this into code or config specific to
-                    // the reads set editor.
-                    // *** removed the .value
-                    model.setItem('params.name', setObject.info[1]);
-                    model.setItem('params.description', setObject.data.description);
-                    model.setItem('params.items', setObject.data.items.map((item) => {
+                // TODO: move this into code or config specific to
+                // the reads set editor.
+                // *** removed the .value
+                model.setItem('params.name', setObject.info[1]);
+                model.setItem('params.description', setObject.data.description);
+                model.setItem(
+                    'params.items',
+                    setObject.data.items.map((item) => {
                         return {
                             ref: item.ref,
-                            label: item.label
+                            label: item.label,
                         };
-                    }));
+                    })
+                );
 
-                    const objectInfo = serviceUtils.objectInfoToObject(setObject.info);
+                const objectInfo = serviceUtils.objectInfoToObject(setObject.info);
 
-                    // Might as well set here.
-                    editorState.setItem('current.set.ref', objectInfo.ref);
-                    editorState.setItem('current.set.info', objectInfo);
+                // Might as well set here.
+                editorState.setItem('current.set.ref', objectInfo.ref);
+                editorState.setItem('current.set.info', objectInfo);
 
-                    // NOT USED?
-                    model.setItem('currentReadsSet', objectInfo);
-                });
+                // NOT USED?
+                model.setItem('currentReadsSet', objectInfo);
+            });
         }
 
         /*
@@ -788,7 +878,7 @@ define([
                     url: runtime.config('services.service_wizard.url'),
                     token: runtime.authToken(),
                     module: 'SetAPI',
-                    version: 'dev'
+                    version: 'dev',
                 }),
                 params = {
                     workspace: String(workspaceInfo.id),
@@ -798,10 +888,11 @@ define([
                         // set api has bug -- will throw exception if fetch a
                         // set with no items.
                         // stuff a sample item in here to start with.
-                        items: []
-                    }
+                        items: [],
+                    },
                 };
-            return setApiClient.callFunc('save_reads_set_v1', [params])
+            return setApiClient
+                .callFunc('save_reads_set_v1', [params])
                 .spread((result) => {
                     doEditObject(serviceUtils.objectInfoToObject(result.set_info));
                 })
@@ -828,34 +919,33 @@ define([
             controller.status = 'unloading';
             controller.cancelled = true;
             return Promise.try(() => {
-                    // stop the widget if there is one.
-                    if (controller.widget) {
-                        controller.status = 'stopping';
-                        return controller.widget.stop()
-                            .then(() => {
-                                controller.status = 'stopped';
-                                controller.widget = null;
-                            });
-                    }
-                })
-                .then(() => {
-                    const editorNode = ui.getElement('editor.widget');
-                    try {
-                        editorNode.removeChild(controller.node);
-                    } catch (ex) {
-                        console.warn('Error removing widget controller node', ex);
-                    }
-                });
+                // stop the widget if there is one.
+                if (controller.widget) {
+                    controller.status = 'stopping';
+                    return controller.widget.stop().then(() => {
+                        controller.status = 'stopped';
+                        controller.widget = null;
+                    });
+                }
+            }).then(() => {
+                const editorNode = ui.getElement('editor.widget');
+                try {
+                    editorNode.removeChild(controller.node);
+                } catch (ex) {
+                    console.warn('Error removing widget controller node', ex);
+                }
+            });
         }
 
         function unloadEditors() {
-            return Promise.all(Object.keys(editorControllers).map((id) => {
-                const controller = editorControllers[id];
-                return unloadEditorController(controller)
-                    .then(() => {
+            return Promise.all(
+                Object.keys(editorControllers).map((id) => {
+                    const controller = editorControllers[id];
+                    return unloadEditorController(controller).then(() => {
                         delete editorControllers[id];
                     });
-            }));
+                })
+            );
         }
 
         // Widget controller
@@ -865,34 +955,33 @@ define([
             controller.status = 'unloading';
             controller.cancelled = true;
             return Promise.try(() => {
-                    // stop the widget if there is one.
-                    if (controller.widget) {
-                        controller.status = 'stopping';
-                        return controller.widget.stop()
-                            .then(() => {
-                                controller.status = 'stopped';
-                                controller.widget = null;
-                            });
-                    }
-                })
-                .then(() => {
-                    const editorNode = ui.getElement('editor.widget');
-                    try {
-                        editorNode.removeChild(controller.node);
-                    } catch (ex) {
-                        console.warn('Error removing widget controller node', ex);
-                    }
-                });
+                // stop the widget if there is one.
+                if (controller.widget) {
+                    controller.status = 'stopping';
+                    return controller.widget.stop().then(() => {
+                        controller.status = 'stopped';
+                        controller.widget = null;
+                    });
+                }
+            }).then(() => {
+                const editorNode = ui.getElement('editor.widget');
+                try {
+                    editorNode.removeChild(controller.node);
+                } catch (ex) {
+                    console.warn('Error removing widget controller node', ex);
+                }
+            });
         }
 
         function unloadWidgets() {
-            return Promise.all(Object.keys(editorControllers).map((id) => {
-                const controller = editorControllers[id];
-                return unloadWidgetController(controller)
-                    .then(() => {
+            return Promise.all(
+                Object.keys(editorControllers).map((id) => {
+                    const controller = editorControllers[id];
+                    return unloadWidgetController(controller).then(() => {
                         delete editorControllers[id];
                     });
-            }));
+                })
+            );
         }
 
         function doShowWidget(widgetFactory, arg) {
@@ -902,7 +991,7 @@ define([
                 node: document.createElement('div'),
                 widget: null,
                 cancelled: false,
-                status: 'creating'
+                status: 'creating',
             };
 
             arg.node = controller.node;
@@ -931,7 +1020,7 @@ define([
                 node: document.createElement('div'),
                 widget: null,
                 cancelled: false,
-                status: 'creating'
+                status: 'creating',
             };
 
             // Update editor state (is also persistent in the metadata)
@@ -947,8 +1036,8 @@ define([
                     ui.getElement('editor.widget').appendChild(controller.node);
                     return controller.widget.start({
                         node: controller.node,
-                        message: 'Loading Reads Set'
-                    })
+                        message: 'Loading Reads Set',
+                    });
                 })
                 .then(() => {
                     if (controller.cancelled) {
@@ -986,16 +1075,14 @@ define([
 
         function loadEditObjectSelector() {
             return new Promise((resolve, reject) => {
-                require([
-                    './selector'
-                ], (Widget) => {
+                require(['./selector'], (Widget) => {
                     const widget = Widget.make({
                         workspaceInfo: workspaceInfo,
-                        objectType: 'KBaseSets.ReadsSet'
+                        objectType: 'KBaseSets.ReadsSet',
                     });
                     widgets.editObjectSelector = {
                         path: ['edit-object-selector', 'widget'],
-                        instance: widget
+                        instance: widget,
                     };
                     // When the user selects a reads set to edit.
                     widget.channel.on('changed', (message) => {
@@ -1007,11 +1094,14 @@ define([
                         if (!newObject) {
                             if (currentObject) {
                                 return doShowWidget(MessageWidget, {
-                                    content: div({
-                                        style: {
-                                            textAlign: 'center'
-                                        }
-                                    }, 'No reads set selected. Please use the "Select Object to Edit" section above to create or edit a Reads Set.')
+                                    content: div(
+                                        {
+                                            style: {
+                                                textAlign: 'center',
+                                            },
+                                        },
+                                        'No reads set selected. Please use the "Select Object to Edit" section above to create or edit a Reads Set.'
+                                    ),
                                 });
                             } else {
                                 // do nothing, no editor displaying.
@@ -1037,15 +1127,18 @@ define([
                         setFatalError({
                             title: 'Fatal error from ' + message.location,
                             message: message.error.message,
-                            details: message.error.details || 'You may need to consult the browser log for additional information',
-                            advice: message.error.advice
+                            details:
+                                message.error.details ||
+                                'You may need to consult the browser log for additional information',
+                            advice: message.error.advice,
                         });
                         renderUI();
                     });
-                    widget.start({
+                    widget
+                        .start({
                             node: ui.getElement(['edit-object-selector', 'widget']),
                             appSpec: env.appSpec,
-                            selectedSet: editorState.getItem('current.set.ref')
+                            selectedSet: editorState.getItem('current.set.ref'),
                         })
                         .then(() => {
                             resolve();
@@ -1092,48 +1185,44 @@ define([
 
         function evaluateAppState() {
             return Promise.try(() => {
-                    const currentEditorSetInfo = editorState.getItem('current.set.info');
+                const currentEditorSetInfo = editorState.getItem('current.set.info');
 
-                    if (!currentEditorSetInfo) {
-                        // nothing being edited.
-                        fsm.updateState({
-                            mode: 'new'
+                if (!currentEditorSetInfo) {
+                    // nothing being edited.
+                    fsm.updateState({
+                        mode: 'new',
+                    });
+                    return null;
+                }
+
+                return validateModel().then((result) => {
+                    // we have a tree of validations, so we need to walk the tree to see if anything
+                    // does not validate.
+                    const messages = gatherValidationMessages(result);
+
+                    if (messages.length === 0) {
+                        buildPython();
+                        // dumb, but gotta get it working...
+                        fsm.newState({
+                            mode: 'editing',
+                            params: 'complete',
+                            data: 'changed',
                         });
-                        return null;
+                    } else {
+                        resetPython(cell);
+                        fsm.newState({
+                            mode: 'editing',
+                            params: 'incomplete',
+                            data: 'changed',
+                        });
                     }
-
-                    return validateModel()
-                        .then((result) => {
-                            // we have a tree of validations, so we need to walk the tree to see if anything
-                            // does not validate.
-                            const messages = gatherValidationMessages(result);
-
-
-                            if (messages.length === 0) {
-                                buildPython();
-                                // dumb, but gotta get it working...
-                                fsm.newState({
-                                    mode: 'editing',
-                                    params: 'complete',
-                                    data: 'changed'
-                                });
-                            } else {
-                                resetPython(cell);
-                                fsm.newState({
-                                    mode: 'editing',
-                                    params: 'incomplete',
-                                    data: 'changed'
-                                });
-                            }
-                        });
-
-                })
+                });
+            })
                 .then(() => {
                     renderUI();
                 })
                 .catch((err) => {
-                    alert('internal error'),
-                        console.error('INTERNAL ERROR', err);
+                    alert('internal error'), console.error('INTERNAL ERROR', err);
                 });
         }
 
@@ -1142,7 +1231,7 @@ define([
                 title: arg.title,
                 message: arg.message,
                 details: arg.details,
-                advice: arg.advice
+                advice: arg.advice,
             });
             syncFatalError();
             fsm.newState({ mode: 'fatal-error' });
@@ -1179,60 +1268,75 @@ define([
 
             cellBus = runtime.bus().makeChannelBus({
                 name: {
-                    cell: Props.getDataItem(cell.metadata, 'kbase.attributes.id')
+                    cell: Props.getDataItem(cell.metadata, 'kbase.attributes.id'),
                 },
-                description: 'A cell channel'
+                description: 'A cell channel',
             });
 
-            eventManager.add(cellBus.on('delete-cell', () => {
-                doDeleteCell();
-            }));
+            eventManager.add(
+                cellBus.on('delete-cell', () => {
+                    doDeleteCell();
+                })
+            );
 
-            eventManager.add(cellBus.on('result', (message) => {
-                // Verify that the run id is the same.
-                if (message.address.run_id !== editorState.getItem('editorState.currentRunId')) {
-                    setStatus(div([
-                        p('Error! result message is not from the generated code!'),
-                        p(['Sent ', editorState.getItem('editorState.currentRunId'), ' received ', message.address.run_id])
-                    ]));
-                    return;
-                }
-                if (message.message.result) {
-                    setStatus('Successfully saved the reads set');
-                    editorState.setItem('editorState.touched', false);
-                    editorState.setItem('editorState.changed', false);
-                    fsm.newState({
-                        mode: 'editing',
-                        params: 'complete',
-                        data: 'clean'
-                    });
-                    renderUI();
+            eventManager.add(
+                cellBus.on('result', (message) => {
+                    // Verify that the run id is the same.
+                    if (
+                        message.address.run_id !== editorState.getItem('editorState.currentRunId')
+                    ) {
+                        setStatus(
+                            div([
+                                p('Error! result message is not from the generated code!'),
+                                p([
+                                    'Sent ',
+                                    editorState.getItem('editorState.currentRunId'),
+                                    ' received ',
+                                    message.address.run_id,
+                                ]),
+                            ])
+                        );
+                        return;
+                    }
+                    if (message.message.result) {
+                        setStatus('Successfully saved the reads set');
+                        editorState.setItem('editorState.touched', false);
+                        editorState.setItem('editorState.changed', false);
+                        fsm.newState({
+                            mode: 'editing',
+                            params: 'complete',
+                            data: 'clean',
+                        });
+                        renderUI();
 
-                    // Now we need to reload the editor with the NEW item.
-                    editorState.setItem('current.set.ref', message.message.result.set_ref);
-                    const objectInfo = serviceUtils.objectInfoToObject(message.message.result.set_info);
-                    editorState.setItem('current.set.info', objectInfo);
-                    JupyterProxy.saveNotebook();
+                        // Now we need to reload the editor with the NEW item.
+                        editorState.setItem('current.set.ref', message.message.result.set_ref);
+                        const objectInfo = serviceUtils.objectInfoToObject(
+                            message.message.result.set_info
+                        );
+                        editorState.setItem('current.set.info', objectInfo);
+                        JupyterProxy.saveNotebook();
 
-                    return doEditObject(objectInfo);
-                } else if (message.message.error) {
-                    // cheap as heck error message
-                    const errorMessage = div({ class: 'alert alert-danger' }, [
-                        'Error saving reads set: ',
-                        message.message.error.message
-                    ]);
-                    setStatus(errorMessage);
-                } else {
-                    setStatus('what?');
-                }
-            }));
+                        return doEditObject(objectInfo);
+                    } else if (message.message.error) {
+                        // cheap as heck error message
+                        const errorMessage = div({ class: 'alert alert-danger' }, [
+                            'Error saving reads set: ',
+                            message.message.error.message,
+                        ]);
+                        setStatus(errorMessage);
+                    } else {
+                        setStatus('what?');
+                    }
+                })
+            );
         }
 
         function loadSpec() {
             return new Promise((resolve) => {
                 require(['./spec'], (editorSpec) => {
                     const spec = Spec.make({
-                        spec: editorSpec
+                        spec: editorSpec,
                     });
                     resolve(spec);
                 });
@@ -1240,17 +1344,16 @@ define([
         }
 
         function start(arg) {
-
             // Set up the top level DOM node and build the layout.
             hostNode = arg.node;
             container = hostNode.appendChild(document.createElement('div'));
             ui = Ui.make({
                 node: container,
-                bus: bus
+                bus: bus,
             });
 
             const events = Events.make({
-                node: container
+                node: container,
             });
             container.innerHTML = buildLayout(events);
             events.attachEvents();
@@ -1263,11 +1366,13 @@ define([
                     spec = loadedSpec;
                     registerEvents();
                     showCodeInputArea();
-                    return syncAppSpec(arg.appId, arg.appTag)
+                    return syncAppSpec(arg.appId, arg.appTag);
                 })
                 .then(() => {
                     // Should not need to do this each time...
-                    const appRef = [editorState.getItem('app').id, editorState.getItem('app').tag].filter(toBoolean).join('/');
+                    const appRef = [editorState.getItem('app').id, editorState.getItem('app').tag]
+                        .filter(toBoolean)
+                        .join('/');
                     const url = '/#appcatalog/app/' + appRef;
                     utils.setCellMeta(cell, 'kbase.attributes.title', env.appSpec.info.name);
                     utils.setCellMeta(cell, 'kbase.attributes.subtitle', env.appSpec.info.subtitle);
@@ -1284,11 +1389,14 @@ define([
                         return doEditObject(editorState.getItem('current.set.info'));
                     } else {
                         return doShowWidget(MessageWidget, {
-                            content: div({
-                                style: {
-                                    textAlign: 'center'
-                                }
-                            }, 'No reads set selected. Please use the "Select Object to Edit" section above to create or edit a Reads Set.')
+                            content: div(
+                                {
+                                    style: {
+                                        textAlign: 'center',
+                                    },
+                                },
+                                'No reads set selected. Please use the "Select Object to Edit" section above to create or edit a Reads Set.'
+                            ),
                         });
                     }
                 })
@@ -1311,7 +1419,7 @@ define([
                         title: 'Error loading main widgets',
                         message: err.message,
                         details: err.details,
-                        advice: err.advice
+                        advice: err.advice,
                     });
                     renderUI();
                 });
@@ -1319,9 +1427,11 @@ define([
 
         function stop() {
             return Promise.try(() => {
-                return Promise.all(Object.keys(widgets).map((key) => {
-                    return widgets[key].stop();
-                }));
+                return Promise.all(
+                    Object.keys(widgets).map((key) => {
+                        return widgets[key].stop();
+                    })
+                );
             });
         }
 
@@ -1329,29 +1439,29 @@ define([
 
         model = Props.make({
             data: {},
-            onUpdate: function(props) {
+            onUpdate: function (props) {
                 renderUI();
-            }
+            },
         });
 
         editorState = Props.make({
             data: utils.getCellMeta(cell, 'kbase.editorCell'),
-            onUpdate: function(props) {
+            onUpdate: function (props) {
                 utils.setCellMeta(cell, 'kbase.editorCell', props.getRawObject());
                 renderUI();
-            }
+            },
         });
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 }, (err) => {
     console.error('ERROR loading editorCell editorCellWidget', err);

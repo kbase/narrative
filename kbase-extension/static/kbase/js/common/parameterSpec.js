@@ -1,7 +1,6 @@
 /*jstlint white:true,browser:true*/
 
-define([
-], () => {
+define([], () => {
     'use strict';
 
     function factory(config) {
@@ -32,14 +31,14 @@ define([
 
         function info() {
             return 'info disabled for now';
-//            return table({class: 'table table-striped'}, [
-//                tr([
-//                    th('Types'),
-//                    tr(td(table({class: 'table'}, spec.text_options.valid_ws_types.map(function (type) {
-//                        return tr(td(type));
-//                    }))))
-//                ])
-//            ]);
+            //            return table({class: 'table table-striped'}, [
+            //                tr([
+            //                    th('Types'),
+            //                    tr(td(table({class: 'table'}, spec.text_options.valid_ws_types.map(function (type) {
+            //                        return tr(td(type));
+            //                    }))))
+            //                ])
+            //            ]);
         }
 
         function multipleItems() {
@@ -92,10 +91,10 @@ define([
                         return '[]string';
                     }
                     return 'string';
-                    //var custom = customTextSubdata();
-                    //if (custom) {
-                    //    return custom;
-                    //}
+                //var custom = customTextSubdata();
+                //if (custom) {
+                //    return custom;
+                //}
                 case 'custom_button':
                     switch (spec.id) {
                         case 'input_check_other_params':
@@ -126,8 +125,7 @@ define([
             if (validateAs) {
                 if (spec.allow_multiple) {
                     return '[]' + validateAs;
-                } else
-                    return validateAs;
+                } else return validateAs;
             }
 
             // Some parameter specs have valid_ws_types as an empty set, which
@@ -242,18 +240,15 @@ define([
                      * TODO: more cases of bad default value? Or a generic
                      * default value validator?
                      */
-                    if (!defaultValues ||
-                        defaultValues.length === 0) {
+                    if (!defaultValues || defaultValues.length === 0) {
                         return spec.checkbox_options.unchecked_value;
                     } else {
                         return coerceToIntBoolean(defaultValues[0]);
                     }
                 case 'custom_textsubdata':
                     if (!defaultValues) {
-
                     }
             }
-
 
             if (!defaultValues && !required()) {
                 return nullValue();
@@ -324,25 +319,24 @@ define([
                                 required: required(),
                                 defaultValue: defaultValue(),
                                 min: spec.text_options ? spec.text_options.min_length : null,
-                                max: spec.text_options ? spec.text_options.max_length : null
+                                max: spec.text_options ? spec.text_options.max_length : null,
                             };
                         case 'autocomplete':
                             return {
                                 required: required(),
                                 defaultValue: defaultValue(),
                                 min: spec.text_options ? spec.text_options.min_length : null,
-                                max: spec.text_options ? spec.text_options.max_length : null
+                                max: spec.text_options ? spec.text_options.max_length : null,
                             };
                         case 'dropdown':
-                            return {
-                            };
+                            return {};
                         case 'textarea':
                             return {
                                 required: required(),
                                 defaultValue: defaultValue(),
-                                min:  spec.text_options ? spec.text_options.min_length : null,
-                                max:  spec.text_options ? spec.text_options.max_length : null,
-                                rows: spec.text_options ? spec.text_options.n_rows : null
+                                min: spec.text_options ? spec.text_options.min_length : null,
+                                max: spec.text_options ? spec.text_options.max_length : null,
+                                rows: spec.text_options ? spec.text_options.n_rows : null,
                             };
                         default:
                             throw new Error('Unknown text param field type');
@@ -350,37 +344,33 @@ define([
                 case 'int':
                     switch (fieldType) {
                         case 'text':
-                            return {
-                            };
+                            return {};
                         case 'checkbox':
-                            return {
-                            };
+                            return {};
                         default:
-                            return {
-                            };
+                            return {};
                     }
                 case 'float':
-                    return {
-                    };
+                    return {};
                 case 'workspaceObjectName':
                     switch (paramClass()) {
                         case 'input':
                             return {
                                 required: required(),
                                 types: spec.text_options.valid_ws_types,
-                                defaultValue: defaultValue()
+                                defaultValue: defaultValue(),
                             };
                         case 'output':
                             return {
                                 required: required(),
                                 types: spec.text_options.valid_ws_types,
-                                defaultValue: defaultValue()
+                                defaultValue: defaultValue(),
                             };
                         case 'parameter':
                             return {
                                 required: required(),
                                 types: spec.text_options.valid_ws_types,
-                                defaultValue: defaultValue()
+                                defaultValue: defaultValue(),
                             };
                         default:
                             throw new Error('Unknown workspaceObjectName ui class');
@@ -391,13 +381,13 @@ define([
                             return {
                                 required: required(),
                                 types: spec.text_options.valid_ws_types,
-                                defaultValues: defaultValue()
+                                defaultValues: defaultValue(),
                             };
                         case 'parameter':
                             return {
                                 required: required(),
                                 types: spec.text_options.valid_ws_types,
-                                defaultValues: defaultValue()
+                                defaultValues: defaultValue(),
                             };
                         default:
                             throw new Error('Unknown []workspaceObjectName ui class');
@@ -406,15 +396,14 @@ define([
                 case '[]text':
                     switch (fieldType) {
                         case 'dropdown':
-                            return {
-                            };
+                            return {};
                         case 'text':
                             return {
-                                required: required()
+                                required: required(),
                             };
                         case 'textarea':
                             return {
-                                required: required()
+                                required: required(),
                             };
                         default:
                             throw new Error('Unknown []string field type: ' + fieldType);
@@ -437,7 +426,7 @@ define([
                         // of the subdata item.
                         selectionId: spec.subdata_selection.selection_id,
                         // Used to generate a description for each item. Becomes the "desc".
-                        displayTemplate: spec.subdata_selection.description_template
+                        displayTemplate: spec.subdata_selection.description_template,
                     };
                     break;
                 case 'xxinput_property_x':
@@ -450,7 +439,7 @@ define([
                         mapper: {
                             before: function () {
                                 return {
-                                    collected: {}
+                                    collected: {},
                                 };
                             },
                             during: function (values, state) {
@@ -464,11 +453,11 @@ define([
                                 return Object.keys(state.collected).map((key) => {
                                     return {
                                         id: key,
-                                        desc: key
+                                        desc: key,
                                     };
                                 });
-                            }
-                        }
+                            },
+                        },
                     };
                     break;
                 case 'sample_property':
@@ -482,75 +471,73 @@ define([
                         map: function (subdata) {
                             const collected = {};
                             Object.keys(subdata).forEach((key) => {
-                                    let id, name, column = subdata[key];
-                                    column.forEach((value) => {
-                                        if (value.category === 'DataSeries' && value.property_name === 'SeriesID') {
-                                            id = value.property_value;
-                                        } else if (value.category === 'Property' && value.property_name === 'Name') {
-                                            name = value.property_value;
-                                        }
-                                        if (id && name) {
-                                            collected[id] = name;
-                                        }
-                                    });
+                                let id,
+                                    name,
+                                    column = subdata[key];
+                                column.forEach((value) => {
+                                    if (
+                                        value.category === 'DataSeries' &&
+                                        value.property_name === 'SeriesID'
+                                    ) {
+                                        id = value.property_value;
+                                    } else if (
+                                        value.category === 'Property' &&
+                                        value.property_name === 'Name'
+                                    ) {
+                                        name = value.property_value;
+                                    }
+                                    if (id && name) {
+                                        collected[id] = name;
+                                    }
                                 });
-                                return Object.keys(collected).map((key) => {
+                            });
+                            return Object.keys(collected)
+                                .map((key) => {
                                     return {
                                         id: key,
-                                        desc: collected[key]
+                                        desc: collected[key],
                                     };
                                 })
-                                    .sort((a, b) => {
-                                        if (a.desc < b.desc) {
-                                            return -1;
-                                        } else if (a.desc > b.desc) {
-                                            return 1;
-                                        }
-                                        return 0;
-                                    });
-                        }
+                                .sort((a, b) => {
+                                    if (a.desc < b.desc) {
+                                        return -1;
+                                    } else if (a.desc > b.desc) {
+                                        return 1;
+                                    }
+                                    return 0;
+                                });
+                        },
                     };
                     break;
                 case 'unspecified':
                     // a bunch of field types are untyped:
                     switch (fieldType) {
                         case 'text':
-                            return {
-                            };
+                            return {};
                         case 'checkbox':
-                            return {
-                            };
+                            return {};
                         case 'textarea':
-                            return {
-                            };
+                            return {};
                         case 'dropdown':
-                            return {
-                            };
+                            return {};
                         case 'custom_button':
-                            return {
-                            };
+                            return {};
                         case 'textsubdata':
-                            return {
-                            };
+                            return {};
                         case 'file':
-                            return {
-                            };
+                            return {};
                         case 'custom_textsubdata':
-                            return {
-                            };
+                            return {};
                         case 'custom_widget':
-                            return {
-                            };
+                            return {};
                         case 'tab':
-                            return {
-                            };
+                            return {};
                         default:
                             throw new Error('Unknown unspecified field type');
                     }
                 default:
                     console.error('Unknown data type', dataType());
                     throw new Error('Unknown data type');
-
             }
         }
 
@@ -560,7 +547,7 @@ define([
          * is set up in a manner consistent with the class.
          */
         const attributes = {
-            paramClass: null
+            paramClass: null,
         };
         function setupParamClass() {
             // The primary flag for the param class is the ui_class property.
@@ -575,14 +562,22 @@ define([
                 case 'input':
                     // do stuff
                     if (spec.text_options && spec.text_options.is_output_name) {
-                        throw new Error('Parameter ' + spec.id + ' is an input type, but has text_options.is_output_name specified');
+                        throw new Error(
+                            'Parameter ' +
+                                spec.id +
+                                ' is an input type, but has text_options.is_output_name specified'
+                        );
                     }
                     break;
                 case 'output':
                     // must have the isOutputName = spec.text_options && spec.text_options.is_output_name;
                     // do more stuff
                     if (!spec.text_options || !spec.text_options.is_output_name) {
-                        throw new Error('Parameter ' + spec.id + ' is an output type, but does not have text_options.is_output_name specified');
+                        throw new Error(
+                            'Parameter ' +
+                                spec.id +
+                                ' is an output type, but does not have text_options.is_output_name specified'
+                        );
                     }
                     // Workaround if a parameter is multiple object names, turn it
                     // into an input.
@@ -605,7 +600,6 @@ define([
             }
 
             attributes.paramClass = paramClassName;
-
         }
 
         function paramClass() {
@@ -616,8 +610,6 @@ define([
 
         // NEW -- validate and completely set up normalized param first,
         // so that errors are caught early.
-
-
 
         return {
             id: id,
@@ -638,13 +630,13 @@ define([
             nullValue: nullValue,
             defaultValue: defaultValue,
             getConstraints: getConstraints,
-            paramClass: paramClass
+            paramClass: paramClass,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

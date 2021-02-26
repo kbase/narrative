@@ -1,6 +1,4 @@
-define([
-    'kb_common/format'
-], (format) => {
+define(['kb_common/format'], (format) => {
     'use strict';
 
     function pad(string, width, char, right) {
@@ -31,11 +29,13 @@ define([
         }
         let temp = value,
             minimized = [],
-            units = [1000, 60, 60, 24, 30].map((unit) => {
-                const unitValue = temp % unit;
-                temp = (temp - unitValue) / unit;
-                return unitValue;
-            }).reverse();
+            units = [1000, 60, 60, 24, 30]
+                .map((unit) => {
+                    const unitValue = temp % unit;
+                    temp = (temp - unitValue) / unit;
+                    return unitValue;
+                })
+                .reverse();
 
         units.pop();
 
@@ -54,10 +54,11 @@ define([
             }
         }
 
-        return minimized.map((value) => {
-            return pad(value, 2);
-        })
-        .join(':');
+        return minimized
+            .map((value) => {
+                return pad(value, 2);
+            })
+            .join(':');
     }
 
     function niceDuration(value, defaultValue) {
@@ -65,32 +66,38 @@ define([
             return defaultValue;
         }
         const minimized = [];
-        const units = [{
-            unit: 'millisecond',
-            short: 'ms',
-            single: 'm',
-            size: 1000
-        }, {
-            unit: 'second',
-            short: 'sec',
-            single: 's',
-            size: 60
-        }, {
-            unit: 'minute',
-            short: 'min',
-            single: 'm',
-            size: 60
-        }, {
-            unit: 'hour',
-            short: 'hr',
-            single: 'h',
-            size: 24
-        }, {
-            unit: 'day',
-            short: 'day',
-            single: 'd',
-            size: 30
-        }];
+        const units = [
+            {
+                unit: 'millisecond',
+                short: 'ms',
+                single: 'm',
+                size: 1000,
+            },
+            {
+                unit: 'second',
+                short: 'sec',
+                single: 's',
+                size: 60,
+            },
+            {
+                unit: 'minute',
+                short: 'min',
+                single: 'm',
+                size: 60,
+            },
+            {
+                unit: 'hour',
+                short: 'hr',
+                single: 'h',
+                size: 24,
+            },
+            {
+                unit: 'day',
+                short: 'day',
+                single: 'd',
+                size: 30,
+            },
+        ];
         let temp = value;
         const parts = units
             .map((unit) => {
@@ -98,9 +105,10 @@ define([
                 temp = (temp - unitValue) / unit.size;
                 return {
                     name: unit.single,
-                    value: unitValue
+                    value: unitValue,
                 };
-            }).reverse();
+            })
+            .reverse();
 
         parts.pop();
 
@@ -124,10 +132,11 @@ define([
             if (minimized.length > 2) {
                 minimized.pop();
             }
-            return minimized.map((item) => {
-                return String(item.value) + item.name;
-            })
-            .join(' ');
+            return minimized
+                .map((item) => {
+                    return String(item.value) + item.name;
+                })
+                .join(' ');
         }
     }
 
@@ -149,6 +158,6 @@ define([
         elapsedTime: elapsedTime,
         niceElapsedTime: niceElapsedTime,
         niceDuration: niceDuration,
-        niceTime: niceTime
+        niceTime: niceTime,
     });
 });

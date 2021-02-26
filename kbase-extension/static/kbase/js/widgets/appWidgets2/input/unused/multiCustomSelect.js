@@ -9,16 +9,8 @@ define([
     './singleCustomSelect',
     'bootstrap',
 
-    'css!font-awesome'
-], (
-    Promise,
-    Jupyter,
-    html,
-    Validation,
-    Events,
-    Dom,
-    Runtime,
-    SingleSelectInputWidget) => {
+    'css!font-awesome',
+], (Promise, Jupyter, html, Validation, Events, Dom, Runtime, SingleSelectInputWidget) => {
     'use strict';
 
     // Constants
@@ -35,7 +27,7 @@ define([
             bus = config.bus,
             dom,
             model = {
-                value: []
+                value: [],
             },
             runtime = Runtime.make(),
             widgets = [];
@@ -49,23 +41,23 @@ define([
 
         function setModelValue(value, index) {
             return Promise.try(() => {
-                    if (index !== undefined) {
-                        if (value) {
-                            model.value[index] = value;
-                        } else {
-                            model.value.splice(index, 1);
-                        }
+                if (index !== undefined) {
+                    if (value) {
+                        model.value[index] = value;
                     } else {
-                        if (value) {
-                            model.value = value.map((item) => {
-                                return item;
-                            });
-                        } else {
-                            unsetModelValue();
-                        }
+                        model.value.splice(index, 1);
                     }
-                    normalizeModel();
-                })
+                } else {
+                    if (value) {
+                        model.value = value.map((item) => {
+                            return item;
+                        });
+                    } else {
+                        unsetModelValue();
+                    }
+                }
+                normalizeModel();
+            })
                 .then(() => {
                     render();
                 })
@@ -76,20 +68,18 @@ define([
 
         function addModelValue(value) {
             return Promise.try(() => {
-                    model.value.push(value);
-                })
-                .then(() => {
-                    render();
-                });
+                model.value.push(value);
+            }).then(() => {
+                render();
+            });
         }
 
         function unsetModelValue() {
             return Promise.try(() => {
-                    model.value = [];
-                })
-                .then((changed) => {
-                    render();
-                });
+                model.value = [];
+            }).then((changed) => {
+                render();
+            });
         }
 
         function resetModelValue() {
@@ -137,7 +127,7 @@ define([
                     return {
                         isValid: true,
                         validated: false,
-                        diagnosis: 'disabled'
+                        diagnosis: 'disabled',
                     };
                 }
 
@@ -148,9 +138,7 @@ define([
             });
         }
 
-        function updateValue() {
-
-        }
+        function updateValue() {}
 
         /*
          * Creates the markup
@@ -163,7 +151,6 @@ define([
                 return makeSingleInputControl(value, index, events, bus);
             });
 
-
             items = items.concat(makeNewInputControl('', events, bus));
 
             const content = items.join('\n');
@@ -172,7 +159,8 @@ define([
 
         function makeSingleInputControl(currentValue, index, events, bus) {
             // CONTROL
-            let preButton, postButton,
+            let preButton,
+                postButton,
                 widgetId = html.genId(),
                 inputBus = runtime.bus().makeChannelBus(null, 'Multi text input'),
                 inputWidget = SingleSelectInputWidget.make({
@@ -186,13 +174,13 @@ define([
                     //                        regexp: constraints.regexp
                     //                    },
                     parameterSpec: spec,
-                    fieldSpec: config.fieldSpec
+                    fieldSpec: config.fieldSpec,
                 }),
                 widgetWrapper = {
                     id: widgetId,
                     instance: inputWidget,
                     bus: inputBus,
-                    index: index
+                    index: index,
                 },
                 placeholder = div({ id: widgetId });
 
@@ -203,7 +191,7 @@ define([
                 const value = model.value[index];
                 if (value) {
                     inputBus.emit('update', {
-                        value: value
+                        value: value,
                     });
                 }
             });
@@ -212,7 +200,7 @@ define([
                     // alert('delete me!');
                     model.value.splice(widgetWrapper.index, 1);
                     bus.emit('changed', {
-                        newValue: model.value
+                        newValue: model.value,
                     });
                     render();
                 }
@@ -221,43 +209,56 @@ define([
                 model.value[index] = message.newValue;
                 // TODO: validate the main control...
                 bus.emit('changed', {
-                    newValue: model.value
+                    newValue: model.value,
                 });
             });
 
-            preButton = div({ class: 'input-group-addon kb-input-group-addon', style: { width: '5ex', padding: '0' } }, String(index + 1) + '.');
-            postButton = div({ class: 'input-group-addon kb-input-group-addon', style: { padding: '0' } }, button({
-                class: 'btn btn-danger btn-link btn-xs',
-                type: 'button',
-                style: { width: '4ex' },
-                dataIndex: String(index),
-                id: events.addEvent({
-                    type: 'click',
-                    handler: function(e) {
-                        // no, we don't need to consult the control, we just remove
-                        // it...
-                        model.value.splice(widgetWrapper.index, 1);
-                        //var index = e.target.getAttribute('data-index'),
-                        //    control = container.querySelector('input[data-index="' + index + '"]');
-                        //control.value = '';
-                        //control.dispatchEvent(new Event('change'));
-                        bus.emit('changed', {
-                            newValue: model.value
-                        });
-                        render();
-                    }
-                })
-            }, 'x'));
+            preButton = div(
+                {
+                    class: 'input-group-addon kb-input-group-addon',
+                    style: { width: '5ex', padding: '0' },
+                },
+                String(index + 1) + '.'
+            );
+            postButton = div(
+                { class: 'input-group-addon kb-input-group-addon', style: { padding: '0' } },
+                button(
+                    {
+                        class: 'btn btn-danger btn-link btn-xs',
+                        type: 'button',
+                        style: { width: '4ex' },
+                        dataIndex: String(index),
+                        id: events.addEvent({
+                            type: 'click',
+                            handler: function (e) {
+                                // no, we don't need to consult the control, we just remove
+                                // it...
+                                model.value.splice(widgetWrapper.index, 1);
+                                //var index = e.target.getAttribute('data-index'),
+                                //    control = container.querySelector('input[data-index="' + index + '"]');
+                                //control.value = '';
+                                //control.dispatchEvent(new Event('change'));
+                                bus.emit('changed', {
+                                    newValue: model.value,
+                                });
+                                render();
+                            },
+                        }),
+                    },
+                    'x'
+                )
+            );
             return div({ class: 'input-group', dataIndex: String(index) }, [
                 preButton,
                 placeholder,
-                postButton
+                postButton,
             ]);
         }
 
         function makeNewInputControl(currentValue, events, bus) {
             // CONTROL
-            let preButton, postButton,
+            let preButton,
+                postButton,
                 widgetId = html.genId(),
                 inputBus = runtime.bus().makeChannelBus(null, 'New input for text input'),
                 inputWidget = SingleSelectInputWidget.make({
@@ -269,14 +270,14 @@ define([
                     //                        regexp: constraints.regexp
                     //                    },
                     parameterSpec: spec,
-                    fieldSpec: config.fieldSpec
+                    fieldSpec: config.fieldSpec,
                 }),
                 placeholder = div({ id: widgetId });
 
             widgets.push({
                 id: widgetId,
                 instance: inputWidget,
-                bus: inputBus
+                bus: inputBus,
             });
             inputBus.on('sync', (message) => {
                 // we don't have a default value setting for a new item
@@ -284,7 +285,7 @@ define([
                 const value = '';
                 //if (value) {
                 inputBus.emit('update', {
-                    value: value
+                    value: value,
                 });
                 //}
             });
@@ -298,32 +299,39 @@ define([
 
                 // TODO: validate the main control...
                 bus.emit('changed', {
-                    newValue: model.value
+                    newValue: model.value,
                 });
             });
 
-            preButton = div({ class: 'input-group-addon kb-input-group-addon', style: { width: '5ex', padding: '0' } }, '');
-            postButton = div({ class: 'input-group-addon kb-input-group-addon', style: { padding: '0' } }, button({
-                class: 'btn btn-primary btn-link btn-xs',
-                type: 'button',
-                style: { width: '4ex' },
-                id: events.addEvent({
-                    type: 'click',
-                    handler: function(e) {
-                        // alert('add me');
-                    }
-                })
-            }, '+'));
+            preButton = div(
+                {
+                    class: 'input-group-addon kb-input-group-addon',
+                    style: { width: '5ex', padding: '0' },
+                },
+                ''
+            );
+            postButton = div(
+                { class: 'input-group-addon kb-input-group-addon', style: { padding: '0' } },
+                button(
+                    {
+                        class: 'btn btn-primary btn-link btn-xs',
+                        type: 'button',
+                        style: { width: '4ex' },
+                        id: events.addEvent({
+                            type: 'click',
+                            handler: function (e) {
+                                // alert('add me');
+                            },
+                        }),
+                    },
+                    '+'
+                )
+            );
 
-            return div({ class: 'input-group' }, [
-                preButton,
-                placeholder,
-                postButton
-            ]);
+            return div({ class: 'input-group' }, [preButton, placeholder, postButton]);
         }
 
         function render() {
-
             // if we have input widgets already, tear them down.
 
             widgets.forEach((widget) => {
@@ -339,62 +347,61 @@ define([
 
             dom.setContent('input-container', control);
             widgets.forEach((widget) => {
-                widget.instance.start()
-                    .then(() => {
-                        widget.bus.emit('run', {
-                            debug: true,
-                            node: document.querySelector('#' + widget.id)
-                        });
+                widget.instance.start().then(() => {
+                    widget.bus.emit('run', {
+                        debug: true,
+                        node: document.querySelector('#' + widget.id),
                     });
+                });
             });
             events.attachEvents(container);
         }
 
         function layout(events) {
-            const content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' })
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
         function autoValidate() {
-            return Promise.all(model.value.map((value, index) => {
+            return Promise.all(
+                model.value.map((value, index) => {
                     // could get from DOM, but the model is the same.
                     const rawValue = container.querySelector('[data-index="' + index + '"]').value;
                     // console.log('VALIDATE', value);
                     return validate(rawValue);
-                }))
-                .then((results) => {
-                    // a bit of a hack -- we need to handle the
-                    // validation here, and update the individual rows
-                    // for now -- just create one mega message.
-                    let errorMessages = [],
-                        validationMessage;
-                    results.forEach((result, index) => {
-                        if (result.errorMessage) {
-                            errorMessages.push(result.errorMessage + ' in item ' + index);
-                        }
-                    });
-                    if (errorMessages.length) {
-                        validationMessage = {
-                            diagnosis: 'invalid',
-                            errorMessage: errorMessages.join('<br/>')
-                        };
-                    } else {
-                        validationMessage = {
-                            diagnosis: 'valid'
-                        };
+                })
+            ).then((results) => {
+                // a bit of a hack -- we need to handle the
+                // validation here, and update the individual rows
+                // for now -- just create one mega message.
+                let errorMessages = [],
+                    validationMessage;
+                results.forEach((result, index) => {
+                    if (result.errorMessage) {
+                        errorMessages.push(result.errorMessage + ' in item ' + index);
                     }
-                    bus.emit('validation', validationMessage);
-
                 });
+                if (errorMessages.length) {
+                    validationMessage = {
+                        diagnosis: 'invalid',
+                        errorMessage: errorMessages.join('<br/>'),
+                    };
+                } else {
+                    validationMessage = {
+                        diagnosis: 'valid',
+                    };
+                }
+                bus.emit('validation', validationMessage);
+            });
         }
-
 
         // LIFECYCLE API
 
@@ -417,22 +424,20 @@ define([
                     bus.on('update', (message) => {
                         setModelValue(message.value);
                     });
-                    bus.on('refresh', () => {
-
-                    });
+                    bus.on('refresh', () => {});
                     bus.emit('sync');
                 });
             });
         }
 
         return {
-            start: start
+            start: start,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

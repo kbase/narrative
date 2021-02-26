@@ -16,7 +16,7 @@ define([
 
     'select2',
     'bootstrap',
-    'css!font-awesome'
+    'css!font-awesome',
 ], (
     Promise,
     $,
@@ -31,7 +31,9 @@ define([
     Validation,
     TimeFormat,
     WidgetCommon,
-    GenericClient) => { //eslint-disable-line no-unused-vars
+    GenericClient
+) => {
+    //eslint-disable-line no-unused-vars
     'use strict';
 
     // Constants
@@ -56,7 +58,7 @@ define([
                 blacklistValues: undefined,
                 availableValues: undefined,
                 availableValuesMap: {},
-                value: undefined
+                value: undefined,
             },
             eventListeners = [],
             workspaceId = runtime.getEnv('workspaceId');
@@ -96,22 +98,28 @@ define([
                         if (objectInfoHasRef(objectInfo, model.value)) {
                             selected = true;
                         }
-                        return option({
-                            value: ref,
-                            selected: selected
-                        }, objectInfo.name);
+                        return option(
+                            {
+                                value: ref,
+                                selected: selected,
+                            },
+                            objectInfo.name
+                        );
                     });
             }
 
             // CONTROL
-            const selectElem = select({
-                class: 'form-control',
-                dataElement: 'input',
-                style: {
-                    width: '100%'
+            const selectElem = select(
+                {
+                    class: 'form-control',
+                    dataElement: 'input',
+                    style: {
+                        width: '100%',
+                    },
+                    id: html.genId(),
                 },
-                id: html.genId()
-            }, [option({ value: '' }, '')].concat(selectOptions));
+                [option({ value: '' }, '')].concat(selectOptions)
+            );
 
             return selectElem;
         }
@@ -174,11 +182,14 @@ define([
                     validationOptions = {
                         required: spec.data.constraints.required,
                         authToken: runtime.authToken(),
-                        workspaceServiceUrl: runtime.config('services.workspace.url')
+                        workspaceServiceUrl: runtime.config('services.workspace.url'),
                     };
 
                 if (objInfo && objInfo.dataPaletteRef) {
-                    return Validation.validateWorkspaceDataPaletteRef(objInfo.dataPaletteRef, validationOptions);
+                    return Validation.validateWorkspaceDataPaletteRef(
+                        objInfo.dataPaletteRef,
+                        validationOptions
+                    );
                 }
 
                 if (objInfo) {
@@ -187,82 +198,83 @@ define([
 
                 switch (objectRefType) {
                     case 'ref':
-                        return Validation.validateWorkspaceObjectRef(processedValue, validationOptions);
+                        return Validation.validateWorkspaceObjectRef(
+                            processedValue,
+                            validationOptions
+                        );
                     case 'name':
                     default:
-                        return Validation.validateWorkspaceObjectName(processedValue, validationOptions);
+                        return Validation.validateWorkspaceObjectName(
+                            processedValue,
+                            validationOptions
+                        );
                 }
             });
         }
 
         function getObjectsByTypes_datalist(types) {
             return Data.getObjectsByTypes(types, bus, (result) => {
-                    doWorkspaceUpdated(result.data);
-                })
-                .then((result) => {
-                    return result.data;
-                });
+                doWorkspaceUpdated(result.data);
+            }).then((result) => {
+                return result.data;
+            });
         }
-
 
         function fetchData() {
             const types = spec.data.constraints.types;
-            return getObjectsByTypes_datalist(types)
-                .then((objects) => {
-                    objects.sort((a, b) => {
-                        if (a.saveDate < b.saveDate) {
-                            return 1;
-                        }
-                        if (a.saveDate === b.saveDate) {
-                            return 0;
-                        }
-                        return -1;
-                    });
-                    // if our current object isn't in the list,
-                    // try to fetch its info manually
-                    // (it might be in another workspace)
-                    let containsCurrent = false;
-                    const currentObj = getModelValue();
-                    // to begin, this only applies to obj references.
-                    // so test for that.
-                    if (Validation.validateWorkspaceObjectRef(currentObj).isValid) {
-                        objects.forEach((o) => {
-                            if (o.ref === currentObj) {
-                                containsCurrent = true;
-                            }
-                        });
-                        if (!containsCurrent) {
-                            return Data.getObjectsByRef([currentObj])
-                                .then((info) => {
-                                    return [info[currentObj]].concat(objects);
-                                });
-                        }
+            return getObjectsByTypes_datalist(types).then((objects) => {
+                objects.sort((a, b) => {
+                    if (a.saveDate < b.saveDate) {
+                        return 1;
                     }
-                    return Promise.try(() => {
-                        return objects;
-                    });
+                    if (a.saveDate === b.saveDate) {
+                        return 0;
+                    }
+                    return -1;
                 });
+                // if our current object isn't in the list,
+                // try to fetch its info manually
+                // (it might be in another workspace)
+                let containsCurrent = false;
+                const currentObj = getModelValue();
+                // to begin, this only applies to obj references.
+                // so test for that.
+                if (Validation.validateWorkspaceObjectRef(currentObj).isValid) {
+                    objects.forEach((o) => {
+                        if (o.ref === currentObj) {
+                            containsCurrent = true;
+                        }
+                    });
+                    if (!containsCurrent) {
+                        return Data.getObjectsByRef([currentObj]).then((info) => {
+                            return [info[currentObj]].concat(objects);
+                        });
+                    }
+                }
+                return Promise.try(() => {
+                    return objects;
+                });
+            });
         }
 
         function doChange() {
-            validate()
-                .then((result) => {
-                    if (result.isValid) {
-                        model.value = result.parsedValue;
-                        channel.emit('changed', {
-                            newValue: result.parsedValue
-                        });
-                    } else if (result.diagnosis === 'required-missing') {
-                        model.value = spec.data.nullValue;
-                        channel.emit('changed', {
-                            newValue: spec.data.nullValue
-                        });
-                    }
-                    channel.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
+            validate().then((result) => {
+                if (result.isValid) {
+                    model.value = result.parsedValue;
+                    channel.emit('changed', {
+                        newValue: result.parsedValue,
                     });
+                } else if (result.diagnosis === 'required-missing') {
+                    model.value = spec.data.nullValue;
+                    channel.emit('changed', {
+                        newValue: spec.data.nullValue,
+                    });
+                }
+                channel.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
 
         /**
@@ -273,17 +285,20 @@ define([
                 return $('<div style="display:block; height:20px">').append(object.text);
             }
             const objectInfo = model.availableValues[object.id];
-            return $(div([
-                span({ style: 'word-wrap: break-word' }, [
-                    b(objectInfo.name)
-                ]),
-                ' (v' + objectInfo.version + ')<br>',
-                div({ style: 'margin-left: 7px' }, [
-                    '<i>' + objectInfo.typeName + '</i><br>',
-                    'Narrative id: ' + objectInfo.wsid + '<br>',
-                    'updated ' + TimeFormat.getTimeStampStr(objectInfo.save_date) + ' by ' + objectInfo.saved_by
+            return $(
+                div([
+                    span({ style: 'word-wrap: break-word' }, [b(objectInfo.name)]),
+                    ' (v' + objectInfo.version + ')<br>',
+                    div({ style: 'margin-left: 7px' }, [
+                        '<i>' + objectInfo.typeName + '</i><br>',
+                        'Narrative id: ' + objectInfo.wsid + '<br>',
+                        'updated ' +
+                            TimeFormat.getTimeStampStr(objectInfo.save_date) +
+                            ' by ' +
+                            objectInfo.saved_by,
+                    ]),
                 ])
-            ]));
+            );
         }
 
         /*
@@ -299,25 +314,32 @@ define([
                 ui.setContent('input-container', '');
                 const container = ui.getElement('input-container');
                 const content = WidgetCommon.containerContent(
-                    div, button, events, ui, container, inputControl
+                    div,
+                    button,
+                    events,
+                    ui,
+                    container,
+                    inputControl
                 );
                 ui.setContent('input-container', content);
 
-                $(ui.getElement('input-container.input')).select2({
-                    templateResult: formatObjectDisplay,
-                    templateSelection: function(object) {
-                        if (!object.id) {
-                            return object.text;
-                        }
-                        return model.availableValues[object.id].name;
-                    }
-                }).on('change', () => {
-                    doChange();
-                }).on('advanced-shown.kbase', (e) => {
-                    $(e.target).select2({ width: 'resolve' });
-                });
+                $(ui.getElement('input-container.input'))
+                    .select2({
+                        templateResult: formatObjectDisplay,
+                        templateSelection: function (object) {
+                            if (!object.id) {
+                                return object.text;
+                            }
+                            return model.availableValues[object.id].name;
+                        },
+                    })
+                    .on('change', () => {
+                        doChange();
+                    })
+                    .on('advanced-shown.kbase', (e) => {
+                        $(e.target).select2({ width: 'resolve' });
+                    });
                 events.attachEvents(container);
-
             });
         }
 
@@ -327,25 +349,25 @@ define([
          * For the objectInput, there is only ever one control.
          */
         function layout(events) {
-            const content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' })
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
         function autoValidate() {
-            return validate()
-                .then((result) => {
-                    channel.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
+            return validate().then((result) => {
+                channel.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
 
         // function getObjectRef(objectInfo) {
@@ -390,20 +412,18 @@ define([
                     }
                     model.availableValuesMap[id] = index;
                 });
-                return render()
-                    .then(() => {
-                        setControlValue(getModelValue());
-                        autoValidate();
-                    });
+                return render().then(() => {
+                    setControlValue(getModelValue());
+                    autoValidate();
+                });
             }
         }
 
         function doWorkspaceChanged() {
             // there are a few thin
-            fetchData()
-                .then((data) => {
-                    return doWorkspaceUpdated(data);
-                });
+            fetchData().then((data) => {
+                return doWorkspaceUpdated(data);
+            });
         }
 
         // LIFECYCLE API
@@ -431,7 +451,6 @@ define([
                         return render();
                     })
                     .then(() => {
-
                         channel.on('reset-to-defaults', () => {
                             resetModelValue();
                         });
@@ -463,16 +482,15 @@ define([
 
         // INIT
 
-
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

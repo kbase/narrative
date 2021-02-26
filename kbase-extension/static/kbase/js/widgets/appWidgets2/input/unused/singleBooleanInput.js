@@ -6,7 +6,7 @@ define([
     '../validation',
     'common/events',
     'bootstrap',
-    'css!font-awesome'
+    'css!font-awesome',
 ], (Promise, $, Jupyter, html, Validation, Events) => {
     'use strict';
 
@@ -34,7 +34,6 @@ define([
         options.required = spec.required();
         options.enabled = true;
 
-
         /*
          * If the parameter is optional, and is empty, return null.
          * If it allows multiple values, wrap single results in an array
@@ -45,7 +44,9 @@ define([
          */
 
         function getInputValue() {
-            const checkbox = container.querySelector('[data-element="input-container"] [data-element="input"]');
+            const checkbox = container.querySelector(
+                '[data-element="input-container"] [data-element="input"]'
+            );
             if (checkbox.checked) {
                 return valueChecked;
             }
@@ -76,7 +77,7 @@ define([
                     return {
                         isValid: true,
                         validated: false,
-                        diagnosis: 'disabled'
+                        diagnosis: 'disabled',
                     };
                 }
 
@@ -86,7 +87,7 @@ define([
                     // such in the spec.
                     validationOptions = {
                         required: spec.required(),
-                        values: [valueChecked, valueUnchecked]
+                        values: [valueChecked, valueUnchecked],
                     },
                     validationResult;
 
@@ -99,7 +100,7 @@ define([
                     validated: true,
                     diagnosis: validationResult.diagnosis,
                     errorMessage: validationResult.errorMessage,
-                    value: validationResult.parsedValue
+                    value: validationResult.parsedValue,
                 };
             });
         }
@@ -112,40 +113,48 @@ define([
 
         function makeInputControl(currentValue, data, events, bus) {
             const selectOptions = [
-                option({
-                    value: 'yes',
-                    selected: (currentValue === 'yes' ? true : false)
-                }, 'Yes'),
-                option({
-                    value: 'no',
-                    selected: (currentValue === 'no' ? true : false)
-                }, 'No')
+                option(
+                    {
+                        value: 'yes',
+                        selected: currentValue === 'yes' ? true : false,
+                    },
+                    'Yes'
+                ),
+                option(
+                    {
+                        value: 'no',
+                        selected: currentValue === 'no' ? true : false,
+                    },
+                    'No'
+                ),
             ];
 
             // CONTROL
-            return select({
-                id: events.addEvent({
-                    type: 'change',
-                    handler: function(e) {
-                        validate()
-                            .then((result) => {
+            return select(
+                {
+                    id: events.addEvent({
+                        type: 'change',
+                        handler: function (e) {
+                            validate().then((result) => {
                                 if (result.isValid) {
                                     bus.send({
                                         type: 'changed',
-                                        newValue: result.value
+                                        newValue: result.value,
                                     });
                                 }
                                 bus.send({
                                     type: 'validation',
                                     errorMessage: result.errorMessage,
-                                    diagnosis: result.diagnosis
+                                    diagnosis: result.diagnosis,
                                 });
                             });
-                    }
-                }),
-                class: 'form-control',
-                dataElement: 'input'
-            }, [option({ value: '' }, '')].concat(selectOptions));
+                        },
+                    }),
+                    class: 'form-control',
+                    dataElement: 'input',
+                },
+                [option({ value: '' }, '')].concat(selectOptions)
+            );
         }
 
         function render(params) {
@@ -157,26 +166,26 @@ define([
         }
 
         function layout(events) {
-            const content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' })
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
         function autoValidate() {
-            return validate()
-                .then((result) => {
-                    bus.send({
-                        type: 'validation',
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
+            return validate().then((result) => {
+                bus.send({
+                    type: 'validation',
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
 
         // LIFECYCLE API
@@ -203,24 +212,23 @@ define([
 
         function run(params) {
             return Promise.try(() => {
-                    return render(params);
-                })
-                .then(() => {
-                    return autoValidate();
-                });
+                return render(params);
+            }).then(() => {
+                return autoValidate();
+            });
         }
 
         return {
             init: init,
             attach: attach,
             start: start,
-            run: run
+            run: run,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

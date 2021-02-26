@@ -2,29 +2,28 @@
  * @author Pavel Novickov <psnovichkov@lbl.gov>
  * @public
  */
-define(
-    [
-        'kbwidget',
-        'bootstrap',
-        'jquery',
-        'kbaseNarrativeParameterCustomTextSubdataInput',
-        'kbaseNarrativeParameterCustomButtonInput',
-        'kbaseNarrativeParameterCustomDropdownGroupInput'
-    ], (
+define([
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+    'kbaseNarrativeParameterCustomTextSubdataInput',
+    'kbaseNarrativeParameterCustomButtonInput',
+    'kbaseNarrativeParameterCustomDropdownGroupInput',
+], (
     KBWidget,
     bootstrap,
     $,
     kbaseNarrativeParameterCustomTextSubdataInput,
     kbaseNarrativeParameterCustomButtonInput,
     kbaseNarrativeParameterCustomDropdownGroupInput
-    ) => {
+) => {
     return KBWidget({
-        name: "kbaseGrowthParams2DPlotInput",
+        name: 'kbaseGrowthParams2DPlotInput',
         parent: kbaseNarrativeMethodInput,
-        version: "1.0.0",
+        version: '1.0.0',
         options: {
-            loadingImage: "../images/ajax-loader.gif",
-            isInSidePanel: false
+            loadingImage: '../images/ajax-loader.gif',
+            isInSidePanel: false,
         },
         inRefreshState: false,
         columnMetadata: {},
@@ -39,9 +38,11 @@ define(
             console.log('initWsClient.self', self);
 
             if (this.authToken) {
-                this.ws = new Workspace(window.kbconfig.urls.workspace, {token: this.authToken()});
+                this.ws = new Workspace(window.kbconfig.urls.workspace, {
+                    token: this.authToken(),
+                });
             } else {
-                error('not properly initialized - no auth token found')
+                error('not properly initialized - no auth token found');
             }
         },
         /**
@@ -55,7 +56,6 @@ define(
             const self = this;
             self.initWsClient();
 
-
             this.parameters = [];
             this.parameterIdLookup = {};
             const $inputParameterContainer = $('<div>');
@@ -64,13 +64,32 @@ define(
             const method = this.options.method;
             const params = method.parameters;
 
-            this.addParameterDiv(params[0], "kbaseNarrativeParameterTextInput", $optionsDiv);
-            this.addParameterDiv(params[1], "kbaseNarrativeParameterDropdownInput", $optionsDiv);
-            this.addParameterDiv(params[2], "kbaseNarrativeParameterCustomTextSubdataInput", $optionsDiv, self);
-            this.addParameterDiv(params[3], "kbaseNarrativeParameterCustomTextSubdataInput", $optionsDiv, self);
-            this.addParameterDiv(params[4], "kbaseNarrativeParameterCustomButtonInput", $optionsDiv, self);
-            this.addParameterDiv(params[5], "kbaseNarrativeParameterCustomDropdownGroupInput", $optionsDiv, self);
-
+            this.addParameterDiv(params[0], 'kbaseNarrativeParameterTextInput', $optionsDiv);
+            this.addParameterDiv(params[1], 'kbaseNarrativeParameterDropdownInput', $optionsDiv);
+            this.addParameterDiv(
+                params[2],
+                'kbaseNarrativeParameterCustomTextSubdataInput',
+                $optionsDiv,
+                self
+            );
+            this.addParameterDiv(
+                params[3],
+                'kbaseNarrativeParameterCustomTextSubdataInput',
+                $optionsDiv,
+                self
+            );
+            this.addParameterDiv(
+                params[4],
+                'kbaseNarrativeParameterCustomButtonInput',
+                $optionsDiv,
+                self
+            );
+            this.addParameterDiv(
+                params[5],
+                'kbaseNarrativeParameterCustomDropdownGroupInput',
+                $optionsDiv,
+                self
+            );
 
             self.parameterIdLookup['input_growth_matrix'].addInputListener(() => {
                 if (!self.inRefreshState) {
@@ -97,23 +116,21 @@ define(
 
             $inputParameterContainer.append($optionsDiv);
             this.$elem.append($inputParameterContainer);
-            this.$elem.css({"margin-bottom": "5px"});
+            this.$elem.css({ 'margin-bottom': '5px' });
         },
         addParameterDiv: function (paramSpec, widgetName, $optionsDiv, $dataModel) {
             const self = this;
             const $stepDiv = $('<div>');
-            const $widget = $stepDiv[widgetName](
-                {
-                    loadingImage: self.options.loadingImage,
-                    parsedParameterSpec: paramSpec,
-                    isInSidePanel: self.options.isInSidePanel,
-                    dataModel: $dataModel
-                });
-            this.parameters.push({id: paramSpec.id, widget: $widget});
+            const $widget = $stepDiv[widgetName]({
+                loadingImage: self.options.loadingImage,
+                parsedParameterSpec: paramSpec,
+                isInSidePanel: self.options.isInSidePanel,
+                dataModel: $dataModel,
+            });
+            this.parameters.push({ id: paramSpec.id, widget: $widget });
             this.parameterIdLookup[paramSpec.id] = $widget;
 
-            if ($optionsDiv.children().length == 0)
-                $stepDiv.css({"margin-top": "5px"});
+            if ($optionsDiv.children().length == 0) $stepDiv.css({ 'margin-top': '5px' });
             $optionsDiv.append($stepDiv);
         },
         geMainParams: function () {
@@ -133,18 +150,15 @@ define(
         getAdditionalParams: function () {
             const self = this;
             const params = [];
-            if (!self.columnMetadata)
-                return params;
+            if (!self.columnMetadata) return params;
 
             const mainParams = self.geMainParams();
-            if (mainParams.length == 0)
-                return params;
+            if (mainParams.length == 0) return params;
 
             // Collect params
             const paramValues = {};
             for (const i in self.columnMetadata) {
                 const cMetadata = self.columnMetadata[i];
-
 
                 // Check whether the column is a good (all main parameters are present)
                 let goodColumn = true;
@@ -154,8 +168,7 @@ define(
                     let paramFound = false;
                     for (var j in cMetadata) {
                         var propValue = cMetadata[j];
-                        if (propValue.entity != 'Condition')
-                            continue;
+                        if (propValue.entity != 'Condition') continue;
                         if (propValue.property_name == mainParam) {
                             paramFound = true;
                             break;
@@ -166,15 +179,12 @@ define(
                         break;
                     }
                 }
-                if (!goodColumn)
-                    continue;
-
+                if (!goodColumn) continue;
 
                 // Collect other params
                 for (var j in cMetadata) {
                     var propValue = cMetadata[j];
-                    if (propValue.entity != 'Condition')
-                        continue;
+                    if (propValue.entity != 'Condition') continue;
 
                     let isMainParam = false;
                     for (var k in mainParams) {
@@ -204,7 +214,7 @@ define(
                 for (const val in valueSet) {
                     values.push(val);
                 }
-                params.push({name: name, values: values});
+                params.push({ name: name, values: values });
             }
 
             return params;
@@ -217,23 +227,23 @@ define(
             for (const i in params) {
                 const param = params[i];
                 const spec = {
-                    "id": "input_param_filter_" + i,
+                    id: 'input_param_filter_' + i,
                     ui_name: param.name,
                     short_hint: 'Parameter to be constrained',
                     description: 'Parameter to be constrained',
-                    "optional": false,
-                    "advanced": false,
-                    "allow_multiple": false,
-                    "default_values": [],
-                    "field_type": "dropdown",
-                    "dropdown_options": {
-                        "options": []
-                    }
+                    optional: false,
+                    advanced: false,
+                    allow_multiple: false,
+                    default_values: [],
+                    field_type: 'dropdown',
+                    dropdown_options: {
+                        options: [],
+                    },
                 };
                 const options = [];
                 for (const j in param.values) {
                     const value = param.values[j];
-                    options.push({value: value, display: value});
+                    options.push({ value: value, display: value });
                 }
                 spec.dropdown_options.options = options;
                 spec.default_values.push(param.values[0]);
@@ -249,48 +259,50 @@ define(
             const self = this;
             console.log('fetchData.self', self);
             if (self.state == self.STATE_NONE) {
-                $(document).trigger('workspaceQuery.Narrative',
-                    (ws_name) => {
-                        const matrixId = self.getParameterValue('input_growth_matrix');
-                        if (!matrixId)
-                            return;
+                $(document).trigger('workspaceQuery.Narrative', (ws_name) => {
+                    const matrixId = self.getParameterValue('input_growth_matrix');
+                    if (!matrixId) return;
 
-                        const query = [];
-                        query.push({ref: ws_name + '/' + matrixId, included: ["metadata/column_metadata"]});
+                    const query = [];
+                    query.push({
+                        ref: ws_name + '/' + matrixId,
+                        included: ['metadata/column_metadata'],
+                    });
 
-
-                        self.state = self.STATE_FETCHING;
-                        self.ws.get_object_subset(query,
-                            (result) => {
-                                self.columnMetadata = result[0].data.metadata.column_metadata;
-                                const conditions = {};
-                                for (var i in self.columnMetadata) {
-                                    const cm = self.columnMetadata[i];
-                                    for (const j in cm) {
-                                        const propValue = cm[j];
-                                        if (propValue.entity != 'Condition')
-                                            continue;
-                                        conditions[propValue.property_name] = propValue.property_name;
-                                    }
+                    self.state = self.STATE_FETCHING;
+                    self.ws.get_object_subset(
+                        query,
+                        (result) => {
+                            self.columnMetadata = result[0].data.metadata.column_metadata;
+                            const conditions = {};
+                            for (var i in self.columnMetadata) {
+                                const cm = self.columnMetadata[i];
+                                for (const j in cm) {
+                                    const propValue = cm[j];
+                                    if (propValue.entity != 'Condition') continue;
+                                    conditions[propValue.property_name] = propValue.property_name;
                                 }
-
-                                self.conditionParams = [];
-                                for (var i in conditions) {
-                                    const conditionParam = conditions[i];
-                                    self.conditionParams.push({id: conditionParam, text: conditionParam});
-                                }
-
-                                self.state = self.STATE_READY;
-                                if (doneCallback) {
-                                    doneCallback(self.conditionParams);
-                                }
-                            },
-                            (error) => {
-                                console.error(error);
                             }
-                        );
-                    }
-                );
+
+                            self.conditionParams = [];
+                            for (var i in conditions) {
+                                const conditionParam = conditions[i];
+                                self.conditionParams.push({
+                                    id: conditionParam,
+                                    text: conditionParam,
+                                });
+                            }
+
+                            self.state = self.STATE_READY;
+                            if (doneCallback) {
+                                doneCallback(self.conditionParams);
+                            }
+                        },
+                        (error) => {
+                            console.error(error);
+                        }
+                    );
+                });
             } else if (self.state == self.STATE_READY) {
                 if (doneCallback) {
                     doneCallback(self.conditionParams);
@@ -305,7 +317,6 @@ define(
                 }
             }
             this.inRefreshState = false;
-        }
-
+        },
     });
 });

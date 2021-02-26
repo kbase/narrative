@@ -5,13 +5,15 @@ define([
     'common/events',
     'common/dom',
     'bootstrap',
-    'css!font-awesome'
+    'css!font-awesome',
 ], (Promise, html, Validation, Events, Dom) => {
     'use strict';
 
     // Constants
     const t = html.tag,
-        div = t('div'), select = t('select'), option = t('option');
+        div = t('div'),
+        select = t('select'),
+        option = t('option');
 
     function factory(config) {
         let options = {},
@@ -22,7 +24,7 @@ define([
             bus = config.bus,
             model = {
                 availableValues: null,
-                value: null
+                value: null,
             };
 
         // Validate configuration.
@@ -31,7 +33,6 @@ define([
         options.enabled = true;
 
         model.availableValues = spec.spec.dropdown_options.options;
-
 
         /*
          * If the parameter is optional, and is empty, return null.
@@ -71,13 +72,13 @@ define([
                     return {
                         isValid: true,
                         validated: false,
-                        diagnosis: 'disabled'
+                        diagnosis: 'disabled',
                     };
                 }
 
                 const rawValue = getInputValue(),
                     validationResult = Validation.validateTextString(rawValue, {
-                        required: options.required
+                        required: options.required,
                     });
 
                 return validationResult;
@@ -92,31 +93,39 @@ define([
                         selected = true;
                     }
 
-                    return option({
-                        value: item.value,
-                        selected: selected
-                    }, item.display);
+                    return option(
+                        {
+                            value: item.value,
+                            selected: selected,
+                        },
+                        item.display
+                    );
                 });
 
             // CONTROL
-            return select({
-                id: events.addEvent({type: 'change', handler: function () {
-                        validate()
-                            .then((result) => {
+            return select(
+                {
+                    id: events.addEvent({
+                        type: 'change',
+                        handler: function () {
+                            validate().then((result) => {
                                 if (result.isValid) {
                                     bus.emit('changed', {
-                                        newValue: result.value
+                                        newValue: result.value,
                                     });
                                 }
                                 bus.emit('validation', {
                                     errorMessage: result.errorMessage,
-                                    diagnosis: result.diagnosis
+                                    diagnosis: result.diagnosis,
                                 });
                             });
-                    }}),
-                class: 'form-control',
-                dataElement: 'input'
-            }, [option({value: ''}, '')].concat(selectOptions));
+                        },
+                    }),
+                    class: 'form-control',
+                    dataElement: 'input',
+                },
+                [option({ value: '' }, '')].concat(selectOptions)
+            );
         }
 
         function render(input) {
@@ -126,32 +135,31 @@ define([
 
                 dom.setContent('input-container', inputControl);
                 events.attachEvents(container);
-            })
-                .then(() => {
-                    autoValidate();
-                });
+            }).then(() => {
+                autoValidate();
+            });
         }
 
         function layout(events) {
-            const content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({dataElement: 'input-container'})
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
         function autoValidate() {
-            validate()
-                .then((result) => {
-                    bus.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
+            validate().then((result) => {
+                bus.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
 
         function setModelValue(value) {
@@ -161,19 +169,17 @@ define([
                     return true;
                 }
                 return false;
-            })
-                .then((changed) => {
-                    render();
-                });
+            }).then((changed) => {
+                render();
+            });
         }
 
         function unsetModelValue() {
             return Promise.try(() => {
                 model.value = undefined;
-            })
-                .then((changed) => {
-                    render();
-                });
+            }).then((changed) => {
+                render();
+            });
         }
 
         function resetModelValue() {
@@ -184,7 +190,6 @@ define([
             }
         }
 
-
         // LIFECYCLE API
 
         function start() {
@@ -192,7 +197,7 @@ define([
                 bus.on('run', (message) => {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
-                    dom = Dom.make({node: container});
+                    dom = Dom.make({ node: container });
 
                     const events = Events.make(),
                         theLayout = layout(events);
@@ -211,23 +216,23 @@ define([
             });
         }
 
-//        function run(input) {
-//            return Promise.try(function () {
-//                return render(input);
-//            })
-//            .then(function () {
-//                return autoValidate();
-//            });
-//        }
+        //        function run(input) {
+        //            return Promise.try(function () {
+        //                return render(input);
+        //            })
+        //            .then(function () {
+        //                return autoValidate();
+        //            });
+        //        }
 
         return {
-            start: start
+            start: start,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

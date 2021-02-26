@@ -10,19 +10,8 @@ define([
     'common/dom',
     'common/props',
     'bootstrap',
-    'css!font-awesome'
-], (
-    $,
-    Promise,
-    Handlebars,
-    html,
-    Workspace,
-    Validation,
-    Events,
-    Runtime,
-    Dom,
-    Props
-    ) => {
+    'css!font-awesome',
+], ($, Promise, Handlebars, html, Workspace, Validation, Events, Runtime, Dom, Props) => {
     'use strict';
 
     /*
@@ -42,7 +31,8 @@ define([
 
     // Constants
     const t = html.tag,
-        div = t('div'), p = t('p'),
+        div = t('div'),
+        p = t('p'),
         select = t('select'),
         option = t('option');
 
@@ -63,9 +53,9 @@ define([
             //    value: null
             //},
             options = {
-                objectSelectionPageSize: 20
+                objectSelectionPageSize: 20,
             },
-        runtime = Runtime.make(),
+            runtime = Runtime.make(),
             dom;
 
         // Validate configuration.
@@ -81,23 +71,28 @@ define([
         function buildOptions() {
             const availableValues = model.getItem('availableValues'),
                 value = model.getItem('value') || [],
-                selectOptions = [option({value: ''}, '')];
+                selectOptions = [option({ value: '' }, '')];
             if (!availableValues) {
                 return selectOptions;
             }
-            return selectOptions.concat(availableValues.map((availableValue) => {
-                let selected = false,
-                    optionLabel = availableValue.desc,
-                    optionValue = availableValue.id;
-                // TODO: pull the value out of the object
-                if (value === availableValue.id) {
-                    selected = true;
-                }
-                return option({
-                    value: optionValue,
-                    selected: selected
-                }, optionLabel);
-            }));
+            return selectOptions.concat(
+                availableValues.map((availableValue) => {
+                    let selected = false,
+                        optionLabel = availableValue.desc,
+                        optionValue = availableValue.id;
+                    // TODO: pull the value out of the object
+                    if (value === availableValue.id) {
+                        selected = true;
+                    }
+                    return option(
+                        {
+                            value: optionValue,
+                            selected: selected,
+                        },
+                        optionLabel
+                    );
+                })
+            );
         }
 
         function buildCount() {
@@ -105,10 +100,9 @@ define([
                 value = model.getItem('value') || null;
 
             if (value) {
-                return  '1 / ' + String(availableValues.length) + ' items';
+                return '1 / ' + String(availableValues.length) + ' items';
             } else {
-                return  '0 / ' + String(availableValues.length) + ' items';
-
+                return '0 / ' + String(availableValues.length) + ' items';
             }
         }
 
@@ -126,7 +120,19 @@ define([
                 multiple = true;
             }
             if (!availableValues) {
-                return p({class: 'form-control-static', style: {fontStyle: 'italic', whiteSpace: 'normal', padding: '3px', border: '1px silver solid'}}, 'Items will be available after selecting a value for ' + constraints.referredParameter);
+                return p(
+                    {
+                        class: 'form-control-static',
+                        style: {
+                            fontStyle: 'italic',
+                            whiteSpace: 'normal',
+                            padding: '3px',
+                            border: '1px silver solid',
+                        },
+                    },
+                    'Items will be available after selecting a value for ' +
+                        constraints.referredParameter
+                );
             }
             //if (availableValues.length === 0) {
             //    return 'No items found';
@@ -135,39 +141,41 @@ define([
             selectOptions = buildOptions();
 
             // CONTROL
-            return div({style: {border: '1px silver solid'}}, [
-                div({style: {fontStyle: 'italic'}, dataElement: 'count'}, buildCount()),
-                select({
-                    id: events.addEvent({
-                        type: 'change',
-                        handler: function (e) {
-                            validate()
-                                .then((result) => {
+            return div({ style: { border: '1px silver solid' } }, [
+                div({ style: { fontStyle: 'italic' }, dataElement: 'count' }, buildCount()),
+                select(
+                    {
+                        id: events.addEvent({
+                            type: 'change',
+                            handler: function (e) {
+                                validate().then((result) => {
                                     if (result.isValid) {
                                         model.setItem('value', result.value);
                                         updateInputControl('value');
                                         bus.emit('changed', {
-                                            newValue: result.value
+                                            newValue: result.value,
                                         });
                                     } else if (result.diagnosis === 'required-missing') {
                                         model.setItem('value', result.value);
                                         updateInputControl('value');
                                         bus.emit('changed', {
-                                            newValue: result.value
+                                            newValue: result.value,
                                         });
                                     }
                                     bus.emit('validation', {
                                         errorMessage: result.errorMessage,
-                                        diagnosis: result.diagnosis
+                                        diagnosis: result.diagnosis,
                                     });
                                 });
-                        }
-                    }),
-                    size: size,
-                    multiple: multiple,
-                    class: 'form-control',
-                    dataElement: 'input'
-                }, selectOptions)
+                            },
+                        }),
+                        size: size,
+                        multiple: multiple,
+                        class: 'form-control',
+                        dataElement: 'input',
+                    },
+                    selectOptions
+                ),
             ]);
         }
 
@@ -200,12 +208,10 @@ define([
 
                     break;
                 case 'referenceObjectName':
-                    // refetch the available values
-                    // set available values
-                    // update input control for available values
-                    // set value to null
-
-
+                // refetch the available values
+                // set available values
+                // update input control for available values
+                // set value to null
             }
         }
 
@@ -223,7 +229,8 @@ define([
                 return null;
             }
             let input = control.selectedOptions,
-                i, values = [];
+                i,
+                values = [];
 
             if (control.selectedOptions.length === 0) {
                 return;
@@ -247,26 +254,25 @@ define([
                     return {
                         isValid: true,
                         validated: false,
-                        diagnosis: 'disabled'
+                        diagnosis: 'disabled',
                     };
                 }
 
                 const rawValue = getInputValue(),
                     validationOptions = {
-                        required: constraints.required
+                        required: constraints.required,
                     };
 
                 return Validation.validateText(rawValue, validationOptions);
-            })
-                .then((validationResult) => {
-                    return {
-                        isValid: validationResult.isValid,
-                        validated: true,
-                        diagnosis: validationResult.diagnosis,
-                        errorMessage: validationResult.errorMessage,
-                        value: validationResult.parsedValue
-                    };
-                });
+            }).then((validationResult) => {
+                return {
+                    isValid: validationResult.isValid,
+                    validated: true,
+                    diagnosis: validationResult.diagnosis,
+                    errorMessage: validationResult.errorMessage,
+                    value: validationResult.parsedValue,
+                };
+            });
         }
 
         // unsafe, but pretty.
@@ -284,40 +290,36 @@ define([
                 return [];
             }
             const workspace = new Workspace(runtime.config('services.workspace.url'), {
-                token: runtime.authToken()
-            }),
+                    token: runtime.authToken(),
+                }),
                 subObjectIdentity = {
                     ref: workspaceId + '/' + model.getItem('referenceObjectName'),
-                    included: [constraints.subdataIncluded]
+                    included: [constraints.subdataIncluded],
                 };
-            return workspace.get_object_subset([
-                subObjectIdentity
-            ])
-                .then((result) => {
-                    const subdata = Props.make({data: result[0].data}).getItem(constraints.subdataPath);
-                    return constraints.map(subdata);
-                });
+            return workspace.get_object_subset([subObjectIdentity]).then((result) => {
+                const subdata = Props.make({ data: result[0].data }).getItem(
+                    constraints.subdataPath
+                );
+                return constraints.map(subdata);
+            });
         }
 
         function syncAvailableValues() {
             return Promise.try(() => {
                 return fetchData();
-            })
-                .then((data) => {
-                    model.setItem('availableValues', data);
-                });
+            }).then((data) => {
+                model.setItem('availableValues', data);
+            });
         }
 
         function autoValidate() {
-            return validate()
-                .then((result) => {
-                    bus.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
+            return validate().then((result) => {
+                bus.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
-
 
         /*
          * Creates the markup
@@ -328,12 +330,15 @@ define([
             return Promise.try(() => {
                 const events = Events.make(),
                     inputControl = makeInputControl(events, bus),
-                    content = div({
-                        class: 'input-group',
-                        style: {
-                            width: '100%'
-                        }
-                    }, inputControl);
+                    content = div(
+                        {
+                            class: 'input-group',
+                            style: {
+                                width: '100%',
+                            },
+                        },
+                        inputControl
+                    );
 
                 dom.setContent('input-container', content);
                 events.attachEvents(container);
@@ -352,16 +357,19 @@ define([
          * For the objectInput, there is only ever one control.
          */
         function layout(events) {
-            const content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({
-                    dataElement: 'input-container'
-                })
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [
+                    div({
+                        dataElement: 'input-container',
+                    }),
+                ]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
@@ -414,10 +422,10 @@ define([
             // Rather than explicitly refer to that parameter, we have a
             // generic capability to receive updates for that value, after
             // which we re-fetch the values, and re-render the control.
-//            bus.on('update-reference-object', function (message) {
-//                model.setItem('referenceObjectName', value)
-//                setReferenceValue(message.objectRef);
-//            });
+            //            bus.on('update-reference-object', function (message) {
+            //                model.setItem('referenceObjectName', value)
+            //                setReferenceValue(message.objectRef);
+            //            });
             bus.emit('sync');
         }
 
@@ -430,7 +438,7 @@ define([
                     container = parent.appendChild(document.createElement('div'));
                     $container = $(container);
                     dom = Dom.make({
-                        node: container
+                        node: container,
                     });
 
                     const events = Events.make(),
@@ -453,8 +461,8 @@ define([
             data: {
                 referenceObjectName: null,
                 availableValues: [],
-                value: null
-            }
+                value: null,
+            },
             //,
             //onUpdate: function (props) {
             //    // render();
@@ -463,13 +471,13 @@ define([
         });
 
         return {
-            start: start
+            start: start,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

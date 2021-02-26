@@ -1,13 +1,14 @@
-define([
-    'kb_common/html',
-    'common/props',
-    'common/runtime',
-    'narrativeConfig'
-], (html, Props, Runtime, narrativeConfig) => {
+define(['kb_common/html', 'common/props', 'common/runtime', 'narrativeConfig'], (
+    html,
+    Props,
+    Runtime,
+    narrativeConfig
+) => {
     'use strict';
 
     const t = html.tag,
-        span = t('span'), img = t('img');
+        span = t('span'),
+        img = t('img');
 
     function makeToolbarAppIcon(appSpec) {
         // icon is in the spec ...
@@ -16,25 +17,51 @@ define([
             iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
 
         if (iconUrl) {
-            return span({style: {padding: '3px 3px 3px 3px'}}, [
-                img({src: nmsBase + iconUrl, style: {maxWidth: '50px', maxHeight: '50px', margin: '0x'}})
+            return span({ style: { padding: '3px 3px 3px 3px' } }, [
+                img({
+                    src: nmsBase + iconUrl,
+                    style: { maxWidth: '50px', maxHeight: '50px', margin: '0x' },
+                }),
             ]);
         }
 
-        return span({class: 'fa-stack fa-2x', style: {verticalAlign: 'top', textAlign: 'center', color: 'rgb(103,58,183)', lineHeight: '56px'}}, [
-                span({class: 'fa fa-square fa-stack-2x', style: {color: 'rgb(103,58,183)', lineHeight: '56px'}}),
-                span({class: 'fa fa-inverse fa-stack-1x fa-cube'})
-            ]);
+        return span(
+            {
+                class: 'fa-stack fa-2x',
+                style: {
+                    verticalAlign: 'top',
+                    textAlign: 'center',
+                    color: 'rgb(103,58,183)',
+                    lineHeight: '56px',
+                },
+            },
+            [
+                span({
+                    class: 'fa fa-square fa-stack-2x',
+                    style: { color: 'rgb(103,58,183)', lineHeight: '56px' },
+                }),
+                span({ class: 'fa fa-inverse fa-stack-1x fa-cube' }),
+            ]
+        );
     }
 
-     function makeToolbarGenericIcon(fontAwesomeIconName, color) {
+    function makeToolbarGenericIcon(fontAwesomeIconName, color) {
         const iconColor = color || 'silver';
 
-        return span({style: ''}, [
-            span({class: 'fa-stack fa-2x', style: {verticalAlign: 'top', padding: '0', lineHeight: '56px'}}, [
-                span({class: 'fa fa-square fa-stack-2x', style: {color: iconColor, lineHeight: '56px'}}),
-                span({class: 'fa fa-inverse fa-stack-1x fa-' + fontAwesomeIconName})
-            ])
+        return span({ style: '' }, [
+            span(
+                {
+                    class: 'fa-stack fa-2x',
+                    style: { verticalAlign: 'top', padding: '0', lineHeight: '56px' },
+                },
+                [
+                    span({
+                        class: 'fa fa-square fa-stack-2x',
+                        style: { color: iconColor, lineHeight: '56px' },
+                    }),
+                    span({ class: 'fa fa-inverse fa-stack-1x fa-' + fontAwesomeIconName }),
+                ]
+            ),
         ]);
     }
 
@@ -45,27 +72,39 @@ define([
             iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
 
         if (iconUrl) {
-            return span({style: {padding: '3px 3px 3px 3px'}}, [
-                img({src: nmsBase + iconUrl, style: {maxWidth: '50px', maxHeight: '50px', margin: '0x'}})
+            return span({ style: { padding: '3px 3px 3px 3px' } }, [
+                img({
+                    src: nmsBase + iconUrl,
+                    style: { maxWidth: '50px', maxHeight: '50px', margin: '0x' },
+                }),
             ]);
         }
 
-        return span({style: ''}, [
-            span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: 'rgb(103,58,183)', 'padding-top': '5px'}}, [
-                span({class: 'fa fa-square fa-stack-2x', style: {color: 'rgb(103,58,183)'}}),
-                span({class: 'fa fa-inverse fa-stack-1x fa-cube'})
-            ])
+        return span({ style: '' }, [
+            span(
+                {
+                    class: 'fa-stack fa-2x',
+                    style: { textAlign: 'center', color: 'rgb(103,58,183)', 'padding-top': '5px' },
+                },
+                [
+                    span({
+                        class: 'fa fa-square fa-stack-2x',
+                        style: { color: 'rgb(103,58,183)' },
+                    }),
+                    span({ class: 'fa fa-inverse fa-stack-1x fa-cube' }),
+                ]
+            ),
         ]);
     }
 
     function makeGenericIcon(fontAwesomeIconName, color) {
         const iconColor = color || 'silver';
 
-        return span({style: ''}, [
-            span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: iconColor}}, [
-                span({class: 'fa fa-square fa-stack-2x', style: {color: iconColor}}),
-                span({class: 'fa fa-inverse fa-stack-1x fa-' + fontAwesomeIconName})
-            ])
+        return span({ style: '' }, [
+            span({ class: 'fa-stack fa-2x', style: { textAlign: 'center', color: iconColor } }, [
+                span({ class: 'fa fa-square fa-stack-2x', style: { color: iconColor } }),
+                span({ class: 'fa fa-inverse fa-stack-1x fa-' + fontAwesomeIconName }),
+            ]),
         ]);
     }
 
@@ -78,14 +117,16 @@ define([
         return {
             name: name,
             module: module,
-            version: version
+            version: version,
         };
     }
 
     function makeTypeIcon(typeId) {
         let type = parseType(typeId),
             iconSpec = narrativeConfig.get('icons'),
-            color, iconDef, icon;
+            color,
+            iconDef,
+            icon;
 
         if (iconSpec) {
             color = iconSpec.color_mapping[type.name];
@@ -103,17 +144,19 @@ define([
         }
 
         return span([
-            span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: color}}, [
-                span({class: 'fa fa-circle fa-stack-2x', style: {color: color}}),
-                span({class: 'fa fa-inverse fa-stack-1x ' + icon})
-            ])
+            span({ class: 'fa-stack fa-2x', style: { textAlign: 'center', color: color } }, [
+                span({ class: 'fa fa-circle fa-stack-2x', style: { color: color } }),
+                span({ class: 'fa fa-inverse fa-stack-1x ' + icon }),
+            ]),
         ]);
     }
 
     function makeToolbarTypeIcon(typeId) {
         let type = parseType(typeId),
             iconSpec = narrativeConfig.get('icons'),
-            color, iconDef, icon;
+            color,
+            iconDef,
+            icon;
 
         if (iconSpec) {
             color = iconSpec.color_mapping[type.name];
@@ -131,10 +174,19 @@ define([
         }
 
         return span([
-            span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: color, lineHeight: '56px'}}, [
-                span({class: 'fa fa-circle fa-stack-2x', style: {color: color, lineHeight: '56px'}}),
-                span({class: 'fa fa-inverse fa-stack-1x ' + icon})
-            ])
+            span(
+                {
+                    class: 'fa-stack fa-2x',
+                    style: { textAlign: 'center', color: color, lineHeight: '56px' },
+                },
+                [
+                    span({
+                        class: 'fa fa-circle fa-stack-2x',
+                        style: { color: color, lineHeight: '56px' },
+                    }),
+                    span({ class: 'fa fa-inverse fa-stack-1x ' + icon }),
+                ]
+            ),
         ]);
     }
 
@@ -144,6 +196,6 @@ define([
         makeToolbarAppIcon: makeToolbarAppIcon,
         makeToolbarGenericIcon: makeToolbarGenericIcon,
         makeTypeIcon: makeTypeIcon,
-        makeToolbarTypeIcon: makeToolbarTypeIcon
+        makeToolbarTypeIcon: makeToolbarTypeIcon,
     };
 });

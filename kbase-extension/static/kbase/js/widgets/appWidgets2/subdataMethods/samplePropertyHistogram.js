@@ -1,5 +1,4 @@
-define([
-], () => {
+define([], () => {
     'use strict';
     function factory(config) {
         function extractItems(result, params) {
@@ -15,35 +14,37 @@ define([
                     }
                 });
             });
-            return Object.keys(wells).map((wellId) => {
-                return {
-                    id: wellId,
-                    text: wellId
-                };
-            }).sort((a, b) => {
-                return a.text > b.text ? 1 : -1;
-            });
+            return Object.keys(wells)
+                .map((wellId) => {
+                    return {
+                        id: wellId,
+                        text: wellId,
+                    };
+                })
+                .sort((a, b) => {
+                    return a.text > b.text ? 1 : -1;
+                });
         }
 
         function getMethod() {
             return {
                 params: {
                     referenceObject: 'input_sample_property_matrix',
-                    dependencies: ['input_sample_property_matrix']
+                    dependencies: ['input_sample_property_matrix'],
                 },
-                included: ["metadata/row_metadata"],
-                extractItems: extractItems
+                included: ['metadata/row_metadata'],
+                extractItems: extractItems,
             };
         }
 
         return {
-            getMethod: getMethod
+            getMethod: getMethod,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

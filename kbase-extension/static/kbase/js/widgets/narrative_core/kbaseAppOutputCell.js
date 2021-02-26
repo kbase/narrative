@@ -1,12 +1,4 @@
-define([
-    'jquery',
-    'kbwidget',
-    'base/js/namespace'
-], (
-    $,
-    KBWidget,
-    Jupyter
-    ) => {
+define(['jquery', 'kbwidget', 'base/js/namespace'], ($, KBWidget, Jupyter) => {
     'use strict';
     return KBWidget({
         name: 'kbaseAppOutputCell',
@@ -18,7 +10,7 @@ define([
             type: 'error',
             title: 'Output',
             time: '',
-            showMenu: true
+            showMenu: true,
         },
         OUTPUT_ERROR_WIDGET: 'kbaseNarrativeError',
         init: function (options) {
@@ -26,7 +18,7 @@ define([
 
             this.data = this.options.data;
             this.options.type = this.options.type.toLowerCase();
-            if (this.options.widget.toLowerCase() === "null") {
+            if (this.options.widget.toLowerCase() === 'null') {
                 this.options.widget = 'kbaseDefaultNarrativeOutput';
             }
 
@@ -45,16 +37,19 @@ define([
             const $label = $('<span>').addClass('label label-info').append('Output');
             this.renderCell('kb-cell-output', 'panel-default', 'kb-out-desc', $label, 'app output');
             const $cell = this.$elem.closest('.cell');
-            $cell.trigger('set-icon.cell', ['<i class="fa fa-2x fa-file-o method-output-icon"></i>']);
+            $cell.trigger('set-icon.cell', [
+                '<i class="fa fa-2x fa-file-o method-output-icon"></i>',
+            ]);
         },
         renderErrorOutputCell: function () {
             require(['kbaseNarrativeError'], $.proxy(function () {
-                if (!this.options.title)
-                    this.options.title = 'Narrative Error';
+                if (!this.options.title) this.options.title = 'Narrative Error';
                 const $label = $('<span>').addClass('label label-danger').append('Error');
                 this.renderCell('kb-cell-error', 'panel-danger', 'kb-err-desc', $label);
                 const $cell = this.$elem.closest('.cell');
-                $cell.trigger('set-icon.cell', ['<i class="fa fa-2x fa-exclamation-triangle error-icon"></i>']);
+                $cell.trigger('set-icon.cell', [
+                    '<i class="fa fa-2x fa-exclamation-triangle error-icon"></i>',
+                ]);
                 $cell.addClass('kb-error');
             }, this));
         },
@@ -67,26 +62,24 @@ define([
                 title += ' (' + titleSuffix + ')';
             }
 
-            this.$elem
-                .closest('.cell')
-                .trigger('set-title', [title]);
+            this.$elem.closest('.cell').trigger('set-title', [title]);
 
             let widgetData = this.options.data;
-            if (widget === 'kbaseDefaultNarrativeOutput')
-                widgetData = {data: this.options.data};
+            if (widget === 'kbaseDefaultNarrativeOutput') widgetData = { data: this.options.data };
 
-            this.$timestamp = $('<span>')
-                .addClass('pull-right kb-func-timestamp');
+            this.$timestamp = $('<span>').addClass('pull-right kb-func-timestamp');
 
             if (this.options.time) {
-                this.$timestamp.append($('<span>')
-                    .append(this.readableTimestamp(this.options.time)));
-                this.$elem.closest('.cell').find('.button_container').trigger('set-timestamp.toolbar', this.options.time);
+                this.$timestamp.append(
+                    $('<span>').append(this.readableTimestamp(this.options.time))
+                );
+                this.$elem
+                    .closest('.cell')
+                    .find('.button_container')
+                    .trigger('set-timestamp.toolbar', this.options.time);
             }
 
-            const $headerLabel = $('<span>')
-                .addClass('label label-info')
-                .append('Output');
+            const $headerLabel = $('<span>').addClass('label label-info').append('Output');
 
             const $headerInfo = $('<span>')
                 .addClass(headerClass)
@@ -96,33 +89,42 @@ define([
             const $body = $('<div class="kb-cell-output-content">');
 
             try {
-                require([widget],
-                    (W) => {
-                        // If we successfully Require the widget code, render it:
-                        this.$outWidget = new W($body, widgetData);
-                        // this.$outWidget = $body.find('.panel-body > div')[widget](widgetData);
-                        this.$elem.append($body);
-                    },
-                    (err) => {
-                        // If we fail, render the error widget and log the error.
-                        KBError("Output::" + this.options.title, "failed to render app output widget: '" + widget);
-                        this.options.title = 'App Error';
-                        this.options.data = {
-                            error: {
-                                msg: 'An error occurred while showing your output:',
-                                method_name: 'kbaseNarrativeOutputCell.renderCell',
-                                type: 'Output',
-                                severity: '',
-                                traceback: 'Failed while trying to show a "' + widget + '"\n' +
-                                    'With inputs ' + JSON.stringify(widgetData) + '\n\n' +
-                                    err.message
-                            }
-                        };
-                        this.options.widget = this.OUTPUT_ERROR_WIDGET;
-                        this.renderErrorOutputCell();
-                    });
+                require([widget], (W) => {
+                    // If we successfully Require the widget code, render it:
+                    this.$outWidget = new W($body, widgetData);
+                    // this.$outWidget = $body.find('.panel-body > div')[widget](widgetData);
+                    this.$elem.append($body);
+                }, (err) => {
+                    // If we fail, render the error widget and log the error.
+                    KBError(
+                        'Output::' + this.options.title,
+                        "failed to render app output widget: '" + widget
+                    );
+                    this.options.title = 'App Error';
+                    this.options.data = {
+                        error: {
+                            msg: 'An error occurred while showing your output:',
+                            method_name: 'kbaseNarrativeOutputCell.renderCell',
+                            type: 'Output',
+                            severity: '',
+                            traceback:
+                                'Failed while trying to show a "' +
+                                widget +
+                                '"\n' +
+                                'With inputs ' +
+                                JSON.stringify(widgetData) +
+                                '\n\n' +
+                                err.message,
+                        },
+                    };
+                    this.options.widget = this.OUTPUT_ERROR_WIDGET;
+                    this.renderErrorOutputCell();
+                });
             } catch (err) {
-                KBError("Output::" + this.options.title, "failed to render app output widget: '" + widget);
+                KBError(
+                    'Output::' + this.options.title,
+                    "failed to render app output widget: '" + widget
+                );
                 this.options.title = 'App Error';
                 this.options.data = {
                     error: {
@@ -130,10 +132,15 @@ define([
                         method_name: 'kbaseNarrativeOutputCell.renderCell',
                         type: 'Output',
                         severity: '',
-                        traceback: 'Failed while trying to show a "' + widget + '"\n' +
-                            'With inputs ' + JSON.stringify(widgetData) + '\n\n' +
-                            err.message
-                    }
+                        traceback:
+                            'Failed while trying to show a "' +
+                            widget +
+                            '"\n' +
+                            'With inputs ' +
+                            JSON.stringify(widgetData) +
+                            '\n\n' +
+                            err.message,
+                    },
                 };
                 this.options.widget = this.OUTPUT_ERROR_WIDGET;
                 this.renderErrorOutputCell();
@@ -148,7 +155,6 @@ define([
                 //                  err.message
                 // }});
             }
-
         },
         getState: function () {
             let state = null;
@@ -185,8 +191,7 @@ define([
          */
         readableTimestamp: function (timestamp) {
             const format = function (x) {
-                if (x < 10)
-                    x = '0' + x;
+                if (x < 10) x = '0' + x;
                 return x;
             };
 
@@ -198,7 +203,7 @@ define([
             const day = format(d.getDate());
             const year = d.getFullYear();
 
-            return hours + ":" + minutes + ":" + seconds + ", " + month + "/" + day + "/" + year;
-        }
+            return hours + ':' + minutes + ':' + seconds + ', ' + month + '/' + day + '/' + year;
+        },
     });
 });

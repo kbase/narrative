@@ -1,7 +1,4 @@
-define([
-    'bluebird',
-    './exceptions'
-], (Promise, exceptions) => {
+define(['bluebird', './exceptions'], (Promise, exceptions) => {
     'use strict';
 
     function post(options) {
@@ -15,7 +12,6 @@ define([
                 } else if (xhr.status >= 500) {
                     reject(new ServerException(xhr.status, 'Server Error', xhr));
                 } else {
-
                     // var buf = new Uint8Array(xhr.response);
                     try {
                         resolve(xhr.response);
@@ -26,7 +22,7 @@ define([
             };
 
             xhr.ontimeout = function () {
-                const elapsed = (new Date()) - startTime;
+                const elapsed = new Date() - startTime;
                 reject(new exceptions.TimeoutException(timeout, elapsed, 'Request timeout', xhr));
             };
             xhr.onerror = function () {
@@ -35,7 +31,6 @@ define([
             xhr.onabort = function () {
                 reject(new exceptions.AbortException('Request was aborted', xhr));
             };
-
 
             xhr.timeout = options.timeout || 60000;
             try {
@@ -91,7 +86,7 @@ define([
             };
 
             xhr.ontimeout = function () {
-                const elapsed = (new Date()) - startTime;
+                const elapsed = new Date() - startTime;
                 reject(new exceptions.TimeoutException(timeout, elapsed, 'Request timeout', xhr));
             };
             xhr.onerror = function () {
@@ -109,7 +104,6 @@ define([
             }
 
             try {
-
                 if (options.header) {
                     Object.keys(options.header).forEach((key) => {
                         xhr.setRequestHeader(key, options.header[key]);
@@ -135,6 +129,6 @@ define([
         AbortException: exceptions.AbortException,
         TimeoutException: exceptions.TimeoutException,
         ServerException: exceptions.ServerException,
-        ClientException: exceptions.ClientException
+        ClientException: exceptions.ClientException,
     };
 });

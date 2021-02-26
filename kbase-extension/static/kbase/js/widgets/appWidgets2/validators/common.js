@@ -9,6 +9,6 @@ define([], () => {
         return false;
     }
     return {
-        isEmptyString: isEmptyString
-    }
+        isEmptyString: isEmptyString,
+    };
 });

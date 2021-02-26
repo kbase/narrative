@@ -5,7 +5,7 @@
  * timeout - if any given update takes longer than this (in ms), a message will be put up.
  */
 define([
-    'jquery'  // just for the handy fadeOut thing.
+    'jquery', // just for the handy fadeOut thing.
 ], ($) => {
     'use strict';
 
@@ -18,7 +18,7 @@ define([
             jobs: false,
             apps: false,
             kernel: false,
-            narrative: false
+            narrative: false,
         };
         this.progressBar = config.node ? config.node.querySelector('.progress-bar') : null;
         this.totalDone = 0;
@@ -44,18 +44,21 @@ define([
         this.timeoutShown = true;
     };
 
-    LoadingWidget.prototype.updateProgress = function(name, done, error) {
+    LoadingWidget.prototype.updateProgress = function (name, done, error) {
         let text = '<i class="fa fa-check" aria-hidden="true" style="color:green"></i>';
         if (error) {
-            text = '<i class="fa fa-times" aria-hidden="true" style="color:red"></i> Error while loading.';
+            text =
+                '<i class="fa fa-times" aria-hidden="true" style="color:red"></i> Error while loading.';
         }
         if (this.container) {
-            const prog = this.container.querySelector('[data-element="' + name + '"] .kb-progress-stage');
+            const prog = this.container.querySelector(
+                '[data-element="' + name + '"] .kb-progress-stage'
+            );
             if (prog) {
                 prog.innerHTML = text;
                 this.totalDone++;
-                this.progressBar.style.width = (this.totalDone / this.totalSteps * 100) + '%';
-                this.initializeTimeout();  // reset the timer for another round.
+                this.progressBar.style.width = (this.totalDone / this.totalSteps) * 100 + '%';
+                this.initializeTimeout(); // reset the timer for another round.
                 if (this.totalDone >= this.totalSteps) {
                     this.remove();
                 }

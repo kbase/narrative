@@ -1,9 +1,4 @@
-define([
-    'bluebird',
-    'uuid',
-    'common/ui',
-    'kb_common/html'
-], (Promise, Uuid, UI, html) => {
+define(['bluebird', 'uuid', 'common/ui', 'kb_common/html'], (Promise, Uuid, UI, html) => {
     'use strict';
 
     var t = html.tag,
@@ -15,7 +10,9 @@ define([
 
     function convertJobError(errorInfo) {
         let errorId = new Uuid(4).format(),
-            errorType, errorMessage, errorDetail;
+            errorType,
+            errorMessage,
+            errorDetail;
         if (errorInfo.error) {
             // Classic KBase rpc error message
             errorType = errorInfo.name;
@@ -36,8 +33,9 @@ define([
             type: errorType,
             message: errorMessage,
             detail: errorDetail,
-            advice: 'If the app fails consistently, ' +
-            'please contact us at https://www.kbase.us/support ',
+            advice:
+                'If the app fails consistently, ' +
+                'please contact us at https://www.kbase.us/support ',
         };
     }
 
@@ -46,30 +44,25 @@ define([
             location: 'app cell',
             type: errorInfo.title,
             message: errorInfo.message,
-            advice: ul({ style: { paddingLeft: '1.2em' } }, errorInfo.advice.map((adv) => {
-                return li(adv);
-            })),
-            detail: errorInfo.detail
+            advice: ul(
+                { style: { paddingLeft: '1.2em' } },
+                errorInfo.advice.map((adv) => {
+                    return li(adv);
+                })
+            ),
+            detail: errorInfo.detail,
         };
     }
 
     function renderErrorLayout() {
         return div([
-            div({ style: { fontWeight: 'bold' } }, [
-                'Type'
-            ]),
+            div({ style: { fontWeight: 'bold' } }, ['Type']),
             div({ dataElement: 'type' }),
-            div({ style: { fontWeight: 'bold', marginTop: '1em' } }, [
-                'Message'
-            ]),
+            div({ style: { fontWeight: 'bold', marginTop: '1em' } }, ['Message']),
             div({ dataElement: 'message' }),
-            div({ style: { fontWeight: 'bold', marginTop: '1em' } }, [
-                'Advice'
-            ]),
+            div({ style: { fontWeight: 'bold', marginTop: '1em' } }, ['Advice']),
             div({ dataElement: 'advice' }),
-            div({ style: { fontWeight: 'bold', marginTop: '1em' } }, [
-                'Detail'
-            ]),
+            div({ style: { fontWeight: 'bold', marginTop: '1em' } }, ['Detail']),
             pre({
                 dataElement: 'detail',
                 style: {
@@ -77,18 +70,18 @@ define([
                     maxHeight: '100rem',
                     overflowY: 'auto',
                     padding: '4px',
-                    wordBreak: 'break-word'
-                }
+                    wordBreak: 'break-word',
+                },
             }),
-            div({ style: { fontWeight: 'bold', marginTop: '1em' } }, [
-                'Info'
-            ]),
-            div({ dataElement: 'info' })
+            div({ style: { fontWeight: 'bold', marginTop: '1em' } }, ['Info']),
+            div({ dataElement: 'info' }),
         ]);
     }
 
     function factory(config) {
-        let container, ui, model = config.model;
+        let container,
+            ui,
+            model = config.model;
 
         function start(arg) {
             return Promise.try(() => {
@@ -110,7 +103,7 @@ define([
                         location: 'unknown',
                         type: 'unknown',
                         message: 'An unknown error was detected',
-                        detail: ''
+                        detail: '',
                     };
                 }
                 console.error('errorTab', viewModel);
@@ -127,13 +120,13 @@ define([
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

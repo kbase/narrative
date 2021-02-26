@@ -8,8 +8,7 @@ define([
     './growthCurves',
     './sampleProperty',
     './samplePropertyHistogram',
-    './growthCondition'
-
+    './growthCondition',
 ], (
     Handlebars,
     Runtime,
@@ -20,7 +19,8 @@ define([
     GrowthCurves,
     SampleProperty,
     SamplePropertyHistogram,
-    GrowthCondition) => {
+    GrowthCondition
+) => {
     'use strict';
 
     const t = html.tag,
@@ -31,20 +31,22 @@ define([
 
         function workspaceCall(subObjectIdentity) {
             return new Workspace(runtime.config('services.workspace.url'), {
-                token: runtime.authToken()
-            })
-                .get_object_subset([subObjectIdentity]);
+                token: runtime.authToken(),
+            }).get_object_subset([subObjectIdentity]);
         }
 
         function genericClientCall(subdataSelection, subObjectIdentity) {
             const swUrl = runtime.config('services.workspace.url').replace('ws', 'service_wizard'),
                 genericClient = new GenericClient(swUrl, {
-                    token: runtime.authToken()
+                    token: runtime.authToken(),
                 });
-            return genericClient.sync_call(subdataSelection.service_function, [
-                [subObjectIdentity]
-            ], null, null,
-            subdataSelection.service_version);
+            return genericClient.sync_call(
+                subdataSelection.service_function,
+                [[subObjectIdentity]],
+                null,
+                null,
+                subdataSelection.service_version
+            );
         }
 
         function makeLabel(item, showSourceObjectName) {
@@ -53,13 +55,16 @@ define([
                 item.desc,
                 (function () {
                     if (showSourceObjectName && item.objectName) {
-                        return div({ style: { padding: '0px', fontStyle: 'italic' } }, item.objectName);
+                        return div(
+                            { style: { padding: '0px', fontStyle: 'italic' } },
+                            item.objectName
+                        );
                     }
-                }())
+                })(),
             ]);
         }
 
-        function sortData (data) {
+        function sortData(data) {
             // sort by id now.
             data.sort((a, b) => {
                 if (a.id > b.id) {
@@ -79,7 +84,7 @@ define([
                 subdataSelection = arg.spec.data.constraints.subdataSelection,
                 subObjectIdentity = {
                     ref: referenceObjectRef,
-                    included: subdataSelection.subdata_included
+                    included: subdataSelection.subdata_included,
                 },
                 dataCall;
 
@@ -91,9 +96,11 @@ define([
                     descriptionTemplate;
 
                 if (!descriptionTemplateText) {
-                    descriptionTemplateText = descriptionFields.map((field) => {
-                        return '{{' + field + '}}';
-                    }).join(' - ');
+                    descriptionTemplateText = descriptionFields
+                        .map((field) => {
+                            return '{{' + field + '}}';
+                        })
+                        .join(' - ');
                 }
 
                 descriptionTemplate = Handlebars.compile(descriptionTemplateText);
@@ -124,8 +131,10 @@ define([
                             values.push({
                                 id: id,
                                 desc: descriptionTemplate(datum),
-                                objectRef: [result.info[6], result.info[0], result.info[4]].join('/'),
-                                objectName: result.info[1]
+                                objectRef: [result.info[6], result.info[0], result.info[4]].join(
+                                    '/'
+                                ),
+                                objectName: result.info[1],
                             });
                         });
                     } else if (subdata instanceof Object) {
@@ -134,10 +143,9 @@ define([
                             let id = key;
 
                             if (selectionId) {
-                                if (typeof datum === 'object'){
+                                if (typeof datum === 'object') {
                                     id = datum[selectionId];
-                                }
-                                else if (selectionId === 'value') {
+                                } else if (selectionId === 'value') {
                                     id = datum;
                                 }
                             }
@@ -145,13 +153,15 @@ define([
                             values.push({
                                 id: id,
                                 desc: descriptionTemplate(datum),
-                                objectRef: [result.info[6], result.info[0], result.info[4]].join('/'),
-                                objectName: result.info[1]
+                                objectRef: [result.info[6], result.info[0], result.info[4]].join(
+                                    '/'
+                                ),
+                                objectName: result.info[1],
                             });
                         });
-                    } else  {
+                    } else {
                         console.error(`subdata must be should be either an array or object
-                                       but was ${typeof subdata}`)
+                                       but was ${typeof subdata}`);
                     }
                 });
                 return values.map((item) => {
@@ -167,87 +177,95 @@ define([
             // Look for the "<WSREF>" key in the path_to_subdata and if present, follow the path
             // preceding that key to extract and load a reference to another object then follow
             // the path after the key to extract the subdata
-            const followRefKey = "<WSREF>";
+            const followRefKey = '<WSREF>';
             const ref_index = subdataSelection.path_to_subdata.indexOf(followRefKey);
             if (ref_index > -1) {
                 const ref_loc = subdataSelection.path_to_subdata.slice(0, ref_index);
                 subdata_path = subdataSelection.path_to_subdata.slice(ref_index + 1);
-                return dataCall
-                    .then((results) => {
-                        const reference = Props.getDataItem(results[0].data, [ref_loc]);
-                        return workspaceCall({
-                                ref: reference,
-                                included: subdataSelection.subdata_included
-                        })
-                            .then(parseData)
-                            .then(sortData);
-
+                return dataCall.then((results) => {
+                    const reference = Props.getDataItem(results[0].data, [ref_loc]);
+                    return workspaceCall({
+                        ref: reference,
+                        included: subdataSelection.subdata_included,
                     })
+                        .then(parseData)
+                        .then(sortData);
+                });
             } else {
-                subdata_path =subdataSelection.path_to_subdata;
-                return dataCall
-                    .then(parseData)
-                    .then(sortData);
+                subdata_path = subdataSelection.path_to_subdata;
+                return dataCall.then(parseData).then(sortData);
             }
         }
 
         function getSubdataInfo(appSpec, paramSpec) {
             switch (appSpec.widgets.input) {
-            case 'kbaseSamplePropertyHistogramInput':
-                switch (paramSpec.id) {
-                case 'input_samples':
-                    return SamplePropertyHistogram.make().getMethod();
+                case 'kbaseSamplePropertyHistogramInput':
+                    switch (paramSpec.id) {
+                        case 'input_samples':
+                            return SamplePropertyHistogram.make().getMethod();
+                        default:
+                            throw new Error(
+                                'Unknown custom parameter id for ' + appSpec.widgets.input
+                            );
+                    }
+                case 'kbaseSampleProperty2DPlotInput':
+                    switch (paramSpec.id) {
+                        case 'input_property_x':
+                        case 'input_property_y':
+                            return SampleProperty.make().getMethod();
+                        default:
+                            throw new Error(
+                                'Unknown custom parameter id for ' + appSpec.widgets.input
+                            );
+                    }
+                case 'kbaseGrowthParamsPlotInput':
+                    switch (paramSpec.id) {
+                        case 'input_condition_param':
+                            return GrowthCondition.make().getMethod();
+                        default:
+                            throw new Error(
+                                'Unknown custom parameter id for ' + appSpec.widgets.input
+                            );
+                    }
+                case 'kbaseGrowthCurvesInput':
+                    return GrowthCurves.make().getMethod();
                 default:
-                    throw new Error('Unknown custom parameter id for ' + appSpec.widgets.input);
-                }
-            case 'kbaseSampleProperty2DPlotInput':
-                switch (paramSpec.id) {
-                case 'input_property_x':
-                case 'input_property_y':
-                    return SampleProperty.make().getMethod();
-                default:
-                    throw new Error('Unknown custom parameter id for ' + appSpec.widgets.input);
-                }
-            case 'kbaseGrowthParamsPlotInput':
-                switch (paramSpec.id) {
-                case 'input_condition_param':
-                    return GrowthCondition.make().getMethod();
-                default:
-                    throw new Error('Unknown custom parameter id for ' + appSpec.widgets.input);
-                }
-            case 'kbaseGrowthCurvesInput':
-                return GrowthCurves.make().getMethod();
-            default:
-                throw new Error('Sorry, input widget ' + appSpec.widgets.input + ' is not recognized');
+                    throw new Error(
+                        'Sorry, input widget ' + appSpec.widgets.input + ' is not recognized'
+                    );
             }
         }
 
         function customFetchDataNormal(arg) {
             const workspace = new Workspace(runtime.config('services.workspace.url'), {
-                    token: runtime.authToken()
+                    token: runtime.authToken(),
                 }),
-                query = [{
-                    ref: arg.referenceObjectRef,
-                    included: arg.included
-                }];
-            return workspace.get_object_subset(query)
-                .then((result) => {
-                    return arg.extractItems(result, arg.params);
-                });
+                query = [
+                    {
+                        ref: arg.referenceObjectRef,
+                        included: arg.included,
+                    },
+                ];
+            return workspace.get_object_subset(query).then((result) => {
+                return arg.extractItems(result, arg.params);
+            });
         }
 
         function customFetchFromReference(arg) {
             const referenceObjectRef = arg.referenceObjectRef,
                 workspace = new Workspace(runtime.config('services.workspace.url'), {
-                    token: runtime.authToken()
+                    token: runtime.authToken(),
                 });
-            return workspace.get_objects([{ ref: referenceObjectRef }])
+            return workspace
+                .get_objects([{ ref: referenceObjectRef }])
                 .then((data) => {
                     const nextRef = arg.getRef(data),
-                        query = [{
-                            ref: nextRef,
-                            included: arg.included
-                        }];
+                        query = [
+                            {
+                                ref: nextRef,
+                                included: arg.included,
+                            },
+                        ];
                     return workspace.get_object_subset(query);
                 })
                 .then((result) => {
@@ -266,13 +284,13 @@ define([
             fetchData: standardFetchData,
             standardFetchData: standardFetchData,
             customFetchData: customFetchData,
-            getSubdataInfo: getSubdataInfo
+            getSubdataInfo: getSubdataInfo,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

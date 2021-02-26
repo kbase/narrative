@@ -6,14 +6,8 @@ define([
     'common/runtime',
     'common/props',
     'bootstrap',
-    'css!font-awesome'
-], (
-    Promise,
-    html,
-    Workspace,
-    serviceUtils,
-    Runtime,
-    Props) => {
+    'css!font-awesome',
+], (Promise, html, Workspace, serviceUtils, Runtime, Props) => {
     'use strict';
 
     // Constants
@@ -38,12 +32,12 @@ define([
                 case 'name':
                     return {
                         wsid: workspaceId,
-                        name: model.getItem('value')
+                        name: model.getItem('value'),
                     };
                     break;
                 case 'ref':
                     return {
-                        ref: model.getItem('value')
+                        ref: model.getItem('value'),
                     };
                     break;
                 default:
@@ -53,14 +47,14 @@ define([
 
         function getObject(value) {
             const workspace = new Workspace(runtime.config('services.workspace.url'), {
-                token: runtime.authToken()
+                token: runtime.authToken(),
             });
-            return workspace.get_object_info_new({
-                objects: [getObjectRef()],
-                includeMetadata: 1,
-                ignoreErrors: 1
-
-            })
+            return workspace
+                .get_object_info_new({
+                    objects: [getObjectRef()],
+                    includeMetadata: 1,
+                    ignoreErrors: 1,
+                })
                 .then((data) => {
                     const objectInfo = data[0];
                     if (objectInfo) {
@@ -76,25 +70,41 @@ define([
             getObject()
                 .then((objectInfo) => {
                     // console.log('OBJECT INFO', objectInfo);
-                    container.innerHTML = div({
-                        style: {
-                            padding: '3px',
-                            border: '1px solid gray',
-                            backgroundColor: '#eeeeee'
-                        }
-                    }, [
-                        div({style: {fontWeight: 'bold'}}, objectInfo.name),
-                        div({style: {fontStyle: 'italic'}}, objectInfo.typeName + ' v' + objectInfo.typeMajorVersion + '.' + objectInfo.typeMinorVersion + ' (' + objectInfo.typeModule + ') '),
-                        div({style: {fontStyle: 'italic'}}, objectInfo.save_date)
-                    ]);
+                    container.innerHTML = div(
+                        {
+                            style: {
+                                padding: '3px',
+                                border: '1px solid gray',
+                                backgroundColor: '#eeeeee',
+                            },
+                        },
+                        [
+                            div({ style: { fontWeight: 'bold' } }, objectInfo.name),
+                            div(
+                                { style: { fontStyle: 'italic' } },
+                                objectInfo.typeName +
+                                    ' v' +
+                                    objectInfo.typeMajorVersion +
+                                    '.' +
+                                    objectInfo.typeMinorVersion +
+                                    ' (' +
+                                    objectInfo.typeModule +
+                                    ') '
+                            ),
+                            div({ style: { fontStyle: 'italic' } }, objectInfo.save_date),
+                        ]
+                    );
                 })
                 .catch((err) => {
-                    container.innerHTML = div({
-                        style: {
-                            border: '1px red solid',
-                            padding: '4px'
-                        }
-                    }, err.message);
+                    container.innerHTML = div(
+                        {
+                            style: {
+                                border: '1px red solid',
+                                padding: '4px',
+                            },
+                        },
+                        err.message
+                    );
                 });
         }
 
@@ -114,17 +124,17 @@ define([
         model = Props.make({
             onUpdate: function (props) {
                 render();
-            }
+            },
         });
 
         return {
-            start: start
+            start: start,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

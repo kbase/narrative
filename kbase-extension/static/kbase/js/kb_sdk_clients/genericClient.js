@@ -1,6 +1,4 @@
-define([
-    './jsonRpc-native'
-], (jsonRpc) => {
+define(['./jsonRpc-native'], (jsonRpc) => {
     'use strict';
 
     /*
@@ -29,29 +27,36 @@ define([
             return {
                 timeout: arg.timeout,
                 authorization: token,
-                rpcContext: arg.rpcContext
+                rpcContext: arg.rpcContext,
             };
         }
 
         this.lookupModule = function () {
             const func = 'get_service_status',
-                params = [{
+                params = [
+                    {
                         module_name: module,
-                        version: arg.version || 'dev'
-                    }];
+                        version: arg.version || 'dev',
+                    },
+                ];
             // NB: pass null for numRets (number of return values) so we get the
             // full return structure.
             return jsonRpc.request(arg.url, 'ServiceWizard', func, params, null, options());
         };
 
-        this.callFunc = function(funcName, params) {
+        this.callFunc = function (funcName, params) {
             // var params = Array.prototype.slice.call(arguments);
-            return this.lookupModule()
-                .spread((serviceStatus) => {
-                    return jsonRpc.request(serviceStatus.url, module, funcName, params, null, options());
-                });
+            return this.lookupModule().spread((serviceStatus) => {
+                return jsonRpc.request(
+                    serviceStatus.url,
+                    module,
+                    funcName,
+                    params,
+                    null,
+                    options()
+                );
+            });
         };
-
     }
     return GenericClient;
 });

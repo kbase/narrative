@@ -6,7 +6,7 @@ define([
     'common/runtime',
     'common/dom',
     'bootstrap',
-    'css!font-awesome'
+    'css!font-awesome',
 ], (Promise, html, Validation, Events, Runtime, Dom) => {
     'use strict';
 
@@ -21,7 +21,7 @@ define([
             container,
             bus = config.bus,
             model = {
-                value: undefined
+                value: undefined,
             },
             dom;
 
@@ -29,24 +29,22 @@ define([
 
         function setModelValue(value) {
             return Promise.try(() => {
-                    if (model.value !== value) {
-                        model.value = value;
-                        return true;
-                    }
-                    return false;
-                })
-                .then((changed) => {
-                    render();
-                });
+                if (model.value !== value) {
+                    model.value = value;
+                    return true;
+                }
+                return false;
+            }).then((changed) => {
+                render();
+            });
         }
 
         function unsetModelValue() {
             return Promise.try(() => {
-                    model.value = undefined;
-                })
-                .then((changed) => {
-                    render();
-                });
+                model.value = undefined;
+            }).then((changed) => {
+                render();
+            });
         }
 
         function resetModelValue() {
@@ -68,7 +66,7 @@ define([
                 dataElement: 'input',
                 value: currentValue,
                 readonly: true,
-                disabled: true
+                disabled: true,
             });
         }
 
@@ -83,14 +81,15 @@ define([
         }
 
         function layout(events) {
-            const content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' })
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
@@ -109,16 +108,13 @@ define([
                     container.innerHTML = theLayout.content;
                     events.attachEvents(container);
 
-
                     bus.on('reset-to-defaults', (message) => {
                         resetModelValue();
                     });
                     bus.on('update', (message) => {
                         setModelValue(message.value);
                     });
-                    bus.on('refresh', () => {
-
-                    });
+                    bus.on('refresh', () => {});
 
                     bus.emit('sync');
                 });
@@ -126,13 +122,13 @@ define([
         }
 
         return {
-            start: start
+            start: start,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

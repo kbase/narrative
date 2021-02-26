@@ -1,10 +1,4 @@
-
-define([
-    'jquery',
-    'underscore',
-    'narrativeConfig',
-    'kb_service/client/narrativeMethodStore'
-], (
+define(['jquery', 'underscore', 'narrativeConfig', 'kb_service/client/narrativeMethodStore'], (
     $,
     _,
     Config,
@@ -59,49 +53,57 @@ define([
         let methodIds = [];
 
         const methodStoreClient = new NarrativeMethodStore(Config.url('narrative_method_store'));
-        return methodStoreClient.list_categories({
-            load_methods: 1,
-            load_apps: 0,
-            load_types: 1
-        }).then((data) => {
-            const methodInfo = data[1];
-            const allTypes = data[3];
+        return methodStoreClient
+            .list_categories({
+                load_methods: 1,
+                load_apps: 0,
+                load_types: 1,
+            })
+            .then((data) => {
+                const methodInfo = data[1];
+                const allTypes = data[3];
 
-            _.each(allTypes, (val, key) => {
-                // If there's an error, whine.
-                if (val.loading_error) {
-                    console.error('Error loading method [' + key + ']: ' + val.loading_error);
-                }
-                // If it has at least one method id, make sure it's there.
-                else if (val.view_method_ids && val.view_method_ids.length > 0) {
-                    const methodId = val.view_method_ids[0];
-                    if (!methodInfo[methodId]) {
-                        console.warn('Can\'t find method info for id: ' + methodId);
-                    } else if (methodInfo[methodId].loading_error) {
-                        console.warn('There is an error for method info with id [' + methodId + ']: ' + methodInfo[methodId].loading_error);
-                    } else {
-                        viewers[key] = methodId;
-                        landingPageUrls[key] = val.landing_page_url_prefix;
-                        typeNames[key] = val.name;
-                        methodIds.push(methodId);
+                _.each(allTypes, (val, key) => {
+                    // If there's an error, whine.
+                    if (val.loading_error) {
+                        console.error('Error loading method [' + key + ']: ' + val.loading_error);
                     }
-                }
-            });
+                    // If it has at least one method id, make sure it's there.
+                    else if (val.view_method_ids && val.view_method_ids.length > 0) {
+                        const methodId = val.view_method_ids[0];
+                        if (!methodInfo[methodId]) {
+                            console.warn("Can't find method info for id: " + methodId);
+                        } else if (methodInfo[methodId].loading_error) {
+                            console.warn(
+                                'There is an error for method info with id [' +
+                                    methodId +
+                                    ']: ' +
+                                    methodInfo[methodId].loading_error
+                            );
+                        } else {
+                            viewers[key] = methodId;
+                            landingPageUrls[key] = val.landing_page_url_prefix;
+                            typeNames[key] = val.name;
+                            methodIds.push(methodId);
+                        }
+                    }
+                });
 
-            methodIds = _.uniq(methodIds);
-            return methodStoreClient.get_method_spec({ ids: methodIds });
-        }).then((specs) => {
-            _.each(specs, (val) => {
-                specs[val.info.id] = val;
+                methodIds = _.uniq(methodIds);
+                return methodStoreClient.get_method_spec({ ids: methodIds });
+            })
+            .then((specs) => {
+                _.each(specs, (val) => {
+                    specs[val.info.id] = val;
+                });
+                return {
+                    viewers: viewers,
+                    landingPageUrls: landingPageUrls,
+                    typeNames: typeNames,
+                    specs: specs,
+                    methodIds: methodIds,
+                };
             });
-            return {
-                viewers: viewers,
-                landingPageUrls: landingPageUrls,
-                typeNames: typeNames,
-                specs: specs,
-                methodIds: methodIds
-            };
-        });
     }
 
     /**
@@ -116,7 +118,7 @@ define([
      *
      */
     function createViewer(dataCell) {
-        const getParamValue = function(o, mapping) {
+        const getParamValue = function (o, mapping) {
             let param = null;
 
             if (mapping.input_parameter) {
@@ -137,7 +139,7 @@ define([
             return param;
         };
 
-        const transformParam = function(o, mapping, param) {
+        const transformParam = function (o, mapping, param) {
             if (mapping.target_type_transform) {
                 switch (mapping.target_type_transform) {
                     case 'list':
@@ -154,7 +156,6 @@ define([
         };
 
         return getViewerInfo().then((viewerInfo) => {
-
             const o = dataCell.obj_info;
             const methodId = viewerInfo.viewers[o.bare_type];
             if (!methodId) {
@@ -162,7 +163,7 @@ define([
                 return { widget: defaultViewer(dataCell), title: 'Unknown Data Type' };
             }
             const spec = viewerInfo.specs[methodId];
-            const output = { '_obj_info': o };
+            const output = { _obj_info: o };
             _.each(spec.behavior.output_mapping, (mapping) => {
                 // Get parameter value
                 let param = getParamValue(o, mapping);
@@ -173,7 +174,14 @@ define([
                 // Get transformed parameter value
                 param = transformParam(o, mapping, param);
                 if (param === null) {
-                    console.error('Method (' + methodId + ') spec: bad transformation type (obj_info, mapping, param) = ', o, mapping, param);
+                    console.error(
+                        'Method (' +
+                            methodId +
+                            ') spec: bad transformation type (obj_info, mapping, param) = ',
+                        o,
+                        mapping,
+                        param
+                    );
                     return null;
                 }
                 // Get target property
@@ -195,22 +203,24 @@ define([
 
             try {
                 w = $elem[outputWidget](output);
-            }
-            // If that fails, try to load with require.
-            // If THAT fails, fail with an error (though the error should be improved)
-            catch (err) {
+            } catch (err) {
+                // If that fails, try to load with require.
+                // If THAT fails, fail with an error (though the error should be improved)
                 require([outputWidget], (W) => {
                     w = new W($elem, output);
                     return w;
                 }, (reqErr) => {
-                    console.error('errors occurred while making widget: ' + outputWidget, { 'firstTry': err, 'requireErr': reqErr });
+                    console.error('errors occurred while making widget: ' + outputWidget, {
+                        firstTry: err,
+                        requireErr: reqErr,
+                    });
                     $elem = defaultViewer(dataCell);
                     output.widgetTitle = 'Unknown Data Type';
                 });
             }
             return {
                 widget: $elem,
-                title: output.widgetTitle
+                title: output.widgetTitle,
             };
         });
     }
@@ -238,6 +248,6 @@ define([
     return {
         getViewerInfo: getViewerInfo,
         createViewer: createViewer,
-        defaultViewer: defaultViewer
+        defaultViewer: defaultViewer,
     };
 });

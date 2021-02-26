@@ -51,47 +51,37 @@
 
 */
 
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery'
-	], (
-		KBWidget,
-		bootstrap,
-		$
-	) => {
+define(['kbwidget', 'bootstrap', 'jquery'], (KBWidget, bootstrap, $) => {
     return KBWidget({
+        name: 'kbasePrompt',
 
-        name: "kbasePrompt",
-
-        version: "1.0.0",
+        version: '1.0.0',
         options: {
-            controls : ['closeButton'],  // Fixme: why would we want both cancel and ok?  Need 'primary' close button
-            modalClass : 'fade',
+            controls: ['closeButton'], // Fixme: why would we want both cancel and ok?  Need 'primary' close button
+            modalClass: 'fade',
         },
 
-        init: function(options) {
+        init: function (options) {
             this._super(options);
             return this;
         },
 
-        openPrompt : function() {
-            this.dialogModal().modal({'keyboard' : true});
+        openPrompt: function () {
+            this.dialogModal().modal({ keyboard: true });
 
-            //fixme: hack for jim to fix?  
-            // This results in destroying the modal on close, intead of hiding.  
+            //fixme: hack for jim to fix?
+            // This results in destroying the modal on close, intead of hiding.
             // Critical for modals that are dynamically populated
-            // EAP - but this breaks the bootstrap modal "auto management" of 
+            // EAP - but this breaks the bootstrap modal "auto management" of
             // modals that are not already inserted into the dom. E.g. the
-            // documented method for modal usage is to point the modal to 
+            // documented method for modal usage is to point the modal to
             // an existing dom node. If the dom node is not in the dom tree,
-            // I guess bootstrap's modal() will insert it by itself into the 
+            // I guess bootstrap's modal() will insert it by itself into the
             // bottom of the body (you can see this happen in the inspector).
             // But it doesn't expect it to be removed later, and will fail
             // after some # of usages (that may depend on how many auto-generated
             // modals have been placed at the bottom of the page.
-            // 
+            //
             //$('.modal').on('hidden.bs.modal', function () {
             //    $(this).data('bs.modal', null);
             //    $(this).remove();
@@ -100,106 +90,101 @@ define (
             //fixme: I didn't bother figuring this one out?
             $('.focusedInput').focus();
         },
-        closePrompt : function() {
+        closePrompt: function () {
             this.dialogModal().modal('hide');
         },
 
-        cancelButton : function() {
+        cancelButton: function () {
             return {
                 name: 'Cancel',
-                callback : function (e, $prompt) {
+                callback: function (e, $prompt) {
                     $prompt.closePrompt();
-                }
-            }
+                },
+            };
         },
 
-        okayButton : function() {
+        okayButton: function () {
             return {
                 name: 'Okay',
-                type : 'primary',
-                callback : function (e, $prompt) {
+                type: 'primary',
+                callback: function (e, $prompt) {
                     $prompt.closePrompt();
-                }
-            }
+                },
+            };
         },
-        closeButton : function() {
+        closeButton: function () {
             return {
                 name: 'Close',
-                type : 'primary',
-                callback : function (e, $prompt) {
+                type: 'primary',
+                callback: function (e, $prompt) {
                     $prompt.closePrompt();
-                }
-            }
+                },
+            };
         },
 
-        dialogModal : function () {
+        dialogModal: function () {
             if (this.data('dialogModal') != undefined) {
                 return this.data('dialogModal');
             }
 
-            const $dialogModal =
-                $('<div></div>')
-                    .attr('class', 'modal ' + this.options.modalClass)
-                    .attr('tabindex', '-1')
-                    .append(
-                        $.jqElem('div')
-                            .addClass('modal-dialog')
-                            .append(
-                                $.jqElem('div')
-                                    .addClass('modal-content')
-                                    .append(
-                                        $('<div></div>')
-                                            .attr('class', 'modal-header')
-                                            .append(
-                                                $('<button></button>')
-                                                    .attr('type', 'button')
-                                                    .attr('class', 'close')
-                                                    .attr('data-dismiss', 'modal')
-                                                    .attr('aria-hidden', 'true')
-                                                    .append('x\n')
-                                            )
-                                            .append(
-                                                $('<h3></h3>')
-                                                    .addClass('modal-title')
-                                                    .attr('id', 'title')
-                                            )
-                                    )
-                                    .append(
-                                        $('<div></div>')
-                                            .attr('class', 'modal-body')
-                                            .attr('id', 'body')
-                                    )
-                                    .append(
-                                        $('<div></div>')
-                                            .attr('class', 'modal-footer')
-                                            .append(
-                                                $('<div></div>')
-                                                    .addClass('row')
-                                                    .addClass('form-horizontal')
-                                                    .append(
-                                                        $('<div></div>')
+            const $dialogModal = $('<div></div>')
+                .attr('class', 'modal ' + this.options.modalClass)
+                .attr('tabindex', '-1')
+                .append(
+                    $.jqElem('div')
+                        .addClass('modal-dialog')
+                        .append(
+                            $.jqElem('div')
+                                .addClass('modal-content')
+                                .append(
+                                    $('<div></div>')
+                                        .attr('class', 'modal-header')
+                                        .append(
+                                            $('<button></button>')
+                                                .attr('type', 'button')
+                                                .attr('class', 'close')
+                                                .attr('data-dismiss', 'modal')
+                                                .attr('aria-hidden', 'true')
+                                                .append('x\n')
+                                        )
+                                        .append(
+                                            $('<h3></h3>')
+                                                .addClass('modal-title')
+                                                .attr('id', 'title')
+                                        )
+                                )
+                                .append(
+                                    $('<div></div>').attr('class', 'modal-body').attr('id', 'body')
+                                )
+                                .append(
+                                    $('<div></div>')
+                                        .attr('class', 'modal-footer')
+                                        .append(
+                                            $('<div></div>')
+                                                .addClass('row')
+                                                .addClass('form-horizontal')
+                                                .append(
+                                                    $('<div></div>')
                                                         .addClass('col-md-6')
                                                         .addClass('text-left')
                                                         .attr('id', 'footer')
-                                                    )
-                                                    .append(
-                                                        $('<div></div>')
-                                                            .addClass('col-md-6')
-                                                            .attr('id', 'controls')
-                                                            .css('white-space', 'nowrap')
-                                                    )
-                                            )
-                                    )
-                            )
-                    )
-            ;
-
+                                                )
+                                                .append(
+                                                    $('<div></div>')
+                                                        .addClass('col-md-6')
+                                                        .attr('id', 'controls')
+                                                        .css('white-space', 'nowrap')
+                                                )
+                                        )
+                                )
+                        )
+                );
             $dialogModal.unbind('keypress');
             $dialogModal.keypress((e) => {
                 if (e.keyCode == 13) {
                     e.stopPropagation();
                     e.preventDefault();
-                    $('a:last', $dialogModal).trigger("click");
+                    $('a:last', $dialogModal).trigger('click');
                 }
             });
 
@@ -219,41 +204,32 @@ define (
                 $dialogModal.data('footer').append(this.options.footer);
             }
 
-
             const $prompt = this;
 
-            $.each(
-                this.options.controls,
-                (idx, val) => {
-                    if (typeof val == 'string') {
-                        val = $prompt[val]();
-                    }
-                    let btnClass = 'btn btn-default';
-                    if (val.type) {
-                        btnClass = btnClass + ' btn-' + val.type;
-                    }
-
-                    const $button =
-                        $('<a></a>')
-                            //.attr('href', '#')
-                            .attr('class', btnClass)
-                            .append(val.name)
-                            .bind('click',
-                                function(e) {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    val.callback.call(this, e, $prompt);
-                                }
-                            )
-                    ;
-
-                    if (val.id) {
-                        $button.attr('id', val.id);
-                    }
-
-                    $dialogModal.data('controls').append($button);
+            $.each(this.options.controls, (idx, val) => {
+                if (typeof val == 'string') {
+                    val = $prompt[val]();
                 }
-            )
+                let btnClass = 'btn btn-default';
+                if (val.type) {
+                    btnClass = btnClass + ' btn-' + val.type;
+                }
+
+                const $button = $('<a></a>')
+                    //.attr('href', '#')
+                    .attr('class', btnClass)
+                    .append(val.name)
+                    .bind('click', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        val.callback.call(this, e, $prompt);
+                    });
+                if (val.id) {
+                    $button.attr('id', val.id);
+                }
+
+                $dialogModal.data('controls').append($button);
+            });
 
             this._rewireIds($dialogModal, $dialogModal);
 
@@ -262,38 +238,33 @@ define (
             let $firstField = undefined;
             let selection = false;
 
-            $dialogModal.on('shown.bs.modal',
-                $.proxy(
-                    () => {
-                        $.each(
-                            $dialogModal.find('input[type=text],input[type=password],textarea'),
-                            (idx, val) => {
-                                if ($firstField == undefined) {
-                                    $firstField = $(val);
-                                }
-
-                                if ($(val).is("input") && $(val).val() == undefined) {
-                                    $(val).focus();
-                                    selection = true;
-                                    return;
-                                }
-                                else if ($(val).is("textarea") && $(val).text().length == 0) {
-                                    $(val).focus();
-                                    selection = true;
-                                    return;
-                                }
+            $dialogModal.on(
+                'shown.bs.modal',
+                $.proxy(() => {
+                    $.each(
+                        $dialogModal.find('input[type=text],input[type=password],textarea'),
+                        (idx, val) => {
+                            if ($firstField == undefined) {
+                                $firstField = $(val);
                             }
-                        );
 
-                        if (! selection && $firstField != undefined) {
-                            $firstField.focus();
+                            if ($(val).is('input') && $(val).val() == undefined) {
+                                $(val).focus();
+                                selection = true;
+                                return;
+                            } else if ($(val).is('textarea') && $(val).text().length == 0) {
+                                $(val).focus();
+                                selection = true;
+                                return;
+                            }
                         }
-                    },
-                    this
-                )
+                    );
+
+                    if (!selection && $firstField != undefined) {
+                        $firstField.focus();
+                    }
+                }, this)
             );
-
-
 
             /*$dialogModal.find('input[type=text],input[type=password]').last().keypress(
                 $.proxy(
@@ -309,69 +280,73 @@ define (
             );*/
 
             return $dialogModal;
-
         },
 
-        addAlert : function(text, type) {
+        addAlert: function (text, type) {
             if (this.data('dialogModal').find('.alert')) {
                 this.rmAlert();
             }
 
-            const ele = $('<div class="alert'+(type ? ' alert-'+type : ' alert-danger')+'">'+text+'</div>');
+            const ele = $(
+                '<div class="alert' +
+                    (type ? ' alert-' + type : ' alert-danger') +
+                    '">' +
+                    text +
+                    '</div>'
+            );
 
             if (text) {
-                this.data('dialogModal').find('.modal-body').prepend(ele);                
-            }            
+                this.data('dialogModal').find('.modal-body').prepend(ele);
+            }
 
-           return this;
+            return this;
         },
 
-        rmAlert : function(text) {
+        rmAlert: function (text) {
             this.data('dialogModal').find('.alert').remove();
 
-           return this;
+            return this;
         },
 
-        addCover : function(text, type) {
+        addCover: function (text, type) {
             if (this.data('dialogModal').find('.modal-cover')) {
                 this.rmCover();
             }
 
-            const ele = $('<div class="modal-cover"> \
+            const ele = $(
+                '<div class="modal-cover"> \
                              <div class="modal-cover-table"> \
                                <div class="modal-cover-cell"> \
-                                 <span class="modal-cover-box">'+
-                                 '</span> \
+                                 <span class="modal-cover-box">' +
+                    '</span> \
                                </div> \
                              </div> \
-                           </div>');
-    
+                           </div>'
+            );
+
             if (type) {
-                ele.find('.modal-cover-box').addClass('alert-'+type);
+                ele.find('.modal-cover-box').addClass('alert-' + type);
             } else {
-                ele.find('.modal-cover-box').addClass('alert-success');                
+                ele.find('.modal-cover-box').addClass('alert-success');
             }
 
             ele.hide();
             if (text) ele.find('.modal-cover-box').html(text);
-            ele.show();            
+            ele.show();
 
             $('.modal-body').append(ele);
 
             return this;
         },
-        
-        getCover : function() {
+
+        getCover: function () {
             return this.data('dialogModal').find('.modal-cover-box');
         },
 
-
-        rmCover : function(text) {
+        rmCover: function (text) {
             this.data('dialogModal').find('.modal-cover').remove();
 
             return this;
-        },            
-
+        },
     });
-
 });

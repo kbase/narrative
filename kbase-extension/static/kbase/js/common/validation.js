@@ -1,12 +1,11 @@
-define([
-    'bluebird',
-    'kb_service/client/workspace',
-    'kb_service/utils'
-], (Promise, Workspace, serviceUtils) => {
+define(['bluebird', 'kb_service/client/workspace', 'kb_service/utils'], (
+    Promise,
+    Workspace,
+    serviceUtils
+) => {
     'use strict';
 
     function Validators() {
-
         /**
          * Converts a string to an integer.
          * If it's not a string (or an integer already), this throws an Error.
@@ -31,7 +30,7 @@ define([
                     }
                     throw new Error('Invalid integer format');
                 default:
-                    throw new Error('Type ' + (typeof value) + ' cannot be converted to integer');
+                    throw new Error('Type ' + typeof value + ' cannot be converted to integer');
             }
         }
 
@@ -75,9 +74,11 @@ define([
                     diagnosis = 'optional-empty';
                 }
             } else {
-                if (!options.values.some((setValue) => {
-                        return (setValue === value);
-                    })) {
+                if (
+                    !options.values.some((setValue) => {
+                        return setValue === value;
+                    })
+                ) {
                     diagnosis = 'invalid';
                     errorMessage = 'Value not in the set';
                 } else {
@@ -90,7 +91,7 @@ define([
                 errorMessage: errorMessage,
                 diagnosis: diagnosis,
                 value: value,
-                parsedValue: value
+                parsedValue: value,
             };
         }
 
@@ -105,8 +106,7 @@ define([
          * @returns {Object}
          */
         function validateWorkspaceDataPaletteRef(value, options) {
-            let parsedValue,
-                errorMessage, diagnosis;
+            let parsedValue, errorMessage, diagnosis;
 
             if (typeof value !== 'string') {
                 diagnosis = 'invalid';
@@ -136,7 +136,7 @@ define([
                 errorMessage: errorMessage,
                 diagnosis: diagnosis,
                 value: value,
-                parsedValue: parsedValue
+                parsedValue: parsedValue,
             };
         }
 
@@ -150,8 +150,7 @@ define([
          * - required - boolean
          */
         function validateWorkspaceObjectRef(value, options) {
-            let parsedValue,
-                errorMessage, diagnosis;
+            let parsedValue, errorMessage, diagnosis;
 
             if (typeof value !== 'string') {
                 diagnosis = 'invalid';
@@ -180,25 +179,25 @@ define([
                 errorMessage: errorMessage,
                 diagnosis: diagnosis,
                 value: value,
-                parsedValue: parsedValue
+                parsedValue: parsedValue,
             };
         }
 
         function getObjectInfo(workspaceId, objectName, authToken, serviceUrl) {
             const workspace = new Workspace(serviceUrl, {
-                token: authToken
+                token: authToken,
             });
 
-            return workspace.get_object_info_new({
+            return workspace
+                .get_object_info_new({
                     objects: [{ wsid: workspaceId, name: objectName }],
-                    ignoreErrors: 1
+                    ignoreErrors: 1,
                 })
                 .then((data) => {
                     console.error(data);
                     if (data[0]) {
                         return serviceUtils.objectInfoToObject(data[0]);
-                    }
-                    else {
+                    } else {
                         return null;
                     }
                 });
@@ -217,7 +216,10 @@ define([
          */
         function validateWorkspaceObjectName(value, options) {
             let parsedValue,
-                messageId, shortMessage, errorMessage, diagnosis = 'valid';
+                messageId,
+                shortMessage,
+                errorMessage,
+                diagnosis = 'valid';
 
             return Promise.try(() => {
                 const validateName = validateWorkspaceObjectNameString(value, options);
@@ -227,53 +229,57 @@ define([
                 diagnosis = validateName.diagnosis;
                 parsedValue = validateName.parsedValue;
                 if (options.shouldNotExist) {
-                    return getObjectInfo(options.workspaceId, parsedValue, options.authToken, options.workspaceServiceUrl)
-                        .then((objectInfo) => {
-                            if (objectInfo) {
-                                const type = objectInfo.typeModule + '.' + objectInfo.typeName,
-                                    matchingType = options.types.some((typeId) => {
-                                        if (typeId === type) {
-                                            return true;
-                                        }
-                                        return false;
-                                    });
-                                if (!matchingType) {
-                                    messageId = 'obj-overwrite-diff-type';
-                                    errorMessage = 'an object already exists with this name and is not of the same type';
-                                    diagnosis = 'invalid';
-                                } else {
-                                    messageId = 'obj-overwrite-warning';
-                                    shortMessage = 'an object already exists with this name';
-                                    diagnosis = 'suspect';
-                                }
+                    return getObjectInfo(
+                        options.workspaceId,
+                        parsedValue,
+                        options.authToken,
+                        options.workspaceServiceUrl
+                    ).then((objectInfo) => {
+                        if (objectInfo) {
+                            const type = objectInfo.typeModule + '.' + objectInfo.typeName,
+                                matchingType = options.types.some((typeId) => {
+                                    if (typeId === type) {
+                                        return true;
+                                    }
+                                    return false;
+                                });
+                            if (!matchingType) {
+                                messageId = 'obj-overwrite-diff-type';
+                                errorMessage =
+                                    'an object already exists with this name and is not of the same type';
+                                diagnosis = 'invalid';
+                            } else {
+                                messageId = 'obj-overwrite-warning';
+                                shortMessage = 'an object already exists with this name';
+                                diagnosis = 'suspect';
                             }
-                        });
+                        }
+                    });
                 }
-            })
-                .then(() => {
-                    return {
-                        isValid: errorMessage ? false : true,
-                        messageId: messageId,
-                        errorMessage: errorMessage,
-                        shortMessage: shortMessage,
-                        diagnosis: diagnosis,
-                        value: value,
-                        parsedValue: parsedValue
-                    };
-                });
+            }).then(() => {
+                return {
+                    isValid: errorMessage ? false : true,
+                    messageId: messageId,
+                    errorMessage: errorMessage,
+                    shortMessage: shortMessage,
+                    diagnosis: diagnosis,
+                    value: value,
+                    parsedValue: parsedValue,
+                };
+            });
         }
 
         function validateInteger(value, min, max) {
             if (max && max < value) {
                 return {
                     id: 'int-above-maximum',
-                    message: 'the maximum value for this parameter is ' + max
+                    message: 'the maximum value for this parameter is ' + max,
                 };
             }
             if (min && min > value) {
                 return {
                     id: 'int-below-minimum',
-                    message: 'the minimum value for this parameter is ' + min
+                    message: 'the minimum value for this parameter is ' + min,
                 };
             }
         }
@@ -281,7 +287,10 @@ define([
         function validateIntString(value, options) {
             let plainValue,
                 parsedValue,
-                errorObject, messageId, errorMessage, diagnosis = 'valid',
+                errorObject,
+                messageId,
+                errorMessage,
+                diagnosis = 'valid',
                 min = options.min_int,
                 max = options.max_int;
 
@@ -296,7 +305,7 @@ define([
             } else if (typeof value !== 'string') {
                 diagnosis = 'invalid';
                 messageId = 'incoming-value-not-string';
-                errorMessage = 'value must be a string (it is of type "' + (typeof value) + '")';
+                errorMessage = 'value must be a string (it is of type "' + typeof value + '")';
             } else {
                 plainValue = value.trim();
                 try {
@@ -325,7 +334,7 @@ define([
                 diagnosis: diagnosis,
                 value: value,
                 plainValue: plainValue,
-                parsedValue: parsedValue
+                parsedValue: parsedValue,
             };
         }
 
@@ -347,7 +356,8 @@ define([
         function validateFloatString(value, options) {
             let normalizedValue,
                 parsedValue,
-                errorMessage, diagnosis,
+                errorMessage,
+                diagnosis,
                 min = options.min_float,
                 max = options.max_float;
 
@@ -360,7 +370,7 @@ define([
                 }
             } else if (typeof value !== 'string') {
                 diagnosis = 'invalid';
-                errorMessage = 'value must be a string (it is of type "' + (typeof value) + '")';
+                errorMessage = 'value must be a string (it is of type "' + typeof value + '")';
             } else {
                 normalizedValue = value.trim();
                 parsedValue = parseFloat(normalizedValue);
@@ -378,13 +388,16 @@ define([
                 diagnosis: diagnosis,
                 value: value,
                 normalizedValue: normalizedValue,
-                parsedValue: parsedValue
+                parsedValue: parsedValue,
             };
         }
 
         function validateWorkspaceObjectNameString(value, options) {
             let parsedValue,
-                messageId, shortMessage, errorMessage, diagnosis = 'valid';
+                messageId,
+                shortMessage,
+                errorMessage,
+                diagnosis = 'valid';
 
             if (typeof value !== 'string') {
                 diagnosis = 'invalid';
@@ -410,7 +423,8 @@ define([
                 } else if (!/^[A-Za-z0-9|\.|\||_\-]+$/.test(parsedValue)) {
                     messageId = 'obj-name-invalid-characters';
                     diagnosis = 'invalid';
-                    errorMessage = 'one or more invalid characters detected; an object name may only include alphabetic characters, numbers, and the symbols "_",  "-",  ".",  and "|"';
+                    errorMessage =
+                        'one or more invalid characters detected; an object name may only include alphabetic characters, numbers, and the symbols "_",  "-",  ".",  and "|"';
                 } else if (parsedValue.length > 255) {
                     messageId = 'obj-name-too-long';
                     diagnosis = 'invalid';
@@ -424,7 +438,7 @@ define([
                 shortMessage: shortMessage,
                 diagnosis: diagnosis,
                 value: value,
-                parsedValue: parsedValue
+                parsedValue: parsedValue,
             };
         }
 
@@ -449,7 +463,8 @@ define([
          */
         function validateText(value, options) {
             let parsedValue,
-                errorMessage, diagnosis = 'valid',
+                errorMessage,
+                diagnosis = 'valid',
                 minLength = options.min_length,
                 maxLength = options.max_length,
                 regexp = options.regexp_constraint ? new RegExp(options.regexp_constraint) : false;
@@ -470,7 +485,7 @@ define([
                 }
             } else if (typeof value !== 'string') {
                 diagnosis = 'invalid';
-                errorMessage = 'value must be a string (it is of type "' + (typeof value) + '")';
+                errorMessage = 'value must be a string (it is of type "' + typeof value + '")';
             } else {
                 parsedValue = value.trim();
                 if (parsedValue.length < minLength) {
@@ -481,7 +496,9 @@ define([
                     errorMessage = 'the maximum length for this parameter is ' + maxLength;
                 } else if (regexp && !regexp.test(parsedValue)) {
                     diagnosis = 'invalid';
-                    errorMessage = 'The text value did not match the regular expression constraint ' + options.regexp_constraint;
+                    errorMessage =
+                        'The text value did not match the regular expression constraint ' +
+                        options.regexp_constraint;
                 } else {
                     diagnosis = 'valid';
                 }
@@ -492,7 +509,7 @@ define([
                 errorMessage: errorMessage,
                 diagnosis: diagnosis,
                 value: value,
-                parsedValue: parsedValue
+                parsedValue: parsedValue,
             };
         }
 
@@ -503,9 +520,7 @@ define([
          * @param {*} options
          */
         function validateTextSet(value, options) {
-            let errorMessage,
-                diagnosis,
-                parsedSet;
+            let errorMessage, diagnosis, parsedSet;
             // values are raw, no parsing.
             if (value === null) {
                 if (options.required) {
@@ -530,7 +545,7 @@ define([
                     }
                 } else if (options.values) {
                     const matchedSet = parsedSet.filter((setValue) => {
-                        return (options.values.indexOf(setValue) >= 0);
+                        return options.values.indexOf(setValue) >= 0;
                     });
                     if (matchedSet.length !== parsedSet.length) {
                         diagnosis = 'invalid';
@@ -549,7 +564,7 @@ define([
                 errorMessage: errorMessage,
                 diagnosis: diagnosis,
                 value: value,
-                parsedValue: parsedSet
+                parsedValue: parsedSet,
             };
         }
 
@@ -594,7 +609,7 @@ define([
                 }
             } else if (typeof value !== 'string') {
                 diagnosis = 'invalid';
-                errorMessage = 'value must be a string (it is of type "' + (typeof value) + '")';
+                errorMessage = 'value must be a string (it is of type "' + typeof value + '")';
             } else {
                 try {
                     parsedValue = stringToBoolean(value);
@@ -609,7 +624,7 @@ define([
                 errorMessage: errorMessage,
                 diagnosis: diagnosis,
                 value: value,
-                parsedValue: parsedValue
+                parsedValue: parsedValue,
             };
         }
 
@@ -619,7 +634,7 @@ define([
                 errorMessage: null,
                 diagnosis: 'valid',
                 value: value,
-                parsedValue: value
+                parsedValue: value,
             };
         }
 
@@ -638,7 +653,7 @@ define([
             validateStringSet: validateTextSet,
             validateTextSet: validateTextSet,
             validateBoolean: validateBoolean,
-            validateTrue: validateTrue
+            validateTrue: validateTrue,
         };
     }
 

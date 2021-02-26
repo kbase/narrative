@@ -8,7 +8,7 @@ define([
     'common/lang',
     'common/sdk',
     'common/specValidation',
-    'widgets/appWidgets2/validators/resolver'
+    'widgets/appWidgets2/validators/resolver',
 ], (require, Promise, lang, sdk, Validation, validationResolver) => {
     'use strict';
 
@@ -35,7 +35,9 @@ define([
         function makeEmptyModel() {
             const model = {};
             spec.parameters.layout.forEach((id) => {
-                model[id] = spec.parameters.specs[id].data.defaultValue || spec.parameters.specs[id].data.nullValue;
+                model[id] =
+                    spec.parameters.specs[id].data.defaultValue ||
+                    spec.parameters.specs[id].data.nullValue;
             });
             return model;
         }
@@ -73,8 +75,8 @@ define([
             int: 'int',
             float: 'float',
             sequence: 'sequence',
-            struct: 'struct'
-        }
+            struct: 'struct',
+        };
 
         function getValidatorModule(fieldSpec) {
             const moduleName = typeToValidatorModule[fieldSpec.data.type];
@@ -100,13 +102,13 @@ define([
             getSpec: getSpec,
             makeEmptyModel: makeEmptyModel,
             makeDefaultedModel: makeDefaultedModel,
-            validateModel: validateModel
+            validateModel: validateModel,
         });
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

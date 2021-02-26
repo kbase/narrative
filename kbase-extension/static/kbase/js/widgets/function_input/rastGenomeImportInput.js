@@ -2,24 +2,17 @@
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'narrativeConfig',
-		'kbaseNarrativeInput'
-	], (
-		KBWidget,
-		bootstrap,
-		$,
-		Config,
-		kbaseNarrativeInput
-	) => {
+define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'kbaseNarrativeInput'], (
+    KBWidget,
+    bootstrap,
+    $,
+    Config,
+    kbaseNarrativeInput
+) => {
     return KBWidget({
-        name: "rastGenomeImportInput",
-        parent : kbaseNarrativeInput,
-        version: "1.0.0",
+        name: 'rastGenomeImportInput',
+        parent: kbaseNarrativeInput,
+        version: '1.0.0',
         options: {
             loadingImage: Config.get('loading_gif'),
         },
@@ -38,7 +31,7 @@ define (
          * @returns {String} an HTML string describing the available parameters for the cell.
          * @private
          */
-        init: function(options) {
+        init: function (options) {
             this._super(options);
 
             this.$genomeIdTable = this.makeGenomeIdTable();
@@ -46,79 +39,80 @@ define (
 
             this.$rastCreds = this.makeRastCredsBlock();
 
-            const $inputDiv = $('<div>').addClass('kb-cell-params')
-                                     .append('<p><b>RAST Genome Ids:</b></p>')
-                                     .append(this.$genomeIdTable)
-                                     .append(this.$rastCreds);
-
+            const $inputDiv = $('<div>')
+                .addClass('kb-cell-params')
+                .append('<p><b>RAST Genome Ids:</b></p>')
+                .append(this.$genomeIdTable)
+                .append(this.$rastCreds);
 
             this.$elem.append($inputDiv);
 
             return this;
         },
 
-        makeGenomeIdTable: function() {
+        makeGenomeIdTable: function () {
             const $table = $('<form class="form-horizontal">');
             return $table;
         },
 
-        addGenomeIdRow: function(id) {
+        addGenomeIdRow: function (id) {
             const $newRowBtn = this.makeAddIdButton(id ? true : false);
             const $row = $('<div class="form-group" style="margin-bottom:5px">')
-                       .append($('<div class="col-sm-10">')
-                               .append($('<input>')
-                                       .addClass('form-control')
-                                       .attr('placeholder', 'Genome Id')
-                                       .attr('value', (id ? id : ''))))
-                       .append($('<div class="col-sm-2">')
-                               .append($newRowBtn));
+                .append(
+                    $('<div class="col-sm-10">').append(
+                        $('<input>')
+                            .addClass('form-control')
+                            .attr('placeholder', 'Genome Id')
+                            .attr('value', id ? id : '')
+                    )
+                )
+                .append($('<div class="col-sm-2">').append($newRowBtn));
 
             this.$genomeIdTable.append($row);
             return $row;
         },
 
-        makeAddIdButton: function(trashOnly) {
+        makeAddIdButton: function (trashOnly) {
             const self = this;
 
-            const deleteRow = function(event) {
+            const deleteRow = function (event) {
                 event.preventDefault();
-                $(event.currentTarget).closest(".form-group").remove();
+                $(event.currentTarget).closest('.form-group').remove();
             };
 
-            const addRow = function(event) {
+            const addRow = function (event) {
                 event.preventDefault();
                 const $newRow = self.addGenomeIdRow();
 
-                $(event.currentTarget).find("span")
-                                      .addClass("glyphicon-trash")
-                                      .removeClass("glyphicon-plus");
+                $(event.currentTarget)
+                    .find('span')
+                    .addClass('glyphicon-trash')
+                    .removeClass('glyphicon-plus');
 
-                $(event.currentTarget).off("click")
-                                      .click(deleteRow);
+                $(event.currentTarget).off('click').click(deleteRow);
 
                 $newRow.find('input').focus();
             };
 
-            const $button = $("<button>")
-                          .addClass("btn")
-                          .append($("<span>")
-                                  .addClass("glyphicon")
-                                  .addClass(trashOnly ? "glyphicon-trash" : "glyphicon-plus"));
+            const $button = $('<button>')
+                .addClass('btn')
+                .append(
+                    $('<span>')
+                        .addClass('glyphicon')
+                        .addClass(trashOnly ? 'glyphicon-trash' : 'glyphicon-plus')
+                );
 
-            if (trashOnly)
-                $button.click(deleteRow);
-            else
-                $button.click(addRow);
+            if (trashOnly) $button.click(deleteRow);
+            else $button.click(addRow);
 
             return $button;
         },
 
-        refreshIdTable: function(ids) {
-            if (!(ids instanceof Array) || ids.length < 1)
-                return;
+        refreshIdTable: function (ids) {
+            if (!(ids instanceof Array) || ids.length < 1) return;
 
             this.$genomeIdTable.empty();
-            for (let i=0; i<ids.length; i++) {
+            for (let i = 0; i < ids.length; i++) {
                 this.addGenomeIdRow(ids[i]);
             }
             this.addGenomeIdRow();
@@ -129,26 +123,36 @@ define (
          * @return {} a jQuery node with user id and password input fields.
          * @private
          */
-        makeRastCredsBlock: function() {
+        makeRastCredsBlock: function () {
             return $('<div>')
-                   .append($('<div>').append('Rast Login:'))
-                   .append($('<div>')
-                           .append($('<form class="form-inline" role="form" autocomplete="off">')
-                                .append($('<div class="form-group">')
-                                   .append($('<input>')
-                                           .attr('id', 'rast-id')
-                                           .attr('placeholder', 'RAST username')
-                                           .attr('autocomplete', 'off')
-                                           .addClass('form-control')
-                                           .attr('type', 'text')
-                                           ).css({'padding-right' : '10px'}))
-                                .append($('<div class="form-group">')
-                                   .append($('<input>')
-                                           .attr('id', 'rast-pw')
-                                           .attr('placeholder', 'RAST password')
-                                           .attr('type', 'password')
-                                           .attr('autocomplete', 'off')
-                                           .addClass('form-control')))));
+                .append($('<div>').append('Rast Login:'))
+                .append(
+                    $('<div>').append(
+                        $('<form class="form-inline" role="form" autocomplete="off">')
+                            .append(
+                                $('<div class="form-group">')
+                                    .append(
+                                        $('<input>')
+                                            .attr('id', 'rast-id')
+                                            .attr('placeholder', 'RAST username')
+                                            .attr('autocomplete', 'off')
+                                            .addClass('form-control')
+                                            .attr('type', 'text')
+                                    )
+                                    .css({ 'padding-right': '10px' })
+                            )
+                            .append(
+                                $('<div class="form-group">').append(
+                                    $('<input>')
+                                        .attr('id', 'rast-pw')
+                                        .attr('placeholder', 'RAST password')
+                                        .attr('type', 'password')
+                                        .attr('autocomplete', 'off')
+                                        .addClass('form-control')
+                                )
+                            )
+                    )
+                );
         },
 
         /**
@@ -157,14 +161,13 @@ define (
          * @return {Array} an array of strings - one for each parameter
          * @public
          */
-        getParameters: function() {
+        getParameters: function () {
             // First, the genome ids.
             const idList = [];
 
             this.$genomeIdTable.find('input').each((idx, elem) => {
                 const id = $(elem).val().trim();
-                if (id)
-                    idList.push(id);
+                if (id) idList.push(id);
             });
 
             const genomeIds = idList.join(',');
@@ -183,11 +186,10 @@ define (
          * }
          * with one key/value for each parameter in the defined method.
          */
-        getState: function() {
+        getState: function () {
             const paramsList = this.getParameters();
 
-            return { idList : paramsList[0],
-                     user : paramsList[1] };
+            return { idList: paramsList[0], user: paramsList[1] };
         },
 
         /**
@@ -195,9 +197,8 @@ define (
          * Doesn't really do a whole lot of type checking yet, but it's assumed that
          * a state will be loaded from an object generated by getState.
          */
-        loadState: function(state) {
-            if (!state)
-                return;
+        loadState: function (state) {
+            if (!state) return;
 
             if (state.hasOwnProperty('idList')) {
                 const ids = state['idList'].split(',');
@@ -209,8 +210,6 @@ define (
             }
         },
 
-        refresh: function() { },
-
+        refresh: function () {},
     });
-
 });

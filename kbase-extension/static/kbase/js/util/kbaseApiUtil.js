@@ -7,16 +7,9 @@ define([
     'kbase-client-api',
     'kbase-generic-client-api',
     'narrativeConfig',
-    'base/js/namespace'
-], (
-    Promise,
-    KBaseClient,
-    GenericClient,
-    Config,
-    Jupyter
-) => {
-
-    function getAppSpec (id, tag) {
+    'base/js/namespace',
+], (Promise, KBaseClient, GenericClient, Config, Jupyter) => {
+    function getAppSpec(id, tag) {
         return getAppSpecs([id], tag).then((result) => {
             return Promise.try(() => {
                 return result[0];
@@ -24,10 +17,10 @@ define([
         });
     }
 
-    function getAppVersionTag () {
+    function getAppVersionTag() {
         let tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag;
         if (!tag) {
-            tag = "release";
+            tag = 'release';
         }
         return tag;
     }
@@ -36,12 +29,12 @@ define([
      * Expects idList to be a list of app ids
      * If tag is not present, it uses the currently configured tag
      */
-    function getAppSpecs (idList, tag) {
+    function getAppSpecs(idList, tag) {
         if (!tag) {
             tag = getAppVersionTag();
         }
         const nms = new NarrativeMethodStore(Config.url('narrative_method_store'));
-        return Promise.resolve(nms.get_method_spec({ids: idList, tag: tag}));
+        return Promise.resolve(nms.get_method_spec({ ids: idList, tag: tag }));
     }
 
     /**
@@ -49,7 +42,7 @@ define([
      * is of the form xx/yy or xx/yy/zz or xx/yy/zz;aa/bb/cc, or combinations.
      * Basically, if it's a reference or reference path, this returns true.
      */
-    function checkObjectRef (ref) {
+    function checkObjectRef(ref) {
         // return true if this.options.objRef = a reference or reference path
         // return false otherwise
         if (!ref) {
@@ -70,6 +63,6 @@ define([
         getAppSpec: getAppSpec,
         getAppSpecs: getAppSpecs,
         getAppVersionTag: getAppVersionTag,
-        checkObjectRef: checkObjectRef
+        checkObjectRef: checkObjectRef,
     };
 });

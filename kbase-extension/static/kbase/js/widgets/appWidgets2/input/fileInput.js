@@ -11,22 +11,9 @@ define([
     'kb_service/client/shock',
     '../validators/text',
 
-
     'bootstrap',
-    'css!font-awesome'
-], (
-    Promise,
-    $,
-    Jupyter,
-    html,
-    Events,
-    UI,
-    Runtime,
-    Props,
-    UJS,
-    Shock,
-    Validation
-) => {
+    'css!font-awesome',
+], (Promise, $, Jupyter, html, Events, UI, Runtime, Props, UJS, Shock, Validation) => {
     'use strict';
 
     // Constants
@@ -41,7 +28,7 @@ define([
         td = t('td'),
         serviceNameInUJS = 'ShockUploader',
         maxFileStatesInUJS = 100,
-        maxFileStateTime = 7 * 24 * 3600000 // in milliseconds;
+        maxFileStateTime = 7 * 24 * 3600000; // in milliseconds;
 
     function factory(config) {
         let spec = config.parameterSpec,
@@ -56,7 +43,7 @@ define([
             local = {
                 fileName: null,
                 percentText: null,
-                fakeButton: null
+                fakeButton: null,
             };
 
         // MODEL
@@ -90,7 +77,6 @@ define([
             ui.getElement('input-container.input').value = newValue;
         }
 
-
         // VALIDATION
 
         function importControlValue() {
@@ -106,10 +92,9 @@ define([
         }
 
         function autoValidate() {
-            return validate(model.getItem('value'))
-                .then((result) => {
-                    channel.emit('validation', result);
-                });
+            return validate(model.getItem('value')).then((result) => {
+                channel.emit('validation', result);
+            });
         }
 
         // function handleInputChange(e) {
@@ -138,7 +123,7 @@ define([
                 .then((value) => {
                     model.setItem('value', value);
                     channel.emit('changed', {
-                        newValue: value
+                        newValue: value,
                     });
                     return validate(value);
                 })
@@ -156,7 +141,7 @@ define([
                                 title: 'ERROR',
                                 type: 'danger',
                                 id: result.messageId,
-                                message: result.errorMessage
+                                message: result.errorMessage,
                             });
                             ui.setContent('input-container.message', message.content);
                             message.events.attachEvents();
@@ -168,16 +153,15 @@ define([
                     channel.emit('validation', {
                         isValid: false,
                         diagnosis: 'invalid',
-                        errorMessage: err.message
+                        errorMessage: err.message,
                     });
                 });
         }
 
-
         function handleChanged() {
             return {
                 type: 'change',
-                handler: doChange
+                handler: doChange,
             };
         }
 
@@ -191,9 +175,9 @@ define([
         }
 
         function updateProgressBar(partial, total) {
-            let percent = String(Math.floor(partial * 1000 / total) / 10);
+            let percent = String(Math.floor((partial * 1000) / total) / 10);
             if (percent.indexOf('.') < 0) {
-                percent += ".0";
+                percent += '.0';
             }
             ui.getElement('progress').value = percent + '%';
         }
@@ -202,10 +186,11 @@ define([
             return new Promise((resolve, reject) => {
                 let shockClient = new Shock({
                         url: runtime.config('services.shock.url'),
-                        token: runtime.authToken()
+                        token: runtime.authToken(),
                     }),
                     uploadStartTime = new Date().getTime(),
-                    fileState, shockNodeId;
+                    fileState,
+                    shockNodeId;
 
                 // Called upon completion of uploading one chunk of the file.
                 // Used both for progress and to detect the end of the upload
@@ -221,12 +206,13 @@ define([
 
                     // Detect upload completion
                     if (info.uploaded_size >= info.file_size) {
-                        shockClient.change_node_file_name(info.node_id, file.name)
+                        shockClient
+                            .change_node_file_name(info.node_id, file.name)
                             .then((info2) => {
                                 // RESOLUTION
                                 resolve({
                                     shockNodeId: shockNodeId,
-                                    fileState: fileState
+                                    fileState: fileState,
                                 });
                             })
                             .catch((error) => {
@@ -241,7 +227,7 @@ define([
                 }
 
                 function cancel() {
-                    return (state === 'cancel');
+                    return state === 'cancel';
                 }
                 state = 'uploading';
                 shockClient.upload_node(file, existingShockNodeId, false, progress, error, cancel);
@@ -254,15 +240,21 @@ define([
                 // Using the file size, time, name, and user id is a pretty
                 // good unique and idempotent id for this file.
                 ujsKey = [
-                    "File:", file.size, ":",
-                    file.lastModified, ":",
-                    file.name, ":", Jupyter.narrative.userId
+                    'File:',
+                    file.size,
+                    ':',
+                    file.lastModified,
+                    ':',
+                    file.name,
+                    ':',
+                    Jupyter.narrative.userId,
                 ].join(''),
                 ujsClient = new UJS(runtime.config('services.user_and_job_state.url'), {
-                    token: runtime.authToken()
+                    token: runtime.authToken(),
                 });
 
-            return ujsClient.get_has_state(serviceNameInUJS, ujsKey, 0)
+            return ujsClient
+                .get_has_state(serviceNameInUJS, ujsKey, 0)
                 .then((ujsState) => {
                     /*
                      * If the file, as identified by the ujsKey above, exists use
@@ -313,7 +305,7 @@ define([
             // function render() {
             const cellStyle = {
                     border: 'none',
-                    verticalAlign: 'middle'
+                    verticalAlign: 'middle',
                 },
                 // percentTextWidth = '50px',
                 layout = div([
@@ -321,112 +313,131 @@ define([
                         type: 'text',
                         style: { display: 'none' },
                         dataElement: 'input',
-                        id: events.addEvent(handleChanged)
+                        id: events.addEvent(handleChanged),
                     }),
-                    table({ style: { border: '0px', margin: '0px', width: '100%' }, cellpadding: '0', cellspacing: '0' }, [
-                        tr({ style: { border: 'none', verticalAlign: 'middle' } }, [
-                            td({ style: { width: '80%' } }, [
-                                input({
-                                    class: 'form-control',
-                                    type: 'file',
-                                    style: { width: '100%' },
-                                    dataElement: 'file-input',
-                                    id: events.addEvent({
-                                        type: 'change',
-                                        handler: handleFileInputChange
-                                    })
-                                })
-                            ]),
+                    table(
+                        {
+                            style: { border: '0px', margin: '0px', width: '100%' },
+                            cellpadding: '0',
+                            cellspacing: '0',
+                        },
+                        [
+                            tr({ style: { border: 'none', verticalAlign: 'middle' } }, [
+                                td({ style: { width: '80%' } }, [
+                                    input({
+                                        class: 'form-control',
+                                        type: 'file',
+                                        style: { width: '100%' },
+                                        dataElement: 'file-input',
+                                        id: events.addEvent({
+                                            type: 'change',
+                                            handler: handleFileInputChange,
+                                        }),
+                                    }),
+                                ]),
 
-                            //                            td({style: cellStyle}, [
-                            //                                button({
-                            //                                    dataElement: 'fake-button',
-                            //                                    type: 'button',
-                            //                                    class: 'btn kb-primary-btn',
-                            //                                    id: events.addEvent({
-                            //                                        type: 'click',
-                            //                                        handler: handleButtonChange
-                            //                                    })
-                            //                                }, 'Select File')
-                            //                            ]),
-                            //                            td({style: {width: '70%', padding: '0px', margin: '2px'}}, [
-                            //                                textarea({
-                            //                                    dataElement: 'input',
-                            //                                    type: 'text',
-                            //                                    readonly: true,
-                            //                                    style: {width: '100%'},
-                            //                                    rows: 3,
-                            //                                    id: events.addEvent({
-                            //                                        type: 'change',
-                            //                                        handler: handleInputChange
-                            //                                    })
-                            //                                })
-                            //                            ]),
-                            td({ style: { border: 'none', verticalAlign: 'middle', width: '20%' } }, [
-                                input({
-                                    dataElement: 'progress',
-                                    type: 'text',
-                                    readonly: true,
-                                    style: { width: '100%', padding: '0px', textAlign: 'center' }
-                                })
-                            ])
-                        ])
-                    ])
+                                //                            td({style: cellStyle}, [
+                                //                                button({
+                                //                                    dataElement: 'fake-button',
+                                //                                    type: 'button',
+                                //                                    class: 'btn kb-primary-btn',
+                                //                                    id: events.addEvent({
+                                //                                        type: 'click',
+                                //                                        handler: handleButtonChange
+                                //                                    })
+                                //                                }, 'Select File')
+                                //                            ]),
+                                //                            td({style: {width: '70%', padding: '0px', margin: '2px'}}, [
+                                //                                textarea({
+                                //                                    dataElement: 'input',
+                                //                                    type: 'text',
+                                //                                    readonly: true,
+                                //                                    style: {width: '100%'},
+                                //                                    rows: 3,
+                                //                                    id: events.addEvent({
+                                //                                        type: 'change',
+                                //                                        handler: handleInputChange
+                                //                                    })
+                                //                                })
+                                //                            ]),
+                                td(
+                                    {
+                                        style: {
+                                            border: 'none',
+                                            verticalAlign: 'middle',
+                                            width: '20%',
+                                        },
+                                    },
+                                    [
+                                        input({
+                                            dataElement: 'progress',
+                                            type: 'text',
+                                            readonly: true,
+                                            style: {
+                                                width: '100%',
+                                                padding: '0px',
+                                                textAlign: 'center',
+                                            },
+                                        }),
+                                    ]
+                                ),
+                            ]),
+                        ]
+                    ),
                 ]);
 
             return layout;
         }
-
 
         function makeInputControlx(currentValue, events, bus) {
             // CONTROL
 
             return input({
                 id: events.addEvents({
-                    events: [{
-                        type: 'change',
-                        handler: function (e) {
-                            if (editPauseTimer) {
-                                window.clearTimeout(editPauseTimer);
-                                editPauseTimer = null;
-                            }
-                            validate()
-                                .then((result) => {
+                    events: [
+                        {
+                            type: 'change',
+                            handler: function (e) {
+                                if (editPauseTimer) {
+                                    window.clearTimeout(editPauseTimer);
+                                    editPauseTimer = null;
+                                }
+                                validate().then((result) => {
                                     if (result.isValid) {
                                         bus.emit('changed', {
-                                            newValue: result.value
+                                            newValue: result.value,
                                         });
                                     } else if (result.diagnosis === 'required-missing') {
                                         bus.emit('changed', {
-                                            newValue: result.value
+                                            newValue: result.value,
                                         });
                                     }
                                     setModelValue(result.value);
                                     bus.emit('validation', {
                                         errorMessage: result.errorMessage,
-                                        diagnosis: result.diagnosis
+                                        diagnosis: result.diagnosis,
                                     });
                                 });
-                        }
-                    }]
+                            },
+                        },
+                    ],
                 }),
                 class: 'form-control',
                 dataElement: 'input',
-                value: currentValue
+                value: currentValue,
             });
         }
 
         function render() {
             Promise.try(() => {
-                    const events = Events.make(),
-                        inputControl = makeInputControl(model.value, events);
+                const events = Events.make(),
+                    inputControl = makeInputControl(model.value, events);
 
-                    ui.setContent('input-container', inputControl);
-                    events.attachEvents(container);
-                })
-                .then(() => {
-                    return autoValidate();
-                });
+                ui.setContent('input-container', inputControl);
+                events.attachEvents(container);
+            }).then(() => {
+                return autoValidate();
+            });
         }
 
         function updateInputControl() {
@@ -434,19 +445,17 @@ define([
         }
 
         function layout(events) {
-            const content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' })
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
-
-
-
 
         // LIFECYCLE API
 
@@ -467,7 +476,6 @@ define([
                 render();
                 autoValidate();
                 syncModelToControl();
-
 
                 channel.on('reset-to-defaults', (message) => {
                     resetModelValue();
@@ -490,23 +498,23 @@ define([
 
         model = Props.make({
             data: {
-                value: null
+                value: null,
             },
             onUpdate: function () {
                 //syncModelToControl();
                 //autoValidate();
-            }
+            },
         });
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

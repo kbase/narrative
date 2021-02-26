@@ -397,14 +397,18 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime'], (
                     .initCommChannel()
                     .then(() => {
                         comm.handleCommMessages(msg);
-                        return new Promise((resolve) => { setTimeout(() => resolve(), 500)});
+                        return new Promise((resolve) => {
+                            setTimeout(() => resolve(), 500);
+                        });
                     })
                     .then(() => {
                         expect(document.querySelector('.modal #kb-job-err-trace')).not.toBeNull();
                         // click the 'OK' button
                         document.querySelector('.modal a.btn.btn-default').click();
                         // expect it to be gone
-                        return new Promise((resolve) => { setTimeout(() => resolve(), 500)});
+                        return new Promise((resolve) => {
+                            setTimeout(() => resolve(), 500);
+                        });
                     })
                     .then(() => {
                         expect(document.querySelector('.modal #kb-job-err-trace')).toBeNull();

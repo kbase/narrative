@@ -8,15 +8,8 @@ define([
     '../inputUtils',
 
     'bootstrap',
-    'css!font-awesome'
-], (
-    Promise,
-    html,
-    Events,
-    UI,
-    Runtime,
-    Validation,
-    inputUtils) => {
+    'css!font-awesome',
+], (Promise, html, Events, UI, Runtime, Validation, inputUtils) => {
     'use strict';
 
     // Constants
@@ -35,7 +28,7 @@ define([
             container,
             model = {
                 availableValues: null,
-                value: null
+                value: null,
             };
 
         model.availableValues = spec.data.constraints.options;
@@ -74,10 +67,9 @@ define([
         }
 
         function autoValidate() {
-            return validate(model.value)
-                .then((result) => {
-                    channel.emit('validation', result);
-                });
+            return validate(model.value).then((result) => {
+                channel.emit('validation', result);
+            });
         }
 
         // DOM EVENTS
@@ -85,12 +77,12 @@ define([
         function handleChanged() {
             return {
                 type: 'change',
-                handler: function() {
+                handler: function () {
                     importControlValue()
                         .then((value) => {
                             model.value = value;
                             channel.emit('changed', {
-                                newValue: value
+                                newValue: value,
                             });
                             return validate(value);
                         })
@@ -108,7 +100,7 @@ define([
                                         title: 'ERROR',
                                         type: 'danger',
                                         id: result.messageId,
-                                        message: result.errorMessage
+                                        message: result.errorMessage,
                                     });
                                     ui.setContent('input-container.message', message.content);
                                     message.events.attachEvents();
@@ -120,10 +112,10 @@ define([
                             channel.emit('validation', {
                                 isValid: false,
                                 diagnosis: 'invalid',
-                                errorMessage: err.message
+                                errorMessage: err.message,
                             });
                         });
-                }
+                },
             };
         }
 
@@ -135,18 +127,24 @@ define([
                         selected = true;
                     }
 
-                    return option({
-                        value: item.value,
-                        selected: selected
-                    }, item.display);
+                    return option(
+                        {
+                            value: item.value,
+                            selected: selected,
+                        },
+                        item.display
+                    );
                 });
 
             // CONTROL
-            return select({
-                id: events.addEvents({ events: [handleChanged()] }),
-                class: 'form-control',
-                dataElement: 'input'
-            }, [option({ value: '' }, '')].concat(selectOptions));
+            return select(
+                {
+                    id: events.addEvents({ events: [handleChanged()] }),
+                    class: 'form-control',
+                    dataElement: 'input',
+                },
+                [option({ value: '' }, '')].concat(selectOptions)
+            );
         }
 
         function syncModelToControl() {
@@ -164,16 +162,15 @@ define([
         }
 
         function layout(events) {
-            const content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' },
-                    makeInputControl(events)
-                )
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' }, makeInputControl(events))]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
@@ -186,7 +183,6 @@ define([
         function resetModelValue() {
             setModelValue(spec.data.defaultValue);
         }
-
 
         // LIFECYCLE API
 
@@ -227,13 +223,13 @@ define([
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

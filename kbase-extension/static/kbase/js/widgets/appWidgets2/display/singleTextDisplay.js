@@ -1,15 +1,14 @@
-define([
-    'bluebird',
-    'kb_common/html',
-    'common/props',
-    'bootstrap',
-    'css!font-awesome'
-], (Promise, html, Props) => {
+define(['bluebird', 'kb_common/html', 'common/props', 'bootstrap', 'css!font-awesome'], (
+    Promise,
+    html,
+    Props
+) => {
     'use strict';
 
     // Constants
     const t = html.tag,
-        div = t('div'), span = t('span');
+        div = t('div'),
+        span = t('span');
 
     function factory(config) {
         let options = {},
@@ -30,17 +29,16 @@ define([
             let value = model.getItem('value'),
                 displayValue;
             if (value === null || value.length === 0) {
-                displayValue = span({style: {fontStyle: 'italic', color: 'orange'}}, 'NA');
+                displayValue = span({ style: { fontStyle: 'italic', color: 'orange' } }, 'NA');
             } else {
                 displayValue = span(value);
             }
-            container.innerHTML = div({class: 'form-control-static'}, displayValue);
+            container.innerHTML = div({ class: 'form-control-static' }, displayValue);
         }
 
         // LIFECYCLE API
 
-        function init() {
-        }
+        function init() {}
 
         function attach(node) {
             return Promise.try(() => {
@@ -59,29 +57,29 @@ define([
 
         function run(params) {
             return Promise.try(() => {
-//                model.value = params.value;
-//                var result = render();
-//                container.innerHTML = result.content;
+                //                model.value = params.value;
+                //                var result = render();
+                //                container.innerHTML = result.content;
             });
         }
 
         model = Props.make({
             onUpdate: function (props) {
                 render();
-            }
+            },
         });
 
         return {
             init: init,
             attach: attach,
             start: start,
-            run: run
+            run: run,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

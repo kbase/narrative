@@ -28,7 +28,7 @@ define([
     'kb_common/jsonRpc/dynamicServiceClient',
     'kbaseNarrative',
     'kbase-client-api',
-    'bootstrap'
+    'bootstrap',
 ], (
     KBWidget,
     $,
@@ -62,7 +62,7 @@ define([
             methodStoreURL: Config.url('narrative_method_store'),
             moduleLink: '/#catalog/modules/',
             methodHelpLink: '/#appcatalog/app/',
-            appHelpLink: '/#appcatalog/app/l.a/'
+            appHelpLink: '/#appcatalog/app/l.a/',
         },
         ignoreCategories: {},
         id2Elem: {},
@@ -82,56 +82,53 @@ define([
             this.narrativeService = new DynamicServiceClient({
                 module: 'NarrativeService',
                 url: Config.url('service_wizard'),
-                token: Runtime.make().authToken()
+                token: Runtime.make().authToken(),
             });
 
             this.getIgnoreCategories();
 
             this.$searchDiv = $('<div>').hide();
 
-
             // placeholder for apps and methods once they're loaded.
-            this.$methodList = $('<div>')
-                .css({
-                    'height': '300px',
-                    'overflow-y': 'auto',
-                    'overflow-x': 'hidden'
-                });
+            this.$methodList = $('<div>').css({
+                height: '300px',
+                'overflow-y': 'auto',
+                'overflow-x': 'hidden',
+            });
 
             // Make a function panel for everything to sit inside.
             this.$functionPanel = $('<div>')
                 .addClass('kb-function-body')
-                .append($('<div>')
-                    .append(this.$searchDiv))
+                .append($('<div>').append(this.$searchDiv))
                 .append(this.$methodList);
 
             this.bsSearch = new BootstrapSearch(this.$searchDiv, {
                 inputFunction: () => {
                     this.refreshPanel(this);
                 },
-                placeholder: 'Search apps'
+                placeholder: 'Search apps',
             });
 
             // The 'loading' panel should just have a spinning gif in it.
             this.$loadingPanel = $('<div>')
                 .addClass('kb-data-loading')
                 .append('<img src="' + this.options.loadingImage + '">')
-                .append($('<div>')
-                    .attr('id', 'message'))
+                .append($('<div>').attr('id', 'message'))
                 .hide();
 
             // The error panel should be empty for now.
-            this.$errorPanel = $('<div>')
-                .hide();
+            this.$errorPanel = $('<div>').hide();
 
             // The help element should be outside of the panel itself, so it can be manipulated separately.
             // It should hide itself when clicked.
             this.initMethodTooltip();
-            this.$bodyDiv.append($('<div>')
-                .addClass('kb-narr-panel-body')
-                .append(this.$functionPanel)
-                .append(this.$loadingPanel)
-                .append(this.$errorPanel));
+            this.$bodyDiv.append(
+                $('<div>')
+                    .addClass('kb-narr-panel-body')
+                    .append(this.$functionPanel)
+                    .append(this.$loadingPanel)
+                    .append(this.$errorPanel)
+            );
 
             $(document).on('filterMethods.Narrative', (e, filterString) => {
                 if (filterString) {
@@ -168,7 +165,8 @@ define([
              *
              * If a spec isn't found, then it won't appear in the return values.
              */
-            $(document).on('getFunctionSpecs.Narrative',
+            $(document).on(
+                'getFunctionSpecs.Narrative',
                 $.proxy(function (e, specSet, callback) {
                     if (callback) {
                         this.getFunctionSpecs(specSet, callback);
@@ -181,19 +179,30 @@ define([
             const $filterMenu = $('<ul>')
                 .addClass('dropdown-menu dropdown-menu-right')
                 .css({
-                    'margin-top': '20px'
+                    'margin-top': '20px',
                 })
                 .attr('aria-labeledby', 'kb-app-panel-filter')
-                .append($('<li>')
-                    .append('<a style="cursor:pointer" data-filter="category">Category</a>'))
-                .append($('<li>')
-                    .append('<a style="cursor:pointer" data-filter="input">Input Types</a>'))
-                .append($('<li>')
-                    .append('<a style="cursor:pointer" data-filter="output">Output Types</a>'))
-                .append($('<li>')
-                    .append('<a style="cursor:pointer" data-filter="a-z">Name A-Z</a>'))
-                .append($('<li>')
-                    .append('<a style="cursor:pointer" data-filter="z-a">Name Z-A</a>'));
+                .append(
+                    $('<li>').append(
+                        '<a style="cursor:pointer" data-filter="category">Category</a>'
+                    )
+                )
+                .append(
+                    $('<li>').append(
+                        '<a style="cursor:pointer" data-filter="input">Input Types</a>'
+                    )
+                )
+                .append(
+                    $('<li>').append(
+                        '<a style="cursor:pointer" data-filter="output">Output Types</a>'
+                    )
+                )
+                .append(
+                    $('<li>').append('<a style="cursor:pointer" data-filter="a-z">Name A-Z</a>')
+                )
+                .append(
+                    $('<li>').append('<a style="cursor:pointer" data-filter="z-a">Name Z-A</a>')
+                );
 
             $filterMenu.find('li a').click((ev) => {
                 this.currentPanelStyle = $(ev.target).data('filter');
@@ -201,67 +210,79 @@ define([
                 this.refreshPanel();
             });
 
-            this.addButton($('<span class="dropdown">')
-                .append($('<button>')
-                    .addClass('btn btn-xs btn-default dropdown-toggle')
-                    .attr({
-                        type: 'button',
-                        id: 'kb-app-panel-filter',
-                        'data-toggle': 'dropdown',
-                        'aria-haspopup': true,
-                        'aria-expanded': true
-                    })
-                    .append(this.$filterLabel)
-                    .append('<span class="fa fa-filter"></span>'))
-                .append($filterMenu));
+            this.addButton(
+                $('<span class="dropdown">')
+                    .append(
+                        $('<button>')
+                            .addClass('btn btn-xs btn-default dropdown-toggle')
+                            .attr({
+                                type: 'button',
+                                id: 'kb-app-panel-filter',
+                                'data-toggle': 'dropdown',
+                                'aria-haspopup': true,
+                                'aria-expanded': true,
+                            })
+                            .append(this.$filterLabel)
+                            .append('<span class="fa fa-filter"></span>')
+                    )
+                    .append($filterMenu)
+            );
 
             // Search button
-            this.addButton($('<button>')
-                .addClass('btn btn-xs btn-default')
-                .append('<span class="fa fa-search"></span>')
-                .tooltip({
-                    title: 'Search for Apps',
-                    container: 'body',
-                    delay: {
-                        show: Config.get('tooltip').showDelay,
-                        hide: Config.get('tooltip').hideDelay
-                    }
-                })
-                .click(() => {
-                    this.$searchDiv.toggle({ effect: 'blind', duration: 'fast' });
-                    let new_height = this.$methodList.height();
-                    if (this.app_offset) {
-                        new_height = (new_height - 40) + 'px';
-                    } else {
-                        new_height = (new_height + 40) + 'px';
-                    }
-                    this.$methodList.css('height', new_height);
-                    this.app_offset = !this.app_offset;
-                    this.bsSearch.focus();
-                }));
+            this.addButton(
+                $('<button>')
+                    .addClass('btn btn-xs btn-default')
+                    .append('<span class="fa fa-search"></span>')
+                    .tooltip({
+                        title: 'Search for Apps',
+                        container: 'body',
+                        delay: {
+                            show: Config.get('tooltip').showDelay,
+                            hide: Config.get('tooltip').hideDelay,
+                        },
+                    })
+                    .click(() => {
+                        this.$searchDiv.toggle({ effect: 'blind', duration: 'fast' });
+                        let new_height = this.$methodList.height();
+                        if (this.app_offset) {
+                            new_height = new_height - 40 + 'px';
+                        } else {
+                            new_height = new_height + 40 + 'px';
+                        }
+                        this.$methodList.css('height', new_height);
+                        this.app_offset = !this.app_offset;
+                        this.bsSearch.focus();
+                    })
+            );
 
             // Refresh button
-            this.addButton($('<button>')
-                .addClass('btn btn-xs btn-default')
-                .append('<span class="fa fa-refresh">')
-                .tooltip({
-                    title: 'Refresh app/method listings',
-                    container: 'body',
-                    delay: {
-                        show: Config.get('tooltip').showDelay,
-                        hide: Config.get('tooltip').hideDelay
-                    }
-                })
-                .click(() => {
-                    let versionTag = 'release';
-                    if (this.versionState === 'B') { versionTag = 'beta'; } else if (this.versionState === 'D') { versionTag = 'dev'; }
-                    this.refreshFromService(versionTag);
-                    this.refreshKernelSpecManager();
+            this.addButton(
+                $('<button>')
+                    .addClass('btn btn-xs btn-default')
+                    .append('<span class="fa fa-refresh">')
+                    .tooltip({
+                        title: 'Refresh app/method listings',
+                        container: 'body',
+                        delay: {
+                            show: Config.get('tooltip').showDelay,
+                            hide: Config.get('tooltip').hideDelay,
+                        },
+                    })
+                    .click(() => {
+                        let versionTag = 'release';
+                        if (this.versionState === 'B') {
+                            versionTag = 'beta';
+                        } else if (this.versionState === 'D') {
+                            versionTag = 'dev';
+                        }
+                        this.refreshFromService(versionTag);
+                        this.refreshKernelSpecManager();
 
-                    if (this.appCatalog) {
-                        this.appCatalog.refreshAndRender();
-                    }
-                }));
+                        if (this.appCatalog) {
+                            this.appCatalog.refreshAndRender();
+                        }
+                    })
+            );
 
             // Toggle version btn
             let toggleTooltipText = 'Toggle between Release and Beta Versions';
@@ -274,8 +295,8 @@ define([
                     container: 'body',
                     delay: {
                         show: Config.get('tooltip').showDelay,
-                        hide: Config.get('tooltip').hideDelay
-                    }
+                        hide: Config.get('tooltip').hideDelay,
+                    },
                 })
                 .append('R');
             this.versionState = 'R';
@@ -290,11 +311,15 @@ define([
                 body: betaWarningCompiled(),
                 buttons: [$('<button class="btn btn-primary" data-dismiss="modal">OK</button>')],
                 closeButton: true,
-                enterToTrigger: true
+                enterToTrigger: true,
             });
-            this.betaWarningDialog.getBody().find('input').change(function () {
-                showBetaWarning = $(this).is(':checked');
-            }).prop('checked', showBetaWarning);
+            this.betaWarningDialog
+                .getBody()
+                .find('input')
+                .change(function () {
+                    showBetaWarning = $(this).is(':checked');
+                })
+                .prop('checked', showBetaWarning);
 
             this.$toggleVersionBtn.click(() => {
                 this.$toggleVersionBtn.tooltip('hide');
@@ -326,15 +351,16 @@ define([
             });
             this.addButton(this.$toggleVersionBtn);
 
-            this.$appCatalogBody = $('<div>')
-                .attr('data-test-id', 'app-slideout-panel');
+            this.$appCatalogBody = $('<div>').attr('data-test-id', 'app-slideout-panel');
 
             this.appCatalog = null;
             this.$appCatalogContainer = $('<div>')
-                .append($('<div>')
-                    .addClass('kb-side-header active')
-                    .css({ 'width': '100%' })
-                    .append('App Catalog'))
+                .append(
+                    $('<div>')
+                        .addClass('kb-side-header active')
+                        .css({ width: '100%' })
+                        .append('App Catalog')
+                )
                 .append(this.$appCatalogBody);
 
             this.$slideoutBtn = $('<button>')
@@ -345,8 +371,8 @@ define([
                     container: 'body',
                     delay: {
                         show: Config.get('tooltip').showDelay,
-                        hide: Config.get('tooltip').hideDelay
-                    }
+                        hide: Config.get('tooltip').hideDelay,
+                    },
                 })
                 .append('<span class="fa fa-arrow-right"></span>')
                 .click(() => this.spawnCatalogBrowser());
@@ -401,12 +427,10 @@ define([
         spawnCatalogBrowser: function () {
             // only load the appCatalog on click
             if (!this.appCatalog) {
-                this.appCatalog = new KBaseCatalogBrowser(
-                    this.$appCatalogBody, {
+                this.appCatalog = new KBaseCatalogBrowser(this.$appCatalogBody, {
                     ignoreCategories: this.ignoreCategories,
-                    tag: this.currentTag
-                }
-                );
+                    tag: this.currentTag,
+                });
             }
             this.$slideoutBtn.tooltip('hide');
             this.trigger('toggleSidePanelOverlay.Narrative', [this.$appCatalogContainer]);
@@ -423,7 +447,7 @@ define([
             try {
                 Jupyter.notebook.kernel.execute(
                     'from biokbase.narrative.jobs.specmanager import SpecManager\n' +
-                    'SpecManager().reload()'
+                        'SpecManager().reload()'
                 );
             } catch (e) {
                 alert(e);
@@ -434,9 +458,9 @@ define([
         setListHeight: function (height, animate) {
             if (this.$methodList) {
                 if (animate) {
-                    this.$methodList.animate({ 'height': height }, this.slideTime); // slideTime comes from kbaseNarrativeControlPanel
+                    this.$methodList.animate({ height: height }, this.slideTime); // slideTime comes from kbaseNarrativeControlPanel
                 } else {
-                    this.$methodList.css({ 'height': height });
+                    this.$methodList.css({ height: height });
                 }
             }
         },
@@ -459,27 +483,27 @@ define([
                     this.help.$helpPanel.hide();
                 });
             this.help.$helpTitle = $('<span>');
-            this.help.$helpVersion = $('<span>')
-                .addClass('version');
+            this.help.$helpVersion = $('<span>').addClass('version');
 
             const $helpHeader = $('<div>')
                 .append(
                     $('<h1>')
                         .css({
                             display: 'inline',
-                            'padding-right': '8px'
+                            'padding-right': '8px',
                         })
-                        .append(this.help.$helpTitle))
+                        .append(this.help.$helpTitle)
+                )
                 .append(this.help.$helpVersion);
 
-            this.help.$helpBody = $('<div>')
-                .addClass('body');
+            this.help.$helpBody = $('<div>').addClass('body');
             this.help.$helpLinkout = $('<a>')
                 .attr('href', this.options.methodHelpLink)
                 .attr('target', '_blank')
                 .append('More...');
 
-            this.help.$helpPanel.append($helpHeader)
+            this.help.$helpPanel
+                .append($helpHeader)
                 .append(this.help.$helpBody)
                 .append($('<div>').append(this.help.$helpLinkout))
                 .append($('<h2>').append('Click to hide'));
@@ -490,7 +514,8 @@ define([
          * Fetch ignored_category from Narrative Service and assign returned value to local ignoreCategories
          */
         getIgnoreCategories: function () {
-            this.narrativeService.callFunc('get_ignore_categories', [])
+            this.narrativeService
+                .callFunc('get_ignore_categories', [])
                 .then((ignoreCategories) => {
                     this.ignoreCategories = ignoreCategories[0];
                 })
@@ -499,7 +524,7 @@ define([
                     this.ignoreCategories = {
                         inactive: 1,
                         importers: 1,
-                        viewers: 1
+                        viewers: 1,
                     };
                 });
         },
@@ -513,10 +538,13 @@ define([
                 this.currentTag = versionTag;
             }
 
-            return this.narrativeService.callFunc('get_all_app_info', [{
-                tag: this.currentTag,
-                user: Jupyter.narrative.userId
-            }])
+            return this.narrativeService
+                .callFunc('get_all_app_info', [
+                    {
+                        tag: this.currentTag,
+                        user: Jupyter.narrative.userId,
+                    },
+                ])
                 .then((appInfo) => {
                     appInfo = appInfo[0];
                     this.methodSpecs = appInfo.app_infos;
@@ -547,20 +575,20 @@ define([
                     type: 'warning',
                     title: 'Warning',
                     body: 'Read-only Narrative -- you may not add apps to this Narrative',
-                    alertOnly: true
+                    alertOnly: true,
                 }).show();
                 return;
             }
             if (!tag) {
                 tag = this.currentTag;
             }
-            if (typeof (app) === 'string') {
+            if (typeof app === 'string') {
                 let info = this.methodSpecs[app.toLowerCase()];
                 if (!info) {
                     info = {
-                        'info': {
-                            'id': app
-                        }
+                        info: {
+                            id: app,
+                        },
                     };
                 }
                 app = info;
@@ -585,7 +613,6 @@ define([
         },
 
         categorizeApps: function (style, appSet) {
-
             // previously, categories had the first letter of each word uppercased as part of display.
             // now they're uppercased while the cats are built, to map similar cats to the same keyed
             // display name (e.g. "metabolic_modeling" and "metabolic modeling" both go to "Metabolic Modeling")
@@ -594,9 +621,9 @@ define([
             const UNCATEGORIZED = 'Uncategorized';
 
             const allCategories = {
-                favorites: []
+                favorites: [],
             };
-            allCategories[UNCATEGORIZED] = [];  //my kingdom for es6 syntax
+            allCategories[UNCATEGORIZED] = []; //my kingdom for es6 syntax
 
             Object.keys(appSet).forEach((appId) => {
                 let categoryList = [];
@@ -605,8 +632,7 @@ define([
                         categoryList = appSet[appId].info.input_types.map((input) => {
                             if (input.indexOf('.') !== -1) {
                                 return input.split('.')[1];
-                            }
-                            else {
+                            } else {
                                 return input;
                             }
                         });
@@ -615,8 +641,7 @@ define([
                         categoryList = appSet[appId].info.output_types.map((output) => {
                             if (output.indexOf('.') !== -1) {
                                 return output.split('.')[1];
-                            }
-                            else {
+                            } else {
                                 return output;
                             }
                         });
@@ -637,10 +662,9 @@ define([
                 }
                 categoryList.forEach((cat) => {
                     cat = Categories.categories[cat] || cat;
-                    cat = cat.replace('_', ' ')
-                        .replace(/\w\S*/g, (txt) => {
-                            return txt.charAt(0).toUpperCase() + txt.substr(1);
-                        });
+                    cat = cat.replace('_', ' ').replace(/\w\S*/g, (txt) => {
+                        return txt.charAt(0).toUpperCase() + txt.substr(1);
+                    });
                     if (!allCategories[cat]) {
                         allCategories[cat] = [];
                     }
@@ -655,8 +679,7 @@ define([
                     return index === arr.indexOf(el);
                 });
                 allCategories[cat].sort((a, b) => {
-                    a = appSet[a],
-                        b = appSet[b];
+                    (a = appSet[a]), (b = appSet[b]);
                     return a.info.name.localeCompare(b.info.name);
                 });
             });
@@ -708,37 +731,38 @@ define([
                 }
 
                 return {
-                    title: category + ' <span class="label label-info pull-right" style="padding-top:0.4em">' + appList.length + '</span>',
-                    body: $accordionBody
+                    title:
+                        category +
+                        ' <span class="label label-info pull-right" style="padding-top:0.4em">' +
+                        appList.length +
+                        '</span>',
+                    body: $accordionBody,
                 };
             };
 
             const assembleAccordion = function (accordion) {
                 const $body = accordion.body;
-                const $toggle = $('<span class="fa fa-chevron-right">')
-                    .css({
-                        'padding-right': '3px'
-                    });
+                const $toggle = $('<span class="fa fa-chevron-right">').css({
+                    'padding-right': '3px',
+                });
                 const $header = $('<div class="row">')
                     .css({
                         cursor: 'pointer',
                         'font-size': '1.1em',
                         'font-weight': 'bold',
                         padding: '3px 0',
-                        'border-bottom': '1px solid #eee'
+                        'border-bottom': '1px solid #eee',
                     })
                     .append($toggle)
                     .append(accordion.title)
                     .click(() => {
                         if ($toggle.hasClass('fa-chevron-right')) {
                             $body.slideDown('fast', () => {
-                                $toggle.removeClass('fa-chevron-right')
-                                    .addClass('fa-chevron-down');
+                                $toggle.removeClass('fa-chevron-right').addClass('fa-chevron-down');
                             });
                         } else {
                             $body.slideUp('fast', () => {
-                                $toggle.removeClass('fa-chevron-down')
-                                    .addClass('fa-chevron-right');
+                                $toggle.removeClass('fa-chevron-down').addClass('fa-chevron-right');
                             });
                         }
                     });
@@ -748,9 +772,13 @@ define([
             const withCategories = function (a, b) {
                 const catA = (Categories.categories[a] || a).toLowerCase();
                 const catB = (Categories.categories[b] || b).toLowerCase();
-                if (catA < catB) { return -1; }
-                else if (catA > catB) { return 1; }
-                else { return 0; }
+                if (catA < catB) {
+                    return -1;
+                } else if (catA > catB) {
+                    return 1;
+                } else {
+                    return 0;
+                }
             };
 
             const buildAccordionPanel = (style) => {
@@ -759,14 +787,18 @@ define([
                  */
                 const categorySet = this.categorizeApps(style, appSet);
                 const accordionList = [];
-                Object.keys(categorySet).sort(withCategories).forEach((cat) => {
-                    if (cat === 'favorites') {
-                        return;
-                    }
-                    accordionList.push(buildSingleAccordion(cat, categorySet[cat]));
-                });
+                Object.keys(categorySet)
+                    .sort(withCategories)
+                    .forEach((cat) => {
+                        if (cat === 'favorites') {
+                            return;
+                        }
+                        accordionList.push(buildSingleAccordion(cat, categorySet[cat]));
+                    });
                 if (categorySet.favorites) {
-                    accordionList.unshift(buildSingleAccordion('My Favorites', categorySet.favorites));
+                    accordionList.unshift(
+                        buildSingleAccordion('My Favorites', categorySet.favorites)
+                    );
                 }
                 accordionList.forEach((accordion) => {
                     $appPanel.append(assembleAccordion(accordion));
@@ -821,8 +853,7 @@ define([
                     case 'input':
                         if (filterString.indexOf('.') !== -1) {
                             searchSet = app.info.input_types;
-                        }
-                        else {
+                        } else {
                             searchSet = app.info.short_input_types;
                         }
                         break;
@@ -830,20 +861,26 @@ define([
                     case 'output':
                         if (filterString.indexOf('.') !== -1) {
                             searchSet = app.info.output_types;
-                        }
-                        else {
+                        } else {
                             searchSet = app.info.short_output_types;
                         }
                         break;
                     default:
-                        return [
-                            app.info.name,
-                            app.info.input_types.join(';'),
-                            app.info.output_types.join(';'),
-                            app.info.module_name
-                        ].join(';').toLowerCase().indexOf(filterString) !== -1;
+                        return (
+                            [
+                                app.info.name,
+                                app.info.input_types.join(';'),
+                                app.info.output_types.join(';'),
+                                app.info.module_name,
+                            ]
+                                .join(';')
+                                .toLowerCase()
+                                .indexOf(filterString) !== -1
+                        );
                 }
-                const lowerSearchSet = searchSet.map((val) => { return val.toLowerCase(); });
+                const lowerSearchSet = searchSet.map((val) => {
+                    return val.toLowerCase();
+                });
                 return lowerSearchSet.indexOf(filterString) !== -1;
             });
             const filteredSet = {};
@@ -878,20 +915,18 @@ define([
             } else {
                 moreLink = this.options.methodHelpLink + 'l.m/' + app.info.id;
             }
-            const $more = $('<div>')
-                .addClass('kb-method-list-more-div');
+            const $more = $('<div>').addClass('kb-method-list-more-div');
 
             if (this.currentTag && this.currentTag !== 'release') {
-                $more.append($('<div style="font-size:8pt">')
-                    .append(app.info.git_commit_hash));
+                $more.append($('<div style="font-size:8pt">').append(app.info.git_commit_hash));
             }
-            $more.append($('<div>')
-                .append(app.info.subtitle))
-                .append($('<div>')
-                    .append($('<a>')
-                        .append('more...')
-                        .attr('target', '_blank')
-                        .attr('href', moreLink)));
+            $more
+                .append($('<div>').append(app.info.subtitle))
+                .append(
+                    $('<div>').append(
+                        $('<a>').append('more...').attr('target', '_blank').attr('href', moreLink)
+                    )
+                );
 
             const $card = kbaseAppCard.apply(this, [
                 {
@@ -900,7 +935,8 @@ define([
                     max_name_length: 50,
                     self: this,
                     app: app,
-                }]);
+                },
+            ]);
 
             //custom click functions;
             $card.find('.narrative-card-logo .kb-data-list-name').click((e) => {
@@ -939,7 +975,9 @@ define([
             if (specSet.methods && specSet.methods instanceof Array) {
                 results.methods = {};
                 // we need to fetch some methods, so don't
-                Promise.resolve(this.methClient.get_method_spec({ ids: specSet.methods, tag: this.currentTag }))
+                Promise.resolve(
+                    this.methClient.get_method_spec({ ids: specSet.methods, tag: this.currentTag })
+                )
                     .then((specs) => {
                         for (const spec of specs) {
                             results.methods[spec.info.id] = spec;
@@ -947,11 +985,12 @@ define([
                         callback(results);
                     })
                     .catch((err) => {
-                        console.error('Error in method panel on "getFunctionSpecs" when contacting NMS');
+                        console.error(
+                            'Error in method panel on "getFunctionSpecs" when contacting NMS'
+                        );
                         console.error(err);
                         callback(results); // still return even if we couldn't get the methods
                     });
-
             } else {
                 // there were no methods to fetch, so return
                 callback(results);
@@ -964,8 +1003,7 @@ define([
          */
         showLoadingMessage: function (message) {
             this.$loadingPanel.find('#message').empty();
-            if (message)
-                this.$loadingPanel.find('#message').html(message);
+            if (message) this.$loadingPanel.find('#message').html(message);
             this.$functionPanel.hide();
             this.$errorPanel.hide();
             this.$loadingPanel.show();

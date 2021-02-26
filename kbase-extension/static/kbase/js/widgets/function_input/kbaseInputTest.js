@@ -1,29 +1,28 @@
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'narrativeConfig',
-		'bluebird',
-		'kbaseNarrativeMethodInput',
-		'kbaseNarrativeInput',
-		'kbaseNarrativeParameterTextInput',
-		'kbase-client-api'
-	], (
-		KBWidget,
-		bootstrap,
-		$,
-		Config,
-		Promise,
-		kbaseNarrativeMethodInput,
-		kbaseNarrativeInput,
-		kbaseNarrativeParameterTextInput,
-		kbase_client_api
-	) => {
+define([
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+    'narrativeConfig',
+    'bluebird',
+    'kbaseNarrativeMethodInput',
+    'kbaseNarrativeInput',
+    'kbaseNarrativeParameterTextInput',
+    'kbase-client-api',
+], (
+    KBWidget,
+    bootstrap,
+    $,
+    Config,
+    Promise,
+    kbaseNarrativeMethodInput,
+    kbaseNarrativeInput,
+    kbaseNarrativeParameterTextInput,
+    kbase_client_api
+) => {
     'use strict';
     return KBWidget({
         name: 'kbaseInputTest',
-        parent : kbaseNarrativeMethodInput,
+        parent: kbaseNarrativeMethodInput,
 
         mediaChooserWidget: null,
         $mediaDisplayPanel: null,
@@ -35,13 +34,12 @@ define (
         },
 
         render: function (options) {
-            this.wsClient = new Workspace(Config.url('workspace'), { token:this.authToken() });
+            this.wsClient = new Workspace(Config.url('workspace'), { token: this.authToken() });
 
             const $mediaChooserPanel = $('<div>');
             this.$mediaDisplayPanel = $('<div>');
 
-             this.$elem.append($mediaChooserPanel)
-                     .append(this.$mediaDisplayPanel);
+            this.$elem.append($mediaChooserPanel).append(this.$mediaDisplayPanel);
 
             // For now, spit up the method spec to console.log so you can read it.
             // this.options.method is guaranteed to be there.
@@ -49,12 +47,11 @@ define (
 
             // Creates the media chooser widget, which is just a 'text' input
             // This was originally designed to deal with the parameter spec object.
-            this.mediaChooserWidget =  new kbaseNarrativeParameterTextInput($mediaChooserPanel, {
-                    loadingImage: Config.get('loading_gif'),
-                    parsedParameterSpec: this.options.method.parameters[0],
-                    isInSidePanel: false
-                }
-            );
+            this.mediaChooserWidget = new kbaseNarrativeParameterTextInput($mediaChooserPanel, {
+                loadingImage: Config.get('loading_gif'),
+                parsedParameterSpec: this.options.method.parameters[0],
+                isInSidePanel: false,
+            });
 
             // Simple listener that just plops the input value in this panel.
             // Listener gets triggered whenever anything in the chooser widget
@@ -68,34 +65,41 @@ define (
         /**
          * You'll spend most of your time here, I think.
          */
-        updateDisplayPanel: function(mediaObject) {
+        updateDisplayPanel: function (mediaObject) {
             console.log('input value: ' + mediaObject);
 
             if (mediaObject) {
-
-
                 // cram a div into the area.
                 // should probably get templated with Handlebars. An exercise for the reader.
-                this.$mediaDisplayPanel.append($('<div class="alert alert-warning alert-dismissible">' +
-                    '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
-                    '<span aria-hidden="true">&times;</span></button>' +
-                    mediaObject + '</div>'));
+                this.$mediaDisplayPanel.append(
+                    $(
+                        '<div class="alert alert-warning alert-dismissible">' +
+                            '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                            '<span aria-hidden="true">&times;</span></button>' +
+                            mediaObject +
+                            '</div>'
+                    )
+                );
 
                 // Actually fetch the data object. Bluebird promises rock way harder than jquery.ajax.
                 // Seriously. Map and reduce among promises, being able to cancel running ones,
                 // pretty sweet.
                 //
                 // And they're easy to wrap any existing deferreds (or any code, really).
-                Promise.resolve(this.wsClient.get_objects([{
-                    workspace: Jupyter.narrative.getWorkspaceName(),  // sneaky fetch code I put in last week. look in the kbaseNarrative.js module for more
-                    name: mediaObject
-                }]))
-                .then((objects) => {
-                    console.log(objects);
-                })
-                .catch((error) => {
-                    console.error(error);
-                });
+                Promise.resolve(
+                    this.wsClient.get_objects([
+                        {
+                            workspace: Jupyter.narrative.getWorkspaceName(), // sneaky fetch code I put in last week. look in the kbaseNarrative.js module for more
+                            name: mediaObject,
+                        },
+                    ])
+                )
+                    .then((objects) => {
+                        console.log(objects);
+                    })
+                    .catch((error) => {
+                        console.error(error);
+                    });
             }
         },
 
@@ -121,36 +125,30 @@ define (
         /**
          * Should do something with the state that gets returned.
          */
-        loadState: function (state) {
-
-        },
+        loadState: function (state) {},
 
         /**
          * Should disable a single parameter editing (used when input is part of an app)
          */
-        disableParameterEditing: function (paramId) {
-
-        },
+        disableParameterEditing: function (paramId) {},
 
         /**
          * Enables a single parameter editing (used when input is part of an app)
          */
-        enableParameterEditing: function (paramId) {
-
-        },
+        enableParameterEditing: function (paramId) {},
 
         /**
          * Sets a single parameter value (only one in this widget, right?).
          * paramId is from the method spec.
          */
-        setParameterValue: function(paramId, value) {
+        setParameterValue: function (paramId, value) {
             this.mediaChooserWidget.setParameterValue(value);
         },
 
         /**
          * Gets a single parameter value from the id set by the method spec.
          */
-        getParameterValue: function(paramId) {
+        getParameterValue: function (paramId) {
             return this.mediaChooserWidget.getParameterValue();
         },
 
@@ -158,12 +156,12 @@ define (
          * Needed to run the function. Parameter ids need to map onto what's expected
          * from the method spec. Needs to be returned as a list.
          */
-        getAllParameterValues: function() {
+        getAllParameterValues: function () {
             return [
                 {
                     id: this.options.method.parameters[0].id,
-                    value: this.mediaChooserWidget.getParameterValue()
-                }
+                    value: this.mediaChooserWidget.getParameterValue(),
+                },
             ];
         },
 
@@ -174,12 +172,12 @@ define (
          * called, you should visually indicate which parameters are invalid by marking them
          * red (see kbaseNarrativeMethodInput for default styles).
          */
-        isValid: function() {
-            const isValidRet = { isValid:true, errormssgs: [] };
+        isValid: function () {
+            const isValidRet = { isValid: true, errormssgs: [] };
             const paramStatus = this.mediaChooserWidget.isValid();
             if (!paramStatus.isValid()) {
                 isValidRet.isValid = false;
-                for (let i=0; i<paramStatus.errormssgs.length; i++) {
+                for (let i = 0; i < paramStatus.errormssgs.length; i++) {
                     isValidRet.errormssgs.push(paramStatus.errormssgs[i]);
                 }
             }
@@ -191,9 +189,6 @@ define (
          * and getAllParameterValues/getParameterValue which could be invoked many times before running
          * (e.g. when widget is rendered).
          */
-        prepareDataBeforeRun: function() {
-
-        },
-
+        prepareDataBeforeRun: function () {},
     });
 });

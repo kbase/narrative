@@ -7,7 +7,7 @@ define([
     'handlebars',
     'StagingServiceClient',
     'text!kbase/templates/data_staging/dropzone_area.html',
-    'text!kbase/templates/data_staging/dropped_file.html'
+    'text!kbase/templates/data_staging/dropped_file.html',
 ], (
     $,
     KBWidget,
@@ -23,7 +23,7 @@ define([
     return new KBWidget({
         name: 'fileUploadWidget',
 
-        init: function(options) {
+        init: function (options) {
             this._super(options);
             this.dropzoneTmpl = Handlebars.compile(DropzoneAreaHtml);
             this.dropFileTmpl = Handlebars.compile(DropFileHtml);
@@ -34,54 +34,60 @@ define([
             return this;
         },
 
-        render: function() {
+        render: function () {
             const uploadConfig = Config.get('upload');
-            const globusUrlLinked = uploadConfig.globus_upload_url + '&destination_path=' + this.userInfo.user;
-            const $dropzoneElem = $(this.dropzoneTmpl({
-                userInfo: this.userInfo,
-                globusUrl: globusUrlLinked
-            }));
+            const globusUrlLinked =
+                uploadConfig.globus_upload_url + '&destination_path=' + this.userInfo.user;
+            const $dropzoneElem = $(
+                this.dropzoneTmpl({
+                    userInfo: this.userInfo,
+                    globusUrl: globusUrlLinked,
+                })
+            );
 
             // there are two anchor elements with same class name .globus_linked.
             // One link takes the user to globus site,
             // and the other link takes user to how to link globus account.
-            $dropzoneElem.find('globus_linked').click(function(e) {
+            $dropzoneElem.find('globus_linked').click(function (e) {
                 this.uploadGlobusClickEvent(e, globusUrlLinked);
             });
             this.$elem.append($dropzoneElem);
             this.dropzone = new Dropzone($dropzoneElem.get(0), {
                 url: this.stagingUrl + '/upload',
-                accept: function(file, done) {
+                accept: function (file, done) {
                     done();
                 },
-                headers: {'Authorization': Runtime.make().authToken()},
+                headers: { Authorization: Runtime.make().authToken() },
                 paramName: 'uploads',
                 previewTemplate: this.dropFileTmpl(),
                 autoProcessQueue: true,
                 parallelUploads: uploadConfig.parallel_uploads,
                 maxFilesize: uploadConfig.max_file_size,
                 timeout: uploadConfig.timeout,
-                userInfo: this.userInfo
+                userInfo: this.userInfo,
             })
                 .on('totaluploadprogress', (progress) => {
-                    $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': progress + '%'});
+                    $($dropzoneElem.find('#total-progress .progress-bar')).css({
+                        width: progress + '%',
+                    });
                 })
                 .on('addedfile', (file) => {
-                    $dropzoneElem.find('#global-info').css({'display': 'inline'});
+                    $dropzoneElem.find('#global-info').css({ display: 'inline' });
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
 
                     // If there is a button already in the area, it has to be removed,
                     // and appened to the new document when additional errored files are added.
-                    if ($dropzoneElem.find('#clear-all-btn').length){
+                    if ($dropzoneElem.find('#clear-all-btn').length) {
                         this.deleteClearAllButton();
                         $dropzoneElem.append(this.makeClearAllButton());
                     }
-
                 })
                 .on('success', (file) => {
                     const $successElem = $(file.previewElement);
                     $successElem.find('#upload_progress_and_cancel').hide();
-                    $successElem.find('#dz_file_row_1').css({'display': 'flex', 'align-items': 'center'});
+                    $successElem
+                        .find('#dz_file_row_1')
+                        .css({ display: 'flex', 'align-items': 'center' });
                     $successElem.find('#success_icon').css('display', 'flex');
                     $successElem.find('#success_message').css('display', 'inline');
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
@@ -92,11 +98,14 @@ define([
                     });
                 })
                 .on('sending', (file, xhr, data) => {
-                    $dropzoneElem.find('#global-info').css({'display': 'inline'});
+                    $dropzoneElem.find('#global-info').css({ display: 'inline' });
                     //okay, if we've been given a full path, then we pull out the pieces (ignoring the filename at the end) and then
                     //tack it onto our set path, then set that as the destPath form param.
                     if (file.fullPath) {
-                        const subPath = file.fullPath.replace(new RegExp('/' + file.name + '$'), '');
+                        const subPath = file.fullPath.replace(
+                            new RegExp('/' + file.name + '$'),
+                            ''
+                        );
                         data.append('destPath', [this.path, subPath].join('/'));
                     }
                     //if we don't have a fullPath, then we're uploading a file and not a folder. Just use the current path.
@@ -109,13 +118,15 @@ define([
                 .on('reset', () => {
                     $('#clear-all-btn-container').remove();
                     $('#clear-all-btn').remove();
-                    $dropzoneElem.find('#global-info').css({'display': 'none'});
-                    $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0'});
+                    $dropzoneElem.find('#global-info').css({ display: 'none' });
+                    $($dropzoneElem.find('#total-progress .progress-bar')).css({ width: '0' });
                 })
                 .on('error', (erroredFile) => {
                     const $errorElem = $(erroredFile.previewElement);
                     $errorElem.find('#upload_progress_and_cancel').hide();
-                    $errorElem.find('#dz_file_row_1').css({'display': 'flex', 'align-items': 'center'});
+                    $errorElem
+                        .find('#dz_file_row_1')
+                        .css({ display: 'flex', 'align-items': 'center' });
                     $errorElem.css('color', '#DF0002');
                     $errorElem.find('#error_icon').css('display', 'flex');
                     this.removeProgressBar($dropzoneElem);
@@ -125,8 +136,8 @@ define([
                     const $errorMessage = $errorElem.find('#error_message');
 
                     // I don't know how to determine if the file was too big other than looking at the preview message
-                    if ($errorMessage.html().search('File is too big') !== -1){
-                        errorText  = 'File size exceeds maximum of 20GB. Please ';
+                    if ($errorMessage.html().search('File is too big') !== -1) {
+                        errorText = 'File size exceeds maximum of 20GB. Please ';
                         $errorMessage.text('Error: ' + errorText);
                         $errorMessage.append(this.makeGlobusErrorLink(globusUrlLinked));
                     } else if (erroredFile && erroredFile.xhr && erroredFile.xhr.responseText) {
@@ -137,40 +148,41 @@ define([
                     }
 
                     // Check to see if there already a button in the dropzone area
-                    if (!$dropzoneElem.find('#clear-all-btn').length){
+                    if (!$dropzoneElem.find('#clear-all-btn').length) {
                         $dropzoneElem.append(this.makeClearAllButton());
                     }
                 });
         },
 
-        uploadGlobusClickEvent: function(e, globusUrlLinked) {
+        uploadGlobusClickEvent: function (e, globusUrlLinked) {
             e.stopPropagation();
             e.preventDefault();
 
-            if(e.target.href === globusUrlLinked) {
+            if (e.target.href === globusUrlLinked) {
                 const stagingServiceClient = new StagingServiceClient({
                     root: this.stagingUrl,
-                    token: Runtime.make().authToken()
+                    token: Runtime.make().authToken(),
                 });
                 const globusWindow = window.open('', 'dz-globus');
-                globusWindow.document.write('<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>');
-                stagingServiceClient.addAcl()
-                    .done(() => {
-                        window.open($(e.target).attr('href'), 'dz-globus');
-                        return true;
-                    });
+                globusWindow.document.write(
+                    '<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>'
+                );
+                stagingServiceClient.addAcl().done(() => {
+                    window.open($(e.target).attr('href'), 'dz-globus');
+                    return true;
+                });
             } else {
                 window.open(e.target.href, '_blank');
             }
         },
 
-        makeClearAllButton: function() {
+        makeClearAllButton: function () {
             const $clearAllBtn = $('<button>')
                 .text('Clear All')
                 .addClass('btn__text clear-all-dropzone')
                 .attr('aria-label', 'clear all errored files from the dropzone')
                 .attr('id', 'clear-all-btn')
-                .click(()=> {
+                .click(() => {
                     this.dropzone.removeAllFiles();
                     this.deleteClearAllButton();
                 });
@@ -183,45 +195,47 @@ define([
             return $buttonContainer;
         },
 
-        deleteClearAllButton: function() {
+        deleteClearAllButton: function () {
             $('#clear-all-btn-container').remove();
             $('#clear-all-btn').remove();
         },
 
-        makeGlobusErrorLink: function(globusUrlLinked) {
+        makeGlobusErrorLink: function (globusUrlLinked) {
             const url = 'https://docs.kbase.us/data/globus';
 
             const $globusErrorLink = $('<a>')
                 .attr({
-                    'id': 'globus_error_link',
-                    'href': url,
-                    'aria-label': 'opens new window to kbase globus upload docs'
-                }).text('upload with Globus.')
+                    id: 'globus_error_link',
+                    href: url,
+                    'aria-label': 'opens new window to kbase globus upload docs',
+                })
+                .text('upload with Globus.')
                 .click((e) => {
                     this.uploadGlobusClickEvent(e, globusUrlLinked);
                 });
 
-            if (this.userInfo.globusLinked){
-                $globusErrorLink
-                    .attr({
-                        'href': globusUrlLinked,
-                        'aria-label': 'opens new window to upload via globus'
-                    });
+            if (this.userInfo.globusLinked) {
+                $globusErrorLink.attr({
+                    href: globusUrlLinked,
+                    'aria-label': 'opens new window to upload via globus',
+                });
             }
 
             return $globusErrorLink;
         },
 
-        removeProgressBar: function($dropzoneElem) {
-            if (!this.dropzone.getQueuedFiles().length &&
-            !this.dropzone.getUploadingFiles().length) {
+        removeProgressBar: function ($dropzoneElem) {
+            if (
+                !this.dropzone.getQueuedFiles().length &&
+                !this.dropzone.getUploadingFiles().length
+            ) {
                 $($dropzoneElem.find('#total-progress')).fadeOut(1000, () => {
-                    $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0'});
+                    $($dropzoneElem.find('#total-progress .progress-bar')).css({ width: '0' });
                 });
             }
         },
 
-        makeUploadMessage: function() {
+        makeUploadMessage: function () {
             if (!this.dropzone) {
                 return 'No files uploading.';
             }
@@ -230,7 +244,7 @@ define([
             if (numUploading === 0 && numQueued === 0) {
                 return 'No files uploading.';
             }
-            const queuedText = numQueued ? ('(' + numQueued + ' queued)') : '';
+            const queuedText = numQueued ? '(' + numQueued + ' queued)' : '';
             const pluralFiles = numUploading > 1 ? 's' : '';
             return [
                 'Uploading ',
@@ -240,17 +254,16 @@ define([
                 ' ',
                 queuedText,
                 ' to ',
-                this.getPath()
+                this.getPath(),
             ].join('');
         },
 
-        setPath: function(path) {
+        setPath: function (path) {
             this.path = path;
         },
 
-        getPath: function() {
+        getPath: function () {
             return this.path;
         },
-
     });
 });

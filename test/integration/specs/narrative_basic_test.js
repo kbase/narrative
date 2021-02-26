@@ -6,15 +6,14 @@ const env = process.env.ENV || 'ci';
 const allTestCases = {
     ci: {
         CASE1: {
-            narrativeId: 31932
-        }
-
+            narrativeId: 31932,
+        },
     },
     'narrative-dev': {
         CASE1: {
-            narrativeId: 78050
-        }
-    }
+            narrativeId: 78050,
+        },
+    },
 };
 
 const testCases = allTestCases[env];

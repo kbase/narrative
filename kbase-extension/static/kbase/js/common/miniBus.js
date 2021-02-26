@@ -19,10 +19,7 @@
  * listen - a component requests that messages meeting a certain pattern invoke a function it provides
  *
  */
-define([
-    'uuid',
-    'bluebird'
-], (Uuid, Promise) => {
+define(['uuid', 'bluebird'], (Uuid, Promise) => {
     'use strict';
     let instanceId = 0;
     function newInstance() {
@@ -39,7 +36,6 @@ define([
             interval = 0,
             timer,
             instanceId = newInstance();
-
 
         function letListenerHandle(item, handle) {
             try {
@@ -126,7 +122,7 @@ define([
                 listener = {
                     spec: spec,
                     id: id,
-                    created: new Date()
+                    created: new Date(),
                 };
 
             if (spec.key) {
@@ -161,7 +157,7 @@ define([
             const envelope = {
                 created: new Date(),
                 id: new Uuid(4).format(),
-                address: address
+                address: address,
             };
             if (address) {
                 if (address.key) {
@@ -170,7 +166,7 @@ define([
             }
             sendQueue.push({
                 message: message,
-                envelope: envelope
+                envelope: envelope,
             });
             run();
         }
@@ -188,7 +184,7 @@ define([
                 try {
                     const result = originalHandle(message);
                     send(result, {
-                        key: {requestId: envelope.address.requestId}
+                        key: { requestId: envelope.address.requestId },
                     });
                 } catch (ex) {
                     console.error('Error handling in respond', ex);
@@ -213,12 +209,12 @@ define([
                 // is run, as well as to invoke the error handler upon
                 // timeout. (TODO)
                 listen({
-                    key: {requestId: requestId},
+                    key: { requestId: requestId },
                     once: true,
                     timeout: address.timeout || 10000,
                     handle: function (message) {
                         resolve(message);
-                    }
+                    },
                 });
 
                 // NB - respond understands requestId in the envelope.
@@ -239,20 +235,19 @@ define([
             //     handle: handler
             // });
             listen({
-               key: JSON.stringify({type: type}),
-               handle: handler
+                key: JSON.stringify({ type: type }),
+                handle: handler,
             });
         }
 
         function emit(type, message) {
-          if (message === undefined) {
-            message = {};
-          }
-          send(message, {
-            key: {type: type}
-          });
+            if (message === undefined) {
+                message = {};
+            }
+            send(message, {
+                key: { type: type },
+            });
         }
-
 
         return {
             listen: listen,
@@ -260,13 +255,13 @@ define([
             respond: respond,
             request: request,
             on: on,
-            emit: emit
+            emit: emit,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

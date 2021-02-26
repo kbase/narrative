@@ -1,5 +1,4 @@
-define([
-], () => {
+define([], () => {
     'use strict';
 
     function Messagesx(config) {
@@ -25,7 +24,8 @@ define([
         function receiveMessage(event) {
             let origin = event.origin || event.originalEvent.origin,
                 message = event.data,
-                listener, response;
+                listener,
+                response;
 
             if (message.id && awaitingResponse[message.id]) {
                 try {
@@ -48,7 +48,6 @@ define([
                     }
                 });
             }
-
         }
 
         function sendMessage(message) {
@@ -60,7 +59,7 @@ define([
             message.id = id;
             awaitingResponse[id] = {
                 started: new Date(),
-                handler: handler
+                handler: handler,
             };
             sendMessage(message);
         }
@@ -75,12 +74,11 @@ define([
 
         config.root.addEventListener('message', receiveMessage, false);
 
-
         return {
             request: request,
             send: sendMessage,
             // sendMessages: sendMessages,
-            listen: listenForMessage
+            listen: listenForMessage,
         };
     }
 
@@ -111,7 +109,8 @@ define([
         function receiveMessage(event) {
             let origin = event.origin || event.originalEvent.origin,
                 message = event.data,
-                listener, response;
+                listener,
+                response;
 
             if (message.id && awaitingResponse[message.id]) {
                 try {
@@ -134,7 +133,6 @@ define([
                     }
                 });
             }
-
         }
 
         function getPartner(name) {
@@ -156,7 +154,7 @@ define([
             message.id = id;
             awaitingResponse[id] = {
                 started: new Date(),
-                handler: handler
+                handler: handler,
             };
             sendMessage(partnerName, message);
         }
@@ -176,9 +174,7 @@ define([
             name = newName;
         }
 
-
         root.addEventListener('message', receiveMessage, false);
-
 
         return {
             addPartner: addPartner,
@@ -186,7 +182,7 @@ define([
             send: sendMessage,
             // sendMessages: sendMessages,
             listen: listenForMessage,
-            setName: setName
+            setName: setName,
         };
     }
 

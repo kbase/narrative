@@ -81,18 +81,18 @@ define([
     KBaseNarrativePrestart.loadJupyterEvents();
 
     /**
-    * @constructor
-    * The base, namespaced Narrative object. This is mainly used at start-up time, and
-    * gets injected into the Jupyter namespace.
-    *
-    * Most of its methods below - init, registerEvents, initAboutDialog, initUpgradeDialog,
-    * checkVersion, updateVersion - are set up at startup time.
-    * This is all done by an injection into static/notebook/js/main.js where the
-    * Narrative object is set up, and Narrative.init is run.
-    *
-    * But, this also has a noteable 'Save' method, that implements another Narrative-
-    * specific piece of functionality. See Narrative.prototype.saveNarrative below.
-    */
+     * @constructor
+     * The base, namespaced Narrative object. This is mainly used at start-up time, and
+     * gets injected into the Jupyter namespace.
+     *
+     * Most of its methods below - init, registerEvents, initAboutDialog, initUpgradeDialog,
+     * checkVersion, updateVersion - are set up at startup time.
+     * This is all done by an injection into static/notebook/js/main.js where the
+     * Narrative object is set up, and Narrative.init is run.
+     *
+     * But, this also has a noteable 'Save' method, that implements another Narrative-
+     * specific piece of functionality. See Narrative.prototype.saveNarrative below.
+     */
     const Narrative = function () {
         // Maximum narrative size that can be stored in the workspace.
         // This is set by nginx on the backend - this variable is just for
@@ -186,10 +186,9 @@ define([
         const ws = new Workspace(Config.url('workspace'), {
             token: this.getAuthToken(),
         });
-        return ws.get_workspace_info({ id: this.workspaceId })
-            .then((wsInfo) => {
-                return wsInfo[5];
-            });
+        return ws.get_workspace_info({ id: this.workspaceId }).then((wsInfo) => {
+            return wsInfo[5];
+        });
     };
 
     // Wrappers for the Jupyter/Jupyter function so we only maintain it in one place.
@@ -242,9 +241,7 @@ define([
                 console.warn('Error removing shortcut "' + shortcut + '"', e);
             }
             try {
-                Jupyter.notebook.keyboard_manager.edit_shortcuts.remove_shortcut(
-                    shortcut
-                );
+                Jupyter.notebook.keyboard_manager.edit_shortcuts.remove_shortcut(shortcut);
             } catch (e) {
                 // console.warn('Error removing shortcut "' + shortcut + '"', e);
             }
@@ -260,9 +257,7 @@ define([
 
         editShortcuts.forEach((shortcut) => {
             try {
-                Jupyter.notebook.keyboard_manager.edit_shortcuts.remove_shortcut(
-                    shortcut
-                );
+                Jupyter.notebook.keyboard_manager.edit_shortcuts.remove_shortcut(shortcut);
             } catch (ex) {
                 console.warn('Error removing shortcut "' + shortcut + '"', ex);
             }
@@ -309,19 +304,15 @@ define([
         ].forEach((e) => {
             $([Jupyter.events]).on(e, () => {
                 self.runtime.bus().emit('kernel-state-changed', {
-                    isReady:
-                    Jupyter.notebook.kernel && Jupyter.notebook.kernel.is_connected(),
+                    isReady: Jupyter.notebook.kernel && Jupyter.notebook.kernel.is_connected(),
                 });
             });
         });
 
-        $([Jupyter.events]).on(
-            'notebook_save_failed.Notebook',
-            (event, data) => {
-                $('#kb-save-btn').find('div.fa-save').removeClass('fa-spin');
-                this.saveFailed(event, data);
-            }
-        );
+        $([Jupyter.events]).on('notebook_save_failed.Notebook', (event, data) => {
+            $('#kb-save-btn').find('div.fa-save').removeClass('fa-spin');
+            this.saveFailed(event, data);
+        });
     };
 
     /**
@@ -342,8 +333,8 @@ define([
     Narrative.prototype.initSharePanel = function () {
         let sharePanel = $(
                 '<div style="text-align:center"><br><br><img src="' +
-                Config.get('loading_gif') +
-                '"></div>'
+                    Config.get('loading_gif') +
+                    '"></div>'
             ),
             shareWidget = null,
             shareDialog = new BootstrapDialog({
@@ -351,36 +342,28 @@ define([
                 body: sharePanel,
                 closeButton: true,
             });
-        shareDialog.getElement().one(
-            'shown.bs.modal',
-            () => {
-                shareWidget = new KBaseNarrativeSharePanel(sharePanel.empty(), {
-                    ws_name_or_id: this.getWorkspaceName(),
+        shareDialog.getElement().one('shown.bs.modal', () => {
+            shareWidget = new KBaseNarrativeSharePanel(sharePanel.empty(), {
+                ws_name_or_id: this.getWorkspaceName(),
+            });
+        });
+        $('#kb-share-btn').click(() => {
+            const narrName = Jupyter.notebook.notebook_name;
+            if (narrName.trim().toLowerCase() === 'untitled' || narrName.trim().length === 0) {
+                Jupyter.save_widget.rename_notebook({
+                    notebook: Jupyter.notebook,
+                    message: 'Please name your Narrative before sharing.',
+                    callback: function () {
+                        shareDialog.show();
+                    },
                 });
+                return;
             }
-        );
-        $('#kb-share-btn').click(
-            () => {
-                const narrName = Jupyter.notebook.notebook_name;
-                if (
-                    narrName.trim().toLowerCase() === 'untitled' ||
-                    narrName.trim().length === 0
-                ) {
-                    Jupyter.save_widget.rename_notebook({
-                        notebook: Jupyter.notebook,
-                        message: 'Please name your Narrative before sharing.',
-                        callback: function () {
-                            shareDialog.show();
-                        },
-                    });
-                    return;
-                }
-                if (shareWidget) {
-                    shareWidget.refresh();
-                }
-                shareDialog.show();
+            if (shareWidget) {
+                shareWidget.refresh();
             }
-        );
+            shareDialog.show();
+        });
     };
 
     Narrative.prototype.initStaticNarrativesPanel = function () {
@@ -413,12 +396,9 @@ define([
             // now we make the dialog and all that.
             $('#kb-narr-version-btn')
                 .off('click')
-                .on(
-                    'click',
-                    () => {
-                        this.showDocumentVersionDialog(docInfo);
-                    }
-                );
+                .on('click', () => {
+                    this.showDocumentVersionDialog(docInfo);
+                });
             this.toggleDocumentVersionBtn(true);
         }
     };
@@ -436,8 +416,7 @@ define([
                 const workspace = new Workspace(Config.url('workspace'), {
                     token: self.getAuthToken(),
                 });
-                self
-                    .getNarrativeRef()
+                self.getNarrativeRef()
                     .then((narrativeRef) => {
                         return workspace.get_object_info_new({
                             objects: [{ ref: narrativeRef }],
@@ -503,11 +482,9 @@ define([
         const $upgradeBtn = $('<button type="button" data-dismiss="modal">')
             .addClass('btn btn-success')
             .append('Update and Reload')
-            .click(
-                () => {
-                    this.updateVersion();
-                }
-            );
+            .click(() => {
+                this.updateVersion();
+            });
 
         const upgradeDialog = new BootstrapDialog({
             title: 'New Narrative version available!',
@@ -516,20 +493,18 @@ define([
         $('#kb-update-btn').click(() => {
             upgradeDialog.show();
         });
-        this.checkVersion().then(
-            (ver) => {
-                upgradeDialog.setBody(
-                    bodyTemplate({
-                        currentVersion: this.currentVersion,
-                        newVersion: ver ? ver.version : 'No new version',
-                        releaseNotesUrl: Config.get('release_notes'),
-                    })
-                );
-                if (ver && ver.version && this.currentVersion !== ver.version) {
-                    $('#kb-update-btn').fadeIn('fast');
-                }
+        this.checkVersion().then((ver) => {
+            upgradeDialog.setBody(
+                bodyTemplate({
+                    currentVersion: this.currentVersion,
+                    newVersion: ver ? ver.version : 'No new version',
+                    releaseNotesUrl: Config.get('release_notes'),
+                })
+            );
+            if (ver && ver.version && this.currentVersion !== ver.version) {
+                $('#kb-update-btn').fadeIn('fast');
             }
-        );
+        });
     };
 
     /**
@@ -554,13 +529,8 @@ define([
                 });
             })
             .catch((error) => {
-                console.error(
-                    'Error while checking for a version update: ' + error.statusText
-                );
-                KBError(
-                    'Narrative.checkVersion',
-                    'Unable to check for a version update!'
-                );
+                console.error('Error while checking for a version update: ' + error.statusText);
+                KBError('Narrative.checkVersion', 'Unable to check for a version update!');
             });
     };
 
@@ -569,11 +539,9 @@ define([
             .attr({ type: 'button', 'data-dismiss': 'modal' })
             .addClass('btn btn-danger')
             .append('Okay. Shut it all down!')
-            .click(
-                () => {
-                    this.updateVersion();
-                }
-            );
+            .click(() => {
+                this.updateVersion();
+            });
 
         const $reallyShutdownPanel = $('<div style="margin-top:10px">')
             .append(
@@ -606,25 +574,21 @@ define([
     };
 
     Narrative.prototype.initAboutDialog = function () {
-        const $versionDiv = $('<div>').append(
-            '<b>Version:</b> ' + Config.get('version')
-        );
+        const $versionDiv = $('<div>').append('<b>Version:</b> ' + Config.get('version'));
         $versionDiv.append(
             '<br><b>Git Commit:</b> ' +
-            Config.get('git_commit_hash') +
-            ' -- ' +
-            Config.get('git_commit_time')
+                Config.get('git_commit_hash') +
+                ' -- ' +
+                Config.get('git_commit_time')
         );
         $versionDiv.append(
             '<br>View release notes on <a href="' +
-            Config.get('release_notes') +
-            '" target="_blank">Github</a>'
+                Config.get('release_notes') +
+                '" target="_blank">Github</a>'
         );
 
         const urlList = Object.keys(Config.get('urls')).sort();
-        const $versionTable = $('<table>').addClass(
-            'table table-striped table-bordered'
-        );
+        const $versionTable = $('<table>').addClass('table table-striped table-bordered');
         $.each(urlList, (idx, val) => {
             let url = Config.url(val);
             // if url looks like a url (starts with http), include it.
@@ -680,10 +644,7 @@ define([
             body: $('<div>').append(
                 'Shutdown and restart your Narrative session? Any unsaved changes in any open Narrative in any window WILL BE LOST!'
             ),
-            buttons: [
-                shutdownButtons.cancelButton,
-                shutdownButtons.finalShutdownButton,
-            ],
+            buttons: [shutdownButtons.cancelButton, shutdownButtons.finalShutdownButton],
         });
 
         $('#kb-shutdown-btn').click(() => {
@@ -714,11 +675,11 @@ define([
 
             if (errorText) {
                 /* gonna throw in a special case for workspace permissions issues for now.
-                * if it has this pattern:
-                *
-                * User \w+ may not write to workspace \d+
-                * change the text to something more sensible.
-                */
+                 * if it has this pattern:
+                 *
+                 * User \w+ may not write to workspace \d+
+                 * change the text to something more sensible.
+                 */
 
                 const res = /User\s+(\w+)\s+may\s+not\s+write\s+to\s+workspace\s+(\d+)/.exec(
                     errorText
@@ -762,12 +723,10 @@ define([
 
     Narrative.prototype.initTour = function () {
         try {
-            $('#kb-tour').click(
-                () => {
-                    const tour = new Tour.Tour(this);
-                    tour.start();
-                }
-            );
+            $('#kb-tour').click(() => {
+                const tour = new Tour.Tour(this);
+                tour.start();
+            });
         } catch (e) {
             console.error(e);
         }
@@ -813,14 +772,14 @@ define([
         this.initTour();
 
         /* Clever extension to $.event from StackOverflow
-        * Lets us watch DOM nodes and catch when a widget's node gets nuked.
-        * http://stackoverflow.com/questions/2200494/jquery-trigger-event-when-an-element-is-removed-from-the-dom
-        *
-        * We bind a jQuery event to a node. Call it 'destroyed'.
-        * When that event is no longer bound (i.e. when the node is removed, OR when .unbind is called)
-        * it triggers the 'remove' function. Lets us keep track of when widgets get removed
-        * in the registerWidget function below.
-        */
+         * Lets us watch DOM nodes and catch when a widget's node gets nuked.
+         * http://stackoverflow.com/questions/2200494/jquery-trigger-event-when-an-element-is-removed-from-the-dom
+         *
+         * We bind a jQuery event to a node. Call it 'destroyed'.
+         * When that event is no longer bound (i.e. when the node is removed, OR when .unbind is called)
+         * it triggers the 'remove' function. Lets us keep track of when widgets get removed
+         * in the registerWidget function below.
+         */
         $.event.special.destroyed = {
             remove: function (o) {
                 if (o.handler) {
@@ -833,24 +792,21 @@ define([
             this.loadingWidget.updateProgress('narrative', true);
             $('#notification_area').find('div#notification_trusted').hide();
 
-            $(document).one(
-                'dataUpdated.Narrative',
-                () => this.loadingWidget.updateProgress('data', true)
+            $(document).one('dataUpdated.Narrative', () =>
+                this.loadingWidget.updateProgress('data', true)
             );
 
-            $(document).one(
-                'appListUpdated.Narrative',
-                () => this.loadingWidget.updateProgress('apps', true)
+            $(document).one('appListUpdated.Narrative', () =>
+                this.loadingWidget.updateProgress('apps', true)
             );
 
             // Tricky with inter/intra-dependencies between kbaseNarrative and kbaseNarrativeWorkspace...
             this.sidePanel = new KBaseNarrativeSidePanel($('#kb-side-panel'), {
                 autorender: false,
             });
-            this.narrController = new KBaseNarrativeWorkspace(
-                $('#notebook_panel'),
-                { ws_id: this.getWorkspaceName() }
-            );
+            this.narrController = new KBaseNarrativeWorkspace($('#notebook_panel'), {
+                ws_id: this.getWorkspaceName(),
+            });
 
             // Disable autosave so as not to spam the Workspace.
             Jupyter.notebook.set_autosave_interval(0);
@@ -899,7 +855,7 @@ define([
                         'KBase communication channel could not be initiated with the kernel.'
                     );
                     if (jobsReadyCallback) {
-                        jobsReadyCallback({error: err});
+                        jobsReadyCallback({ error: err });
                     }
                 });
         });
@@ -923,17 +879,15 @@ define([
         )
             .then(() => {
                 setTimeout(() => {
-                    location.replace(
-                        `/load-narrative.html?n=${this.workspaceId}&check=true`
-                    );
+                    location.replace(`/load-narrative.html?n=${this.workspaceId}&check=true`);
                 }, 200);
             })
             .catch((error) => {
                 window.alert(
                     'Unable to update your Narrative session\nError: ' +
-                    error.status +
-                    ': ' +
-                    error.statusText
+                        error.status +
+                        ': ' +
+                        error.statusText
                 );
                 console.error(error);
             });
@@ -980,8 +934,7 @@ define([
             new BootstrapDialog({
                 type: 'warning',
                 title: 'Warning',
-                body:
-                'Read-only Narrative -- may not add a data viewer to this Narrative',
+                body: 'Read-only Narrative -- may not add a data viewer to this Narrative',
                 alertOnly: true,
             }).show();
             return;
@@ -1043,10 +996,7 @@ define([
                     return;
                 }
                 // put the method in the narrative by simulating a method clicked in kbaseNarrativeAppPanel
-                self.narrController.trigger(
-                    'methodClicked.Narrative',
-                    specs.methods[method_id]
-                );
+                self.narrController.trigger('methodClicked.Narrative', specs.methods[method_id]);
 
                 // the method initializes an internal method input widget, but rendering and initializing is
                 // async, so we have to wait and check back before we can load the parameter state.
@@ -1058,7 +1008,7 @@ define([
                 );
                 var updateStateAndRun = function () {
                     if (newWidget.$inputWidget) {
-                    // if the $inputWidget is not null, we are good to go, so set the parameters
+                        // if the $inputWidget is not null, we are good to go, so set the parameters
                         newWidget.loadState(parameters);
                         // make sure the new cell is still selected, then run the method
                         Jupyter.notebook.select(newCellIdx);
@@ -1121,28 +1071,15 @@ define([
      * is a helper that does so. It then returns the cell object
      * that gets created.
      */
-    Narrative.prototype.insertAndSelectCellBelow = function (
-        cellType,
-        index,
-        data
-    ) {
+    Narrative.prototype.insertAndSelectCellBelow = function (cellType, index, data) {
         return this.insertAndSelectCell(cellType, 'below', index, data);
     };
 
-    Narrative.prototype.insertAndSelectCellAbove = function (
-        cellType,
-        index,
-        data
-    ) {
+    Narrative.prototype.insertAndSelectCellAbove = function (cellType, index, data) {
         return this.insertAndSelectCell(cellType, 'above', index, data);
     };
 
-    Narrative.prototype.insertAndSelectCell = function (
-        cellType,
-        direction,
-        index,
-        data
-    ) {
+    Narrative.prototype.insertAndSelectCell = function (cellType, direction, index, data) {
         let newCell;
         if (direction === 'below') {
             newCell = Jupyter.notebook.insert_cell_below(cellType, index, data);
@@ -1160,8 +1097,7 @@ define([
         const $elem = $('#notebook-container');
         $elem.animate(
             {
-                scrollTop:
-                cell.element.offset().top + $elem.scrollTop() - $elem.offset().top,
+                scrollTop: cell.element.offset().top + $elem.scrollTop() - $elem.offset().top,
             },
             400
         );
@@ -1239,12 +1175,9 @@ define([
      */
     Narrative.prototype.registerWidget = function (widget, cellId) {
         this.kbaseWidgets[cellId] = widget;
-        $('#' + cellId).bind(
-            'destroyed',
-            () => {
-                this.removeWidget(cellId);
-            }
-        );
+        $('#' + cellId).bind('destroyed', () => {
+            this.removeWidget(cellId);
+        });
     };
 
     Narrative.prototype.removeWidget = function (cellId) {

@@ -7,15 +7,8 @@ define([
     'common/props',
     '../inputUtils',
     'bootstrap',
-    'css!font-awesome'
-], (
-    Promise,
-    html,
-    Validation,
-    Events,
-    UI,
-    Props,
-    inputUtils) => {
+    'css!font-awesome',
+], (Promise, html, Validation, Events, UI, Props, inputUtils) => {
     'use strict';
 
     // Constants
@@ -25,15 +18,16 @@ define([
 
     function factory(config) {
         let spec = config.parameterSpec,
-            parent, container,
+            parent,
+            container,
             bus = config.bus,
             model = {
-                value: undefined
+                value: undefined,
             },
             ui,
             options = {
                 enabled: true,
-                rowCount: spec.ui.nRows || 5
+                rowCount: spec.ui.nRows || 5,
             };
 
         // CONTROL
@@ -52,7 +46,7 @@ define([
         // MODEL
 
         // NB this is a trusted method. The value had better be valid,
-        // since it won't (can't) be validated. Validation is an event 
+        // since it won't (can't) be validated. Validation is an event
         // which sits between the control and the model.
         function setModelValue(value) {
             if (value === undefined) {
@@ -73,7 +67,6 @@ define([
             setControlValue(model.getItem('value', null));
         }
 
-
         // VALIDATION
 
         function importControlValue() {
@@ -89,10 +82,9 @@ define([
         }
 
         function autoValidate() {
-            return validate(model.getItem('value'))
-                .then((result) => {
-                    bus.emit('validation', result);
-                });
+            return validate(model.getItem('value')).then((result) => {
+                bus.emit('validation', result);
+            });
         }
 
         let autoChangeTimer;
@@ -108,27 +100,27 @@ define([
             const editPauseInterval = interval || 100;
             return {
                 type: 'keyup',
-                handler: function(e) {
+                handler: function (e) {
                     bus.emit('touched');
                     cancelTouched();
                     autoChangeTimer = window.setTimeout(() => {
                         autoChangeTimer = null;
                         e.target.dispatchEvent(new Event('change'));
                     }, editPauseInterval);
-                }
+                },
             };
         }
 
         function handleChanged() {
             return {
                 type: 'change',
-                handler: function() {
+                handler: function () {
                     cancelTouched();
                     importControlValue()
                         .then((value) => {
                             model.setItem('value', value);
                             bus.emit('changed', {
-                                newValue: value
+                                newValue: value,
                             });
                             return validate(value);
                         })
@@ -146,7 +138,7 @@ define([
                                         title: 'ERROR',
                                         type: 'danger',
                                         id: result.messageId,
-                                        message: result.errorMessage
+                                        message: result.errorMessage,
                                     });
                                     ui.setContent('input-container.message', message.content);
                                     message.events.attachEvents();
@@ -158,10 +150,10 @@ define([
                             bus.emit('validation', {
                                 isValid: false,
                                 diagnosis: 'invalid',
-                                errorMessage: err.message
+                                errorMessage: err.message,
                             });
                         });
-                }
+                },
             };
         }
 
@@ -173,25 +165,24 @@ define([
         function makeInputControl(events) {
             return textarea({
                 id: events.addEvents({
-                    events: [handleChanged(), handleTouched()]
+                    events: [handleChanged(), handleTouched()],
                 }),
                 class: 'form-control',
                 dataElement: 'input',
-                rows: options.rowCount
+                rows: options.rowCount,
             });
         }
 
         function render(events) {
-            const content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' }, [
-                    makeInputControl(events)
-                ])
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' }, [makeInputControl(events)])]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
@@ -234,22 +225,22 @@ define([
 
         model = Props.make({
             data: {
-                value: null
+                value: null,
             },
-            onUpdate: function() {}
+            onUpdate: function () {},
         });
 
         setModelValue(config.initialValue);
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

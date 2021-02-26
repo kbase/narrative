@@ -3,29 +3,22 @@
  * @public
  */
 
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'narrativeConfig',
-		'kbaseNarrativeInput'
-	], (
-		KBWidget,
-		bootstrap,
-		$,
-		Config,
-		kbaseNarrativeInput
-	) => {
+define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'kbaseNarrativeInput'], (
+    KBWidget,
+    bootstrap,
+    $,
+    Config,
+    kbaseNarrativeInput
+) => {
     return KBWidget({
-        name: "kbaseDefaultNarrativeInput",
-        parent : kbaseNarrativeInput,
-        version: "1.0.0",
+        name: 'kbaseDefaultNarrativeInput',
+        parent: kbaseNarrativeInput,
+        version: '1.0.0',
         options: {
             loadingImage: Config.get('loading_gif'),
         },
 
-        init: function(options) {
+        init: function (options) {
             this._super(options);
 
             this.render();
@@ -41,29 +34,50 @@ define (
          * @returns {String} an HTML string describing the available parameters for the cell.
          * @private
          */
-        render: function() {
+        render: function () {
             // figure out all types from the method
             const method = this.options.method;
             const params = method.properties.parameters;
 
             let inputDiv = "<div class='kb-cell-params'><table class='table'>";
-            for (let i=0; i<Object.keys(params).length; i++) {
+            for (let i = 0; i < Object.keys(params).length; i++) {
                 const pid = 'param' + i;
                 const p = params[pid];
 
-                const input_default = (p.default !== "" && p.default !== undefined) ?
-                                    " placeholder='" + p.default + "'" : "";
-                input = "<input class='form-control' style='width: 95%' name='" + pid + "'" + input_default +
-                        " value='' type='text'></input>";
+                const input_default =
+                    p.default !== '' && p.default !== undefined
+                        ? " placeholder='" + p.default + "'"
+                        : '';
+                input =
+                    "<input class='form-control' style='width: 95%' name='" +
+                    pid +
+                    "'" +
+                    input_default +
+                    " value='' type='text'></input>";
 
-                const cellStyle = "border:none; vertical-align:middle;";
-                inputDiv += "<tr style='" + cellStyle + "'>" +
-                                "<th style='" + cellStyle + " font-family: 'OxygenBold', sans-serif; font-weight: bold;>" + p.ui_name + "</th>" +
-                                "<td style='" + cellStyle + " width: 40%;'>" + input + "</td>" +
-                                "<td style='" + cellStyle + " color: #777;'>" + p.description + "</td>" +
-                            "</tr>";
+                const cellStyle = 'border:none; vertical-align:middle;';
+                inputDiv +=
+                    "<tr style='" +
+                    cellStyle +
+                    "'>" +
+                    "<th style='" +
+                    cellStyle +
+                    " font-family: 'OxygenBold', sans-serif; font-weight: bold;>" +
+                    p.ui_name +
+                    '</th>' +
+                    "<td style='" +
+                    cellStyle +
+                    " width: 40%;'>" +
+                    input +
+                    '</td>' +
+                    "<td style='" +
+                    cellStyle +
+                    " color: #777;'>" +
+                    p.description +
+                    '</td>' +
+                    '</tr>';
             }
-            inputDiv += "</table></div>";
+            inputDiv += '</table></div>';
             this.$elem.append(inputDiv);
         },
 
@@ -73,15 +87,17 @@ define (
          * @return {Array} an array of strings - one for each parameter
          * @public
          */
-        getParameters: function() {
+        getParameters: function () {
             const paramList = [];
 
-            $(this.$elem).find("[name^=param]").filter(":input").each((key, field) => {
-                let value = field.value;
-                if (!value)
-                    value = field.placeholder;
-                paramList.push(value.trim());
-            });
+            $(this.$elem)
+                .find('[name^=param]')
+                .filter(':input')
+                .each((key, field) => {
+                    let value = field.value;
+                    if (!value) value = field.placeholder;
+                    paramList.push(value.trim());
+                });
 
             return paramList;
         },
@@ -95,12 +111,15 @@ define (
          * }
          * with one key/value for each parameter in the defined method.
          */
-        getState: function() {
+        getState: function () {
             const state = {};
 
-            $(this.$elem).find("[name^=param]").filter(":input").each((key, field) => {
-                state[field.name] = field.value;
-            });
+            $(this.$elem)
+                .find('[name^=param]')
+                .filter(':input')
+                .each((key, field) => {
+                    state[field.name] = field.value;
+                });
 
             return state;
         },
@@ -110,32 +129,34 @@ define (
          * Doesn't really do a whole lot of type checking yet, but it's assumed that
          * a state will be loaded from an object generated by getState.
          */
-        loadState: function(state) {
-            if (!state)
-                return;
+        loadState: function (state) {
+            if (!state) return;
 
-            $(this.$elem).find("[name^=param]").filter(":input").each((key, field) => {
-                const $field = $(field);
-                const fieldName = $field.attr("name");
+            $(this.$elem)
+                .find('[name^=param]')
+                .filter(':input')
+                .each((key, field) => {
+                    const $field = $(field);
+                    const fieldName = $field.attr('name');
 
-                // If it's a text field, just dump the value in there.
-                if ($field.is("input") && $field.attr("type") === "text") {
-                    $field.val(state[fieldName]);
-                }
+                    // If it's a text field, just dump the value in there.
+                    if ($field.is('input') && $field.attr('type') === 'text') {
+                        $field.val(state[fieldName]);
+                    }
 
-                // If it's a select field, do the same... we'll have comboboxen or something,
-                // eventually, so I'm just leaving this open for that.
-                else if ($field.is("select")) {
-                    $field.val(state[fieldName]);
-                }
-            });
+                    // If it's a select field, do the same... we'll have comboboxen or something,
+                    // eventually, so I'm just leaving this open for that.
+                    else if ($field.is('select')) {
+                        $field.val(state[fieldName]);
+                    }
+                });
         },
 
         /**
          * Refreshes the input fields for this widget. I.e. if any of them reference workspace
          * information, those fields get refreshed without altering any other inputs.
          */
-        refresh: function() {
+        refresh: function () {
             const method = this.options.method;
             const params = method.properties.parameters;
             const lookupTypes = [];
@@ -147,19 +168,21 @@ define (
                 }
             }
 
-            this.trigger('dataLoadedQuery.Narrative', [lookupTypes, this.IGNORE_VERSION, $.proxy(
-                function(objects) {
+            this.trigger('dataLoadedQuery.Narrative', [
+                lookupTypes,
+                this.IGNORE_VERSION,
+                $.proxy(function (objects) {
                     // we know from each parameter what each input type is.
                     // we also know how many of each type there is.
                     // so, iterate over all parameters and fulfill cases as below.
 
-                    for (let i=0; i<Object.keys(params).length; i++) {
+                    for (let i = 0; i < Object.keys(params).length; i++) {
                         const pid = 'param' + i;
                         const p = params[pid];
 
                         // we're refreshing, not rendering, so assume that there's an
                         // input with name = pid present.
-                        const $input = $($(this.$elem).find("[name=" + pid + "]"));
+                        const $input = $($(this.$elem).find('[name=' + pid + ']'));
                         let objList = [];
 
                         /*
@@ -192,9 +215,9 @@ define (
                         // case 2 - no data, need to clear input
                         let datalistID = $input.attr('list');
                         if (objList.length == 0 && datalistID) {
-                            $(this.$elem.find("#" + datalistID)).remove();
+                            $(this.$elem.find('#' + datalistID)).remove();
                             $input.removeAttr('list');
-                            $input.val("");
+                            $input.val('');
                         }
 
                         // case 3 - data, need new datalist
@@ -204,33 +227,29 @@ define (
                             if (!datalistID) {
                                 datalistID = this.genUUID();
                                 $input.attr('list', datalistID);
-                                $datalist = $('<datalist>')
-                                            .attr('id', datalistID);
+                                $datalist = $('<datalist>').attr('id', datalistID);
                                 $input.after($datalist);
-                            }
-                            else {
-                                $datalist = $(this.$elem.find("#" + datalistID));
+                            } else {
+                                $datalist = $(this.$elem.find('#' + datalistID));
                             }
                             $datalist.empty();
-                            for (let j=0; j<objList.length; j++) {
-                                $datalist.append($('<option>')
-                                                 .attr('value', objList[j][1])
-                                                 .append(objList[j][1]));
+                            for (let j = 0; j < objList.length; j++) {
+                                $datalist.append(
+                                    $('<option>').attr('value', objList[j][1]).append(objList[j][1])
+                                );
                             }
                         }
                     }
-                },
-                this
-            )]);
+                }, this),
+            ]);
         },
 
-        genUUID: function() {
+        genUUID: function () {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-                const r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+                const r = (Math.random() * 16) | 0,
+                    v = c == 'x' ? r : (r & 0x3) | 0x8;
                 return v.toString(16);
             });
-        }
-
+        },
     });
-
 });

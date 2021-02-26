@@ -3,7 +3,7 @@
  * KBase Widgets are based around the jQuery widget extension architecture,
  * and are also instantiated as such.
  *
- * Your widget will need (at minimum) a unique name, a parent to inherit 
+ * Your widget will need (at minimum) a unique name, a parent to inherit
  * from, a semantic version, an 'options' structure, and an init() function
  * that returns itself.
  *
@@ -26,18 +26,9 @@
  * @see kbaseAuthenticatedWidget.js
  * @public
  */
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery'
-	], (
-		KBWidget,
-		bootstrap,
-		$
-	) => {
+define(['kbwidget', 'bootstrap', 'jquery'], (KBWidget, bootstrap, $) => {
     return KBWidget({
-        /* 
+        /*
          * (required) Your widget should be named in CamelCase.
          */
         name: 'kbaseDefaultNarrativeOutput',
@@ -51,7 +42,6 @@ define (
          * this.user_id() = the logged in user id
          * this.authToken() = the current authentication token
          */
-        
 
         /*
          * (optional) Widgets should be semantically versioned.
@@ -69,16 +59,16 @@ define (
 
         /**
          * (required) This is the only required function for a KBase Widget.
-         * @param {object} options - a structure containing the set of 
+         * @param {object} options - a structure containing the set of
          * options to be passed to this widget.
          * @private
          */
-        init: function(options) {
+        init: function (options) {
             /*
              * This should be the first line of your init function.
              * It registers the new widget, overriding existing options.
              *
-             * The members of the options structure will become members of 
+             * The members of the options structure will become members of
              * this.options, overriding any existing members.
              */
             this._super(options);
@@ -94,12 +84,13 @@ define (
          * I prefer to keep initialization and rendering code separate, but
          * that's just a style thing. You can do whatever the widget requires.
          */
-        render: function() {
+        render: function () {
             let s = this.options.data;
             if (typeof s != 'string') {
                 s = JSON.stringify(s, undefined, 2);
                 s = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                s = s.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, 
+                s = s.replace(
+                    /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
                     (match) => {
                         let cls = 'number';
                         if (/^"/.test(match)) {
@@ -121,7 +112,5 @@ define (
 
             return this;
         },
-
-
     });
 });

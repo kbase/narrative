@@ -5,7 +5,7 @@
  * A more global manager for all Narratives a user owns might be here later.
  */
 define([
-    'jquery',  // needed to set up Bootstrap popover
+    'jquery', // needed to set up Bootstrap popover
     'bluebird',
     'narrativeConfig',
     'common/runtime',
@@ -15,9 +15,8 @@ define([
     'kb_service/client/workspace',
     'base/js/namespace',
     'handlebars',
-    'text!kbase/templates/static_narrative.html'
-],
-(
+    'text!kbase/templates/static_narrative.html',
+], (
     $,
     Promise,
     Config,
@@ -49,12 +48,9 @@ define([
             this.serviceClient = new DynamicServiceClient({
                 module: 'StaticNarrative',
                 url: Config.url('service_wizard'),
-                token: token
+                token: token,
             });
-            this.wsClient = new Workspace(
-                Config.url('workspace'),
-                {token: token}
-            );
+            this.wsClient = new Workspace(Config.url('workspace'), { token: token });
         }
 
         /**
@@ -85,39 +81,39 @@ define([
             if (!docInfo) {
                 return Promise.try(() => {
                     this.container.innerHTML = '';
-                    this.container.appendChild(this.renderError({
-                        code: -1,
-                        error: 'Narrative document info not found',
-                        name: 'Narrative error',
-                        message: 'Unable to find current Narrative version!'
-                    }));
+                    this.container.appendChild(
+                        this.renderError({
+                            code: -1,
+                            error: 'Narrative document info not found',
+                            name: 'Narrative error',
+                            message: 'Unable to find current Narrative version!',
+                        })
+                    );
                 });
             }
 
-            return Promise.all([
-                this.getStaticNarratives(),
-                this.getPermissionInfo()
-            ]).spread((narrativeInfo, permissions) => {
-                const info = Object.assign(narrativeInfo, permissions);
-                if (info.url) {
-                    info.narr_saved = TimeFormat.prettyTimestamp(info.narr_saved);
-                    info.static_saved = TimeFormat.prettyTimestamp(info.static_saved);
-                    info.url = Config.url('static_narrative_root') + info.url;
-                }
-                info.canMakeStatic = info.isAdmin && info.isPublic;
-                info.currentVersion = docInfo[4];
-                info.currentVersionSaved = TimeFormat.prettyTimestamp(docInfo[3]);
-                info.isCurrentVersion = info.currentVersion === info.version;
-                const tmpl = Handlebars.compile(StaticNarrativeTmpl);
-                this.container.innerHTML = tmpl(info);
+            return Promise.all([this.getStaticNarratives(), this.getPermissionInfo()])
+                .spread((narrativeInfo, permissions) => {
+                    const info = Object.assign(narrativeInfo, permissions);
+                    if (info.url) {
+                        info.narr_saved = TimeFormat.prettyTimestamp(info.narr_saved);
+                        info.static_saved = TimeFormat.prettyTimestamp(info.static_saved);
+                        info.url = Config.url('static_narrative_root') + info.url;
+                    }
+                    info.canMakeStatic = info.isAdmin && info.isPublic;
+                    info.currentVersion = docInfo[4];
+                    info.currentVersionSaved = TimeFormat.prettyTimestamp(docInfo[3]);
+                    info.isCurrentVersion = info.currentVersion === info.version;
+                    const tmpl = Handlebars.compile(StaticNarrativeTmpl);
+                    this.container.innerHTML = tmpl(info);
 
-                const createBtn = this.hostNode.querySelector('button.btn-primary');
-                if (createBtn) {
-                    createBtn.addEventListener('click', this.saveStaticNarrative.bind(this));
-                }
-                $(this.hostNode.querySelector('#kb-sn-help')).popover();
-            })
-                .catch(error => {
+                    const createBtn = this.hostNode.querySelector('button.btn-primary');
+                    if (createBtn) {
+                        createBtn.addEventListener('click', this.saveStaticNarrative.bind(this));
+                    }
+                    $(this.hostNode.querySelector('#kb-sn-help')).popover();
+                })
+                .catch((error) => {
                     console.error(JSON.stringify(error));
                     this.container.innerHTML = '';
                     this.container.appendChild(this.renderError(error));
@@ -145,7 +141,7 @@ define([
                     status: error.status,
                     code: error.error.error.code,
                     message: error.error.error.message || 'No further detail',
-                    name: error.error.error.name
+                    name: error.error.error.name,
                 };
             }
             return DisplayUtil.createError('Static Narrative Error', error)[0];
@@ -159,12 +155,13 @@ define([
          *      Static Narrative info, if any.
          */
         getStaticNarratives() {
-            return Promise.resolve(this.serviceClient.callFunc(
-                'get_static_narrative_info',
-                [{ws_id: this.workspaceId}]
-            ))
-                .then(info => info[0])
-                .catch(error => {
+            return Promise.resolve(
+                this.serviceClient.callFunc('get_static_narrative_info', [
+                    { ws_id: this.workspaceId },
+                ])
+            )
+                .then((info) => info[0])
+                .catch((error) => {
                     this.detach();
                     this.container.appendChild(this.renderError(error));
                     throw error;
@@ -180,16 +177,17 @@ define([
          * Note that errors will propagate and not be caught here.
          */
         getPermissionInfo() {
-            return this.wsClient.get_permissions_mass({'workspaces': [{'id': this.workspaceId}]})
-                .then(perms => {
+            return this.wsClient
+                .get_permissions_mass({ workspaces: [{ id: this.workspaceId }] })
+                .then((perms) => {
                     const perm = perms.perms[0];
                     return {
                         isAdmin: perm[this.userId] && perm[this.userId] === 'a',
-                        isPublic: perm['*'] && perm['*'] === 'r'
+                        isPublic: perm['*'] && perm['*'] === 'r',
                     };
                 })
                 .catch(() => {
-                    return {isAdmin: false, isPublic: false};
+                    return { isAdmin: false, isPublic: false };
                 });
         }
 
@@ -201,13 +199,16 @@ define([
         saveStaticNarrative() {
             const docInfo = Jupyter.narrative.documentVersionInfo;
             const narrativeRef = docInfo[6] + '/' + docInfo[0] + '/' + docInfo[4];
-            this.hostNode.querySelector('span[data-element="saving-spinner"]').classList.toggle('hidden');
-            return Promise.resolve(this.serviceClient.callFunc(
-                'create_static_narrative',
-                [{'narrative_ref': narrativeRef}])
+            this.hostNode
+                .querySelector('span[data-element="saving-spinner"]')
+                .classList.toggle('hidden');
+            return Promise.resolve(
+                this.serviceClient.callFunc('create_static_narrative', [
+                    { narrative_ref: narrativeRef },
+                ])
             )
-                .then(() => this.refresh() )
-                .catch(error => {
+                .then(() => this.refresh())
+                .catch((error) => {
                     this.detach();
                     this.container.appendChild(this.renderError(error));
                 });

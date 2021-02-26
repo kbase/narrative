@@ -6,13 +6,8 @@ define([
     'common/ui',
 
     'bootstrap',
-    'css!font-awesome'
-], (
-    Promise,
-    html,
-    Validation,
-    Events,
-    UI) => {
+    'css!font-awesome',
+], (Promise, html, Validation, Events, UI) => {
     'use strict';
 
     // Constants
@@ -30,7 +25,7 @@ define([
             container,
             model = {
                 availableValues: null,
-                value: null
+                value: null,
             };
 
         options.enabled = true;
@@ -51,19 +46,25 @@ define([
                         selected = true;
                     }
 
-                    return option({
-                        value: item.value,
-                        selected: selected,
-                        disabled: true
-                    }, item.display);
+                    return option(
+                        {
+                            value: item.value,
+                            selected: selected,
+                            disabled: true,
+                        },
+                        item.display
+                    );
                 });
 
             // CONTROL
-            return select({
-                class: 'form-control',
-                dataElement: 'input',
-                readonly: true
-            }, [option({ value: '' }, '')].concat(selectOptions));
+            return select(
+                {
+                    class: 'form-control',
+                    dataElement: 'input',
+                    readonly: true,
+                },
+                [option({ value: '' }, '')].concat(selectOptions)
+            );
         }
 
         function syncModelToControl() {
@@ -81,16 +82,15 @@ define([
         }
 
         function layout(events) {
-            const content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' },
-                    makeViewControl(events)
-                )
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' }, makeViewControl(events))]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
@@ -103,7 +103,6 @@ define([
         function resetModelValue() {
             setModelValue(spec.data.defaultValue);
         }
-
 
         // LIFECYCLE API
 
@@ -142,13 +141,13 @@ define([
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

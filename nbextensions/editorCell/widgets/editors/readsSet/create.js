@@ -10,9 +10,8 @@ define([
     './inputWrapperWidget',
     'widgets/appWidgets2/fieldWidget',
     'widgets/appWidgets2/paramResolver',
-    'common/runtime'
+    'common/runtime',
     // All the input widgets
-
 ], (
     Promise,
     html,
@@ -46,10 +45,9 @@ define([
             inputBusses = [],
             paramResolver = ParamResolver.make(),
             settings = {
-                showAdvanced: null
+                showAdvanced: null,
             },
             widgets = [];
-
 
         // DATA
         /*
@@ -81,7 +79,6 @@ define([
          * - input app - input, select
          */
 
-
         // RENDERING
 
         function makeFieldWidget(appSpec, parameterSpec, value) {
@@ -94,15 +91,14 @@ define([
             fieldBus.on('changed', (message) => {
                 parentBus.emit('parameter-changed', {
                     parameter: parameterSpec.id(),
-                    newValue: message.newValue
+                    newValue: message.newValue,
                 });
             });
-
 
             // An input widget may ask for the current model value at any time.
             fieldBus.on('sync', () => {
                 parentBus.emit('parameter-sync', {
-                    parameter: parameterSpec.id()
+                    parameter: parameterSpec.id(),
                 });
             });
 
@@ -110,55 +106,58 @@ define([
                 console.log('request sync params', message);
                 parentBus.emit('sync-params', {
                     parameters: message.parameters,
-                    replyToChannel: fieldBus.channelName
+                    replyToChannel: fieldBus.channelName,
                 });
             });
-
 
             /*
              * Or in fact any parameter value at any time...
              */
             fieldBus.on('get-parameter-value', (message) => {
-                parentBus.request({
-                        parameter: message.parameter
-                    }, {
-                        key: 'get-parameter-value'
-                    })
+                parentBus
+                    .request(
+                        {
+                            parameter: message.parameter,
+                        },
+                        {
+                            key: 'get-parameter-value',
+                        }
+                    )
                     .then((message) => {
                         bus.emit('parameter-value', {
-                            parameter: message.parameter
+                            parameter: message.parameter,
                         });
                     });
             });
 
             fieldBus.respond({
                 key: {
-                    type: 'get-parameter'
+                    type: 'get-parameter',
                 },
-                handle: function(message) {
+                handle: function (message) {
                     if (message.parameterName) {
                         return parentBus.request(message, {
                             key: {
-                                type: 'get-parameter'
-                            }
+                                type: 'get-parameter',
+                            },
                         });
                     } else {
                         return null;
                     }
-                }
+                },
             });
 
             // Just pass the update along to the input widget.
             parentBus.listen({
                 key: {
                     type: 'update',
-                    parameter: parameterSpec.id()
+                    parameter: parameterSpec.id(),
                 },
-                handle: function(message) {
+                handle: function (message) {
                     fieldBus.emit('update', {
-                        value: message.value
+                        value: message.value,
                     });
-                }
+                },
             });
 
             return {
@@ -172,8 +171,8 @@ define([
                     parameterSpec: parameterSpec,
                     bus: fieldBus,
                     workspaceId: workspaceInfo.id,
-                    referenceType: 'ref'
-                })
+                    referenceType: 'ref',
+                }),
             };
         }
 
@@ -185,14 +184,12 @@ define([
                         type: 'default',
                         classes: ['kb-panel-light'],
                         body: [
-                            div('Create Set Editor')
+                            div('Create Set Editor'),
                             // ui.makeButton('Reset to Defaults', 'reset-to-defaults', {events: events})
-                        ]
+                        ],
                     }),
                     // Main editor panel
-                    div({ dataElement: 'field-area' }, [
-                        div({ dataElement: 'fields' })
-                    ])
+                    div({ dataElement: 'field-area' }, [div({ dataElement: 'fields' })]),
                     //                    ui.buildPanel({
                     //                        title: span(['EDITOR', span({dataElement: 'advanced-hidden-message', style: {marginLeft: '6px', fontStyle: 'italic'}})]),
                     //                        name: 'field-area',
@@ -203,7 +200,7 @@ define([
 
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
@@ -213,13 +210,13 @@ define([
             container = node;
             ui = UI.make({
                 node: container,
-                bus: bus
+                bus: bus,
             });
             const layout = renderLayout();
             container.innerHTML = layout.content;
             layout.events.attachEvents(container);
             places = {
-                fields: ui.getElement('fields')
+                fields: ui.getElement('fields'),
             };
         }
 
@@ -271,7 +268,7 @@ define([
                 div({ dataParameter: 'name' }),
                 div({ dataParameter: 'description' }),
                 // div({dataParameter: 'type'}),
-                div({ dataParameter: 'items' })
+                div({ dataParameter: 'items' }),
             ]);
         }
 
@@ -287,56 +284,74 @@ define([
                 return Promise.resolve()
                     .then(() => {
                         if (params.length === 0) {
-                            places.fields.innerHTML = span({ style: { fontStyle: 'italic' } }, 'No input objects for this app');
+                            places.fields.innerHTML = span(
+                                { style: { fontStyle: 'italic' } },
+                                'No input objects for this app'
+                            );
                         } else {
                             // The "fields" becomes the layout.
                             places.fields.innerHTML = renderEditorLayout();
 
-                            return Promise.all(params.map((spec) => {
-                                try {
-                                    const result = makeFieldWidget(appSpec, spec, model.getItem(['params', spec.name()])),
-                                        rowWidget = RowWidget.make({ widget: result.widget, spec: spec }),
-                                        rowNode = document.createElement('div');
-                                    // places.fields.appendChild(rowNode);
-                                    const rowPlace = document.querySelector('[data-parameter="' + spec.name() + '"]');
-                                    if (!rowPlace) {
-                                        console.warn('Parameter not found in layout', spec);
-                                        return;
+                            return Promise.all(
+                                params.map((spec) => {
+                                    try {
+                                        const result = makeFieldWidget(
+                                                appSpec,
+                                                spec,
+                                                model.getItem(['params', spec.name()])
+                                            ),
+                                            rowWidget = RowWidget.make({
+                                                widget: result.widget,
+                                                spec: spec,
+                                            }),
+                                            rowNode = document.createElement('div');
+                                        // places.fields.appendChild(rowNode);
+                                        const rowPlace = document.querySelector(
+                                            '[data-parameter="' + spec.name() + '"]'
+                                        );
+                                        if (!rowPlace) {
+                                            console.warn('Parameter not found in layout', spec);
+                                            return;
+                                        }
+                                        rowPlace.appendChild(rowNode);
+                                        widgets.push({
+                                            widget: rowWidget,
+                                            bus: result.bus,
+                                        });
+                                        rowWidget.attach(rowNode);
+                                    } catch (ex) {
+                                        console.error('Error making input field widget', ex);
+                                        // TRY Throwing up
+                                        // or not: throw new Error('Error making input field widget: ' + ex.message);
+                                        const errorDisplay = div(
+                                            { style: { border: '1px red solid' } },
+                                            [ex.message]
+                                        );
+                                        places.fields.appendChild(ui.createNode(errorDisplay));
                                     }
-                                    rowPlace.appendChild(rowNode);
-                                    widgets.push({
-                                        widget: rowWidget,
-                                        bus: result.bus
-                                    });
-                                    rowWidget.attach(rowNode);
-                                } catch (ex) {
-                                    console.error('Error making input field widget', ex);
-                                    // TRY Throwing up
-                                    // or not: throw new Error('Error making input field widget: ' + ex.message);
-                                    const errorDisplay = div({ style: { border: '1px red solid' } }, [
-                                        ex.message
-                                    ]);
-                                    places.fields.appendChild(ui.createNode(errorDisplay));
-                                }
-                            }));
+                                })
+                            );
                         }
                     })
 
-                .then(() => {
-                        return Promise.all(widgets.map((widget) => {
-                            return widget.widget.start();
-                        }));
+                    .then(() => {
+                        return Promise.all(
+                            widgets.map((widget) => {
+                                return widget.widget.start();
+                            })
+                        );
                     })
                     .then(() => {
-                        return Promise.all(widgets.map((widget) => {
-                            return widget.widget.run(params);
-                        }));
+                        return Promise.all(
+                            widgets.map((widget) => {
+                                return widget.widget.run(params);
+                            })
+                        );
                     });
             });
         }
 
         function start() {
-
             return Promise.try(() => {
                 // parent will send us our initial parameters
                 parentBus.on('run', (message) => {
@@ -369,8 +384,8 @@ define([
                         bus.send(message, {
                             key: {
                                 type: 'parameter-changed',
-                                parameter: message.parameter
-                            }
+                                parameter: message.parameter,
+                            },
                         });
                         // bus.emit('parameter-changed', message);
                     });
@@ -389,16 +404,15 @@ define([
 
         bus = runtime.bus().makeChannelBus({ description: 'A app params widget' });
 
-
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

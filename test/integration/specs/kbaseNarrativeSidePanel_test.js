@@ -8,21 +8,19 @@ const { login, openNarrative, clickWhenReady } = require('../wdioUtils.js');
 // Note that the narrativeIds used below must be owned or shared with full rights (at least edit) with the narrativetest user.
 // Note that narrativetest is not yet set up in narrative-dev/prod.
 const allTestCases = {
-    common: {
-
-    },
+    common: {},
     envs: {
         ci: {
             TEST_CASE_1: {
-                narrativeId: 53983
+                narrativeId: 53983,
             },
         },
         'narrative-dev': {
             TEST_CASE_1: {
                 narrativeId: 78050,
-            }
-        }
-    }
+            },
+        },
+    },
 };
 
 function getTestCase(name) {
@@ -47,7 +45,6 @@ async function clickAddDataButton() {
     await clickWhenReady(button);
 }
 
-
 async function clickOverlayDimmer() {
     const dimmer = await $('.kb-overlay-dimmer');
     const slideoutPanel = await $('[data-test-id="data-slideout-panel"]');
@@ -61,10 +58,10 @@ async function clickOverlayDimmer() {
 
     // I find that bottom and right are just easier to reason
     // about when doing comparisons.
-    const spBottom = (spy + sph);
-    const dBottom = (dy + dh);
-    const spRight = (spx + spw);
-    const dRight = (dx + dw);
+    const spBottom = spy + sph;
+    const dBottom = dy + dh;
+    const spRight = spx + spw;
+    const dRight = dx + dw;
 
     // We'll try to click below the side panel or to the right.
     // Note that the point of reference for "click" is the
@@ -73,16 +70,16 @@ async function clickOverlayDimmer() {
     if (dBottom > spBottom) {
         // Below
         const clickOptions = {
-            x: 0,                     // midpoint
-            y: Math.round(dh / 2) - 1 // this should be the last pixel (length - 1)
+            x: 0, // midpoint
+            y: Math.round(dh / 2) - 1, // this should be the last pixel (length - 1)
         };
         await dimmer.click(clickOptions);
     } else if (dRight > spRight) {
         // To the right
         const clickOptions = {
-            x: Math.round(dw / 2) - 1,  // this should be the last pixel (length - 1)
-            y: 0                        // midpoint
-        }
+            x: Math.round(dw / 2) - 1, // this should be the last pixel (length - 1)
+            y: 0, // midpoint
+        };
         await dimmer.click(clickOptions);
     } else {
         throw new Error('No clickable areas');
@@ -112,21 +109,25 @@ async function slideoutPanelToBe(slideout, state) {
         const slideoutContainer = await getSlideoutContainer();
         if (await slideoutContainer.isDisplayed()) {
             await browser.waitUntil(async () => {
-                const slideoutPanel = await slideoutContainer.$(`[data-test-id="${slideout}-slideout-panel"]`);
+                const slideoutPanel = await slideoutContainer.$(
+                    `[data-test-id="${slideout}-slideout-panel"]`
+                );
                 const isDisplayed = await slideoutPanel.isDisplayed();
                 return !isDisplayed;
             });
         }
     } else {
         const slideoutContainer = await slideoutToBe('open');
-        const slideoutPanel = await slideoutContainer.$(`[data-test-id="${slideout}-slideout-panel"]`);
+        const slideoutPanel = await slideoutContainer.$(
+            `[data-test-id="${slideout}-slideout-panel"]`
+        );
         await slideoutPanel.waitForDisplayed();
     }
 }
 
 describe('Tabbing within the data panel should work', () => {
     beforeEach(async () => {
-        await browser.setTimeout({ 'implicit': 30000 });
+        await browser.setTimeout({ implicit: 30000 });
         await browser.reloadSession();
     });
 
@@ -256,5 +257,4 @@ describe('Tabbing within the data panel should work', () => {
         await slideoutPanelToBe('data', 'closed');
         await slideoutPanelToBe('app', 'closed');
     });
-
 });

@@ -6,7 +6,7 @@ define([
     'common/runtime',
     'common/dom',
     'bootstrap',
-    'css!font-awesome'
+    'css!font-awesome',
 ], (Promise, html, Validation, Events, Runtime, Dom) => {
     'use strict';
 
@@ -23,7 +23,7 @@ define([
             container,
             bus = config.bus,
             model = {
-                value: undefined
+                value: undefined,
             },
             dom,
             runtime = Runtime.make(),
@@ -60,19 +60,17 @@ define([
                     return true;
                 }
                 return false;
-            })
-                .then((changed) => {
-                    render();
-                });
+            }).then((changed) => {
+                render();
+            });
         }
 
         function unsetModelValue() {
             return Promise.try(() => {
                 model.value = undefined;
-            })
-                .then((changed) => {
-                    render();
-                });
+            }).then((changed) => {
+                render();
+            });
         }
 
         function resetModelValue() {
@@ -96,11 +94,10 @@ define([
                     return {
                         isValid: true,
                         validated: false,
-                        diagnosis: 'disabled'
+                        diagnosis: 'disabled',
                     };
                 });
-            }
-            else {
+            } else {
                 const rawValue = getInputValue();
                 return validateUniqueOutput(rawValue)
                     .then((isUnique) => {
@@ -108,19 +105,22 @@ define([
                             return {
                                 isValid: false,
                                 diagnosis: 'invalid',
-                                errorMessage: 'Every output object from a single app run must have a unique name.'
+                                errorMessage:
+                                    'Every output object from a single app run must have a unique name.',
                             };
-                        }
-                        else {
+                        } else {
                             const validationOptions = {
                                 required: spec.data.constraints.required,
                                 shouldNotExist: true,
                                 workspaceId: workspaceId,
                                 types: spec.data.constraints.types,
                                 authToken: runtime.authToken(),
-                                workspaceServiceUrl: runtime.config('services.workspace.url')
+                                workspaceServiceUrl: runtime.config('services.workspace.url'),
                             };
-                            return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
+                            return Validation.validateWorkspaceObjectName(
+                                rawValue,
+                                validationOptions
+                            );
                         }
                     })
                     .then((validationResult) => {
@@ -131,16 +131,23 @@ define([
 
         /* Validate that this is a unique value among all output parameters */
         function validateUniqueOutput(rawValue) {
-            return bus.request({
-                parameterNames: otherOutputParams
-            }, {
-                key: {
-                    type: 'get-parameters'
-                }
-            }).then((paramValues) => {
-                const duplicates = Object.values(paramValues).filter(value => rawValue === value && !!value);
-                return !duplicates.length;
-            });
+            return bus
+                .request(
+                    {
+                        parameterNames: otherOutputParams,
+                    },
+                    {
+                        key: {
+                            type: 'get-parameters',
+                        },
+                    }
+                )
+                .then((paramValues) => {
+                    const duplicates = Object.values(paramValues).filter(
+                        (value) => rawValue === value && !!value
+                    );
+                    return !duplicates.length;
+                });
         }
 
         let autoChangeTimer;
@@ -156,31 +163,31 @@ define([
             const editPauseInterval = interval || 500;
             return {
                 type: 'keyup',
-                handler: function(e) {
+                handler: function (e) {
                     bus.emit('touched');
                     cancelTouched();
                     autoChangeTimer = window.setTimeout(() => {
                         autoChangeTimer = null;
                         e.target.dispatchEvent(new Event('change'));
                     }, editPauseInterval);
-                }
+                },
             };
         }
 
         function handleChanged() {
             return {
                 type: 'change',
-                handler: function() {
+                handler: function () {
                     validate()
                         .then((result) => {
                             if (result.isValid || result.diagnosis === 'required-missing') {
                                 bus.emit('changed', {
-                                    newValue: result.parsedValue
+                                    newValue: result.parsedValue,
                                 });
                             } else if (result.diagnosis === 'invalid') {
                                 bus.emit('changed', {
                                     newValue: result.parsedValue,
-                                    isError: true
+                                    isError: true,
                                 });
                             }
                             bus.emit('validation', result);
@@ -188,10 +195,10 @@ define([
                         .catch((err) => {
                             bus.emit('validation', {
                                 errorMessage: err.message,
-                                diagnosis: 'error'
+                                diagnosis: 'error',
                             });
                         });
-                }
+                },
             };
         }
 
@@ -204,13 +211,11 @@ define([
             // CONTROL
             return input({
                 id: events.addEvents({
-                    events: [
-                        handleChanged(), handleTouched()
-                    ]
+                    events: [handleChanged(), handleTouched()],
                 }),
                 class: 'form-control',
                 dataElement: 'input',
-                value: currentValue
+                value: currentValue,
             });
         }
 
@@ -221,21 +226,21 @@ define([
 
                 dom.setContent('input-container', inputControl);
                 events.attachEvents(container);
-            })
-                .then(() => {
-                    return autoValidate();
-                });
+            }).then(() => {
+                return autoValidate();
+            });
         }
 
         function layout(events) {
-            const content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' })
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
@@ -247,7 +252,7 @@ define([
                 .catch((err) => {
                     bus.emit('validation', {
                         errorMessage: err.message,
-                        diagnosis: 'error'
+                        diagnosis: 'error',
                     });
                 });
         }
@@ -267,29 +272,26 @@ define([
                     container.innerHTML = theLayout.content;
                     events.attachEvents(container);
 
-
                     bus.on('reset-to-defaults', (message) => {
                         resetModelValue();
                     });
                     bus.on('update', (message) => {
                         setModelValue(message.value);
                     });
-                    bus.on('refresh', () => {
-
-                    });
+                    bus.on('refresh', () => {});
                     bus.emit('sync');
                 });
             });
         }
 
         return {
-            start: start
+            start: start,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

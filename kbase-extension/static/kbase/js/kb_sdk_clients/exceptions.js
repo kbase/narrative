@@ -29,7 +29,6 @@ define([], () => {
     TimeoutException.prototype.constructor = TimeoutException;
     TimeoutException.prototype.name = 'TimeoutException';
 
-
     function RequestException(message, xhr) {
         this.xhr = xhr;
         this.message = message;
@@ -97,7 +96,6 @@ define([], () => {
     AttributeError.prototype.name = 'AttributeError';
 
     return Object.freeze({
-
         // json rpc level errors
         ClientException: ClientException,
         ServerException: ServerException,
@@ -109,7 +107,6 @@ define([], () => {
         InvalidResponseError: InvalidResponseError,
         RequestError: RequestError,
         JsonRpcError: JsonRpcError,
-        AttributeError: AttributeError
+        AttributeError: AttributeError,
     });
-
 });

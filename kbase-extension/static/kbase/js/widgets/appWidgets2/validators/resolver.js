@@ -1,9 +1,4 @@
-define([
-    'require',
-    'bluebird'
-], (
-    require,
-    Promise) => {
+define(['require', 'bluebird'], (require, Promise) => {
     'use strict';
 
     const typeToValidatorModule = {
@@ -17,7 +12,7 @@ define([
         subdata: 'subdata',
         customSubdata: 'customSubdata',
         custom: 'custom',
-        dynamicDropdown: 'dynamicDropdown'
+        dynamicDropdown: 'dynamicDropdown',
     };
 
     function getValidatorModule(fieldSpec) {
@@ -44,6 +39,6 @@ define([
     }
 
     return {
-        validate: validate
-    }
+        validate: validate,
+    };
 });

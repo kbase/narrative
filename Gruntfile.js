@@ -1,4 +1,4 @@
-module.exports = function(grunt) {
+module.exports = function (grunt) {
     // Project configuration
     'use strict';
     grunt.loadNpmTasks('grunt-contrib-requirejs');
@@ -16,10 +16,7 @@ module.exports = function(grunt) {
                 options: {
                     name: 'narrative_paths',
                     baseUrl: 'kbase-extension/static',
-                    include: [
-                        'narrativeMain',
-                        'buildTools/loadAppWidgets'
-                    ],
+                    include: ['narrativeMain', 'buildTools/loadAppWidgets'],
                     mainConfigFile: 'kbase-extension/static/narrative_paths.js',
                     findNestedDependencies: true,
                     optimize: 'none',
@@ -42,28 +39,30 @@ module.exports = function(grunt) {
                         'base/js/dialog': 'empty:',
                         'notebook/js/notebook': 'empty:',
                         'notebook/js/main': 'empty:',
-                        'custom/custom': 'empty:'
+                        'custom/custom': 'empty:',
                     },
                     inlineText: false,
                     buildCSS: false,
                     optimizeAllPluginResources: false,
-                    done: function(done, output) {
+                    done: function (done, output) {
                         console.log(output);
                         done();
-                    }
-                }
-            }
+                    },
+                },
+            },
         },
 
         uglify: {
             dist: {
                 options: {
-                    sourceMap: true
+                    sourceMap: true,
                 },
                 files: {
-                    'kbase-extension/static/kbase-narrative-min.js': ['kbase-extension/static/kbase-narrative.js']
-                }
-            }
+                    'kbase-extension/static/kbase-narrative-min.js': [
+                        'kbase-extension/static/kbase-narrative.js',
+                    ],
+                },
+            },
         },
 
         // Once we have a revved file, this inserts that reference into page.html at
@@ -77,24 +76,17 @@ module.exports = function(grunt) {
                         // search: 'narrativeMain',
                         search: 'narrativeMain.js',
 
-                        replace: function() {
+                        replace: function () {
                             return 'kbase-narrative-min.js';
                         },
-                        flags: ''
-                    }
-                ]
-            }
+                        flags: '',
+                    },
+                ],
+            },
         },
     });
 
-    grunt.registerTask('minify', [
-        'requirejs',
-        'uglify',
-        'regex-replace'
-    ]);
+    grunt.registerTask('minify', ['requirejs', 'uglify', 'regex-replace']);
 
-    grunt.registerTask('build', [
-        'requirejs',
-        'regex-replace'
-    ]);
+    grunt.registerTask('build', ['requirejs', 'regex-replace']);
 };

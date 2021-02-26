@@ -7,17 +7,8 @@ define([
     'util/bootstrapDialog',
     'kbase/js/widgets/appInfoPanel',
     'narrativeConfig',
-    'custom/custom'
-], (
-    $,
-    html,
-    Events,
-    Jupyter,
-    utils,
-    BootstrapDialog,
-    AppInfoPanel,
-    Config
-) => {
+    'custom/custom',
+], ($, html, Events, Jupyter, utils, BootstrapDialog, AppInfoPanel, Config) => {
     'use strict';
 
     const t = html.tag,
@@ -85,15 +76,17 @@ define([
                 label = utils.getCellMeta(cell, 'kbase.attributes.info.label');
 
             if (url) {
-                return a({
+                return a(
+                    {
                         href: url,
                         target: '_blank',
                         id: events.addEvent({
                             type: 'click',
-                            handler: doShowInfoModal
-                        })
+                            handler: doShowInfoModal,
+                        }),
                     },
-                    label || 'ref');
+                    label || 'ref'
+                );
             }
             return '';
         }
@@ -131,13 +124,17 @@ define([
                 title: title,
                 body: $('<div class="container"></div>'),
                 buttons: [
-                    $('<a href="' + appStoreUrl + '" target="_blank" type="button" class="btn btn-default">View on App Store</a>'),
+                    $(
+                        '<a href="' +
+                            appStoreUrl +
+                            '" target="_blank" type="button" class="btn btn-default">View on App Store</a>'
+                    ),
                     $('<button type="button" class="btn btn-primary">Close</button>').click(() => {
                         dialog.hide();
-                    })
+                    }),
                 ],
                 enterToTrigger: true,
-                closeButton: true
+                closeButton: true,
             });
 
             const infoPanel = AppInfoPanel.make({
@@ -145,9 +142,9 @@ define([
                 appVersion: version,
                 appAuthors: authors,
                 appModule: module,
-                tag: tag
+                tag: tag,
             });
-            infoPanel.start({node: dialog.getBody()});
+            infoPanel.start({ node: dialog.getBody() });
 
             dialog.getElement().on('hidden.bs.modal', () => {
                 dialog.destroy();
@@ -165,23 +162,24 @@ define([
                 return;
             }
 
-            return button({
-                type: 'button',
-                class: 'btn btn-default btn-xs',
-                dataToggle: 'tooltip',
-                dataPlacement: 'left',
-                title: true,
-                dataOriginalTitle: 'Cell Settings',
-                id: events.addEvent({type: 'click', handler: doToggleCellSettings})
-            }, [
-                span({class: 'fa fa-cog', style: 'font-size: 14pt'})
-            ]);
+            return button(
+                {
+                    type: 'button',
+                    class: 'btn btn-default btn-xs',
+                    dataToggle: 'tooltip',
+                    dataPlacement: 'left',
+                    title: true,
+                    dataOriginalTitle: 'Cell Settings',
+                    id: events.addEvent({ type: 'click', handler: doToggleCellSettings }),
+                },
+                [span({ class: 'fa fa-cog', style: 'font-size: 14pt' })]
+            );
         }
 
         function renderIcon(icon) {
             return span({
                 class: 'fa fa-' + icon.type + ' fa-sm',
-                style: {color: icon.color || '#000'}
+                style: { color: icon.color || '#000' },
             });
         }
 
@@ -197,8 +195,12 @@ define([
         }
 
         function renderOptions(cell, events) {
-            const toggleMinMax = utils.getCellMeta(cell, 'kbase.cellState.toggleMinMax', 'maximized'),
-                toggleIcon = (toggleMinMax === 'maximized' ? 'minus' : 'plus'),
+            const toggleMinMax = utils.getCellMeta(
+                    cell,
+                    'kbase.cellState.toggleMinMax',
+                    'maximized'
+                ),
+                toggleIcon = toggleMinMax === 'maximized' ? 'minus' : 'plus',
                 dropdownId = html.genId(),
                 menuItems = [];
 
@@ -208,9 +210,9 @@ define([
                     label: isCodeShowing(cell) ? 'Hide code' : 'Show code',
                     icon: {
                         type: 'terminal',
-                        color: 'black'
+                        color: 'black',
                     },
-                    id: events.addEvent({type: 'click', handler: doToggleCodeView})
+                    id: events.addEvent({ type: 'click', handler: doToggleCodeView }),
                 });
             }
 
@@ -220,14 +222,14 @@ define([
                     label: 'Info',
                     icon: {
                         type: 'info',
-                        color: 'orange'
+                        color: 'orange',
                     },
                     id: events.addEvent({
                         type: 'click',
                         handler: function () {
                             cell.showInfo();
-                        }
-                    })
+                        },
+                    }),
                 });
             }
 
@@ -237,21 +239,21 @@ define([
                     label: 'Toggle Batch',
                     icon: {
                         type: 'table',
-                        color: 'black'
+                        color: 'black',
                     },
                     id: events.addEvent({
                         type: 'click',
                         handler: () => {
                             cell.toggleBatch();
-                        }
-                    })
+                        },
+                    }),
                 });
             }
 
             if (!readOnly) {
                 if (menuItems.length > 0) {
                     menuItems.push({
-                        type: 'separator'
+                        type: 'separator',
                     });
                 }
                 menuItems.push({
@@ -259,9 +261,9 @@ define([
                     label: 'Delete cell',
                     icon: {
                         type: 'times',
-                        color: 'red'
+                        color: 'red',
                     },
-                    id: events.addEvent({type: 'click', handler: doDeleteCell})
+                    id: events.addEvent({ type: 'click', handler: doDeleteCell }),
                 });
             }
 
@@ -269,50 +271,66 @@ define([
                 return '';
             }
 
-            return span({class: 'dropdown'}, [
-                button({
-                    class: 'btn btn-xs btn-default dropdown-toggle',
-                    type: 'button',
-                    id: dropdownId,
-                    dataToggle: 'dropdown',
-                    ariaHaspopup: 'true',
-                    ariaExpanded: 'true',
-                    'aria-label': 'cell options',
-                    'data-test': 'cell-dropdown'
-                }, [span({class: 'fa fa-ellipsis-h fa-lg'})]),
-                ul({
-                    class: 'dropdown-menu dropdown-menu-right',
-                    ariaLabelledby: dropdownId
-                }, [
-                    menuItems.map((item) => {
-                        switch (item.type) {
-                            case 'separator':
-                                return li({
-                                    role: 'separator',
-                                    class: 'divider'
-                                });
-                            default:
-                                return li(button({
-                                    class: 'btn btn-default',
-                                    type: 'button',
-                                    style: {
-                                        width: '100%',
-                                        textAlign: 'left'
-                                    },
-                                    id: item.id
-                                }, [
-                                    span({
-                                        style: {
-                                            display: 'inline-block',
-                                            width: '25px',
-                                            marginRight: '4px'
-                                        }
-                                    }, renderIcon(item.icon)),
-                                    span(item.label)
-                                ]));
-                        }
-                    }).join('')
-                ])
+            return span({ class: 'dropdown' }, [
+                button(
+                    {
+                        class: 'btn btn-xs btn-default dropdown-toggle',
+                        type: 'button',
+                        id: dropdownId,
+                        dataToggle: 'dropdown',
+                        ariaHaspopup: 'true',
+                        ariaExpanded: 'true',
+                        'aria-label': 'cell options',
+                        'data-test': 'cell-dropdown',
+                    },
+                    [span({ class: 'fa fa-ellipsis-h fa-lg' })]
+                ),
+                ul(
+                    {
+                        class: 'dropdown-menu dropdown-menu-right',
+                        ariaLabelledby: dropdownId,
+                    },
+                    [
+                        menuItems
+                            .map((item) => {
+                                switch (item.type) {
+                                    case 'separator':
+                                        return li({
+                                            role: 'separator',
+                                            class: 'divider',
+                                        });
+                                    default:
+                                        return li(
+                                            button(
+                                                {
+                                                    class: 'btn btn-default',
+                                                    type: 'button',
+                                                    style: {
+                                                        width: '100%',
+                                                        textAlign: 'left',
+                                                    },
+                                                    id: item.id,
+                                                },
+                                                [
+                                                    span(
+                                                        {
+                                                            style: {
+                                                                display: 'inline-block',
+                                                                width: '25px',
+                                                                marginRight: '4px',
+                                                            },
+                                                        },
+                                                        renderIcon(item.icon)
+                                                    ),
+                                                    span(item.label),
+                                                ]
+                                            )
+                                        );
+                                }
+                            })
+                            .join(''),
+                    ]
+                ),
             ]);
         }
 
@@ -324,7 +342,7 @@ define([
                 class: 'fa fa-thumbs-down fa-2x',
                 style: {
                     verticalAlign: 'top',
-                }
+                },
             });
         }
 
@@ -352,191 +370,228 @@ define([
             The cell metadata 'kbase.cellState.toggleMinMax' is the
             canonical indicator of whether a cell is collapsed or not.
             */
-            const cellCollapsed = utils.getCellMeta(
-                cell, 'kbase.cellState.toggleMinMax', 'maximized'
-            ) !== 'maximized';
-            const fsmMode = utils.getCellMeta(
-                cell, 'kbase.appCell.fsm.currentState.mode', ''
-            );
-            const fsmStage = utils.getCellMeta(
-                cell, 'kbase.appCell.fsm.currentState.stage', ''
-            );
+            const cellCollapsed =
+                utils.getCellMeta(cell, 'kbase.cellState.toggleMinMax', 'maximized') !==
+                'maximized';
+            const fsmMode = utils.getCellMeta(cell, 'kbase.appCell.fsm.currentState.mode', '');
+            const fsmStage = utils.getCellMeta(cell, 'kbase.appCell.fsm.currentState.stage', '');
             const appStatePretty = minimizedStatus(fsmMode, fsmStage);
             const collapsedCellStatus = cellCollapsed ? appStatePretty : '';
 
-            const events = Events.make({node: container}),
+            const events = Events.make({ node: container }),
                 buttons = [
-                    div({class: 'buttons pull-right'}, [
+                    div({ class: 'buttons pull-right' }, [
                         renderOptions(cell, events),
                         span({
                             class: 'fa fa-circle-o-notch fa-spin',
-                            style: {color: 'rgb(42, 121, 191)', display: 'none'}
+                            style: { color: 'rgb(42, 121, 191)', display: 'none' },
                         }),
-                        span({class: 'fa fa-exclamation-triangle', style: {color: 'rgb(255, 0, 0)', display: 'none'}}),
-                        (readOnly ? null : button({
-                            type: 'button',
-                            class: 'btn btn-default btn-xs',
-                            dataToggle: 'tooltip',
-                            dataPlacement: 'left',
-                            title: true,
-                            dataOriginalTitle: 'Move Cell Up',
-                            'data-test': 'cell-move-up',
-                            'aria-label': 'Move cell up',
-                            id: events.addEvent({type: 'click', handler: doMoveCellUp})
-                        }, [
-                            span({class: 'fa fa-arrow-up fa-lg'})
-                        ])),
-                        (readOnly ? null : button({
-                            type: 'button',
-                            class: 'btn btn-default btn-xs',
-                            dataToggle: 'tooltip',
-                            dataPlacement: 'left',
-                            title: true,
-                            dataOriginalTitle: 'Move Cell Down',
-                            'data-test': 'cell-move-down',
-                            'aria-label': 'Move cell down',
-                            id: events.addEvent({type: 'click', handler: doMoveCellDown})
-                        }, [
-                            span({class: 'fa fa-arrow-down fa-lg'})
-                        ])),
-
+                        span({
+                            class: 'fa fa-exclamation-triangle',
+                            style: { color: 'rgb(255, 0, 0)', display: 'none' },
+                        }),
+                        readOnly
+                            ? null
+                            : button(
+                                  {
+                                      type: 'button',
+                                      class: 'btn btn-default btn-xs',
+                                      dataToggle: 'tooltip',
+                                      dataPlacement: 'left',
+                                      title: true,
+                                      dataOriginalTitle: 'Move Cell Up',
+                                      'data-test': 'cell-move-up',
+                                      'aria-label': 'Move cell up',
+                                      id: events.addEvent({ type: 'click', handler: doMoveCellUp }),
+                                  },
+                                  [span({ class: 'fa fa-arrow-up fa-lg' })]
+                              ),
+                        readOnly
+                            ? null
+                            : button(
+                                  {
+                                      type: 'button',
+                                      class: 'btn btn-default btn-xs',
+                                      dataToggle: 'tooltip',
+                                      dataPlacement: 'left',
+                                      title: true,
+                                      dataOriginalTitle: 'Move Cell Down',
+                                      'data-test': 'cell-move-down',
+                                      'aria-label': 'Move cell down',
+                                      id: events.addEvent({
+                                          type: 'click',
+                                          handler: doMoveCellDown,
+                                      }),
+                                  },
+                                  [span({ class: 'fa fa-arrow-down fa-lg' })]
+                              ),
                         (function () {
-                            const toggleMinMax = utils.getCellMeta(cell, 'kbase.cellState.toggleMinMax', 'maximized'),
-                                toggleIcon = (toggleMinMax === 'maximized' ? 'minus' : 'plus'),
-                                color = (toggleMinMax === 'maximized' ? '#000' : 'rgba(255,137,0,1)');
-                            return button({
-                                type: 'button',
-                                class: 'btn btn-default btn-xs',
-                                dataToggle: 'tooltip',
-                                dataPlacement: 'left',
-                                title: true,
-                                'data-test': 'cell-toggle-expansion',
-                                'aria-label': 'Expand or Collapse Cell',
-                                dataOriginalTitle: toggleMinMax === 'maximized' ? 'Collapse Cell' : 'Expand Cell',
-                                id: events.addEvent({type: 'click', handler: doToggleMinMaxCell})
-                            }, [
-                                span({
-                                    class: 'fa fa-' + toggleIcon + '-square-o fa-lg',
-                                    style: {
-                                        color: color
-                                    }
-                                })
-                            ]);
-                        }())
-                    ])
+                            const toggleMinMax = utils.getCellMeta(
+                                    cell,
+                                    'kbase.cellState.toggleMinMax',
+                                    'maximized'
+                                ),
+                                toggleIcon = toggleMinMax === 'maximized' ? 'minus' : 'plus',
+                                color = toggleMinMax === 'maximized' ? '#000' : 'rgba(255,137,0,1)';
+                            return button(
+                                {
+                                    type: 'button',
+                                    class: 'btn btn-default btn-xs',
+                                    dataToggle: 'tooltip',
+                                    dataPlacement: 'left',
+                                    title: true,
+                                    'data-test': 'cell-toggle-expansion',
+                                    'aria-label': 'Expand or Collapse Cell',
+                                    dataOriginalTitle:
+                                        toggleMinMax === 'maximized'
+                                            ? 'Collapse Cell'
+                                            : 'Expand Cell',
+                                    id: events.addEvent({
+                                        type: 'click',
+                                        handler: doToggleMinMaxCell,
+                                    }),
+                                },
+                                [
+                                    span({
+                                        class: 'fa fa-' + toggleIcon + '-square-o fa-lg',
+                                        style: {
+                                            color: color,
+                                        },
+                                    }),
+                                ]
+                            );
+                        })(),
+                    ]),
                 ],
-                message = div({
-                    class: 'pull-right messsage',
-                    style: {
-                        fontStyle: 'italic'
-                    }
-                }, [
-                    div([
-                        utils.getCellMeta(cell, 'kbase.cellState.message')
-                    ])
-                ]),
-                content = div({class: 'kb-cell-toolbar'}, [
-                    div({
-                        class: '', style: {
-                            display: 'flex',
-                            flexDirection: 'row',
-                            height: '56px',
-                            justifyContent: 'space-between',
-                        }
-                    }, [
-                        div({
-                            class: 'title-container',
-                            style: {flexGrow: '1'}
-                        }, [
-                            div({
-                                class: 'title', style: {
-                                    display: 'flex', height: '56px'
-                                }
-                            }, [
-                                div({
-                                    dataElement: 'icon',
-                                    class: 'icon',
-                                    style: {
-                                        flexShrink: '0',
-                                        width: '56px',
-                                        height: '56px',
-                                        lineHeight: '56px'
-                                    }
-                                }, [
-                                    buildIcon(cell)
-                                ]),
-                                div({style: {flexGrow: '1'}}, [
-                                    div({
-                                        dataElement: 'title',
-                                        class: 'title',
-                                        style: {
-                                            lineHeight: '20px',
-                                            height: '20px',
-                                            marginTop: '8px',
-                                            overflow: 'hidden'
-                                        }
-                                    }, [
-                                        getOutdatedWarning(cell),
-                                        getCellTitle(cell),
-                                    ]),
-                                    div({
-                                        dataElement: 'subtitle',
-                                        class: 'subtitle',
-                                        style: {
-                                            lineHeight: '20px',
-                                            height: '20px',
-                                            overflow: 'hidden'
-                                        }
-                                    }, [getCellSubtitle(cell)])
-                                ]),
-                                div(
-                                    {
-                                        style: {
-                                            margin: '0px 0px 0px auto',
-                                            minWidth: '65px'
-                                        }
-                                    },
-                                    [collapsedCellStatus]
-                                )
-                            ])
-                        ]),
-                        div({
-                            class: 'buttons-container',
-                            style: {minWidth: '110px'}
-                        }, [
-                            buttons,
-                            message
-                        ])
-                    ])
+                message = div(
+                    {
+                        class: 'pull-right messsage',
+                        style: {
+                            fontStyle: 'italic',
+                        },
+                    },
+                    [div([utils.getCellMeta(cell, 'kbase.cellState.message')])]
+                ),
+                content = div({ class: 'kb-cell-toolbar' }, [
+                    div(
+                        {
+                            class: '',
+                            style: {
+                                display: 'flex',
+                                flexDirection: 'row',
+                                height: '56px',
+                                justifyContent: 'space-between',
+                            },
+                        },
+                        [
+                            div(
+                                {
+                                    class: 'title-container',
+                                    style: { flexGrow: '1' },
+                                },
+                                [
+                                    div(
+                                        {
+                                            class: 'title',
+                                            style: {
+                                                display: 'flex',
+                                                height: '56px',
+                                            },
+                                        },
+                                        [
+                                            div(
+                                                {
+                                                    dataElement: 'icon',
+                                                    class: 'icon',
+                                                    style: {
+                                                        flexShrink: '0',
+                                                        width: '56px',
+                                                        height: '56px',
+                                                        lineHeight: '56px',
+                                                    },
+                                                },
+                                                [buildIcon(cell)]
+                                            ),
+                                            div({ style: { flexGrow: '1' } }, [
+                                                div(
+                                                    {
+                                                        dataElement: 'title',
+                                                        class: 'title',
+                                                        style: {
+                                                            lineHeight: '20px',
+                                                            height: '20px',
+                                                            marginTop: '8px',
+                                                            overflow: 'hidden',
+                                                        },
+                                                    },
+                                                    [getOutdatedWarning(cell), getCellTitle(cell)]
+                                                ),
+                                                div(
+                                                    {
+                                                        dataElement: 'subtitle',
+                                                        class: 'subtitle',
+                                                        style: {
+                                                            lineHeight: '20px',
+                                                            height: '20px',
+                                                            overflow: 'hidden',
+                                                        },
+                                                    },
+                                                    [getCellSubtitle(cell)]
+                                                ),
+                                            ]),
+                                            div(
+                                                {
+                                                    style: {
+                                                        margin: '0px 0px 0px auto',
+                                                        minWidth: '65px',
+                                                    },
+                                                },
+                                                [collapsedCellStatus]
+                                            ),
+                                        ]
+                                    ),
+                                ]
+                            ),
+                            div(
+                                {
+                                    class: 'buttons-container',
+                                    style: { minWidth: '110px' },
+                                },
+                                [buttons, message]
+                            ),
+                        ]
+                    ),
                 ]);
             return {
                 events: events,
-                content: content
+                content: content,
             };
         }
 
         function getOutdatedWarning(cell) {
             if (utils.getCellMeta(cell, 'kbase.appCell.outdated', false)) {
-                return a({
-                    tabindex: '0',
-                    type: 'button',
-                    class: 'btn btn-default btn-xs',
-                    dataContainer: 'body',
-                    container: 'body',
-                    dataToggle: 'popover',
-                    dataPlacement: 'bottom',
-                    dataTrigger: 'focus',
-                    role: 'button',
-                    title: 'New version available',
-                    dataContent: 'This app has a newer version available! ' +
-                        'There\'s probably nothing wrong with this version, ' +
-                        'but the new one may include new features. Add a new "' +
-                        utils.getCellMeta(cell, 'kbase.appCell.newAppName') +
-                        '" app cell for the update.',
-                    style: {color: '#f79b22'}
-                }, [
-                    span({class: 'fa fa-exclamation-triangle fa-lg'})
-                ]);
+                return a(
+                    {
+                        tabindex: '0',
+                        type: 'button',
+                        class: 'btn btn-default btn-xs',
+                        dataContainer: 'body',
+                        container: 'body',
+                        dataToggle: 'popover',
+                        dataPlacement: 'bottom',
+                        dataTrigger: 'focus',
+                        role: 'button',
+                        title: 'New version available',
+                        dataContent:
+                            'This app has a newer version available! ' +
+                            "There's probably nothing wrong with this version, " +
+                            'but the new one may include new features. Add a new "' +
+                            utils.getCellMeta(cell, 'kbase.appCell.newAppName') +
+                            '" app cell for the update.',
+                        style: { color: '#f79b22' },
+                    },
+                    [span({ class: 'fa fa-exclamation-triangle fa-lg' })]
+                );
             } else {
                 return '';
             }
@@ -562,13 +617,13 @@ define([
         }
 
         return {
-            register_callback: callback
+            register_callback: callback,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

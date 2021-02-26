@@ -1,8 +1,4 @@
-define([
-    'kb_common/html'
-], (
-    html
-) => {
+define(['kb_common/html'], (html) => {
     'use strict';
     const t = html.tag,
         div = t('div');
@@ -39,13 +35,13 @@ define([
         return {
             attach: attach,
             start: start,
-            run: run
+            run: run,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

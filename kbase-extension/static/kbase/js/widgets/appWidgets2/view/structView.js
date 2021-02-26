@@ -9,16 +9,8 @@ define([
     '../fieldWidgetCompact',
 
     'bootstrap',
-    'css!font-awesome'
-], (
-    Promise,
-    html,
-    Validation,
-    Events,
-    UI,
-    lang,
-    Resolver,
-    FieldWidget) => {
+    'css!font-awesome',
+], (Promise, html, Validation, Events, UI, lang, Resolver, FieldWidget) => {
     'use strict';
 
     // Constants
@@ -35,8 +27,8 @@ define([
             viewModel = {
                 data: {},
                 state: {
-                    enabled: null
-                }
+                    enabled: null,
+                },
             },
             structFields = {},
             // model = {
@@ -68,10 +60,9 @@ define([
         function unsetModelValue() {
             return Promise.try(() => {
                 viewModel.data = {};
-            })
-                .then(() => {
-                    // render();
-                });
+            }).then(() => {
+                // render();
+            });
         }
 
         function resetModelValue() {
@@ -102,26 +93,32 @@ define([
             // TODO: support different layouts, this is a simple stacked
             // one for now.
 
-
-            return Promise.all(promiseOfFields)
-                .then((fields) => {
-                    const layout = div({
-                        class: 'row'
-                    }, fields.map((field) => {
-                        return div({ id: field.id, style: { border: '0px orange dashed', padding: '0px' } });
-                    }).join('\n'));
-                    return {
-                        content: layout,
-                        fields: fields
-                    };
-                });
+            return Promise.all(promiseOfFields).then((fields) => {
+                const layout = div(
+                    {
+                        class: 'row',
+                    },
+                    fields
+                        .map((field) => {
+                            return div({
+                                id: field.id,
+                                style: { border: '0px orange dashed', padding: '0px' },
+                            });
+                        })
+                        .join('\n')
+                );
+                return {
+                    content: layout,
+                    fields: fields,
+                };
+            });
         }
 
         function doChanged(id, newValue) {
             // Absorb and propagate the new value...
             viewModel.data[id] = lang.copy(newValue);
             bus.emit('changed', {
-                newValue: lang.copy(viewModel.data)
+                newValue: lang.copy(viewModel.data),
             });
 
             // Validate and propagate.
@@ -129,10 +126,9 @@ define([
             // input widget will have an error message if applicable, so not reason
             // (at present) to have yet another one...
 
-            validate(viewModel.data)
-                .then((result) => {
-                    bus.emit('validation', result);
-                });
+            validate(viewModel.data).then((result) => {
+                bus.emit('validation', result);
+            });
         }
 
         /*
@@ -140,53 +136,52 @@ define([
          * wrapper around the input widget itself.
          */
         function makeSingleInputControl(value, fieldSpec) {
-            return resolver.loadViewControl(fieldSpec)
-                .then((widgetFactory) => {
-                    const id = html.genId(),
-                        fieldWidget = FieldWidget.make({
-                            inputControlFactory: widgetFactory,
-                            showHint: true,
-                            useRowHighight: true,
-                            initialValue: value,
-                            // appSpec: appSpec,
-                            parameterSpec: fieldSpec,
-                            // workspaceId: workspaceInfo.id,
-                            referenceType: 'ref',
-                            paramsChannelName: config.paramsChannelName
+            return resolver.loadViewControl(fieldSpec).then((widgetFactory) => {
+                const id = html.genId(),
+                    fieldWidget = FieldWidget.make({
+                        inputControlFactory: widgetFactory,
+                        showHint: true,
+                        useRowHighight: true,
+                        initialValue: value,
+                        // appSpec: appSpec,
+                        parameterSpec: fieldSpec,
+                        // workspaceId: workspaceInfo.id,
+                        referenceType: 'ref',
+                        paramsChannelName: config.paramsChannelName,
+                    });
+
+                // set up listeners for the input
+                fieldWidget.bus.on('sync', () => {
+                    const value = viewModel.data[fieldSpec.id];
+                    if (value) {
+                        fieldWidget.bus.emit('update', {
+                            value: value,
                         });
-
-                    // set up listeners for the input
-                    fieldWidget.bus.on('sync', () => {
-                        const value = viewModel.data[fieldSpec.id];
-                        if (value) {
-                            fieldWidget.bus.emit('update', {
-                                value: value
-                            });
-                        }
-                    });
-                    fieldWidget.bus.on('validation', (message) => {
-                        if (message.diagnosis === 'optional-empty') {
-                            bus.emit('changed', {
-                                newValue: lang.copy(viewModel.data)
-                            });
-                        }
-                    });
-                    fieldWidget.bus.on('changed', (message) => {
-                        doChanged(fieldSpec.id, message.newValue);
-                    });
-
-                    fieldWidget.bus.on('touched', () => {
-                        bus.emit('touched', {
-                            parameter: fieldSpec.id
-                        });
-                    });
-
-                    return {
-                        id: id,
-                        fieldName: fieldSpec.id,
-                        instance: fieldWidget
-                    };
+                    }
                 });
+                fieldWidget.bus.on('validation', (message) => {
+                    if (message.diagnosis === 'optional-empty') {
+                        bus.emit('changed', {
+                            newValue: lang.copy(viewModel.data),
+                        });
+                    }
+                });
+                fieldWidget.bus.on('changed', (message) => {
+                    doChanged(fieldSpec.id, message.newValue);
+                });
+
+                fieldWidget.bus.on('touched', () => {
+                    bus.emit('touched', {
+                        parameter: fieldSpec.id,
+                    });
+                });
+
+                return {
+                    id: id,
+                    fieldName: fieldSpec.id,
+                    instance: fieldWidget,
+                };
+            });
         }
 
         /*
@@ -196,59 +191,60 @@ define([
         function renderSubcontrols() {
             if (viewModel.state.enabled) {
                 const events = Events.make({
-                    node: container
+                    node: container,
                 });
-                return makeInputControl(events)
-                    .then((result) => {
-                        ui.setContent('input-container.subcontrols', result.content);
-                        events.attachEvents();
-                        structFields = {};
-                        result.fields.forEach((field) => {
-                            structFields[field.fieldName] = field;
-                        });
-                        // Start up all the widgets
-
-                        return Promise.all(
-                            result.fields.map((field) => {
-                                return field.instance.start({
-                                    node: document.getElementById(field.id)
-                                });
-                            }));
+                return makeInputControl(events).then((result) => {
+                    ui.setContent('input-container.subcontrols', result.content);
+                    events.attachEvents();
+                    structFields = {};
+                    result.fields.forEach((field) => {
+                        structFields[field.fieldName] = field;
                     });
+                    // Start up all the widgets
+
+                    return Promise.all(
+                        result.fields.map((field) => {
+                            return field.instance.start({
+                                node: document.getElementById(field.id),
+                            });
+                        })
+                    );
+                });
             } else {
                 return Promise.all(
                     Object.keys(structFields).map((fieldName) => {
                         return structFields[fieldName].instance.stop();
-                    }))
-                    .then(() => {
-                        ui.setContent('input-container.subcontrols', '');
-                        structFields = {};
-                    });
+                    })
+                ).then(() => {
+                    ui.setContent('input-container.subcontrols', '');
+                    structFields = {};
+                });
             }
         }
 
         function renderStruct() {
-            const layout = div({
-                style: {
-                    'border-left': '5px silver solid',
-                    padding: '2px',
-                    margin: '6px'
-                }
-            }, [
-                div({ dataElement: 'subcontrols' })
-            ]);
+            const layout = div(
+                {
+                    style: {
+                        'border-left': '5px silver solid',
+                        padding: '2px',
+                        margin: '6px',
+                    },
+                },
+                [div({ dataElement: 'subcontrols' })]
+            );
             ui.setContent('input-container', layout);
         }
 
         function render(events) {
-            container.innerHTML = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' })
-            ]);
+            container.innerHTML = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
 
             renderStruct(events);
-
         }
 
         // LIFECYCLE API
@@ -292,17 +288,16 @@ define([
                             viewModel.data = lang.copy(message.value);
                             Object.keys(message.value).forEach((id) => {
                                 structFields[id].instance.bus.emit('update', {
-                                    value: message.value[id]
+                                    value: message.value[id],
                                 });
                             });
                         }
-
                     });
 
                     // A fake submit.
                     bus.on('submit', () => {
                         bus.emit('submitted', {
-                            value: lang.copy(viewModel.data)
+                            value: lang.copy(viewModel.data),
                         });
                     });
 
@@ -320,27 +315,28 @@ define([
         function stop() {
             return Promise.try(() => {
                 if (structFields) {
-                    return Promise.all(Object.keys(structFields).map((id) => {
-                        return structFields[id].instance.stop();
-                    }));
+                    return Promise.all(
+                        Object.keys(structFields).map((id) => {
+                            return structFields[id].instance.stop();
+                        })
+                    );
                 }
-            })
-                .then(() => {
-                    if (parent && container) {
-                        parent.removeChild(container);
-                    }
-                });
+            }).then(() => {
+                if (parent && container) {
+                    parent.removeChild(container);
+                }
+            });
         }
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

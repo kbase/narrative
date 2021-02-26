@@ -12,7 +12,22 @@
 define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config) => {
     'use strict';
     /**
-     * Creates a mock Jupyter notebook cell of some type.
+     * Creates a mock Jupyter notebook cell of some type. When returned, it will have the following
+     * attributes:
+     * - metadata: object, with some basic metadata,
+     * - cell_type: string, the given cellType,
+     * - renderMinMax: a no-op function,
+     * - celltoolbar: an object with a rebuild function, that's a no-op
+     * - element: a jQuery node with a single div
+     * - input: a jQuery node with the DOM structure:
+     *   <div class="input">
+     *     <div class="input_area"></div>
+     *   </div>
+     * - output: a jQuery node with the DOM structure:
+     *   <div class="output_wrapper">
+     *     <div class="output"></div>
+     *   </div>
+     *
      * @param {string} cellType the type of cell it should be
      * @param {string} kbaseCellType if present, mock up an extended cell by adding some
      *      base metadata.

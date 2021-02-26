@@ -1,7 +1,5 @@
-
-(function($, undefined) {
+(function ($, undefined) {
     return KBWidget({
-        
         name: 'kbaseIntegrateGapfillOutput',
 
         /*
@@ -13,45 +11,57 @@
          * this.user_id() = the logged in user id
          * this.authToken() = the current authentication token
          */
-        parent : kbaseAuthenticatedWidget,
+        parent: kbaseAuthenticatedWidget,
         version: '1.0.0',
-        options: 
-            {
-            "workspaceName":"",
-            "originalModel":"",
-            "originalModelRef":0,
-            "startingNumRxns":0,
-            "newModel":"",
-            "newModelRef":0,
-            "endingNumRxns":0
-            },
-        
+        options: {
+            workspaceName: '',
+            originalModel: '',
+            originalModelRef: 0,
+            startingNumRxns: 0,
+            newModel: '',
+            newModelRef: 0,
+            endingNumRxns: 0,
+        },
 
         wsUrl: window.kbconfig.urls.workspace,
         loadingImage: window.kbconfig.loading_gif,
-        
-        
-        init: function(options) {
+
+        init: function (options) {
             this._super(options);
             return this.render(options);
         },
 
-        render: function(options) {
+        render: function (options) {
             const self = this;
             const container = this.$elem;
-            
-            const n_rxns_added = parseInt(options.endingNumRxns) - parseInt(options.startingNumRxns);
-            if (n_rxns_added==0) {
-                container.append("Integration completed successfully, but no reactions were integrated.<br><br>");
-                container.append("This may result if the gapfill solution reactions were already integrated ");
-                container.append("into the input <br> model ("+options.originalModelRef+"), or if the solution ID you provided ");
-                container.append("could not be found. <br><br>");
+
+            const n_rxns_added =
+                parseInt(options.endingNumRxns) - parseInt(options.startingNumRxns);
+            if (n_rxns_added == 0) {
+                container.append(
+                    'Integration completed successfully, but no reactions were integrated.<br><br>'
+                );
+                container.append(
+                    'This may result if the gapfill solution reactions were already integrated '
+                );
+                container.append(
+                    'into the input <br> model (' +
+                        options.originalModelRef +
+                        '), or if the solution ID you provided '
+                );
+                container.append('could not be found. <br><br>');
             } else {
-                container.append("<b>Success!</b><br><br><i>"
-                                 +n_rxns_added+" reactions integrated into model <b>"+
-                                 options.newModel+"</b> ("+options.newModelRef+")<br><br>")
+                container.append(
+                    '<b>Success!</b><br><br><i>' +
+                        n_rxns_added +
+                        ' reactions integrated into model <b>' +
+                        options.newModel +
+                        '</b> (' +
+                        options.newModelRef +
+                        ')<br><br>'
+                );
             }
-            
+
             return this;
         },
     });

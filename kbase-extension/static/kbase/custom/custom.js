@@ -112,7 +112,7 @@ define([
     'kb_common/html',
 
     'components/requirejs/require',
-    'narrative_paths'
+    'narrative_paths',
 ], (
     $,
     Handlebars,
@@ -177,10 +177,9 @@ define([
         } else {
             delimiter = ',';
         }
-        let lineage = value.split(delimiter)
-            .map((item) => {
-                return item.trim();
-            });
+        let lineage = value.split(delimiter).map((item) => {
+            return item.trim();
+        });
         let start;
         if (startAt) {
             start = lineage.indexOf(startAt);
@@ -193,13 +192,14 @@ define([
                 lineage = lineage.slice(start + 1);
             }
         }
-        return new Handlebars.SafeString(lineage
-            .map((item) => {
-                return Handlebars.Utils.escapeExpression(item.trim());
-            })
-            .join(' <span style="color: #AAA"> &gt; </span>'));
+        return new Handlebars.SafeString(
+            lineage
+                .map((item) => {
+                    return Handlebars.Utils.escapeExpression(item.trim());
+                })
+                .join(' <span style="color: #AAA"> &gt; </span>')
+        );
     });
-
 
     const t = html.tag,
         span = t('span');
@@ -219,7 +219,6 @@ define([
         $('div#site').height($(window).height() - $('#header').css('height'));
     };
 
-
     // Patch the security mechanisms to allow any JavaScript to run for now.
     // TODO: update this so only the few KBase commands run.
 
@@ -238,7 +237,7 @@ define([
 
     // Make the favicon change a no-op for now. They use lots of hard-coded paths to
     // Jupyter icons, so it's hard to change branding...
-    nbUtils.change_favicon = function() {};
+    nbUtils.change_favicon = function () {};
 
     // TODO: refactor
     function cellType(cell) {
@@ -248,9 +247,7 @@ define([
             return;
         }
 
-        const type = cell.metadata &&
-            cell.metadata['kb-cell'] &&
-            cell.metadata['kb-cell']['type'];
+        const type = cell.metadata && cell.metadata['kb-cell'] && cell.metadata['kb-cell']['type'];
 
         // Markdown cells don't of course have a kb cell type.
         if (type === undefined) {
@@ -258,16 +255,15 @@ define([
         }
 
         switch (type) {
-        case 'function_input':
-            return 'method';
-        case 'kb_app':
-            return 'app';
-        case 'function_output':
-            return 'output';
-        default:
-            return 'unknown';
+            case 'function_input':
+                return 'method';
+            case 'kb_app':
+                return 'app';
+            case 'function_output':
+                return 'output';
+            default:
+                return 'unknown';
         }
-
     }
 
     // CELLTOOLBAR
@@ -292,7 +288,7 @@ define([
                 }
                 return wasSelected;
             };
-        }());
+        })();
 
         // Extend
         (function () {
@@ -302,7 +298,7 @@ define([
                 $(this.element).trigger('unselected.cell');
                 return wasSelected;
             };
-        }());
+        })();
 
         p.renderMinMax = function () {
             let $cellNode = $(this.element),
@@ -325,16 +321,16 @@ define([
             }
 
             switch (toggleMode) {
-            case 'maximized':
-                if (!this.maximize) {
-                    console.log('HELP', this);
-                    return;
-                }
-                this.maximize();
-                break;
-            case 'minimized':
-                this.minimize();
-                break;
+                case 'maximized':
+                    if (!this.maximize) {
+                        console.log('HELP', this);
+                        return;
+                    }
+                    this.maximize();
+                    break;
+                case 'minimized':
+                    this.minimize();
+                    break;
             }
         };
 
@@ -343,12 +339,12 @@ define([
                 toggleMode = $cellNode.data('toggleMinMax') || 'maximized';
 
             switch (toggleMode) {
-            case 'maximized':
-                toggleMode = 'minimized';
-                break;
-            case 'minimized':
-                toggleMode = 'maximized';
-                break;
+                case 'maximized':
+                    toggleMode = 'minimized';
+                    break;
+                case 'minimized':
+                    toggleMode = 'maximized';
+                    break;
             }
 
             // NB namespacing is important with jquery messages because they
@@ -402,8 +398,8 @@ define([
                     }
                 });
             };
-        }());
-    }());
+        })();
+    })();
 
     // RAW CELL
 
@@ -524,7 +520,7 @@ define([
                 }
             });
         };
-    }());
+    })();
 
     // MARKDOWN CELL
 
@@ -568,10 +564,13 @@ define([
             const iconColor = 'silver';
 
             return span({ style: '' }, [
-                span({ class: 'fa-stack fa-2x', style: { textAlign: 'center', color: iconColor } }, [
-                    span({ class: 'fa fa-square fa-stack-2x', style: { color: iconColor } }),
-                    span({ class: 'fa fa-inverse fa-stack-1x fa-' + 'paragraph' })
-                ])
+                span(
+                    { class: 'fa-stack fa-2x', style: { textAlign: 'center', color: iconColor } },
+                    [
+                        span({ class: 'fa fa-square fa-stack-2x', style: { color: iconColor } }),
+                        span({ class: 'fa fa-inverse fa-stack-1x fa-' + 'paragraph' }),
+                    ]
+                ),
             ]);
         };
 
@@ -594,7 +593,6 @@ define([
                 }
                 const cont = cell.unrender();
                 if (cont) {
-
                     cell.focus_editor();
                 }
             });
@@ -604,7 +602,6 @@ define([
             //  * to disappear, when the user clicks out of the edit area.
             //  */
             this.code_mirror.on('blur', () => {
-
                 cell.render();
             });
 
@@ -649,7 +646,6 @@ define([
                 const $menu = $(cell.celltoolbar.element).find('.button_container');
                 $menu.trigger('job-state.toolbar', data);
             });
-
 
             /*
              * This is how the cell propagates the select/unselect events to
@@ -728,14 +724,15 @@ define([
                 }
             });
         };
-    }());
+    })();
 
     // Patch the MarkdownCell renderer to run the Javascript we need.
     textCell.MarkdownCell.options_default = {
         cm_config: {
-            mode: 'ipythongfm'
+            mode: 'ipythongfm',
         },
-        placeholder: '_Markdown_/LaTeX cell - double click here to edit, click out of the edit area to preview.'
+        placeholder:
+            '_Markdown_/LaTeX cell - double click here to edit, click out of the edit area to preview.',
     };
 
     // KEYBOARD MANAGER
@@ -759,7 +756,7 @@ define([
             // NOOP
             return;
         };
-    }());
+    })();
 
     // CODE CELL
 
@@ -811,10 +808,10 @@ define([
             icon = span({ class: 'fa fa-inverse fa-stack-1x fa-spinner fa-pulse fa-fw' });
 
             return span({ style: '' }, [
-                span({ class: 'fa-stack fa-2x', style: { textAlign: 'center', color: iconColor } }, [
-                    span({ class: 'fa fa-square fa-stack-2x', style: { color: iconColor } }),
-                    icon
-                ])
+                span(
+                    { class: 'fa-stack fa-2x', style: { textAlign: 'center', color: iconColor } },
+                    [span({ class: 'fa fa-square fa-stack-2x', style: { color: iconColor } }), icon]
+                ),
             ]);
         };
 
@@ -899,7 +896,7 @@ define([
             }
             return originalExecute.apply(this, arguments);
         };
-    }());
+    })();
 
     // Patch the Notebook to return the right name
     notebook.Notebook.prototype.get_notebook_name = function () {
@@ -914,15 +911,13 @@ define([
         const that = this;
         const parent = nbUtils.url_path_split(this.notebook_path)[0];
         const new_path = nbUtils.url_path_join(parent, new_name);
-        return this.contents.rename(this.notebook_path, new_path).then(
-            (json) => {
-                that.notebook_name = json.name;
-                that.notebook_path = json.path;
-                that.last_modified = new Date(json.last_modified);
-                // that.session.rename_notebook(json.path);
-                that.events.trigger('notebook_renamed.Notebook', json);
-            }
-        );
+        return this.contents.rename(this.notebook_path, new_path).then((json) => {
+            that.notebook_name = json.name;
+            that.notebook_path = json.path;
+            that.last_modified = new Date(json.last_modified);
+            // that.session.rename_notebook(json.path);
+            that.events.trigger('notebook_renamed.Notebook', json);
+        });
     };
 
     // Extend methods.
@@ -957,11 +952,11 @@ define([
                     type: type || 'code',
                     index: index,
                     cell: cell,
-                    data: dataToSend
+                    data: dataToSend,
                 });
                 return cell;
             };
-        }());
+        })();
 
         // insert_cell_below wrapper
         // Accepts a third argument "data" not supported in the original.
@@ -977,7 +972,7 @@ define([
                 const cell = originalMethod.apply(this, arguments);
                 return cell;
             };
-        }());
+        })();
         (function () {
             const originalMethod = p.insert_cell_above;
             p.insert_cell_above = function (type, index, data) {
@@ -985,8 +980,8 @@ define([
                 const cell = originalMethod.apply(this, arguments);
                 return cell;
             };
-        }());
-    }());
+        })();
+    })();
 
     // Patch the save widget to skip the 'notebooks' part of the URL when updating
     // after a notebook rename.
@@ -994,9 +989,11 @@ define([
         const base_url = this.notebook.base_url;
         const path = this.notebook.notebook_path;
         const state = { path: path };
-        window.history.replaceState(state, '', nbUtils.url_path_join(
-            base_url,
-            nbUtils.encode_uri_components(path)));
+        window.history.replaceState(
+            state,
+            '',
+            nbUtils.url_path_join(base_url, nbUtils.encode_uri_components(path))
+        );
     };
 
     // Patch the save widget to change the "Jupyter Notebook" part of the title to
@@ -1004,29 +1001,33 @@ define([
     saveWidget.SaveWidget.prototype.update_document_title = function () {
         const nbname = this.notebook.get_notebook_name();
         document.title = nbname + ' - KBase Narrative';
-    }
+    };
 
     // Patch the save widget to take in options at save time
     saveWidget.SaveWidget.prototype.rename_notebook = function (options) {
-        Jupyter.narrative.getUserPermissions()
-        .then((perm) => {
+        Jupyter.narrative.getUserPermissions().then((perm) => {
             const canChangeName = perm === 'a' && !Jupyter.narrative.readonly;
             options = options || {};
             let that = this,
                 dialogBody,
                 buttons;
             if (canChangeName) {
-                dialogBody = $('<div>').append(
-                    $('<p>').addClass('rename-message')
-                        .text(options.message ? options.message : 'Enter a new Narrative name:')
-                ).append(
-                    $('<br>')
-                ).append(
-                    $('<input>').attr('type', 'text').attr('size', '25').addClass('form-control')
-                        .val(options.notebook.get_notebook_name())
-                );
+                dialogBody = $('<div>')
+                    .append(
+                        $('<p>')
+                            .addClass('rename-message')
+                            .text(options.message ? options.message : 'Enter a new Narrative name:')
+                    )
+                    .append($('<br>'))
+                    .append(
+                        $('<input>')
+                            .attr('type', 'text')
+                            .attr('size', '25')
+                            .addClass('form-control')
+                            .val(options.notebook.get_notebook_name())
+                    );
                 buttons = {
-                    'OK': {
+                    OK: {
                         class: 'btn-primary',
                         click: function () {
                             const new_name = d.find('input').val();
@@ -1043,27 +1044,31 @@ define([
                                     }
                                 },
                                 (error) => {
-                                    d.find('.rename-message').text(error.message || 'Unknown error');
-                                    d.find('input[type="text"]').prop('disabled', false).focus().select();
+                                    d.find('.rename-message').text(
+                                        error.message || 'Unknown error'
+                                    );
+                                    d.find('input[type="text"]')
+                                        .prop('disabled', false)
+                                        .focus()
+                                        .select();
                                 }
                             );
                             return false;
-                        }
+                        },
                     },
-                    'Cancel': {}
+                    Cancel: {},
                 };
-            }
-            else {
+            } else {
                 let text;
                 if (Jupyter.narrative.readonly) {
                     text = 'You cannot change the name of a read-only Narrative.';
-                }
-                else {
-                    text = 'Only a user with "edit and share" privileges can change a Narrative name.';
+                } else {
+                    text =
+                        'Only a user with "edit and share" privileges can change a Narrative name.';
                 }
                 dialogBody = $('<div>').append($('<p>').addClass('rename-message').text(text));
                 buttons = {
-                    'OK': {}
+                    OK: {},
                 };
             }
             var d = dialog.modal({
@@ -1085,7 +1090,7 @@ define([
                         });
                         d.find('input[type="text"]').focus().select();
                     }
-                }
+                },
             });
         });
     };

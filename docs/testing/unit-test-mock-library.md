@@ -30,11 +30,28 @@ define([
 
 ## buildMockCell
 `buildMockCell(cellType, kbaseCellType, data)`  
-This function builds a mock Jupyter notebook cell given a Jupyter notebook cell type and an optional KBase cell type. It includes the full structure needed to portray a cell, including DOM elements.
+This function builds a mock Jupyter notebook cell, given a Jupyter notebook cell type and an optional KBase cell type. It includes a minimal structure needed to portray a cell, including minimum required DOM elements. The returned object has these attributes:
+* `metadata`: object, with some basic metadata,
+* `cell_type`: string, the given cellType,
+* `renderMinMax`: a no-op function,
+* `celltoolbar`: an object with a rebuild function, that's a no-op
+* `element`: a jQuery node with a single div
+* `input`: a jQuery node with the DOM structure:  
+```
+  <div class="input">
+    <div class="input_area"></div>
+  </div>
+```
+* `output`: a jQuery node with the DOM structure:  
+```
+  <div class="output_wrapper">
+    <div class="output"></div>
+  </div>
+```
 
 **parameters**
 * `cellType` - string - the type of cell it should be, one of "code", "markdown", "raw". For mocking KBase cell types, this should be "code"
-* `kbaseCellType` - optional string - if present, mock up an extended cell by adding some base metadata. One of "app", "app-bulk-import", "codeWithUserSettings", "code". If more needed, please add them to the `buildMockExtensionCellMetadata` function that isn't exported.
+* `kbaseCellType` - optional string - if present, mock up an extended cell by adding some base metadata. One of "app", "app-bulk-import", "codeWithUserSettings", "code". If more are needed, please add them to the `buildMockExtensionCellMetadata` function that isn't exported.
 * `data` - object - if present, will populate the cell's metadata.
 
 **example**
@@ -73,7 +90,7 @@ Builds a mock Jupyter notebook object with a few attributes, but mostly an empty
 There's a single `options` parameter here, which is an object with several possible attributes:
 * `deleteCallback` - function - called when `delete_cell` is called
 * `fullyLoaded` - boolean - if true, treat the notebook as fully loaded
-* `cells` - Array - an array of mocked cells (see buildMockCell)
+* `cells` - Array - an array of mocked cells (see [buildMockCell](#buildmockcell))
 * `readOnly` - boolean - set true if the Narrative should be read-only
 
 **example**  
@@ -133,10 +150,10 @@ The basic usage is that you'll need to provide the service wizard's URL, as well
 Note that this requires running `jasmine.Ajax.install()` first.
 
 **parameters**  
-There's only a single parameter, `args`, that is an object. It's expected attributes are below:
+There's only a single parameter, `args`, that is an object. Its expected attributes are below:
 * `module` - string - the module to mock. This should be its registered name, e.g. `NarrativeService`
 * `url` - string - the fake url to return. Requests to this should be mocked, too!
-* `statusCode` - int, optional, default 200 - the HTTP status to return. Set to something in the 500 range to mock an error.
+* `statusCode` - int, optional, default 200 - the HTTP status to return. Set to something in the 400 range to mock a user error, and in the 500 range to mock a service error.
 * `statusText` - optional, default 'OK' - a status text to return, if you're changing the mocked status from 200, this should get changed, too.
 
 **example**  
@@ -145,7 +162,7 @@ This is a partial test set taken from the App Panel tests.
 ```Javascript
 define(['narrativeMocks', 'narrativeConfig'], (Mocks, Config) => {
     describe('service wizard mockery', () => {
-        // a fake url that gets returned        
+        // a fake url that gets returned
         const NS_URL = 'https://fake_narrative_service.kbase.us';
         const APP_INFO = { }; // a set of all app info to be returned;
         beforeEach(() => {
@@ -247,7 +264,7 @@ Requires that `jasmine.Ajax.install()` has been run first.
 
 **parameters**
 * `path` - string - the path to request from the Auth2 service. See the Auth2 docs for details, but likely one of `token`, `me`
-* `reponse` - object - the response object that the test expects to see
+* `response` - object - the response object that the test expects to see
 * `statusCode` - int - the HTTP status code to return
 
 **example**  

@@ -1,77 +1,58 @@
-
-
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'kbaseAuthenticatedWidget',
-		'kbaseHeatmap'
-	], (
-		KBWidget,
-		bootstrap,
-		$,
-		kbaseAuthenticatedWidget,
-		kbaseHeatmap
-	) => {
-
+define(['kbwidget', 'bootstrap', 'jquery', 'kbaseAuthenticatedWidget', 'kbaseHeatmap'], (
+    KBWidget,
+    bootstrap,
+    $,
+    kbaseAuthenticatedWidget,
+    kbaseHeatmap
+) => {
     'use strict';
 
     return KBWidget({
+        name: 'kbaseFigureObjectHeatmap',
+        parent: kbaseAuthenticatedWidget,
 
-	    name: "kbaseFigureObjectHeatmap",
-	    parent : kbaseAuthenticatedWidget,
-
-        version: "1.0.0",
+        version: '1.0.0',
         options: {
-            numBins : 10,
-            magicHeight : 10,
-            minHeight : 300,
+            numBins: 10,
+            magicHeight: 10,
+            minHeight: 300,
         },
 
-        _accessors : [
-            {name: 'dataset', setter: 'setDataset'},
-            {name: 'barchartDataset', setter: 'setBarchartDataset'},
+        _accessors: [
+            { name: 'dataset', setter: 'setDataset' },
+            { name: 'barchartDataset', setter: 'setBarchartDataset' },
         ],
 
-        transpose : function transpose(arr,arrLen) {
-          for (let i = 0; i < arrLen; i++) {
-            for (let j = 0; j <i; j++) {
-              //swap element[i,j] and element[j,i]
-              const temp = arr[i][j];
-              arr[i][j] = arr[j][i];
-              arr[j][i] = temp;
+        transpose: function transpose(arr, arrLen) {
+            for (let i = 0; i < arrLen; i++) {
+                for (let j = 0; j < i; j++) {
+                    //swap element[i,j] and element[j,i]
+                    const temp = arr[i][j];
+                    arr[i][j] = arr[j][i];
+                    arr[j][i] = temp;
+                }
             }
-          }
         },
 
-        setDataset : function setDataset(newDataset, groupInfo) {
-
+        setDataset: function setDataset(newDataset, groupInfo) {
             const $self = this;
 
             this.data('loader').hide();
 
             if (newDataset.data.length == 0) {
                 this.$elem.empty();
-                this.$elem
-                    .addClass('alert alert-danger')
-                    .html("Empty heatmap");
-            }
-            else {
-
+                this.$elem.addClass('alert alert-danger').html('Empty heatmap');
+            } else {
                 const calculatedHeight = newDataset.column_labels.length * this.options.magicHeight;
 
                 const heatHeight = Math.max(calculatedHeight, this.options.minHeight);
 
-                const $heatElem = $.jqElem('div').css({width : 800, height : heatHeight});
+                const $heatElem = $.jqElem('div').css({ width: 800, height: heatHeight });
 
-                const $heatmap =
-                     new kbaseHeatmap($heatElem, {
-                            colors : ['#0000FF', '#FFFFFF', '#FF0000'],
-                            xPadding : 170,
-                        }
-                    )
-                ;
+                const $heatmap = new kbaseHeatmap($heatElem, {
+                    colors: ['#0000FF', '#FFFFFF', '#FF0000'],
+                    xPadding: 170,
+                });
                 this.data('heatmap', $heatmap);
                 this.data('heatElem', $heatElem);
 
@@ -114,39 +95,43 @@ define (
                 const rows_by_cluster = {};
                 let groupStartIdx = 0;
                 for (var i = 0; i < groupInfo.ygroup.length; i++) {
-                  const label = groupInfo.ygtick_labels[i];
-                  const count = groupInfo.ygroup[i];
-                  const groupEndIdx = groupStartIdx + count;
-                  if (rows_by_cluster[label] === undefined) {
-                    rows_by_cluster[label] = { };
-                  }
+                    const label = groupInfo.ygtick_labels[i];
+                    const count = groupInfo.ygroup[i];
+                    const groupEndIdx = groupStartIdx + count;
+                    if (rows_by_cluster[label] === undefined) {
+                        rows_by_cluster[label] = {};
+                    }
 
-                  // side effects are the best! We need to filter out rows if they have only null values, but we also need
-                  // to filter out the label associated with that row, which is in a different array and associated solely by index.
-                  // So here we keep track of all of the indexes we've filtered out while iterating over the data, so we can use that
-                  // to filter the sliced array of labels later.
-                  var filteredIndexes = {};
+                    // side effects are the best! We need to filter out rows if they have only null values, but we also need
+                    // to filter out the label associated with that row, which is in a different array and associated solely by index.
+                    // So here we keep track of all of the indexes we've filtered out while iterating over the data, so we can use that
+                    // to filter the sliced array of labels later.
+                    var filteredIndexes = {};
 
-                  //okay, now we slice out the rows associated with this cluster.
-                  rows_by_cluster[label].data   = invertedData.slice(groupStartIdx, groupEndIdx)
-                    .filter( (r, i) => {
-                      //here's where we filter. We take a row and iterate through it, if all of the values are null it gets tossed.
-                      const keep_this_row = r.reduce( (keep_this_row, v) => {
-                        return keep_this_row || v !== null;
-                      }, false);
+                    //okay, now we slice out the rows associated with this cluster.
+                    rows_by_cluster[label].data = invertedData
+                        .slice(groupStartIdx, groupEndIdx)
+                        .filter((r, i) => {
+                            //here's where we filter. We take a row and iterate through it, if all of the values are null it gets tossed.
+                            const keep_this_row = r.reduce((keep_this_row, v) => {
+                                return keep_this_row || v !== null;
+                            }, false);
 
-                      if ( !keep_this_row ) {
-                        filteredIndexes[i] = true;
-                      }
-                      return keep_this_row;
-                    });
+                            if (!keep_this_row) {
+                                filteredIndexes[i] = true;
+                            }
+                            return keep_this_row;
+                        });
 
-                  //peel out the appropriate subarray of labels, filtering out the indexes we removed up above.
-                  rows_by_cluster[label].labels = newDataset.column_labels.slice(groupStartIdx, groupEndIdx)
-                    .filter((l, i) => { return ! filteredIndexes[i] });
+                    //peel out the appropriate subarray of labels, filtering out the indexes we removed up above.
+                    rows_by_cluster[label].labels = newDataset.column_labels
+                        .slice(groupStartIdx, groupEndIdx)
+                        .filter((l, i) => {
+                            return !filteredIndexes[i];
+                        });
 
-                  //next group starts where ours left off
-                  groupStartIdx = groupEndIdx;
+                    //next group starts where ours left off
+                    groupStartIdx = groupEndIdx;
                 }
 
                 // now we've built up lists of filtered rows, grouped by cluster. Next step is easy - we just sort
@@ -154,28 +139,27 @@ define (
                 //
                 // This is where I'd love to use the spread syntax on the push, but since I wasn't sure our environment supported it
                 // I went old school.
-                const sortedRows   = [];
+                const sortedRows = [];
                 const sortedLabels = [];
-                Object.keys(rows_by_cluster).sort().forEach( (label) => {
-                  const clusterRows = rows_by_cluster[label].data;
-                  sortedRows.push.apply(sortedRows, clusterRows);
+                Object.keys(rows_by_cluster)
+                    .sort()
+                    .forEach((label) => {
+                        const clusterRows = rows_by_cluster[label].data;
+                        sortedRows.push.apply(sortedRows, clusterRows);
 
-                  const clusterLabels = rows_by_cluster[label].labels;
-                  sortedLabels.push.apply(sortedLabels, clusterLabels);
-                });
+                        const clusterLabels = rows_by_cluster[label].labels;
+                        sortedLabels.push.apply(sortedLabels, clusterLabels);
+                    });
 
                 const heatmap_dataset = {
-                    row_ids : sortedLabels,
-                    column_ids : newDataset.row_labels,
-                    row_labels : sortedLabels,
-                    column_labels : newDataset.row_labels,
-                    data : sortedRows,//invertedData,//newDataset.data,
+                    row_ids: sortedLabels,
+                    column_ids: newDataset.row_labels,
+                    row_labels: sortedLabels,
+                    column_labels: newDataset.row_labels,
+                    data: sortedRows, //invertedData,//newDataset.data,
                 };
 
-                this.data('heatmap').setDataset(
-                  heatmap_dataset
-                );
-
+                this.data('heatmap').setDataset(heatmap_dataset);
 
                 //okay now do some extra BS to add in grouping.
 
@@ -189,20 +173,26 @@ define (
 
                 // First thing we're going to do is a little bit of bounds checking and see if we actually need to decrement at all.
 
-                const needs_decrement = Object.keys(rows_by_cluster).reduce( (needs_it, label) => {
-                  if (label === 'Cluster_0') { needs_it = false };
-                  return needs_it;
+                const needs_decrement = Object.keys(rows_by_cluster).reduce((needs_it, label) => {
+                    if (label === 'Cluster_0') {
+                        needs_it = false;
+                    }
+                    return needs_it;
                 }, true);
 
-                const ygtick_labels = Object.keys(rows_by_cluster).sort().map( (label) => {
-                  // yes, I know that I don't need to loop and map to nothing if needs_decrement is false.
-                  // I'm mapping invalid data from the server anyway. I put in the bounds check at all.
-                  // Let me have this little protest.
-                  if (needs_decrement) {
-                    label = label.replace(/(\d+)$/, (m,d) => { return d - 1 });
-                  }
-                  return label;
-                });
+                const ygtick_labels = Object.keys(rows_by_cluster)
+                    .sort()
+                    .map((label) => {
+                        // yes, I know that I don't need to loop and map to nothing if needs_decrement is false.
+                        // I'm mapping invalid data from the server anyway. I put in the bounds check at all.
+                        // Let me have this little protest.
+                        if (needs_decrement) {
+                            label = label.replace(/(\d+)$/, (m, d) => {
+                                return d - 1;
+                            });
+                        }
+                        return label;
+                    });
 
                 // it's a maxim in CS that side-effects are wonderful and should always be used as much as possible, right?
                 // in this case, we need to find out the total number of groups. While we're iterating over our list of groups
@@ -210,216 +200,194 @@ define (
                 let total_groups = 0;
 
                 // Super. We've got our labels in sorted order. Now we peel out our new counts in sorted order.
-                const ygroup = Object.keys(rows_by_cluster).sort().map( (label) => {
-                  total_groups += rows_by_cluster[label].labels.length;
-                  return rows_by_cluster[label].labels.length;
-                });
+                const ygroup = Object.keys(rows_by_cluster)
+                    .sort()
+                    .map((label) => {
+                        total_groups += rows_by_cluster[label].labels.length;
+                        return rows_by_cluster[label].labels.length;
+                    });
 
                 // finally, also just note that the "Results" tab of View Multi-Cluster Heatmap will, of course, still display the ygtick_labels
                 // as they were originally generated on the server, and so will not be in sync with the data in the heatmap itself.
 
-                const groups = $heatmap.D3svg().select( $heatmap.region('xPadding') ).selectAll('.groupBox').data(ygtick_labels);
+                const groups = $heatmap
+                    .D3svg()
+                    .select($heatmap.region('xPadding'))
+                    .selectAll('.groupBox')
+                    .data(ygtick_labels);
 
                 const groupsEnter = groups.enter().insert('g', ':first-child');
 
-                const yIdxFunc =
-                    function(d,i) {
+                const yIdxFunc = function (d, i) {
+                    let prior = 0;
 
-                        let prior = 0;
-
-                        for (let j = 0; j < i; j++) {
-                            prior += ygroup[j];
-                        }
-                        return chartBounds.size.height * (prior / total_groups);
+                    for (let j = 0; j < i; j++) {
+                        prior += ygroup[j];
                     }
-                ;
-
+                    return chartBounds.size.height * (prior / total_groups);
+                };
                 groupsEnter
                     .append('rect')
-                        .attr('x', 0)
-                        .attr('y', yIdxFunc )
-                        .attr('width', $heatmap.xPaddingBounds().size.width)
-                        .attr('height',
-                            (d, i) => {
-                                return chartBounds.size.height * (ygroup[i] / total_groups);
-                            }
-                        )
-                        .attr('stroke', 'black')
-                        .attr('fill', (d, i) => {return i % 2 ? '#EEEEEE' : 'none'} )
-                        .attr('stroke-width', '.5px')
-                        .attr('opacity',
-                            (d,i) => {
-                                const y = yIdxFunc(d,i);
+                    .attr('x', 0)
+                    .attr('y', yIdxFunc)
+                    .attr('width', $heatmap.xPaddingBounds().size.width)
+                    .attr('height', (d, i) => {
+                        return chartBounds.size.height * (ygroup[i] / total_groups);
+                    })
+                    .attr('stroke', 'black')
+                    .attr('fill', (d, i) => {
+                        return i % 2 ? '#EEEEEE' : 'none';
+                    })
+                    .attr('stroke-width', '.5px')
+                    .attr('opacity', (d, i) => {
+                        const y = yIdxFunc(d, i);
 
-                                return y < chartBounds.size.height
-                                    ? 1
-                                    : 0;
-                            }
-                        )
-                ;
+                        return y < chartBounds.size.height ? 1 : 0;
+                    });
                 groupsEnter
                     .append('text')
-                        .attr('x', 0)
-                        .attr('y', 0)
-                        .text(function (d,i) { this.idx = i; return d })
-                        .attr('opacity',
-                            (d,i) => {
-                                const y = yIdxFunc(d,i);
+                    .attr('x', 0)
+                    .attr('y', 0)
+                    .text(function (d, i) {
+                        this.idx = i;
+                        return d;
+                    })
+                    .attr('opacity', (d, i) => {
+                        const y = yIdxFunc(d, i);
 
-                                return y < chartBounds.size.height
-                                    ? 1
-                                    : 0;
-                            }
-                        )
-                ;
+                        return y < chartBounds.size.height ? 1 : 0;
+                    });
 
                 //gotta transform it after it's been inserted. Fun.
                 //first thing we do is select the text, get the size, and see if it's > 60. If it is, then it wouldn't fit horizontally,
                 //so we need to decrease its size. That way, in the next step when we select for the transform, we can properly place it.
-                groups.selectAll('text')
-                    .attr('font-size', function(d, i) {
+                groups.selectAll('text').attr('font-size', function (d, i) {
+                    const width = d3.select(this).node().getComputedTextLength();
+
+                    const groupHeight = chartBounds.size.height * (ygroup[this.idx] / total_groups);
+
+                    if (width > groupHeight && width > 60) {
+                        //magic numbers abound in KBase!
+                        this.tinySize = true;
+                        return '9px';
+                    }
+                });
+                groups
+                    .selectAll('text')
+                    .attr('transform', function (d, i) {
                         const width = d3.select(this).node().getComputedTextLength();
 
-                        const groupHeight = chartBounds.size.height * (ygroup[this.idx] / total_groups);
+                        const groupHeight =
+                            chartBounds.size.height * (ygroup[this.idx] / total_groups);
 
-                        if (width > groupHeight && width > 60) {   //magic numbers abound in KBase!
-                            this.tinySize = true;
-                            return '9px';
-                        }
-                    });
-                groups.selectAll('text')
-                    .attr('transform',
-                        function(d, i) {
+                        if (width < groupHeight) {
+                            var vOffset = -2 - width;
 
-                            const width = d3.select(this).node().getComputedTextLength();
-
-                            const groupHeight = chartBounds.size.height * (ygroup[this.idx] / total_groups);
-
-                            if (width < groupHeight) {
-
-                                var vOffset = -2 - width;
-
-                                if (this.idx > 0) {
-                                    vOffset -= yIdxFunc(d,this.idx);
-                                }
-
-
-                                const hOffset = 12;//this.idx % 2 ? 30 : 12;
-                                this.v = true;
-                                return 'rotate(270) translate(' + vOffset + ',' + hOffset + ')'
+                            if (this.idx > 0) {
+                                vOffset -= yIdxFunc(d, this.idx);
                             }
-                            else {
-                                const box = this.getBBox();
-                                vOffset = box.height + yIdxFunc(d,this.idx) + 1;
-                                this.h = true;
 
-                                if (this.tinySize) {
-                                    vOffset -= 2;
-                                }
+                            const hOffset = 12; //this.idx % 2 ? 30 : 12;
+                            this.v = true;
+                            return 'rotate(270) translate(' + vOffset + ',' + hOffset + ')';
+                        } else {
+                            const box = this.getBBox();
+                            vOffset = box.height + yIdxFunc(d, this.idx) + 1;
+                            this.h = true;
 
-                                return 'translate(1,' + vOffset + ')';
+                            if (this.tinySize) {
+                                vOffset -= 2;
                             }
+
+                            return 'translate(1,' + vOffset + ')';
                         }
-                    )
-                    .each(function(d,i) {
+                    })
+                    .each(function (d, i) {
                         const box = this.getBBox();
                         //magic width number! Ooo!
                         if (this.h && box.width > 70) {
                             const label = d3.select(this).text();
                             if (label.length > 10) {
-                                d3.select(this).text(label.substring(0,7) + '...');
+                                d3.select(this).text(label.substring(0, 7) + '...');
                                 d3.select(this)
-                                    .on('mouseover', function(d) {
+                                    .on('mouseover', function (d) {
                                         d3.select(this).attr('fill', $self.options.overColor);
-                                        $self.data('heatmap').showToolTip(
-                                            {
-                                                label : label
-                                            }
-                                        );
+                                        $self.data('heatmap').showToolTip({
+                                            label: label,
+                                        });
                                     })
-                                    .on('mouseout', function(d) {
+                                    .on('mouseout', function (d) {
                                         d3.select(this).attr('fill', 'black');
                                         $self.data('heatmap').hideToolTip();
-                                    })
+                                    });
                             }
                         }
-                    })
-
+                    });
             }
-
-
         },
 
-        load_data_ref : function(ws, dataset) {
-          const $self = this;
-          ws.get_objects([{ref : dataset.data_ref}]).then((b) => {
-
-              $self.setDataset(b[0].data, dataset);
-
-          });
+        load_data_ref: function (ws, dataset) {
+            const $self = this;
+            ws.get_objects([{ ref: dataset.data_ref }]).then((b) => {
+                $self.setDataset(b[0].data, dataset);
+            });
         },
 
-        init : function init(options) {
-
+        init: function init(options) {
             this._super(options);
 
             const $self = this;
 
             this.appendUI(this.$elem);
 
-            const ws = new Workspace(window.kbconfig.urls.workspace, {token : $self.authToken()});
+            const ws = new Workspace(window.kbconfig.urls.workspace, { token: $self.authToken() });
             //var ws = new Workspace('https://ci.kbase.us/services/ws', {token : $self.authToken()});
 
             const ws_params = {
-                workspace : this.options.workspace,
-                name : this.options.expression_object
+                workspace: this.options.workspace,
+                name: this.options.expression_object,
             };
 
-            ws.get_objects([ws_params]).then((d) => {
-
-                if (d[0].data.figure_obj) {
-                  ws.get_objects([{ref : d[0].data.figure_obj}]).then((d) => {
-                    $self.load_data_ref(ws, d[0].data);
-                  });
-                }
-                else {
-                    $self.load_data_ref(ws, d[0].data);
-                }
-            }).fail((d) => {
-
-                $self.$elem.empty();
-                $self.$elem
-                    .addClass('alert alert-danger')
-                    .html("Could not load object : " + d.error.message);
-            })
+            ws.get_objects([ws_params])
+                .then((d) => {
+                    if (d[0].data.figure_obj) {
+                        ws.get_objects([{ ref: d[0].data.figure_obj }]).then((d) => {
+                            $self.load_data_ref(ws, d[0].data);
+                        });
+                    } else {
+                        $self.load_data_ref(ws, d[0].data);
+                    }
+                })
+                .fail((d) => {
+                    $self.$elem.empty();
+                    $self.$elem
+                        .addClass('alert alert-danger')
+                        .html('Could not load object : ' + d.error.message);
+                });
 
             return this;
         },
 
-        appendUI : function appendUI($elem) {
-
+        appendUI: function appendUI($elem) {
             const $me = this;
 
-
-            $elem
-                .append(
-                    $.jqElem('div')
-                        .attr('id', 'loader')
-                        .append('<br>&nbsp;Loading data...<br>&nbsp;please wait...')
-                        .append($.jqElem('br'))
-                        .append(
-                            $.jqElem('div')
-                                .attr('align', 'center')
-                                .append($.jqElem('i').addClass('fa fa-spinner').addClass('fa fa-spin fa fa-4x'))
-                        )
-                )
-            ;
-
+            $elem.append(
+                $.jqElem('div')
+                    .attr('id', 'loader')
+                    .append('<br>&nbsp;Loading data...<br>&nbsp;please wait...')
+                    .append($.jqElem('br'))
+                    .append(
+                        $.jqElem('div')
+                            .attr('align', 'center')
+                            .append(
+                                $.jqElem('i')
+                                    .addClass('fa fa-spinner')
+                                    .addClass('fa fa-spin fa fa-4x')
+                            )
+                    )
+            );
 
             this._rewireIds($elem, this);
-
         },
-
     });
-
-} );
+});

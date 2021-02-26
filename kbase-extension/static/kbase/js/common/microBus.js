@@ -19,8 +19,7 @@
  * listen - a component requests that messages meeting a certain pattern invoke a function it provides
  *
  */
-define([
-], () => {
+define([], () => {
     'use strict';
     let instanceId = 0;
     function newInstance() {
@@ -34,7 +33,6 @@ define([
             interval = 0,
             timer,
             instanceId = newInstance();
-
 
         function testListener(message, tester) {
             try {
@@ -90,15 +88,15 @@ define([
         function listen(spec) {
             listeners.push({
                 test: spec.test,
-                handle: spec.handle
+                handle: spec.handle,
             });
         }
         function on(type, handler) {
             listeners.push({
                 test: function (message) {
-                    return (type === message.type);
+                    return type === message.type;
                 },
-                handle: handler
+                handle: handler,
             });
         }
 
@@ -117,8 +115,8 @@ define([
             queue.push({
                 message: message,
                 envelope: {
-                    created: new Date()
-                }
+                    created: new Date(),
+                },
             });
             run();
         }
@@ -126,13 +124,13 @@ define([
         return {
             listen: listen,
             send: send,
-            on: on
+            on: on,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

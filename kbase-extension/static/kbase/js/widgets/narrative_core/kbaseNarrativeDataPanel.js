@@ -26,7 +26,7 @@ define([
     'kbaseNarrativeSidePublicTab',
     'kbaseNarrativeExampleDataTab',
     'kbaseNarrativeStagingDataTab',
-    'bootstrap'
+    'bootstrap',
 ], (
     KBWidget,
     $,
@@ -69,7 +69,7 @@ define([
         $errorMessage: null,
         $loading: null,
         isLoggedIn: false,
-        narrWs: null, /* see setNarrWS */
+        narrWs: null /* see setNarrWS */,
         // The set of all data currently loaded into the widget
         loadedData: {},
         options: {
@@ -85,11 +85,11 @@ define([
         // Constants
         dataListWidget: null,
         $myDataHeader: null,
-        myDataTempNarrativeMsg: 'Warning! This Narrative is temporary (untitled). ' +
+        myDataTempNarrativeMsg:
+            'Warning! This Narrative is temporary (untitled). ' +
             'Data of temporary Narratives is not visible on this tab. Please change ' +
             'the name of the Narrative to make it permanent.',
         renderedTabs: [false, false, false, false, false],
-
 
         init: function (options) {
             this._super(options);
@@ -102,57 +102,54 @@ define([
 
             const $dataList = $('<div>');
             this.body().append($dataList);
-            this.dataListWidget =
-                new kbaseNarrativeDataList($dataList, {
-                    ws_name: this.ws_name,
-                    parentControlPanel: this,
-                    slideTime: this.slideTime
-                });
+            this.dataListWidget = new kbaseNarrativeDataList($dataList, {
+                ws_name: this.ws_name,
+                parentControlPanel: this,
+                slideTime: this.slideTime,
+            });
             this.buildSlideoutPanel();
 
             /**
              * This should be triggered if something wants to know what data is loaded from the current workspace
              */
             $(document).on(
-                'dataLoadedQuery.Narrative', $.proxy(function (e, params, ignoreVersion, callback) {
+                'dataLoadedQuery.Narrative',
+                $.proxy(function (e, params, ignoreVersion, callback) {
                     const obj_data = this.dataListWidget.getObjData(params, ignoreVersion);
                     if (callback) {
                         callback(obj_data);
                     }
-                },
-                    this)
+                }, this)
             );
-
 
             /**
              * This should be triggered when something updates the available data in either the narrative or
              * in the workspace.
              */
-            $(document).on(
-                'updateData.Narrative', () => {
-                    this.dataListWidget.refresh();
-                }
-            );
+            $(document).on('updateData.Narrative', () => {
+                this.dataListWidget.refresh();
+            });
 
             /**
              * This should be triggered when something wants to know what workspace this widget is currently linked to.
              */
-            $(document).on(
-                'workspaceQuery.Narrative', (e, callback) => {
-                    if (callback) {
-                        callback(this.ws_name);
-                    }
+            $(document).on('workspaceQuery.Narrative', (e, callback) => {
+                if (callback) {
+                    callback(this.ws_name);
                 }
+            });
+
+            $(document).on(
+                'deleteDataList.Narrative',
+                $.proxy(function (event, data) {
+                    this.loadedData[data] = false;
+                    const className = '.' + data.split('.').join('--');
+                    $(className).html('');
+                    $(className)
+                        .append($('<span>').addClass('fa fa-chevron-circle-left'))
+                        .append(' Add');
+                }, this)
             );
-
-
-            $(document).on('deleteDataList.Narrative', $.proxy(function (event, data) {
-                this.loadedData[data] = false;
-                const className = '.' + data.split('.').join('--');
-                $(className).html('');
-                $(className).append($('<span>').addClass('fa fa-chevron-circle-left'))
-                    .append(' Add');
-            }, this));
 
             // note how many times we've clicked on the data browser slideout button.
             let numDataBrowserClicks = 0;
@@ -164,8 +161,8 @@ define([
                     container: 'body',
                     delay: {
                         show: Config.get('tooltip').showDelay,
-                        hide: Config.get('tooltip').hideDelay
-                    }
+                        hide: Config.get('tooltip').hideDelay,
+                    },
                 })
                 .append('<span class="fa fa-arrow-right"></span>')
                 .click(() => {
@@ -179,7 +176,10 @@ define([
 
                     // once we've clicked it 10 times, meaning we've open and shut the browser 5x, we reveal its TRUE NAME.
                     if (++numDataBrowserClicks >= 10) {
-                        this.$slideoutBtn.attr('data-original-title', 'Hide / Show Slidey McSliderface');
+                        this.$slideoutBtn.attr(
+                            'data-original-title',
+                            'Hide / Show Slidey McSliderface'
+                        );
                     }
                 });
 
@@ -242,20 +242,17 @@ define([
                             this.exampleTab.getExampleDataAndRender();
                         }.bind(this),
                     },
-                    { render: function () { } },
+                    { render: function () {} },
                 ];
 
                 if (Config.get('features').stagingDataViewer) {
-                    this.tabMapping.push(
-                        {
-                            widget: this.stagingTab,
-                            render: function () {
-                                this.stagingTab.updateView();
-                            }.bind(this)
-                        }
-                    );
+                    this.tabMapping.push({
+                        widget: this.stagingTab,
+                        render: function () {
+                            this.stagingTab.updateView();
+                        }.bind(this),
+                    });
                 }
-
             } else {
                 //console.error("ws_name is not defined");
             }
@@ -339,39 +336,45 @@ define([
 
             for (let i = 0; i < tabs.length; i++) {
                 const tab = tabs[i];
-                $header.append($('<div>')
-                    .addClass('kb-side-header')
-                    .attr('role', 'tab')
-                    .attr('data-test-id', `tab-${tab.id}`)
-                    .css('width', (100 / tabs.length) + '%')
-                    .click((e) => {
-                        const $tab = $(e.currentTarget);
-                        if ($tab.hasClass('active')) {
-                            return;
-                        }
+                $header.append(
+                    $('<div>')
+                        .addClass('kb-side-header')
+                        .attr('role', 'tab')
+                        .attr('data-test-id', `tab-${tab.id}`)
+                        .css('width', 100 / tabs.length + '%')
+                        .click((e) => {
+                            const $tab = $(e.currentTarget);
+                            if ($tab.hasClass('active')) {
+                                return;
+                            }
 
-                        // deactivate active tab
-                        $header.find('.kb-side-header.active').removeClass('active');
+                            // deactivate active tab
+                            $header.find('.kb-side-header.active').removeClass('active');
 
-                        // Make this one active
-                        $tab.addClass('active');
+                            // Make this one active
+                            $tab.addClass('active');
 
-                        // Deactivate tab panel.
-                        $body.find('div.kb-side-tab.active').removeClass('active');
+                            // Deactivate tab panel.
+                            $body.find('div.kb-side-tab.active').removeClass('active');
 
-                        // Activate this one.
-                        $body.find('div:nth-child(' + (i + 1) + ').kb-side-tab').addClass('active');
+                            // Activate this one.
+                            $body
+                                .find('div:nth-child(' + (i + 1) + ').kb-side-tab')
+                                .addClass('active');
 
-                        if (isOuter) {
-                            this.hideOverlay();
-                        }
-                        this.updateSlideoutRendering(i);
-                    })
-                    .append(`<span data-test-id="label">${tab.tabName}</tab>`));
-                $body.append($('<div>')
-                    .addClass('kb-side-tab')
-                    .attr('data-test-id', `panel-${tab.id}`)
-                    .append(tab.content));
+                            if (isOuter) {
+                                this.hideOverlay();
+                            }
+                            this.updateSlideoutRendering(i);
+                        })
+                        .append(`<span data-test-id="label">${tab.tabName}</tab>`)
+                );
+                $body.append(
+                    $('<div>')
+                        .addClass('kb-side-tab')
+                        .attr('data-test-id', `panel-${tab.id}`)
+                        .append(tab.content)
+                );
             }
 
             $header.find('div:first-child').addClass('active');
@@ -379,7 +382,7 @@ define([
 
             return {
                 header: $header,
-                body: $body
+                body: $body,
             };
         },
 
@@ -407,7 +410,7 @@ define([
 
         currentWsIsTemp: function () {
             this.$myDataHeader.empty();
-            this.$myDataHeader.css({ 'color': '#777', 'margin': '10px 10px 0px 10px' });
+            this.$myDataHeader.css({ color: '#777', margin: '10px 10px 0px 10px' });
             this.$myDataHeader.append(this.myDataTempNarrativeMsg);
         },
 
@@ -434,19 +437,29 @@ define([
             // tab panels
             const minePanel = $('<div class="kb-import-content kb-import-mine">'),
                 sharedPanel = $('<div class="kb-import-content kb-import-shared">'),
-                publicPanel = $('<div class="kb-import-content kb-import-public" data-test-id="panel-public">'),
+                publicPanel = $(
+                    '<div class="kb-import-content kb-import-public" data-test-id="panel-public">'
+                ),
                 examplePanel = $('<div class="kb-import-content">'),
                 stagingPanel = $('<div class="kb-import-content">');
 
             const tabList = [
                 { id: 'mydata', tabName: '<small>My Data</small>', content: minePanel },
-                { id: 'sharedwithme', tabName: '<small>Shared With Me</small>', content: sharedPanel },
+                {
+                    id: 'sharedwithme',
+                    tabName: '<small>Shared With Me</small>',
+                    content: sharedPanel,
+                },
                 { id: 'public', tabName: '<small>Public</small>', content: publicPanel },
                 { id: 'example', tabName: '<small>Example</small>', content: examplePanel },
             ];
 
             if (Config.get('features').stagingDataViewer) {
-                tabList.push({ id: 'import', tabName: '<small>Import<small>', content: stagingPanel });
+                tabList.push({
+                    id: 'import',
+                    tabName: '<small>Import<small>',
+                    content: stagingPanel,
+                });
             }
 
             // add tabs
@@ -461,13 +474,29 @@ define([
             // add footer status container and buttons
             const importStatus = $('<div class="pull-left kb-import-status">');
             footer.append(importStatus);
-            const closeBtn = $('<button class="kb-default-btn pull-right">Close</button>').css({ 'margin': '10px' });
+            const closeBtn = $('<button class="kb-default-btn pull-right">Close</button>').css({
+                margin: '10px',
+            });
 
             // Setup the panels that are defined by widgets
-            this.mineTab = new DataBrowser(minePanel, { $importStatus: importStatus, ws_name: this.ws_name, dataSet: 'mine' });
-            this.sharedTab = new DataBrowser(sharedPanel, { $importStatus: importStatus, ws_name: this.ws_name, dataSet: 'shared' });
-            this.publicTab = new kbaseNarrativeSidePublicTab(publicPanel, { $importStatus: importStatus, ws_name: this.ws_name });
-            this.exampleTab = new kbaseNarrativeExampleDataTab(examplePanel, { $importStatus: importStatus, ws_name: this.ws_name });
+            this.mineTab = new DataBrowser(minePanel, {
+                $importStatus: importStatus,
+                ws_name: this.ws_name,
+                dataSet: 'mine',
+            });
+            this.sharedTab = new DataBrowser(sharedPanel, {
+                $importStatus: importStatus,
+                ws_name: this.ws_name,
+                dataSet: 'shared',
+            });
+            this.publicTab = new kbaseNarrativeSidePublicTab(publicPanel, {
+                $importStatus: importStatus,
+                ws_name: this.ws_name,
+            });
+            this.exampleTab = new kbaseNarrativeExampleDataTab(examplePanel, {
+                $importStatus: importStatus,
+                ws_name: this.ws_name,
+            });
             if (Config.get('features').stagingDataViewer) {
                 this.stagingTab = new kbaseNarrativeStagingDataTab(stagingPanel).render();
             }
@@ -499,6 +528,6 @@ define([
             footer.append(closeBtn);
 
             this.$overlayPanel = body.append(footer);
-        }
+        },
     });
 });

@@ -1,43 +1,35 @@
-define([
-    'kb_common/html',
-    'kb_common/format',
-    './props',
-    'bootstrap'
-], (html, format, Props) => {
+define(['kb_common/html', 'kb_common/format', './props', 'bootstrap'], (html, format, Props) => {
     'use strict';
     const t = html.tag,
         div = t('div');
 
     function makePanel(title, elementName) {
-        return  div({class: 'panel panel-primary'}, [
-            div({class: 'panel-heading'}, [
-                div({class: 'panel-title'}, title)
+        return div({ class: 'panel panel-primary' }, [
+            div({ class: 'panel-heading' }, [div({ class: 'panel-title' }, title)]),
+            div({ class: 'panel-body' }, [
+                div({ dataElement: elementName, class: 'container-fluid' }),
             ]),
-            div({class: 'panel-body'}, [
-                div({dataElement: elementName, class: 'container-fluid'})
-            ])
         ]);
     }
 
     function buildPanel(args) {
-        const style = {}, type = args.type || 'primary';
+        const style = {},
+            type = args.type || 'primary';
         if (args.hidden) {
             style.display = 'none';
         }
-        return  div({class: 'panel panel-' + type, dataElement: args.name, style: style}, [
-            div({class: 'panel-heading'}, [
-                div({class: 'panel-title'}, args.title)
-            ]),
-            div({class: 'panel-body'}, [
-                args.body
-            ])
+        return div({ class: 'panel panel-' + type, dataElement: args.name, style: style }, [
+            div({ class: 'panel-heading' }, [div({ class: 'panel-title' }, args.title)]),
+            div({ class: 'panel-body' }, [args.body]),
         ]);
     }
 
     function getElement(container, names) {
-        const selector = names.map((name) => {
-            return '[data-element="' + name + '"]';
-        }).join(' ');
+        const selector = names
+            .map((name) => {
+                return '[data-element="' + name + '"]';
+            })
+            .join(' ');
 
         return container.querySelector(selector);
     }
@@ -140,5 +132,4 @@ define([
         horribleHackToHideElement: horribleHackToHideElement,
         toBoolean: toBoolean,
     };
-
 });

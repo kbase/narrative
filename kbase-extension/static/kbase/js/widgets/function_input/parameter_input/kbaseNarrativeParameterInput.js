@@ -3,64 +3,55 @@
  * @public
  */
 
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'narrativeConfig',
-		'kbaseAuthenticatedWidget'
-	], (
-		KBWidget,
-		bootstrap,
-		$,
-		Config,
-		kbaseAuthenticatedWidget
-	) => {
+define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'kbaseAuthenticatedWidget'], (
+    KBWidget,
+    bootstrap,
+    $,
+    Config,
+    kbaseAuthenticatedWidget
+) => {
     'use strict';
     return KBWidget({
-        name: "kbaseNarrativeParameterInput",
-        parent : kbaseAuthenticatedWidget,
-        version: "1.0.0",
+        name: 'kbaseNarrativeParameterInput',
+        parent: kbaseAuthenticatedWidget,
+        version: '1.0.0',
         options: {
             loadingImage: Config.get('loading_gif'),
             parsedParameterSpec: null,
-            isInSidePanel: false
+            isInSidePanel: false,
         },
         IGNORE_VERSION: true,
 
-        $mainPanel:null,
-        spec:null,
+        $mainPanel: null,
+        spec: null,
 
-        init: function(options) {
+        init: function (options) {
             this._super(options);
 
             this.spec = options.parsedParameterSpec;
 
-            this.$mainPanel = $("<div>");
+            this.$mainPanel = $('<div>');
             this.$elem.append(this.$mainPanel);
             this.render();
 
             return this;
         },
 
-        render: function() {
-            this.$mainPanel.append("A parameter is not being displayed correctly.");
-            console.error("Incorrect Parameter Spec:");
+        render: function () {
+            this.$mainPanel.append('A parameter is not being displayed correctly.');
+            console.error('Incorrect Parameter Spec:');
             console.error(this.spec);
         },
 
-        getState: function() {
+        getState: function () {
             return this.getParameterValue();
         },
 
-        loadState: function(state) {
+        loadState: function (state) {
             this.setParameterValue(state);
         },
 
-        refresh: function() {
-
-        },
+        refresh: function () {},
 
         /*
          * This is called when this method is run to allow you to check if the parameters
@@ -69,40 +60,34 @@ define (
          * called, you should visually indicate which parameters are invalid by marking them
          * red (see kbaseNarrativeMethodInput for default styles).
          */
-        isValid: function() {
-           return { isValid: false, errormssgs: ["A parameter is not specified properly."] };
+        isValid: function () {
+            return { isValid: false, errormssgs: ['A parameter is not specified properly.'] };
         },
 
         /*
          * Necessary for Apps to disable editing parameters that are automatically filled
          * from a previous step.  Returns nothing.
          */
-        disableParameterEditing: function() {
-
-        },
+        disableParameterEditing: function () {},
 
         /*
          * Allows those parameters to be renabled, which may be an option for advanced users.
          */
-        enableParameterEditing: function() {
-
-        },
+        enableParameterEditing: function () {},
 
         /*
          * An App (or a narrative that needs to auto populate certain fields) needs to set
          * specific parameter values based on the App spec, so we need a way to do this.
          */
-        setParameterValue: function(value) {
-
-        },
+        setParameterValue: function (value) {},
 
         /*
          * We need to be able to retrieve any parameter value from this method.  Valid parameter
          * values may be strings, numbers, objects, or lists, but must match what is declared
          * in the method spec.  If the parameter is not valid.
          */
-        getParameterValue: function() {
-            return "";
+        getParameterValue: function () {
+            return '';
         },
 
         /*
@@ -110,9 +95,6 @@ define (
          * and getParameterValue() which could be invoked many times before running (e.g. when widget
          * is rendered).
          */
-        prepareValueBeforeRun: function(methodSpec) {
-
-        }
-
+        prepareValueBeforeRun: function (methodSpec) {},
     });
 });

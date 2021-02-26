@@ -16,7 +16,7 @@ define([
     'messageManager',
     'narrativeConfig',
     // Use our locally defined widget service for protyping the iframe stuff, then merge that in
-    'widgetService2'
+    'widgetService2',
 ], (Promise, RuntimeManager, MessageManager, NarrativeConfig, WidgetService) => {
     'use strict';
     function factory(config) {
@@ -26,73 +26,89 @@ define([
             narrativeConfig = NarrativeConfig.getConfig(),
             messageManager = MessageManager({
                 root: window,
-                name: 'parent'
+                name: 'parent',
             });
 
         function showErrorMessage(message) {
-            widgetParentNode.innerHTML = '<div style="margin: 1em; padding: 1em; border: 2px red solid;"><h1>Error in ' + widgetTitle + '</h1><p>' + message + '</p></div>';
+            widgetParentNode.innerHTML =
+                '<div style="margin: 1em; padding: 1em; border: 2px red solid;"><h1>Error in ' +
+                widgetTitle +
+                '</h1><p>' +
+                message +
+                '</p></div>';
         }
 
         function runWidget(objectRefs, options) {
             return new Promise((resolve, reject) => {
                 try {
                     const runtimeManager = RuntimeManager.make({
-                        cdnUrl: narrativeConfig.services.cdn.url
-                    }),
+                            cdnUrl: narrativeConfig.services.cdn.url,
+                        }),
                         // This runtime object is provided for the boot up of the widget invocation
                         // machinery, NOT running the widget.
                         // Note -- need to use the global require in order to generate additional require objects
                         // via require.config()
-                        req = runtimeManager.getModuleLoader('0.1.1', require, '/narrative/widgetApi/kbase/js/widgetApi');
+                        req = runtimeManager.getModuleLoader(
+                            '0.1.1',
+                            require,
+                            '/narrative/widgetApi/kbase/js/widgetApi'
+                        );
 
-                    req([
-                        //'kb_widget_service/widgetManager',
-                        // 'yaml!./config.yml',
-                        'kb_common/props',
-                        'kb_common/session',
-                        'kb_common/html',
-                        'uuid'
-                    ],
+                    req(
+                        [
+                            //'kb_widget_service/widgetManager',
+                            // 'yaml!./config.yml',
+                            'kb_common/props',
+                            'kb_common/session',
+                            'kb_common/html',
+                            'uuid',
+                        ],
                         (Props, Session, Html, Uuid) => {
                             // just a little synchronous auth token business for now
                             function getAuthToken() {
-                                const session = Session.make({cookieName: 'kbase_session'});
+                                const session = Session.make({ cookieName: 'kbase_session' });
                                 return session.getAuthToken();
                             }
                             function makeWidgetHostAdapter(objectRefs, options) {
-                                const configProps = Props.make({data: NarrativeConfig.getConfig()});
+                                const configProps = Props.make({
+                                    data: NarrativeConfig.getConfig(),
+                                });
                                 return function (bus) {
                                     bus.subscribe('ready', () => {
                                         bus.publish('start', {
                                             objectRefs: objectRefs,
-                                            options: options
+                                            options: options,
                                         });
                                     });
 
                                     bus.subscribe('config', (data) => {
                                         return {
-                                            value: configProps.getItem(data.property, data.defaultValue)
+                                            value: configProps.getItem(
+                                                data.property,
+                                                data.defaultValue
+                                            ),
                                         };
                                     });
 
                                     bus.subscribe('authToken', () => {
                                         const token = getAuthToken();
                                         return {
-                                            value: token
+                                            value: token,
                                         };
                                     });
 
                                     bus.subscribe('error', (data) => {
                                         showErrorMessage(data.message);
-
                                     });
                                 };
                             }
                             const waitingPartners = {};
                             function findWaiting(frameWindow) {
-                                let keys = Object.keys(waitingPartners), i;
+                                let keys = Object.keys(waitingPartners),
+                                    i;
                                 for (i = 0; i < keys.length; i += 1) {
-                                    const key = keys[i], partner = waitingPartners[key];
+                                    const key = keys[i],
+                                        partner = waitingPartners[key];
                                     if (frameWindow === partner.window) {
                                         return partner;
                                     }
@@ -107,40 +123,47 @@ define([
                             function renderIFrameWidget(node, url, host) {
                                 const div = Html.tag('div'),
                                     iframe = Html.tag('iframe'),
-                                    iframeId = (new Uuid(4)).format(),
+                                    iframeId = new Uuid(4).format(),
                                     iframeNodeId = 'frame_' + iframeId,
                                     iframeHost = urlToHost(url);
 
-
-                                node.innerHTML = div({class: 'row'}, [
-                                    div({class: 'col-md-12'}, [
+                                node.innerHTML = div({ class: 'row' }, [
+                                    div({ class: 'col-md-12' }, [
                                         Html.makePanel({
                                             title: 'iFrame Remote Loading Example ' + iframeId,
                                             content: iframe({
                                                 dataFrame: iframeNodeId,
-                                                dataParams: encodeURIComponent(JSON.stringify({
-                                                    parentHost: host,
-                                                    frameId: 'frame_' + iframeId,
-                                                    objectRef: '4079/2/1'
-                                                })),
-                                                style: {width: '100%', height: 'auto', border: '0px green dotted'},
-                                                src: url})
-                                        })
-                                    ])
+                                                dataParams: encodeURIComponent(
+                                                    JSON.stringify({
+                                                        parentHost: host,
+                                                        frameId: 'frame_' + iframeId,
+                                                        objectRef: '4079/2/1',
+                                                    })
+                                                ),
+                                                style: {
+                                                    width: '100%',
+                                                    height: 'auto',
+                                                    border: '0px green dotted',
+                                                },
+                                                src: url,
+                                            }),
+                                        }),
+                                    ]),
                                 ]);
                                 // Note that this listener needs to be effective before the iframe loads.
                                 // This is not a problem since although the iframe will be present in the DOM
                                 // at this point in the code, the content will not have loaded yet.
                                 waitingPartners[iframeId] = {
                                     name: iframeId,
-                                    window: node.querySelector('[data-frame="'+iframeNodeId+'"]').contentWindow,
-                                    host: iframeHost
+                                    window: node.querySelector(
+                                        '[data-frame="' + iframeNodeId + '"]'
+                                    ).contentWindow,
+                                    host: iframeHost,
                                 };
                             }
                             messageManager.listen({
                                 name: 'ready',
                                 handler: function (message, event) {
-
                                     // Now we only add the parter after the initial handshake.
 
                                     // Do we have the partner?
@@ -148,7 +171,11 @@ define([
                                         waitingPartner = findWaiting(source);
 
                                     if (!waitingPartner) {
-                                        console.error('Not a waiting parter ', source, waitingPartners);
+                                        console.error(
+                                            'Not a waiting parter ',
+                                            source,
+                                            waitingPartners
+                                        );
                                         throw new Error('Not a waiting parter');
                                     }
 
@@ -158,7 +185,7 @@ define([
                                     messageManager.addPartner({
                                         name: waitingPartner.name,
                                         window: source,
-                                        host: waitingPartner.host
+                                        host: waitingPartner.host,
                                     });
 
                                     console.log('Sending to ' + waitingPartner.name);
@@ -166,13 +193,13 @@ define([
                                         name: 'start',
                                         config: {
                                             frameId: waitingPartner.name,
-                                            host: 'http://localhost:8888'
+                                            host: 'http://localhost:8888',
                                         },
                                         params: {
-                                            objectRef: '4079/2/1'
-                                        }
+                                            objectRef: '4079/2/1',
+                                        },
                                     });
-                                }
+                                },
                             });
 
                             messageManager.listen({
@@ -182,22 +209,27 @@ define([
                                         name: 'authStatus',
                                         id: message.id,
                                         auth: {
-                                            token: getAuthToken()
-                                        }
+                                            token: getAuthToken(),
+                                        },
                                     });
-                                }
+                                },
                             });
 
                             messageManager.listen({
                                 name: 'config',
                                 handler: function (message) {
-                                    const configProps = Props.make({data: NarrativeConfig.getConfig()});
+                                    const configProps = Props.make({
+                                        data: NarrativeConfig.getConfig(),
+                                    });
                                     messageManager.send(message.from, {
                                         name: 'config',
                                         id: message.id,
-                                        value: configProps.getItem(message.property, message.defaultValue)
+                                        value: configProps.getItem(
+                                            message.property,
+                                            message.defaultValue
+                                        ),
                                     });
-                                }
+                                },
                             });
 
                             messageManager.listen({
@@ -206,9 +238,11 @@ define([
                                     // adjust height of source window...
                                     console.log('rendering ...' + message.from);
                                     const height = message.height; // event.source.contentWindow.height;
-                                    const iframe = document.querySelector('[data-frame="frame_' + message.from + '"]');
+                                    const iframe = document.querySelector(
+                                        '[data-frame="frame_' + message.from + '"]'
+                                    );
                                     iframe.style.height = height + 'px';
-                                }
+                                },
                             });
 
                             /*
@@ -234,33 +268,47 @@ define([
 
                             // use raw widget service for now.
                             const widgetService = WidgetService.make({
-                                url: 'http://widget.kbase.us/wsvc'
+                                url: 'http://widget.kbase.us/wsvc',
                             });
-                            const widget = widgetService.getWidget(config.package, config.version, config.widget);
+                            const widget = widgetService.getWidget(
+                                config.package,
+                                config.version,
+                                config.widget
+                            );
                             if (!widget) {
-                                throw new Error('Cannot find widget: ' + config.package + ', ' + config.version + ', ' + config.widget);
+                                throw new Error(
+                                    'Cannot find widget: ' +
+                                        config.package +
+                                        ', ' +
+                                        config.version +
+                                        ', ' +
+                                        config.widget
+                                );
                             }
 
-//                            var widgetManager = WidgetManager.make({
-//                                widgetServiceUrl: config.services.widget.url,
-//                                cdnUrl: config.services.cdn.url
-//                            });
-//                            var widgetDiv = widgetManager.addWidget({
-//                                package: packageName,
-//                                version: packageVersion,
-//                                widget: widgetName,
-//                                panel: true,
-//                                title: widgetTitle
-//                            });
+                            //                            var widgetManager = WidgetManager.make({
+                            //                                widgetServiceUrl: config.services.widget.url,
+                            //                                cdnUrl: config.services.cdn.url
+                            //                            });
+                            //                            var widgetDiv = widgetManager.addWidget({
+                            //                                package: packageName,
+                            //                                version: packageVersion,
+                            //                                widget: widgetName,
+                            //                                panel: true,
+                            //                                title: widgetTitle
+                            //                            });
 
                             // The "widget" is provided as simple markup (string) with an id set and mapped
                             // internally to the right widget invocation stuff.
-                            renderIFrameWidget(widgetParentNode, widget.widget.url, 'http://localhost:8888');
+                            renderIFrameWidget(
+                                widgetParentNode,
+                                widget.widget.url,
+                                'http://localhost:8888'
+                            );
 
                             messageManager.listen({
                                 name: 'ready',
                                 handler: function (message, event) {
-
                                     // Now we only add the parter after the initial handshake.
 
                                     // Do we have the partner?
@@ -268,7 +316,11 @@ define([
                                         waitingPartner = findWaiting(source);
 
                                     if (!waitingPartner) {
-                                        console.error('Not a waiting parter ', source, waitingPartners);
+                                        console.error(
+                                            'Not a waiting parter ',
+                                            source,
+                                            waitingPartners
+                                        );
                                         throw new Error('Not a waiting parter');
                                     }
 
@@ -278,7 +330,7 @@ define([
                                     messageManager.addPartner({
                                         name: waitingPartner.name,
                                         window: source,
-                                        host: waitingPartner.host
+                                        host: waitingPartner.host,
                                     });
 
                                     console.log('Sending to ' + waitingPartner.name);
@@ -286,41 +338,41 @@ define([
                                         name: 'start',
                                         config: {
                                             frameId: waitingPartner.name,
-                                            host: 'http://localhost:8080'
+                                            host: 'http://localhost:8080',
                                         },
                                         params: {
-                                            objectRef: '4079/2/1'
-                                        }
+                                            objectRef: '4079/2/1',
+                                        },
                                     });
-                                }
+                                },
                             });
 
                             // After the widget wrapper is placed into the dom, we can launch the widget.
-//                            widgetManager.loadWidgets(makeWidgetHostAdapter(objectRefs, options))
-//                                .then(function () {
-//                                    resolve();
-//                                })
-//                                .catch(function (err) {
-//                                    console.error('load widgets error', err);
-//                                    reject(err);
-//                                });
-                        });
+                            //                            widgetManager.loadWidgets(makeWidgetHostAdapter(objectRefs, options))
+                            //                                .then(function () {
+                            //                                    resolve();
+                            //                                })
+                            //                                .catch(function (err) {
+                            //                                    console.error('load widgets error', err);
+                            //                                    reject(err);
+                            //                                });
+                        }
+                    );
                 } catch (ex) {
                     reject(ex);
                 }
             });
         }
 
-
         return {
             runWidget: runWidget,
-            showErrorMessage: showErrorMessage
+            showErrorMessage: showErrorMessage,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

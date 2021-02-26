@@ -11,7 +11,7 @@ define([
     'base/js/namespace',
     '../subdataMethods/manager',
     'bootstrap',
-    'css!font-awesome'
+    'css!font-awesome',
 ], (
     $,
     Promise,
@@ -65,7 +65,7 @@ define([
             subdataMethods,
             isAvailableValuesInitialized = false,
             options = {
-                objectSelectionPageSize: 20
+                objectSelectionPageSize: 20,
             },
             minimumFilterLength = 0,
             ui;
@@ -86,19 +86,24 @@ define([
             if (!availableValues) {
                 return selectOptions;
             }
-            return selectOptions.concat(availableValues.map((availableValue) => {
-                let selected = false,
-                    optionLabel = availableValue.id,
-                    optionValue = availableValue.id;
-                // TODO: pull the value out of the object
-                if (value.indexOf(availableValue.id) >= 0) {
-                    selected = true;
-                }
-                return option({
-                    value: optionValue,
-                    selected: selected
-                }, optionLabel);
-            }));
+            return selectOptions.concat(
+                availableValues.map((availableValue) => {
+                    let selected = false,
+                        optionLabel = availableValue.id,
+                        optionValue = availableValue.id;
+                    // TODO: pull the value out of the object
+                    if (value.indexOf(availableValue.id) >= 0) {
+                        selected = true;
+                    }
+                    return option(
+                        {
+                            value: optionValue,
+                            selected: selected,
+                        },
+                        optionLabel
+                    );
+                })
+            );
         }
 
         function buildCount() {
@@ -136,7 +141,7 @@ define([
 
         function renderAvailableItems() {
             let selected = model.getItem('selectedItems', []),
-                allowSelection = (spec.ui.multiSelection || selected.length === 0),
+                allowSelection = spec.ui.multiSelection || selected.length === 0,
                 items = model.getItem('filteredAvailableItems', []),
                 from = model.getItem('showFrom'),
                 to = model.getItem('showTo'),
@@ -149,83 +154,106 @@ define([
             } else if (itemsToShow.length === 0) {
                 content = div({ style: { textAlign: 'center' } }, 'no available values');
             } else {
-                content = itemsToShow.map((item, index) => {
-                    const isSelected = selected.some((id) => {
-                            return (item.id === id);
-                        }),
-                        disabled = isSelected;
-                    return div({ class: 'row', style: { border: '1px #CCC solid' } }, [
-                        div({
-                            class: 'col-md-2',
-                            style: {
-                                verticalAlign: 'middle',
-                                borderRadius: '3px',
-                                padding: '2px',
-                                backgroundColor: '#EEE',
-                                color: '#444',
-                                textAlign: 'right',
-                                paddingRight: '6px',
-                                fontFamily: 'monospace'
-                            }
-                        }, String(from + index + 1)),
-                        div({
-                            class: 'col-md-8',
-                            style: {
-                                padding: '2px'
-                            }
-                        }, item.text),
-                        div({
-                            class: 'col-md-2',
-                            style: {
-                                padding: '2px',
-                                textAlign: 'right',
-                                verticalAlign: 'top'
-                            }
-                        }, [
-                            (function() {
-                                if (disabled) {
-                                    return span({
-                                        class: 'kb-btn-icon',
-                                        type: 'button',
-                                        dataToggle: 'tooltip',
-                                        title: 'Remove from selected'
-                                    }, [
-                                        span({
-                                            class: 'fa fa-minus-circle',
-                                            style: {
-                                                color: 'red',
-                                                fontSize: '200%'
-                                            }
-                                        })
-                                    ]);
-                                }
-                                if (allowSelection) {
-                                    return span({
-                                        class: 'kb-btn-icon',
-                                        type: 'button',
-                                        dataToggle: 'tooltip',
-                                        title: 'Add to selected',
-                                        dataItemId: item.id,
-                                    }, [span({
-                                        class: 'fa fa-plus-circle',
-                                        style: {
-                                            color: 'green',
-                                            fontSize: '200%'
+                content = itemsToShow
+                    .map((item, index) => {
+                        const isSelected = selected.some((id) => {
+                                return item.id === id;
+                            }),
+                            disabled = isSelected;
+                        return div({ class: 'row', style: { border: '1px #CCC solid' } }, [
+                            div(
+                                {
+                                    class: 'col-md-2',
+                                    style: {
+                                        verticalAlign: 'middle',
+                                        borderRadius: '3px',
+                                        padding: '2px',
+                                        backgroundColor: '#EEE',
+                                        color: '#444',
+                                        textAlign: 'right',
+                                        paddingRight: '6px',
+                                        fontFamily: 'monospace',
+                                    },
+                                },
+                                String(from + index + 1)
+                            ),
+                            div(
+                                {
+                                    class: 'col-md-8',
+                                    style: {
+                                        padding: '2px',
+                                    },
+                                },
+                                item.text
+                            ),
+                            div(
+                                {
+                                    class: 'col-md-2',
+                                    style: {
+                                        padding: '2px',
+                                        textAlign: 'right',
+                                        verticalAlign: 'top',
+                                    },
+                                },
+                                [
+                                    (function () {
+                                        if (disabled) {
+                                            return span(
+                                                {
+                                                    class: 'kb-btn-icon',
+                                                    type: 'button',
+                                                    dataToggle: 'tooltip',
+                                                    title: 'Remove from selected',
+                                                },
+                                                [
+                                                    span({
+                                                        class: 'fa fa-minus-circle',
+                                                        style: {
+                                                            color: 'red',
+                                                            fontSize: '200%',
+                                                        },
+                                                    }),
+                                                ]
+                                            );
                                         }
-                                    })]);
-                                }
-                                return span({
-                                    class: 'kb-btn-icon',
-                                    type: 'button',
-                                    dataToggle: 'tooltip',
-                                    title: 'Can\'t add - remove one first',
-                                    dataItemId: item.id
-                                }, span({ class: 'fa fa-ban', style: { color: 'silver', fontSize: '200%' } }));
-                            }())
-
-                        ])
-                    ]);
-                })
+                                        if (allowSelection) {
+                                            return span(
+                                                {
+                                                    class: 'kb-btn-icon',
+                                                    type: 'button',
+                                                    dataToggle: 'tooltip',
+                                                    title: 'Add to selected',
+                                                    dataItemId: item.id,
+                                                },
+                                                [
+                                                    span({
+                                                        class: 'fa fa-plus-circle',
+                                                        style: {
+                                                            color: 'green',
+                                                            fontSize: '200%',
+                                                        },
+                                                    }),
+                                                ]
+                                            );
+                                        }
+                                        return span(
+                                            {
+                                                class: 'kb-btn-icon',
+                                                type: 'button',
+                                                dataToggle: 'tooltip',
+                                                title: "Can't add - remove one first",
+                                                dataItemId: item.id,
+                                            },
+                                            span({
+                                                class: 'fa fa-ban',
+                                                style: { color: 'silver', fontSize: '200%' },
+                                            })
+                                        );
+                                    })(),
+                                ]
+                            ),
+                        ]);
+                    })
                     .join('\n');
             }
 
@@ -243,57 +271,84 @@ define([
             if (selectedItems.length === 0) {
                 content = div({ style: { textAlign: 'center' } }, 'no selected values');
             } else {
-                content = selectedItems.map((itemId, index) => {
-                    let item = valuesMap[itemId];
-                    if (item === undefined || item === null) {
-                        item = {
-                            text: itemId
-                        };
-                    }
+                content = selectedItems
+                    .map((itemId, index) => {
+                        let item = valuesMap[itemId];
+                        if (item === undefined || item === null) {
+                            item = {
+                                text: itemId,
+                            };
+                        }
 
-                    return div({ class: 'row', style: { border: '1px #CCC solid', borderCollapse: 'collapse', boxSizing: 'border-box' } }, [
-                        div({
-                            class: 'col-md-2',
-                            style: {
-                                xdisplay: 'inline-block',
-                                xwidth: '20%',
-                                verticalAlign: 'middle',
-                                borderRadius: '3px',
-                                padding: '2px',
-                                backgroundColor: '#EEE',
-                                color: '#444',
-                                textAlign: 'right',
-                                paddingRight: '6px',
-                                fontFamily: 'monospace'
-                            }
-                        }, String(index + 1)),
-                        div({
-                            class: 'col-md-8',
-                            style: {
-                                xdisplay: 'inline-block',
-                                xwidth: '90%',
-                                padding: '2px'
-                            }
-                        }, item.text),
-                        div({
-                            class: 'col-md-2',
-                            style: {
-                                xdisplay: 'inline-block',
-                                xwidth: '10%',
-                                padding: '2px',
-                                textAlign: 'right',
-                                verticalAlign: 'top'
-                            }
-                        }, [
-                            span({
-                                class: 'kb-btn-icon',
-                                type: 'button',
-                                dataToggle: 'tooltip',
-                                title: 'Remove from selected',
-                            }, span({ class: 'fa fa-minus-circle', style: { color: 'red', fontSize: '200%' } }))
-                        ])
-                    ]);
-                }).join('\n');
+                        return div(
+                            {
+                                class: 'row',
+                                style: {
+                                    border: '1px #CCC solid',
+                                    borderCollapse: 'collapse',
+                                    boxSizing: 'border-box',
+                                },
+                            },
+                            [
+                                div(
+                                    {
+                                        class: 'col-md-2',
+                                        style: {
+                                            xdisplay: 'inline-block',
+                                            xwidth: '20%',
+                                            verticalAlign: 'middle',
+                                            borderRadius: '3px',
+                                            padding: '2px',
+                                            backgroundColor: '#EEE',
+                                            color: '#444',
+                                            textAlign: 'right',
+                                            paddingRight: '6px',
+                                            fontFamily: 'monospace',
+                                        },
+                                    },
+                                    String(index + 1)
+                                ),
+                                div(
+                                    {
+                                        class: 'col-md-8',
+                                        style: {
+                                            xdisplay: 'inline-block',
+                                            xwidth: '90%',
+                                            padding: '2px',
+                                        },
+                                    },
+                                    item.text
+                                ),
+                                div(
+                                    {
+                                        class: 'col-md-2',
+                                        style: {
+                                            xdisplay: 'inline-block',
+                                            xwidth: '10%',
+                                            padding: '2px',
+                                            textAlign: 'right',
+                                            verticalAlign: 'top',
+                                        },
+                                    },
+                                    [
+                                        span(
+                                            {
+                                                class: 'kb-btn-icon',
+                                                type: 'button',
+                                                dataToggle: 'tooltip',
+                                                title: 'Remove from selected',
+                                            },
+                                            span({
+                                                class: 'fa fa-minus-circle',
+                                                style: { color: 'red', fontSize: '200%' },
+                                            })
+                                        ),
+                                    ]
+                                ),
+                            ]
+                        );
+                    })
+                    .join('\n');
             }
             ui.setContent('selected-items', content);
             events.attachEvents();
@@ -309,33 +364,34 @@ define([
                 placeholder: 'search',
                 value: model.getItem('filter') || '',
                 id: events.addEvents({
-                    events: [{
-                        type: 'keyup',
-                        handler: function(e) {
-                            doSearchKeyUp(e);
-                        }
-                    },
-                    {
-                        type: 'focus',
-                        handler: function() {
-                            Jupyter.narrative.disableKeyboardManager();
-                        }
-                    },
-                    {
-                        type: 'blur',
-                        handler: function() {
-                            // console.log('SingleSubData Search BLUR');
-                            // Jupyter.narrative.enableKeyboardManager();
-                        }
-                    },
-                    {
-                        type: 'click',
-                        handler: function() {
-                            Jupyter.narrative.disableKeyboardManager();
-                        }
-                    }
-                    ]
-                })
+                    events: [
+                        {
+                            type: 'keyup',
+                            handler: function (e) {
+                                doSearchKeyUp(e);
+                            },
+                        },
+                        {
+                            type: 'focus',
+                            handler: function () {
+                                Jupyter.narrative.disableKeyboardManager();
+                            },
+                        },
+                        {
+                            type: 'blur',
+                            handler: function () {
+                                // console.log('SingleSubData Search BLUR');
+                                // Jupyter.narrative.enableKeyboardManager();
+                            },
+                        },
+                        {
+                            type: 'click',
+                            handler: function () {
+                                Jupyter.narrative.disableKeyboardManager();
+                            },
+                        },
+                    ],
+                }),
             });
 
             ui.setContent('search-box', content);
@@ -344,7 +400,7 @@ define([
 
         function renderSearchMessage() {
             const content = span({
-                dataElement: 'message'
+                dataElement: 'message',
             });
 
             ui.setContent('search-message', content);
@@ -360,25 +416,19 @@ define([
                 content;
             if (!isAvailableValuesInitialized) {
                 content = span({ style: { fontStyle: 'italic' } }, [
-                    ' - ' + html.loading('Loading data...')
+                    ' - ' + html.loading('Loading data...'),
                 ]);
             } else if (availableItems.length === 0) {
-                content = span({ style: { fontStyle: 'italic' } }, [
-                    ' - no available items'
-                ]);
+                content = span({ style: { fontStyle: 'italic' } }, [' - no available items']);
             } else if (filteredItems.length === availableItems.length) {
                 content = span({ style: { fontStyle: 'italic' } }, [
                     ' - ',
-                    String(availableItems.length)
+                    String(availableItems.length),
                 ]);
             } else {
                 content = span({ style: { fontStyle: 'italic' } }, [
                     ' - filtered ',
-                    span([
-                        String(filteredItems.length),
-                        ' out of ',
-                        String(availableItems.length)
-                    ])
+                    span([String(filteredItems.length), ' out of ', String(availableItems.length)]),
                 ]);
             }
 
@@ -394,50 +444,62 @@ define([
                 content = '';
             } else {
                 content = div([
-                    button({
-                        type: 'button',
-                        class: 'btn btn-default',
-                        style: { xwidth: '100%' },
-                        id: events.addEvent({
-                            type: 'click',
-                            handler: function() {
-                                doFirstPage();
-                            }
-                        })
-                    }, ui.buildIcon({ name: 'step-forward', rotate: 270 })),
-                    button({
-                        class: 'btn btn-default',
-                        type: 'button',
-                        style: { xwidth: '50%' },
-                        id: events.addEvent({
-                            type: 'click',
-                            handler: function() {
-                                doPreviousPage();
-                            }
-                        })
-                    }, ui.buildIcon({ name: 'caret-up' })),
-                    button({
-                        class: 'btn btn-default',
-                        type: 'button',
-                        style: { xwidth: '100%' },
-                        id: events.addEvent({
-                            type: 'click',
-                            handler: function() {
-                                doNextPage();
-                            }
-                        })
-                    }, ui.buildIcon({ name: 'caret-down' })),
-                    button({
-                        type: 'button',
-                        class: 'btn btn-default',
-                        style: { xwidth: '100%' },
-                        id: events.addEvent({
-                            type: 'click',
-                            handler: function() {
-                                doLastPage();
-                            }
-                        })
-                    }, ui.buildIcon({ name: 'step-forward', rotate: 90 }))
+                    button(
+                        {
+                            type: 'button',
+                            class: 'btn btn-default',
+                            style: { xwidth: '100%' },
+                            id: events.addEvent({
+                                type: 'click',
+                                handler: function () {
+                                    doFirstPage();
+                                },
+                            }),
+                        },
+                        ui.buildIcon({ name: 'step-forward', rotate: 270 })
+                    ),
+                    button(
+                        {
+                            class: 'btn btn-default',
+                            type: 'button',
+                            style: { xwidth: '50%' },
+                            id: events.addEvent({
+                                type: 'click',
+                                handler: function () {
+                                    doPreviousPage();
+                                },
+                            }),
+                        },
+                        ui.buildIcon({ name: 'caret-up' })
+                    ),
+                    button(
+                        {
+                            class: 'btn btn-default',
+                            type: 'button',
+                            style: { xwidth: '100%' },
+                            id: events.addEvent({
+                                type: 'click',
+                                handler: function () {
+                                    doNextPage();
+                                },
+                            }),
+                        },
+                        ui.buildIcon({ name: 'caret-down' })
+                    ),
+                    button(
+                        {
+                            type: 'button',
+                            class: 'btn btn-default',
+                            style: { xwidth: '100%' },
+                            id: events.addEvent({
+                                type: 'click',
+                                handler: function () {
+                                    doLastPage();
+                                },
+                            }),
+                        },
+                        ui.buildIcon({ name: 'step-forward', rotate: 90 })
+                    ),
                 ]);
             }
 
@@ -502,9 +564,11 @@ define([
                 setSearchMessage('filter applied');
             } else {
                 if (filterLength > 0 && minimumFilterLength > 0) {
-                    setSearchMessage('Enter ' +
-                        (minimumFilterLength - e.target.value.length) +
-                        ' more character to filter');
+                    setSearchMessage(
+                        'Enter ' +
+                            (minimumFilterLength - e.target.value.length) +
+                            ' more character to filter'
+                    );
                 } else {
                     setSearchMessage('');
                 }
@@ -521,15 +585,19 @@ define([
             const availableValues = model.getItem('availableValues');
 
             if (!availableValues) {
-                return p({
-                    class: 'form-control-static',
-                    style: {
-                        fontStyle: 'italic',
-                        whiteSpace: 'normal',
-                        padding: '3px',
-                        border: '1px silver solid'
-                    }
-                }, 'Items will be available after selecting a value for ' + spec.data.constraints.subdataSelection.parameter_id);
+                return p(
+                    {
+                        class: 'form-control-static',
+                        style: {
+                            fontStyle: 'italic',
+                            whiteSpace: 'normal',
+                            padding: '3px',
+                            border: '1px silver solid',
+                        },
+                    },
+                    'Items will be available after selecting a value for ' +
+                        spec.data.constraints.subdataSelection.parameter_id
+                );
             }
 
             return div([
@@ -537,47 +605,55 @@ define([
                     title: span(['Available Items', span({ dataElement: 'stats' })]),
                     classes: ['kb-panel-light'],
                     collapsed: !Narrative.canEdit(),
-                    body: div({ dataElement: 'available-items-area', style: { marginTop: '10px' } }, [
-                        div({ class: 'row' }, [
-                            div({
-                                class: 'col-md-6'
-                            }, [
-                                span({ dataElement: 'search-box' }),
-                                span({
-                                    style: {
-                                        marginLeft: '4px',
-                                        fontStyle: 'italic'
+                    body: div(
+                        { dataElement: 'available-items-area', style: { marginTop: '10px' } },
+                        [
+                            div({ class: 'row' }, [
+                                div(
+                                    {
+                                        class: 'col-md-6',
                                     },
-                                    dataElement: 'search-message'
-                                })
-                            ]),
-                            div({
-                                class: 'col-md-6',
-                                style: { textAlign: 'right' },
-                                dataElement: 'toolbar'
-                            })
-                        ]),
-                        div({ class: 'row', style: { marginTop: '4px' } }, [
-                            div({ class: 'col-md-12' },
+                                    [
+                                        span({ dataElement: 'search-box' }),
+                                        span({
+                                            style: {
+                                                marginLeft: '4px',
+                                                fontStyle: 'italic',
+                                            },
+                                            dataElement: 'search-message',
+                                        }),
+                                    ]
+                                ),
                                 div({
-                                    style: {
-                                        border: '1px silver solid'
-                                    },
-                                    dataElement: 'available-items'
-                                }))
-                        ])
-                    ])
+                                    class: 'col-md-6',
+                                    style: { textAlign: 'right' },
+                                    dataElement: 'toolbar',
+                                }),
+                            ]),
+                            div({ class: 'row', style: { marginTop: '4px' } }, [
+                                div(
+                                    { class: 'col-md-12' },
+                                    div({
+                                        style: {
+                                            border: '1px silver solid',
+                                        },
+                                        dataElement: 'available-items',
+                                    })
+                                ),
+                            ]),
+                        ]
+                    ),
                 }),
                 ui.buildPanel({
                     title: 'Selected Items',
                     classes: ['kb-panel-light'],
                     body: div({
                         style: {
-                            border: '1px silver solid'
+                            border: '1px silver solid',
                         },
-                        dataElement: 'selected-items'
-                    })
-                })
+                        dataElement: 'selected-items',
+                    }),
+                }),
             ]);
         }
 
@@ -594,25 +670,23 @@ define([
          */
         function updateInputControl(changedProperty) {
             switch (changedProperty) {
-            case 'value':
-                // just change the selections.
-                ui.setContent('input-control.count', buildCount());
+                case 'value':
+                    // just change the selections.
+                    ui.setContent('input-control.count', buildCount());
 
-                break;
-            case 'availableValues':
-                // rebuild the options
-                // re-apply the selections from the value
-                ui.setContent('input-control.input', buildOptions());
-                ui.setContent('input-control.count', buildCount());
+                    break;
+                case 'availableValues':
+                    // rebuild the options
+                    // re-apply the selections from the value
+                    ui.setContent('input-control.input', buildOptions());
+                    ui.setContent('input-control.count', buildCount());
 
-                break;
-            case 'referenceObjectName':
-                    // refetch the available values
-                    // set available values
-                    // update input control for available values
-                    // set value to null
-
-
+                    break;
+                case 'referenceObjectName':
+                // refetch the available values
+                // set available values
+                // update input control for available values
+                // set value to null
             }
         }
 
@@ -644,62 +718,61 @@ define([
 
             return subdataMethods.fetchData({
                 referenceObjectRef: referenceObjectRef,
-                spec: spec
+                spec: spec,
             });
         }
 
         function syncAvailableValues() {
             return Promise.try(() => {
                 return fetchData();
-            })
-                .then((data) => {
-                    isAvailableValuesInitialized = true;
-                    if (!data) {
-                        return ' no data? ';
-                    }
+            }).then((data) => {
+                isAvailableValuesInitialized = true;
+                if (!data) {
+                    return ' no data? ';
+                }
 
-                    // If default values have been provided, prepend them to the data.
+                // If default values have been provided, prepend them to the data.
 
-                    // We use the raw default values here since we are not really using
-                    // it as the default value, but as a set of additional items
-                    // to select.
-                    const defaultValues = spec.defaultValue;
-                    if (defaultValues && (defaultValues instanceof Array) && (defaultValues.length > 0)) {
-                        defaultValues.forEach((itemId) => {
-                            if (itemId && itemId.trim().length > 0) {
-                                data.unshift({
-                                    id: itemId,
-                                    text: itemId
-                                });
-                            }
-                        });
-                    }
-
-                    // The data represents the total available subdata, with all
-                    // necessary fields for display. We build from that three
-                    // additional structures
-                    // - a map of id to object
-                    // - a set of available ids
-                    // - a set of selected ids
-                    // - a set of filtered ids
-                    model.setItem('availableValues', data);
-
-                    if (data.length > 4000) {
-                        minimumFilterLength = 3;
-                    } else {
-                        minimumFilterLength = 0;
-                    }
-
-                    // TODO: generate all of this in the fetchData -- it will be a bit faster.
-                    const map = {};
-                    data.forEach((datum) => {
-                        map[datum.id] = datum;
+                // We use the raw default values here since we are not really using
+                // it as the default value, but as a set of additional items
+                // to select.
+                const defaultValues = spec.defaultValue;
+                if (defaultValues && defaultValues instanceof Array && defaultValues.length > 0) {
+                    defaultValues.forEach((itemId) => {
+                        if (itemId && itemId.trim().length > 0) {
+                            data.unshift({
+                                id: itemId,
+                                text: itemId,
+                            });
+                        }
                     });
+                }
 
-                    model.setItem('availableValuesMap', map);
+                // The data represents the total available subdata, with all
+                // necessary fields for display. We build from that three
+                // additional structures
+                // - a map of id to object
+                // - a set of available ids
+                // - a set of selected ids
+                // - a set of filtered ids
+                model.setItem('availableValues', data);
 
-                    doFilterItems();
+                if (data.length > 4000) {
+                    minimumFilterLength = 3;
+                } else {
+                    minimumFilterLength = 0;
+                }
+
+                // TODO: generate all of this in the fetchData -- it will be a bit faster.
+                const map = {};
+                data.forEach((datum) => {
+                    map[datum.id] = datum;
                 });
+
+                model.setItem('availableValuesMap', map);
+
+                doFilterItems();
+            });
         }
 
         /*
@@ -712,12 +785,15 @@ define([
                 // check to see if we have to render inputControl.
                 const events = Events.make({ node: container }),
                     inputControl = makeInputControl(),
-                    content = div({
-                        class: 'input-group',
-                        style: {
-                            width: '100%'
-                        }
-                    }, inputControl);
+                    content = div(
+                        {
+                            class: 'input-group',
+                            style: {
+                                width: '100%',
+                            },
+                        },
+                        inputControl
+                    );
 
                 ui.setContent('input-container', content);
                 renderSearchBox();
@@ -728,10 +804,9 @@ define([
                 renderSelectedItems();
 
                 events.attachEvents();
-            })
-                .catch((err) => {
-                    console.error('ERROR in render', err);
-                });
+            }).catch((err) => {
+                console.error('ERROR in render', err);
+            });
         }
 
         /*
@@ -740,16 +815,19 @@ define([
          * For the objectInput, there is only ever one control.
          */
         function layout(events) {
-            const content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({
-                    dataElement: 'input-container'
-                })
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [
+                    div({
+                        dataElement: 'input-container',
+                    }),
+                ]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
@@ -784,9 +862,9 @@ define([
             paramsChannel.listen({
                 key: {
                     type: 'parameter-changed',
-                    parameter: spec.data.constraints.subdataSelection.constant_ref
+                    parameter: spec.data.constraints.subdataSelection.constant_ref,
                 },
-                handle: function(message) {
+                handle: function (message) {
                     let newValue = message.newValue;
                     if (message.newValue === '') {
                         newValue = null;
@@ -801,15 +879,15 @@ define([
                         .catch((err) => {
                             console.error('ERROR syncing available values', err);
                         });
-                }
+                },
             });
 
             paramsChannel.listen({
                 key: {
                     type: 'parameter-changed',
-                    parameter: spec.data.constraints.subdataSelection.parameter_id
+                    parameter: spec.data.constraints.subdataSelection.parameter_id,
                 },
-                handle: function(message) {
+                handle: function (message) {
                     let newValue = message.newValue;
                     if (message.newValue === '') {
                         newValue = null;
@@ -824,15 +902,15 @@ define([
                         .catch((err) => {
                             console.error('ERROR syncing available values', err);
                         });
-                }
+                },
             });
 
             paramsChannel.listen({
                 key: {
                     type: 'parameter-value',
-                    parameter: spec.data.constraints.subdataSelection.parameter_id
+                    parameter: spec.data.constraints.subdataSelection.parameter_id,
                 },
-                handle: function(message) {
+                handle: function (message) {
                     let newValue = message.newValue;
                     if (message.newValue === '') {
                         newValue = null;
@@ -846,7 +924,7 @@ define([
                         .catch((err) => {
                             console.error('ERROR syncing available values', err);
                         });
-                }
+                },
             });
 
             // This control has a dependency relationship in that its
@@ -861,13 +939,16 @@ define([
             //            });
             // bus.emit('sync');
 
-            paramsChannel.request({
-                parameterName: spec.id
-            }, {
-                key: {
-                    type: 'get-parameter'
+            paramsChannel.request(
+                {
+                    parameterName: spec.id,
+                },
+                {
+                    key: {
+                        type: 'get-parameter',
+                    },
                 }
-            });
+            );
         }
 
         // MODIFICATION EVENTS
@@ -887,8 +968,6 @@ define([
          *
          */
 
-
-
         // LIFECYCLE API
 
         function start(arg) {
@@ -896,7 +975,7 @@ define([
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({
-                    node: container
+                    node: container,
                 });
 
                 const events = Events.make(),
@@ -912,13 +991,16 @@ define([
                 // Get initial data.
                 // Weird, but will make it look nicer.
                 Promise.all([
-                    paramsChannel.request({
-                        parameterName: spec.data.constraints.subdataSelection.parameter_id
-                    }, {
-                        key: {
-                            type: 'get-parameter'
+                    paramsChannel.request(
+                        {
+                            parameterName: spec.data.constraints.subdataSelection.parameter_id,
+                        },
+                        {
+                            key: {
+                                type: 'get-parameter',
+                            },
                         }
-                    })
+                    ),
                 ])
                     .spread((referencedParamValue) => {
                         // hmm, the default value of a subdata is null, but that does
@@ -946,7 +1028,6 @@ define([
                             .catch((err) => {
                                 console.error('ERROR syncing available values', err);
                             });
-
                     })
                     .catch((err) => {
                         console.error('ERROR fetching initial data', err);
@@ -971,25 +1052,25 @@ define([
                 selectedItems: [],
                 value: null,
                 showFrom: 0,
-                showTo: 5
+                showTo: 5,
             },
-            onUpdate: function() {
+            onUpdate: function () {
                 renderStats();
                 renderToolbar();
                 renderAvailableItems();
                 renderSelectedItems();
-            }
+            },
         });
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

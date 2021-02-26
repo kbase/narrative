@@ -9,17 +9,8 @@ define([
     '../inputUtils',
 
     'bootstrap',
-    'css!font-awesome'
-], (
-    Promise,
-    html,
-    Validation,
-    Events,
-    UI,
-    Props,
-    Runtime,
-    inputUtils
-) => {
+    'css!font-awesome',
+], (Promise, html, Validation, Events, UI, Props, Runtime, inputUtils) => {
     'use strict';
 
     const t = html.tag,
@@ -67,8 +58,6 @@ define([
             setControlValue(model.getItem('value', null));
         }
 
-
-
         // VALIDATION
 
         function importControlValue() {
@@ -84,12 +73,10 @@ define([
         }
 
         function autoValidate() {
-            return validate(model.getItem('value'))
-                .then((result) => {
-                    channel.emit('validation', result);
-                });
+            return validate(model.getItem('value')).then((result) => {
+                channel.emit('validation', result);
+            });
         }
-
 
         // DOM & RENDERING
 
@@ -106,27 +93,27 @@ define([
             const editPauseInterval = interval || 100;
             return {
                 type: 'keyup',
-                handler: function(e) {
+                handler: function (e) {
                     channel.emit('touched');
                     cancelTouched();
                     autoChangeTimer = window.setTimeout(() => {
                         autoChangeTimer = null;
                         e.target.dispatchEvent(new Event('change'));
                     }, editPauseInterval);
-                }
+                },
             };
         }
 
         function handleChanged() {
             return {
                 type: 'change',
-                handler: function() {
+                handler: function () {
                     cancelTouched();
                     importControlValue()
                         .then((value) => {
                             model.setItem('value', value);
                             channel.emit('changed', {
-                                newValue: value
+                                newValue: value,
                             });
                             return validate(value);
                         })
@@ -144,7 +131,7 @@ define([
                                         title: 'ERROR',
                                         type: 'danger',
                                         id: result.messageId,
-                                        message: result.errorMessage
+                                        message: result.errorMessage,
                                     });
                                     ui.setContent('input-container.message', message.content);
                                     message.events.attachEvents();
@@ -156,29 +143,30 @@ define([
                             channel.emit('validation', {
                                 isValid: false,
                                 diagnosis: 'invalid',
-                                errorMessage: err.message
+                                errorMessage: err.message,
                             });
                         });
-                }
+                },
             };
         }
 
         function makeInputControl(events) {
             return input({
                 id: events.addEvents({
-                    events: [handleTouched(), handleChanged()]
+                    events: [handleTouched(), handleChanged()],
                 }),
                 class: 'form-control',
-                dataElement: 'input'
+                dataElement: 'input',
             });
         }
 
         function render(events) {
-            return div({
-                dataElement: 'input-container'
-            }, [
-                makeInputControl(events)
-            ]);
+            return div(
+                {
+                    dataElement: 'input-container',
+                },
+                [makeInputControl(events)]
+            );
         }
 
         // EVENT HANDLERS
@@ -193,7 +181,6 @@ define([
             }
         }
 
-
         // LIFECYCLE API
 
         function start(arg) {
@@ -201,7 +188,6 @@ define([
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
-
 
                 const events = Events.make();
                 container.innerHTML = render(events);
@@ -238,25 +224,25 @@ define([
 
         model = Props.make({
             data: {
-                value: null
+                value: null,
             },
-            onUpdate: function() {
+            onUpdate: function () {
                 //syncModelToControl();
                 //autoValidate();
-            }
+            },
         });
 
         setModelValue(config.initialValue);
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

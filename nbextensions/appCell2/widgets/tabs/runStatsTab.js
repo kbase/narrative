@@ -1,14 +1,15 @@
-define([
-    'bluebird',
-    'common/runtime',
-    'common/ui',
-    'common/format',
-    'kb_common/html'
-], (Promise, Runtime, UI, format, html) => {
+define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'kb_common/html'], (
+    Promise,
+    Runtime,
+    UI,
+    format,
+    html
+) => {
     'use strict';
 
     const t = html.tag,
-        div = t('div'), span = t('span');
+        div = t('div'),
+        span = t('span');
 
     function updateRunStats(ui, jobState, lastUpdated) {
         if (!jobState) {
@@ -16,28 +17,28 @@ define([
         }
 
         const viewModel = {
-            lastUpdated: {
-                elapsed: null,
-                time: null
+                lastUpdated: {
+                    elapsed: null,
+                    time: null,
+                },
+                queue: {
+                    active: null,
+                    label: null,
+                    elapsed: null,
+                    position: null,
+                },
+                run: {
+                    active: null,
+                    label: null,
+                    elapsed: null,
+                },
+                finish: {
+                    active: null,
+                    state: null,
+                    when: null,
+                },
             },
-            queue: {
-                active: null,
-                label: null,
-                elapsed: null,
-                position: null
-            },
-            run: {
-                active: null,
-                label: null,
-                elapsed: null
-            },
-            finish: {
-                active: null,
-                state: null,
-                when: null
-            }
-        },
-        now = new Date().getTime();
+            now = new Date().getTime();
 
         if (lastUpdated) {
             viewModel.lastUpdated.time = format.niceElapsedTime(lastUpdated);
@@ -49,17 +50,20 @@ define([
                 // Queue is finished.
                 viewModel.queue.active = false;
                 viewModel.queue.label = 'Queued for';
-                viewModel.queue.elapsed = format.elapsedTime(jobState.exec_start_time - jobState.creation_time);
+                viewModel.queue.elapsed = format.elapsedTime(
+                    jobState.exec_start_time - jobState.creation_time
+                );
 
                 if (jobState.finish_time) {
                     viewModel.run.active = false;
                     viewModel.run.label = 'Ran in';
-                    viewModel.run.elapsed = format.elapsedTime(jobState.finish_time - jobState.exec_start_time);
+                    viewModel.run.elapsed = format.elapsedTime(
+                        jobState.finish_time - jobState.exec_start_time
+                    );
 
                     viewModel.finish.active = true;
                     viewModel.finish.state = jobState.status;
                     viewModel.finish.when = format.niceElapsedTime(jobState.finish_time);
-
                 } else {
                     viewModel.run.active = true;
                     viewModel.run.label = 'Running for';
@@ -80,50 +84,71 @@ define([
 
     function renderRunStats() {
         const labelStyle = {
-            textAlign: 'right',
-            border: '1px transparent solid',
-            padding: '4px'
-        },
-        dataStyle = {
-            border: '1px silver solid',
-            padding: '4px',
-            display: 'inline-block',
-            minWidth: '20px',
-            backgroundColor: 'gray',
-            color: '#FFF'
-        };
-        return div({dataElement: 'run-stats', style: {paddingTop: '6px'}}, [
-            div({class: 'row', dataElement: 'lastUpdated'}, [
-                div({class: 'col-md-2', style: labelStyle}, span({dataElement: 'label'}, 'Last updated')),
-                div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'elapsed', class: 'kb-elapsed-time'})),
-                div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'time'}))
+                textAlign: 'right',
+                border: '1px transparent solid',
+                padding: '4px',
+            },
+            dataStyle = {
+                border: '1px silver solid',
+                padding: '4px',
+                display: 'inline-block',
+                minWidth: '20px',
+                backgroundColor: 'gray',
+                color: '#FFF',
+            };
+        return div({ dataElement: 'run-stats', style: { paddingTop: '6px' } }, [
+            div({ class: 'row', dataElement: 'lastUpdated' }, [
+                div(
+                    { class: 'col-md-2', style: labelStyle },
+                    span({ dataElement: 'label' }, 'Last updated')
+                ),
+                div(
+                    { class: 'col-md-2', style: dataStyle },
+                    span({ dataElement: 'elapsed', class: 'kb-elapsed-time' })
+                ),
+                div({ class: 'col-md-2', style: dataStyle }, span({ dataElement: 'time' })),
             ]),
-            div({class: 'row', dataElement: 'queue'}, [
-                div({class: 'col-md-2', style: labelStyle}, span({dataElement: 'label'}, 'Queue')),
-                div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'elapsed', class: 'kb-elapsed-time'})),
-                div({class: 'col-md-2', style: labelStyle}, 'Position'),
-                div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'position'}))
+            div({ class: 'row', dataElement: 'queue' }, [
+                div(
+                    { class: 'col-md-2', style: labelStyle },
+                    span({ dataElement: 'label' }, 'Queue')
+                ),
+                div(
+                    { class: 'col-md-2', style: dataStyle },
+                    span({ dataElement: 'elapsed', class: 'kb-elapsed-time' })
+                ),
+                div({ class: 'col-md-2', style: labelStyle }, 'Position'),
+                div({ class: 'col-md-2', style: dataStyle }, span({ dataElement: 'position' })),
             ]),
-            div({class: 'row', dataElement: 'run'}, [
-                div({class: 'col-md-2', style: labelStyle}, span({dataElement: 'label'}, 'Run')),
-                div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'elapsed', class: 'kb-elapsed-time'}))
+            div({ class: 'row', dataElement: 'run' }, [
+                div(
+                    { class: 'col-md-2', style: labelStyle },
+                    span({ dataElement: 'label' }, 'Run')
+                ),
+                div(
+                    { class: 'col-md-2', style: dataStyle },
+                    span({ dataElement: 'elapsed', class: 'kb-elapsed-time' })
+                ),
             ]),
-            div({class: 'row', dataElement: 'finish'}, [
-                div({class: 'col-md-2', style: labelStyle}, 'Finish'),
-                div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'state'})),
-                div({class: 'col-md-2', style: labelStyle}, 'When'),
-                div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'when'}))
-            ])
+            div({ class: 'row', dataElement: 'finish' }, [
+                div({ class: 'col-md-2', style: labelStyle }, 'Finish'),
+                div({ class: 'col-md-2', style: dataStyle }, span({ dataElement: 'state' })),
+                div({ class: 'col-md-2', style: labelStyle }, 'When'),
+                div({ class: 'col-md-2', style: dataStyle }, span({ dataElement: 'when' })),
+            ]),
         ]);
     }
 
     function factory(config) {
-        let container, ui, listeners = [],
-            model = config.model, runtime = Runtime.make();
+        let container,
+            ui,
+            listeners = [],
+            model = config.model,
+            runtime = Runtime.make();
         function start(arg) {
             return Promise.try(() => {
                 container = arg.node;
-                ui = UI.make({node: container});
+                ui = UI.make({ node: container });
 
                 const jobState = model.getItem('exec.jobState');
                 const lastUpdated = model.getItem('exec.jobStateUpdated');
@@ -132,10 +157,15 @@ define([
 
                 updateRunStats(ui, jobState, lastUpdated);
 
-                listeners.push(runtime.bus().on('clock-tick', () => {
-                    updateRunStats(ui, model.getItem('exec.jobState'), model.getItem('exec.jobStateUpdated'));
-                }));
-
+                listeners.push(
+                    runtime.bus().on('clock-tick', () => {
+                        updateRunStats(
+                            ui,
+                            model.getItem('exec.jobState'),
+                            model.getItem('exec.jobStateUpdated')
+                        );
+                    })
+                );
             });
         }
 
@@ -147,14 +177,13 @@ define([
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
-
 });

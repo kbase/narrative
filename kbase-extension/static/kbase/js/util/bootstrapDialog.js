@@ -1,9 +1,4 @@
-define ([
-    'jquery',
-    'bootstrap'
-], (
-    $
-) => {
+define(['jquery', 'bootstrap'], ($) => {
     'use strict';
 
     /**
@@ -37,8 +32,9 @@ define ([
         if (options.alertOnly) {
             options.closeButton = true;
             options.buttons = [
-                $('<button type="button" class="btn btn-primary" data-dismiss="modal">')
-                    .text('Close')
+                $('<button type="button" class="btn btn-primary" data-dismiss="modal">').text(
+                    'Close'
+                ),
             ];
             options.enterToTrigger = true;
         }
@@ -51,9 +47,9 @@ define ([
             return;
         }
         if (options.closeButton === true) {
-            const $closeButton = $('<button type="button" class="close" data-dismiss="modal" aria-label="Close">')
-                .append($('<span aria-hidden="true">')
-                    .append('&times;'));
+            const $closeButton = $(
+                '<button type="button" class="close" data-dismiss="modal" aria-label="Close">'
+            ).append($('<span aria-hidden="true">').append('&times;'));
             this.$header.append($closeButton);
         }
         if (options.title) {
@@ -68,9 +64,12 @@ define ([
         this.setButtons(options.buttons);
         this.$modal.append(
             this.$dialog.append(
-                this.$dialogContent.append(this.$header.append(this.$headerTitle))
+                this.$dialogContent
+                    .append(this.$header.append(this.$headerTitle))
                     .append(this.$dialogBody)
-                    .append(this.$footer)));
+                    .append(this.$footer)
+            )
+        );
     };
 
     BootstrapDialog.prototype.setBody = function ($body) {
@@ -84,26 +83,23 @@ define ([
     BootstrapDialog.prototype.setButtons = function (buttonList) {
         this.$footer.empty();
         if (!buttonList || buttonList.length === 0) {
-            this.$footer.css({'border-top': 0});
+            this.$footer.css({ 'border-top': 0 });
             return;
+        } else {
+            this.$footer.css({ 'border-top': '' });
         }
-        else {
-            this.$footer.css({'border-top': ''});
-        }
-        for (let i=0; i<buttonList.length; i++) {
+        for (let i = 0; i < buttonList.length; i++) {
             const $btn = buttonList[i];
             this.$footer.append($btn);
         }
         if (this.enterToTrigger) {
-            this.$modal
-                .off('keypress')
-                .on('keypress', ((e) => {
-                    if (e.keyCode === 13) {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        this.$footer.find('button:last').trigger('click');
-                    }
-                }));
+            this.$modal.off('keypress').on('keypress', (e) => {
+                if (e.keyCode === 13) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    this.$footer.find('button:last').trigger('click');
+                }
+            });
         }
     };
 
@@ -123,26 +119,26 @@ define ([
         this.$modal.modal('show');
     };
 
-    BootstrapDialog.prototype.hide = function() {
+    BootstrapDialog.prototype.hide = function () {
         this.$modal.modal('hide');
     };
 
-    BootstrapDialog.prototype.onHidden = function(handler) {
+    BootstrapDialog.prototype.onHidden = function (handler) {
         this.$modal.on('hidden.bs.modal', handler);
     };
 
-    BootstrapDialog.prototype.onHide = function(handler) {
+    BootstrapDialog.prototype.onHide = function (handler) {
         this.$modal.on('hide.bs.modal', handler);
     };
 
-    BootstrapDialog.prototype.getElement = function() {
+    BootstrapDialog.prototype.getElement = function () {
         return this.$modal;
     };
 
     /**
      * Removes this modal from the DOM and removes any associated content.
      */
-    BootstrapDialog.prototype.destroy = function() {
+    BootstrapDialog.prototype.destroy = function () {
         this.$modal.remove();
         this.$modal = null;
         return null;

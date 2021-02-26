@@ -1,14 +1,7 @@
-define([
-    'bluebird',
-    'require'
-], (
-    Promise,
-    require
-) => {
+define(['bluebird', 'require'], (Promise, require) => {
     'use strict';
 
     function factory(config) {
-
         function getWidgetModule(spec) {
             const dataType = spec.data.type,
                 controlType = spec.ui.control;
@@ -19,33 +12,33 @@ define([
                         case 'dropdown':
                             return {
                                 input: 'selectInput',
-                                view: 'selectView'
+                                view: 'selectView',
                             };
                         case 'textarea':
                             return {
                                 input: 'textareaInput',
-                                view: 'textareaView'
+                                view: 'textareaView',
                             };
                         case 'file':
                             return {
                                 input: 'fileInput',
-                                view: 'fileView'
+                                view: 'fileView',
                             };
                         case 'custom_textsubdata':
                             return {
                                 input: 'customSubdataInput',
-                                view: 'customSubdataView'
+                                view: 'customSubdataView',
                             };
                         case 'autocomplete':
                             // TODO: refactor this from the sdk on up.
                             return {
                                 input: 'taxonomyRefInput',
-                                view: 'taxonomyRefView'
+                                view: 'taxonomyRefView',
                             };
                         case 'dynamic_dropdown':
                             return {
                                 input: 'dynamicDropdownInput',
-                                view: 'dynamicDropdownView'
+                                view: 'dynamicDropdownView',
                             };
                         case 'text':
                         default:
@@ -53,32 +46,32 @@ define([
                             // simple text input.
                             return {
                                 input: 'textInput',
-                                view: 'textView'
+                                view: 'textView',
                             };
                     }
                 case 'sequence':
                     return {
                         input: 'sequenceInput',
-                        view: 'sequenceView'
+                        view: 'sequenceView',
                     };
                 case 'int':
                     switch (controlType) {
                         case 'checkbox':
                             return {
                                 input: 'checkboxInput',
-                                view: 'checkboxView'
+                                view: 'checkboxView',
                             };
                         case 'text':
                         default:
                             return {
                                 input: 'intInput',
-                                view: 'intView'
+                                view: 'intView',
                             };
                     }
                 case 'float':
                     return {
                         input: 'floatInput',
-                        view: 'floatView'
+                        view: 'floatView',
                     };
                 case 'workspaceObjectRef':
                     switch (spec.ui.class) {
@@ -86,59 +79,59 @@ define([
                             //return 'singleObjectInput';
                             return {
                                 input: 'select2ObjectInput',
-                                view: 'select2ObjectView'
+                                view: 'select2ObjectView',
                             };
                         case 'parameter':
                             // return 'singleObjectInput';
                             return {
                                 input: 'select2ObjectInput',
-                                view: 'select2ObjectView'
+                                view: 'select2ObjectView',
                             };
                         default:
                             return {
                                 input: 'undefinedInput',
-                                view: 'undefinedView'
+                                view: 'undefinedView',
                             };
                     }
-                    // IS THIS used anywhere other than in output areas??
+                // IS THIS used anywhere other than in output areas??
                 case 'workspaceObjectName':
                     switch (spec.ui.class) {
                         case 'parameter':
                         case 'output':
                             return {
                                 input: 'newObjectInput',
-                                view: 'newObjectView'
+                                view: 'newObjectView',
                             };
                         default:
                             return {
                                 input: 'undefinedInput',
-                                view: 'undefinedView'
+                                view: 'undefinedView',
                             };
                     }
                 case 'subdata':
                     return {
                         input: 'subdataInput',
-                        view: 'subdataView'
+                        view: 'subdataView',
                     };
                 case 'customSubdata':
                     return {
                         input: 'customSubdataInput',
-                        view: 'customSubdataView'
+                        view: 'customSubdataView',
                     };
                 case 'boolean':
                     return {
                         input: 'toggleButtonInput',
-                        view: 'toggleButtonView'
+                        view: 'toggleButtonView',
                     };
                 case 'struct':
                     return {
                         input: 'structInput',
-                        view: 'structView'
+                        view: 'structView',
                     };
                 case 'custom':
                     return {
                         input: 'customInput',
-                        view: 'customView'
+                        view: 'customView',
                     };
                 default:
                     console.error('ERROR could not detremine control modules for this spec', spec);
@@ -168,12 +161,12 @@ define([
 
         return {
             loadInputControl: loadInputControl,
-            loadViewControl: loadViewControl
+            loadViewControl: loadViewControl,
         };
     }
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

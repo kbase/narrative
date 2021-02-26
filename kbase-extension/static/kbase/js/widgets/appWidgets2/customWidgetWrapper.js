@@ -1,21 +1,18 @@
-define([
-    'bluebird',
-    'kb_common/html',
-    'base/js/namespace',
-    'common/runtime'
-], (
+define(['bluebird', 'kb_common/html', 'base/js/namespace', 'common/runtime'], (
     Promise,
     html,
     Jupyter,
     Runtime
-    ) => {
+) => {
     'use strict';
 
     const t = html.tag,
-        div = t('div'), pre = t('pre');
+        div = t('div'),
+        pre = t('pre');
 
     function factory(config) {
-        let parent, container,
+        let parent,
+            container,
             cellId = config.cellId,
             cellBus,
             runtime = Runtime.make(),
@@ -34,32 +31,33 @@ define([
          */
         function findWidget(widgetId) {
             return {
-                modulePath: widgetId
+                modulePath: widgetId,
             };
         }
 
         function runCustomWidget() {
             const widgetDef = findWidget(appSpec.widgets.input);
-            require([
-                widgetDef.modulePath
-            ], (Widget) => {
+            require([widgetDef.modulePath], (Widget) => {
                 wrappedWidget = new Widget($(container), {
                     appSpec: appSpec,
-                    workspaceName: Jupyter.narrative.getWorkspaceName()
+                    workspaceName: Jupyter.narrative.getWorkspaceName(),
                 });
                 appSpec.parameters.forEach((parameter) => {
                     wrappedWidget.addInputListener(parameter.id, (data) => {
-                        runtime.bus().send({
-                            id: parameter.id,
-                            value: data.val
-                        }, {
-                            channel: {
-                                cell: cellId
+                        runtime.bus().send(
+                            {
+                                id: parameter.id,
+                                value: data.val,
                             },
-                            key: {
-                                type: 'parameter-changed'
+                            {
+                                channel: {
+                                    cell: cellId,
+                                },
+                                key: {
+                                    type: 'parameter-changed',
+                                },
                             }
-                        });
+                        );
 
                         // changedParameters[parameter.id] = data.val;
                         // console.log('CHANGED', data);
@@ -79,25 +77,28 @@ define([
                 // container.innerHTML = render();
                 runCustomWidget();
 
-                runtime.bus().send({}, {
-                    channel: {
-                        cell: cellId
-                    },
-                    key: {
-                        type: 'sync-params'
+                runtime.bus().send(
+                    {},
+                    {
+                        channel: {
+                            cell: cellId,
+                        },
+                        key: {
+                            type: 'sync-params',
+                        },
                     }
-                });
+                );
                 runtime.bus().listen({
                     channel: {
-                        cell: cellId
+                        cell: cellId,
                     },
                     key: {
-                        type: 'parameter-value'
+                        type: 'parameter-value',
                     },
                     handle: function (message) {
                         wrappedWidget.setParameterValue(message.id, message.value);
-                    }
-                })
+                    },
+                });
 
                 runtime.bus().on('workspace-changed', () => {
                     wrappedWidget.refresh();
@@ -105,19 +106,17 @@ define([
             });
         }
 
-        function stop() {
-
-        }
+        function stop() {}
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

@@ -11,6 +11,7 @@
     - [Set up and tear down](#set-up-and-tear-down)
     - [Asynchrony](#asynchrony)
     - [Mocking and Spies](#mocking-and-spies)
+    - [Testing modules that use the factory pattern](#testing-modules-that-use-the-factory-pattern)
   - [Narrative Mocks Library](#narrative-mocks-library)
     - [Loading and using the library](#loading-and-using-the-library)
   - [KBase Narrative Unit Test Best Practices](#kbase-narrative-unit-test-best-practices)
@@ -38,17 +39,17 @@ Jasmine is a popular Javascript unit test framework. It makes use of common JS t
 
 ### Karma
 
-Karma is a test runner that was primarily made to support the Angular framework, but works well outside of that. At it's core, Karma starts a small HTTP server to serve the test module and provide proxy access to both KBase and Jupyter Javascript code modules.
+Karma is a test runner that was primarily made to support the Angular framework, but works well outside of that. At its core, Karma starts a small HTTP server to serve the test module and provide proxy access to both KBase and Jupyter Javascript code modules.
 
 ### Configuration
 
 Karma configuration is done under `test/unit/karma.conf.js`. As used for Narrative testing, this sets up the following:
-* A set of browsers to test on
-* KBase modules files to preprocess for coverage reporting
-* The set of files to load into the test runner server
-* What files to exclude from testing (mainly other thest files that get included from installed npm modules)
-* Proxies for most other directories. These are set up as key-value pairs where the keys are paths to proxy, and the location that gets proxied to.
-* The port to start the test runner server under
+* A set of browsers to test on.
+* KBase module files to preprocess for coverage reporting.
+* The set of files to load into the test runner server.
+* What files to exclude from testing (mainly other test files that get downloaded from installed npm modules).
+* Proxies for most other directories. These are set up as key-value pairs comprising the paths to proxy and the location that gets proxied to.
+* The port to start the test runner server on.
 
 For example, when some test references a file (whether it's a dependency to load or some other requirement), that might be under the `/narrative/nbextensions` directory. Karma will then proxy that to `http://localhost:32323/narrative/nbextensions` which is where the installed and running Narrative will be. A number of other proxies are here, too, all dependent on a running Narrative (and Jupyter notebook) server.
 
@@ -58,8 +59,7 @@ Because of how Karma is configured, it doesn't start running tests once the conf
 3. Additional RequireJS configuration is done at this time.
 4. Once RequireJS is configured, it starts the Karma-loaded test suite.
 
-Individual test specs aren't necessarily run in the same order each time.
-
+Test specs are configured to run in a random order, grouped by module. This encourages keeping individual test specs encapsulated and try to avoid relying on side effects left behind by other tests.
 
 ## Writing test specs
 There should be one test module per Javascript module. These all use Jasmine testing idioms, mixed with RequireJS.
@@ -119,13 +119,13 @@ define([
 ```
 The above sets up and takes down the Runtime module, gets a message bus from it, and uses it for a test spec. Something more realistic would use the same Runtime in multiple specs. Note that `beforeEach` and `afterEach` (as well as `it`) can take `async` functions. More on that later.
 
-This also makes use of Javascript closure. The `runtime` variable is declared in the outer scope, it's set in `beforeEach`, then when each spec is called, it's ready to go.
+This also makes use of a Javascript closure. The `runtime` variable is declared in the outer scope, it's set in `beforeEach`, then when each spec is called, it's ready to go.
 
 ### Asynchrony
 
-The nature of modern Javascript is asynchronous code. Most of the interesting things will be interacting with either KBase services, or with the user, and so we don't want those to run synchronously and locking up the browser while processing.
+The nature of modern Javascript is asynchronous code. Most of the interesting things will be interacting with either KBase services, or with the user, and so we don't want those to run synchronously and lock up the browser while processing.
 
-Jasmine is capable of testing asynchronous code as well. There's 3 idioms that can be used.
+Jasmine is capable of testing asynchronous code as well. There are 3 idioms that can be used.
 
 ***1. Async/Await***
 
@@ -156,7 +156,7 @@ This is similar to the above, but it can also be useful for trapping errors that
 
 ***3. Backup option - `done` function***
 
-As kind of a last resort, you can make use of the built in `done` function that Jasmine has. This isn't recommended as it's more flaky and can lead to code still running in the background or not completing when you expect. It's mostly useful for code asynchronously that executes but doesn't return a Promise, or relies on callbacks. It's highly recommended to write code that properly uses and returns Promises instead of depending on other techniques, but sometimes there's no other option. In that case, add the `done` variable to any test spec, and it becomes available as a function. Just execute it when your test is done running.
+As kind of a last resort, you can make use of the built in `done` function that Jasmine has. This isn't recommended as it's more flaky and can lead to code still running in the background or not completing when you expect. It's mostly useful for code that executes asynchronously but doesn't return a Promise, or code that relies on callback functions. It's highly recommended to write code that properly uses and returns Promises instead of depending on other techniques, but sometimes there's no other option. In that case, add the `done` variable to any test spec, and it becomes available as a function. Just run the `done()` function when your test is done running.
 
 ```Javascript
 it('calls "done" when done', (done) => {
@@ -169,7 +169,7 @@ it('calls "done" when done', (done) => {
 ```
 In this test, `runCodeThatTakesACallback` does some kind of code execution, then calls the callback with the result. The only way we can test the result of that code is to write our own callback in the tester that then calls `done` when it's done running.
 
-Examples of where this is needed are jQuery event listeners (e.g. `$x.trigger('someEvent', input)`) or the messages that use the `monoBus` (most messaging that goes through the app cell, input widgets, etc.).
+Examples of where this is needed are jQuery event listeners (e.g. `$x.trigger('someEvent', input)`) or the messages that use the `monoBus` (i.e. most messaging that goes through the app cell, input widgets, etc.).
 
 
 ### Mocking and Spies
@@ -279,7 +279,7 @@ Jasmine lets you do these with the `jasmine-ajax` library. It needs to be instal
 jasmine.Ajax.stubRequest(url, bodyMatcher)
     .andReturn(response);
 ```
-`bodyMatcher` is optional. If you're doing a POST request and want the mock to handle only a specific data posted, you can put it there. That'll match either a complete body string, or you can pass a regex. This becomes useful when testing KBase service calls.
+`bodyMatcher` is optional. If you're doing a POST request and want the mock to handle only some specific data POSTed, you can put it there. That'll match either a complete body string, or you can pass a regex. This becomes useful when testing KBase service calls.
 
 The `response` returned is the full HTTP response document, not just the data. Most KBase clients will expect something fully fleshed out. That would look like this:
 
@@ -352,9 +352,87 @@ define([
     });
 });
 ```
-This test is, again, contrived. It just tests that we get back what we expect to see. But it illustrates how to use `jasmine.Ajax` to return an async, mocked network call. Make sure to uninstall `jasmine.Ajax` before you set up a separte mock, and that only only have one call to `jasmine.Ajax.install()` at a time.
+This test is, again, contrived. It just tests that we get back what we expect to see. But it illustrates how to use `jasmine.Ajax` to return an async, mocked network call. Make sure to uninstall `jasmine.Ajax` before you set up a separate mock, and that you only have one call to `jasmine.Ajax.install()` at a time.
 
-Also, this might look like a lot of boilerplate that could be copied and pasted. It is. Fortunately, there's a `narrativeMocks` library available for use!
+Also, this might look like a lot of boilerplate that could be copied and pasted. It is. Fortunately, there's a `narrativeMocks` library available for use! See [below](#narrative-mocks-library) for more information, or [this document](./unit-test-mock-library.md) for details.
+
+## Testing modules that use the factory pattern
+There are a number of modules in the Narrative codebase, particularly in the app cell portion, that follow a the factory pattern. These modules generally only export a single `make` function which creates the object. The object, then, often only supports a few functions to have it "start" doing its work, and "stop" and shut itself down. It can be challenging to exercise these in a unit test framework while not relying in implementation details to write tests.
+
+Most of these kinds of modules look something like this:
+```Javascript
+// GenericKBaseModule.js
+define([], () => {
+    function factory(args) {
+        const config = args;
+
+        function render(node) {
+            node.innerHTML = 'some widget';
+        }
+
+        function start(arg) {
+            return Promise.try(() => {
+                return render(arg.node);
+            });
+        }
+
+        function stop() {
+            return Promise.try(() => {
+                // do things to shut down,
+                // remove events, clear DOM, call stop() on
+                // sub-widgets, etc.
+            });
+        }
+
+        return {
+            start: start,
+            stop: stop,
+        };
+    }
+
+    return {
+        make: function (args) {
+            return factory(args);
+        },
+    };
+});
+```
+
+The above `GenericKBaseModule` would be normally invoked with the following:
+```Javascript
+define(['GenericKBaseModule'], (GenericModule) => {
+    const myWidget = GenericModule.make();
+    myWidget.start()
+        .then(() => {
+            // do other things after this officially starts
+        });
+});
+```
+
+Testing this can be tricky, as only a `start` and `stop` function are exported, and no other state seems available. Most widgets that follow this pattern also depend on one or more other elements, like a DOM node, that can be mocked or otherwise examined. The simple example above can be tested with:
+
+```Javascript
+define(['GenericKBaseModule'], (GenericModule) => {
+    describe('Test the Generic Module', () => {
+        it('should make a new module', () => {
+            const myModule = GenericModule.make();
+            ['start', 'stop'].forEach((fn) => {
+                expect(myModule[fn]).toEqual(Jasmine.any(Function));
+            });
+        });
+
+        it('should start and modify its DOM', async () => {
+            const myModule = GenericModule.make();
+            const node = document.createElement('div');
+            document.body.appendChild(node);
+            await myModule.start({node});
+            expect(node.innerHTML).toContain('some widget');
+        });
+    });
+});
+```
+
+Here, we create and start the module, and see if the node contains expected elements from the module's creation. We also test `make` to ensure that it creates an object that has expected functions - the `Jasmine.any(Function)` is a Jasmine idiom that basically says "return true if this is a function" without any judgment about what it does (see detail [here](https://jasmine.github.io/api/3.6/jasmine.html) under `any` - `Function` and `Object` are both helpful uses).
 
 ## Narrative Mocks Library
 This library contains some accessory functions for mocking various things. It'll grow over time - if there's something you would find useful, feel free to add and make a PR! If it's helpful for you, it's almost definitely helpful to someone else. You can find it at `test/unit/mocks.js`. It's pretty decently commented, but the list of functions and usage are available in the [narrative mocks](./unit-test-mock-library.md) doc.
@@ -414,22 +492,23 @@ passingCases.forEach((input) => {
 
 **3. Test async by returning Promises or async/await**
 
-It's best to use the `done` idiom that Jasmine provides only as a last resort. Using `async/await` or just returning a Promise allows Jasmine/Karma to just consume the test properly. Forcing the harness to wait on the `done` function to execute is, even according to the Jasmine docs, somewhat brittle and flaky. That said, there's plenty of cases where it can't be avoided, especially when testing code that uses a message bus, or fires jQuery events, or other things that work asynchronously, but don't return Promises. If you can't refactor your code to cough up a promise, then you're kinda stuck with `done`.
+It's best to use the `done` idiom that Jasmine provides only as a last resort. Using `async/await` or just returning a Promise allows Jasmine/Karma to consume the test properly. Forcing the harness to wait on the `done` function to execute is, even according to the Jasmine docs, somewhat brittle and flaky. That said, there are plenty of cases where it can't be avoided, especially when testing code that uses a message bus, or fires jQuery events, or other things that work asynchronously, but don't return Promises. If you can't refactor your code to cough up a promise, then you're kinda stuck with `done`.
 
 **4. Try to be focused if stuck with using `done`**
 
-If you have a case that necessitates using `done` to finish an async test, be very clear on what you're testing. Here's an example from the BootstrapSearch module:
+If you have a case that necessitates using `done` to finish an async test, be very clear on what you're testing. Here's a slightly modified example from the BootstrapSearch module:
 ```Javascript
 it('Should fire an input function when triggered by input', (done) => {
     const bsSearch = new BootstrapSearch($targetElem, {
-        inputFunction: () => {
+        inputFunction: (e) => {
+            expect(e).toEqual(Jasmine.any(Object));
             done();
         }
     });
     bsSearch.val('stuff');
 });
 ```
-This creates a new BootstrapSearch widget (`$targetElem` is set elsewhere) where its input function just returns done. This gets called by changing the input value to that search widget. We know the test passes if that gets invoked, so nothing else is needed. Then we trigger it by programmatically setting the value. That's it. No other code runs, no asynch searching calls, nothing else. Just validate that the given input function gets executed.
+This creates a new BootstrapSearch widget (`$targetElem` is set elsewhere) where its input function just returns done. This gets called by changing the input value to that search widget. We know the test passes if that gets invoked, so nothing else is needed. Then we trigger it by programmatically setting the value. That's it. No other code runs, no async searching calls, nothing else. Just validate that the given input function gets executed with some input. A better test would examine that the input is correct with more detail (in this case, it's the input event triggered from the element).
 
 Because of the async setup of this (there's no guarantee that `inputFunction` will get called immediately, that's up to the implementation), a simple spy won't work - how long should we wait to test whether it was invoked? It doesn't deal with Promises at all, so there's no thennable to handle or return. The best way to test this is with `done`.
 
@@ -437,11 +516,21 @@ Because of the async setup of this (there's no guarantee that `inputFunction` wi
 
 It's an easy way to think of things - if you don't have access to a Promise, and code doesn't run in a way that you can link `done` to an event that gets fired, it would be straight forward to just run your code, then fire a timeout that runs `done` after some arbitrary time.
 
-The problem here is finding how long your timeout should be, and balancing that against the timeouts that Jasmine/Karma uses. These can then leave your module and other assorted variables in browser memory and scope a lot longer than other tests might expect! The timeout function can continue to linger after an `afterEach` function gets called, then when the timeout's up and your function gets run, some expected things might have been deleted. Worse, the test runner can move on at that point, and you'll see an error that looks like `"an error was thrown in afterAll!"`.
+The problem here is finding how long your timeout should be, and balancing that against the timeouts that Jasmine/Karma uses. These can then leave your module and other assorted variables in browser memory and scope a lot longer than other tests might expect! The timeout function can continue to linger after an `afterEach` function gets called, then when the timeout's up and your function gets run, some expected elements or variables might have been deleted. Worse, the test runner can move on at that point, and you'll see an error that looks like `"an error was thrown in afterAll!"`.
 
 It's best practice to try to refactor your code so it can be run as expected, and tested as such.
 
 That said, it's possible that you can't do so. Just try other things first.
+
+An option if you go this path is to add an additional test timeout to the spec - this would be in the form of a third variable to the `it` function, so that would look like:
+```Javascript
+it('runs a test', () => {
+    // test code here
+}, 50000);
+```
+To give it an extra long 50,000 ms timeout.
+
+But, again, think of this as a last resort.
 
 **6. Don't be shy with mocking!**
 There are a lot of moving pieces in the Narrative. Most of these were written in a long ago time without thought to testability and isolation. Quite a few modules, including Jupyter and Runtime, make use of the global space. The nature of Jasmine tests can keep those items in scope at the end of running a set of test specs in a single module, and can bleed into other tests.

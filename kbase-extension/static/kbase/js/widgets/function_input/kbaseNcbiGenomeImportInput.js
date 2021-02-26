@@ -4,29 +4,22 @@
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'narrativeConfig',
-		'kbaseNarrativeInput'
-	], (
-		KBWidget,
-		bootstrap,
-		$,
-		Config,
-		kbaseNarrativeInput
-	) => {
+define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'kbaseNarrativeInput'], (
+    KBWidget,
+    bootstrap,
+    $,
+    Config,
+    kbaseNarrativeInput
+) => {
     return KBWidget({
-        name: "NcbiGenomeImportInput",
-        parent : kbaseNarrativeInput,
-        version: "1.0.0",
+        name: 'NcbiGenomeImportInput',
+        parent: kbaseNarrativeInput,
+        version: '1.0.0',
         options: {
             loadingImage: Config.get('loading_gif'),
         },
 
-        init: function(options) {
+        init: function (options) {
             this._super(options);
 
             this.render();
@@ -36,54 +29,53 @@ define (
 
         useSelect2: true,
 
-        render: function() {
-            const $inputDiv = $('<div>')
-                            .addClass('kb-cell-params');
+        render: function () {
+            const $inputDiv = $('<div>').addClass('kb-cell-params');
             const $inputGenome = $('<input>')
-                               .addClass('form-control')
-                               .css({'width' : '95%'})
-                               .attr('name', 'param0')
-                               .attr('placeholder', 'Select an NCBI Genome')
-                               .attr('type', 'text');
+                .addClass('form-control')
+                .css({ width: '95%' })
+                .attr('name', 'param0')
+                .attr('placeholder', 'Select an NCBI Genome')
+                .attr('type', 'text');
             const $outputGenome = $('<input>')
-                               .addClass('form-control')
-                               .css({'width' : '95%'})
-                               .attr('name', 'param1')
-                               .attr('placeholder', 'Select an output genome')
-                               .attr('type', 'text');
+                .addClass('form-control')
+                .css({ width: '95%' })
+                .attr('name', 'param1')
+                .attr('placeholder', 'Select an output genome')
+                .attr('type', 'text');
 
-            const cellCss = { 'border' : 'none', 'vertical-align' : 'middle' };
-            const thCss = {'font-family' : '"OxygenBold", sans-serif', 'font-weight': 'bold'};
-            const inputCss = {'width' : '40%'};
-            const descCss = {'color' : '#777'};
-            $inputDiv.append($('<table>')
-                             .addClass('table')
-                             .append($('<tr>')
-                                     .css(cellCss)
-                                     .append($('<th>')
-                                        .css(cellCss)
-                                        .css(thCss)
-                                        .append('NCBI Genome Name'))
-                                     .append($('<td>')
-                                        .css(cellCss)
-                                        .css(inputCss)
-                                        .append($inputGenome))
-                                     .append($('<td>')
-                                        .css(cellCss)
-                                        .append('Name of public genome accessible on NCBI FTP')))
-                             .append($('<tr>')
-                                     .css(cellCss)
-                                     .append($('<th>')
-                                        .css(cellCss)
-                                        .css(thCss)
-                                        .append('Output Genome Id'))
-                                     .append($('<td>')
-                                        .css(cellCss)
-                                        .css(inputCss)
-                                        .append($outputGenome))
-                                     .append($('<td>')
-                                        .css(cellCss)
-                                        .append('Output Genome Id. If empty, an ID will be chosen automatically.'))));
+            const cellCss = { border: 'none', 'vertical-align': 'middle' };
+            const thCss = { 'font-family': '"OxygenBold", sans-serif', 'font-weight': 'bold' };
+            const inputCss = { width: '40%' };
+            const descCss = { color: '#777' };
+            $inputDiv.append(
+                $('<table>')
+                    .addClass('table')
+                    .append(
+                        $('<tr>')
+                            .css(cellCss)
+                            .append($('<th>').css(cellCss).css(thCss).append('NCBI Genome Name'))
+                            .append($('<td>').css(cellCss).css(inputCss).append($inputGenome))
+                            .append(
+                                $('<td>')
+                                    .css(cellCss)
+                                    .append('Name of public genome accessible on NCBI FTP')
+                            )
+                    )
+                    .append(
+                        $('<tr>')
+                            .css(cellCss)
+                            .append($('<th>').css(cellCss).css(thCss).append('Output Genome Id'))
+                            .append($('<td>').css(cellCss).css(inputCss).append($outputGenome))
+                            .append(
+                                $('<td>')
+                                    .css(cellCss)
+                                    .append(
+                                        'Output Genome Id. If empty, an ID will be chosen automatically.'
+                                    )
+                            )
+                    )
+            );
 
             this.$elem.append($inputDiv);
         },
@@ -94,12 +86,15 @@ define (
          * @return {Array} an array of strings - one for each parameter
          * @public
          */
-        getParameters: function() {
+        getParameters: function () {
             const paramList = [];
 
-            $(this.$elem).find("[name^=param]").filter(":input").each((key, field) => {
-                paramList.push(field.value.trim());
-            });
+            $(this.$elem)
+                .find('[name^=param]')
+                .filter(':input')
+                .each((key, field) => {
+                    paramList.push(field.value.trim());
+                });
 
             return paramList;
         },
@@ -113,12 +108,15 @@ define (
          * }
          * with one key/value for each parameter in the defined method.
          */
-        getState: function() {
+        getState: function () {
             const state = {};
 
-            $(this.$elem).find("[name^=param]").filter(":input").each((key, field) => {
-                state[field.name] = field.value;
-            });
+            $(this.$elem)
+                .find('[name^=param]')
+                .filter(':input')
+                .each((key, field) => {
+                    state[field.name] = field.value;
+                });
 
             return state;
         },
@@ -128,32 +126,36 @@ define (
          * Doesn't really do a whole lot of type checking yet, but it's assumed that
          * a state will be loaded from an object generated by getState.
          */
-        loadState: function(state) {
-            if (!state)
-                return;
+        loadState: function (state) {
+            if (!state) return;
 
-            $(this.$elem).find("[name^=param]").filter(":input").each((key, field) => {
-                const $field = $(field);
-                const fieldName = $field.attr("name");
+            $(this.$elem)
+                .find('[name^=param]')
+                .filter(':input')
+                .each((key, field) => {
+                    const $field = $(field);
+                    const fieldName = $field.attr('name');
 
-                // If it's a text field, just dump the value in there.
-                if ($field.is("input") && $field.attr("type") === "text") {
-                    $field.val(state[fieldName]);
-                }
+                    // If it's a text field, just dump the value in there.
+                    if ($field.is('input') && $field.attr('type') === 'text') {
+                        $field.val(state[fieldName]);
+                    }
 
-                // If it's a select field, do the same... we'll have comboboxen or something,
-                // eventually, so I'm just leaving this open for that.
-                else if ($field.is("select")) {
-                    $field.val(state[fieldName]);
-                }
-            });
+                    // If it's a select field, do the same... we'll have comboboxen or something,
+                    // eventually, so I'm just leaving this open for that.
+                    else if ($field.is('select')) {
+                        $field.val(state[fieldName]);
+                    }
+                });
         },
 
-        refresh: function() {
+        refresh: function () {
             this.fixGenomeNames();
             const type = 'KBaseGenomes.Genome';
-            this.trigger('dataLoadedQuery.Narrative', [type, this.IGNORE_VERSION, $.proxy(
-                function(objects) {
+            this.trigger('dataLoadedQuery.Narrative', [
+                type,
+                this.IGNORE_VERSION,
+                $.proxy(function (objects) {
                     const $input = $($(this.$elem).find('[name=param1]'));
                     let objList = [];
 
@@ -168,7 +170,7 @@ define (
                             if (a[1] < b[1]) return -1;
                             if (a[1] > b[1]) return 1;
                             return 0;
-                        })
+                        });
                     }
                     /* down to cases:
                      * 1. (simple) objList is empty, $input doesn't have a list attribute.
@@ -186,9 +188,9 @@ define (
                     // case 2 - no data, need to clear input
                     let datalistID = $input.attr('list');
                     if (objList.length == 0 && datalistID) {
-                        $(this.$elem.find("#" + datalistID)).remove();
+                        $(this.$elem.find('#' + datalistID)).remove();
                         $input.removeAttr('list');
-                        $input.val("");
+                        $input.val('');
                     }
 
                     // case 3 - data, need new datalist
@@ -198,62 +200,66 @@ define (
                         if (!datalistID) {
                             datalistID = this.genUUID();
                             $input.attr('list', datalistID);
-                            $datalist = $('<datalist>')
-                                        .attr('id', datalistID);
+                            $datalist = $('<datalist>').attr('id', datalistID);
                             $input.after($datalist);
-                        }
-                        else {
-                            $datalist = $(this.$elem.find("#" + datalistID));
+                        } else {
+                            $datalist = $(this.$elem.find('#' + datalistID));
                         }
                         $datalist.empty();
-                        for (let j=0; j<objList.length; j++) {
-                            $datalist.append($('<option>')
-                                             .attr('value', objList[j][1])
-                                             .append(objList[j][1]));
+                        for (let j = 0; j < objList.length; j++) {
+                            $datalist.append(
+                                $('<option>').attr('value', objList[j][1]).append(objList[j][1])
+                            );
                         }
                     }
-                }, this)])
+                }, this),
+            ]);
             return;
         },
 
-        fixGenomeNames: function() {
+        fixGenomeNames: function () {
             const pid = 'param0';
-            const $input = $($(this.$elem).find("[name=" + pid + "]"));
+            const $input = $($(this.$elem).find('[name=' + pid + ']'));
             const self = this;
 
-            const request = $.getJSON('static/kbase/js/widgets/function_input/ncbi_genome2ftp.json');
+            const request = $.getJSON(
+                'static/kbase/js/widgets/function_input/ncbi_genome2ftp.json'
+            );
 
             //kbws.list_referencing_objects([objectIdentity], function(data) {
-            $.when(request).done((data) => {
-                const objList = [];
-                for (const key in data)
-                    objList.push(key);
-                let datalistID = $input.attr('list');
-                let $datalist;
-                if (!datalistID) {
-                    datalistID = self.genUUID();
-                    $input.attr('list', datalistID);
-                    $datalist = $('<datalist>').attr('id', datalistID);
-                    $input.after($datalist);
-                } else {
-                    $datalist = $(self.$elem.find("#" + datalistID));
-                }
-                $datalist.empty();
-                for (let j=0; j<objList.length; j++) {
-                    $datalist.append($('<option>').attr('value', objList[j]).append(objList[j]));
-                }
-            }).fail((err)=> {
-                console.error("Error loading ncbi genome names from JSON resource file:");
-                console.error(err);
-            });
+            $.when(request)
+                .done((data) => {
+                    const objList = [];
+                    for (const key in data) objList.push(key);
+                    let datalistID = $input.attr('list');
+                    let $datalist;
+                    if (!datalistID) {
+                        datalistID = self.genUUID();
+                        $input.attr('list', datalistID);
+                        $datalist = $('<datalist>').attr('id', datalistID);
+                        $input.after($datalist);
+                    } else {
+                        $datalist = $(self.$elem.find('#' + datalistID));
+                    }
+                    $datalist.empty();
+                    for (let j = 0; j < objList.length; j++) {
+                        $datalist.append(
+                            $('<option>').attr('value', objList[j]).append(objList[j])
+                        );
+                    }
+                })
+                .fail((err) => {
+                    console.error('Error loading ncbi genome names from JSON resource file:');
+                    console.error(err);
+                });
         },
 
-        genUUID: function() {
+        genUUID: function () {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-                const r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+                const r = (Math.random() * 16) | 0,
+                    v = c == 'x' ? r : (r & 0x3) | 0x8;
                 return v.toString(16);
             });
-        }
-
+        },
     });
 });

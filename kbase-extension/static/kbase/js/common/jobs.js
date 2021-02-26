@@ -1,7 +1,4 @@
-define([
-    'bluebird',
-    'base/js/namespace'
-], (Promise, Jupyter) => {
+define(['bluebird', 'base/js/namespace'], (Promise, Jupyter) => {
     'use strict';
 
     /*
@@ -10,7 +7,7 @@ define([
     function JobError(message, remoteStacktrace) {
         this.name = 'JobError';
         this.message = message;
-        this.stack = (new Error()).stack;
+        this.stack = new Error().stack;
         this.remoteStacktrace = remoteStacktrace;
     }
     JobError.prototype = Object.create(Error.prototype);
@@ -34,43 +31,47 @@ define([
     function runPython(command) {
         return new Promise((resolve, reject) => {
             const callbacks = {
-                shell: {
-                    reply: function (content) {
-                        defaultHandler('reply', content);
+                    shell: {
+                        reply: function (content) {
+                            defaultHandler('reply', content);
+                        },
+                        payload: {
+                            set_next_input: function (content) {
+                                defaultHandler('set_next_input', content);
+                            },
+                        },
                     },
-                    payload: {
-                        set_next_input: function (content) {
-                            defaultHandler('set_next_input', content);
-                        }
-                    }
-                },
-                iopub: {
-                    output: function (content) {
-                        if (content.msg_type === 'error') {
-                            const trace = content.content.traceback.map((line) => {
-                                return consoleToText(line);
-                            }),
-                                message = 'Error in iopub output: ' + content.content.ename + ':' + content.content.evalue;
-                            reject(new JobError(message, trace));
-                        } else {
-                            // console.log('IOPUB', content);
-                            resolve(JSON.parse(content.content.text));
-                        }
+                    iopub: {
+                        output: function (content) {
+                            if (content.msg_type === 'error') {
+                                const trace = content.content.traceback.map((line) => {
+                                        return consoleToText(line);
+                                    }),
+                                    message =
+                                        'Error in iopub output: ' +
+                                        content.content.ename +
+                                        ':' +
+                                        content.content.evalue;
+                                reject(new JobError(message, trace));
+                            } else {
+                                // console.log('IOPUB', content);
+                                resolve(JSON.parse(content.content.text));
+                            }
+                        },
+                        clear_output: function (content) {
+                            defaultHandler('clear_output', content);
+                        },
                     },
-                    clear_output: function (content) {
-                        defaultHandler('clear_output', content);
-                    }
+                    input: function (content) {
+                        defaultHandler('input', content);
+                    },
                 },
-                input: function (content) {
-                    defaultHandler('input', content);
-                }
-            },
-            options = {
-                silent: true,
-                user_expressions: {},
-                allow_stdin: false,
-                store_history: false
-            };
+                options = {
+                    silent: true,
+                    user_expressions: {},
+                    allow_stdin: false,
+                    store_history: false,
+                };
 
             if (Jupyter.notebook.kernel.is_connected()) {
                 Jupyter.notebook.kernel.execute(command, callbacks, options);
@@ -88,7 +89,7 @@ define([
             'print jm.delete_jobs(["' + jobId + '"], as_json=True)'
         ].join('\n');
         return runPython(command);*/
-        throw new Error("Method is not supported anymore");
+        throw new Error('Method is not supported anymore');
     }
 
     /*
@@ -106,7 +107,7 @@ define([
             .then(function (data) {
                 return data.lines;
             });*/
-        throw new Error("Method is not supported anymore");
+        throw new Error('Method is not supported anymore');
     }
 
     /**
@@ -131,6 +132,6 @@ define([
     return {
         getLogData: getLogData,
         deleteJob: deleteJob,
-        isValidJobState: isValidJobState
+        isValidJobState: isValidJobState,
     };
 });

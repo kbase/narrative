@@ -8,14 +8,8 @@ define([
     '../inputUtils',
 
     'bootstrap',
-    'css!font-awesome'
-], (
-    Promise,
-    html,
-    Validation,
-    Events,
-    UI,
-    Props) => {
+    'css!font-awesome',
+], (Promise, html, Validation, Events, UI, Props) => {
     'use strict';
 
     // Constants
@@ -59,7 +53,15 @@ define([
             }
             return div({ style: { width: '100%' }, dataElement: 'input-wrapper' }, [
                 div({ class: 'input-group', style: { width: '100%' } }, [
-                    (typeof min === 'number' ? div({ class: 'input-group-addon kb-input-group-addon', fontFamily: 'monospace' }, String(min) + ' &#8804; ') : ''),
+                    typeof min === 'number'
+                        ? div(
+                              {
+                                  class: 'input-group-addon kb-input-group-addon',
+                                  fontFamily: 'monospace',
+                              },
+                              String(min) + ' &#8804; '
+                          )
+                        : '',
                     input({
                         class: 'form-control',
                         dataElement: 'input',
@@ -67,12 +69,20 @@ define([
                         readonly: true,
                         value: initialControlValue,
                         style: {
-                            textAlign: 'right'
-                        }
+                            textAlign: 'right',
+                        },
                     }),
-                    (typeof max === 'number' ? div({ class: 'input-group-addon kb-input-group-addon', fontFamily: 'monospace' }, ' &#8804; ' + String(max)) : '')
+                    typeof max === 'number'
+                        ? div(
+                              {
+                                  class: 'input-group-addon kb-input-group-addon',
+                                  fontFamily: 'monospace',
+                              },
+                              ' &#8804; ' + String(max)
+                          )
+                        : '',
                 ]),
-                div({ dataElement: 'message', style: { backgroundColor: 'red', color: 'white' } })
+                div({ dataElement: 'message', style: { backgroundColor: 'red', color: 'white' } }),
             ]);
         }
 
@@ -87,13 +97,14 @@ define([
         }
 
         function layout() {
-            const content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' })
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
             return {
-                content: content
+                content: content,
             };
         }
 
@@ -133,9 +144,9 @@ define([
 
         model = Props.make({
             data: {
-                value: spec.data.nullValue
+                value: spec.data.nullValue,
             },
-            onUpdate: function() {}
+            onUpdate: function () {},
         });
 
         setModelValue(config.initialValue);
@@ -143,13 +154,13 @@ define([
         return {
             start: start,
             stop: stop,
-            bus: bus
+            bus: bus,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

@@ -83,7 +83,7 @@ define(['common/props'], (Props) => {
             const props = Props.make({
                 onUpdate: function (_props) {
                     expect(_props.getHistoryCount()).toEqual(1);
-                        done();
+                    done();
                 },
             });
             props.setItem('color', 'red');

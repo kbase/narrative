@@ -8,16 +8,8 @@ define([
     '../inputUtils',
 
     'bootstrap',
-    'css!font-awesome'
-], (
-    Promise,
-    html,
-    Validation,
-    Events,
-    UI,
-    Props,
-    inputUtils
-) => {
+    'css!font-awesome',
+], (Promise, html, Validation, Events, UI, Props, inputUtils) => {
     'use strict';
 
     const t = html.tag,
@@ -63,8 +55,6 @@ define([
             setControlValue(model.getItem('value', null));
         }
 
-
-
         // VALIDATION
 
         function importControlValue() {
@@ -80,12 +70,10 @@ define([
         }
 
         function autoValidate() {
-            return validate(model.getItem('value'))
-                .then((result) => {
-                    bus.emit('validation', result);
-                });
+            return validate(model.getItem('value')).then((result) => {
+                bus.emit('validation', result);
+            });
         }
-
 
         // DOM & RENDERING
 
@@ -93,16 +81,17 @@ define([
             return input({
                 class: 'form-control',
                 readonly: true,
-                dataElement: 'input'
+                dataElement: 'input',
             });
         }
 
         function render(events) {
-            return div({
-                dataElement: 'input-container'
-            }, [
-                makeViewControl(events)
-            ]);
+            return div(
+                {
+                    dataElement: 'input-container',
+                },
+                [makeViewControl(events)]
+            );
         }
 
         // EVENT HANDLERS
@@ -117,7 +106,6 @@ define([
             }
         }
 
-
         // LIFECYCLE API
 
         function start(arg) {
@@ -125,7 +113,6 @@ define([
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
-
 
                 const events = Events.make();
                 container.innerHTML = render(events);
@@ -161,25 +148,25 @@ define([
 
         model = Props.make({
             data: {
-                value: null
+                value: null,
             },
-            onUpdate: function() {
+            onUpdate: function () {
                 //syncModelToControl();
                 //autoValidate();
-            }
+            },
         });
 
         setModelValue(config.initialValue);
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

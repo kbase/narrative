@@ -10,18 +10,8 @@ define([
     'common/runtime',
     'common/dom',
     'bootstrap',
-    'css!font-awesome'
-], (
-    Promise,
-    $,
-    html,
-    utils,
-    Workspace,
-    serviceUtils,
-    Validation,
-    Events,
-    Runtime,
-    Dom) => {
+    'css!font-awesome',
+], (Promise, $, html, utils, Workspace, serviceUtils, Validation, Events, Runtime, Dom) => {
     'use strict';
 
     // Constants
@@ -42,7 +32,7 @@ define([
             model = {
                 blacklistValues: undefined,
                 availableValues: undefined,
-                value: undefined
+                value: undefined,
             };
 
         model.blacklistValues = config.blacklist || [];
@@ -61,7 +51,7 @@ define([
                     .filter((objectInfo) => {
                         if (model.blacklistValues) {
                             return !model.blacklistValues.some((value) => {
-                                return (value === getObjectRef(objectInfo));
+                                return value === getObjectRef(objectInfo);
                             });
                         }
                     })
@@ -71,42 +61,47 @@ define([
                         if (ref === model.value) {
                             selected = true;
                         }
-                        return option({
-                            value: ref,
-                            selected: selected,
-                            disabled: true
-                        }, objectInfo.name);
+                        return option(
+                            {
+                                value: ref,
+                                selected: selected,
+                                disabled: true,
+                            },
+                            objectInfo.name
+                        );
                     });
             }
 
             // CONTROL
-            return select({
-                id: events.addEvent({
-                    type: 'change',
-                    handler: function(e) {
-                        validate()
-                            .then((result) => {
+            return select(
+                {
+                    id: events.addEvent({
+                        type: 'change',
+                        handler: function (e) {
+                            validate().then((result) => {
                                 if (result.isValid) {
                                     model.value = result.value;
                                     bus.emit('changed', {
-                                        newValue: result.value
+                                        newValue: result.value,
                                     });
                                 } else if (result.diagnosis === 'required-missing') {
                                     model.value = result.value;
                                     bus.emit('changed', {
-                                        newValue: result.value
+                                        newValue: result.value,
                                     });
                                 }
                                 bus.emit('validation', {
                                     errorMessage: result.errorMessage,
-                                    diagnosis: result.diagnosis
+                                    diagnosis: result.diagnosis,
                                 });
                             });
-                    }
-                }),
-                class: 'form-control',
-                dataElement: 'input'
-            }, [option({ value: '' }, '')].concat(selectOptions));
+                        },
+                    }),
+                    class: 'form-control',
+                    dataElement: 'input',
+                },
+                [option({ value: '' }, '')].concat(selectOptions)
+            );
         }
 
         /*
@@ -130,12 +125,12 @@ define([
 
         function setModelValue(value) {
             return Promise.try(() => {
-                    if (model.value !== value) {
-                        model.value = value;
-                        return true;
-                    }
-                    return false;
-                })
+                if (model.value !== value) {
+                    model.value = value;
+                    return true;
+                }
+                return false;
+            })
                 .then((changed) => {
                     return render();
                 })
@@ -146,8 +141,8 @@ define([
 
         function unsetModelValue() {
             return Promise.try(() => {
-                    model.value = undefined;
-                })
+                model.value = undefined;
+            })
                 .then((changed) => {
                     render();
                 })
@@ -166,38 +161,38 @@ define([
 
         function validate() {
             return Promise.try(() => {
-                    const rawValue = getInputValue(),
-                        validationOptions = {
-                            required: constraints.required,
-                            authToken: runtime.authToken(),
-                            workspaceServiceUrl: runtime.config('services.workspace.url')
-                        };
-
-                    switch (objectRefType) {
-                        case 'ref':
-                            return Validation.validateWorkspaceObjectRef(rawValue, validationOptions);
-                        case 'name':
-                        default:
-                            return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
-                    }
-                })
-                .then((validationResult) => {
-                    return {
-                        isValid: validationResult.isValid,
-                        validated: true,
-                        diagnosis: validationResult.diagnosis,
-                        errorMessage: validationResult.errorMessage,
-                        value: validationResult.parsedValue
+                const rawValue = getInputValue(),
+                    validationOptions = {
+                        required: constraints.required,
+                        authToken: runtime.authToken(),
+                        workspaceServiceUrl: runtime.config('services.workspace.url'),
                     };
-                });
+
+                switch (objectRefType) {
+                    case 'ref':
+                        return Validation.validateWorkspaceObjectRef(rawValue, validationOptions);
+                    case 'name':
+                    default:
+                        return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
+                }
+            }).then((validationResult) => {
+                return {
+                    isValid: validationResult.isValid,
+                    validated: true,
+                    diagnosis: validationResult.diagnosis,
+                    errorMessage: validationResult.errorMessage,
+                    value: validationResult.parsedValue,
+                };
+            });
         }
 
         function getObjectsByType(type) {
             return new Promise((resolve) => {
                 // wow, creative (ab)use of trigger!
                 $(document).trigger('dataLoadedQuery.Narrative', [
-                    [type], 0,
-                    function(data) {
+                    [type],
+                    0,
+                    function (data) {
                         const items = [];
                         Object.keys(data).forEach((type) => {
                             data[type].forEach((objInfo) => {
@@ -205,18 +200,19 @@ define([
                             });
                         });
                         resolve(items);
-                    }
+                    },
                 ]);
             });
         }
 
         function getObjectsByTypex(type) {
             const workspace = new Workspace(runtime.config('services.workspace.url'), {
-                token: runtime.authToken()
+                token: runtime.authToken(),
             });
-            return workspace.list_objects({
+            return workspace
+                .list_objects({
                     type: type,
-                    ids: [workspaceId]
+                    ids: [workspaceId],
                 })
                 .then((data) => {
                     return data.map((objectInfo) => {
@@ -227,9 +223,11 @@ define([
 
         function fetchData() {
             const types = constraints.types;
-            return Promise.all(types.map((type) => {
+            return Promise.all(
+                types.map((type) => {
                     return getObjectsByType(type);
-                }))
+                })
+            )
                 .then((objectSets) => {
                     // we could also use [] rather than Array.prototype, but
                     // this way is both more mysterious and better performing.
@@ -271,25 +269,25 @@ define([
          * For the objectInput, there is only ever one control.
          */
         function layout(events) {
-            const content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' })
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
         function autoValidate() {
-            return validate()
-                .then((result) => {
-                    bus.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
+            return validate().then((result) => {
+                bus.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
 
         function getObjectRef(objectInfo) {
@@ -312,32 +310,29 @@ define([
          */
         function doWorkspaceChanged() {
             // there are a few thin
-            fetchData()
-                .then((data) => {
-                    // compare to availableData.
-                    if (!utils.isEqual(data, model.availableValues)) {
-                        model.availableValues = data;
-                        const matching = model.availableValues.filter((value) => {
-                            if (value.name === getObjectRef(value)) {
-                                return true;
-                            }
-                            return false;
-                        });
+            fetchData().then((data) => {
+                // compare to availableData.
+                if (!utils.isEqual(data, model.availableValues)) {
+                    model.availableValues = data;
+                    const matching = model.availableValues.filter((value) => {
+                        if (value.name === getObjectRef(value)) {
+                            return true;
+                        }
+                        return false;
+                    });
 
-                        // disable for now -- race between this widget and the data panel
-                        // the data panel is slower, so this widget thinks there are
-                        // no availale objects, so it empties the model...
-                        //if (matching.length === 0) {
-                        //    model.value = null;
-                        // }
+                    // disable for now -- race between this widget and the data panel
+                    // the data panel is slower, so this widget thinks there are
+                    // no availale objects, so it empties the model...
+                    //if (matching.length === 0) {
+                    //    model.value = null;
+                    // }
 
-                        render()
-                            .then(() => {
-                                autoValidate();
-                            });
-                    }
-                });
-
+                    render().then(() => {
+                        autoValidate();
+                    });
+                }
+            });
         }
 
         // LIFECYCLE API
@@ -379,13 +374,13 @@ define([
         }
 
         return {
-            start: start
+            start: start,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

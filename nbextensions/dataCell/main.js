@@ -12,7 +12,7 @@ define([
     'common/jupyter',
     'kb_common/html',
     './widgets/dataCell',
-    'custom/custom'
+    'custom/custom',
 ], (
     Promise,
     $,
@@ -34,10 +34,13 @@ define([
         div = t('div');
 
     function specializeCell(cell) {
-        cell.minimize = function() {
+        cell.minimize = function () {
             const inputArea = this.input.find('.input_area').get(0),
                 outputArea = this.element.find('.output_wrapper'),
-                showCode = utils.getCellMeta(cell, 'kbase.dataCell.user-settings.showCodeInputArea');
+                showCode = utils.getCellMeta(
+                    cell,
+                    'kbase.dataCell.user-settings.showCodeInputArea'
+                );
 
             if (showCode) {
                 inputArea.classList.remove('-show');
@@ -45,10 +48,13 @@ define([
             outputArea.addClass('hidden');
         };
 
-        cell.maximize = function() {
+        cell.maximize = function () {
             const inputArea = this.input.find('.input_area').get(0),
                 outputArea = this.element.find('.output_wrapper'),
-                showCode = utils.getCellMeta(cell, 'kbase.dataCell.user-settings.showCodeInputArea');
+                showCode = utils.getCellMeta(
+                    cell,
+                    'kbase.dataCell.user-settings.showCodeInputArea'
+                );
 
             if (showCode) {
                 if (!inputArea.classList.contains('-show')) {
@@ -63,30 +69,36 @@ define([
          * The data cell icon is derived by looking up the type in the
          * narrative configuration.
          */
-        cell.renderIcon = function() {
+        cell.renderIcon = function () {
             const inputPrompt = this.element[0].querySelector('[data-element="icon"]'),
                 type = Props.getDataItem(cell.metadata, 'kbase.dataCell.objectInfo.type');
 
             if (inputPrompt) {
-                inputPrompt.innerHTML = div({
-                    style: { textAlign: 'center' }
-                }, [
-                    AppUtils.makeTypeIcon(type)
-                ]);
+                inputPrompt.innerHTML = div(
+                    {
+                        style: { textAlign: 'center' },
+                    },
+                    [AppUtils.makeTypeIcon(type)]
+                );
             }
         };
 
-        cell.getIcon = function() {
+        cell.getIcon = function () {
             const type = Props.getDataItem(cell.metadata, 'kbase.dataCell.objectInfo.type'),
                 icon = AppUtils.makeToolbarTypeIcon(type);
             return icon;
         };
 
-        cell.toggleCodeInputArea = function() {
+        cell.toggleCodeInputArea = function () {
             const codeInputArea = this.input.find('.input_area')[0];
             if (codeInputArea) {
                 codeInputArea.classList.toggle('-show');
-                utils.setCellMeta(cell, 'kbase.dataCell.user-settings.showCodeInputArea', this.isCodeShowing(), true);
+                utils.setCellMeta(
+                    cell,
+                    'kbase.dataCell.user-settings.showCodeInputArea',
+                    this.isCodeShowing(),
+                    true
+                );
                 // NB purely for side effect - toolbar refresh
                 cell.metadata = cell.metadata;
             }
@@ -111,7 +123,7 @@ define([
         cell.kbase = {};
 
         // Update metadata.
-        utils.setMeta(cell, 'attributes', 'lastLoaded', (new Date()).toUTCString());
+        utils.setMeta(cell, 'attributes', 'lastLoaded', new Date().toUTCString());
 
         // Ensure code showing is closed to start with.
         // Disable this line to allow this setting to be sticky.
@@ -122,17 +134,19 @@ define([
             kbaseNode,
             ui = UI.make({ node: cellInputNode });
 
-        kbaseNode = ui.createNode(div({
-            dataSubareaType: 'data-cell-input'
-        }));
+        kbaseNode = ui.createNode(
+            div({
+                dataSubareaType: 'data-cell-input',
+            })
+        );
 
         cellInputNode.appendChild(kbaseNode);
 
         const dataCell = DataCell.make({
-            cell: cell
+            cell: cell,
         });
         dataCell.bus.emit('run', {
-            node: kbaseNode
+            node: kbaseNode,
         });
 
         // The output cell just needs to inhibit the input area.
@@ -147,7 +161,7 @@ define([
     function upgradeCell(cell, setupData) {
         return Promise.try(() => {
             const meta = cell.metadata,
-                cellId = setupData.cellId || (new Uuid(4).format());
+                cellId = setupData.cellId || new Uuid(4).format();
 
             // Set the initial metadata for the output cell.
             meta.kbase = {
@@ -158,12 +172,12 @@ define([
                     created: new Date().toGMTString(),
                     lastLoaded: new Date().toGMTString(),
                     icon: 'database',
-                    title: 'Data Cell'
+                    title: 'Data Cell',
                 },
                 dataCell: {
                     objectInfo: setupData.objectInfo,
-                    widget: setupData.widget
-                }
+                    widget: setupData.widget,
+                },
             };
             cell.metadata = meta;
 
@@ -180,7 +194,7 @@ define([
             if (!ref) {
                 ref = wsId + '/' + objInfo.id + '/' + objInfo.version;
             }
-            const title = (objInfo && objInfo.name) ? objInfo.name : 'Data Viewer';
+            const title = objInfo && objInfo.name ? objInfo.name : 'Data Viewer';
             const cellText = PythonInterop.buildDataWidgetRunner(ref, cellId, title, tag);
 
             cell.set_text(cellText);
@@ -190,7 +204,8 @@ define([
             utils.setCellMeta(cell, 'kbase.dataCell.user-settings.showCodeInputArea', false);
 
             utils.setCellMeta(cell, 'kbase.attributes.title', setupData.objectInfo.name);
-            const subtitle = 'v' + String(setupData.objectInfo.version) + ' - ' + setupData.objectInfo.type;
+            const subtitle =
+                'v' + String(setupData.objectInfo.version) + ' - ' + setupData.objectInfo.type;
             utils.setCellMeta(cell, 'kbase.attributes.subtitle', subtitle, true);
 
             setupCell(cell);
@@ -203,17 +218,17 @@ define([
             const setupData = payload.data;
             const jupyterCellType = payload.type;
 
-            if (jupyterCellType === 'code' &&
-                setupData &&
-                setupData.type === 'data') {
-                upgradeCell(cell, setupData)
-                    .catch((err) => {
-                        console.error('ERROR creating cell', err);
-                        // delete cell.
-                        $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
-                        // TODO: better error handling - a cell failing to insert is a major error.
-                        alert('Could not insert cell due to errors.\n' + err.message);
-                    });
+            if (jupyterCellType === 'code' && setupData && setupData.type === 'data') {
+                upgradeCell(cell, setupData).catch((err) => {
+                    console.error('ERROR creating cell', err);
+                    // delete cell.
+                    $(document).trigger(
+                        'deleteCell.Narrative',
+                        Jupyter.notebook.find_cell_index(cell)
+                    );
+                    // TODO: better error handling - a cell failing to insert is a major error.
+                    alert('Could not insert cell due to errors.\n' + err.message);
+                });
             }
         });
 
@@ -239,7 +254,7 @@ define([
 
     return {
         // This is the sole ipython/jupyter api call
-        load_ipython_extension: load
+        load_ipython_extension: load,
     };
 }, (err) => {
     'use strict';

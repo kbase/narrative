@@ -1,9 +1,4 @@
-define([
-    'bluebird'
-], (Promise) => {
-
-
-
+define(['bluebird'], (Promise) => {
     function toInteger(value) {
         switch (typeof value) {
             case 'number':
@@ -17,20 +12,19 @@ define([
                 }
                 throw new Error('Invalid integer format');
             default:
-                throw new Error('Type ' + (typeof value) + ' cannot be converted to integer');
+                throw new Error('Type ' + typeof value + ' cannot be converted to integer');
         }
     }
 
     function importString(value) {
-        let plainValue,
-            parsedValue;
+        let plainValue, parsedValue;
 
         if (value === undefined || value === null) {
             return null;
         }
 
         if (typeof value !== 'string') {
-            throw new Error('value must be a string (it is of type "' + (typeof value) + '")');
+            throw new Error('value must be a string (it is of type "' + typeof value + '")');
         } else {
             plainValue = value.trim();
             if (plainValue === '') {
@@ -58,12 +52,11 @@ define([
         if (typeof value !== 'number') {
             try {
                 value = toInteger(value);
-            }
-            catch(error) {
+            } catch (error) {
                 return {
                     id: 'non-numeric',
-                    message: 'value must be numeric'
-                }
+                    message: 'value must be numeric',
+                };
             }
             // return {
             //     id: 'non-numeric',
@@ -73,31 +66,33 @@ define([
         if (isNaN(value)) {
             return {
                 id: 'non-numeric',
-                message: 'value must be numeric'
+                message: 'value must be numeric',
             };
         }
         if (value - Math.floor(value) !== 0) {
             return {
                 id: 'non-integer',
-                message: 'value is a number but not an integer'
+                message: 'value is a number but not an integer',
             };
         }
         if (max && max < value) {
             return {
                 id: 'int-above-maximum',
-                message: 'the maximum value for this parameter is ' + max
+                message: 'the maximum value for this parameter is ' + max,
             };
         }
         if (min && min > value) {
             return {
                 id: 'int-below-minimum',
-                message: 'the minimum value for this parameter is ' + min
+                message: 'the minimum value for this parameter is ' + min,
             };
         }
     }
 
     function applyConstraints(value, constraints) {
-        let messageId, errorMessage, diagnosis = 'valid';
+        let messageId,
+            errorMessage,
+            diagnosis = 'valid';
 
         if (value === null) {
             if (constraints.required) {
@@ -122,7 +117,7 @@ define([
             isValid: errorMessage ? false : true,
             messageId: messageId,
             errorMessage: errorMessage,
-            diagnosis: diagnosis
+            diagnosis: diagnosis,
         };
     }
 
@@ -158,6 +153,6 @@ define([
     return {
         importString: importString,
         applyConstraints: applyConstraints,
-        validate: validate
+        validate: validate,
     };
 });

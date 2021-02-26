@@ -23,7 +23,7 @@ define([
     'kb_common/jsonRpc/genericClient',
     // Loaded for effect
     'jquery-dataTables',
-    'kbaseFeatureValues-client-api'
+    'kbaseFeatureValues-client-api',
 ], (
     KBWidget,
     bootstrap,
@@ -45,7 +45,7 @@ define([
             expressionMatrixID: null,
             geneIds: null,
             input_featureset: null,
-            loadingImage: 'static/kbase/images/ajax-loader.gif'
+            loadingImage: 'static/kbase/images/ajax-loader.gif',
         },
         // Prefix for all div ids
         pref: null,
@@ -67,12 +67,12 @@ define([
             this.featureValues = new DynamicServiceClient({
                 module: 'KBaseFeatureValues',
                 url: Config.url('service_wizard'),
-                token: auth.token
+                token: auth.token,
             });
             this.ws = new ServiceClient({
                 module: 'Workspace',
                 url: Config.url('workspace'),
-                token: auth.token
+                token: auth.token,
             });
 
             // Let's go...
@@ -86,7 +86,8 @@ define([
         setTestParameters: function () {
             this.options.workspaceID = '645';
             this.options.expressionMatrixID = '9';
-            this.options.geneIds = 'VNG0001H,VNG0002G,VNG0003C,VNG0006G,VNG0013C,VNG0014C,VNG0361C,VNG0518H,VNG0868H,VNG0289H,VNG0852C';
+            this.options.geneIds =
+                'VNG0001H,VNG0002G,VNG0003C,VNG0006G,VNG0013C,VNG0014C,VNG0361C,VNG0518H,VNG0868H,VNG0289H,VNG0852C';
         },
         // To be overriden to specify additional parameters
         getSubmtrixParams: function () {
@@ -96,7 +97,7 @@ define([
             if (self.options.geneIds) {
                 features = $.map(self.options.geneIds.split(','), $.trim);
             }
-            return{
+            return {
                 input_data: self.options.workspaceID + '/' + self.options.expressionMatrixID,
                 row_ids: features,
                 // specify your additional parameters
@@ -111,10 +112,13 @@ define([
 
                 // some parameter checking
                 if (!smParams.row_ids || smParams.row_ids.length === 0) {
-                    self.clientError('No Features or FeatureSet selected.  Please include at least one Feature from the data.');
+                    self.clientError(
+                        'No Features or FeatureSet selected.  Please include at least one Feature from the data.'
+                    );
                     return;
                 }
-                self.featureValues.callFunc('get_submatrix_stat', [smParams])
+                self.featureValues
+                    .callFunc('get_submatrix_stat', [smParams])
                     .spread((data) => {
                         self.submatrixStat = data;
                         self.render();
@@ -127,9 +131,14 @@ define([
 
             // if a feature set is defined, use it.
             if (self.options.featureset) {
-                self.ws.callFunc('get_objects', [[{
-                    ref: self.options.workspaceID + '/' + self.options.featureset
-                }]])
+                self.ws
+                    .callFunc('get_objects', [
+                        [
+                            {
+                                ref: self.options.workspaceID + '/' + self.options.featureset,
+                            },
+                        ],
+                    ])
                     .spread((fdata) => {
                         const fs = fdata[0].data;
                         if (!self.options.geneIds) {
@@ -186,27 +195,32 @@ define([
                 style = 'fti';
             }
 
-            $overvewContainer.append($('<table id="' + pref + 'genes-table"  \
+            $overvewContainer.append(
+                $(
+                    '<table id="' +
+                        pref +
+                        'genes-table"  \
                 class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">\
-                </table>')
-                .dataTable({
-                    'sDom': style,
-                    'iDisplayLength': iDisplayLength,
-                    'aaData': geneData,
-                    'aoColumns': [
-                        {sTitle: 'Name', mData: 'id'},
-                        {sTitle: 'Function', mData: 'function'},
-                        {sTitle: 'Min', mData: 'min'},
-                        {sTitle: 'Max', mData: 'max'},
-                        {sTitle: 'Avg', mData: 'avg'},
-                        {sTitle: 'Std', mData: 'std'},
-                        {sTitle: 'Missing', mData: 'missing_values'}
+                </table>'
+                ).dataTable({
+                    sDom: style,
+                    iDisplayLength: iDisplayLength,
+                    aaData: geneData,
+                    aoColumns: [
+                        { sTitle: 'Name', mData: 'id' },
+                        { sTitle: 'Function', mData: 'function' },
+                        { sTitle: 'Min', mData: 'min' },
+                        { sTitle: 'Max', mData: 'max' },
+                        { sTitle: 'Avg', mData: 'avg' },
+                        { sTitle: 'Std', mData: 'std' },
+                        { sTitle: 'Missing', mData: 'missing_values' },
                     ],
-                    'oLanguage': {
-                        'sEmptyTable': 'No genes found!',
-                        'sSearch': 'Search: '
-                    }
-                }));
+                    oLanguage: {
+                        sEmptyTable: 'No genes found!',
+                        sSearch: 'Search: ',
+                    },
+                })
+            );
 
             $overviewSwitch.click(() => {
                 $overvewContainer.toggle();
@@ -220,19 +234,17 @@ define([
                 const desc = submatrixStat.row_descriptors[i];
 
                 const gene_function = desc.properties['function'];
-                tableData.push(
-                    {
-                        'index': desc.index,
-                        'id': desc.id,
-                        'name': desc.name ? desc.name : ' ',
-                        'function': gene_function ? gene_function : ' ',
-                        'min': stat.mins[i] ? stat.mins[i].toFixed(2) : null,
-                        'max': stat.maxs[i] ? stat.maxs[i].toFixed(2) : null,
-                        'avg': stat.avgs[i] ? stat.avgs[i].toFixed(2) : null,
-                        'std': stat.stds[i] ? stat.stds[i].toFixed(2) : null,
-                        'missing_values': stat.missing_values[i]
-                    }
-                );
+                tableData.push({
+                    index: desc.index,
+                    id: desc.id,
+                    name: desc.name ? desc.name : ' ',
+                    function: gene_function ? gene_function : ' ',
+                    min: stat.mins[i] ? stat.mins[i].toFixed(2) : null,
+                    max: stat.maxs[i] ? stat.maxs[i].toFixed(2) : null,
+                    avg: stat.avgs[i] ? stat.avgs[i].toFixed(2) : null,
+                    std: stat.stds[i] ? stat.stds[i].toFixed(2) : null,
+                    missing_values: stat.missing_values[i],
+                });
             }
             return tableData;
         },
@@ -246,10 +258,8 @@ define([
             return $row;
         },
         loading: function (isLoading) {
-            if (isLoading)
-                this.showMessage('<img src=\'' + this.options.loadingImage + '\'/>');
-            else
-                this.hideMessage();
+            if (isLoading) this.showMessage("<img src='" + this.options.loadingImage + "'/>");
+            else this.hideMessage();
         },
         showMessage: function (message) {
             const span = $('<span/>').append(message);
@@ -265,17 +275,18 @@ define([
             this.loading(false);
             let errString = 'Unknown error.';
             console.error(error);
-            if (typeof error === 'string')
-                errString = error;
-            else if (error.error && error.error.message)
-                errString = error.error.message;
+            if (typeof error === 'string') errString = error;
+            else if (error.error && error.error.message) errString = error.error.message;
             else if (error.error && error.error.error && typeof error.error.error === 'string') {
                 errString = error.error.error;
-                if (errString.indexOf('java.lang.NullPointerException') > -1 &&
-                    errString.indexOf('buildIndeces(KBaseFeatureValuesImpl.java:708)') > -1) {
+                if (
+                    errString.indexOf('java.lang.NullPointerException') > -1 &&
+                    errString.indexOf('buildIndeces(KBaseFeatureValuesImpl.java:708)') > -1
+                ) {
                     // this is a null pointer due to an unknown feature ID.  TODO: handle this gracefully
                     errString = 'Feature IDs not found.<br><br>';
-                    errString += 'Currently all Features included in a FeatureSet must be present' +
+                    errString +=
+                        'Currently all Features included in a FeatureSet must be present' +
                         ' in the Expression Data Matrix.  Please rebuild the FeatureSet ' +
                         'so that it only includes these features.  This is a known issue ' +
                         'and will be fixed shortly.';
@@ -290,33 +301,27 @@ define([
             this.$elem.append($errorDiv);
         },
         uuid: function () {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
-                (c) => {
-                    const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-                    return v.toString(16);
-                });
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+                const r = (Math.random() * 16) | 0,
+                    v = c == 'x' ? r : (r & 0x3) | 0x8;
+                return v.toString(16);
+            });
         },
         buildObjectIdentity: function (workspaceID, objectID, objectVer, wsRef) {
             const obj = {};
             if (wsRef) {
                 obj['ref'] = wsRef;
             } else {
-                if (/^\d+$/.exec(workspaceID))
-                    obj['wsid'] = workspaceID;
-                else
-                    obj['workspace'] = workspaceID;
+                if (/^\d+$/.exec(workspaceID)) obj['wsid'] = workspaceID;
+                else obj['workspace'] = workspaceID;
 
                 // same for the id
-                if (/^\d+$/.exec(objectID))
-                    obj['objid'] = objectID;
-                else
-                    obj['name'] = objectID;
+                if (/^\d+$/.exec(objectID)) obj['objid'] = objectID;
+                else obj['name'] = objectID;
 
-                if (objectVer)
-                    obj['ver'] = objectVer;
+                if (objectVer) obj['ver'] = objectVer;
             }
             return obj;
-        }
-
+        },
     });
 });

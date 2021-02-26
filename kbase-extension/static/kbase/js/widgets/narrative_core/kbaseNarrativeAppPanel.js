@@ -939,7 +939,7 @@ define([
             ]);
 
             //custom click functions;
-            $card.find('.narrative-card-logo .kb-data-list-name').click((e) => {
+            $card.find('.narrative-card-row-main, .kb-data-list-name').click((e) => {
                 e.stopPropagation();
                 this.triggerApp(app);
             });

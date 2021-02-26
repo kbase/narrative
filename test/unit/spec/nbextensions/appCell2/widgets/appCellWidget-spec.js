@@ -118,13 +118,13 @@ define([
             });
         });
 
-        it('has a method "init" which returns a promise then null', () => {
+        xit('has a method "init" which returns a promise then null', () => {
             return mockAppCell.init().then(() => {
                 // something to see if it worked
             });
         });
 
-        it('has a method stop which returns a Promise', () => {
+        xit('has a method stop which returns a Promise', () => {
             return mockAppCell
                 .init()
                 .then(() => {
@@ -135,7 +135,7 @@ define([
                 });
         });
 
-        it('has a method detach which returns a Promise', () => {
+        xit('has a method detach which returns a Promise', () => {
             return mockAppCell
                 .init()
                 .then(() => {

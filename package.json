@@ -23,6 +23,7 @@
         "grunt-contrib-requirejs": "1.0.0",
         "grunt-contrib-uglify-es": "3.3.0",
         "grunt-regex-replace": "0.4.0",
+        "husky": "^5.1.1",
         "jasmine-ajax": "4.0.0",
         "jasmine-core": "3.6.0",
         "jasmine-jquery": "2.1.1",
@@ -47,12 +48,16 @@
         "webdriverio": "^6.12.0"
     },
     "scripts": {
-        "bower": "bower install",
-        "test": "karma start test/unit/karma.conf.js",
         "black": "black -v --exclude '.+Impl.py' .",
-        "flake8": "flake8 .",
+        "bower": "bower install",
         "build": "grunt build",
         "eslint": "eslint --fix '**/*.js'",
-        "prettier": "prettier --write '**/*.js'"
+        "flake8": "flake8 .",
+        "husky_msg": "echo Running git hooks -- see the 'husky' section of package.json for details",
+        "prettier": "prettier --write '**/*.js'",
+        "prettier_check": "prettier --check '**/*.js'",
+        "prettier_debug": "prettier --debug-check '**/*.js'",
+        "test": "karma start test/unit/karma.conf.js",
+        "postinstall": "husky install"
     }
 }

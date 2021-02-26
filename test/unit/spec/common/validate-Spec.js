@@ -147,7 +147,15 @@ define(['bluebird', 'common/validation'], (Promise, Validation) => {
                 workspaceServiceUrl: 'https://test.kbase.us/services/ws',
                 types: [wsObjType],
             }).then((result) => {
-                console.log(result);
+                expect(result).toEqual({
+                    isValid: true,
+                    messageId: undefined,
+                    errorMessage: undefined,
+                    diagnosis: 'valid',
+                    shortMessage: undefined,
+                    value: 'somename',
+                    parsedValue: 'somename',
+                });
                 done();
             });
         });

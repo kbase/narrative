@@ -4,30 +4,16 @@
  * @author Bill Riehl wjriehl@lbl.gov
  */
 define([
-    'kbwidget',
     'bootstrap',
     'jquery',
     'underscore',
     'bluebird',
     'narrativeConfig',
-    'util/timeFormat',
     'util/string',
     'kbase-client-api',
     'kbaseAccordion',
     'api/auth',
-], (
-    KBWidget,
-    bootstrap,
-    $,
-    _,
-    Promise,
-    Config,
-    TimeFormat,
-    StringUtil,
-    kbase_client_api,
-    KBaseAccordion,
-    Auth
-) => {
+], (bootstrap, $, _, Promise, Config, StringUtil, kbase_client_api, KBaseAccordion, Auth) => {
     'use strict';
 
     const profileClient = new UserProfile(Config.url('user_profile'));
@@ -57,9 +43,9 @@ define([
      * @param {string} displayName - optional, the display name to use. If given, then an auth call isn't made.
      */
     function displayRealName(username, $target, displayName) {
-        let safeUser = StringUtil.escape(username),
-            usernameLink =
-                '<a href="' + profilePageUrl + safeUser + '" target="_blank">' + safeUser + '</a>';
+        const safeUser = StringUtil.escape(username);
+        let usernameLink =
+            '<a href="' + profilePageUrl + safeUser + '" target="_blank">' + safeUser + '</a>';
         if (displayName) {
             return new Promise((resolve) => {
                 $target.text(displayName);
@@ -83,22 +69,6 @@ define([
             });
     }
 
-    /**
-     * @method
-     * loadingSpinner
-     * creates and returns a loading spinner DOM element with optional caption.
-     * This node is a div with the usual loading gif centered, with the (optional)
-     * caption centered below.
-     */
-    function loadingSpinner(caption) {
-        let spinner = '<span class="fa fa-spinner fa-pulse fa-2x fa-fw">';
-        if (caption) {
-            spinner += caption + '... &nbsp; &nbsp;';
-        }
-        spinner += '</span>';
-        return spinner;
-    }
-
     function loadingDiv(caption) {
         const $caption = $('<span>');
         const $loader = $('<div>')
@@ -108,8 +78,8 @@ define([
             .append($caption);
         if (caption) setText(caption);
 
-        function setText(caption) {
-            $caption.text(caption);
+        function setText(_caption) {
+            $caption.text(_caption);
         }
 
         return {

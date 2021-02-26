@@ -206,51 +206,37 @@ define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
 
         it('Should render a queued message for queued jobs', (done) => {
             const viewer = JobLogViewer.make();
-            const jobId = 'testJobQueued';
-            const arg = {
-                node: hostNode,
-                jobId: jobId,
-            };
+            const jobId = 'testJobQueued',
+                arg = {
+                    node: hostNode,
+                    jobId: jobId,
+                },
+                jobData = {
+                    jobId: jobId,
+                    jobState: {
+                        status: 'queued',
+                    },
+                },
+                channelData = {
+                    channel: {
+                        jobId: jobId,
+                    },
+                    key: {
+                        type: 'job-status',
+                    },
+                };
+
             runtimeBus.on('request-job-status', (msg) => {
                 expect(msg).toEqual({ jobId: jobId });
-                runtimeBus.send(
-                    {
-                        jobId: jobId,
-                        jobState: {
-                            status: 'queued',
-                        },
-                    },
-                    {
-                        channel: {
-                            jobId: jobId,
-                        },
-                        key: {
-                            type: 'job-status',
-                        },
-                    }
-                );
+                runtimeBus.send(jobData, channelData);
             });
+
             runtimeBus.on('request-job-update', (msg) => {
                 expect(msg).toEqual({ jobId: jobId });
-                runtimeBus.send(
-                    {
-                        jobId: jobId,
-                        jobState: {
-                            status: 'queued',
-                        },
-                    },
-                    {
-                        channel: {
-                            jobId: jobId,
-                        },
-                        key: {
-                            type: 'job-status',
-                        },
-                    }
-                );
+                runtimeBus.send(jobData, channelData);
+
                 setTimeout(() => {
                     const panel = hostNode.querySelector('[data-element="log-panel"]');
-                    console.log(panel);
                     expect(panel.children.length).toEqual(1);
                     expect(panel.children[0].innerHTML).toContain('Job is queued'); //, logs will be available when the job is running.');
                     done();
@@ -259,14 +245,14 @@ define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
             viewer.start(arg);
         });
 
-        xit('Should render a canceled message for canceled jobs', (done) => {});
+        xit('Should render a canceled message for canceled jobs', () => {});
 
-        xit('Should render an error message for errored jobs', (done) => {});
+        xit('Should render an error message for errored jobs', () => {});
 
-        xit('Should have the top button go to the top', (done) => {});
+        xit('Should have the top button go to the top', () => {});
 
-        xit('Should have the bottom button go to the end', (done) => {});
+        xit('Should have the bottom button go to the end', () => {});
 
-        xit('Should have the stop button make sure it stops', (done) => {});
+        xit('Should have the stop button make sure it stops', () => {});
     });
 });

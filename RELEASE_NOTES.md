@@ -8,7 +8,7 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
 -   PTV-1635: fix bug in data slideout tab selection
 -   PTV-1635: fix data and app slideout button and opening behavior
-
+-   DEVOPS-475: Change dockerfile so that container runs as nobody, without need to setuid for initialization. Enables removing CAP_SETUID from container initialization
 ### Version 4.3.2
 
 -   SCT-2778 - convert data slideout, public tab, refseq data source to use searchapi2/rpc api rather than searchapi2/legacy.

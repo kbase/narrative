@@ -2,13 +2,13 @@
  * Some utility KBase-wrapping functions
  */
 
-define([
-    'bluebird',
-    'kbase-client-api',
-    'kbase-generic-client-api',
-    'narrativeConfig',
-    'base/js/namespace',
-], (Promise, KBaseClient, GenericClient, Config, Jupyter) => {
+define(['bluebird', 'kbase-client-api', 'narrativeConfig', 'base/js/namespace'], (
+    Promise,
+    KBaseClient,
+    Config,
+    Jupyter
+) => {
+    'use strict';
     function getAppSpec(id, tag) {
         return getAppSpecs([id], tag).then((result) => {
             return Promise.try(() => {

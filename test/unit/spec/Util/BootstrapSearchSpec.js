@@ -12,6 +12,7 @@ define(['jquery', 'util/bootstrapSearch', 'base/js/namespace'], ($, BootstrapSea
 
         afterEach(() => {
             $targetElem.empty();
+            Jupyter.narrative = null;
         });
 
         it('Should create a new search object', () => {
@@ -21,7 +22,8 @@ define(['jquery', 'util/bootstrapSearch', 'base/js/namespace'], ($, BootstrapSea
 
         it('Should fire an input function when triggered by input', (done) => {
             const bsSearch = new BootstrapSearch($targetElem, {
-                inputFunction: () => {
+                inputFunction: (event) => {
+                    expect(event.type).toBe('input');
                     done();
                 },
             });
@@ -89,7 +91,8 @@ define(['jquery', 'util/bootstrapSearch', 'base/js/namespace'], ($, BootstrapSea
         it('Should have a working focus function', (done) => {
             const bsSearch = new BootstrapSearch($targetElem);
             $('body').append($targetElem);
-            $targetElem.find('input.form-control').on('focus', () => {
+            $targetElem.find('input.form-control').on('focus', (event) => {
+                expect(event.type).toBe('focus');
                 done();
             });
             bsSearch.focus();
@@ -97,16 +100,16 @@ define(['jquery', 'util/bootstrapSearch', 'base/js/namespace'], ($, BootstrapSea
 
         it('Should set placeholder text', () => {
             const placeholder = 'some text';
-            const bsSearch = new BootstrapSearch($targetElem, {
+            new BootstrapSearch($targetElem, {
                 placeholder: placeholder,
             });
             expect($targetElem.find('input.form-control').attr('placeholder')).toEqual(placeholder);
         });
 
         it('Should trigger an escape function', (done) => {
-            const passed = false;
-            const bsSearch = new BootstrapSearch($targetElem, {
-                escFunction: () => {
+            new BootstrapSearch($targetElem, {
+                escFunction: (event) => {
+                    expect(event.type).toBe('keyup');
                     done();
                 },
             });

@@ -18,7 +18,6 @@ define(['jquery', 'util/bootstrapDialog'], ($, Dialog) => {
             body: $simpleBody,
             buttons: simpleButtons,
         });
-        // simpleDialog.getElement().appendTo('body');
     });
 
     describe('Test the BootstrapDialog module', () => {
@@ -31,12 +30,13 @@ define(['jquery', 'util/bootstrapDialog'], ($, Dialog) => {
             expect($($.find('.fade.in')).is(':visible')).toBeTruthy();
         });
 
-        it('Should hide on command', () => {
-            simpleDialog.show();
-            simpleDialog.hide();
+        it('Should hide on command', (done) => {
             simpleDialog.$modal.on('hidden.bs.modal', () => {
                 expect(simpleDialog.$modal.is(':visible')).toBeFalsy();
+                done();
             });
+            simpleDialog.show();
+            simpleDialog.hide();
         });
 
         it('Should get a title string back', () => {

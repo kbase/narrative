@@ -39,15 +39,15 @@ define([], () => {
         const timediff = calcTimeFromNow(d);
         const timeMillis = d ? d.getTime() : '';
 
-        const timeHtml =
+        return (
             '<span href="#" data-toggle="tooltip" title="' +
             parsedTime +
             '" millis="' +
             timeMillis +
             '" >' +
             timediff +
-            '</span>';
-        return timeHtml;
+            '</span>'
+        );
     }
 
     /**
@@ -81,18 +81,16 @@ define([], () => {
             d = new Date(t[0], t[1] - 1, t[2], t[3], t[4], t[5], t[6]);
             // Test the new Date object
             if (Object.prototype.toString.call(d) === '[object Date]') {
-                // This would mean its got the 'Invalid Date' status.
+                // This would mean it has the 'Invalid Date' status.
                 if (isNaN(d.getTime())) {
                     return null;
-                } else {
-                    d.setFullYear(t[0]);
-                    return d;
                 }
+                d.setFullYear(t[0]);
+                return d;
             }
             return null;
-        } else {
-            return d;
         }
+        return d;
     }
 
     /**
@@ -263,8 +261,10 @@ define([], () => {
             seconds = 0;
         }
 
-        const exactDate = function (date) {
-            return monthLookup[date.getMonth()] + ' ' + date.getDate() + ', ' + date.getFullYear();
+        const exactDate = function (_date) {
+            return (
+                monthLookup[_date.getMonth()] + ' ' + _date.getDate() + ', ' + _date.getFullYear()
+            );
         };
 
         // f-ing safari, need to add extra ':' delimiter to parse the timestamp
@@ -334,17 +334,6 @@ define([], () => {
         longTimeStampStr = longTimeStampStr.replace(/\s*ago\s*/, '');
 
         return longTimeStampStr;
-    }
-
-    /**
-     * @private
-     * @method
-     * Checks if the timestamp looks like it should be ISO 8601 format.
-     * If so, it "cleans" it up to make sure (if it has a trailing +0000, it converts it
-     * to a trailing +00:00, for example)
-     */
-    function cleanupISOFormat(timestamp) {
-        // check if ISO.
     }
 
     /**

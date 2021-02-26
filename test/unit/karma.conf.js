@@ -31,41 +31,44 @@ module.exports = function (config) {
             'nbextensions/appcell2/widgets/tabs/*.js': ['coverage'],
             'kbase-extension/static/kbase/js/*.js': ['coverage'],
         },
+        // karma defaults:
+        // included: true; nocache: false; served: true; watched: true;
         files: [
-            'kbase-extension/static/narrative_paths.js',
+            'node_modules/jasmine-ajax/lib/mock-ajax.js',
+            // tests and test resources
+            'test/unit/testUtil.js',
+            'test/unit/mocks.js',
+            'test/unit/test-main.js',
             { pattern: 'test/unit/spec/**/*.js', included: false },
-            { pattern: 'node_modules/jasmine-ajax/lib/mock-ajax.js', included: true },
-            {
-                pattern:
-                    'kbase-extension/static/ext_components/kbase-ui-plugin-catalog/src/plugin/modules/data/categories.yml',
-                included: false,
-                served: true,
-            },
-            { pattern: 'kbase-extension/static/**/*.css', included: false, served: true },
+            { pattern: 'test/testConfig.json', included: false, nocache: true },
+            { pattern: 'test/*.tok', included: false, nocache: true },
+            { pattern: 'test/data/**/*', included: false },
+            // JS files
+            'kbase-extension/static/narrative_paths.js',
+            { pattern: 'kbase-extension/static/**/*.js', included: false },
+            { pattern: 'nbextensions/appcell2/widgets/tabs/*.js', included: false },
+            // static resources
+            { pattern: 'kbase-extension/kbase_templates/*.html', included: false },
+            { pattern: 'kbase-extension/static/**/*.css', included: false },
+            { pattern: 'kbase-extension/static/**/*.gif', included: false },
             {
                 pattern: 'kbase-extension/static/kbase/templates/**/*.html',
                 included: false,
-                served: true,
             },
+            { pattern: 'kbase-extension/static/**/*.woff2', included: false },
             {
                 pattern: 'kbase-extension/static/kbase/config/**/*.json',
                 included: false,
-                served: true,
             },
             {
                 pattern: 'kbase-extension/static/kbase/config/**/*.yaml',
                 included: false,
-                served: true,
             },
-            { pattern: 'kbase-extension/static/**/*.js', included: false, served: true },
-            { pattern: 'kbase-extension/static/**/*.gif', included: false, served: true },
-            { pattern: 'nbextensions/appcell2/widgets/tabs/*.js', included: false },
-            { pattern: 'test/testConfig.json', included: false, served: true, nocache: true },
-            { pattern: 'test/*.tok', included: false, served: true, nocache: true },
-            { pattern: 'test/data/**/*', included: false, served: true },
-            'test/unit/testUtil.js',
-            'test/unit/mocks.js',
-            'test/unit/test-main.js',
+            {
+                pattern:
+                    'kbase-extension/static/ext_components/kbase-ui-plugin-catalog/src/plugin/modules/data/categories.yml',
+                included: false,
+            },
         ],
         exclude: [
             'kbase-extension/static/buildTools/*.js',
@@ -112,6 +115,7 @@ module.exports = function (config) {
         browserNoActivityTimeout: 30000,
         singleRun: true,
         proxies: {
+            '/kbase_templates/': '/base/kbase-extension/kbase_templates/',
             '/narrative/nbextensions': 'http://localhost:32323/narrative/nbextensions',
             '/narrative/static/': '/base/kbase-extension/static/',
             '/narrative/static/base': 'http://localhost:32323/narrative/static/base',

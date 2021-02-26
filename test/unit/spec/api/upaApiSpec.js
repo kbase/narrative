@@ -88,7 +88,6 @@ define(['api/upa', 'narrativeConfig'], (UpaApi, Config) => {
             };
 
         beforeEach(() => {
-            history.pushState(null, null, '/narrative/ws.31.obj.1');
             Config.config.workspaceId = 31;
         });
 

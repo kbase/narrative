@@ -1,13 +1,8 @@
-define('testUtil', ['bluebird', 'narrativeConfig', 'json!/test/testConfig.json'], (
-    Promise,
-    Config,
-    TestConfig
-) => {
+define('testUtil', ['bluebird', 'json!/test/testConfig.json'], (Promise, TestConfig) => {
     'use strict';
 
     let token = null,
-        userId = null,
-        currentNarrative = null;
+        userId = null;
 
     function factory() {
         return initialize();
@@ -20,34 +15,6 @@ define('testUtil', ['bluebird', 'narrativeConfig', 'json!/test/testConfig.json']
     function getUserId() {
         return userId;
     }
-
-    function getCurrentNarrative() {
-        if (currentNarrative) {
-            return currentNarrative;
-        }
-        const token = getAuthToken();
-        // make a new workspace
-        // make a new narrative object and add it to the workspace
-        // add some data to the workspace
-    }
-
-    function createNarrative() {}
-
-    function loadNarrativeData() {
-        /* Steps:
-         * 1. Make a new narrative if there isn't a current one.
-         * 2. Load all data given by TestConfig.data
-         * 3. ...
-         * 4. Profit.
-         */
-    }
-
-    function cleanupTestRun() {
-        /* If we have open Workspaces, delete them.
-         */
-    }
-
-    function getCurrentWorkspace() {}
 
     /**
      * Runs the Jasmine pending() function if there's no Auth token available. This skips the
@@ -88,7 +55,6 @@ define('testUtil', ['bluebird', 'narrativeConfig', 'json!/test/testConfig.json']
     return {
         make: factory,
         getAuthToken: getAuthToken,
-        getCurrentNarrative: getCurrentNarrative,
         pendingIfNoToken: pendingIfNoToken,
         getUserId: getUserId,
         wait: wait,

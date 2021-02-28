@@ -62,12 +62,10 @@ define(['jquery', 'widgets/loadingWidget', 'text!/kbase_templates/loading.html',
             widget.clearTimeout();
         });
 
-        it('Should show the loading warning after a timeout', (done) => {
-            const node = document.createElement('div');
-            document.body.appendChild(node);
-            const widget = new LoadingWidget({ node: node, timeout: 1 });
+        it('Should show the loading warning after a timeout', function (done) {
+            const widget = new LoadingWidget({ node: this.node, timeout: 1 });
             spyOn(widget, 'showTimeoutWarning').and.callThrough();
-            const $warningNode = $(node).find('.loading-warning');
+            const $warningNode = $(this.node).find('.loading-warning');
             expect($warningNode.length).toBe(1);
             spyOn($warningNode.__proto__, 'fadeIn').and.callThrough();
             expect(widget.timeoutShown).toBeFalse();

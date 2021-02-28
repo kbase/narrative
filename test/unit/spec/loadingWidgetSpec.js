@@ -68,12 +68,13 @@ define(['jquery', 'widgets/loadingWidget', 'text!/kbase_templates/loading.html',
             const widget = new LoadingWidget({ node: node, timeout: 1 });
             spyOn(widget, 'showTimeoutWarning').and.callThrough();
             const $warningNode = $(node).find('.loading-warning');
+            expect($warningNode.length).toBe(1);
             spyOn($warningNode.__proto__, 'fadeIn').and.callThrough();
             expect(widget.timeoutShown).toBeFalse();
             setTimeout(() => {
                 expect(widget.showTimeoutWarning).toHaveBeenCalled();
                 expect(widget.timeoutShown).toBeTrue();
-                expect($warningNode.fadeIn).toHaveBeenCalledOnceWith('fast');
+                expect($warningNode.fadeIn).toHaveBeenCalledWith('fast');
                 widget.remove();
                 done();
             }, 500);

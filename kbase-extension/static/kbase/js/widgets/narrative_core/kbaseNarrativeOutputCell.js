@@ -243,14 +243,18 @@ define([
                 this.$elem.append(this.$body);
             }
 
-            return this.renderBody().then(() => {
-                this.isRendered = true;
-            });
+            return this.renderBody()
+                .then(() => {
+                    this.isRendered = true;
+                })
+                .catch((err) => {
+                    return this.renderError(err);
+                });
         },
 
         renderBody: function () {
             const self = this;
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
                 let widget = self.options.widget,
                     widgetData = self.options.data;
                 if (widget === 'kbaseDefaultNarrativeOutput') {
@@ -267,9 +271,10 @@ define([
                     self.$outWidget = new W(self.$widgetBody, widgetData);
                     resolve();
                 }, (err) => {
+                    reject(err);
                     // TODO: No, should reject the promise, or handle here and resolve,
                     // otherwise on error the promise will dangle.
-                    return self.renderError(err);
+                    // return self.renderError(err);
                 });
             });
         },

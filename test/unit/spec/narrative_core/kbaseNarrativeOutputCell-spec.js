@@ -102,15 +102,14 @@ define([
             expect(myWidget.inViewport()).toBe(true);
         });
 
-        it('Should render properly', (done) => {
-            myWidget.render().then(() => {
+        it('Should render properly', () => {
+            return myWidget.render().then(() => {
                 // exercise the header button a bit
                 expect($target.find('.btn.kb-data-obj')).not.toBeNull();
                 $target.find('.btn.kb-data-obj').click();
                 expect(myWidget.headerShown).toBeTruthy();
                 $target.find('.btn.kb-data-obj').click();
                 expect(myWidget.headerShown).toBeFalsy();
-                done();
             });
         });
 
@@ -123,16 +122,15 @@ define([
                 type: 'viewer',
                 upas: testUpas,
             });
-            w.render().then(() => {
+            return w.render().then(() => {
                 expect(w.options.title).toEqual('App Error');
             });
         });
 
-        it('Should update its UPAs properly with a version change request', (done) => {
-            myWidget.render().then(() => {
+        it('Should update its UPAs properly with a version change request', () => {
+            return myWidget.render().then(() => {
                 myWidget.displayVersionChange('test', 4);
                 expect(myWidget.cell.metadata.kbase.dataCell.upas.test).toEqual('[3]/4/4');
-                done();
             });
         });
 

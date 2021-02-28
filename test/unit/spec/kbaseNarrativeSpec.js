@@ -1,11 +1,12 @@
 define([
+    'bluebird',
     'jquery',
     'narrativeConfig',
     'kbaseNarrative',
     'base/js/namespace',
     'narrativeLogin',
     'narrativeMocks',
-], ($, Config, Narrative, Jupyter, NarrativeLogin, Mocks) => {
+], (Promise, $, Config, Narrative, Jupyter, NarrativeLogin, Mocks) => {
     'use strict';
 
     const DEFAULT_FULLY_LOADED = false,
@@ -16,6 +17,12 @@ define([
 
     describe('Test the kbaseNarrative module', () => {
         const loginDiv = $('<div>');
+
+        beforeAll(() => {
+            // remove any jquery events that get bound to document,
+            // including login and logout listeners
+            $(document).off();
+        })
 
         beforeEach(async () => {
             // we need to be "logged in" for various tests to work, especially initing the Narrative object.
@@ -97,7 +104,12 @@ define([
             jasmine.Ajax.uninstall();
             Jupyter.notebook = null;
             NarrativeLogin.clearTokenCheckTimers();
+            NarrativeLogin.destroy();
             Mocks.clearAuthToken();
+            // clear all jquery event listeners set up by either NarrativeLogin or anything else
+            $(document).off();
+            $([Jupyter.events]).off();
+            document.body.innerHTML = '';
         });
 
         it('Should instantiate', () => {
@@ -105,36 +117,33 @@ define([
             expect(narr.maxNarrativeSize).toBe('10 MB');
         });
 
-        it('Should have an init function that responds when the kernel is connected', () => {
-            return new Promise((resolve, reject) => {
+        it('Should have an init function that responds when the kernel is connected', (done) => {
+            return Promise.try(() => {
                 const narr = new Narrative();
                 const jobsReadyCallback = (err) => {
-                    if (err) {
-                        reject('This should not have failed', err);
-                    } else {
-                        resolve();
-                    }
+                    expect(err).toBeFalsy();
+                    done();
                 };
                 narr.init(jobsReadyCallback);
                 $([Jupyter.events]).trigger('kernel_connected.Kernel');
+                // return new Promise((resolve) => setTimeout(resolve, 500));
             });
         });
 
-        it('init should fail as expected when the job connection fails', () => {
-            return new Promise((resolve, reject) => {
+        it('init should fail as expected when the job connection fails', (done) => {
+            return Promise.try(() => {
                 Jupyter.notebook.kernel.comm_info = () => {
                     throw new Error('an error happened');
                 };
                 const narr = new Narrative();
                 const jobsReadyCallback = (err) => {
-                    if (err) {
-                        resolve();
-                    } else {
-                        reject('expected an error');
-                    }
+                    expect(err).toBeDefined();
+                    done();
                 };
                 narr.init(jobsReadyCallback);
                 $([Jupyter.events]).trigger('kernel_connected.Kernel');
+                // return new Promise((resolve) => setTimeout(resolve, 500));
+
             });
         });
 

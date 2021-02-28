@@ -123,7 +123,7 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime'], (
                         expect(comm.comm).not.toBeNull();
                         spyOn(comm.comm, 'send');
                         testBus.emit(testCase[0], testCase[1]);
-                        return new Promise((resolve) => setTimeout(resolve, 500));
+                        return new Promise((resolve) => setTimeout(resolve, 1000));
                     })
                     .then(() => {
                         expect(comm.comm.send).toHaveBeenCalled();

@@ -115,42 +115,39 @@ define([
         it('Should instantiate', () => {
             const narr = new Narrative();
             expect(narr.maxNarrativeSize).toBe('10 MB');
+            narr.loadingWidget.clearTimeout();
         });
 
         it('Should have an init function that responds when the kernel is connected', (done) => {
-            return Promise.try(() => {
-                const narr = new Narrative();
-                const jobsReadyCallback = (err) => {
-                    expect(err).toBeFalsy();
-                    done();
-                };
-                narr.init(jobsReadyCallback);
-                $([Jupyter.events]).trigger('kernel_connected.Kernel');
-                // return new Promise((resolve) => setTimeout(resolve, 500));
-            });
+            const narr = new Narrative();
+            const jobsReadyCallback = (err) => {
+                expect(err).toBeFalsy();
+                done();
+            };
+            narr.init(jobsReadyCallback);
+            $([Jupyter.events]).trigger('kernel_connected.Kernel');
+            narr.loadingWidget.clearTimeout();
         });
 
         it('init should fail as expected when the job connection fails', (done) => {
-            return Promise.try(() => {
-                Jupyter.notebook.kernel.comm_info = () => {
-                    throw new Error('an error happened');
-                };
-                const narr = new Narrative();
-                const jobsReadyCallback = (err) => {
-                    expect(err).toBeDefined();
-                    done();
-                };
-                narr.init(jobsReadyCallback);
-                $([Jupyter.events]).trigger('kernel_connected.Kernel');
-                // return new Promise((resolve) => setTimeout(resolve, 500));
-
-            });
+            Jupyter.notebook.kernel.comm_info = () => {
+                throw new Error('an error happened');
+            };
+            const narr = new Narrative();
+            const jobsReadyCallback = (err) => {
+                expect(err).toBeDefined();
+                done();
+            };
+            narr.init(jobsReadyCallback);
+            $([Jupyter.events]).trigger('kernel_connected.Kernel');
+            narr.loadingWidget.clearTimeout();
         });
 
         it('Should return a boolean for is_loaded', () => {
             const narr = new Narrative();
             // default as set in the mock Jupyter object above
             expect(narr.isLoaded()).toEqual(DEFAULT_FULLY_LOADED);
+            narr.loadingWidget.clearTimeout();
         });
 
         it('Should test ui mode', () => {
@@ -161,11 +158,13 @@ define([
             Jupyter.notebook.writable = !Jupyter.notebook.writable;
             expect(narr.uiModeIs('edit')).toBe(!DEFAULT_WRITABLE);
             expect(narr.uiModeIs('view')).toBe(DEFAULT_WRITABLE);
+            narr.loadingWidget.clearTimeout();
         });
 
         it('Should provide an auth token when requested', () => {
             const narr = new Narrative();
             expect(narr.getAuthToken()).toBe(TEST_TOKEN);
+            narr.loadingWidget.clearTimeout();
         });
     });
 });

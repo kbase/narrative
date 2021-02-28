@@ -119,6 +119,24 @@ define(['narrativeViewers', 'narrativeConfig'], (Viewers, Config) => {
             });
         });
 
+        it('should create a default viewer, given inputs and a missing widget', () => {
+            const dataCell = {
+                obj_info: {
+                    type: 'Module.Type1-1.0',
+                    bare_type: 'Module.Type1',
+                },
+            };
+            spyOn(window, 'require').and.callFake((files, cb, errCb) => {
+                errCb(new Error('Not a real widget!')); // make a fake error
+            });
+            return Viewers.createViewer(dataCell).then((view) => {
+                expect(window.require).toHaveBeenCalled();
+                expect(view.widget).toBeDefined();
+                expect(view.widget.prop('tagName')).toEqual('DIV');
+                expect(view.title).toEqual('Unknown Data Type');
+            });
+        });
+
         it('should create a viewer, given inputs', () => {
             const dataCell = {
                 obj_info: {
@@ -126,12 +144,18 @@ define(['narrativeViewers', 'narrativeConfig'], (Viewers, Config) => {
                     bare_type: 'Module.Type1',
                 },
             };
+            // spyOn(window, 'require').and.returnValue(new Error('nope'));
+            spyOn(window, 'require').and.callFake((files, cb) => {
+                cb(function () { return this; }); // just a dummy constructor
+            });
             return Viewers.createViewer(dataCell).then((view) => {
+                expect(window.require).toHaveBeenCalled();
                 expect(view.widget).toBeDefined();
                 expect(view.widget.prop('tagName')).toEqual('DIV');
                 expect(view.title).toEqual('Type 1');
             });
         });
+
 
         it("should still make a default widget when the type doesn't exist", () => {
             const dataCell = {

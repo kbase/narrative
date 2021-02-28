@@ -1,4 +1,4 @@
-define(['jquery', 'widgets/loadingWidget', 'text!/kbase_templates/loading.html'], (
+define(['jquery', 'widgets/loadingWidget', 'text!/kbase_templates/loading.html', 'css!/narrative/static/kbase/css/kbaseNarrative.css'], (
     $,
     LoadingWidget,
     LoadingTemplate
@@ -10,15 +10,27 @@ define(['jquery', 'widgets/loadingWidget', 'text!/kbase_templates/loading.html']
         '/narrative/static/kbase/images/kbase_animated_logo.gif'
     );
     describe('Test the LoadingWidget module', () => {
+        beforeAll(() => {
+            document.body.innerHTML = '';
+        });
+
         beforeEach(function () {
             this.node = document.createElement('div');
+            document.body.appendChild(this.node);
             this.node.innerHTML = templateHtml;
+        });
+
+        afterEach(function () {
+            this.node.remove();
+            this.node = null;
+            document.body.innerHTML = '';
         });
 
         it('Should instantiate with a null node', () => {
             const noNodeWidget = new LoadingWidget({ node: null });
             expect(noNodeWidget).not.toBeNull();
             expect(noNodeWidget).toBeInstanceOf(LoadingWidget);
+            noNodeWidget.clearTimeout();
         });
 
         it('Should be able to update its progress', function () {
@@ -30,10 +42,11 @@ define(['jquery', 'widgets/loadingWidget', 'text!/kbase_templates/loading.html']
             ).toContain('class="fa fa-check"');
             // total progress indicator updated
             expect(this.node.querySelector('.progress-bar').style.width).toBe('20%');
+            widget.clearTimeout();
         });
 
         it('Should be able to remove its container node', function () {
-            spyOn(LoadingWidget.prototype, 'remove');
+            spyOn(LoadingWidget.prototype, 'remove').and.callThrough();
             const widget = new LoadingWidget({ node: this.node });
             ['data', 'narrative', 'jobs', 'apps', 'kernel'].forEach((name) => {
                 widget.updateProgress(name, true);
@@ -42,23 +55,26 @@ define(['jquery', 'widgets/loadingWidget', 'text!/kbase_templates/loading.html']
         });
 
         it('Should not show the loading warning when first starting', function () {
-            new LoadingWidget({ node: this.node });
-            expect($(this.node).find('.loading-warning').length).toBe(1);
-            expect($(this.node).find('.loading-warning:visible').length).toBe(0);
-            expect($(this.node).find('.loading-warning:hidden').length).toBe(1);
+            const widget = new LoadingWidget({ node: this.node });
+            const $warning = $(this.node).find('.loading-warning');
+            expect($warning.length).toBe(1);
+            expect($warning.is(':visible')).toBeFalsy();
+            widget.clearTimeout();
         });
 
-        it('Should show the loading warning after a timeout', function (done) {
-            spyOn(LoadingWidget.prototype, 'showTimeoutWarning').and.callThrough();
-            const widget = new LoadingWidget({ node: this.node, timeout: 1 });
-            const $warningNode = $(this.node).find('.loading-warning');
+        it('Should show the loading warning after a timeout', (done) => {
+            const node = document.createElement('div');
+            document.body.appendChild(node);
+            const widget = new LoadingWidget({ node: node, timeout: 1 });
+            spyOn(widget, 'showTimeoutWarning').and.callThrough();
+            const $warningNode = $(node).find('.loading-warning');
             spyOn($warningNode.__proto__, 'fadeIn').and.callThrough();
             expect(widget.timeoutShown).toBeFalse();
             setTimeout(() => {
-                expect($(this.node).find('.loading-warning').length).toBe(1);
                 expect(widget.showTimeoutWarning).toHaveBeenCalled();
-                expect($warningNode.fadeIn).toHaveBeenCalledOnceWith('fast');
                 expect(widget.timeoutShown).toBeTrue();
+                expect($warningNode.fadeIn).toHaveBeenCalledOnceWith('fast');
+                widget.remove();
                 done();
             }, 500);
         });

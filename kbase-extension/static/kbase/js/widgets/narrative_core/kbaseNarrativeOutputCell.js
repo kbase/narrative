@@ -254,14 +254,13 @@ define([
 
         renderBody: function () {
             const self = this;
+            const widget = self.options.widget;
+            let widgetData = self.options.data;
+            if (widget === 'kbaseDefaultNarrativeOutput') {
+                widgetData = { data: self.options.data };
+            }
+            widgetData.upas = self.options.upas;
             return new Promise((resolve, reject) => {
-                let widget = self.options.widget,
-                    widgetData = self.options.data;
-                if (widget === 'kbaseDefaultNarrativeOutput') {
-                    widgetData = { data: self.options.data };
-                }
-                widgetData.upas = self.options.upas;
-
                 require([widget], (W) => {
                     if (self.$widgetBody) {
                         self.$widgetBody.remove();
@@ -272,9 +271,6 @@ define([
                     resolve();
                 }, (err) => {
                     reject(err);
-                    // TODO: No, should reject the promise, or handle here and resolve,
-                    // otherwise on error the promise will dangle.
-                    // return self.renderError(err);
                 });
             });
         },

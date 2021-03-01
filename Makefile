@@ -30,7 +30,7 @@ install:
 # local venv.
 build-travis-narrative:
 	bash $(INSTALLER) && \
-	npx grunt minify && \
+	npm run minify && \
 	sed <src/config.json.templ >src/config.json "s/{{ .Env.CONFIG_ENV }}/dev/" && \
 	sed -i 's/{{ if ne .Env.CONFIG_ENV "prod" }} true {{- else }} false {{- end }}/true/' src/config.json && \
 	jupyter notebook --version
@@ -54,7 +54,7 @@ test-frontend:
 
 # test-frontend-unit should use karma and jasmine to test
 # each of the Javascript components of the Narrative.
-# This is achieved through the grunt test invocation
+# This is achieved through python test invocation
 test-frontend-unit:
 	@echo "running frontend unit tests"
 	python test/unit/run_tests.py -u

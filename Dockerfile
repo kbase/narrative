@@ -44,7 +44,7 @@ RUN \
     ./node_modules/.bin/bower install --allow-root --config.interactive=false && \
     # Compile Javascript down into an itty-bitty ball unless SKIP_MINIFY is non-empty
     echo Skip=$SKIP_MINIFY && \
-    [ -n "$SKIP_MINIFY" ] || grunt minify && \
+    [ -n "$SKIP_MINIFY" ] || npm run minify && \
     # install the narrative and jupyter console
     /bin/bash scripts/install_narrative_docker.sh && \
     pip install jupyter-console==6.0.0 && \

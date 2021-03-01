@@ -1,4 +1,4 @@
-define(['kb_common/html', 'common/events', 'common/ui'], (html, Events, UI) => {
+define(['common/html', 'common/events', 'common/ui'], (html, Events, UI) => {
     'use strict';
 
     const t = html.tag,

@@ -1,22 +1,19 @@
 define(['common/runtime', 'widgets/appWidgets2/input/selectInput'], (Runtime, SelectInput) => {
     'use strict';
-    let bus,
-        testConfig,
-        required = false,
-        runtime,
-        node,
+    let bus, testConfig, runtime, node;
+    const required = false,
         defaultValue = 'apple';
 
-    function buildTestConfig(required, defaultValue, bus) {
+    function buildTestConfig(_required, _defaultValue, _bus) {
         return {
-            bus: bus,
+            bus: _bus,
             parameterSpec: {
                 data: {
-                    defaultValue: defaultValue,
+                    defaultValue: _defaultValue,
                     nullValue: '',
                     constraints: {
-                        required: required,
-                        defaultValue: defaultValue,
+                        required: _required,
+                        defaultValue: _defaultValue,
                         options: [
                             {
                                 value: 'apple',
@@ -34,7 +31,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/selectInput'], (Runtime, Se
                     },
                 },
             },
-            channelName: bus.channelName,
+            channelName: _bus.channelName,
             initialValue: 'apple',
         };
     }
@@ -55,14 +52,20 @@ define(['common/runtime', 'widgets/appWidgets2/input/selectInput'], (Runtime, Se
             window.kbaseRuntime = null;
         });
 
-        it('Should load the widget', () => {
+        it('should be defined', () => {
             expect(SelectInput).not.toBeNull();
+        });
+
+        it('should be instantiable', () => {
+            const widget = SelectInput.make(testConfig);
+            expect(widget).toEqual(jasmine.any(Object));
+            ['start', 'stop'].forEach((fn) => {
+                expect(widget[fn]).toEqual(jasmine.any(Function));
+            });
         });
 
         it('Should start and stop a widget', (done) => {
             const widget = SelectInput.make(testConfig);
-            expect(widget).toBeDefined();
-            expect(widget.start).toBeDefined();
 
             widget
                 .start({ node: node })
@@ -150,7 +153,6 @@ define(['common/runtime', 'widgets/appWidgets2/input/selectInput'], (Runtime, Se
             bus = runtime.bus().makeChannelBus();
             testConfig = buildTestConfig(true, '', bus);
             const widget = SelectInput.make(testConfig);
-            const inputText = null;
             let msgCount = 0,
                 okCount = 0;
             bus.on('validation', (message) => {

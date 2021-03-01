@@ -6,7 +6,13 @@ define(['widgets/appWidgets2/input/undefinedInput'], (UndefinedInput) => {
             expect(UndefinedInput).not.toBeNull();
         });
 
-        it('Should be instantiable and have an element', () => {
+        it('Should be instantiable and have an "attach" function', () => {
+            const widget = UndefinedInput.make({});
+            expect(widget).toEqual(jasmine.any(Object));
+            expect(widget.attach).toEqual(jasmine.any(Function));
+        });
+
+        it('Should attach to a DOM node', () => {
             const widget = UndefinedInput.make({});
             const node = document.createElement('div');
             widget.attach(node);

@@ -19,30 +19,23 @@ define([
         input = t('input');
 
     function factory(config) {
-        let spec = config.parameterSpec,
+        const spec = config.parameterSpec,
             runtime = Runtime.make(),
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(config.channelName),
-            parent,
-            container,
-            model,
-            ui;
+            model = Props.make({
+                data: {
+                    value: spec.data.nullValue,
+                },
+                onUpdate: function () {},
+            });
+
+        let parent, container, ui;
 
         // CONTROL
 
         function getControlValue() {
             return ui.getElement('input-container.input').value;
-        }
-
-        function setControlValue(value) {
-            let stringValue;
-            if (value === null) {
-                stringValue = '';
-            } else {
-                stringValue = String(value);
-            }
-
-            ui.getElement('input-container.input').value = stringValue;
         }
 
         // MODEL
@@ -61,11 +54,6 @@ define([
 
         function resetModelValue() {
             setModelValue(spec.data.constraints.defaultValue);
-        }
-
-        // sync the dom to the model.
-        function syncModelToControl() {
-            setControlValue(model.getItem('value', null));
         }
 
         // VALIDATION
@@ -142,7 +130,10 @@ define([
                                         message: result.errorMessage,
                                     });
                                     ui.setContent('input-container.message', message.content);
-                                    message.events.attachEvents();
+                                    // FIXME: when enabled, this (silently) throws error
+                                    // "Error: could not find node for #kb_html_.+"
+                                    //
+                                    // message.events.attachEvents();
                                 }
                             }
                             channel.emit('validation', result);
@@ -160,9 +151,9 @@ define([
 
         function makeInputControl(currentValue, events) {
             // CONTROL
-            let initialControlValue,
-                min = spec.data.constraints.min,
+            const min = spec.data.constraints.min,
                 max = spec.data.constraints.max;
+            let initialControlValue;
             if (typeof currentValue === 'number') {
                 initialControlValue = String(currentValue);
             }
@@ -239,7 +230,6 @@ define([
 
                 container.innerHTML = theLayout.content;
                 events.attachEvents(container);
-                // model.setItem('value', message.value);
 
                 channel.on('reset-to-defaults', () => {
                     resetModelValue();
@@ -247,11 +237,6 @@ define([
                 channel.on('update', (message) => {
                     model.setItem('value', message.value);
                 });
-
-                // TODO: since we now rely on initialValue -- perhaps
-                // we can omit the 'sync' event or at least in cases
-                // in which the initial value is known to be available.
-                // bus.emit('sync');
 
                 return render().then(() => {
                     return autoValidate();
@@ -269,14 +254,6 @@ define([
         }
 
         // INIT
-
-        model = Props.make({
-            data: {
-                value: spec.data.nullValue,
-            },
-            onUpdate: function () {},
-        });
-
         setModelValue(config.initialValue);
 
         return {

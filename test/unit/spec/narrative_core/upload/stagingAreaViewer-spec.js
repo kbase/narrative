@@ -92,7 +92,7 @@ define([
                         globusLinked: true,
                     },
                 });
-            await linkedStagingViewer.render()
+            await linkedStagingViewer.render();
             const $globusButton = $node.find('#globusLinked');
             expect($globusButton).toBeDefined();
             expect($globusButton.html()).toContain('Upload with Globus');

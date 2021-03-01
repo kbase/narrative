@@ -394,7 +394,7 @@ define([
                         title: 'Job Initialization Error',
                         body: $modalBody,
                         buttons: [
-                            $('<a type="button" class="btn btn-default">')
+                            $('<a type="button" class="btn btn-default kb-job-err-dialog__button">')
                                 .append('OK')
                                 .click(() => {
                                     modal.hide();

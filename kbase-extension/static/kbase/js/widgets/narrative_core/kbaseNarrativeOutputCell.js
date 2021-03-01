@@ -243,21 +243,24 @@ define([
                 this.$elem.append(this.$body);
             }
 
-            return this.renderBody().then(() => {
-                this.isRendered = true;
-            });
+            return this.renderBody()
+                .then(() => {
+                    this.isRendered = true;
+                })
+                .catch((err) => {
+                    return this.renderError(err);
+                });
         },
 
         renderBody: function () {
             const self = this;
-            return new Promise((resolve) => {
-                const widget = self.options.widget;
-                let widgetData = self.options.data;
-                if (widget === 'kbaseDefaultNarrativeOutput') {
-                    widgetData = { data: self.options.data };
-                }
-                widgetData.upas = self.options.upas;
-
+            const widget = self.options.widget;
+            let widgetData = self.options.data;
+            if (widget === 'kbaseDefaultNarrativeOutput') {
+                widgetData = { data: self.options.data };
+            }
+            widgetData.upas = self.options.upas;
+            return new Promise((resolve, reject) => {
                 require([widget], (W) => {
                     if (self.$widgetBody) {
                         self.$widgetBody.remove();
@@ -267,9 +270,7 @@ define([
                     self.$outWidget = new W(self.$widgetBody, widgetData);
                     resolve();
                 }, (err) => {
-                    // TODO: No, should reject the promise, or handle here and resolve,
-                    // otherwise on error the promise will dangle.
-                    return self.renderError(err);
+                    reject(err);
                 });
             });
         },

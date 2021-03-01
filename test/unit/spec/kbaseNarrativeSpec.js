@@ -23,7 +23,7 @@ define([
             // remove any jquery events that get bound to document,
             // including login and logout listeners
             $(document).off();
-        })
+        });
 
         beforeEach(async () => {
             // we need to be "logged in" for various tests to work, especially initing the Narrative object.

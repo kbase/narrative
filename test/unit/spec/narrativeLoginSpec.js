@@ -9,7 +9,6 @@ define(['jquery', 'narrativeLogin', 'narrativeConfig', 'narrativeMocks'], (
     const FAKE_TOKEN = 'some_fake_token';
 
     describe('Test the narrativeLogin module', () => {
-
         beforeEach(() => {
             // remove any jquery events that get bound to document,
             // including login and logout listeners

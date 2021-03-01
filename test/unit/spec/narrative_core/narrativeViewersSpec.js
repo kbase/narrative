@@ -146,7 +146,9 @@ define(['narrativeViewers', 'narrativeConfig'], (Viewers, Config) => {
             };
             // spyOn(window, 'require').and.returnValue(new Error('nope'));
             spyOn(window, 'require').and.callFake((files, cb) => {
-                cb(function () { return this; }); // just a dummy constructor
+                cb(function () {
+                    return this;
+                }); // just a dummy constructor
             });
             return Viewers.createViewer(dataCell).then((view) => {
                 expect(window.require).toHaveBeenCalled();
@@ -155,7 +157,6 @@ define(['narrativeViewers', 'narrativeConfig'], (Viewers, Config) => {
                 expect(view.title).toEqual('Type 1');
             });
         });
-
 
         it("should still make a default widget when the type doesn't exist", () => {
             const dataCell = {

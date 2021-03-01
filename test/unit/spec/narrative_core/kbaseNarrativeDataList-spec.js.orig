@@ -4,20 +4,50 @@ define([
     'narrativeConfig',
     'kb_service/client/workspace',
     'base/js/namespace',
-    'narrativeMocks',
+<<<<<<< HEAD
+    'narrativeMocks'
 ], (DataList, $, Config, Workspace, Jupyter, Mocks) => {
     'use strict';
 
     const FAKE_NS_URL = 'https://ci.kbase.us/services/fake_url';
     const FAKE_WS_NAME = 'some_workspace';
+=======
+    'narrativeMocks',
+], (DataList, $, Config, Workspace, Jupyter, Mocks) => {
+    'use strict';
+
+    const fakeNSUrl = 'https://ci.kbase.us/services/fake_url';
+    const narrativeServiceInfo = {
+        version: '1.1',
+        id: '12345',
+        result: [
+            {
+                git_commit_hash: 'foo',
+                hash: 'bar',
+                health: 'healthy',
+                module_name: 'SampleService',
+                url: fakeNSUrl,
+            },
+        ],
+    };
+
+    function mockServiceWizard() {
+        jasmine.Ajax.stubRequest(Config.url('service_wizard')).andReturn({
+            status: 200,
+            statusText: 'HTTP/1/1 200 OK',
+            contentType: 'application/json',
+            responseText: JSON.stringify(narrativeServiceInfo),
+        });
+    }
+>>>>>>> develop
 
     function mockNarrativeServiceListObjects(objData) {
         Mocks.mockJsonRpc1Call({
             url: FAKE_NS_URL,
             response: {
                 data: objData,
-                data_palette_refs: {},
-            },
+                data_palette_refs: {}
+            }
         });
     }
 
@@ -68,7 +98,9 @@ define([
         return widget;
     }
 
+
     describe('Test the kbaseNarrativeDataList', () => {
+<<<<<<< HEAD
         let $dataList;
         let dataListObj = null;
 
@@ -78,7 +110,11 @@ define([
             $(document).off();
         });
 
+=======
+        let $dataList, dataListObj;
+>>>>>>> develop
         beforeEach(() => {
+            $dataList = $('<div>');
             jasmine.Ajax.install();
             const AUTH_TOKEN = 'fakeAuthToken';
             Mocks.setAuthToken(AUTH_TOKEN);
@@ -101,11 +137,15 @@ define([
 
         afterEach(() => {
             jasmine.Ajax.uninstall();
+<<<<<<< HEAD
             dataListObj.destroy();
             $dataList.remove();
             $dataList = null;
             dataListObj = null;
             $(document).off();
+=======
+            Jupyter.narrative = null;
+>>>>>>> develop
         });
 
         it('Should instantiate itself with expected functions', () => {
@@ -137,9 +177,45 @@ define([
             expect($addDataButton.css('display')).toEqual('none');
         });
 
+<<<<<<< HEAD
         it('Should render with data and show a data card', async () => {
             mockNarrativeServiceListObjects(OBJDATA);
             await dataListObj.refresh();
+=======
+        describe('With data', () => {
+            beforeEach(async () => {
+                const objData = [
+                    {
+                        object_info: [
+                            5,
+                            'Rhodobacter_CACIA_14H1',
+                            'KBaseGenomes.Genome-7.0',
+                            '2020-10-03T01:15:14+0000',
+                            1,
+                            'testuser',
+                            54640,
+                            'testuser:narrative_1601675739009',
+                            '53af8071b814a1db43f81eb490a35491',
+                            3110399,
+                            {},
+                        ],
+                    },
+                ];
+
+                // mock service calls
+                mockServiceWizard();
+                mockNarrativeServiceListObjects(objData);
+                mockWorkSpaceService();
+
+                // Create datalist object
+                dataListObj = new DataList($dataList, {});
+
+                // Populate datalist object via the refresh function
+                dataListObj.ws_name = 'some_workspace';
+                dataListObj.ws = new Workspace(Config.url('workspace'), null);
+                await dataListObj.refresh();
+            });
+>>>>>>> develop
 
             expect($dataList.find('.narrative-card-row')).toBeDefined();
         });

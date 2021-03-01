@@ -1,3 +1,5 @@
+const crypto = require('crypto');
+
 module.exports = function (grunt) {
     'use strict';
     grunt.loadNpmTasks('grunt-regex-replace');
@@ -13,7 +15,8 @@ module.exports = function (grunt) {
                         name: 'requirejs-onefile',
                         search: 'narrativeMain.js',
                         replace: function () {
-                            return 'kbase-narrative-min.js';
+                            const cbString = crypto.randomBytes(4).toString('hex');
+                            return `kbase-narrative-min.js?cb=${cbString}`;
                         },
                         flags: '',
                     },

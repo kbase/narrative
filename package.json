@@ -5,6 +5,7 @@
     "private": true,
     "repository": "github.com/kbase/narrative",
     "devDependencies": {
+        "@lodder/grunt-postcss": "^3.0.0",
         "@types/puppeteer": "5",
         "@wdio/browserstack-service": "^6.12.1",
         "@wdio/cli": "^6.10.5",
@@ -24,6 +25,9 @@
         "grunt-contrib-concat": "^1.0.1",
         "grunt-contrib-copy": "1.0.0",
         "grunt-regex-replace": "0.4.0",
+        "grunt-contrib-watch": "^1.1.0",
+        "grunt-shell": "^3.0.1",
+        "grunt-stylelint": "^0.15.0",
         "husky": "^5.1.1",
         "jasmine-ajax": "4.0.0",
         "jasmine-core": "^3.6.0",
@@ -85,15 +89,11 @@
         "tdd": "karma start test/unit/karma.conf.js --auto-watch --no-single-run --reporters coverage,progress",
         "test": "karma start test/unit/karma.conf.js",
         "update_browserslist": "npx browserslist@latest --update-db",
-        "watch_css": "grunt watch"
-        "flake8": "flake8 .",
-        "husky_msg": "echo Running git hooks -- see the 'husky' section of package.json for details",
+        "watch_css": "grunt watch",
         "minify": "r.js -o build.js && terser kbase-extension/static/kbase-narrative.js -c --source-map --output kbase-extension/static/kbase-narrative-min.js && grunt regex-replace",
-        "prettier": "prettier --write '**/*.js'",
         "prettier_check": "prettier --check '**/*.js'",
         "prettier_debug": "prettier --debug-check '**/*.js'",
         "requirejs": "r.js -o build.js",
-        "test": "karma start test/unit/karma.conf.js",
         "uglify": "terser kbase-extension/static/kbase-narrative.js -c --source-map --output kbase-extension/static/kbase-narrative-min.js",
         "postinstall": "husky install"
     }

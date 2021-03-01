@@ -26,6 +26,7 @@ define([
         });
 
         beforeEach(async () => {
+            $(document).off();
             // we need to be "logged in" for various tests to work, especially initing the Narrative object.
             // this means mocking up some auth responses, and the NarrativeLogin object.
             Mocks.setAuthToken(TEST_TOKEN);
@@ -108,13 +109,13 @@ define([
             jasmine.Ajax.uninstall();
 
             Jupyter.notebook = null;
+            narr.loadingWidget.clearTimeout();
             NarrativeLogin.clearTokenCheckTimers();
             NarrativeLogin.destroy();
             Mocks.clearAuthToken();
             // clear all jquery event listeners set up by either NarrativeLogin or anything else
             $(document).off();
             $([Jupyter.events]).off();
-            document.body.innerHTML = '';
         });
 
         it('Should instantiate', () => {

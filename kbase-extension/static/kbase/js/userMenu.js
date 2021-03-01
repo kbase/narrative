@@ -10,7 +10,7 @@ define([
     'use strict';
 
     function factory(config) {
-        let target = config.target,
+        const target = config.target,
             email = config.email,
             userName = StringUtil.escape(config.userName),
             displayName = StringUtil.escape(config.displayName),
@@ -25,8 +25,8 @@ define([
             br = html.tag('br', { close: false }),
             i = html.tag('i'),
             img = html.tag('img'),
-            profileClient = new UserProfile(NarrativeConfig.url('user_profile'), { token: token }),
-            gravatarDefault = 'identicon';
+            profileClient = new UserProfile(NarrativeConfig.url('user_profile'), { token: token });
+        let gravatarDefault = 'identicon';
 
         function start() {
             return profileClient

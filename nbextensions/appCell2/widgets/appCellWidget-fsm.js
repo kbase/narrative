@@ -50,513 +50,483 @@ define([], () => {
                     },
                 },
                 label: 'new',
-                message: '',
+                message: ''
             },
-            next: [
-                {
-                    mode: 'internal-error',
-                },
-                {
-                    mode: 'editing',
-                    params: 'incomplete',
-                },
-            ],
+            next: [{
+                mode: 'internal-error'
+            },
+            {
+                mode: 'editing',
+                params: 'incomplete'
+            }
+            ]
         },
         {
             state: {
                 mode: 'editing',
-                params: 'incomplete',
+                params: 'incomplete'
             },
             ui: {
                 tabs: {
                     info: {
-                        enabled: true,
+                        enabled: true
                     },
-                    configure: [
-                        {
-                            selector: {
-                                viewOnly: false,
-                            },
-                            settings: {
-                                enabled: true,
-                                hidden: false,
-                                selected: true,
-                            },
+                    configure: [{
+                        selector: {
+                            viewOnly: false
                         },
-                        {
-                            selector: {
-                                viewOnly: true,
-                            },
-                            settings: {
-                                enabled: false,
-                                hidden: true,
-                                selected: false,
-                            },
+                        settings: {
+                            enabled: true,
+                            hidden: false,
+                            selected: true
+                        }
+                    }, {
+                        selector: {
+                            viewOnly: true
                         },
-                    ],
-                    viewConfigure: [
-                        {
-                            selector: {
-                                viewOnly: false,
-                            },
-                            settings: {
-                                enabled: false,
-                                hidden: true,
-                                selected: false,
-                            },
+                        settings: {
+                            enabled: false,
+                            hidden: true,
+                            selected: false
+                        }
+                    }],
+                    viewConfigure: [{
+                        selector: {
+                            viewOnly: false
                         },
-                        {
-                            selector: {
-                                viewOnly: true,
-                            },
-                            settings: {
-                                enabled: true,
-                                hidden: false,
-                                selected: true,
-                            },
+                        settings: {
+                            enabled: false,
+                            hidden: true,
+                            selected: false
+                        }
+                    }, {
+                        selector: {
+                            viewOnly: true
                         },
-                    ],
+                        settings: {
+                            enabled: true,
+                            hidden: false,
+                            selected: true
+                        }
+                    }],
                     logs: {
-                        enabled: false,
+                        enabled: false
                     },
                     results: {
-                        enabled: false,
+                        enabled: false
                     },
                     error: {
                         enabled: false,
-                        hidden: true,
-                    },
+                        hidden: true
+                    }
                 },
                 actionButton: {
                     name: 'runApp',
-                    disabled: true,
+                    disabled: true
                 },
                 elements: {
                     show: ['parameters-group', 'output-group'],
-                    hide: ['internal-error', 'parameters-display-group', 'exec-group'],
+                    hide: ['internal-error', 'parameters-display-group', 'exec-group']
                 },
                 appStatus: {
                     classes: ['kb-app-status-warning'],
                     icon: {
-                        type: 'pencil',
-                    },
+                        type: 'pencil'
+                    }
                 },
                 label: 'editing',
-                message:
-                    'You may edit the parameters for this App. You must fill in all required parameters (indicated by red arrows) before you can run the App.',
+                message: 'You may edit the parameters for this App. You must fill in all required parameters (indicated by red arrows) before you can run the App.'
             },
             next: [
                 {
                     mode: 'editing',
                     params: 'complete',
-                    code: 'built',
+                    code: 'built'
                 },
                 {
                     mode: 'editing',
-                    params: 'incomplete',
+                    params: 'incomplete'
                 },
                 {
                     mode: 'editing-batch',
-                    params: 'incomplete',
+                    params: 'incomplete'
                 },
                 {
-                    mode: 'internal-error',
-                },
-            ],
+                    mode: 'internal-error'
+                }
+            ]
         },
         {
             state: {
                 mode: 'editing',
                 params: 'complete',
-                code: 'built',
+                code: 'built'
             },
             ui: {
                 tabs: {
                     info: {
-                        enabled: true,
+                        enabled: true
                     },
-                    configure: [
-                        {
-                            selector: {
-                                viewOnly: false,
-                            },
-                            settings: {
-                                enabled: true,
-                                hidden: false,
-                                selected: true,
-                            },
+                    configure: [{
+                        selector: {
+                            viewOnly: false
                         },
-                        {
-                            selector: {
-                                viewOnly: true,
-                            },
-                            settings: {
-                                enabled: false,
-                                hidden: true,
-                                selected: false,
-                            },
+                        settings: {
+                            enabled: true,
+                            hidden: false,
+                            selected: true
+                        }
+                    }, {
+                        selector: {
+                            viewOnly: true
                         },
-                    ],
-                    viewConfigure: [
-                        {
-                            selector: {
-                                viewOnly: false,
-                            },
-                            settings: {
-                                enabled: false,
-                                hidden: true,
-                                selected: false,
-                            },
+                        settings: {
+                            enabled: false,
+                            hidden: true,
+                            selected: false
+                        }
+                    }],
+                    viewConfigure: [{
+                        selector: {
+                            viewOnly: false
                         },
-                        {
-                            selector: {
-                                viewOnly: true,
-                            },
-                            settings: {
-                                enabled: true,
-                                hidden: false,
-                                selected: true,
-                            },
+                        settings: {
+                            enabled: false,
+                            hidden: true,
+                            selected: false
+                        }
+                    }, {
+                        selector: {
+                            viewOnly: true
                         },
-                    ],
+                        settings: {
+                            enabled: true,
+                            hidden: false,
+                            selected: true
+                        }
+                    }],
                     logs: {
-                        enabled: false,
+                        enabled: false
                     },
                     results: {
-                        enabled: false,
+                        enabled: false
                     },
                     error: {
                         enabled: false,
-                        hidden: true,
-                    },
+                        hidden: true
+                    }
                 },
                 actionButton: {
                     name: 'runApp',
-                    disabled: false,
+                    disabled: false
                 },
                 elements: {
                     show: ['parameters-group', 'output-group'],
-                    hide: ['internal-error', 'parameters-display-group', 'exec-group'],
+                    hide: ['internal-error', 'parameters-display-group', 'exec-group']
                 },
                 appStatus: {
                     classes: ['kb-app-status-ok'],
                     icon: {
-                        type: 'pencil',
-                    },
+                        type: 'pencil'
+                    }
                 },
                 label: 'editing',
-                message:
-                    'You have completed the required parameters for this App; you may run it or continue to edit parameters.',
+                message: 'You have completed the required parameters for this App; you may run it or continue to edit parameters.'
             },
             next: [
                 {
                     mode: 'editing',
-                    params: 'incomplete',
+                    params: 'incomplete'
                 },
                 {
                     mode: 'editing-batch',
-                    params: 'incomplete',
+                    params: 'incomplete'
                 },
                 {
                     mode: 'editing',
                     params: 'complete',
-                    code: 'built',
+                    code: 'built'
                 },
                 {
-                    mode: 'execute-requested',
-                },
-                {
-                    mode: 'processing',
-                    stage: 'launched',
+                    mode: 'execute-requested'
                 },
                 {
                     mode: 'processing',
-                    stage: 'queued',
+                    stage: 'launched'
                 },
                 {
                     mode: 'processing',
-                    stage: 'running',
+                    stage: 'queued'
                 },
                 {
                     mode: 'processing',
-                    stage: 'partial-complete',
+                    stage: 'running'
                 },
                 {
-                    mode: 'success',
+                    mode: 'processing',
+                    stage: 'partial-complete'
                 },
                 {
-                    mode: 'error',
-                    stage: 'launching',
-                },
-                {
-                    mode: 'error',
-                    stage: 'queued',
+                    mode: 'success'
                 },
                 {
                     mode: 'error',
-                    stage: 'running',
+                    stage: 'launching'
                 },
                 {
                     mode: 'error',
+                    stage: 'queued'
                 },
                 {
-                    mode: 'internal-error',
+                    mode: 'error',
+                    stage: 'running'
                 },
-            ],
+                {
+                    mode: 'error'
+                },
+                {
+                    mode: 'internal-error'
+                }
+            ]
         },
         {
             state: {
                 mode: 'editing-batch',
-                params: 'incomplete',
+                params: 'incomplete'
             },
             ui: {
                 tabs: {
                     info: {
-                        enabled: true,
+                        enabled: true
                     },
-                    configureBatch: [
-                        {
-                            selector: {
-                                viewOnly: false,
-                            },
-                            settings: {
-                                enabled: true,
-                                hidden: false,
-                                selected: true,
-                            },
+                    configureBatch: [{
+                        selector: {
+                            viewOnly: false
                         },
-                        {
-                            selector: {
-                                viewOnly: true,
-                            },
-                            settings: {
-                                enabled: false,
-                                hidden: true,
-                                selected: false,
-                            },
+                        settings: {
+                            enabled: true,
+                            hidden: false,
+                            selected: true
+                        }
+                    }, {
+                        selector: {
+                            viewOnly: true
                         },
-                    ],
-                    viewConfigure: [
-                        {
-                            selector: {
-                                viewOnly: false,
-                            },
-                            settings: {
-                                enabled: false,
-                                hidden: true,
-                                selected: false,
-                            },
+                        settings: {
+                            enabled: false,
+                            hidden: true,
+                            selected: false
+                        }
+                    }],
+                    viewConfigure: [{
+                        selector: {
+                            viewOnly: false
                         },
-                        {
-                            selector: {
-                                viewOnly: true,
-                            },
-                            settings: {
-                                enabled: true,
-                                hidden: false,
-                                selected: true,
-                            },
+                        settings: {
+                            enabled: false,
+                            hidden: true,
+                            selected: false
+                        }
+                    }, {
+                        selector: {
+                            viewOnly: true
                         },
-                    ],
+                        settings: {
+                            enabled: true,
+                            hidden: false,
+                            selected: true
+                        }
+                    }],
                     configure: {
                         enabled: false,
-                        hidden: true,
+                        hidden: true
                     },
                     logs: {
-                        enabled: false,
+                        enabled: false
                     },
                     results: {
-                        enabled: false,
+                        enabled: false
                     },
                     error: {
                         enabled: false,
-                        hidden: true,
-                    },
+                        hidden: true
+                    }
                 },
                 actionButton: {
                     name: 'runApp',
-                    disabled: true,
+                    disabled: true
                 },
                 elements: {
                     show: ['parameters-group', 'output-group'],
-                    hide: ['internal-error', 'parameters-display-group', 'exec-group'],
+                    hide: ['internal-error', 'parameters-display-group', 'exec-group']
                 },
                 appStatus: {
                     classes: ['kb-app-status-warning'],
                     icon: {
-                        type: 'pencil',
-                    },
+                        type: 'pencil'
+                    }
                 },
                 label: 'editing',
-                message:
-                    'You may edit the parameters for this App. You must fill in all required parameters (indicated by red arrows) before you can run the App.',
+                message: 'You may edit the parameters for this App. You must fill in all required parameters (indicated by red arrows) before you can run the App.'
             },
-            next: [
-                {
-                    mode: 'editing-batch',
-                    params: 'complete',
-                    code: 'built',
-                },
-                {
-                    mode: 'editing-batch',
-                    params: 'incomplete',
-                },
-                {
-                    mode: 'editing',
-                    params: 'incomplete',
-                },
-                {
-                    mode: 'internal-error',
-                },
-            ],
+            next: [{
+                mode: 'editing-batch',
+                params: 'complete',
+                code: 'built'
+            },
+            {
+                mode: 'editing-batch',
+                params: 'incomplete'
+            },
+            {
+                mode: 'editing',
+                params: 'incomplete'
+            },
+            {
+                mode: 'internal-error'
+            }
+            ]
         },
         {
             state: {
                 mode: 'editing-batch',
                 params: 'complete',
-                code: 'built',
+                code: 'built'
             },
             ui: {
                 tabs: {
                     info: {
-                        enabled: true,
+                        enabled: true
                     },
-                    configureBatch: [
-                        {
-                            selector: {
-                                viewOnly: false,
-                            },
-                            settings: {
-                                enabled: true,
-                                hidden: false,
-                                selected: true,
-                            },
+                    configureBatch: [{
+                        selector: {
+                            viewOnly: false
                         },
-                        {
-                            selector: {
-                                viewOnly: true,
-                            },
-                            settings: {
-                                enabled: false,
-                                hidden: true,
-                                selected: false,
-                            },
+                        settings: {
+                            enabled: true,
+                            hidden: false,
+                            selected: true
+                        }
+                    }, {
+                        selector: {
+                            viewOnly: true
                         },
-                    ],
-                    viewConfigure: [
-                        {
-                            selector: {
-                                viewOnly: false,
-                            },
-                            settings: {
-                                enabled: false,
-                                hidden: true,
-                                selected: false,
-                            },
+                        settings: {
+                            enabled: false,
+                            hidden: true,
+                            selected: false
+                        }
+                    }],
+                    viewConfigure: [{
+                        selector: {
+                            viewOnly: false
                         },
-                        {
-                            selector: {
-                                viewOnly: true,
-                            },
-                            settings: {
-                                enabled: true,
-                                hidden: false,
-                                selected: true,
-                            },
+                        settings: {
+                            enabled: false,
+                            hidden: true,
+                            selected: false
+                        }
+                    }, {
+                        selector: {
+                            viewOnly: true
                         },
-                    ],
+                        settings: {
+                            enabled: true,
+                            hidden: false,
+                            selected: true
+                        }
+                    }],
                     configure: {
                         enabled: false,
-                        hidden: true,
+                        hidden: true
                     },
                     logs: {
-                        enabled: false,
+                        enabled: false
                     },
                     results: {
-                        enabled: false,
+                        enabled: false
                     },
                     error: {
                         enabled: false,
-                        hidden: true,
-                    },
+                        hidden: true
+                    }
                 },
                 actionButton: {
                     name: 'runApp',
-                    disabled: false,
+                    disabled: false
                 },
                 elements: {
                     show: ['parameters-group', 'output-group'],
-                    hide: ['internal-error', 'parameters-display-group', 'exec-group'],
+                    hide: ['internal-error', 'parameters-display-group', 'exec-group']
                 },
                 appStatus: {
                     classes: ['kb-app-status-ok'],
                     icon: {
-                        type: 'pencil',
-                    },
+                        type: 'pencil'
+                    }
                 },
                 label: 'editing',
-                message:
-                    'You have completed the required parameters for this App; you may run it or continue to edit parameters.',
+                message: 'You have completed the required parameters for this App; you may run it or continue to edit parameters.'
             },
             next: [
                 {
                     mode: 'editing',
-                    params: 'incomplete',
+                    params: 'incomplete'
                 },
                 {
                     mode: 'editing-batch',
-                    params: 'incomplete',
+                    params: 'incomplete'
                 },
                 {
                     mode: 'editing-batch',
                     params: 'complete',
-                    code: 'built',
+                    code: 'built'
                 },
                 {
-                    mode: 'execute-requested',
-                },
-                {
-                    mode: 'processing',
-                    stage: 'launched',
+                    mode: 'execute-requested'
                 },
                 {
                     mode: 'processing',
-                    stage: 'queued',
+                    stage: 'launched'
                 },
                 {
                     mode: 'processing',
-                    stage: 'running',
+                    stage: 'queued'
                 },
                 {
                     mode: 'processing',
-                    stage: 'partial-complete',
+                    stage: 'running'
                 },
                 {
-                    mode: 'success',
+                    mode: 'processing',
+                    stage: 'partial-complete'
                 },
                 {
-                    mode: 'error',
-                    stage: 'launching',
-                },
-                {
-                    mode: 'error',
-                    stage: 'queued',
+                    mode: 'success'
                 },
                 {
                     mode: 'error',
-                    stage: 'running',
+                    stage: 'launching'
                 },
                 {
                     mode: 'error',
+                    stage: 'queued'
                 },
                 {
-                    mode: 'internal-error',
+                    mode: 'error',
+                    stage: 'running'
                 },
-            ],
+                {
+                    mode: 'error'
+                },
+                {
+                    mode: 'internal-error'
+                }
+            ]
         },
         {
             state: {
-                mode: 'execute-requested',
+                mode: 'execute-requested'
             },
             doc: [
                 'This state is entered when the cell is first executing, and before the back end has received the code and begun processing it.',
@@ -854,274 +824,262 @@ define([], () => {
                     stage: 'queued',
                 },
 
-                {
-                    mode: 'canceled',
-                },
-                {
-                    mode: 'canceling',
-                },
-                {
-                    mode: 'success',
-                },
-                {
-                    mode: 'error',
-                },
-                {
-                    mode: 'error',
-                    stage: 'queued',
-                },
-                // This can happen if there is no in-progress message received
-                // before an error occurs.
-                {
-                    mode: 'error',
-                    stage: 'running',
-                },
-                // This can happen if the job disappeared while the app thinks
-                // it is queued, yet the user still wants to cancel (which can't really
-                // cancel, it just has to return to editing mode.
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built',
-                },
-                {
-                    mode: 'internal-error',
-                },
-            ],
+            {
+                mode: 'canceled'
+            },
+            {
+                mode: 'canceling'
+            },
+            {
+                mode: 'success'
+            },
+            {
+                mode: 'error'
+            },
+            {
+                mode: 'error',
+                stage: 'queued'
+            },
+            // This can happen if there is no in-progress message received
+            // before an error occurs.
+            {
+                mode: 'error',
+                stage: 'running'
+            },
+            // This can happen if the job disappeared while the app thinks
+            // it is queued, yet the user still wants to cancel (which can't really
+            // cancel, it just has to return to editing mode.
+            {
+                mode: 'editing',
+                params: 'complete',
+                code: 'built'
+            },
+            {
+                mode: 'internal-error'
+            }
+            ]
         },
 
         {
             state: {
                 mode: 'processing',
-                stage: 'running',
+                stage: 'running'
             },
             ui: {
                 tabs: {
                     info: {
-                        enabled: true,
+                        enabled: true
                     },
                     configure: {
                         enabled: false,
-                        hidden: true,
+                        hidden: true
                     },
                     viewConfigure: {
-                        enabled: true,
+                        enabled: true
                     },
                     logs: {
-                        enabled: true,
+                        enabled: true
                     },
                     results: {
-                        enabled: false,
+                        enabled: false
                     },
                     error: {
                         enabled: false,
-                        hidden: true,
-                    },
+                        hidden: true
+                    }
                 },
                 actionButton: {
-                    name: 'cancel',
+                    name: 'cancel'
                 },
                 elements: {
                     show: ['parameters-display-group', 'exec-group', 'output-group'],
-                    hide: ['parameters-group'],
+                    hide: ['parameters-group']
                 },
                 appStatus: {
                     classes: ['kb-app-status-ok'],
                     icon: {
-                        type: 'bolt',
-                    },
+                        type: 'bolt'
+                    }
                 },
                 label: 'running',
-                message: 'The App is now running.',
+                message: 'The App is now running.'
             },
             on: {
                 enter: {
-                    messages: [
-                        {
-                            emit: 'start-running',
-                        },
-                    ],
+                    messages: [{
+                        emit: 'start-running'
+                    }]
                 },
                 resume: {
-                    messages: [
-                        {
-                            emit: 'start-running',
-                        },
-                    ],
+                    messages: [{
+                        emit: 'start-running'
+                    }]
                 },
                 exit: {
-                    messages: [
-                        {
-                            emit: 'stop-running',
-                        },
-                    ],
-                },
+                    messages: [{
+                        emit: 'stop-running'
+                    }]
+                }
             },
             next: [
                 {
                     mode: 'processing',
-                    stage: 'running',
+                    stage: 'running'
                 },
                 {
                     mode: 'processing',
-                    stage: 'partial-complete',
+                    stage: 'partial-complete'
                 },
 
                 {
-                    mode: 'canceled',
+                    mode: 'canceled'
                 },
                 {
-                    mode: 'canceling',
+                    mode: 'canceling'
                 },
                 {
-                    mode: 'success',
+                    mode: 'success'
+                },
+                {
+                    mode: 'error'
                 },
                 {
                     mode: 'error',
-                },
-                {
-                    mode: 'error',
-                    stage: 'running',
+                    stage: 'running'
                 },
                 {
                     mode: 'editing',
                     params: 'complete',
-                    code: 'built',
+                    code: 'built'
                 },
                 {
-                    mode: 'internal-error',
-                },
-            ],
+                    mode: 'internal-error'
+                }
+            ]
         },
         {
             state: {
                 mode: 'processing',
-                stage: 'partial-complete',
+                stage: 'partial-complete'
             },
             ui: {
                 tabs: {
                     info: {
-                        enabled: true,
+                        enabled: true
                     },
                     configure: {
                         enabled: false,
-                        hidden: true,
+                        hidden: true
                     },
                     viewConfigure: {
-                        enabled: true,
+                        enabled: true
                     },
                     logs: {
-                        enabled: true,
+                        enabled: true
                     },
                     results: {
-                        enabled: true,
+                        enabled: true
                     },
                     error: {
                         enabled: false,
-                        hidden: true,
-                    },
+                        hidden: true
+                    }
                 },
                 actionButton: {
-                    name: 'cancel',
+                    name: 'cancel'
                 },
                 elements: {
                     show: ['parameters-display-group', 'exec-group', 'output-group'],
-                    hide: ['parameters-group'],
+                    hide: ['parameters-group']
                 },
                 appStatus: {
                     classes: ['kb-app-status-ok'],
                     icon: {
-                        type: 'bolt',
-                    },
+                        type: 'bolt'
+                    }
                 },
                 label: 'running',
-                message: 'The App is now running.',
+                message: 'The App is now running.'
             },
             on: {
                 enter: {
-                    messages: [
-                        {
-                            emit: 'start-running',
-                        },
-                    ],
+                    messages: [{
+                        emit: 'start-running'
+                    }]
                 },
                 resume: {
-                    messages: [
-                        {
-                            emit: 'start-running',
-                        },
-                    ],
+                    messages: [{
+                        emit: 'start-running'
+                    }]
                 },
                 exit: {
-                    messages: [
-                        {
-                            emit: 'stop-running',
-                        },
-                    ],
-                },
+                    messages: [{
+                        emit: 'stop-running'
+                    }]
+                }
             },
             next: [
                 {
                     mode: 'processing',
-                    stage: 'partial-complete',
+                    stage: 'partial-complete'
                 },
 
                 {
-                    mode: 'canceled',
+                    mode: 'canceled'
                 },
                 {
-                    mode: 'canceling',
+                    mode: 'canceling'
                 },
                 {
-                    mode: 'success',
+                    mode: 'success'
+                },
+                {
+                    mode: 'error'
                 },
                 {
                     mode: 'error',
-                },
-                {
-                    mode: 'error',
-                    stage: 'running',
+                    stage: 'running'
                 },
                 {
                     mode: 'editing',
                     params: 'complete',
-                    code: 'built',
+                    code: 'built'
                 },
                 {
-                    mode: 'internal-error',
-                },
-            ],
+                    mode: 'internal-error'
+                }
+            ]
         },
         {
             state: {
-                mode: 'canceling',
+                mode: 'canceling'
             },
             ui: {
                 tabs: {
                     info: {
-                        enabled: true,
+                        enabled: true
                     },
                     configure: {
                         enabled: false,
-                        hidden: true,
+                        hidden: true
                     },
                     viewConfigure: {
-                        enabled: true,
+                        enabled: true
                     },
                     logs: {
-                        enabled: true,
+                        enabled: true
                     },
                     results: {
-                        enabled: false,
+                        enabled: false
                     },
                     error: {
                         enabled: false,
-                        hidden: true,
-                    },
+                        hidden: true
+                    }
                 },
                 actionButton: {
                     name: 'cancel',
-                    default: true,
+                    default: true
                 },
                 elements: {
                     show: ['exec-group', 'output-group'],

@@ -1,0 +1,123 @@
+@use "sass:color";
+
+#kblog {
+  /* #kblog-header */
+  &-header {
+    margin: 5px 0;
+  }
+
+  /* #kblog-panel */
+  &-panel {
+    overflow: auto;
+    height: 350px;
+    padding: 5px;
+    border: 1px solid rgb(206 206 206);
+    background-color: rgb(245 245 245);
+    color: rgb(0 0 0);
+    resize: vertical;
+    vertical-align: top;
+  }
+
+  /* #kblog-err, #kblog-msg */
+  &-err,
+  &-msg {
+    margin-top: 5px;
+  }
+}
+
+.kblog,
+.kb-log {
+  &__container {
+    margin-top: 10px;
+  }
+
+  /* .kblog-header */
+  &-header,
+  &__controls {
+    display: flex;
+    margin-bottom: 10px;
+  }
+
+  &__content,
+  &__content--expanded {
+    overflow-y: scroll;
+    transition: height 0.5s;
+  }
+
+  &__content {
+    height: 200px;
+
+    &--expanded {
+      height: 600px;
+    }
+  }
+
+  /* .kblog-line,
+    .kb-log__line_container */
+  &-line,
+  &__line_container {
+    @include fixed-width;
+
+    /* .kb-log__line_container--error */
+    &--error {
+      background-color: color.scale(
+        use-color('error-lighter'),
+        $lightness: -10%,
+        $saturation: -10%
+      );
+    }
+  }
+
+  /* .kblog-num-wrapper,
+    .kb-log__flex_wrapper */
+  &-num-wrapper,
+  &__flex_wrapper {
+    display: flex;
+    flex-direction: row;
+  }
+
+  /* .kblog-line-num
+    .kb-log__line_number */
+  &-line-num,
+  &__line_number {
+    width: 4rem;
+    flex-shrink: 0;
+    color: use-color('grey');
+    text-align: right;
+
+    /* makes text unselectable */
+    user-select: none;
+    white-space: nowrap;
+
+    &--error {
+      color: use-color('error-darker');
+      font-weight: 700;
+    }
+  }
+
+  /* .kblog-text,
+    .kb-log__line_text */
+  &-text,
+  &__line_text {
+    flex: 1;
+    margin-left: 1rem;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    &--error {
+      color: use-color('error-darker');
+    }
+  }
+}
+
+.kb-error {
+  background-color: rgb(255 245 245);
+  color: rgb(139 0 0);
+  font-weight: 700;
+
+  /* .kb-error-line-num */
+  &-line-num {
+    background-color: rgb(255 245 245);
+    color: rgb(139 0 0);
+    font-weight: 700;
+  }
+}

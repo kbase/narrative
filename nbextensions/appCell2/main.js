@@ -20,20 +20,25 @@ define([
     'bluebird',
     'common/runtime',
     'common/clock',
-    'common/ui',
-    'kb_common/html',
+    'common/error',
     'kb_service/utils',
     'kb_service/client/workspace',
     './appCell',
-    'css!kbase/css/appCell.css',
     'bootstrap',
-    'custom/custom',
-], ($, Jupyter, Promise, Runtime, Clock, UI, html, serviceUtils, Workspace, AppCell) => {
+    'custom/custom'
+], function(
+    $,
+    Jupyter,
+    Promise,
+    Runtime,
+    Clock,
+    Error,
+    serviceUtils,
+    Workspace,
+    AppCell
+) {
     'use strict';
-    const runtime = Runtime.make();
-    const t = html.tag,
-        div = t('div'),
-        p = t('p');
+    var runtime = Runtime.make();
 
     function setupNotebook(workspaceInfo) {
         // console.log(Jupyter.notebook.get_cells());
@@ -47,33 +52,13 @@ define([
                     return appCell.setupCell(cell).catch((err) => {
                         // If we have an error here, there is a serious problem setting up the cell and it is not usable.
                         // What to do? The safest thing to do is inform the user, and then strip out the cell, leaving
-                        // in it's place a markdown cell with the error info.
+                        // in its place a markdown cell with the error info.
                         // For now, just pop up an error dialog;
-                        const ui = UI.make({
-                            node: document.body,
-                        });
-                        ui.showInfoDialog({
-                            title: 'Error',
-                            body: div(
-                                {
-                                    style: {
-                                        margin: '10px',
-                                    },
-                                },
-                                [
-                                    ui.buildPanel({
-                                        title: 'Error Starting App Cell',
-                                        type: 'danger',
-                                        body: ui.buildErrorTabs({
-                                            preamble: p(
-                                                'There was an error starting the app cell.'
-                                            ),
-                                            error: err,
-                                        }),
-                                    }),
-                                ]
-                            ),
-                        });
+                        Error.reportCellError(
+                            'Error starting app cell',
+                            'There was an error starting the app cell:',
+                            err
+                        );
                     });
                 }
             })
@@ -148,37 +133,13 @@ define([
                         cell: cell,
                         workspaceInfo: workspaceInfo,
                     });
-                    appCell
-                        .upgradeToAppCell(setupData.appSpec, setupData.appTag, setupData.type)
-                        .catch((err) => {
-                            console.error('ERROR creating cell', err);
-                            Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(cell));
-                            // For now, just pop up an error dialog;
-                            const ui = UI.make({
-                                node: document.body,
-                            });
-                            ui.showInfoDialog({
-                                title: 'Error',
-                                body: div(
-                                    {
-                                        style: {
-                                            margin: '10px',
-                                        },
-                                    },
-                                    [
-                                        ui.buildPanel({
-                                            title: 'Error Inserting App Cell',
-                                            type: 'danger',
-                                            body: ui.buildErrorTabs({
-                                                preamble: p(
-                                                    'Could not insert the App Cell due to errors.'
-                                                ),
-                                                error: err,
-                                            }),
-                                        }),
-                                    ]
-                                ),
-                            });
+                    appCell.upgradeToAppCell(setupData.appSpec, setupData.appTag, setupData.type)
+                        .catch(function(err) {
+                            Error.reportCellError(
+                                'Error inserting app cell',
+                                'Could not insert the app cell due to errors:',
+                                err
+                            );
                         });
                 });
                 // also delete.Cell, edit_mode.Cell, select.Cell, command_mocd.Cell, output_appended.OutputArea ...
@@ -214,6 +175,7 @@ define([
         // This is the sole ipython/jupyter api call
         load_ipython_extension: load,
     };
-}, (err) => {
+}, function (err) {
+    'use strict';
     console.error('ERROR loading appCell main', err);
 });

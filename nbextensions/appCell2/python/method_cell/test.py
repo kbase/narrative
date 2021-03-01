@@ -3,6 +3,7 @@ import string
 import sys
 import uuid
 
+
 def js_error(cell_id, message):
     jsString = """
 require([
@@ -17,13 +18,17 @@ require([
     });
 });
 """
+    return jsString
+
+
 def js_test():
     js = "alert('hi');"
     return Javascript(data=js, lib=None, css=None)
 
+
 def js_run_widget(cell_id, kbase_cell_id):
     jsString = """
-//@ sourceUrl=whatever.js    
+//@ sourceUrl=whatever.js
 require([
   'base/js/namespace',
   'nbextensions/methodCell/widgets/codeCellRunWidget'
@@ -46,8 +51,9 @@ require([
 """
     jsTemplate = string.Template(jsString)
     js = jsTemplate.substitute(cell_id=cell_id, kbase_cell_id=kbase_cell_id)
-    print js
+    print(js)
     return Javascript(data=js, lib=None, css=None)
+
 
 def insert_run_widget(cell_id, kbase_cell_id):
     try:
@@ -56,6 +62,3 @@ def insert_run_widget(cell_id, kbase_cell_id):
     except Exception as e:
         error = str(e)
         return js_error(cell_id, error)
-
-
-

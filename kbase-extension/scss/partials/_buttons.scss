@@ -1,0 +1,56 @@
+/* A flat button, with no unselected background color, but with hover and click styles */
+
+.btn.kb-flat-btn {
+  border: 0;
+  margin: 0;
+  background-color: rgb(255 255 255);
+  color: rgb(102 102 102);
+  text-shadow: none !important;
+
+  .kb-nav-btn-txt {
+    margin-top: -5px;
+    font-size: 13px;
+  }
+
+  &:active,
+  &:hover {
+    background-color: rgb(204 204 204);
+  }
+}
+
+.kb-flat-btn-wrapper {
+  /* don't add shadows here */
+  box-shadow: none;
+}
+
+.kb-btn-action {
+  &__container {
+    display: flex;
+    overflow: hidden;
+    height: 50px;
+    flex-direction: row;
+    line-height: 50px;
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  &__list {
+    padding: 6px;
+  }
+
+  &__button {
+    width: 80px;
+  }
+}
+
+.kb-button {
+  &__toolbar_icon {
+    &--outdated {
+      font-size: $font-size-base;
+      line-height: 1;
+      border: 0;
+      padding: 6px 0 0 0;
+      color: use-color('warning');
+    }
+  }
+}

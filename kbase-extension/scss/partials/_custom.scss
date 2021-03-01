@@ -1,0 +1,395 @@
+/*
+This file is for overriding the Jupyter CSS. Any KBase-component
+CSS should go in /kbase-extension/static/kbase/css/kbaseNarrative.css
+
+(or the specific css file if available)
+*/
+#ipython-main-app {
+  position: relative;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+  background-color: rgb(51 122 183);
+  color: rgb(255 255 255);
+
+  span {
+    color: rgb(255 255 255) !important;
+  }
+}
+
+#site {
+  overflow: visible;
+}
+
+/* disable the standard notebook, bottom spacer */
+
+#notebook > .end_space {
+  height: 0;
+  min-height: 0;
+}
+
+@media (min-width: 1200px) {
+  #notebook-container {
+    width: auto;
+  }
+}
+
+@media (min-width: 992px) {
+  #notebook-container {
+    width: auto;
+  }
+}
+
+@media (min-width: 768px) {
+  #notebook-container {
+    width: auto;
+  }
+}
+
+.celltoolbar {
+  height: auto;
+  padding-top: 0;
+  padding-bottom: 2px;
+  border: 0;
+  border-left: 1px solid transparent;
+  background: none;
+}
+
+div {
+  &.input_area {
+    padding-top: 4px;
+    border: 1px solid rgb(206 206 206);
+    border-radius: 0;
+  }
+
+  &.output_subarea {
+    max-width: inherit;
+  }
+
+  &.text_cell_input {
+    border: 1px solid rgb(206 206 206);
+    border-radius: 0;
+  }
+
+  &.cell {
+    padding: 0;
+    border: 1px solid rgb(204 204 204);
+    border-left-width: 5px;
+    margin: 8px 0;
+    border-radius: 0;
+
+    &.selected {
+      padding-left: 0;
+      border: 1px solid rgb(75 184 86);
+      border-left-width: 5px;
+      margin-left: 0;
+      background: none;
+      box-shadow: 0 1px 2px rgb(170 170 170), 0 5px 5px rgb(170 170 170);
+      transition: box-shadow 0.2s ease-in-out;
+
+      &::before {
+        background: none;
+      }
+
+      /* div.cell.selected.kb-error */
+      &.kb-error {
+        border: 1px solid rgb(217 83 79);
+        border-left-width: 5px;
+      }
+    }
+
+    &.opened {
+      padding-top: 0;
+    }
+  }
+
+  &#notebook {  /* FIXME Jupyter css */
+    padding: 0;
+  }
+}
+
+.edit_mode div.cell.selected {
+  padding-left: 0;
+  border-left: 5px solid rgb(102 187 106);
+  background: none;
+}
+
+#notebook_name {
+  color: rgb(0 102 152);
+
+  &:hover {
+    background-color: rgb(224 224 224);
+    cursor: pointer;
+  }
+}
+
+#notebook-container {
+  position: fixed;
+  top: 70px;
+  right: 0;
+  bottom: 0;
+  left: 380px;
+  overflow: auto;
+  width: auto;
+  min-width: 460px;
+  box-shadow: none;
+
+  &::after {
+    display: block;
+    height: 100px;
+    content: '';
+  }
+}
+
+.btn-toolbar {
+  padding-left: 0;
+  margin-left: 0;
+}
+
+.kb-narr-side-panel .btn-group .btn {
+  padding: 3px 4px;
+  font-size: 16px;
+}
+
+.btn-subtle {
+  margin: 0;
+  color: rgb(136 136 136);
+
+  .fa {
+    color: rgb(136 136 136);
+
+    &::before {
+      color: rgb(136 136 136);
+    }
+  }
+}
+
+.notebook_app {
+  background-color: rgb(255 255 255);
+  overflow-y: hidden;
+
+  .btn.active {
+    box-shadow: none;
+  }
+
+  .inner_cell {
+    overflow: visible;
+  }
+
+  .celltoolbar > .button_container {
+    flex: 0 auto;
+
+    &:first-child {
+      flex: auto;
+    }
+  }
+
+  .celltoolbar_container {
+    border-bottom: 1px solid rgb(192 192 192);
+  }
+
+  .prompt {
+    width: 75px;
+    padding-top: 0;
+    color: rgb(192 192 192);
+  }
+
+  .cell {
+    &.selected div.text_cell_render,
+    &.unselected div.text_cell_render {
+      border: 1px solid transparent;
+    }
+  }
+
+  .buttons .dropdown-menu {
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  .btn.disabled .fa {
+    color: rgb(192 192 192);
+  }
+}
+
+/* Fooling around with the narrative cells */
+
+.text_cell {
+  &.kb-cell .rendered_html {
+    table {
+      border: 1px solid rgb(221 221 221);
+    }
+
+    ul {
+      margin: 0;
+    }
+  }
+
+  &.opened.rendered {
+    &.kb-cell .rendered_html {
+      padding: 0;
+      border: 0;
+    }
+
+    &.selected.kb-cell {
+      .rendered_html {
+        border-left: 1px solid rgb(75 184 86);
+      }
+
+      &.kb-error .rendered_html {
+        border-left: 1px solid rgb(217 83 79);
+      }
+    }
+
+    &.kb-cell {
+      padding-bottom: 0;
+    }
+  }
+}
+
+.rendered_html {
+  td,
+  th,
+  tr {
+    text-align: inherit;
+  }
+
+  table {
+    table-layout: inherit;
+  }
+}
+
+/* narrative cell icons */
+
+.cell {
+  &.selected {
+    .prompt {
+      .method-icon {
+        color: rgb(103 58 183);
+      }
+
+      .app-icon {
+        color: rgb(0 150 136);
+      }
+
+      .app-output-icon,
+      .data-viewer-icon,
+      .markdown-icon,
+      .method-output-icon {
+        color: rgb(0 0 0);
+      }
+
+      .error-icon {
+        color: rgb(255 0 0);
+      }
+
+      &.input_prompt {
+        color: rgb(48 63 159);
+      }
+
+      &.output_prompt {
+        color: rgb(216 67 21);
+      }
+    }
+
+    .btn-default {
+      color: rgb(0 0 0);
+    }
+  }
+
+  > .inner_cell > .ctb_hideshow {
+    display: block;
+  }
+
+  &.unselected {
+    .btn-default {
+      color: rgb(204 204 204);
+    }
+
+    .kb-cell-toolbar {
+      .title-container {
+        opacity: 0.5;
+      }
+
+      .buttons-container {
+        opacity: 0.2;
+      }
+    }
+  }
+}
+
+.kb-btn-icon {
+  display: inline-block;
+  padding: 4px;
+
+  .fa {
+    opacity: 0.5;
+  }
+
+  &:hover .fa {
+    opacity: 1;
+  }
+}
+
+/*
+  For some reason Jupyter removes the bottom margin. This causes problems with
+   bootstrap, since bootstrap removes the top margin!
+*/
+
+p {
+  margin-bottom: 9px;
+}
+
+.prompt {
+  display: none !important;
+}
+
+/*
+ * Jupyter 5.6.0 introduced a "run this cell" button that appears on mouseover.
+ * Cool though this is, it's a problem on app cells.
+ * This hunk of CSS should remove it until we can better work it in to our design.
+ */
+
+div.code_cell {
+  &:hover {
+    .run_this_cell,
+    div.input_prompt.run_this_cell {
+      visibility: hidden !important;
+    }
+  }
+
+  div.input_prompt {
+    min-width: 0;
+  }
+}
+
+.run_this_cell {
+  width: 0 !important;
+  padding: 0 !important;
+}
+
+.panel-title {
+  @include font-h4;
+}
+
+/* collapsible Bootstrap toggle */
+[data-toggle=collapse] {
+  cursor: pointer;
+
+  &::before {
+    display: inline-block;
+    width: 1.2em;
+    margin-right: 0.2em;
+    margin-left: 0;
+    color: rgb(192 192 192);
+    content: '\f078 ';
+    font: normal 400 90%/1 $typeface-font-awesome;
+    vertical-align: baseline;
+    text-align: center;
+  }
+
+  &.collapsed::before {
+    margin-left: 0.1em;
+    margin-right: 0.1em;
+    content: '\f054 ';
+  }
+}

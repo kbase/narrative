@@ -103,9 +103,12 @@ define([
             });
 
             this.methClient = new NarrativeMethodStore(Config.url('narrative_method_store'));
-            this.on('get_cell_subtitle.Narrative', (e, callback) => {
-                callback(this.getSubtitle());
-            });
+            this.on(
+                'get_cell_subtitle.Narrative',
+                (e, callback) => {
+                    callback(this.getSubtitle());
+                }
+            );
             this.render();
 
             if (Jupyter.narrative) Jupyter.narrative.registerWidget(this, this.cellId);
@@ -117,7 +120,7 @@ define([
          * Renders this cell and its contained input widget.
          */
         render: function () {
-            self = this;
+            const self = this;
             this.$inputDiv = $('<div>');
             this.$submitted = $('<span>').addClass('kb-func-timestamp').hide();
 
@@ -129,7 +132,7 @@ define([
                 .addClass('kb-method-run')
                 .append('Run');
             this.$runButton.click(
-                $.proxy(function (event) {
+                $.proxy(function () {
                     console.log('** clicked' + new Date().getTime());
 
                     if (!this.checkMethodRun()) return;
@@ -163,7 +166,7 @@ define([
                 .append('Cancel')
                 .css({ 'margin-right': '5px' })
                 .click(
-                    $.proxy(function (event) {
+                    $.proxy(function () {
                         this.stopRunning();
                     }, this)
                 )
@@ -176,7 +179,7 @@ define([
                 .append('Edit and Re-Run')
                 .css({ 'margin-right': '5px' })
                 .click(
-                    $.proxy(function (event) {
+                    $.proxy(function () {
                         this.stopRunning();
                     }, this)
                 )
@@ -189,27 +192,7 @@ define([
                 .append(this.$resetButton)
                 .append(this.$submitted);
 
-            const $progressBar = $('<div>')
-                .attr('id', 'kb-func-progress')
-                .addClass('pull-left')
-                .css({ display: 'none' })
-                .append(
-                    $('<div>')
-                        .addClass('progress progress-striped active kb-cell-progressbar')
-                        .append(
-                            $('<div>')
-                                .addClass('progress-bar progress-bar-success')
-                                .attr('role', 'progressbar')
-                                .attr('aria-valuenow', '0')
-                                .attr('aria-valuemin', '0')
-                                .attr('aria-valuemax', '100')
-                                .css({ width: '0%' })
-                        )
-                )
-                .append($('<p>').addClass('text-success'));
-
             const methodId = 'method-details-' + StringUtil.uuid();
-            const buttonLabel = 'details';
             const methodDesc = this.method.info.tooltip;
 
             let link = this.options.methodHelpLink;
@@ -231,7 +214,7 @@ define([
 
             // Controls (minimize)
             const $controlsSpan = $('<div>').addClass('pull-left');
-            this.$minimizeControl = $("<span class='glyphicon glyphicon-chevron-down'>").css({
+            this.$minimizeControl = $('<span class=\'glyphicon glyphicon-chevron-down\'>').css({
                 color: '#888',
                 fontSize: '14pt',
                 cursor: 'pointer',
@@ -255,7 +238,6 @@ define([
 
             // Add minimize/restore actions.
             // These mess with the CSS on the cells!
-            var self = this;
             $controlsSpan.click(() => {
                 if (self.panel_minimized) {
                     self.maximizeView();
@@ -284,7 +266,7 @@ define([
             require([inputWidgetName], (W) => {
                 console.log('loaded input widget ' + inputWidgetName);
                 this.$inputWidget = new W(this.$inputDiv, { method: this.options.method });
-            }, (error) => {
+            }, () => {
                 console.error('Error while trying to load widget "' + inputWidgetName + '"');
             });
         },
@@ -500,6 +482,7 @@ define([
                         // maybe unlock? show a 'last run' box?
                         break;
                     case 'running':
+                    case 'queued':
                         this.$submitted.html(this.submittedText).show();
                         this.$elem.find('.kb-app-panel').removeClass('kb-app-error');
                         this.$cellPanel.addClass('kb-app-step-running');
@@ -518,16 +501,6 @@ define([
                         this.$inputWidget.lockInputs();
                         this.$elem.find('.kb-app-panel').addClass('kb-app-error');
                         this.displayRunning(false, true);
-                        break;
-                    case 'queued':
-                        this.$submitted.html(this.submittedText).show();
-                        this.$elem.find('.kb-app-panel').removeClass('kb-app-error');
-                        this.$cellPanel.addClass('kb-app-step-running');
-                        this.$runButton.hide();
-                        this.$stopButton.show();
-                        this.$resetButton.hide();
-                        this.$inputWidget.lockInputs();
-                        this.displayRunning(true);
                         break;
                     default:
                         this.$cellPanel.removeClass('kb-app-step-running');
@@ -639,10 +612,10 @@ define([
                                 tab: 'Report',
                                 showContentCallback: function () {
                                     const $reportPanel = $('<div>');
-                                    const result = jobDetails.result;
-                                    result['showReportText'] = true;
-                                    result['showCreatedObjects'] = false;
-                                    $reportPanel.kbaseReportView(result);
+                                    const jobDetailsResult = jobDetails.result;
+                                    jobDetailsResult['showReportText'] = true;
+                                    jobDetailsResult['showCreatedObjects'] = false;
+                                    $reportPanel.kbaseReportView(jobDetailsResult);
                                     return $reportPanel;
                                 },
                                 canDelete: false,
@@ -653,10 +626,10 @@ define([
                                 tab: 'New Data Objects',
                                 showContentCallback: function () {
                                     const $reportPanel = $('<div>');
-                                    const result = jobDetails.result;
-                                    result['showReportText'] = false;
-                                    result['showCreatedObjects'] = true;
-                                    $reportPanel.kbaseReportView(result);
+                                    const jobDetailsResult = jobDetails.result;
+                                    jobDetailsResult['showReportText'] = false;
+                                    jobDetailsResult['showCreatedObjects'] = true;
+                                    $reportPanel.kbaseReportView(jobDetailsResult);
                                     return $reportPanel;
                                 },
                                 canDelete: false,
@@ -679,7 +652,7 @@ define([
                 .append(makeInfoRow('Job Id', jobId))
                 .append(makeInfoRow('Status', statusText));
             if (jobState && jobState.state) {
-                const state = jobState.state;
+                const {state} = jobState;
                 let creationTime = state.start_timestamp;
                 let execStartTime = null;
                 let finishTime = null;
@@ -859,7 +832,7 @@ define([
         prepareDataBeforeRun: function () {
             if (this.inputSteps) {
                 for (let i = 0; i < this.inputSteps.length; i++)
-                    var v = this.inputSteps[i].widget.prepareDataBeforeRun();
+                    this.inputSteps[i].widget.prepareDataBeforeRun();
             }
         },
 
@@ -904,10 +877,12 @@ define([
             if (data.cellId && this.allowOutput) {
                 this.allowOutput = false;
                 // Show the 'next-steps' to take, if there are any
-                this.getNextSteps((next_steps) => {
-                    data.next_steps = next_steps;
-                    this.trigger('createOutputCell.Narrative', data);
-                });
+                this.getNextSteps(
+                    (next_steps) => {
+                        data.next_steps = next_steps;
+                        this.trigger('createOutputCell.Narrative', data);
+                    }
+                );
             }
             this.changeState('complete', null, data.result);
         },
@@ -983,15 +958,14 @@ define([
         getNextSteps: function (render_cb) {
             // fetch full info, which contains suggested next steps
             const params = { ids: [this.method.info.id] };
-            const result = {};
             const self = this;
             this.methClient.get_method_full_info(
                 params,
                 $.proxy(function (info_list) {
                     const sugg = info_list[0].suggestions;
-                    const params = { apps: sugg.next_apps, methods: sugg.next_methods };
+                    const _params = { apps: sugg.next_apps, methods: sugg.next_methods };
                     this.trigger('getFunctionSpecs.Narrative', [
-                        params,
+                        _params,
                         function (specs) {
                             render_cb(specs);
                         },

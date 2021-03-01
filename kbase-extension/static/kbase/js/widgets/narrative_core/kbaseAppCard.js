@@ -6,7 +6,7 @@
  *   Example and expected out put:
  *
  *     var $card = new kbaseAppCard(
-                {   
+                {
                     //expected values
                     app: app (object with info object and favorite field),
                     favorite: app.favorite (number),
@@ -19,14 +19,14 @@
                     moreContent: jquery object,
                 });
  *
- *             
+ *
         app.info:
         authors:["rsutormin"], categories:["annotation"], icon:{url:}, id: str,
         input_types: ['KbaseGenomeAnnotations.Assembly'], module_name: str,
         name: str, namespace: str, output_types:["KBaseGenomes.Genome"],
         subtitle: str, tooltip: str, ver: str
-             
-            
+
+
 */
 
 define([
@@ -39,9 +39,10 @@ define([
     'narrativeConfig',
     'jquery',
 ], (bootstrap, Icon, Promise, BootstrapDialog, DisplayUtil, kbaseCardLayout, Config, $) => {
+    'use strict';
     function KbaseAppCard(entry) {
         const self = this;
-        let favorite = entry.app.favorite;
+        let {favorite} = entry.app;
         const app = entry.app.info;
 
         const shortName = entry.name ? entry.name : app.name;

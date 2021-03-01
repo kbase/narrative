@@ -807,8 +807,8 @@ define([
                         renderUI();
                     }
                 })
-                .catch((err) => {
-                    alert('internal error'), console.error('INTERNAL ERROR', err);
+                .catch(function (err) {
+                    console.error('INTERNAL ERROR', err);
                 });
         }
 

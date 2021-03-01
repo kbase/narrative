@@ -80,20 +80,22 @@ define(['bluebird', 'common/runtime'], (Promise, runtime) => {
     }
 
     function factory(config) {
-        let container, widget, workspaceInfo;
+        var container,
+            widget;
 
         function start(arg) {
             container = arg.node;
-            workspaceInfo = arg.workspaceInfo;
 
             return loadParamsWidget({
                 node: container,
                 workspaceInfo: arg.workspaceInfo,
                 appSpec: arg.appSpec,
-                parameters: arg.parameters,
-            }).then((result) => {
+                parameters: arg.parameters
+
+            }).then(function(result) {
                 widget = result;
             });
+
         }
 
         function stop() {

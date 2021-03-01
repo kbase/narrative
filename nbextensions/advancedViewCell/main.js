@@ -22,17 +22,13 @@ define([
     'base/js/namespace',
     './widgets/advancedViewCellWidget',
     'common/runtime',
-    'common/parameterSpec',
     'common/utils',
     'common/dom',
-    'common/props',
-    'common/appUtils',
+    'util/icon',
     'common/jupyter',
     'common/spec',
     'kb_service/utils',
     'kb_service/client/workspace',
-    'css!kbase/css/appCell.css',
-    'css!kbase/css/advancedViewCell.css',
     'bootstrap',
     'custom/custom',
 ], (
@@ -43,11 +39,9 @@ define([
     Jupyter,
     ViewCellWidget,
     Runtime,
-    ParameterSpec,
     utils,
     Dom,
-    Props,
-    AppUtils,
+    Icon,
     jupyter,
     Spec,
     serviceUtils,
@@ -155,19 +149,11 @@ define([
             const inputPrompt = this.element[0].querySelector('[data-element="prompt"]');
 
             if (inputPrompt) {
-                inputPrompt.innerHTML = div(
-                    {
-                        style: { textAlign: 'center' },
-                    },
-                    [AppUtils.makeAppIcon(utils.getCellMeta(cell, 'kbase.viewCell.app.spec'))]
-                );
+                inputPrompt.innerHTML = this.getIcon();
             }
         };
-        cell.getIcon = function () {
-            const icon = AppUtils.makeToolbarAppIcon(
-                utils.getCellMeta(cell, 'kbase.viewCell.app.spec')
-            );
-            return icon;
+        cell.getIcon = function() {
+            return Icon.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.viewCell.app.spec'));
         };
     }
 
@@ -351,5 +337,6 @@ define([
     };
 }, (err) => {
     // TODO: use the error reporting mechanism from the app cell
+    'use strict';
     console.error('ERROR loading viewCell main', err);
 });

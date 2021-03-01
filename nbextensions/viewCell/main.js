@@ -27,15 +27,12 @@ define([
     'common/clock',
     'common/dom',
     'common/props',
-    'common/appUtils',
+    'util/icon',
     'common/jupyter',
     'common/spec',
     'kb_service/utils',
     'kb_service/client/workspace',
     './widgets/appInfoDialog',
-
-    // for effect
-    'css!kbase/css/appCell.css',
     'bootstrap',
     'custom/custom',
 ], (
@@ -51,7 +48,7 @@ define([
     Clock,
     Dom,
     Props,
-    AppUtils,
+    Icon,
     jupyter,
     Spec,
     serviceUtils,
@@ -178,19 +175,11 @@ define([
             const inputPrompt = this.element[0].querySelector('[data-element="prompt"]');
 
             if (inputPrompt) {
-                inputPrompt.innerHTML = div(
-                    {
-                        style: { textAlign: 'center' },
-                    },
-                    [AppUtils.makeAppIcon(utils.getCellMeta(cell, 'kbase.viewCell.app.spec'))]
-                );
+                inputPrompt.innerHTML = this.getIcon();
             }
         };
-        cell.getIcon = function () {
-            const icon = AppUtils.makeToolbarAppIcon(
-                utils.getCellMeta(cell, 'kbase.viewCell.app.spec')
-            );
-            return icon;
+        cell.getIcon = function() {
+            return Icon.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.viewCell.app.spec'));
         };
         cell.showInfo = function () {
             const app = utils.getCellMeta(cell, 'kbase.viewCell.app');

@@ -5,9 +5,9 @@ define([
     'common/runtime',
     'common/html',
     'common/dom',
-    'common/appUtils',
+    'util/icon',
     'common/jupyter',
-    'common/ui',
+    'common/error',
     './widgets/appInfoDialog',
     './widgets/appCellWidget',
     'common/spec',
@@ -18,19 +18,17 @@ define([
     Runtime,
     html,
     Dom,
-    AppUtils,
+    Icon,
     jupyter,
-    UI,
+    Error,
     appInfoDialog,
     AppCellWidget,
     Spec
 ) => {
     'use strict';
 
-    const t = html.tag,
-        div = t('div'),
-        p = t('p'),
-        b = t('b');
+    var t = html.tag,
+        div = t('div');
 
     function isAppCell(cell) {
         if (cell.cell_type !== 'code') {
@@ -92,19 +90,15 @@ define([
                 outputArea.removeClass('hidden');
                 viewInputArea.removeClass('hidden');
             };
-            cell.getIcon = function () {
-                return AppUtils.makeToolbarAppIcon(
-                    utils.getCellMeta(cell, 'kbase.appCell.app.spec')
-                );
+            cell.getIcon = function() {
+                return Icon.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.appCell.app.spec'));
             };
             cell.renderIcon = function () {
                 const iconNode = this.element[0].querySelector(
                     '.celltoolbar [data-element="icon"]'
                 );
                 if (iconNode) {
-                    iconNode.innerHTML = AppUtils.makeToolbarAppIcon(
-                        utils.getCellMeta(cell, 'kbase.appCell.app.spec')
-                    );
+                    iconNode.innerHTML = this.getIcon();
                 }
             };
             cell.showInfo = function () {
@@ -205,31 +199,14 @@ define([
                             .then(() => {
                                 return appCellWidget.detach();
                             })
-                            .catch((err) => {
-                                console.log('ERR in ERR', err);
+                            .catch(function(_err) {
+                                console.log('ERR in ERR', _err);
                             })
-                            .finally(() => {
-                                const ui = UI.make({
-                                    node: document.body,
-                                });
-                                kbaseNode.innerHTML = div(
-                                    {
-                                        style: {
-                                            margin: '10px',
-                                        },
-                                    },
-                                    [
-                                        ui.buildPanel({
-                                            title: 'Error Starting App Cell',
-                                            type: 'danger',
-                                            body: ui.buildErrorTabs({
-                                                preamble: p(
-                                                    b('There was an error starting the app cell.')
-                                                ),
-                                                error: err,
-                                            }),
-                                        }),
-                                    ]
+                            .finally(function() {
+                                Error.reportCellError(
+                                    'Error starting app cell',
+                                    'There was an error starting the app cell:',
+                                    err
                                 );
                             });
                     });

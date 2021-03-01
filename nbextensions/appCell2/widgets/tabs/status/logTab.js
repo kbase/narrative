@@ -7,11 +7,10 @@ define([
     'common/ui',
     'common/runtime',
     'util/jobLogViewer',
-    './jobStateViewer',
+    'util/jobStateViewer',
     './jobStateList',
     './jobInputParams',
-    'css!kbase/css/batchMode',
-], (Promise, html, UI, Runtime, LogViewer, JobStateViewer, JobStateList, JobInputParams) => {
+], (Promise, html, UI, Runtime, JobLogViewer, JobStateViewer, JobStateList, JobInputParams) => {
     'use strict';
 
     const t = html.tag,
@@ -25,9 +24,9 @@ define([
         let ui;
 
         // A cheap widget collection.
-        let widgets = {},
-            queueListener,
-            model = config.model,
+        const widgets = {},
+            { model } = config;
+        let queueListener,
             selectedJobId = config.jobId;
 
         /**
@@ -122,7 +121,7 @@ define([
             return config.clickedId;
         }
 
-        function startBatch(arg) {
+        function startBatch() {
             return Promise.try(() => {
                 container.innerHTML = batchLayout();
 
@@ -130,7 +129,7 @@ define([
                 widgets.params = JobInputParams.make({
                     model: model,
                 });
-                widgets.log = LogViewer.make();
+                widgets.log = JobLogViewer.make();
                 widgets.jobState = JobStateViewer.make({
                     model: model,
                 });
@@ -150,25 +149,25 @@ define([
                 });
 
                 function startDetails(arg) {
-                    const selectedJobId = arg.jobId
+                    const jobId = arg.jobId
                         ? arg.jobId
                         : model.getItem('exec.jobState.job_id');
-                    config.clickedId = selectedJobId;
+                    config.clickedId = jobId;
                     return Promise.all([
                         widgets.params.start({
                             node: ui.getElement('params.body'),
-                            jobId: selectedJobId,
+                            jobId: jobId,
                             parentJobId: model.getItem('exec.jobState.job_id'),
                             isParentJob: arg.isParentJob,
                         }),
                         widgets.log.start({
                             node: ui.getElement('log.body'),
-                            jobId: selectedJobId,
+                            jobId: jobId,
                             parentJobId: model.getItem('exec.jobState.job_id'),
                         }),
                         widgets.jobState.start({
                             node: ui.getElement('jobState.body'),
-                            jobId: selectedJobId,
+                            jobId: jobId,
                             parentJobId: model.getItem('exec.jobState.job_id'),
                         }),
                     ]);
@@ -213,28 +212,28 @@ define([
                             if (message.jobState.status !== 'queued') {
                                 container.innerHTML = '';
                                 Runtime.make().bus().removeListener(queueListener);
-                                startNonQueued(arg);
+                                startNonQueued();
                             }
                         },
                     });
             } else {
-                startNonQueued(arg);
+                startNonQueued();
             }
         }
 
-        function startNonQueued(arg) {
+        function startNonQueued() {
             const childJobs = model.getItem('exec.jobState.child_jobs');
             if ((childJobs && childJobs.length > 0) || model.getItem('user-settings.batchMode')) {
-                startBatch(arg);
+                startBatch();
             } else {
-                startSingle(arg);
+                startSingle();
             }
         }
 
-        function startSingle(arg) {
+        function startSingle() {
             return Promise.try(() => {
                 container.innerHTML = singleLayout();
-                widgets.log = LogViewer.make();
+                widgets.log = JobLogViewer.make();
                 widgets.jobState = JobStateViewer.make({
                     model: model,
                 });

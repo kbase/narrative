@@ -1,0 +1,40 @@
+.kb-tour {
+  background-color: rgb(33 150 243);
+
+  &.popover {
+    &.top > .arrow::after {
+      border-top-color: rgb(33 150 243);
+    }
+
+    &.bottom > .arrow::after {
+      border-bottom-color: rgb(33 150 243);
+    }
+
+    &.right > .arrow::after {
+      border-right-color: rgb(33 150 243);
+    }
+
+    &.left > .arrow::after {
+      border-left-color: rgb(33 150 243);
+    }
+  }
+
+  > {
+    h3.popover-title {
+      background-color: rgb(33 150 243);
+      color: rgb(255 255 255);
+      font: 16px $typeface-page-text;
+    }
+
+    .popover-content,
+    .popover-navigation {
+      background-color: rgb(238 238 238);
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 7px;
+      right: 7px;
+    }
+  }
+}

@@ -67,8 +67,8 @@ define([
             let value;
             if (item.value instanceof Array) {
                 value = item.value
-                    .map((item) => {
-                        return formatItem(item);
+                    .map((_item) => {
+                        return formatItem(_item);
                     })
                     .join('&nbsp;&nbsp;&nbsp;');
             } else {
@@ -137,7 +137,7 @@ define([
     by a previous failed attempt to save the object, return either:
     - null if the target name is not found in the object set
     - 1 if the target name was found, but no target names with a suffix
-    - the greatest of the failed suffix passed in or the greatest suffix in the data 
+    - the greatest of the failed suffix passed in or the greatest suffix in the data
       set, incremented by one.
     */
     function getNextAutoSuffix(targetName, narrativeObjects, nextSuffix) {
@@ -289,7 +289,7 @@ define([
                 token: this.token,
             });
 
-            const margin = { margin: '10px 0px 10px 0px' };
+            const margin = { margin: '10px 0' };
             const $typeInput = $('<select class="form-control">').css(margin);
 
             this.dataSourceConfigs.forEach((config, index) => {
@@ -356,20 +356,22 @@ define([
                     if (dataSource.logoUrl) {
                         this.$dataSourceLogo.append($('<img>').attr('src', dataSource.logoUrl));
                     }
+                    this.searchAndRender(newDataSourceID, $filterInput.val());
                 }
-                this.searchAndRender(newDataSourceID, $filterInput.val());
-            });
+            );
 
             /*
                 search and render only when input change is detected.
             */
-            var inputFieldLastValue = null;
-            $filterInput.change(() => {
-                inputFieldLastValue = $filterInput.val();
-                renderInputFieldState();
-                const dataSourceID = parseInt($typeInput.val());
-                this.searchAndRender(dataSourceID, $filterInput.val());
-            });
+            let inputFieldLastValue = null;
+            $filterInput.change(
+                () => {
+                    inputFieldLastValue = $filterInput.val();
+                    renderInputFieldState();
+                    const _dataSourceID = parseInt($typeInput.val());
+                    this.searchAndRender(_dataSourceID, $filterInput.val());
+                }
+            );
 
             function renderInputFieldState() {
                 if ($filterInput.val() === '') {
@@ -404,11 +406,11 @@ define([
             const searchFilter = $('<div class="col-sm-8">').append($filterInputField);
 
             const header = $('<div class="row">')
-                .css({ margin: '0px 10px 0px 10px' })
+                .css({ margin: '0 10px' })
                 .append(typeFilter)
                 .append(searchFilter);
             this.$elem.append(header);
-            this.totalPanel = $('<div>').css({ margin: '0px 0px 0px 10px' });
+            this.totalPanel = $('<div>').css({ margin: '0 0 0 10px' });
             this.$elem.append(this.totalPanel);
 
             this.resultPanel = $('<div role="table" data-test-id="result">');
@@ -426,11 +428,14 @@ define([
                 .css('overflow-x', 'hidden')
                 .css('overflow-y', 'auto')
                 .css('height', this.mainListPanelHeight)
-                .on('scroll', (e) => {
-                    if (e.target.scrollTop + e.target.clientHeight >= e.target.scrollHeight) {
-                        this.renderMore();
+                .on(
+                    'scroll',
+                    (e) => {
+                        if (e.target.scrollTop + e.target.clientHeight >= e.target.scrollHeight) {
+                            this.renderMore();
+                        }
                     }
-                })
+                )
                 .append(this.resultPanel)
                 .append(this.resultFooter);
 
@@ -807,7 +812,7 @@ define([
             be here or should be a precondition (just let if fail otherwise.)
 
             the check for existence fo the object should not throw an error; the null value
-            means the object could not be read, and since we have read access to this narrative, 
+            means the object could not be read, and since we have read access to this narrative,
             that is the only possible error.
         */
 

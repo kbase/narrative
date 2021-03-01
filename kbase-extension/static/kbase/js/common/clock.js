@@ -1,9 +1,10 @@
 define([], () => {
+    'use strict';
     function factory(config) {
         let timer,
-            ticks,
-            resolution = config.resolution,
-            bus = config.bus;
+            ticks;
+        const { resolution } = config,
+            { bus } = config;
 
         function start() {
             ticks = 0;

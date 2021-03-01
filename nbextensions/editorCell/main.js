@@ -26,12 +26,10 @@ define([
     'common/utils',
     'common/clock',
     'common/dom',
-    'common/appUtils',
+    'util/icon',
     'common/jupyter',
     'kb_service/utils',
     'kb_service/client/workspace',
-    'css!kbase/css/appCell.css',
-    'css!kbase/css/editorCell.css',
     'bootstrap',
     'custom/custom',
 ], (
@@ -46,7 +44,7 @@ define([
     utils,
     Clock,
     Dom,
-    AppUtils,
+    Icon,
     jupyter,
     serviceUtils,
     Workspace
@@ -152,19 +150,12 @@ define([
             const inputPrompt = this.element[0].querySelector('[data-element="prompt"]');
 
             if (inputPrompt) {
-                inputPrompt.innerHTML = div(
-                    {
-                        style: { textAlign: 'center' },
-                    },
-                    [AppUtils.makeAppIcon(utils.getCellMeta(cell, 'kbase.editorCell.app.spec'))]
-                );
+                inputPrompt.innerHTML = this.getIcon();
             }
         };
 
-        cell.getIcon = function () {
-            return AppUtils.makeToolbarAppIcon(
-                utils.getCellMeta(cell, 'kbase.editorCell.app.spec')
-            );
+        cell.getIcon = function() {
+            return Icon.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.editorCell.app.spec'));
         };
 
         cell.toggleCodeInputArea = function () {

@@ -12,13 +12,12 @@ define([
     'use strict';
     const t = html.tag,
         div = t('div'),
-        p = t('p'),
         a = t('a'),
         span = t('span');
 
     function factory(config) {
+        const {model} = config;
         let container,
-            model = config.model,
             ui,
             runtime,
             nms,
@@ -31,43 +30,27 @@ define([
             runtime = Runtime.make();
             nms = new NarrativeMethodStore(runtime.config('services.narrative_method_store.url'));
 
-            const jobState = arg.jobState;
+            const {jobState} = arg;
 
             return Promise.try(() => {
-                const finishDate = new Date(jobState.finish_time);
 
-                const layout = div(
-                    {
-                        style: {
-                            overflowX: 'auto',
-                            maxWidth: 'inherit',
-                        },
-                    },
-                    [
-                        ui.buildCollapsiblePanel({
-                            title: 'Results',
-                            name: 'results',
-                            hidden: true,
-                            type: 'default',
-                            classes: ['kb-panel-container'],
-                        }),
-                        div({ dataElement: 'report' }),
-                        div({ dataElement: 'next-steps' }),
-                    ]
-                );
+                const layout = div({
+                    style: {
+                        overflowX: 'auto',
+                        maxWidth: 'inherit'
+                    }
+                }, [
+                    ui.buildCollapsiblePanel({
+                        title: 'Results',
+                        name: 'results',
+                        hidden: true,
+                        type: 'default',
+                        classes: ['kb-panel-container'],
+                    }),
+                    div({dataElement: 'report'}),
+                    div({dataElement: 'next-steps'})
+                ]);
                 container.innerHTML = layout;
-
-                ui.setContent(
-                    'summary.body',
-                    p(
-                        [
-                            'Finished on ',
-                            finishDate.toLocaleDateString(),
-                            ' at ',
-                            finishDate.toLocaleTimeString(),
-                        ].join('')
-                    )
-                );
 
                 // If there's a "report_ref" key in the results, load and show the report.
                 // console.log('SHOWING RESULTS', result);
@@ -189,7 +172,8 @@ define([
             }
         }
 
-        function stop(arg) {}
+
+        function stop() {}
 
         return {
             start: start,

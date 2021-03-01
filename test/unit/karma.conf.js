@@ -29,8 +29,10 @@ module.exports = function (config) {
                 'coverage',
             ],
             'kbase-extension/static/kbase/js/api/RestAPIClient.js': ['coverage'],
-            'nbextensions/appcell2/widgets/tabs/*.js': ['coverage'],
-            'kbase-extension/static/kbase/js/*.js': ['coverage'],
+            'nbextensions/appCell2/widgets/tabs/*.js': ['coverage'],
+            'nbextensions/bulkImportCell/**/*.js': ['coverage'],
+            'nbextensions/codeCell/**/*.js': ['coverage'],
+            'kbase-extension/static/kbase/js/*.js': ['coverage']
         },
         // karma defaults:
         // included: true; nocache: false; served: true; watched: true;

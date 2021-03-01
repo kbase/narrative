@@ -1,7 +1,14 @@
-define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
+define([
+    'util/jobLogViewer',
+    'common/runtime'
+], (
+    JobLogViewer,
+    Runtime
+) => {
     'use strict';
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('Test the job log viewer module', () => {
+        const cssBaseClass = 'kb-log';
         let hostNode = null,
             runtimeBus = null;
 
@@ -192,10 +199,14 @@ define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
                     const panel = hostNode.querySelector('[data-element="log-panel"]');
                     expect(panel.children.length).toEqual(2);
                     const logLine = panel.children[0];
-                    expect(logLine.classList.toLocaleString()).toEqual('kblog-line');
+                    expect(logLine.classList.toLocaleString()).toContain(
+                        `${cssBaseClass}__line_container`
+                    );
                     expect(logLine.innerHTML).toContain('line 1 - log');
                     const errorLine = panel.children[1];
-                    expect(errorLine.classList.toLocaleString()).toEqual('kblog-line kb-error');
+                    expect(errorLine.classList.toLocaleString()).toContain(
+                        `${cssBaseClass}__line_container--error`
+                    );
                     expect(errorLine.innerHTML).toContain('line 2 - error');
                     viewer.detach();
                     done();

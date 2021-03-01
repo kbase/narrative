@@ -4,13 +4,11 @@ define([
     'uuid',
     'base/js/namespace',
     'common/utils',
-    'common/appUtils',
+    'util/icon',
     'common/props',
     'common/cellUtils',
     'common/pythonInterop',
     'common/jupyter',
-    'kb_common/html',
-    'util/string',
     './widgets/outputCell',
     'custom/custom',
 ], (
@@ -19,19 +17,14 @@ define([
     Uuid,
     Jupyter,
     utils,
-    AppUtils,
+    Icon,
     Props,
     cellUtils,
     PythonInterop,
     jupyter,
-    html,
-    StringUtil,
     OutputCell
 ) => {
     'use strict';
-
-    const t = html.tag,
-        div = t('div');
 
     function specializeCell(cell) {
         cell.minimize = function () {
@@ -69,18 +62,12 @@ define([
             const inputPrompt = this.element[0].querySelector('[data-element="icon"]');
 
             if (inputPrompt) {
-                inputPrompt.innerHTML = div(
-                    {
-                        style: { textAlign: 'center' },
-                    },
-                    [AppUtils.makeGenericIcon('arrow-left')]
-                );
+                inputPrompt.innerHTML = this.getIcon();
             }
         };
 
-        cell.getIcon = function () {
-            const icon = AppUtils.makeToolbarGenericIcon('arrow-left');
-            return icon;
+        cell.getIcon = function() {
+            return Icon.makeToolbarGenericIcon('arrow-left');
         };
 
         cell.isCodeShowing = function () {

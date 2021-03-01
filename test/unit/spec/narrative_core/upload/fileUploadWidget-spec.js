@@ -210,5 +210,32 @@ define([
                 done();
             });
         });
+
+        it('Should contain a cancel warning button', () => {
+            $targetNode = $('<div>');
+            let uploadWidget = new FileUploadWidget($targetNode, {
+                path: '/',
+                userInfo: {
+                    user: fakeUser,
+                    globusLinked: false
+                }
+            });
+
+            // Create file
+            const filename='foo.txt';
+            mockUploadEndpoint(filename, fakeUser, false);
+            var mockFile = createMockFile(filename);
+
+            const adderMock = jasmine.createSpy('adderMock');
+            uploadWidget.dropzone.on('addedfile', () => {
+                adderMock();
+            });
+
+            uploadWidget.dropzone.addFile(mockFile);
+            let $cancelButton = uploadWidget.$elem.find('.cancel');
+            expect($cancelButton).toBeDefined();
+            expect($cancelButton.attr('data-dz-remove')).toBeDefined();
+        });
+
     });
 });

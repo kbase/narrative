@@ -19,14 +19,12 @@ define([
             return 'kbaseNarrativeCellMenu_' + this.lastId;
         },
         init: function (options) {
-            var self = this;
+            const self = this;
             this._super(options);
 
             this.$subtitle = $('<div class="subtitle">').hide();
 
             this.$timestamp = $('<span class="kb-func-timestamp">');
-
-            const devMode = true;
 
             const $deleteBtn = $(
                 '<button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="left" Title="Delete Cell">'
@@ -58,13 +56,13 @@ define([
                     icon: 'fa fa-code',
                     text: 'View Job Submission',
                     action: function () {
-                        let metadata = this.options.cell.metadata,
-                            stackTrace = [],
+                        const {metadata} = this.options.cell,
                             newCell = Jupyter.narrative.insertAndSelectCell(
                                 'code',
                                 'below',
                                 Jupyter.notebook.find_cell_index(this.options.cell)
                             );
+                        let stackTrace = [];
                         if (metadata['kb-cell'] && metadata['kb-cell'].stackTrace) {
                             stackTrace = metadata['kb-cell'].stackTrace;
                         }
@@ -120,7 +118,7 @@ define([
                     text: 'Duplicate Cell',
                     action: $.proxy(function () {
                         // get the current state, and clear it of its running state
-                        const kbWidget = options.kbWidget,
+                        const {kbWidget} = options,
                             currentState = kbWidget.getState();
                         if (this.options.kbWidgetType === 'method') {
                             // put the method in the narrative
@@ -132,7 +130,7 @@ define([
                             const newWidget = new kbaseNarrativeMethodCell(
                                 $('#' + $(newCell.get_text())[0].id)
                             );
-                            var updateState = function (state) {
+                            const updateState = function () {
                                 if (newWidget.$inputWidget) {
                                     // if the $inputWidget is not null, we are good to go, so set the state
                                     newWidget.loadState(currentState.params);
@@ -161,15 +159,13 @@ define([
                 });
             }
 
-            var self = this;
-
             // Job State Icon
             this.$jobStateIcon = $('<span>');
 
             // this shows whether the app is running
             this.$runningIcon = $('<span>')
                 .addClass('fa fa-circle-o-notch fa-spin')
-                .css({ color: 'rgb(42,121,191)' })
+                .css({ color: 'rgb(42, 121, 191)' })
                 .hide();
             this.$elem.data('runningIcon', this.$runningIcon);
 
@@ -181,33 +177,42 @@ define([
                 self.$runningIcon.hide();
             });
 
-            this.$elem.on('runningIndicator.toolbar', (e, data) => {
-                //                if (data.enabled) {
-                //                    self.$runningIcon.show();
-                //                } else {
-                //                    self.$runningIcon.hide();
-                //                }
-                //                if (data.enabled) {
-                //                    self.$jobStateIcon.html(makeIcon({
-                //                        class: 'wifi',
-                //                        color: 'orange',
-                //                        spin: true,
-                //                        label: 'Sending'
-                //                    }));
-                //                }
-            });
+            // this.$elem.on('runningIndicator.toolbar', (e, data) => {
+            //     if (data.enabled) {
+            //         self.$runningIcon.show();
+            //     } else {
+            //         self.$runningIcon.hide();
+            //     }
+            //     if (data.enabled) {
+            //         self.$jobStateIcon.html(makeIcon({
+            //             class: 'wifi',
+            //             color: 'orange',
+            //             spin: true,
+            //             label: 'Sending'
+            //         }));
+            //     }
+            // });
 
-            this.$elem.on('show-title.toolbar', () => {
-                this.$elem.find('div.title').css('display', 'inline-block');
-            });
+            this.$elem.on(
+                'show-title.toolbar',
+                () => {
+                    this.$elem.find('div.title').css('display', 'inline-block');
+                }
+            );
 
-            this.$elem.on('hide-title.toolbar', () => {
-                this.$elem.find('div.title').css('display', 'none');
-            });
+            this.$elem.on(
+                'hide-title.toolbar',
+                () => {
+                    this.$elem.find('div.title').css('display', 'none');
+                }
+            );
 
-            this.$elem.on('mousedown', () => {
-                Jupyter.notebook.events.trigger('select.Cell', this.options.cell);
-            });
+            this.$elem.on(
+                'mousedown',
+                () => {
+                    Jupyter.notebook.events.trigger('select.Cell', this.options.cell);
+                }
+            );
 
             this.$elem.dblclick(function (e) {
                 e.stopPropagation();
@@ -225,18 +230,18 @@ define([
                 $cellNode.trigger('toggle.cell');
             });
 
-            function makeIcon(icon) {
-                const spinClass = icon.spin ? 'fa-spin' : '',
-                    label = icon.label ? icon.label + ' ' : '',
+            function makeIcon(_icon) {
+                const spinClass = _icon.spin ? 'fa-spin' : '',
+                    label = _icon.label ? _icon.label + ' ' : '',
                     iconHtml =
                         '<span>' +
                         label +
                         '<i class="fa fa-' +
-                        icon.class +
+                        _icon.class +
                         ' ' +
                         spinClass +
                         '" style="color: ' +
-                        (icon.color || '#000') +
+                        (_icon.color || '#000') +
                         '"></i></span>';
                 return iconHtml;
             }
@@ -353,7 +358,7 @@ define([
                 }
             });
 
-            var $dropdownMenu = $('<span class="btn-group">').append($menuBtn).append(this.$menu);
+            const $dropdownMenu = $('<span class="btn-group">').append($menuBtn).append(this.$menu);
 
             this.$elem.append(
                 $('<div class="kb-cell-toolbar container-fluid">').append(
@@ -397,16 +402,9 @@ define([
 
             // Set up title.
             const $titleNode = this.$elem.find('[data-element="title"]');
-            this.$elem.on('set-title.toolbar', (e, title) => {
+            this.$elem.on('set-title.toolbar', (e, _title) => {
                 e.stopPropagation();
-                //                if (typeof title === 'object') {
-                //                    if (title.suffix) {
-                //                        $titleNode.html($titleNode.html() + '(' + title.suffix + ')');
-                //                    }
-                //                } else {
-                //                    $titleNode.html(title);
-                //                }
-                $titleNode.html(title);
+                $titleNode.html(_title);
             });
 
             /* And an icon -- hack to go into the input prompt for now...
@@ -416,11 +414,11 @@ define([
              * $cell =  = $(options.cell.element);
              */
 
-            this.$elem.on('set-icon.toolbar', (e, icon) => {
-                const $cell = $(self.options.cell.element),
-                    $iconNode = $cell.find('.prompt');
+            this.$elem.on('set-icon.toolbar', (e, _icon) => {
+                const $cellElement = $(self.options.cell.element),
+                    $iconNode = $cellElement.find('.prompt');
                 e.stopPropagation();
-                const wrapped = '<div style="text-align: center;">' + icon + '</div>';
+                const wrapped = '<div style="text-align: center;">' + _icon + '</div>';
                 $iconNode.html(wrapped);
             });
 
@@ -453,47 +451,48 @@ define([
             }
             const $icon = this.$collapseBtn.find('span.fa');
 
-            switch (state) {
-                case 'closed':
-                    $icon.removeClass('fa-chevron-down');
-                    $icon.addClass('fa-chevron-right');
-                    this.$elem.parent().removeClass('kb-toolbar-open');
-                    if (this.options.cell.metadata['kb-cell'] && this.$subtitle) {
-                        const type = this.options.cell.metadata['kb-cell']['type'];
-                        const $kbCell = $(this.options.cell.element).find('[id^=kb-cell]');
-                        if ($kbCell) {
-                            switch (type) {
-                                case 'kb_app':
-                                    this.$subtitle.html(
-                                        $kbCell.kbaseNarrativeAppCell('getSubtitle')
-                                    );
-                                    break;
-                                case 'kb_error':
-                                    this.$subtitle.html('An error has occurred in this cell!');
-                                    break;
-                                case 'function_output':
-                                    // this.$subtitle.html($kbCell.kbaseNarrativeOutputCell('getSubtitle'));
-                                    break;
-                                case 'function_input':
-                                    // doing this more declarative causes some funky rendering issues.
-                                    // we need some better message passing, I think.
-                                    $kbCell.trigger('get_cell_subtitle.Narrative', (text) => {
-                                        this.$subtitle.html(text);
-                                    });
-                                    break;
-                                default:
-                                    break;
-                            }
-                            this.$subtitle.show();
-                        }
+            if (state !== 'closed') {
+                $icon.removeClass('fa-chevron-right');
+                $icon.addClass('fa-chevron-down');
+                this.$elem.parent().addClass('kb-toolbar-open');
+                this.$subtitle.hide();
+                return;
+            }
+
+            $icon.removeClass('fa-chevron-down');
+            $icon.addClass('fa-chevron-right');
+            this.$elem.parent().removeClass('kb-toolbar-open');
+            if (this.options.cell.metadata['kb-cell'] && this.$subtitle) {
+                const type = this.options.cell.metadata['kb-cell']['type'];
+                const $kbCell = $(this.options.cell.element).find('[id^=kb-cell]');
+                if ($kbCell) {
+                    switch (type) {
+                        case 'kb_app':
+                            this.$subtitle.html(
+                                $kbCell.kbaseNarrativeAppCell('getSubtitle')
+                            );
+                            break;
+                        case 'kb_error':
+                            this.$subtitle.html('An error has occurred in this cell!');
+                            break;
+                        case 'function_output':
+                            // this.$subtitle.html($kbCell.kbaseNarrativeOutputCell('getSubtitle'));
+                            break;
+                        case 'function_input':
+                            // doing this more declarative causes some funky rendering issues.
+                            // we need some better message passing, I think.
+                            $kbCell.trigger(
+                                'get_cell_subtitle.Narrative',
+                                (text) => {
+                                    this.$subtitle.html(text);
+                                }
+                            );
+                            break;
+                        default:
+                            break;
                     }
-                    break;
-                default:
-                    $icon.removeClass('fa-chevron-right');
-                    $icon.addClass('fa-chevron-down');
-                    this.$elem.parent().addClass('kb-toolbar-open');
-                    this.$subtitle.hide();
-                    break;
+                    this.$subtitle.show();
+                }
             }
         },
         setSubtitle: function (value) {

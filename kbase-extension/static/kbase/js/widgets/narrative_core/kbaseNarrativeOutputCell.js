@@ -251,8 +251,8 @@ define([
         renderBody: function () {
             const self = this;
             return new Promise((resolve) => {
-                let widget = self.options.widget,
-                    widgetData = self.options.data;
+                const widget = self.options.widget;
+                let widgetData = self.options.data;
                 if (widget === 'kbaseDefaultNarrativeOutput') {
                     widgetData = { data: self.options.data };
                 }

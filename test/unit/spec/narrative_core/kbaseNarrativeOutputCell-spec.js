@@ -39,12 +39,14 @@ define([
         };
 
         beforeEach(() => {
-            Config.config.workspaceId = 10;
+            jasmine.Ajax.install();
             const AUTH_TOKEN = 'fakeAuthToken';
             Mocks.setAuthToken(AUTH_TOKEN);
             Jupyter.narrative = {
                 getAuthToken: () => AUTH_TOKEN,
             };
+
+            Config.config.workspaceId = 10;
             $target = $('<div>');
             $('body').append($('<div id="notebook-container">').append($target));
             myWidget = new Widget($target, {
@@ -55,13 +57,20 @@ define([
             });
             myWidget.cell = {};
             myWidget.metadata = myWidget.initMetadata();
+
+            Mocks.mockJsonRpc1Call({
+                url: Config.url('workspace'),
+                statusCode: 503,
+                statusText: 'HTTP/1.1 503 Service Offline',
+                response: { error: '...' },
+            });
         });
 
         afterEach(() => {
             Mocks.clearAuthToken();
             Jupyter.narrative = null;
-            $('body').empty();
-            // $target = $('<div>');
+            jasmine.Ajax.uninstall();
+            $('#notebook-container').remove();
         });
 
         it('Should load properly with a dummy UPA', () => {
@@ -101,22 +110,18 @@ define([
             validateUpas(deserialUpas, myWidget.options.upas);
         });
 
-        xit('Should do lazy rendering if the option is enabled', () => {});
-
         it("inViewport should return true by default, if it's missing parameters", () => {
             expect(myWidget.inViewport()).toBe(true);
         });
 
-        it('Should render properly', (done) => {
-            myWidget.render().then(() => {
-                // exercise the header button a bit
-                expect($target.find('.btn.kb-data-obj')).not.toBeNull();
-                $target.find('.btn.kb-data-obj').click();
-                expect(myWidget.headerShown).toBeTruthy();
-                $target.find('.btn.kb-data-obj').click();
-                expect(myWidget.headerShown).toBeFalsy();
-                done();
-            });
+        it('Should render properly', async () => {
+            await myWidget.render();
+            // exercise the header button a bit
+            expect($target.find('.btn.kb-data-obj')).not.toBeNull();
+            $target.find('.btn.kb-data-obj').click();
+            expect(myWidget.headerShown).toBeTruthy();
+            $target.find('.btn.kb-data-obj').click();
+            expect(myWidget.headerShown).toBeFalsy();
         });
 
         // FIXME: this test consistently times out
@@ -134,12 +139,10 @@ define([
             });
         });
 
-        it('Should update its UPAs properly with a version change request', (done) => {
-            myWidget.render().then(() => {
-                myWidget.displayVersionChange('test', 4);
-                expect(myWidget.cell.metadata.kbase.dataCell.upas.test).toEqual('[3]/4/4');
-                done();
-            });
+        it('Should update its UPAs properly with a version change request', async () => {
+            await myWidget.render();
+            myWidget.displayVersionChange('test', 4);
+            expect(myWidget.cell.metadata.kbase.dataCell.upas.test).toEqual('[3]/4/4');
         });
 
         it('Should handle UPAs correctly when forcing to overwrite existing metadata', () => {

@@ -1,14 +1,9 @@
-define(['jquery', 'kbaseNarrativeJobStatus'], ($, JobStatusWidget) => {
+define(['kbaseNarrativeJobStatus'], (JobStatusWidget) => {
     'use strict';
     describe('The kbaseNarrativeJobStatus widget', () => {
-        let dummyNode;
-        beforeEach(() => {
-            dummyNode = document.createElement('div');
-        });
-
-        it('Should load successfully', () => {
-            // var w = new JobStatusWidget($(dummyNode));
-            // expect(w).not.toBeNull();
+        it('Should be defined', () => {
+            expect(JobStatusWidget).toBeDefined();
+            expect(JobStatusWidget).toEqual(jasmine.any(Function));
         });
     });
 });

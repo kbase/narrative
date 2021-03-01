@@ -40,17 +40,14 @@ define([
         option = t('option');
 
     function factory(config) {
-        let spec = config.parameterSpec,
-            parent,
-            container,
+        const spec = config.parameterSpec,
             runtime = Runtime.make(),
             bus = runtime.bus().connect(),
             channel = bus.channel(config.channelName),
-            ui,
             model = {
                 value: undefined,
-            },
-            eventListeners = [];
+            };
+        let parent, container, ui;
 
         function makeInputControl() {
             let selectOptions;
@@ -68,32 +65,12 @@ define([
         // CONTROL
 
         function getControlValue() {
-            const control = ui.getElement('input-container.input'),
-                selected = control.selectedOptions;
-            // if (selected.length === 0) {
-            //     return;
-            // }
-            // we are modeling a single string value, so we always just get the
-            // first selected element, which is all there should be!
-            // return selected.item(0).value;
+            const control = ui.getElement('input-container.input');
             return $(control).val();
         }
 
         function setControlValue(value) {
-            // console.log('setting control value', value);
-            let stringValue;
-            if (value === null) {
-                stringValue = '';
-            } else {
-                stringValue = value;
-            }
-
             const control = ui.getElement('input-container.input');
-
-            // NB id used as String since we are comparing it below to the actual dom
-            // element id
-            // var currentSelectionId = String(model.availableValuesMap[stringValue]);
-
             $(control).val(value).trigger('change.select2');
         }
 
@@ -121,9 +98,6 @@ define([
         function validate() {
             return Promise.try(() => {
                 const value = getControlValue();
-
-                // console.log('value', value);
-
                 return {
                     isValid: true,
                     validated: true,
@@ -137,7 +111,6 @@ define([
 
         function doChange() {
             validate().then((result) => {
-                // console.log('validated??', result);
                 if (result.isValid) {
                     model.value = result.parsedValue;
                     channel.emit('changed', {
@@ -157,7 +130,6 @@ define([
         }
 
         function doTemplateResult(item) {
-            // console.log('template', item);
             if (!item.id) {
                 return $(
                     div(
@@ -196,9 +168,6 @@ define([
             );
         }
 
-        let totalItems;
-        let currentPage;
-        let currentStartItem;
         const pageSize = 10;
 
         function doTaxonomySearch(data) {
@@ -212,14 +181,10 @@ define([
             }
 
             // globals
-            currentPage = page;
-            currentStartItem = startItem;
-            const start = new Date().getTime();
-
+            const startTime = new Date().getTime();
             const taxonClient = new GenericClient({
                 url: runtime.config('services.service_wizard.url'),
                 module: 'taxonomy_service',
-                // version: 'dev',
                 token: Runtime.make().authToken(),
             });
             return taxonClient
@@ -233,28 +198,26 @@ define([
                     },
                 ])
                 .then((result) => {
-                    const elapsed = new Date().getTime() - start;
+                    const elapsedTime = new Date().getTime() - startTime;
+                    // eslint-disable-next-line no-console
                     console.log(
                         'Loaded data ' +
                             result[0].hits.length +
                             ' items of ' +
                             result[0].num_of_hits +
                             ' in ' +
-                            elapsed +
+                            elapsedTime +
                             'ms'
                     );
-                    totalItems = result[0].num_of_hits;
                     return result[0];
                 });
         }
 
         function getTaxonomyItem(taxonObject) {
-            // console.log('get taxonomy', taxonObject);
             const ref = taxonObject,
                 taxonClient = new GenericClient({
                     url: runtime.config('services.service_wizard.url'),
                     module: 'TaxonAPI',
-                    // version: 'dev',
                     token: Runtime.make().authToken(),
                 });
             return taxonClient.callFunc('get_scientific_name', [ref]).then((result) => {
@@ -277,7 +240,7 @@ define([
         function render() {
             return Promise.try(() => {
                 const events = Events.make(),
-                    inputControl = makeInputControl(events),
+                    inputControl = makeInputControl(),
                     content = div({ class: 'input-group', style: { width: '100%' } }, inputControl);
 
                 ui.setContent('input-container', content);
@@ -296,16 +259,14 @@ define([
                                 return;
                             }
                             getTaxonomyItem(currentValue).then((taxon) => {
-                                // console.log('TAXON', taxon);
                                 callback(taxon);
                             });
                         },
-                        formatMoreResults: function (page) {
+                        formatMoreResults: function () {
                             return 'more???';
                         },
                         language: {
-                            loadingMore: function (arg) {
-                                // console.log('ARG', arg);
+                            loadingMore: function () {
                                 return html.loading('Loading more scientific names');
                             },
                         },
@@ -320,7 +281,6 @@ define([
                                 };
                             },
                             processResults: function (data, params) {
-                                // console.log('processing', data, params);
                                 params.page = params.page || 1;
                                 return {
                                     results: data.hits,
@@ -336,12 +296,10 @@ define([
                                     .then((results) => {
                                         success(results);
                                     })
-                                    .catch((err) => {
+                                    .catch(() => {
                                         status = 'error';
                                         failure();
                                     });
-                                // console.log('transport got ', options);
-
                                 return {
                                     status: status,
                                 };
@@ -382,13 +340,6 @@ define([
             });
         }
 
-        // function syncModelToControl() {
-        //     if (!model.value) {
-        //         // set empty control...
-        //     }
-
-        // }
-
         // LIFECYCLE API
         function start(arg) {
             return Promise.try(() => {
@@ -413,11 +364,6 @@ define([
                     channel.on('update', (message) => {
                         setModelValue(message.value);
                     });
-                    // bus.channel().on('workspace-changed', function() {
-                    //     doWorkspaceChanged();
-                    // });
-                    // bus.emit('sync');
-
                     setControlValue(getModelValue());
                     autoValidate();
                 });
@@ -430,9 +376,6 @@ define([
                     parent.removeChild(container);
                 }
                 bus.stop();
-                eventListeners.forEach((id) => {
-                    runtime.bus().removeListener(id);
-                });
             });
         }
 

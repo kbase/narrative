@@ -1,15 +1,14 @@
 define([
     'jquery',
     'base/js/namespace',
-    'kbaseNarrative',
+    'narrativeMocks',
     'narrativeConfig',
     'widgets/narrative_core/staticNarrativesManager',
-], ($, Jupyter, Narrative, Config, StaticNarrativesManager) => {
+], ($, Jupyter, Mocks, Config, StaticNarrativesManager) => {
     'use strict';
     const staticNarrativeServiceUrl = 'https://ci.kbase.us/dynserv/blah.StaticNarrative';
 
-    let node,
-        wsId = 43667,
+    const wsId = 43667,
         staticVer = 32,
         objId = 1,
         narrDocInfo = [
@@ -165,16 +164,24 @@ define([
     }
 
     describe('The Static Narrative manager widget', () => {
+        let node;
+
         beforeEach(() => {
-            Jupyter.narrative = new Narrative();
-            Jupyter.narrative.userId = userId;
-            Jupyter.narrative.documentVersionInfo = narrDocInfo;
+            const AUTH_TOKEN = 'fakeAuthToken';
+            Mocks.setAuthToken(AUTH_TOKEN);
+            Jupyter.narrative = {
+                getAuthToken: () => AUTH_TOKEN,
+                userId: userId,
+                documentVersionInfo: narrDocInfo,
+            };
             node = $(document.createElement('div'));
 
             jasmine.Ajax.install();
         });
 
         afterEach(() => {
+            Mocks.clearAuthToken();
+            Jupyter.narrative = null;
             jasmine.Ajax.uninstall();
         });
 

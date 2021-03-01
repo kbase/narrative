@@ -10,13 +10,20 @@ define(['jquery', 'narrativeLogin', 'narrativeConfig', 'narrativeMocks'], (
 
     describe('Test the narrativeLogin module', () => {
         beforeEach(() => {
+            // remove any jquery events that get bound to document,
+            // including login and logout listeners
+            $(document).off();
             Mocks.setAuthToken(FAKE_TOKEN);
             jasmine.Ajax.install();
         });
 
         afterEach(() => {
+            // remove any jquery events that get bound to document,
+            // including login and logout listeners
+            $(document).off();
             jasmine.Ajax.uninstall();
             Mocks.clearAuthToken();
+            document.body.innerHTML = '';
         });
 
         it('Should instantiate and have expected functions', () => {

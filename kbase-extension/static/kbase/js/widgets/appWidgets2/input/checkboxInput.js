@@ -18,17 +18,15 @@ define([
         label = t('label');
 
     function factory(config) {
-        let spec = config.parameterSpec,
+        const spec = config.parameterSpec,
             runtime = Runtime.make(),
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(config.channelName),
-            parent,
-            container,
-            ui,
             model = {
                 updates: 0,
                 value: undefined,
             };
+        let parent, container, ui;
 
         // MODEL
 
@@ -55,6 +53,7 @@ define([
             return 0;
         }
 
+        // FIXME: where is the 'input-control' element?
         function syncModelToControl() {
             const control = ui.getElement('input-control.input');
             if (model.value === 1) {
@@ -102,14 +101,7 @@ define([
                                 type: 'change',
                                 handler: function () {
                                     validate().then((result) => {
-                                        if (config.showOwnMessages) {
-                                            ui.setContent('input-container.message', '');
-                                        }
-                                        if (result.diagnosis === 'optional-empty') {
-                                            setModelValue(result.parsedValue);
-                                        } else {
-                                            setModelValue(result.parsedValue);
-                                        }
+                                        setModelValue(result.parsedValue);
                                         channel.emit('validation', {
                                             errorMessage: result.errorMessage,
                                             diagnosis: result.diagnosis,

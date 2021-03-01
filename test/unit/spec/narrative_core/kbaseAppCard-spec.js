@@ -12,8 +12,7 @@ define(['jquery', 'base/js/namespace', 'kbase/js/widgets/narrative_core/kbaseApp
                     id: 'modle/descript',
                     git_commit_hash: '',
                     icon: {
-                        url:
-                            'img?method_id=ProkkaAnnotation/annotate_contigs&image_name=prokka.png&tag=release',
+                        isApp: true,
                     },
                     authors: ['rsutormin'],
                     app_type: 'app',

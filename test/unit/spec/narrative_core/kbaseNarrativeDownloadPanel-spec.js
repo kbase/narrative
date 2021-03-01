@@ -1,23 +1,25 @@
-define([
-    'jquery',
-    'kbaseNarrativeDownloadPanel',
-    'common/runtime',
-    'base/js/namespace',
-    'kbaseNarrative',
-], ($, kbaseNarrativeDownloadPanel, Runtime, Jupyter, Narrative) => {
+define(['jquery', 'kbaseNarrativeDownloadPanel', 'base/js/namespace', 'narrativeMocks'], (
+    $,
+    kbaseNarrativeDownloadPanel,
+    Jupyter,
+    Mocks
+) => {
     'use strict';
     describe('The kbaseNarrativeDownloadPanel widget', () => {
         let $div = null;
         beforeEach(() => {
             jasmine.Ajax.install();
-            $div = $('<div>');
-            Jupyter.narrative = new Narrative();
-            Jupyter.narrative.getAuthToken = () => {
-                return 'NotARealToken!';
+            const AUTH_TOKEN = 'fakeAuthToken';
+            Mocks.setAuthToken(AUTH_TOKEN);
+            Jupyter.narrative = {
+                getAuthToken: () => AUTH_TOKEN,
             };
+            $div = $('<div>');
         });
 
         afterEach(() => {
+            Mocks.clearAuthToken();
+            Jupyter.narrative = null;
             jasmine.Ajax.uninstall();
             $div.remove();
         });
@@ -66,7 +68,7 @@ define([
                 }),
             });
 
-            const w = new kbaseNarrativeDownloadPanel($div, {
+            new kbaseNarrativeDownloadPanel($div, {
                 token: null,
                 type: objType,
                 objId: oid,
@@ -89,15 +91,9 @@ define([
                 ver = 3333,
                 name = 'fake_test_object',
                 objType = 'KBaseGenomes.Genome',
-                saveDate = '2018-08-03T00:17:04+0000',
-                userId = 'fakeUser',
-                wsName = 'fakeWs',
-                checksum = '12345',
-                meta = {},
-                size = 1234567,
                 upa = String(ws) + '/' + String(oid) + '/' + String(ver);
 
-            const w = new kbaseNarrativeDownloadPanel($div, {
+            new kbaseNarrativeDownloadPanel($div, {
                 token: null,
                 type: objType,
                 objName: name,

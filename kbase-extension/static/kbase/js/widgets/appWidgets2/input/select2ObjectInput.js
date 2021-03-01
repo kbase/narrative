@@ -3,8 +3,6 @@ define([
     'jquery',
     'kb_common/html',
     'kb_common/utils',
-    'kb_service/client/workspace',
-    'kb_service/utils',
     'common/data',
     'common/events',
     'common/runtime',
@@ -12,7 +10,6 @@ define([
     'common/validation',
     'util/timeFormat',
     'widgets/appWidgets2/common',
-    'kb_sdk_clients/genericClient',
 
     'select2',
     'bootstrap',
@@ -22,8 +19,6 @@ define([
     $,
     html,
     utils,
-    Workspace,
-    serviceUtils,
     Data,
     Events,
     Runtime,
@@ -31,37 +26,33 @@ define([
     Validation,
     TimeFormat,
     WidgetCommon,
-    GenericClient
 ) => {
-    //eslint-disable-line no-unused-vars
     'use strict';
 
     // Constants
     const t = html.tag,
         button = t('button'),
         div = t('div'),
+        bold = t('b'),
         span = t('span'),
-        b = t('b'),
         select = t('select'),
         option = t('option');
 
     function factory(config) {
-        let spec = config.parameterSpec,
+        const spec = config.parameterSpec,
             objectRefType = config.referenceType || 'name',
-            parent,
-            container,
             runtime = Runtime.make(),
             bus = runtime.bus().connect(),
             channel = bus.channel(config.channelName),
-            ui,
             model = {
                 blacklistValues: undefined,
                 availableValues: undefined,
                 availableValuesMap: {},
                 value: undefined,
-            },
-            eventListeners = [],
-            workspaceId = runtime.getEnv('workspaceId');
+            };
+        let parent,
+            container,
+            ui;
 
         // TODO: getting rid of blacklist temporarily until we work out how to state-ify everything by reference.
         model.blacklistValues = []; //config.blacklist || [];
@@ -79,22 +70,17 @@ define([
         function makeInputControl() {
             let selectOptions;
             if (model.availableValues) {
-                const filteredOptions = [];
                 selectOptions = model.availableValues
-                    .filter((objectInfo, idx) => {
+                    .filter((objectInfo) => {
                         if (model.blacklistValues) {
                             return !model.blacklistValues.some((value) => {
-                                if (objectInfoHasRef(objectInfo, value)) {
-                                    filteredOptions.push(idx);
-                                    return true;
-                                }
-                                return false;
+                                return objectInfoHasRef(objectInfo, value);
                             });
                         }
                     })
                     .map((objectInfo, idx) => {
-                        let selected = false,
-                            ref = idx; //getObjectRef(objectInfo);
+                        let selected = false;
+                        const ref = idx;
                         if (objectInfoHasRef(objectInfo, model.value)) {
                             selected = true;
                         }
@@ -177,13 +163,13 @@ define([
 
         function validate() {
             return Promise.try(() => {
-                let objInfo = model.availableValues[getControlValue()],
-                    processedValue = '',
+                const objInfo = model.availableValues[getControlValue()],
                     validationOptions = {
                         required: spec.data.constraints.required,
                         authToken: runtime.authToken(),
                         workspaceServiceUrl: runtime.config('services.workspace.url'),
                     };
+                let processedValue = '';
 
                 if (objInfo && objInfo.dataPaletteRef) {
                     return Validation.validateWorkspaceDataPaletteRef(
@@ -287,7 +273,7 @@ define([
             const objectInfo = model.availableValues[object.id];
             return $(
                 div([
-                    span({ style: 'word-wrap: break-word' }, [b(objectInfo.name)]),
+                    span({ style: 'word-wrap: break-word' }, [bold(objectInfo.name)]),
                     ' (v' + objectInfo.version + ')<br>',
                     div({ style: 'margin-left: 7px' }, [
                         '<i>' + objectInfo.typeName + '</i><br>',
@@ -309,16 +295,16 @@ define([
         function render() {
             return Promise.try(() => {
                 const events = Events.make(),
-                    inputControl = makeInputControl(events);
+                    inputControl = makeInputControl();
 
                 ui.setContent('input-container', '');
-                const container = ui.getElement('input-container');
+                const _container = ui.getElement('input-container');
                 const content = WidgetCommon.containerContent(
                     div,
                     button,
                     events,
                     ui,
-                    container,
+                    _container,
                     inputControl
                 );
                 ui.setContent('input-container', content);
@@ -339,7 +325,7 @@ define([
                     .on('advanced-shown.kbase', (e) => {
                         $(e.target).select2({ width: 'resolve' });
                     });
-                events.attachEvents(container);
+                events.attachEvents(_container);
             });
         }
 
@@ -419,13 +405,6 @@ define([
             }
         }
 
-        function doWorkspaceChanged() {
-            // there are a few thin
-            fetchData().then((data) => {
-                return doWorkspaceUpdated(data);
-            });
-        }
-
         // LIFECYCLE API
         function start(arg) {
             return Promise.try(() => {
@@ -447,7 +426,6 @@ define([
                 return fetchData()
                     .then((data) => {
                         doWorkspaceUpdated(data);
-                        // model.availableValues = data;
                         return render();
                     })
                     .then(() => {
@@ -457,10 +435,6 @@ define([
                         channel.on('update', (message) => {
                             setModelValue(message.value);
                         });
-                        // bus.channel().on('workspace-changed', function() {
-                        //     doWorkspaceChanged();
-                        // });
-                        // bus.emit('sync');
 
                         setControlValue(getModelValue());
                         autoValidate();
@@ -474,9 +448,6 @@ define([
                     parent.removeChild(container);
                 }
                 bus.stop();
-                eventListeners.forEach((id) => {
-                    runtime.bus().removeListener(id);
-                });
             });
         }
 

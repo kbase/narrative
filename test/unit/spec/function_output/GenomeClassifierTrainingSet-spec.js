@@ -1,22 +1,25 @@
-define(['jquery', 'GenomeClassifierTrainingSet', 'base/js/namespace', 'kbaseNarrative'], (
+define(['jquery', 'GenomeClassifierTrainingSet', 'base/js/namespace', 'narrativeMocks'], (
     $,
     GenomeClassifierTrainingSet,
     Jupyter,
-    Narrative
+    Mocks
 ) => {
     'use strict';
     describe('The GenomeClassifierTrainingSet widget', () => {
         let $div = null;
         beforeEach(() => {
             jasmine.Ajax.install();
-            $div = $('<div>');
-            Jupyter.narrative = new Narrative();
-            Jupyter.narrative.getAuthToken = () => {
-                return 'NotARealToken!';
+            const AUTH_TOKEN = 'fakeAuthToken';
+            Mocks.setAuthToken(AUTH_TOKEN);
+            Jupyter.narrative = {
+                getAuthToken: () => AUTH_TOKEN,
             };
+            $div = $('<div>');
         });
 
         afterEach(() => {
+            Mocks.clearAuthToken();
+            Jupyter.narrative = null;
             jasmine.Ajax.uninstall();
             $div.remove();
         });

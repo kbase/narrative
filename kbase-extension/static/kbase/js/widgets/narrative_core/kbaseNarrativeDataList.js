@@ -276,8 +276,8 @@ define([
                     'overflow-y': 'auto',
                     height: this.mainListPanelHeight,
                 })
-                .on('scroll', () => {
-                    if ($(this).scrollTop() + $(this).innerHeight() >= this.scrollHeight) {
+                .on('scroll', (event) => {
+                    if ($(event.target).scrollTop() + $(event.target).innerHeight() >= event.target.scrollHeight) {
                         this.renderMore();
                     }
                 });
@@ -317,6 +317,18 @@ define([
             return this;
         },
 
+        destroy: function () {
+            this.token = null;
+            this.ws = null;
+            this.isLoggedIn = false;
+            this.my_username = null;
+            $(document).off('updateDataList.Narrative');
+            if (this.refreshTimer) {
+                clearInterval(this.refreshTimer);
+                this.refreshTimer = null;
+            }
+        },
+
         setListHeight: function (height, animate) {
             if (this.$mainListDiv) {
                 if (animate) {
@@ -351,11 +363,7 @@ define([
          * @private
          */
         loggedOutCallback: function () {
-            this.token = null;
-            this.ws = null;
-            this.isLoggedIn = false;
-            this.my_username = null;
-            return this;
+            this.destroy();
         },
 
         showLoading: function (caption) {
@@ -371,7 +379,7 @@ define([
 
         refresh: function (showError) {
             if (this.writingLock) {
-                return;
+                return Promise.resolve();
             }
             // Set the refresh timer on the first refresh. From  here, it'll refresh itself
             // every this.options.refresh_interval (30000) ms
@@ -385,7 +393,7 @@ define([
                 console.error('DataList: missing variable(s)');
                 console.error('ws_name: ' + this.ws_name);
                 console.error('ws: ' + this.ws);
-                return;
+                return Promise.resolve();
             }
             return Promise.resolve(
                 this.ws.get_workspace_info({
@@ -397,12 +405,13 @@ define([
                         this.wsLastUpdateTimestamp = wsInfo[3];
                         this.maxWsObjId = wsInfo[4];
                         this.showLoading('Fetching data...');
-                        this.reloadWsData();
+                        return this.reloadWsData();
                     } else {
                         this.refreshTimeStrings();
                     }
                 })
                 .catch((error) => {
+                    console.trace('dumping stacktrace!')
                     console.error('DataList: when checking for updates:', error);
                     if (showError) {
                         this.showBlockingError(
@@ -432,7 +441,7 @@ define([
 
             this.clearSets();
 
-            this.fetchWorkspaceData()
+            return this.fetchWorkspaceData()
                 .then(() => {
                     // Signal all data channel listeners that we have new data.
                     // TODO: only signal if there are actual changes

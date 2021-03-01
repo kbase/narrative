@@ -55,6 +55,8 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime'], (
 
         afterEach(() => {
             window.kbaseRuntime = null;
+            Jupyter.notebook = null;
+            testBus = null;
         });
 
         it('Should load properly', () => {
@@ -121,7 +123,7 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime'], (
                         expect(comm.comm).not.toBeNull();
                         spyOn(comm.comm, 'send');
                         testBus.emit(testCase[0], testCase[1]);
-                        return new Promise((resolve) => setTimeout(resolve, 100));
+                        return new Promise((resolve) => setTimeout(resolve, 4000));
                     })
                     .then(() => {
                         expect(comm.comm.send).toHaveBeenCalled();
@@ -404,7 +406,9 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime'], (
                     .then(() => {
                         expect(document.querySelector('.modal #kb-job-err-trace')).not.toBeNull();
                         // click the 'OK' button
-                        document.querySelector('.modal a.btn.btn-default').click();
+                        document
+                            .querySelector('.modal a.btn.btn-default.kb-job-err-dialog__button')
+                            .click();
                         // expect it to be gone
                         return new Promise((resolve) => {
                             setTimeout(() => resolve(), 500);

@@ -11,7 +11,7 @@ define(['jquery', 'util/bootstrapSearch', 'base/js/namespace'], ($, BootstrapSea
         });
 
         afterEach(() => {
-            $targetElem.empty();
+            $targetElem.remove();
             Jupyter.narrative = null;
         });
 
@@ -91,8 +91,10 @@ define(['jquery', 'util/bootstrapSearch', 'base/js/namespace'], ($, BootstrapSea
         it('Should have a working focus function', (done) => {
             const bsSearch = new BootstrapSearch($targetElem);
             $('body').append($targetElem);
-            $targetElem.find('input.form-control').on('focus', (event) => {
+            spyOn(Jupyter.narrative, 'disableKeyboardManager');
+            $targetElem.find('input[type="text"]').on('focus', (event) => {
                 expect(event.type).toBe('focus');
+                expect(Jupyter.narrative.disableKeyboardManager).toHaveBeenCalled();
                 done();
             });
             bsSearch.focus();

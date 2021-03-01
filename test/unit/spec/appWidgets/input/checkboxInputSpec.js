@@ -1,10 +1,4 @@
-define([
-    'widgets/appWidgets2/input/checkboxInput',
-    'common/runtime',
-    'base/js/namespace',
-    'kbaseNarrative',
-    'testUtil',
-], (CheckboxInput, Runtime, Jupyter, Narrative, TestUtil) => {
+define(['widgets/appWidgets2/input/checkboxInput', 'common/runtime'], (CheckboxInput, Runtime) => {
     'use strict';
 
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
@@ -34,12 +28,6 @@ define([
                 },
                 channelName: bus.channelName,
             };
-            Jupyter.narrative = new Narrative();
-            if (TestUtil.getAuthToken()) {
-                document.cookie = 'kbase_session=' + TestUtil.getAuthToken();
-                Jupyter.narrative.authToken = TestUtil.getAuthToken();
-                Jupyter.narrative.userId = TestUtil.getUserId();
-            }
         });
 
         afterEach(() => {
@@ -47,14 +35,16 @@ define([
             window.kbaseRuntime = null;
         });
 
-        it('should be real!', () => {
+        it('should be defined', () => {
             expect(CheckboxInput).not.toBeNull();
         });
 
         it('should instantiate with a test config', () => {
-            TestUtil.pendingIfNoToken();
             const widget = CheckboxInput.make(testConfig);
             expect(widget).toEqual(jasmine.any(Object));
+            ['start', 'stop'].forEach((fn) => {
+                expect(widget[fn]).toEqual(jasmine.any(Function));
+            });
         });
 
         it('should start and stop properly without initial value', () => {
@@ -99,20 +89,6 @@ define([
             });
             const widget = CheckboxInput.make(testConfig);
             const node = document.createElement('div');
-            widget.start({ node: node }).then(() => {
-                const input = node.querySelector('input[type="checkbox"]');
-                input.setAttribute('checked', true);
-                input.dispatchEvent(new Event('change'));
-            });
-        });
-
-        it('should show message when configured', (done) => {
-            testConfig.showOwnMessaged = true;
-            const widget = CheckboxInput.make(testConfig);
-            const node = document.createElement('div');
-            bus.on('changed', (value) => {
-                done();
-            });
             widget.start({ node: node }).then(() => {
                 const input = node.querySelector('input[type="checkbox"]');
                 input.setAttribute('checked', true);

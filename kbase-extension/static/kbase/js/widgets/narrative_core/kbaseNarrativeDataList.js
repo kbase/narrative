@@ -305,7 +305,6 @@ define([
 
             // listener for refresh
             $(document).on('updateDataList.Narrative', () => {
-                console.log('updating datalist from trigger');
                 this.refresh();
             });
 

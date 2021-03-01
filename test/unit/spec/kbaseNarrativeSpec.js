@@ -17,6 +17,7 @@ define([
 
     describe('Test the kbaseNarrative module', () => {
         const loginDiv = $('<div>');
+        let narr;
 
         beforeAll(() => {
             // remove any jquery events that get bound to document,
@@ -98,10 +99,14 @@ define([
             // The NarrativeLogin.init call invokes both of the above token/user profile calls.
             // It's called before the creation of the Narrative object. So that needs to happen here.
             await NarrativeLogin.init(loginDiv);
+            narr = new Narrative();
         });
 
         afterEach(() => {
+            // a little hacky and implementation specific, but necessary right now
+            narr.loadingWidget.clearTimeout();
             jasmine.Ajax.uninstall();
+
             Jupyter.notebook = null;
             NarrativeLogin.clearTokenCheckTimers();
             NarrativeLogin.destroy();
@@ -113,58 +118,46 @@ define([
         });
 
         it('Should instantiate', () => {
-            const narr = new Narrative();
             expect(narr.maxNarrativeSize).toBe('10 MB');
-            narr.loadingWidget.clearTimeout();
         });
 
         it('Should have an init function that responds when the kernel is connected', (done) => {
-            const narr = new Narrative();
             const jobsReadyCallback = (err) => {
                 expect(err).toBeFalsy();
                 done();
             };
             narr.init(jobsReadyCallback);
             $([Jupyter.events]).trigger('kernel_connected.Kernel');
-            narr.loadingWidget.clearTimeout();
         });
 
         it('init should fail as expected when the job connection fails', (done) => {
             Jupyter.notebook.kernel.comm_info = () => {
                 throw new Error('an error happened');
             };
-            const narr = new Narrative();
             const jobsReadyCallback = (err) => {
                 expect(err).toBeDefined();
                 done();
             };
             narr.init(jobsReadyCallback);
             $([Jupyter.events]).trigger('kernel_connected.Kernel');
-            narr.loadingWidget.clearTimeout();
         });
 
         it('Should return a boolean for is_loaded', () => {
-            const narr = new Narrative();
             // default as set in the mock Jupyter object above
             expect(narr.isLoaded()).toEqual(DEFAULT_FULLY_LOADED);
-            narr.loadingWidget.clearTimeout();
         });
 
         it('Should test ui mode', () => {
-            const narr = new Narrative();
             expect(Jupyter.notebook.writable).toBe(DEFAULT_WRITABLE);
             expect(narr.uiModeIs('edit')).toBe(DEFAULT_WRITABLE);
             expect(narr.uiModeIs('view')).toBe(!DEFAULT_WRITABLE);
             Jupyter.notebook.writable = !Jupyter.notebook.writable;
             expect(narr.uiModeIs('edit')).toBe(!DEFAULT_WRITABLE);
             expect(narr.uiModeIs('view')).toBe(DEFAULT_WRITABLE);
-            narr.loadingWidget.clearTimeout();
         });
 
         it('Should provide an auth token when requested', () => {
-            const narr = new Narrative();
             expect(narr.getAuthToken()).toBe(TEST_TOKEN);
-            narr.loadingWidget.clearTimeout();
         });
     });
 });

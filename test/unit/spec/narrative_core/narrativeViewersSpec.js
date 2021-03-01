@@ -144,7 +144,6 @@ define(['narrativeViewers', 'narrativeConfig'], (Viewers, Config) => {
                     bare_type: 'Module.Type1',
                 },
             };
-            // spyOn(window, 'require').and.returnValue(new Error('nope'));
             spyOn(window, 'require').and.callFake((files, cb) => {
                 cb(function () {
                     return this;

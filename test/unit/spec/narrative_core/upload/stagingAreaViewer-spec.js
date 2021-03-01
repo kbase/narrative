@@ -7,7 +7,7 @@ define([
     'use strict';
 
     describe('The staging area viewer widget', () => {
-        let stagingViewer, $targetNode;
+        let stagingViewer, $targetNode, parentNode;
         const startingPath = '/',
             updatePathFn = () => {},
             fakeUser = 'notAUser';
@@ -51,7 +51,9 @@ define([
                 addAndPopulateApp: () => {},
                 hideOverlay: () => {},
             };
+            parentNode = $('<div id="stagingAreaDivParent">');
             $targetNode = $('<div>');
+            parentNode.append($targetNode);
             stagingViewer = new StagingAreaViewer($targetNode, {
                 path: startingPath,
                 updatePathFn: updatePathFn,
@@ -59,25 +61,28 @@ define([
                     user: fakeUser,
                     globusLinked: false,
                 },
+                refreshIntervalDuration: 2,
             });
         });
 
         afterEach(() => {
-            jasmine.Ajax.uninstall();
-            $targetNode.remove();
+            parentNode.remove();
+            stagingViewer.deactivate();
             stagingViewer = null;
+            jasmine.Ajax.uninstall();
+            Jupyter.narrative = null;
         });
 
         it('Should initialize properly', () => {
             expect(stagingViewer).not.toBeNull();
         });
 
-        it('Should render properly', () => {
-            stagingViewer.render();
+        it('Should render properly', async () => {
+            await stagingViewer.render();
             expect(stagingViewer).not.toBeNull();
         });
 
-        it('Should render properly with a Globus linked account', async (done) => {
+        it('Should render properly with a Globus linked account', async () => {
             const $node = $('<div>'),
                 linkedStagingViewer = new StagingAreaViewer($node, {
                     path: startingPath,
@@ -87,16 +92,14 @@ define([
                         globusLinked: true,
                     },
                 });
-            await linkedStagingViewer.render().then(() => {
-                const $globusButton = $node.find('#globusLinked');
-                expect($globusButton).toBeDefined();
-                expect($globusButton.html()).toContain('Upload with Globus');
-                expect($globusButton.attr('href')).toEqual(
-                    'https://app.globus.org/file-manager?destination_id=c3c0a65f-5827-4834-b6c9-388b0b19953a&destination_path=' +
-                        fakeUser
-                );
-                done();
-            });
+            await linkedStagingViewer.render()
+            const $globusButton = $node.find('#globusLinked');
+            expect($globusButton).toBeDefined();
+            expect($globusButton.html()).toContain('Upload with Globus');
+            expect($globusButton.attr('href')).toEqual(
+                'https://app.globus.org/file-manager?destination_id=c3c0a65f-5827-4834-b6c9-388b0b19953a&destination_path=' +
+                    fakeUser
+            );
         });
 
         it('Should render properly without a Globus linked account', async () => {
@@ -114,13 +117,16 @@ define([
             expect($urlButton.html()).toContain('Upload with URL');
         });
 
-        it('Should start a help tour', () => {
-            stagingViewer.render();
+        it('Should start a help tour', async () => {
+            await stagingViewer.render();
             stagingViewer.startTour();
             expect(stagingViewer.tour).not.toBeNull();
+            // clean up the DOM afterwards
+            stagingViewer.tour.tour.end();
         });
 
-        it('Should update its view with a proper subpath', async () => {
+        // FIXME: test requires expectations
+        xit('Should update its view with a proper subpath', async () => {
             await stagingViewer.updateView();
         });
 
@@ -151,9 +157,9 @@ define([
             expect($targetNode.find('#kb-data-staging-table').html()).toContain('No files found.');
         });
 
-        it('Should respond to activate and deactivate commands', () => {
+        it('Should respond to activate and deactivate commands', async () => {
             expect(stagingViewer.refreshInterval).toBeFalsy();
-            stagingViewer.activate();
+            await stagingViewer.activate();
             expect(stagingViewer.refreshInterval).toBeDefined();
             stagingViewer.deactivate();
             expect(stagingViewer.refreshInterval).toBeUndefined();
@@ -217,6 +223,8 @@ define([
             const dlNode = document.getElementById('hiddenDownloader');
             expect(dlNode).toBeDefined();
             expect(dlNode.getAttribute('src')).toEqual('some_url');
+            // clean up the DOM
+            $(dlNode).remove();
         });
     });
 });

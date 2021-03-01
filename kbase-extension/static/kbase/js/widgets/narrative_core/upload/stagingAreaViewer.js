@@ -178,7 +178,7 @@ define([
             // Add ACL before going to the staging area
             // If it fails, it'll just do so silently.
             const $globusLink = this.$elem.find('.globus_acl_link');
-            $globusLink.click((e) => {
+            $globusLink.click(() => {
                 const globusWindow = window.open('', 'globus');
                 globusWindow.document.write(
                     '<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>'
@@ -360,10 +360,10 @@ define([
                         sType: 'numeric',
                     },
                 ],
-                rowCallback: function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {
-                    const getFileFromName = function (fileName) {
+                rowCallback: function (nRow) {
+                    const getFileFromName = function (_fileName) {
                         return files.filter((file) => {
-                            return file.name === fileName;
+                            return file.name === _fileName;
                         })[0];
                     };
 
@@ -439,9 +439,8 @@ define([
                     $('td:eq(0)', nRow).find('i[data-caret]').off('click');
 
                     // What a @#*$!ing PITA. First, we find the expansion caret in the first cell.
-                    let $caret = $('td:eq(0)', nRow).find('i[data-caret]'),
-                        fileName,
-                        myFile;
+                    const $caret = $('td:eq(0)', nRow).find('i[data-caret]');
+                    let fileName, myFile;
                     if ($caret.length) {
                         //next, we use that caret to find the fileName, and the file Data.
                         fileName = $caret.data().caret;
@@ -481,8 +480,8 @@ define([
                     $('td:eq(1)', nRow)
                         .find('button[data-decompress]')
                         .on('click', (e) => {
-                            const fileName = $(e.currentTarget).data().decompress;
-                            const myFile = getFileFromName(fileName);
+                            const _fileName = $(e.currentTarget).data().decompress;
+                            const _myFile = getFileFromName(_fileName);
 
                             $(e.currentTarget).replaceWith(
                                 $.jqElem('i').addClass('fa fa-spinner fa-spin')
@@ -490,7 +489,7 @@ define([
 
                             this.stagingServiceClient
                                 .decompress({
-                                    path: myFile.name,
+                                    path: _myFile.name,
                                 })
                                 .then(() => this.updateView())
                                 .fail((xhr) => {
@@ -530,7 +529,7 @@ define([
                 .metadata({
                     path: filePath,
                 })
-                .then((dataString, status, xhr) => {
+                .then((dataString) => {
                     const $tabsContainer = $.jqElem('div');
                     const data = JSON.parse(dataString);
 
@@ -655,10 +654,10 @@ define([
                         .jgi_metadata({
                             path: filePath,
                         })
-                        .then((dataString, status, xhr) => {
+                        .then((_dataString) => {
                             // XXX - while doing this, I ran into a NaN issue in the file, specifically on the key illumina_read_insert_size_avg_insert.
                             //       So we nuke any NaN fields to make it valid again.
-                            const metadataJSON = JSON.parse(dataString.replace(/NaN/g, '""'));
+                            const metadataJSON = JSON.parse(_dataString.replace(/NaN/g, '""'));
                             const metadataContents = JSON.stringify(metadataJSON, null, 2);
 
                             $tabs.addTab({
@@ -700,9 +699,9 @@ define([
         initImportApp: function (type, file) {
             const appInfo = this.uploaders.app_info[type];
             if (appInfo) {
-                let tag = APIUtil.getAppVersionTag(),
-                    fileParam = file ? file.name : '',
+                const tag = APIUtil.getAppVersionTag(),
                     inputs = {};
+                let fileParam = file ? file.name : '';
                 if (this.subpath) {
                     fileParam = this.subpath + '/' + file.name;
                 }
@@ -729,14 +728,10 @@ define([
         },
 
         startTour: function () {
-            const tourStartFn = function () {};
-
             if (!this.tour) {
                 this.tour = new UploadTour.Tour(
                     this.$elem.parent(),
-                    this.globus_name,
-                    tourStartFn,
-                    this.updateView.bind(this)
+                    this.globus_name
                 );
             }
             this.tour.start();

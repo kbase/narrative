@@ -4,10 +4,9 @@ define([
     'narrativeConfig',
     'kb_service/client/workspace',
     'base/js/namespace',
-], (DataList, $, Config, Workspace, Jupyter) => {
+    'narrativeMocks',
+], (DataList, $, Config, Workspace, Jupyter, Mocks) => {
     'use strict';
-    let $dataList = $('<div>');
-    let dataListObj = null;
 
     const fakeNSUrl = 'https://ci.kbase.us/services/fake_url';
     const narrativeServiceInfo = {
@@ -83,18 +82,21 @@ define([
     }
 
     describe('Test the kbaseNarrativeDataList', () => {
+        let $dataList, dataListObj;
         beforeEach(() => {
+            $dataList = $('<div>');
             jasmine.Ajax.install();
+            const AUTH_TOKEN = 'fakeAuthToken';
+            Mocks.setAuthToken(AUTH_TOKEN);
             Jupyter.narrative = {
-                getAuthToken: () => 'someToken',
+                getAuthToken: () => AUTH_TOKEN,
                 getWorkspaceName: () => 'someWorkspace',
             };
         });
 
         afterEach(() => {
             jasmine.Ajax.uninstall();
-            $dataList = $('<div>');
-            dataListObj = null;
+            Jupyter.narrative = null;
         });
 
         describe('Without data', () => {
@@ -160,7 +162,7 @@ define([
                 mockWorkSpaceService();
 
                 // Create datalist object
-                const dataListObj = new DataList($dataList, {});
+                dataListObj = new DataList($dataList, {});
 
                 // Populate datalist object via the refresh function
                 dataListObj.ws_name = 'some_workspace';

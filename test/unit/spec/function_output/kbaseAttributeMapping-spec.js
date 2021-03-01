@@ -1,22 +1,25 @@
-define(['jquery', 'kbaseAttributeMapping', 'base/js/namespace', 'kbaseNarrative'], (
+define(['jquery', 'kbaseAttributeMapping', 'base/js/namespace', 'narrativeMocks'], (
     $,
     kbaseAttributeMapping,
     Jupyter,
-    Narrative
+    Mocks
 ) => {
     'use strict';
     describe('The kbaseAttributeMapping widget', () => {
         let $div = null;
         beforeEach(() => {
             jasmine.Ajax.install();
-            $div = $('<div>');
-            Jupyter.narrative = new Narrative();
-            Jupyter.narrative.getAuthToken = () => {
-                return 'NotARealToken!';
+            const AUTH_TOKEN = 'fakeAuthToken';
+            Mocks.setAuthToken(AUTH_TOKEN);
+            Jupyter.narrative = {
+                getAuthToken: () => AUTH_TOKEN,
             };
+            $div = $('<div>');
         });
 
         afterEach(() => {
+            Mocks.clearAuthToken();
+            Jupyter.narrative = null;
             jasmine.Ajax.uninstall();
             $div.remove();
         });
@@ -69,7 +72,7 @@ define(['jquery', 'kbaseAttributeMapping', 'base/js/namespace', 'kbaseNarrative'
                     ],
                 }),
             });
-            const w = new kbaseAttributeMapping($div, { upas: { obj_ref: 'fake' } });
+            new kbaseAttributeMapping($div, { upas: { obj_ref: 'fake' } });
             ['Time series design', 'Treatment with Sirolimus', 'S1', 'S9'].forEach((str) => {
                 expect($div.html()).toContain(str);
             });
@@ -124,7 +127,7 @@ define(['jquery', 'kbaseAttributeMapping', 'base/js/namespace', 'kbaseNarrative'
                     ],
                 }),
             });
-            const w = new kbaseAttributeMapping($div, { upas: { obj_ref: 'fake' } });
+            new kbaseAttributeMapping($div, { upas: { obj_ref: 'fake' } });
             ['Time series design', 'Treatment with Sirolimus', 'S1', 'S9'].forEach((str) => {
                 expect($div.html()).toContain(str);
             });

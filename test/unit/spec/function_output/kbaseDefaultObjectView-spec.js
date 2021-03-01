@@ -1,23 +1,25 @@
 define([
     'jquery',
     'widgets/function_output/kbaseDefaultObjectView',
-    'common/runtime',
     'base/js/namespace',
-    'kbaseNarrative',
-], ($, KBaseDefaultObjectView, Runtime, Jupyter, Narrative) => {
+    'narrativeMocks',
+], ($, KBaseDefaultObjectView, Jupyter, Mocks) => {
     'use strict';
     describe('The kbaseDefaultObjectView widget', () => {
         let $div = null;
         beforeEach(() => {
             jasmine.Ajax.install();
-            $div = $('<div>');
-            Jupyter.narrative = new Narrative();
-            Jupyter.narrative.getAuthToken = () => {
-                return 'NotARealToken!';
+            const AUTH_TOKEN = 'fakeAuthToken';
+            Mocks.setAuthToken(AUTH_TOKEN);
+            Jupyter.narrative = {
+                getAuthToken: () => AUTH_TOKEN,
             };
+            $div = $('<div>');
         });
 
         afterEach(() => {
+            Mocks.clearAuthToken();
+            Jupyter.narrative = null;
             jasmine.Ajax.uninstall();
             $div.remove();
         });

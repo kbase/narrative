@@ -33,7 +33,7 @@ define([
                         subtitle: 'Run an app',
                         tooltip: 'Run an app',
                         icon: {
-                            url: 'img?method_id=a_module/an_app&image_name=an_app.png&tag=release',
+                            isApp: true,
                         },
                         categories: ['active', CATEGORY_A],
                         authors: [FAKE_USER],
@@ -55,8 +55,7 @@ define([
                         subtitle: 'Run an app',
                         tooltip: 'Run an app',
                         icon: {
-                            url:
-                                'img?method_id=another_module/another_app&image_name=an_app.png&tag=release',
+                            isApp: true,
                         },
                         categories: ['active', CATEGORY_B],
                         authors: [FAKE_USER],
@@ -112,7 +111,6 @@ define([
 
         afterEach(() => {
             appPanel.detach();
-            $panel = $('<div>');
             appPanel = null;
             Jupyter.notebook = null;
             Jupyter.narrative = null;
@@ -406,7 +404,7 @@ define([
                 dummySpec = {
                     info: {
                         id: appId,
-                        name: appName
+                        name: appName,
                     },
                 },
                 appTag = 'release';

@@ -11,7 +11,7 @@ define([
 ], ($, Jupyter, Tour, Handlebars, TourTmpl) => {
     'use strict';
 
-    const UploadTour = function ($elem, useGlobus, tourStartFn, tourEndFn) {
+    const UploadTour = function ($elem, useGlobus) {
         const that = this;
         this.$elem = $elem;
         this.step_duration = 0;
@@ -96,10 +96,8 @@ define([
             duration: this.step_duration,
             onPause: this.toggle_pause_play,
             onResume: this.toggle_pause_play,
-            // onStart: tourStartFn,
-            // onEnd: tourEndFn,
             steps: this.tour_steps,
-            template: function (i, step) {
+            template: function (i) {
                 return that.template({
                     step: i + 1,
                     totalSteps: that.tour_steps.length,

@@ -46,10 +46,10 @@ define([
                 placement: 'bottom',
                 content:
                     "If there's an update to the Narrative Interface, this button will appear. Click it before you start working on your Narrative.",
-                onShow: function (tour) {
+                onShow: function () {
                     $('#kb-update-btn').show();
                 },
-                onHide: function (tour) {
+                onHide: function () {
                     $('#kb-update-btn').hide();
                 },
             },
@@ -80,17 +80,17 @@ define([
                 placement: 'bottom',
                 content:
                     'The Analyze tab contains both the data you have added to this Narrative and the analysis tools in KBase--called Apps.',
-                onShow: function (tour) {
+                onShow: function () {
                     $('.kb-side-header[kb-data-id="0"]').click();
                 },
             },
             {
-                element: $('.kb-side-tab[kb-data-id="0"]').find('button > .fa-arrow-right').first(), //$('.kb-side-tab[kb-data-id="0"] > button > .fa-arrow-right'),
+                element: $('.kb-side-tab[kb-data-id="0"]').find('button > .fa-arrow-right').first(),
                 title: 'Data Slideout',
                 placement: 'left',
                 content:
                     'This arrow opens the data slideout, which allows you to add data to your Narrative from a variety of sources.',
-                onShow: function (tour) {
+                onShow: function () {
                     that.openDataSlideout(true);
                 },
             },
@@ -100,7 +100,7 @@ define([
                 placement: 'bottom',
                 content:
                     'The <i>My Data</i> tab shows data from your other Narratives. If this is your first Narrative, it will be empty.',
-                onShow: function (tour) {
+                onShow: function () {
                     that.openDataSlideout(true);
                     $('.kb-side-overlay-container .kb-side-header:nth-child(1)').click();
                 },
@@ -111,7 +111,7 @@ define([
                 placement: 'bottom',
                 content:
                     'The <i>Shared With Me</i> tab contains data from any Narratives that have been shared with you by collaborators.',
-                onShow: function (tour) {
+                onShow: function () {
                     that.openDataSlideout(true);
                     $('.kb-side-overlay-container .kb-side-header:nth-child(2)').click();
                 },
@@ -122,7 +122,7 @@ define([
                 placement: 'bottom',
                 content:
                     'The <i>Public</i> tab provides direct access to public data that KBase periodically imports from several sources. These sources are listed on the KBase website <a href="//www.kbase.us/data-policy-and-sources" target="_blank">www.kbase.us/data-policy-and-sources</a>',
-                onShow: function (tour) {
+                onShow: function () {
                     that.openDataSlideout(true);
                     $('.kb-side-overlay-container .kb-side-header:nth-child(3)').click();
                 },
@@ -133,7 +133,7 @@ define([
                 placement: 'bottom',
                 content:
                     'The <i>Example</i> tab contains sample data that can be used to try out KBase analysis tools.',
-                onShow: function (tour) {
+                onShow: function () {
                     that.openDataSlideout(true);
                     $('.kb-side-overlay-container .kb-side-header:nth-child(4)').click();
                 },
@@ -144,7 +144,7 @@ define([
                 placement: 'bottom',
                 content:
                     'Finally, the <i>Import</i> tab allows you to upload your own data for analysis. Any data you add are kept private unless you choose to share your Narrative. <a href="//docs.kbase.us/data/upload-download-guide/" target="_blank">The Data Upload/Download Guide</a> has more information about how to import your data.',
-                onShow: function (tour) {
+                onShow: function () {
                     that.openDataSlideout(true);
                     $('.kb-side-overlay-container .kb-side-header:nth-child(5)').click();
                 },
@@ -155,24 +155,23 @@ define([
                 placement: 'right',
                 content:
                     'In KBase, you can run complex analyses on the data in your Narrative by using Apps. All of the Apps available in KBase are listed just below the Data Panel. Click an App name to add it to your Narrative, or click the “...” that appears to the right of the name when hovering your mouse to see more information about the App.',
-                onShow: function (tour) {
+                onShow: function () {
                     $('.kb-side-header[kb-data-id="0"]').click();
                     that.openDataSlideout(false);
                 },
             },
             {
                 element:
-                    '.kb-side-separator:nth-child(2) .kb-function-body .kb-data-list-obj-row:first', //'.kb-narr-side-panel-set > .kb-side-separator:nth-child(2)', // [...] or more... btn on first app
+                    '.kb-side-separator:nth-child(2) .kb-function-body .kb-data-list-obj-row:first',
                 title: 'App Information',
                 placement: 'right',
                 content:
                     'After clicking the "..." to see a short description of an App, click the "more..." link at the end of the description to open another tab with detailed information about the App.',
-                onShow: function (tour) {
+                onShow: function () {
                     $('.kb-side-header[kb-data-id="0"]').click();
                     $(
                         '.kb-side-separator:nth-child(2) .kb-function-body .kb-data-list-obj-row:first'
                     ).click();
-                    // get first ellipsis and click on it.
                 },
             },
             {
@@ -181,7 +180,7 @@ define([
                 placement: 'bottom',
                 content:
                     '<p>This tab lists all your Narratives and those that have been shared with you. Click the name of any Narrative to open it in a new window. Hovering over a Narrative name will reveal options for viewing its history, reverting to an earlier version, and copying or deleting it. This tab also lets you create a new, empty Narrative or copy a Narrative, complete with all its data and contents.',
-                onShow: function (tour) {
+                onShow: function () {
                     $('.kb-side-header[kb-data-id="1"]').click();
                 },
             },
@@ -206,12 +205,6 @@ define([
                 content:
                     'Access control options for the Jupyter kernel that powers the Narrative Interface. This is useful for restarting or reconnecting to KBase after your network connection has been disrupted.',
             },
-            // {
-            //     element: '#kb-settings-btn',
-            //     title: 'Adjust Global Settings',
-            //     placement: 'bottom',
-            //     content: 'Enable advanced or developer features for your Narrative in the Settings Menu. These option are enabled for individual Narratives. Refresh your browser to enable these settings for your Narrative.'
-            // },
             {
                 element: '#kb-add-code-cell',
                 title: 'Code Cells',
@@ -237,7 +230,7 @@ define([
             onPause: this.toggle_pause_play,
             onResume: this.toggle_pause_play,
             steps: this.tour_steps,
-            template: function (i, step) {
+            template: function (i) {
                 return that.template({ step: i + 1, totalSteps: that.tour_steps.length });
             },
             orphan: true,
@@ -250,13 +243,8 @@ define([
     NarrativeTour.prototype.openDataSlideout = function (setOpen) {
         if (setOpen) {
             this.narrative.showDataOverlay();
-            // $(document).trigger('showSidePanelOverlay.Narrative');
-            // $('.kb-side-tab[kb-data-id="0"]').find('button > .fa-arrow-right')
-            //                                  .first()
-            //                                  .click();
         } else {
             this.narrative.hideOverlay();
-            // $(document).trigger('hideSidePanelOverlay.Narrative');
         }
     };
 

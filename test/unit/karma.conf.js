@@ -8,6 +8,7 @@ module.exports = function (config) {
             jasmine: {
                 failFast: false,
                 DEFAULT_TIMEOUT_INTERVAL: 20000,
+                failSpecWithNoExpectations: true,
             },
             requireJsShowNoTimestampsError: '^(?!.*(^/narrative/))',
             clearContext: false,
@@ -76,7 +77,6 @@ module.exports = function (config) {
             'kbase-extension/static/kbase/js/patched-components/**/*',
         ],
         // test results reporter to use
-        // possible values: 'dots', 'progress'
         // available reporters: https://npmjs.org/browse/keyword/karma-reporter
         reporters: ['mocha', 'coverage', 'json-result'],
         coverageReporter: {

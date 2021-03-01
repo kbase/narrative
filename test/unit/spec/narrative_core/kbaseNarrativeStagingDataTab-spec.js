@@ -6,6 +6,7 @@ define(['jquery', 'kbaseNarrativeStagingDataTab', 'base/js/namespace'], (
     'use strict';
     describe('The kbaseNarrativeStagingDataTab widget', () => {
         const fakeUser = 'notAUser';
+        let $dummyNode, stagingWidget;
         beforeEach(() => {
             jasmine.Ajax.install();
             jasmine.Ajax.stubRequest(/\/auth\/api\/V2\/me$/).andReturn({
@@ -55,15 +56,20 @@ define(['jquery', 'kbaseNarrativeStagingDataTab', 'base/js/namespace'], (
                     return 'fakeToken';
                 },
             };
+            $dummyNode = $('<div>');
+            stagingWidget = new StagingDataTab($dummyNode);
         });
 
         afterEach(() => {
+            try {
+                stagingWidget.deactivate();
+                // eslint-disable-next-line no-empty
+            } catch (err) {}
+            Jupyter.narrative = null;
             jasmine.Ajax.uninstall();
         });
 
         it('can load properly', async () => {
-            const $dummyNode = $('<div>'),
-                stagingWidget = new StagingDataTab($dummyNode);
             await stagingWidget.render();
             expect(stagingWidget).not.toBeNull();
         });
@@ -76,22 +82,16 @@ define(['jquery', 'kbaseNarrativeStagingDataTab', 'base/js/namespace'], (
                 responseHeaders: '',
                 responseText: 'error! no profile for you!',
             });
-            const $dummyNode = $('<div>'),
-                stagingWidget = new StagingDataTab($dummyNode);
             const userInfo = await stagingWidget.getUserInfo();
             expect(userInfo).toEqual({ user: fakeUser, globusLinked: false });
         });
 
         it('gets user info and parsed into whether or not the user is linked to globus', async () => {
-            const $dummyNode = $('<div>'),
-                stagingWidget = new StagingDataTab($dummyNode);
             const userInfo = await stagingWidget.getUserInfo();
             expect(userInfo).toEqual({ user: fakeUser, globusLinked: true });
         });
 
         it('can update its path properly', async () => {
-            const $dummyNode = $('<div>'),
-                stagingWidget = new StagingDataTab($dummyNode);
             await stagingWidget.render();
             const newPath = 'a_new_path';
             stagingWidget.updatePath(newPath);
@@ -99,8 +99,6 @@ define(['jquery', 'kbaseNarrativeStagingDataTab', 'base/js/namespace'], (
         });
 
         it('can activate its staging area viewer', async () => {
-            const $dummyNode = $('<div>'),
-                stagingWidget = new StagingDataTab($dummyNode);
             await stagingWidget.render();
             spyOn(stagingWidget.stagingAreaViewer, 'activate');
             stagingWidget.activate();
@@ -108,8 +106,6 @@ define(['jquery', 'kbaseNarrativeStagingDataTab', 'base/js/namespace'], (
         });
 
         it('can deactivate its staging area viewer', async () => {
-            const $dummyNode = $('<div>'),
-                stagingWidget = new StagingDataTab($dummyNode);
             await stagingWidget.render();
             spyOn(stagingWidget.stagingAreaViewer, 'deactivate');
             stagingWidget.activate();
@@ -119,9 +115,6 @@ define(['jquery', 'kbaseNarrativeStagingDataTab', 'base/js/namespace'], (
 
         it('can be told to update its view', async () => {
             jasmine.clock().install();
-
-            const $dummyNode = $('<div>'),
-                stagingWidget = new StagingDataTab($dummyNode);
             await stagingWidget.render();
             // kinda cheating - but to test that things are run, we know that this will call
             // stagingAreaViewer.render
@@ -134,8 +127,6 @@ define(['jquery', 'kbaseNarrativeStagingDataTab', 'base/js/namespace'], (
         });
 
         it('can be triggered to update its view after a completed upload', async () => {
-            const $dummyNode = $('<div>'),
-                stagingWidget = new StagingDataTab($dummyNode);
             await stagingWidget.render();
             spyOn(stagingWidget, 'updateView');
             // a little more cheating with implementation, this triggers the "upload complete" event
@@ -145,9 +136,6 @@ define(['jquery', 'kbaseNarrativeStagingDataTab', 'base/js/namespace'], (
 
         it('only updates its view once per interval on completed uploads', async () => {
             jasmine.clock().install();
-
-            const $dummyNode = $('<div>'),
-                stagingWidget = new StagingDataTab($dummyNode);
             await stagingWidget.render();
             // run a bunch of triggers, should only call render on the staging area once
             spyOn(stagingWidget.stagingAreaViewer, 'render');

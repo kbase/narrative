@@ -81,11 +81,14 @@ define([
                     this.updateView();
                 });
 
-                this.stagingAreaViewer = new StagingAreaViewer(this.$myFiles, {
-                    path: this.path,
-                    updatePathFn: this.updatePath.bind(this),
-                    userInfo: userInfo,
-                });
+                const stagingAreaArgs = Object.assign({},
+                    this.options.stagingAreaViewer || {},
+                    {
+                        path: this.path,
+                        updatePathFn: this.updatePath.bind(this),
+                        userInfo: userInfo
+                    })
+                this.stagingAreaViewer = new StagingAreaViewer(this.$myFiles, stagingAreaArgs);
 
                 this.updateView();
             });

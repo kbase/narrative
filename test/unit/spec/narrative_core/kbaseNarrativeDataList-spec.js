@@ -4,7 +4,7 @@ define([
     'narrativeConfig',
     'kb_service/client/workspace',
     'base/js/namespace',
-    'narrativeMocks'
+    'narrativeMocks',
 ], (DataList, $, Config, Workspace, Jupyter, Mocks) => {
     'use strict';
 
@@ -81,8 +81,10 @@ define([
 
         beforeEach(() => {
             jasmine.Ajax.install();
+            const AUTH_TOKEN = 'fakeAuthToken';
+            Mocks.setAuthToken(AUTH_TOKEN);
             Jupyter.narrative = {
-                getAuthToken: () => 'someToken',
+                getAuthToken: () => AUTH_TOKEN,
                 getWorkspaceName: () => 'someWorkspace',
             };
 

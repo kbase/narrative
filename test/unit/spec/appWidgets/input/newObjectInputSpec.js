@@ -1,18 +1,15 @@
 define([
-    'testUtil',
     'common/runtime',
     'widgets/appWidgets2/input/newObjectInput',
     'base/js/namespace',
-    'kbaseNarrative',
-], (TestUtil, Runtime, NewObjectInput, Jupyter, Narrative) => {
+    'narrativeMocks',
+], (Runtime, NewObjectInput, Jupyter, Mocks) => {
     'use strict';
-    let bus,
-        testConfig,
+    let bus, testConfig, runtime, node;
+    const AUTH_TOKEN = 'fakeAuthToken',
         required = false,
-        runtime,
-        node,
-        defaultValue = 'apple';
-    const wsObjName = 'SomeObject',
+        defaultValue = 'apple',
+        wsObjName = 'SomeObject',
         wsObjType = 'SomeModule.SomeType',
         wsObjMapping = {
             1: [null],
@@ -48,21 +45,21 @@ define([
             ],
         };
 
-    function buildTestConfig(required, defaultValue, bus) {
+    function buildTestConfig(_required, _defaultValue, _bus) {
         return {
-            bus: bus,
+            bus: _bus,
             parameterSpec: {
                 data: {
-                    defaultValue: defaultValue,
+                    defaultValue: _defaultValue,
                     nullValue: '',
                     constraints: {
-                        required: required,
-                        defaultValue: defaultValue,
+                        required: _required,
+                        defaultValue: _defaultValue,
                         types: ['SomeModule.SomeType'],
                     },
                 },
             },
-            channelName: bus.channelName,
+            channelName: _bus.channelName,
             closeParameters: [],
             workspaceId: 777,
         };
@@ -72,12 +69,11 @@ define([
     describe('New Object Input tests', () => {
         beforeEach(() => {
             runtime = Runtime.make();
-            Jupyter.narrative = new Narrative();
-            if (TestUtil.getAuthToken()) {
-                document.cookie = 'kbase_session=' + TestUtil.getAuthToken();
-                Jupyter.narrative.authToken = TestUtil.getAuthToken();
-                Jupyter.narrative.userId = TestUtil.getUserId();
-            }
+            Mocks.setAuthToken(AUTH_TOKEN);
+            Jupyter.narrative = {
+                getAuthToken: () => AUTH_TOKEN,
+                userId: 'test_user',
+            };
 
             node = document.createElement('div');
             bus = runtime.bus().makeChannelBus({
@@ -89,7 +85,7 @@ define([
             jasmine.Ajax.install();
             jasmine.Ajax.stubRequest(
                 runtime.config('services.workspace.url'),
-                /wsid.\s*\:\s*777\s*,/
+                /wsid.\s*:\s*777\s*,/
             ).andReturn(
                 (function () {
                     return {
@@ -106,16 +102,21 @@ define([
             jasmine.Ajax.uninstall();
             bus.stop();
             window.kbaseRuntime = null;
+            Jupyter.narrative = null;
         });
 
-        it('Should load the widget', () => {
+        it('should be defined', () => {
             expect(NewObjectInput).not.toBeNull();
         });
 
-        it('Should start and stop a widget', (done) => {
+        it('should be instantiable', () => {
             const widget = NewObjectInput.make(testConfig);
-            expect(widget).toBeDefined();
-            expect(widget.start).toBeDefined();
+            expect(widget).toEqual(jasmine.any(Object));
+            expect(widget.start).toEqual(jasmine.any(Function));
+        });
+
+        it('Should start a widget', (done) => {
+            const widget = NewObjectInput.make(testConfig);
 
             bus.on('sync', () => {
                 const inputElem = node.querySelector('input');
@@ -177,7 +178,7 @@ define([
                 },
             });
 
-            bus.on('validation', (message) => {
+            bus.on('validation', () => {
                 const inputElem = node.querySelector('input[data-element="input"]');
                 if (inputElem) {
                     if (validationCount < 1) {
@@ -216,7 +217,7 @@ define([
                 },
             });
 
-            bus.on('validation', (message) => {
+            bus.on('validation', () => {
                 const inputElem = node.querySelector('input[data-element="input"]');
                 if (inputElem) {
                     if (validationCount < 1) {
@@ -275,7 +276,6 @@ define([
         });
 
         it('Should respond to non-unique parameter change events with "validation"', (done) => {
-            TestUtil.pendingIfNoToken();
             const widget = NewObjectInput.make(testConfig);
             const inputStr = 'banana';
             bus.respond({
@@ -291,7 +291,7 @@ define([
                 },
             });
 
-            bus.on('validation', (message) => {
+            bus.on('validation', () => {
                 const inputElem = node.querySelector('input[data-element="input"]');
                 if (inputElem) {
                     inputElem.dispatchEvent(new Event('change'));
@@ -310,7 +310,6 @@ define([
         });
 
         it('Should validate against workspace with non-unique parameter change events with "validation"', (done) => {
-            TestUtil.pendingIfNoToken();
             const widget = NewObjectInput.make(testConfig);
             const inputStr = wsObjName;
             bus.respond({

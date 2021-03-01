@@ -1,9 +1,4 @@
-define([
-    'widgets/appWidgets2/input/subdataInput',
-    'base/js/namespace',
-    'kbaseNarrative',
-    'testUtil',
-], (SubdataInput, Jupyter, Narrative, TestUtil) => {
+define(['widgets/appWidgets2/input/subdataInput'], (SubdataInput) => {
     'use strict';
 
     describe('Test subobject data input widget', () => {
@@ -23,23 +18,20 @@ define([
             channelName: 'foo',
         };
 
-        beforeEach(() => {
-            Jupyter.narrative = new Narrative();
-            if (TestUtil.getAuthToken()) {
-                document.cookie = 'kbase_session=' + TestUtil.getAuthToken();
-                Jupyter.narrative.authToken = TestUtil.getAuthToken();
-                Jupyter.narrative.userId = TestUtil.getUserId();
-            }
+        afterEach(() => {
+            window.kbaseRuntime = null;
         });
 
-        it('should be real!', () => {
+        it('should be defined', () => {
             expect(SubdataInput).not.toBeNull();
         });
 
-        it('should instantiate with a test config', () => {
-            TestUtil.pendingIfNoToken();
+        it('should instantiate an object with start and stop functions', () => {
             const widget = SubdataInput.make(testConfig);
             expect(widget).toEqual(jasmine.any(Object));
+            ['start', 'stop'].forEach((fn) => {
+                expect(widget[fn]).toEqual(jasmine.any(Function));
+            });
         });
     });
 });

@@ -1,22 +1,25 @@
-define(['jquery', 'kbaseAlignment', 'base/js/namespace', 'kbaseNarrative'], (
+define(['jquery', 'kbaseAlignment', 'base/js/namespace', 'narrativeMocks'], (
     $,
     kbaseAlignment,
     Jupyter,
-    Narrative
+    Mocks
 ) => {
     'use strict';
     describe('The kbaseAlignment widget', () => {
         let $div = null;
         beforeEach(() => {
             jasmine.Ajax.install();
-            $div = $('<div>');
-            Jupyter.narrative = new Narrative();
-            Jupyter.narrative.getAuthToken = () => {
-                return 'NotARealToken!';
+            const AUTH_TOKEN = 'fakeAuthToken';
+            Mocks.setAuthToken(AUTH_TOKEN);
+            Jupyter.narrative = {
+                getAuthToken: () => AUTH_TOKEN,
             };
+            $div = $('<div>');
         });
 
         afterEach(() => {
+            Mocks.clearAuthToken();
+            Jupyter.narrative = null;
             jasmine.Ajax.uninstall();
             $div.remove();
         });

@@ -3,28 +3,25 @@ define(['common/runtime', 'widgets/appWidgets2/input/toggleButtonInput'], (
     ToggleButtonInput
 ) => {
     'use strict';
-    let bus,
-        testConfig,
-        required = false,
-        runtime,
-        node,
+    let bus, testConfig, runtime, node;
+    const required = false,
         defaultValue = true;
 
-    function buildTestConfig(required, defaultValue, bus) {
+    function buildTestConfig(_required, _defaultValue, _bus) {
         return {
-            bus: bus,
+            bus: _bus,
             parameterSpec: {
                 data: {
-                    defaultValue: defaultValue,
+                    defaultValue: _defaultValue,
                     nullValue: null,
                     constraints: {
-                        required: required,
+                        required: _required,
                     },
                 },
-                defaultValue: () => defaultValue,
-                required: () => required,
+                defaultValue: () => _defaultValue,
+                required: () => _required,
             },
-            channelName: bus.channelName,
+            channelName: _bus.channelName,
         };
     }
 
@@ -46,7 +43,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/toggleButtonInput'], (
             window.kbaseRuntime = null;
         });
 
-        it('Should load the widget', () => {
+        it('should be defined', () => {
             expect(ToggleButtonInput).not.toBeNull();
         });
 

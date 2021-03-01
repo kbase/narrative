@@ -122,7 +122,7 @@ define(['common/runtime'], (Runtime) => {
             return newUpa;
         };
 
-        var serializeAll = function (upas) {
+        const serializeAll = function (upas) {
             if (typeof upas === 'string') {
                 return serialize(upas);
             } else if (Array.isArray(upas)) {
@@ -137,7 +137,7 @@ define(['common/runtime'], (Runtime) => {
             }
         };
 
-        var deserializeAll = function (upas) {
+        const deserializeAll = function (upas) {
             if (typeof upas === 'string') {
                 return deserialize(upas);
             } else if (Array.isArray(upas)) {

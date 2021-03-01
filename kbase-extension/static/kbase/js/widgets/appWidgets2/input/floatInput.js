@@ -19,30 +19,23 @@ define([
         input = t('input');
 
     function factory(config) {
-        let spec = config.parameterSpec,
+        const spec = config.parameterSpec,
             runtime = Runtime.make(),
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(config.channelName),
-            parent,
-            container,
-            model,
-            ui;
+            model = Props.make({
+                data: {
+                    value: spec.data.nullValue,
+                },
+                onUpdate: function () {},
+            });
+
+        let parent, container, ui;
 
         // CONTROL
 
         function getControlValue() {
             return ui.getElement('input-container.input').value;
-        }
-
-        function setControlValue(value) {
-            let stringValue;
-            if (value === null) {
-                stringValue = '';
-            } else {
-                stringValue = String(value);
-            }
-
-            ui.getElement('input-container.input').value = stringValue;
         }
 
         // MODEL
@@ -61,11 +54,6 @@ define([
 
         function resetModelValue() {
             setModelValue(spec.data.constraints.defaultValue);
-        }
-
-        // sync the dom to the model.
-        function syncModelToControl() {
-            setControlValue(model.getItem('value', null));
         }
 
         // VALIDATION
@@ -142,7 +130,10 @@ define([
                                         message: result.errorMessage,
                                     });
                                     ui.setContent('input-container.message', message.content);
-                                    message.events.attachEvents();
+                                    // FIXME: when enabled, this (silently) throws error
+                                    // "Error: could not find node for #kb_html_.+"
+                                    //
+                                    // message.events.attachEvents();
                                 }
                             }
                             channel.emit('validation', result);
@@ -160,49 +151,64 @@ define([
 
         function makeInputControl(currentValue, events) {
             // CONTROL
-            let initialControlValue,
-                min = spec.data.constraints.min,
+            const min = spec.data.constraints.min,
                 max = spec.data.constraints.max;
+            let initialControlValue;
 
             if (typeof currentValue === 'number') {
                 initialControlValue = String(currentValue);
             }
 
-            return div({ style: { width: '100%' }, dataElement: 'input-wrapper' }, [
-                div({ class: 'input-group', style: { width: '100%' } }, [
-                    typeof min === 'number'
-                        ? div(
-                              {
-                                  class: 'input-group-addon kb-input-group-addon',
-                                  fontFamily: 'monospace',
-                              },
-                              String(min) + ' &#8804; '
-                          )
-                        : '',
-                    input({
-                        id: events.addEvents({
-                            events: [handleChanged(), handleTouched()],
-                        }),
-                        class: 'form-control',
-                        dataElement: 'input',
-                        dataType: 'float',
-                        style: {
-                            textAlign: 'right',
+            return div(
+                {
+                    style: { width: '100%' },
+                    dataElement: 'input-wrapper',
+                },
+                [
+                    div(
+                        {
+                            class: 'input-group',
+                            style: { width: '100%' },
                         },
-                        value: initialControlValue,
+                        [
+                            typeof min === 'number'
+                                ? div(
+                                      {
+                                          class: 'input-group-addon kb-input-group-addon',
+                                          fontFamily: 'monospace',
+                                      },
+                                      String(min) + ' &#8804; '
+                                  )
+                                : '',
+                            input({
+                                id: events.addEvents({
+                                    events: [handleChanged(), handleTouched()],
+                                }),
+                                class: 'form-control',
+                                dataElement: 'input',
+                                dataType: 'float',
+                                style: {
+                                    textAlign: 'right',
+                                },
+                                value: initialControlValue,
+                            }),
+                            typeof max === 'number'
+                                ? div(
+                                      {
+                                          class: 'input-group-addon kb-input-group-addon',
+                                          fontFamily: 'monospace',
+                                      },
+                                      ' &#8804; ' + String(max)
+                                  )
+                                : '',
+                        ]
+                    ),
+                    div({
+                        dataElement: 'message',
+                        style: { backgroundColor: 'red', color: 'white' },
                     }),
-                    typeof max === 'number'
-                        ? div(
-                              {
-                                  class: 'input-group-addon kb-input-group-addon',
-                                  fontFamily: 'monospace',
-                              },
-                              ' &#8804; ' + String(max)
-                          )
-                        : '',
-                ]),
-                div({ dataElement: 'message', style: { backgroundColor: 'red', color: 'white' } }),
-            ]);
+                ]
+            );
         }
 
         function render() {
@@ -247,7 +253,6 @@ define([
 
                 container.innerHTML = theLayout.content;
                 events.attachEvents(container);
-                // model.setItem('value', arg.value);
 
                 channel.on('reset-to-defaults', () => {
                     resetModelValue();
@@ -255,7 +260,6 @@ define([
                 channel.on('update', (message) => {
                     model.setItem('value', message.value);
                 });
-                // bus.emit('sync');
 
                 return render().then(() => {
                     return autoValidate();
@@ -273,13 +277,6 @@ define([
         }
 
         // INIT
-
-        model = Props.make({
-            data: {
-                value: spec.data.nullValue,
-            },
-            onUpdate: function () {},
-        });
         setModelValue(config.initialValue);
 
         return {

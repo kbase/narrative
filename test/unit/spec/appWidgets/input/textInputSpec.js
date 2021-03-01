@@ -1,33 +1,30 @@
 define(['common/runtime', 'widgets/appWidgets2/input/textInput'], (Runtime, TextInput) => {
     'use strict';
-    let bus,
-        testConfig,
-        required = false,
-        runtime,
-        node,
+    let bus, testConfig, node;
+    const required = false,
         defaultValue = 'some test text';
 
-    function buildTestConfig(required, defaultValue, bus) {
+    function buildTestConfig(_required, _defaultValue, _bus) {
         return {
-            bus: bus,
+            bus: _bus,
             parameterSpec: {
                 data: {
-                    defaultValue: defaultValue,
+                    defaultValue: _defaultValue,
                     nullValue: '',
                     constraints: {
-                        required: required,
-                        defaultValue: defaultValue,
+                        required: _required,
+                        defaultValue: _defaultValue,
                     },
                 },
             },
-            channelName: bus.channelName,
+            channelName: _bus.channelName,
         };
     }
 
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('Text Input tests', () => {
         beforeEach(() => {
-            runtime = Runtime.make();
+            const runtime = Runtime.make();
             node = document.createElement('div');
             bus = runtime.bus().makeChannelBus({
                 description: 'text input testing',
@@ -40,14 +37,20 @@ define(['common/runtime', 'widgets/appWidgets2/input/textInput'], (Runtime, Text
             window.kbaseRuntime = null;
         });
 
-        it('Should load the widget', () => {
+        it('should be defined', () => {
             expect(TextInput).not.toBeNull();
+        });
+
+        it('should be instantiable', () => {
+            const widget = TextInput.make(testConfig);
+            expect(widget).toEqual(jasmine.any(Object));
+            ['start', 'stop'].forEach((fn) => {
+                expect(widget[fn]).toEqual(jasmine.any(Function));
+            });
         });
 
         it('Should start and stop a widget', (done) => {
             const widget = TextInput.make(testConfig);
-            expect(widget).toBeDefined();
-            expect(widget.start).toBeDefined();
 
             widget
                 .start({ node: node })

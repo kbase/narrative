@@ -6,7 +6,7 @@ It is useful to run the Narrative within a local docker container. E.g. this mak
 
 The following changes are required:
 
-- Build the docker image using the make target "dev_image", this builds the docker image without the "grunt minify" step.
+- Build the docker image using the make target "dev_image", this builds the docker image without the "npm run minify" step.
   The image will be tagged kbase/narrative:dev instead of the current git branch
 
   ```bash
@@ -22,10 +22,10 @@ The following changes are required:
     where:
 
       - `ENV` sets the `CONFIG_ENV` environment variable for the Docker container; ci is the environment in which you are working (needs to be same as the ui is running on.)
-      - `PORT` sets the host port that can be used. E.g. if you use PORT=12345, then http://localhost:12345 will start the Narrative. Default is 8888. 
+      - `PORT` sets the host port that can be used. E.g. if you use PORT=12345, then http://localhost:12345 will start the Narrative. Default is 8888.
         - Note that the logging on the console will always show 8888 since that will be used internal to the container.
       - uses the config set $env; makes it easy to test different environments alongside ui
-      - uses kbase-dev network; allows interoperation with the kbase-ui proxier 
+      - uses kbase-dev network; allows interoperation with the kbase-ui proxier
       - uses name "narrative"; same
       - mounts kbase static directory inside container; allows editing files on host and having changes reflected with a Narrative reload
       - removes container when done; easy cleanup

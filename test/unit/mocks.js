@@ -287,6 +287,6 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
         mockJsonRpc1Call,
         mockAuthRequest,
         setAuthToken,
-        clearAuthToken
+        clearAuthToken,
     };
 });

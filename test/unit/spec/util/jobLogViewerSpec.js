@@ -1,9 +1,14 @@
 define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
     'use strict';
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('Test the job log viewer module', () => {
         const cssBaseClass = 'kb-log';
         let hostNode = null,
             runtimeBus = null;
+
+        beforeAll(() => {
+            window.kbaseRuntime = null;
+        });
         beforeEach(() => {
             hostNode = document.createElement('div');
             document.body.appendChild(hostNode);
@@ -26,9 +31,9 @@ define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
 
         it('Should be created', () => {
             const viewer = JobLogViewer.make();
-            expect(viewer.start).toEqual(jasmine.any(Function));
-            expect(viewer.stop).toEqual(jasmine.any(Function));
-            expect(viewer.detach).toEqual(jasmine.any(Function));
+            ['start', 'stop', 'detach'].forEach((fn) => {
+                expect(viewer[fn]).toEqual(jasmine.any(Function));
+            });
         });
 
         it('Should fail to start without a node', () => {
@@ -37,9 +42,7 @@ define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
             const arg = {
                 jobId: jobId,
             };
-            expect(() => {
-                viewer.start(arg);
-            }).toThrow(new Error('Requires a node to start'));
+            expect(() => viewer.start(arg)).toThrow(new Error('Requires a node to start'));
         });
 
         it('Should fail to start without a jobId', () => {
@@ -47,9 +50,7 @@ define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
             const arg = {
                 node: hostNode,
             };
-            expect(() => {
-                viewer.start(arg);
-            }).toThrow(new Error('Requires a job id to start'));
+            expect(() => viewer.start(arg)).toThrow(new Error('Requires a job id to start'));
         });
 
         it('Should start as expected with inputs, and be stoppable and detachable', () => {
@@ -234,9 +235,11 @@ define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
                 expect(msg).toEqual({ jobId: jobId });
                 runtimeBus.send(jobData, channelData);
             });
+
             runtimeBus.on('request-job-update', (msg) => {
                 expect(msg).toEqual({ jobId: jobId });
                 runtimeBus.send(jobData, channelData);
+
                 setTimeout(() => {
                     const panel = hostNode.querySelector('[data-element="log-panel"]');
                     expect(panel.children.length).toEqual(1);
@@ -247,14 +250,14 @@ define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
             viewer.start(arg);
         });
 
-        xit('Should render a canceled message for canceled jobs', (done) => {});
+        xit('Should render a canceled message for canceled jobs', () => {});
 
-        xit('Should render an error message for errored jobs', (done) => {});
+        xit('Should render an error message for errored jobs', () => {});
 
-        xit('Should have the top button go to the top', (done) => {});
+        xit('Should have the top button go to the top', () => {});
 
-        xit('Should have the bottom button go to the end', (done) => {});
+        xit('Should have the bottom button go to the end', () => {});
 
-        xit('Should have the stop button make sure it stops', (done) => {});
+        xit('Should have the stop button make sure it stops', () => {});
     });
 });

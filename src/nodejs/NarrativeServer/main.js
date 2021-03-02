@@ -1,53 +1,58 @@
 'use strict';
 
-var http = require('http');
-var Url = require('url');
-var Path = require('path');
-var FS = require('fs');
+const http = require('http');
+const Url = require('url');
+const Path = require('path');
+const FS = require('fs');
 
-var App = require('./narrativeapp').NarrativeApp;
+const App = require('./narrativeapp').NarrativeApp;
 App.init();
-var Utils = require('./utils');
-var HttpError = Utils.HttpError;
-var Auth = require('./auth').Auth;
-var Admin = require('./admin').Admin.init({app: App});
+const Utils = require('./utils');
+const HttpError = Utils.HttpError;
+const Auth = require('./auth').Auth;
+const Admin = require('./admin').Admin.init({ app: App });
 
-var httpServer = http.createServer();
+const httpServer = http.createServer();
 
 console.log('Starting Narrative Server...');
 
 function extensionToMime(ext) {
-    var map = {
+    const map = {
         html: 'text/html',
         js: 'application/javascript',
-        css: 'text/stylesheet'
-    }
+        css: 'text/stylesheet',
+    };
     return map[ext] || 'text/plain';
 }
 
-httpServer.on('request', function (req, res) {
+httpServer.on('request', (req, res) => {
     try {
-        var url = Url.parse(req.url, true);
-        var matched;
-        if ( (matched = url.path.match(/\/narrative(:?$|\/(.*))/)) ) {
-            App.getUserContainer(req, function (userContainer) {
-                userContainer.proxy.web(req, res, {
-                    toProxy: '/' + matched[1]
-                }, function (err) {
-                    console.log('Error proxying');
-                    console.log(err);
-                    console.log(req.url);
-                });
+        const url = Url.parse(req.url, true);
+        let matched;
+        if ((matched = url.path.match(/\/narrative(:?$|\/(.*))/))) {
+            App.getUserContainer(req, (userContainer) => {
+                userContainer.proxy.web(
+                    req,
+                    res,
+                    {
+                        toProxy: '/' + matched[1],
+                    },
+                    (err) => {
+                        console.log('Error proxying');
+                        console.log(err);
+                        console.log(req.url);
+                    }
+                );
             });
         } else if (url.path.match(/\/login/)) {
             Auth.renderLogin(req, res, url);
         } else if (url.path.match(/\/signin/)) {
             Auth.handleSignin(req, res, url);
-        } else if ( (matched = url.path.match(/\/admin\/(.*)/)) ) {
+        } else if ((matched = url.path.match(/\/admin\/(.*)/))) {
             Admin.route(req, res, url, matched[1]);
         } else {
-            var filePath = './htdocs' + url.path;
-            FS.stat(filePath, function (err, stats) {
+            const filePath = './htdocs' + url.path;
+            FS.stat(filePath, (err, stats) => {
                 console.log(filePath);
                 if (err) {
                     res.statusCode = 404;
@@ -70,7 +75,7 @@ httpServer.on('request', function (req, res) {
                 FS.createReadStream(filePath).pipe(res);
                 return;
             });
-        } 
+        }
     } catch (err) {
         if (err.isHttpError) {
             switch (err.code) {
@@ -84,10 +89,9 @@ httpServer.on('request', function (req, res) {
                 default:
                     res.statusCode = err.code;
                     res.statusMessage = err.message;
-                    res.setHeader('Content-Type', 'text/plain');            
+                    res.setHeader('Content-Type', 'text/plain');
                     res.end(err.content || '');
             }
-             
         } else {
             res.statusCode = 500;
             res.statusMessage = 'Server error';
@@ -96,13 +100,11 @@ httpServer.on('request', function (req, res) {
             res.end('Sorry, server error.');
         }
     }
-        
 });
 
-httpServer.on('upgrade', function (req, socket, head) {
-    App.getUserContainer(req, function (userContainer) {
-        userContainer.proxy.ws(req, socket, head, {
-        }, function (err) {
+httpServer.on('upgrade', (req, socket, head) => {
+    App.getUserContainer(req, (userContainer) => {
+        userContainer.proxy.ws(req, socket, head, {}, (err) => {
             console.log(err);
         });
     });

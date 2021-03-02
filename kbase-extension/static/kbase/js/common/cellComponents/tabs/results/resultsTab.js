@@ -150,7 +150,7 @@ define(['bluebird', 'common/ui', 'common/events', './outputWidget', './reportWid
 
             const spinnerNode = document.createElement('div');
             spinnerNode.classList.add('kb-loading-spinner');
-            spinnerNode.innerHTML = UI.loading({size: '2x'});
+            spinnerNode.innerHTML = UI.loading({ size: '2x' });
             container.appendChild(spinnerNode);
 
             const objectNode = document.createElement('div');

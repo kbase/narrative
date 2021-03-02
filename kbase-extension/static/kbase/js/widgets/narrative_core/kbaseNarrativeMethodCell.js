@@ -103,12 +103,9 @@ define([
             });
 
             this.methClient = new NarrativeMethodStore(Config.url('narrative_method_store'));
-            this.on(
-                'get_cell_subtitle.Narrative',
-                (e, callback) => {
-                    callback(this.getSubtitle());
-                }
-            );
+            this.on('get_cell_subtitle.Narrative', (e, callback) => {
+                callback(this.getSubtitle());
+            });
             this.render();
 
             if (Jupyter.narrative) Jupyter.narrative.registerWidget(this, this.cellId);
@@ -214,7 +211,7 @@ define([
 
             // Controls (minimize)
             const $controlsSpan = $('<div>').addClass('pull-left');
-            this.$minimizeControl = $('<span class=\'glyphicon glyphicon-chevron-down\'>').css({
+            this.$minimizeControl = $("<span class='glyphicon glyphicon-chevron-down'>").css({
                 color: '#888',
                 fontSize: '14pt',
                 cursor: 'pointer',
@@ -652,7 +649,7 @@ define([
                 .append(makeInfoRow('Job Id', jobId))
                 .append(makeInfoRow('Status', statusText));
             if (jobState && jobState.state) {
-                const {state} = jobState;
+                const { state } = jobState;
                 let creationTime = state.start_timestamp;
                 let execStartTime = null;
                 let finishTime = null;
@@ -877,12 +874,10 @@ define([
             if (data.cellId && this.allowOutput) {
                 this.allowOutput = false;
                 // Show the 'next-steps' to take, if there are any
-                this.getNextSteps(
-                    (next_steps) => {
-                        data.next_steps = next_steps;
-                        this.trigger('createOutputCell.Narrative', data);
-                    }
-                );
+                this.getNextSteps((next_steps) => {
+                    data.next_steps = next_steps;
+                    this.trigger('createOutputCell.Narrative', data);
+                });
             }
             this.changeState('complete', null, data.result);
         },

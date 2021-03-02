@@ -5,6 +5,8 @@
 @import "modules/fonts";
 @import "modules/colours";
 @import "modules/typography";
+@import "modules/mixins";
+
 // overrides of specific jupyter notebook formatting bits
 @import "partials/custom";
 
@@ -23,11 +25,10 @@
 @import "partials/tour";
 @import "partials/batchMode";
 @import "partials/advancedViewCell";
+@import "partials/errorDialog";
 @import "partials/errorDisplay";
 @import "partials/appCell";
 @import "partials/editorCell";
 @import "partials/bulkImportCell";
 @import "partials/job-status";
-@import "partials/job-state";
 @import "partials/kb-icon";
-@import "partials/createdObjects";

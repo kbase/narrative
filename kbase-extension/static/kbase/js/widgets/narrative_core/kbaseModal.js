@@ -18,51 +18,45 @@
  *
  *   See public methods below for rest of API.  It is self-documenting.
  *
-*/
+ */
 
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery'
-	], function(
-		KBWidget,
-		bootstrap,
-		$
-	) {
+define(['kbwidget', 'bootstrap', 'jquery'], (KBWidget, bootstrap, $) => {
     return KBWidget({
-        name: "kbaseModal",
-        version: "1.0.0",
-        options: {
-        },
-        init: function(options) {
+        name: 'kbaseModal',
+        version: '1.0.0',
+        options: {},
+        init: function (options) {
             this._super(options);
-            var self = this;
+            const self = this;
 
-            var title = options.title;
-            var subtext = options.subText;
-            var right_label = options.rightLabel;
-            var body = options.body;
-            var buttons = options.buttons;
-            var width = options.width;
+            const title = options.title;
+            const subtext = options.subText;
+            const right_label = options.rightLabel;
+            const body = options.body;
+            const buttons = options.buttons;
+            const width = options.width;
 
-            var modal = $('<div class="modal">'+
-                                '<div class="modal-dialog" ' + (width ? 'style="width: '+width+';"' : '') + '>'+
-                                    '<div class="modal-content">'+
-                                        '<div class="modal-header">'+
-                                            '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>'+
-                                            '<h3 class="modal-title"></h3>'+
-                                            '<span class="modal-subtext"></span>'+
-                                        '</div>'+
-                                        '<div class="modal-body"></div>'+
-                                        '<div class="modal-footer">'+
-                                            '<a href="#" class="btn btn-default" data-dismiss="modal">Close</a>'+
-                                        '</div>'+
-                                    '</div>'+
-                                '</div>'+
-                          '</div>');
+            const modal = $(
+                '<div class="modal">' +
+                    '<div class="modal-dialog" ' +
+                    (width ? 'style="width: ' + width + ';"' : '') +
+                    '>' +
+                    '<div class="modal-content">' +
+                    '<div class="modal-header">' +
+                    '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>' +
+                    '<h3 class="modal-title"></h3>' +
+                    '<span class="modal-subtext"></span>' +
+                    '</div>' +
+                    '<div class="modal-body"></div>' +
+                    '<div class="modal-footer">' +
+                    '<a href="#" class="btn btn-default" data-dismiss="modal">Close</a>' +
+                    '</div>' +
+                    '</div>' +
+                    '</div>' +
+                    '</div>'
+            );
 
-            var modalHeader = modal.find('.modal-header'),
+            const modalHeader = modal.find('.modal-header'),
                 modalTitle = modal.find('.modal-title'),
                 modalSubtext = modal.find('.modal-subtext'),
                 modalBody = modal.find('.modal-body'),
@@ -74,42 +68,48 @@ define (
 
             // destroy every time, unless specified otherwise
             if (!options.noDestroy) {
-                modal.on('hidden.bs.modal', function(){
+                modal.on('hidden.bs.modal', function () {
                     $(this).remove();
                 });
             }
 
-            this.header = function(data) {
+            this.header = function (data) {
                 if (data) modalHeader.html(data);
                 return modalHeader;
-            }
+            };
 
-            this.title = function(data) {
+            this.title = function (data) {
                 if (data) modalTitle.html(data);
                 return modalTitle;
-            }
+            };
 
-            this.body = function(data) {
+            this.body = function (data) {
                 if (data) modalBody.html(data);
                 return modalBody;
-            }
+            };
 
-            this.footer = function(data) {
+            this.footer = function (data) {
                 if (data) modalFooter.html(data);
                 return modalFooter;
-            }
+            };
 
-            this.buttons = function(buttons) {
-                modalFooter.html('')
-                buttons.forEach(function(btn) {
-                    var text = btn.text;
+            this.buttons = function (buttons) {
+                modalFooter.html('');
+                buttons.forEach((btn) => {
+                    const text = btn.text;
 
                     // make modal dismiss by default
                     if (!btn.dismiss) {
-                        var ele = $('<a class="btn" data-name="'+text+'"'+
-                                                ' data-dismiss="modal">'+text+'</a>')
+                        var ele = $(
+                            '<a class="btn" data-name="' +
+                                text +
+                                '"' +
+                                ' data-dismiss="modal">' +
+                                text +
+                                '</a>'
+                        );
                     } else {
-                        var ele = $('<a class="btn" data-name="'+text+'">'+text+'</a>')
+                        var ele = $('<a class="btn" data-name="' + text + '">' + text + '</a>');
                     }
 
                     // set button colors
@@ -120,27 +120,26 @@ define (
                     }
 
                     modalFooter.append(ele);
-                })
-            }
+                });
+            };
 
-            this.button = function(name) {
-                return modalFooter.find('[data-name="'+name+'"]');
-            }
+            this.button = function (name) {
+                return modalFooter.find('[data-name="' + name + '"]');
+            };
 
-            this.show = function() {
+            this.show = function () {
                 modal.modal('show');
-            }
+            };
 
-            this.hide = function() {
+            this.hide = function () {
                 modal.modal('hide');
-            }
-
+            };
 
             // do any other options
             if (buttons) this.buttons(buttons);
             if (options.show) this.show();
 
             return this;
-        }  //end init
-    })
-})
+        }, //end init
+    });
+});

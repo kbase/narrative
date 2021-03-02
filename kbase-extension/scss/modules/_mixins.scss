@@ -1,0 +1,20 @@
+// standard formatting for elements containing code
+@mixin code-block() {
+  @include fixed-width;
+
+  background-color: use-color('base-lightest');
+  border: 0;
+  margin: 0;
+  max-height: 50rem;
+  overflow-wrap: break-word;
+  overflow-y: auto;
+  padding: 1rem;
+  word-break: break-word;
+  word-wrap: break-word;
+}
+
+@mixin zero-box {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}

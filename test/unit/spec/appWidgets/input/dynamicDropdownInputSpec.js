@@ -1,71 +1,64 @@
-/*eslint-env jasmine*/
-define([
-    'widgets/appWidgets2/input/dynamicDropdownInput',
-    'base/js/namespace',
-    'kbaseNarrative',
-    'testUtil'
-], function(
+define(['widgets/appWidgets2/input/dynamicDropdownInput', 'base/js/namespace', 'narrativeMocks'], (
     DynamicDropdownInput,
     Jupyter,
-    Narrative,
-    TestUtil
-) {
+    Mocks
+) => {
     'use strict';
 
-    describe('Test dynamic dropdown input widget', function() {
-        var testConfig = {
-            parameterSpec: {
-                data: {
-                    defaultValue: '',
-                    nullValue: '',
-                    constraints: {
-                        required: false
-                    }
-
+    describe('Test dynamic dropdown input widget', () => {
+        const testConfig = {
+                parameterSpec: {
+                    data: {
+                        defaultValue: '',
+                        nullValue: '',
+                        constraints: {
+                            required: false,
+                        },
+                    },
+                    original: {
+                        dynamic_dropdown_options: {},
+                    },
                 },
-                original: {
-                    dynamic_dropdown_options: {}
-                }
+                channelName: 'foo',
             },
-            channelName: 'foo'
-        };
+            AUTH_TOKEN = 'fakeAuthToken';
 
-        beforeEach(function() {
-            Jupyter.narrative = new Narrative();
-            if (TestUtil.getAuthToken()) {
-                document.cookie = 'kbase_session=' + TestUtil.getAuthToken();
-                Jupyter.narrative.authToken = TestUtil.getAuthToken();
-                Jupyter.narrative.userId = TestUtil.getUserId();
-            }
+        beforeEach(() => {
+            Mocks.setAuthToken(AUTH_TOKEN);
+            Jupyter.narrative = {
+                getAuthToken: () => AUTH_TOKEN,
+                userId: 'test_user',
+            };
         });
 
-        it('should be real!', function() {
+        afterEach(() => {
+            Mocks.clearAuthToken();
+            Jupyter.narrative = null;
+        });
+
+        it('should be defined', () => {
             expect(DynamicDropdownInput).not.toBeNull();
         });
 
-        it('should instantiate with a test config', function() {
-            TestUtil.pendingIfNoToken();
-            var widget = DynamicDropdownInput.make(testConfig);
+        it('should instantiate with a test config', () => {
+            const widget = DynamicDropdownInput.make(testConfig);
             expect(widget).toEqual(jasmine.any(Object));
+            ['start', 'stop'].forEach((fn) => {
+                expect(widget[fn]).toEqual(jasmine.any(Function));
+            });
         });
 
-        it('should start up and stop correctly', function(done) {
-            TestUtil.pendingIfNoToken();
-            var widget = DynamicDropdownInput.make(testConfig);
-            widget.start({node: document.createElement('div')})
-                .then(function() {
+        it('should start up and stop correctly', () => {
+            const widget = DynamicDropdownInput.make(testConfig);
+            const node = document.createElement('div');
+            return widget
+                .start({ node: node })
+                .then(() => {
+                    expect(node.innerHTML).toContain('input-container');
                     return widget.stop();
                 })
-                .then(function() {
-                    // no-op
-                })
-                .catch(function(error) {
-                    console.error(JSON.stringify(error, null, 4));
-                    console.error(error.stack);
-                    done.fail();
-                })
-                .finally(function() {
-                    done();
+                .then(() => {
+                    expect(node.innerHTML).not.toContain('input-container');
                 });
         });
     });

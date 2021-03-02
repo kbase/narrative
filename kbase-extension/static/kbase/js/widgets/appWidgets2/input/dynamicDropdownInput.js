@@ -16,8 +16,8 @@ define([
     'common/props',
     'select2',
     'bootstrap',
-    'css!font-awesome'
-], function(
+    'css!font-awesome',
+], (
     Promise,
     $,
     html,
@@ -33,11 +33,11 @@ define([
     StringUtil,
     GenericClient,
     Props
-) {
+) => {
     'use strict';
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         span = t('span'),
         b = t('b'),
@@ -45,7 +45,7 @@ define([
         option = t('option');
 
     function factory(config) {
-        var spec = config.parameterSpec,
+        let spec = config.parameterSpec,
             parent,
             container,
             runtime = Runtime.make(),
@@ -55,11 +55,11 @@ define([
             dd_options = spec.original.dynamic_dropdown_options || {},
             dataSource = dd_options.data_source || 'ftp_staging',
             model = {
-                value: undefined
+                value: undefined,
             },
             stagingService = new StagingServiceClient({
                 root: runtime.config('services.staging_api_url.url'),
-                token: runtime.authToken()
+                token: runtime.authToken(),
             }),
             userId = runtime.userId(),
             eventListeners = [];
@@ -72,14 +72,14 @@ define([
          * This function takes a nested return and returns a flat key-value pairing for use with
          * handlebar replacement for example {"foo":{"bar": "meh"}} becomes {"foo.bar": "meh"}
          */
-        var flattenObject = function(ob) {
-            var toReturn = {};
-            for (var i in ob) {
+        var flattenObject = function (ob) {
+            const toReturn = {};
+            for (const i in ob) {
                 if (!Object.prototype.hasOwnProperty.call(ob, i)) continue;
 
-                if ((typeof ob[i]) === 'object') {
-                    var flatObject = flattenObject(ob[i]);
-                    for (var x in flatObject) {
+                if (typeof ob[i] === 'object') {
+                    const flatObject = flattenObject(ob[i]);
+                    for (const x in flatObject) {
                         if (!Object.prototype.hasOwnProperty.call(flatObject, x)) continue;
                         toReturn[i + '.' + x] = flatObject[x];
                     }
@@ -91,34 +91,36 @@ define([
         };
 
         function makeInputControl() {
-            var selectOptions;
-            var selectElem = select({
-                class: 'form-control',
-                dataElement: 'input',
-                style: {
-                    width: '100%'
+            let selectOptions;
+            const selectElem = select(
+                {
+                    class: 'form-control',
+                    dataElement: 'input',
+                    style: {
+                        width: '100%',
+                    },
+                    multiple: false,
+                    id: html.genId(),
                 },
-                multiple: false,
-                id: html.genId()
-            }, [option({ value: '' }, '')].concat(selectOptions));
+                [option({ value: '' }, '')].concat(selectOptions)
+            );
 
             return selectElem;
         }
 
         // CONTROL
         function getControlValue() {
-            var control = ui.getElement('input-container.input'),
+            const control = ui.getElement('input-container.input'),
                 selected = $(control).select2('data')[0];
 
-            var selection_val = selected[dd_options.selection_id] || selected.subpath;
+            const selection_val = selected[dd_options.selection_id] || selected.subpath;
             if (!selected || !selection_val) {
                 // might have just started up, and we don't have a selection value, but
                 // we might have a model value.
-                var modelVal = getModelValue();
+                const modelVal = getModelValue();
                 if (modelVal) {
                     return modelVal;
-                }
-                else {
+                } else {
                     return '';
                 }
             }
@@ -130,11 +132,11 @@ define([
          * be unique enough to apply to the dropdown.
          */
         function setControlValue(value) {
-            var control = ui.getElement('input-container.input');
+            const control = ui.getElement('input-container.input');
             if ($(control).find('option[value="' + value + '"]').length) {
                 $(control).val(value).trigger('change');
             } else {
-                var newOption = new Option(value, value, true, true);
+                const newOption = new Option(value, value, true, true);
                 $(control).append(newOption).trigger('change');
             }
         }
@@ -161,12 +163,12 @@ define([
         // VALIDATION
 
         function validate() {
-            return Promise.try(function() {
-                var selectedItem = getControlValue(),
+            return Promise.try(() => {
+                let selectedItem = getControlValue(),
                     validationConstraints = {
                         min_length: spec.data.constraints.min_length,
                         max_length: spec.data.constraints.max_length,
-                        required: spec.data.constraints.required
+                        required: spec.data.constraints.required,
                     };
                 // selected item might be either a string or a number.
                 // if it's a number, we want it to be a string
@@ -180,12 +182,17 @@ define([
         }
 
         function genericClientCall(call_params) {
-            var swUrl = runtime.config('services.service_wizard.url'),
+            const swUrl = runtime.config('services.service_wizard.url'),
                 genericClient = new GenericClient(swUrl, {
-                    token: runtime.authToken()
+                    token: runtime.authToken(),
                 });
-            return genericClient.sync_call(dd_options.service_function,
-                call_params, null, null, dd_options.service_version || 'release');
+            return genericClient.sync_call(
+                dd_options.service_function,
+                call_params,
+                null,
+                null,
+                dd_options.service_version || 'release'
+            );
         }
 
         function fetchData(searchTerm) {
@@ -195,84 +202,93 @@ define([
                 return Promise.resolve([]);
             }
             if (dataSource === 'ftp_staging') {
-                return Promise.resolve(stagingService.search({query: searchTerm}))
-                    .then(function(results) {
-                        results = JSON.parse(results).filter(function(file) {
+                return Promise.resolve(stagingService.search({ query: searchTerm })).then(
+                    (results) => {
+                        results = JSON.parse(results).filter((file) => {
                             return !file.isFolder;
                         });
-                        results.forEach(function(file) {
+                        results.forEach((file) => {
                             file.text = file.path;
-                            file.subdir = file.path.substring(0, file.path.length - file.name.length);
+                            file.subdir = file.path.substring(
+                                0,
+                                file.path.length - file.name.length
+                            );
                             file.subpath = file.path.substring(userId.length + 1);
                             file.id = file.subpath;
                         });
                         return results;
-                    });
+                    }
+                );
             } else {
-                var call_params = JSON.stringify(dd_options.service_params).replace('{{dynamic_dropdown_input}}', searchTerm);
-                call_params =  JSON.parse(call_params);
-                
-                return Promise.resolve(genericClientCall(call_params))
-                    .then(function (results) {
-                        var index = dd_options.result_array_index;
-                        if (!index) {
-                            index = 0;
-                        }
-                        if (index >= results.length) {
-                            console.error(`Result array from ${dd_options.service_function} ` +
-                                    `has length ${results.length} but index ${index} ` +
-                                    'was requested');
-                            return [];
-                        }
-                        results = results[index];
-                        var path = dd_options.path_to_selection_items;
-                        if (!path) {
-                            path = [];
-                        }
-                        results = Props.getDataItem(results, path);
-                        if (!Array.isArray(results)) {
-                            console.error('Selection items returned from ' +
-                                    `${dd_options.service_function} at path /${path.join('/')} ` +
-                                    `in postion ${index} of the returned list are not an array`);
-                            return [];
-                        } else {
-                            results.forEach(function(obj, index) {
-                                // could check here that each item is a map? YAGNI
-                                obj = flattenObject(obj);
-                                if (!('id' in obj)) {
-                                    obj.id = index; // what the fuck
-                                }
-                                //this blows away any 'text' field
-                                obj.text = obj[dd_options.selection_id];
-                                results[index] = obj;
-                            });
-                            return results;
+                let call_params = JSON.stringify(dd_options.service_params).replace(
+                    '{{dynamic_dropdown_input}}',
+                    searchTerm
+                );
+                call_params = JSON.parse(call_params);
 
-                        }
-                    });
+                return Promise.resolve(genericClientCall(call_params)).then((results) => {
+                    let index = dd_options.result_array_index;
+                    if (!index) {
+                        index = 0;
+                    }
+                    if (index >= results.length) {
+                        console.error(
+                            `Result array from ${dd_options.service_function} ` +
+                                `has length ${results.length} but index ${index} ` +
+                                'was requested'
+                        );
+                        return [];
+                    }
+                    results = results[index];
+                    let path = dd_options.path_to_selection_items;
+                    if (!path) {
+                        path = [];
+                    }
+                    results = Props.getDataItem(results, path);
+                    if (!Array.isArray(results)) {
+                        console.error(
+                            'Selection items returned from ' +
+                                `${dd_options.service_function} at path /${path.join('/')} ` +
+                                `in postion ${index} of the returned list are not an array`
+                        );
+                        return [];
+                    } else {
+                        results.forEach((obj, index) => {
+                            // could check here that each item is a map? YAGNI
+                            obj = flattenObject(obj);
+                            if (!('id' in obj)) {
+                                obj.id = index; // what the fuck
+                            }
+                            //this blows away any 'text' field
+                            obj.text = obj[dd_options.selection_id];
+                            results[index] = obj;
+                        });
+                        return results;
+                    }
+                });
             }
         }
 
         function doChange() {
-            validate()
-                .then(function(result) {
-                    if (result.isValid) {
-                        var newValue = result.parsedValue === undefined ? result.value : result.parsedValue;
-                        model.value = newValue;
-                        channel.emit('changed', {
-                            newValue: newValue
-                        });
-                    } else if (result.diagnosis === 'required-missing') {
-                        model.value = spec.data.nullValue;
-                        channel.emit('changed', {
-                            newValue: spec.data.nullValue
-                        });
-                    }
-                    channel.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
+            validate().then((result) => {
+                if (result.isValid) {
+                    const newValue =
+                        result.parsedValue === undefined ? result.value : result.parsedValue;
+                    model.value = newValue;
+                    channel.emit('changed', {
+                        newValue: newValue,
                     });
+                } else if (result.diagnosis === 'required-missing') {
+                    model.value = spec.data.nullValue;
+                    channel.emit('changed', {
+                        newValue: spec.data.nullValue,
+                    });
+                }
+                channel.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
 
         /**
@@ -292,26 +308,29 @@ define([
                 if (!ret_obj.id) {
                     return $('<div style="display:block; height:20px">').append(ret_obj.text);
                 }
-                return $(div([
-                    span({style: 'word-wrap: break-word'}, [
-                        ret_obj.subdir,
-                        b(ret_obj.name)
-                    ]),
-                    div({style: 'margin-left: 7px'}, [
-                        'Size: ' + StringUtil.readableBytes(ret_obj.size) + '<br>',
-                        'Uploaded ' + TimeFormat.getTimeStampStr(ret_obj.mtime, true)
+                return $(
+                    div([
+                        span({ style: 'word-wrap: break-word' }, [ret_obj.subdir, b(ret_obj.name)]),
+                        div({ style: 'margin-left: 7px' }, [
+                            'Size: ' + StringUtil.readableBytes(ret_obj.size) + '<br>',
+                            'Uploaded ' + TimeFormat.getTimeStampStr(ret_obj.mtime, true),
+                        ]),
                     ])
-                ]));
+                );
             } else {
-                var replacer = function (match, p1) {return ret_obj[p1];};
-                var formatted_string;
+                const replacer = function (match, p1) {
+                    return ret_obj[p1];
+                };
+                let formatted_string;
                 if (dd_options.description_template) {
                     // use slice to avoid modifying global description_template
-                    formatted_string = dd_options.description_template.slice().replace(/{{(.+?)}}/g, replacer);
+                    formatted_string = dd_options.description_template
+                        .slice()
+                        .replace(/{{(.+?)}}/g, replacer);
                 } else {
                     formatted_string = JSON.stringify(ret_obj);
                 }
-                return  $('<div style="display:block; height:20px">').append(formatted_string);
+                return $('<div style="display:block; height:20px">').append(formatted_string);
             }
         }
 
@@ -334,32 +353,34 @@ define([
          * Hooks up event listeners
          */
         function render() {
-            return Promise.try(function() {
-                var events = Events.make(),
+            return Promise.try(() => {
+                const events = Events.make(),
                     inputControl = makeInputControl(events),
                     content = div({ class: 'input-group', style: { width: '100%' } }, inputControl);
 
                 ui.setContent('input-container', content);
 
-                $(ui.getElement('input-container.input')).select2({
-                    templateResult: formatObjectDisplay,
-                    templateSelection: selectionTemplate,
-                    ajax: {
-                        delay: 250,
-                        transport: function(params, success, failure) {
-                            return fetchData(params.data.term)
-                                .then(function(data) {
-                                    success({results: data});
-                                })
-                                .catch(function(err) {
-                                    console.error(err);
-                                    failure(err);
-                                });
-                        }
-                    }
-                }).on('change', function() {
-                    doChange();
-                });
+                $(ui.getElement('input-container.input'))
+                    .select2({
+                        templateResult: formatObjectDisplay,
+                        templateSelection: selectionTemplate,
+                        ajax: {
+                            delay: 250,
+                            transport: function (params, success, failure) {
+                                return fetchData(params.data.term)
+                                    .then((data) => {
+                                        success({ results: data });
+                                    })
+                                    .catch((err) => {
+                                        console.error(err);
+                                        failure(err);
+                                    });
+                            },
+                        },
+                    })
+                    .on('change', () => {
+                        doChange();
+                    });
                 events.attachEvents(container);
             });
         }
@@ -370,35 +391,35 @@ define([
          * For the objectInput, there is only ever one control.
          */
         function layout(events) {
-            var content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' })
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
         function autoValidate() {
-            return validate()
-                .then(function(result) {
-                    channel.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
+            return validate().then((result) => {
+                channel.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
 
         // LIFECYCLE API
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
-                var events = Events.make(),
+                const events = Events.make(),
                     theLayout = layout(events);
 
                 container.innerHTML = theLayout.content;
@@ -409,27 +430,26 @@ define([
                     model.value = config.initialValue;
                 }
 
-                return render()
-                    .then(function() {
-                        channel.on('reset-to-defaults', function() {
-                            resetModelValue();
-                        });
-                        channel.on('update', function(message) {
-                            setModelValue(message.value);
-                        });
-                        setControlValue(getModelValue());
-                        autoValidate();
+                return render().then(() => {
+                    channel.on('reset-to-defaults', () => {
+                        resetModelValue();
                     });
+                    channel.on('update', (message) => {
+                        setModelValue(message.value);
+                    });
+                    setControlValue(getModelValue());
+                    autoValidate();
+                });
             });
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (container) {
                     parent.removeChild(container);
                 }
                 bus.stop();
-                eventListeners.forEach(function(id) {
+                eventListeners.forEach((id) => {
                     runtime.bus().removeListener(id);
                 });
             });
@@ -437,16 +457,15 @@ define([
 
         // INIT
 
-
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

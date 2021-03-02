@@ -4,23 +4,21 @@ define([
     'widgets/appWidgets2/paramResolver',
     'common/props',
     'common/spec',
-    'json!../../../../data/testAppObj.json',
-], function (Jupyter, fieldCellWidget, ParamResolver, Props, Spec, TestAppObject) {
+    '/test/data/testAppObj',
+], (Jupyter, FieldCellWidget, ParamResolver, Props, Spec, TestAppObject) => {
     'use strict';
 
-    describe('The Field Table Cell Widget module', function () {
-        it('loads', function () {
-            expect(fieldCellWidget).not.toBe(null);
+    describe('The Field Table Cell Widget module', () => {
+        it('loads', () => {
+            expect(FieldCellWidget).not.toBe(null);
         });
 
-        it('has expected functions', function () {
-            expect(fieldCellWidget.make).toBeDefined();
+        it('has expected functions', () => {
+            expect(FieldCellWidget.make).toBeDefined();
         });
     });
 
-    describe('The Field Table Cell Widget instance', function () {
-        let node, mockFieldWidget;
-
+    describe('The Field Table Cell Widget instance', () => {
         const parameterSpec = {
             data: {
                 constraints: {
@@ -77,6 +75,7 @@ define([
         ];
 
         beforeAll(() => {
+            window.kbaseRuntime = null;
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',
             };
@@ -87,8 +86,8 @@ define([
         });
 
         beforeEach(async () => {
-            node = document.createElement('div');
-            document.getElementsByTagName('body')[0].appendChild(node);
+            this.node = document.createElement('div');
+            document.getElementsByTagName('body')[0].appendChild(this.node);
 
             const model = Props.make({
                 data: TestAppObject,
@@ -102,7 +101,7 @@ define([
             const paramResolver = ParamResolver.make();
 
             await paramResolver.loadInputControl(parameterSpec).then((inputControlFactory) => {
-                return (mockFieldWidget = fieldCellWidget.make({
+                return (this.fieldCellWidgetInstance = FieldCellWidget.make({
                     inputControlFactory: inputControlFactory,
                     showHint: true,
                     useRowHighight: true,
@@ -118,47 +117,48 @@ define([
         });
 
         afterEach(async () => {
-            await mockFieldWidget.stop().catch((err) => {
-                console.warn(
-                    'got an error when trying to stop, this is normal if stopped already (e.g. after final test run)',
-                    err
-                );
+            if (this.fieldCellWidgetInstance) {
+                await this.fieldCellWidgetInstance.stop().catch((err) => {
+                    console.warn(
+                        'got an error when trying to stop, this is normal if stopped already (e.g. after final test run)',
+                        err
+                    );
+                });
+            }
+            document.body.innerHTML = '';
+            window.kbaseRuntime = null;
+        });
+
+        it('has a factory which can be invoked', () => {
+            expect(this.fieldCellWidgetInstance).not.toBe(null);
+        });
+
+        it('has the required methods', () => {
+            ['bus', 'start', 'stop'].forEach((fn) => {
+                expect(this.fieldCellWidgetInstance[fn]).toBeDefined();
             });
-
-            node = null;
-            document.body.innnerHTML = '';
-            mockFieldWidget = null;
-        });
-
-        it('has a factory which can be invoked', function () {
-            expect(mockFieldWidget).not.toBe(null);
-        });
-
-        it('has the required methods', function () {
-            expect(mockFieldWidget.start).toBeDefined();
-            expect(mockFieldWidget.stop).toBeDefined();
-            expect(mockFieldWidget.bus).toBeDefined();
         });
 
         it('has a method start which returns the correct object', () => {
-            return mockFieldWidget
+            return this.fieldCellWidgetInstance
                 .start({
-                    node: node,
+                    node: this.node,
                 })
                 .then(() => {
-                    expect(node.innerHTML).toContain('kb-field-cell__cell_label');
-                    expect(node.innerHTML).toContain('kb-field-cell__input_control');
+                    expect(this.node.innerHTML).toContain('kb-field-cell__cell_label');
+                    expect(this.node.innerHTML).toContain('kb-field-cell__input_control');
                 });
         });
 
         it('has a method stop which returns null', () => {
-            return mockFieldWidget
+            return this.fieldCellWidgetInstance
                 .start({
-                    node: node,
+                    node: this.node,
                 })
                 .then(() => {
-                    mockFieldWidget.stop().then((result) => {
+                    this.fieldCellWidgetInstance.stop().then((result) => {
                         expect(result).toBeNull();
+                        this.fieldCellWidgetInstance = null;
                     });
                 });
         });

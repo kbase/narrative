@@ -1,4 +1,4 @@
-define(['jquery', 'util/timeFormat'], ($, TF) => {
+define(['bootstrap', 'jquery', 'util/timeFormat'], (bootstrap, $, TF) => {
     'use strict';
     const testISOTime = '2015-12-09T21:58:22.202Z';
     const testISOTime2 = '2016-01-06T00:48:43.196Z';
@@ -100,12 +100,11 @@ define(['jquery', 'util/timeFormat'], ($, TF) => {
             expect(new Date(title).toUTCString()).toBe(new Date(testISOTime).toUTCString());
         });
 
-        it('prettyTimestamp should throw an error with a bad timestamp', () => {
-            try {
-                TF.prettyTimestamp('bad time');
-            } catch (error) {
-                expect(error).not.toBeNull();
-            }
+        it('prettyTimestamp should silently put up with an invalid timestamp', () => {
+            const badButPrettyTimestamp = TF.prettyTimestamp('bad time');
+            expect(badButPrettyTimestamp).toBe(
+                '<span href="#" data-toggle="tooltip" title="null" millis="" >Unknown time</span>'
+            );
         });
 
         it('reformatISOTimeString should work with a good ISO string', () => {

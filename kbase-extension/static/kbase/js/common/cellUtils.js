@@ -1,16 +1,13 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
-define([
-    'kb_common/html',
-    'kb_common/format',
-    'common/props',
-    'base/js/namespace'
-], function (html, format, Props, Jupyter) {
+define(['kb_common/html', 'kb_common/format', 'common/props', 'base/js/namespace'], (
+    html,
+    format,
+    Props,
+    Jupyter
+) => {
     'use strict';
 
     function createMeta(cell, initial) {
-        var meta = cell.metadata;
+        const meta = cell.metadata;
         meta.kbase = initial;
         cell.metadata = meta;
     }
@@ -35,7 +32,7 @@ define([
          * when the metadata preoperty is actually set -- doesn't count if
          * properties of it are.
          */
-        var temp = cell.metadata;
+        const temp = cell.metadata;
         // Handle the case of setting a group to an entire object
         if (value === undefined) {
             temp.kbase[group] = name;
@@ -49,25 +46,24 @@ define([
     }
 
     function pushMeta(cell, props, value) {
-        var meta = Props.make(cell.metadata.kbase);
+        const meta = Props.make(cell.metadata.kbase);
         meta.incrItem(props, value);
     }
 
     function getTitle(cellId) {
-        var cells = Jupyter.notebook.get_cells().filter(function (cell) {
-            return (cellId === Props.getDataItem(cell.metadata, 'kbase.attributes.id'));
+        const cells = Jupyter.notebook.get_cells().filter((cell) => {
+            return cellId === Props.getDataItem(cell.metadata, 'kbase.attributes.id');
         });
         if (cells.length === 0) {
             return;
         }
         return Props.getDataItem(cells[0].metadata, 'kbase.attributes.title');
-
     }
 
     function findById(id) {
-        var matchingCells = Jupyter.notebook.get_cells().filter(function (cell) {
+        const matchingCells = Jupyter.notebook.get_cells().filter((cell) => {
             if (cell.metadata && cell.metadata.kbase && cell.metadata.kbase.attributes) {
-                return (cell.metadata.kbase.attributes.id === id);
+                return cell.metadata.kbase.attributes.id === id;
             }
             return false;
         });
@@ -86,6 +82,6 @@ define([
         setMeta: setMeta,
         pushMeta: pushMeta,
         getTitle: getTitle,
-        findById: findById
+        findById: findById,
     };
 });

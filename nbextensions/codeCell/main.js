@@ -5,25 +5,21 @@ define([
     'common/utils',
     'kb_common/html',
     './widgets/codeCell',
-    'custom/custom'
-], function (
-    $,
-    Uuid,
-    Jupyter,
-    utils,
-    html,
-    CodeCell
-) {
+    'custom/custom',
+], ($, Uuid, Jupyter, utils, html, CodeCell) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         span = t('span');
 
     function specializeCell(cell) {
         cell.minimize = function () {
-            var inputArea = this.input.find('.input_area').get(0),
+            const inputArea = this.input.find('.input_area').get(0),
                 outputArea = this.element.find('.output_wrapper'),
-                showCode = utils.getCellMeta(cell, 'kbase.codeCell.user-settings.showCodeInputArea');
+                showCode = utils.getCellMeta(
+                    cell,
+                    'kbase.codeCell.user-settings.showCodeInputArea'
+                );
 
             if (showCode) {
                 inputArea.classList.remove('-show');
@@ -32,9 +28,12 @@ define([
         };
 
         cell.maximize = function () {
-            var inputArea = this.input.find('.input_area').get(0),
+            const inputArea = this.input.find('.input_area').get(0),
                 outputArea = this.element.find('.output_wrapper'),
-                showCode = utils.getCellMeta(cell, 'kbase.codeCell.user-settings.showCodeInputArea');
+                showCode = utils.getCellMeta(
+                    cell,
+                    'kbase.codeCell.user-settings.showCodeInputArea'
+                );
 
             if (showCode) {
                 if (!inputArea.classList.contains('-show')) {
@@ -46,23 +45,28 @@ define([
         };
 
         cell.getIcon = function () {
-            var iconColor = 'silver';
-            var icon;
+            const iconColor = 'silver';
+            let icon;
             icon = span({ class: 'fa fa-inverse fa-stack-1x fa-' + 'terminal' });
 
             return span({ style: '' }, [
-                span({ class: 'fa-stack fa-2x', style: { textAlign: 'center', color: iconColor } }, [
-                    span({ class: 'fa fa-square fa-stack-2x', style: { color: iconColor } }),
-                    icon
-                ])
+                span(
+                    { class: 'fa-stack fa-2x', style: { textAlign: 'center', color: iconColor } },
+                    [span({ class: 'fa fa-square fa-stack-2x', style: { color: iconColor } }), icon]
+                ),
             ]);
         };
 
         cell.toggleCodeInputArea = function () {
-            var codeInputArea = this.input.find('.input_area')[0];
+            const codeInputArea = this.input.find('.input_area')[0];
             if (codeInputArea) {
                 codeInputArea.classList.toggle('-show');
-                utils.setCellMeta(cell, 'kbase.codeCell.user-settings.showCodeInputArea', this.isCodeShowing(), true);
+                utils.setCellMeta(
+                    cell,
+                    'kbase.codeCell.user-settings.showCodeInputArea',
+                    this.isCodeShowing(),
+                    true
+                );
                 // NB purely for side effect - toolbar refresh
                 cell.metadata = cell.metadata;
             }
@@ -73,7 +77,11 @@ define([
         if (cell.cell_type !== 'code') {
             return;
         }
-        if (cell.metadata.kbase && cell.metadata.kbase.type && (cell.metadata.kbase.type !== 'code')) {
+        if (
+            cell.metadata.kbase &&
+            cell.metadata.kbase.type &&
+            cell.metadata.kbase.type !== 'code'
+        ) {
             return;
         }
 
@@ -106,11 +114,11 @@ define([
             utils.setCellMeta(cell, 'kbase.codeCell.user-settings.showCodeInputArea', false);
         }
 
-        var widget = CodeCell.make({
-            cell: cell
+        const widget = CodeCell.make({
+            cell: cell,
         });
         widget.bus.emit('run', {
-            node: null
+            node: null,
         });
 
         cell.renderMinMax();
@@ -120,16 +128,16 @@ define([
 
     function upgradeCell(cell, data) {
         data = data || {};
-        var meta = cell.metadata || {},
-            cellId = data.cellId || (new Uuid(4).format());
+        const meta = cell.metadata || {},
+            cellId = data.cellId || new Uuid(4).format();
 
         // Accomodate import/job cells.
         // For now we create an import property on the side.
-        var jobInfo;
+        let jobInfo;
         if (data && data.state) {
             jobInfo = {
                 jobId: data.jobId,
-                state: data.state
+                state: data.state,
             };
         }
 
@@ -143,13 +151,13 @@ define([
                 lastLoaded: new Date().toGMTString(),
                 icon: 'code',
                 title: data.title || 'Code Cell',
-                subtitle: data.language
+                subtitle: data.language,
             },
             codeCell: {
                 'user-settings': {
-                    showCodeInputArea: true
-                }
-            }
+                    showCodeInputArea: true,
+                },
+            },
         };
 
         if (jobInfo) {
@@ -177,14 +185,14 @@ define([
             cell: cell,
             kbase: {
                 type: 'code',
-                language: 'python'
-            }
+                language: 'python',
+            },
         });
         return true;
     }
 
     function initializeExtension() {
-        Jupyter.notebook.get_cells().forEach(function (cell) {
+        Jupyter.notebook.get_cells().forEach((cell) => {
             try {
                 if (ensureCodeCell(cell)) {
                     setupCell(cell);
@@ -194,19 +202,22 @@ define([
             }
         });
 
-        $([Jupyter.events]).on('insertedAtIndex.Cell', function (event, payload) {
-            var cell = payload.cell;
-            var setupData = payload.data;
-            var jupyterCellType = payload.type;
-            if (jupyterCellType === 'code' &&
-                (!setupData || setupData.type === 'code')) {
+        $([Jupyter.events]).on('insertedAtIndex.Cell', (event, payload) => {
+            const cell = payload.cell;
+            const setupData = payload.data;
+            const jupyterCellType = payload.type;
+            // var hasKBaseMetadata = payload.cell.metadata && payload.cell.metadata.kbase;
+            if (jupyterCellType === 'code' && (!setupData || setupData.type === 'code')) {
                 try {
                     upgradeCell(cell, setupData);
                     setupCell(cell);
                 } catch (err) {
                     console.error('ERROR creating cell', err);
                     // delete cell.
-                    $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(setupData.cell));
+                    $(document).trigger(
+                        'deleteCell.Narrative',
+                        Jupyter.notebook.find_cell_index(setupData.cell)
+                    );
                     alert('Could not insert cell due to errors.\n' + err.message);
                 }
             }
@@ -217,9 +228,8 @@ define([
         /* Only initialize after the notebook is fully loaded. */
         if (Jupyter.notebook._fully_loaded) {
             initializeExtension();
-        }
-        else {
-            $([Jupyter.events]).one('notebook_loaded.Notebook', function () {
+        } else {
+            $([Jupyter.events]).one('notebook_loaded.Notebook', () => {
                 initializeExtension();
             });
         }
@@ -227,7 +237,7 @@ define([
 
     return {
         // This is the sole ipython/jupyter api call
-        load_ipython_extension: load
+        load_ipython_extension: load,
     };
 }, function (err) {
     'use strict';

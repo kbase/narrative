@@ -5,15 +5,8 @@ define([
     'base/js/namespace',
     'narrativeMocks',
     'common/runtime',
-    'json!/test/data/NarrativeTest.test_simple_inputs.spec.json'
-], (
-    KBaseNarrativeWorkspace,
-    $,
-    Jupyter,
-    Mocks,
-    Runtime,
-    AppSpec
-) => {
+    'json!/test/data/NarrativeTest.test_simple_inputs.spec.json',
+], (KBaseNarrativeWorkspace, $, Jupyter, Mocks, Runtime, AppSpec) => {
     'use strict';
     describe('Test the kbaseNarrativeWorkspace widget', () => {
         let $node;
@@ -26,7 +19,7 @@ define([
             });
             Jupyter.narrative = {
                 sidePanel: {
-                    setReadOnlyMode: () => {}
+                    setReadOnlyMode: () => {},
                 },
                 toggleSidePanel: () => {},
                 insertAndSelectCellBelow: () => {
@@ -34,12 +27,12 @@ define([
                         metadata: {
                             kbase: {
                                 appCell: {
-                                    params: {}
-                                }
-                            }
-                        }
+                                    params: {},
+                                },
+                            },
+                        },
                     };
-                }  // just a mock
+                }, // just a mock
             };
         });
 
@@ -55,8 +48,8 @@ define([
 
         it('buildAppCodeCell should work by direct call', () => {
             const params = {
-                'foo': 'bar',
-                'baz': 'frobozz'
+                foo: 'bar',
+                baz: 'frobozz',
             };
             let widget = new KBaseNarrativeWorkspace($node);
             spyOn(Jupyter.narrative, 'insertAndSelectCellBelow').and.callThrough();
@@ -67,8 +60,8 @@ define([
 
         it('buildAppCodeCell should work by event', () => {
             const params = {
-                'foo': 'bar',
-                'baz': 'frobozz'
+                foo: 'bar',
+                baz: 'frobozz',
             };
             let widget = new KBaseNarrativeWorkspace($node);
             spyOn(Jupyter.narrative, 'insertAndSelectCellBelow').and.callThrough();
@@ -92,12 +85,12 @@ define([
             let placements = {
                 above: 'above',
                 below: 'below',
-                blah: 'below'
+                blah: 'below',
             };
             for (const place of Object.keys(placements)) {
                 let cell = widget.buildViewerCell(0, {
                     placement: place,
-                    info: {}
+                    info: {},
                 });
                 expect(cell.cell_type).toEqual('code');
             }
@@ -106,18 +99,18 @@ define([
         it('buildViewerCell should work by event', () => {
             let widget = new KBaseNarrativeWorkspace($node);
             spyOn(widget, 'buildViewerCell');
-            $(document).trigger('createViewerCell.Narrative', [{info: {}}]);
+            $(document).trigger('createViewerCell.Narrative', [{ info: {} }]);
             expect(widget.buildViewerCell).toHaveBeenCalled();
 
             // shouldn't do anything in view mode
             widget.enterReadOnlyMode();
-            $(document).trigger('createViewerCell.Narrative', [{info: {}}]);
+            $(document).trigger('createViewerCell.Narrative', [{ info: {} }]);
             expect(widget.buildViewerCell).toHaveBeenCalled();
         });
 
         it('should go back and forth between read-only and read-write modes in a writable Narrative', () => {
             let widget = new KBaseNarrativeWorkspace($node);
-            let initialUIMode = 'edit';  // this is the beforeEach starting point
+            let initialUIMode = 'edit'; // this is the beforeEach starting point
             expect(widget.uiModeIs(initialUIMode)).toBeTruthy();
             widget.enterReadOnlyMode();
             expect(widget.uiModeIs(initialUIMode)).toBeFalsy();
@@ -136,7 +129,7 @@ define([
 
         it('should control the toggle read/write mode', (done) => {
             Jupyter.CellToolbar = {
-                rebuild_all: () => {}
+                rebuild_all: () => {},
             };
             // included in the main templates, mocked here
             $('body').append('<button id="kb-view-mode">');
@@ -165,14 +158,14 @@ define([
 
         it('should delete KBase extension cells by direct call by bus command', (done) => {
             let cell = Mocks.buildMockCell('code', 'app');
-            Jupyter.notebook.cells[0] = cell;  // manually mock out the notebook state
+            Jupyter.notebook.cells[0] = cell; // manually mock out the notebook state
             let widget = new KBaseNarrativeWorkspace($node);
             let runtime = Runtime.make();
             let cellBus = runtime.bus().makeChannelBus({
                 name: {
-                    cell: cell.metadata.kbase.attributes.id
+                    cell: cell.metadata.kbase.attributes.id,
                 },
-                description: 'testing bus'
+                description: 'testing bus',
             });
             cellBus.on('delete-cell', () => done());
             widget.deleteCell(0);
@@ -181,7 +174,7 @@ define([
         it('should delete KBase extension cells by direct call by dialog', (done) => {
             Jupyter.notebook = Mocks.buildMockNotebook({
                 readOnly: false,
-                deleteCallback: () => done()
+                deleteCallback: () => done(),
             });
             Jupyter.notebook.insert_cell_above('code', 0);
             let widget = new KBaseNarrativeWorkspace($node);
@@ -193,18 +186,17 @@ define([
 
         it('should delete cells by event', (done) => {
             let cell = Mocks.buildMockCell('code', 'app');
-            Jupyter.notebook.cells[0] = cell;  // manually mock out the notebook state
+            Jupyter.notebook.cells[0] = cell; // manually mock out the notebook state
             new KBaseNarrativeWorkspace($node);
             let runtime = Runtime.make();
             let cellBus = runtime.bus().makeChannelBus({
                 name: {
-                    cell: cell.metadata.kbase.attributes.id
+                    cell: cell.metadata.kbase.attributes.id,
                 },
-                description: 'testing bus'
+                description: 'testing bus',
             });
             cellBus.on('delete-cell', () => done());
             $(document).trigger('deleteCell.Narrative', [0]);
-
         });
 
         it('should not fail when trying to delete cells with an invalid index', () => {
@@ -213,8 +205,6 @@ define([
             widget.deleteCell(1000);
         });
 
-        it('should have a working copy button', () => {
-
-        });
+        it('should have a working copy button', () => {});
     });
 });

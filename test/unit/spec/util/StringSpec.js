@@ -56,7 +56,6 @@ define(['util/string'], (StringUtil) => {
                 b: true,
                 c: [1, 2, 3],
                 d: {
-                    // eslint-disable-next-line quotes
                     e: 'foo',
                     f: null,
                 },

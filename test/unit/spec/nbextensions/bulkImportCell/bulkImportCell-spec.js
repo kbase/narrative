@@ -3,29 +3,23 @@ define([
     'base/js/namespace',
     'common/runtime',
     'narrativeMocks',
-    'json!/test/data/NarrativeTest.test_simple_inputs.spec.json'
-], (
-    BulkImportCell,
-    Jupyter,
-    Runtime,
-    Mocks,
-    TestAppSpec
-) => {
+    'json!/test/data/NarrativeTest.test_simple_inputs.spec.json',
+], (BulkImportCell, Jupyter, Runtime, Mocks, TestAppSpec) => {
     'use strict';
     const fakeInputs = {
         dataType: {
             files: ['some_file'],
-            appId: 'someApp'
-        }
+            appId: 'someApp',
+        },
     };
     const fakeSpecs = {
-        someApp: TestAppSpec
+        someApp: TestAppSpec,
     };
 
     describe('test the bulk import cell module', () => {
         beforeAll(() => {
             Jupyter.narrative = {
-                getAuthToken: () => 'fakeToken'
+                getAuthToken: () => 'fakeToken',
             };
         });
 
@@ -41,21 +35,21 @@ define([
                 cell,
                 importData: fakeInputs,
                 specs: fakeSpecs,
-                initialize: true
+                initialize: true,
             });
             expect(cellWidget).toBeDefined();
-            ['getIcon', 'renderIcon', 'maximize', 'minimize'].forEach( (method) => {
+            ['getIcon', 'renderIcon', 'maximize', 'minimize'].forEach((method) => {
                 expect(cell[method]).toBeDefined();
             });
             expect(cell.metadata.kbase).toBeDefined();
-            for(const prop of ['id', 'status', 'created', 'title', 'subtitle']) {
+            for (const prop of ['id', 'status', 'created', 'title', 'subtitle']) {
                 expect(cell.metadata.kbase.attributes[prop]).toBeDefined();
             }
             expect(cell.metadata.kbase.type).toBe('app-bulk-import');
             expect(cell.metadata.kbase.bulkImportCell).toBeDefined();
             expect(cell.metadata.kbase.bulkImportCell.state).toEqual({
                 state: 'editingIncomplete',
-                selectedTab: 'configure'
+                selectedTab: 'configure',
             });
         });
 
@@ -65,7 +59,7 @@ define([
                 cell,
                 importData: fakeInputs,
                 specs: fakeSpecs,
-                initialize: true
+                initialize: true,
             });
             expect(cell).toBe(cellWidget.cell);
             expect(cell.getIcon()).toContain('fa-stack');
@@ -75,7 +69,7 @@ define([
 
         it('should fail to make a bulk import cell if the cell is not a code cell', () => {
             const cell = Mocks.buildMockCell('markdown');
-            expect(() => BulkImportCell.make({cell})).toThrow();
+            expect(() => BulkImportCell.make({ cell })).toThrow();
         });
 
         it('can tell whether a cell is bulk import cell with a static function', () => {
@@ -85,19 +79,21 @@ define([
                 cell: codeCell,
                 importData: fakeInputs,
                 specs: fakeSpecs,
-                initialize: true
+                initialize: true,
             });
             expect(BulkImportCell.isBulkImportCell(codeCell)).toBeTruthy();
         });
 
         it('should fail to set up a cell that is not a bulk import cell (has been initialized)', () => {
             const cell = Mocks.buildMockCell('code');
-            expect(() => BulkImportCell({
-                cell,
-                importData: fakeInputs,
-                specs: fakeSpecs,
-                initialize: false
-            })).toThrow();
+            expect(() =>
+                BulkImportCell({
+                    cell,
+                    importData: fakeInputs,
+                    specs: fakeSpecs,
+                    initialize: false,
+                })
+            ).toThrow();
         });
 
         it('should be able to delete its cell', () => {
@@ -108,7 +104,7 @@ define([
                 cell,
                 importData: fakeInputs,
                 specs: fakeSpecs,
-                initialize: true
+                initialize: true,
             });
 
             cellWidget.deleteCell();
@@ -119,23 +115,26 @@ define([
             const runtime = Runtime.make();
             const cell = Mocks.buildMockCell('code');
             Jupyter.notebook = Mocks.buildMockNotebook({
-                deleteCallback: () => done()
+                deleteCallback: () => done(),
             });
             spyOn(Jupyter.notebook, 'delete_cell').and.callThrough();
             BulkImportCell.make({
                 cell,
                 importData: fakeInputs,
                 specs: fakeSpecs,
-                initialize: true
+                initialize: true,
             });
-            runtime.bus().send({}, {
-                channel: {
-                    cell: cell.metadata.kbase.attributes.id
-                },
-                key: {
-                    type: 'delete-cell'
+            runtime.bus().send(
+                {},
+                {
+                    channel: {
+                        cell: cell.metadata.kbase.attributes.id,
+                    },
+                    key: {
+                        type: 'delete-cell',
+                    },
                 }
-            });
+            );
         });
 
         it('should toggle the active file type', () => {
@@ -143,24 +142,23 @@ define([
             const importData = {
                 fastq: {
                     files: ['file1', 'file2', 'file3'],
-                    appId: 'someApp'
+                    appId: 'someApp',
                 },
                 sra: {
                     files: ['file4', 'file5'],
-                    appId: 'someApp'
-                }
+                    appId: 'someApp',
+                },
             };
             BulkImportCell.make({
                 cell,
                 initialize: true,
                 specs: fakeSpecs,
-                importData
+                importData,
             });
             let elem = cell.element.find('[data-element="filetype-panel"] [data-element="sra"]');
             const before = elem[0].outerHTML;
             elem.click();
             expect(elem[0].outerHTML).not.toEqual(before);
-
         });
     });
 });

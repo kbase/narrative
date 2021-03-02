@@ -16,8 +16,10 @@ define([
     'common/ui',
     'common/iframe/hostMessages',
     'common/events',
+
     'jquery-dataTables',
-], function (
+], (
+    bootstrap,
     $,
     Jupyter,
     KBWidget,
@@ -30,7 +32,7 @@ define([
     UI,
     HostMessages,
     Events
-) {
+) => {
     'use strict';
     return KBWidget({
         name: 'kbaseReportView',
@@ -89,7 +91,7 @@ define([
                     name: name,
                 };
                 const queryString = Object.keys(query)
-                    .map(function (key) {
+                    .map((key) => {
                         return [key, query[key]].map(encodeURIComponent).join('=');
                     })
                     .join('&');
@@ -293,7 +295,7 @@ define([
             if (typeof string !== 'string') {
                 return;
             }
-            var entityMap = {
+            const entityMap = {
                 '&': '&amp;',
                 '<': '&lt;',
                 '>': '&gt;',
@@ -303,7 +305,7 @@ define([
                 '`': '&#x60;',
                 '=': '&#x3D;',
             };
-            return String(string).replace(/[&<>"'`=/]/g, function fromEntityMap(s) {
+            return String(string).replace(/[&<>"'`=\/]/g, (s) => {
                 return entityMap[s];
             });
         },
@@ -321,10 +323,10 @@ define([
                 token: this.authToken(),
                 module: 'HTMLFileSetServ',
             });
-            return client.lookupModule().spread(function (serviceStatus) {
+            return client.lookupModule().spread((serviceStatus) => {
                 const htmlServiceURL = serviceStatus.url;
                 if (report.html_links && report.html_links.length) {
-                    return report.html_links.map(function (item, index) {
+                    return report.html_links.map((item, index) => {
                         return {
                             name: item.name,
                             // If label is not provided, name must be.
@@ -348,12 +350,13 @@ define([
         },
 
         makeIframeSrcUrl: function (arg) {
-            var t = html.tag,
+            const t = html.tag,
                 iframe = t('iframe');
 
-            var iframeId = 'frame_' + html.genId();
+            const iframeId = 'frame_' + html.genId();
 
-            var width = arg.width || '100%',
+            const width = arg.width || '100%',
+                // maxHeight = arg.maxHeight || 'auto',
                 iframeHtml = iframe({
                     style: {
                         display: 'block',
@@ -377,7 +380,7 @@ define([
 
         setupHostComm: function (iframe, container) {
             iframe.messages.start();
-            var _this = this;
+            const _this = this;
 
             iframe.messages.listen({
                 name: 'ready',
@@ -413,7 +416,7 @@ define([
             iframe.messages.listen({
                 name: 'rendered',
                 handler: function (message) {
-                    var height = message.height,
+                    const height = message.height,
                         iframeNode = _this.$mainPanel[0].querySelector(
                             '[data-frame="' + iframe.id + '"]'
                         );
@@ -439,24 +442,24 @@ define([
         },
 
         render: function () {
-            var self = this;
-            var _this = this;
-            var t = html.tag,
+            const self = this;
+            const _this = this;
+            const t = html.tag,
                 div = t('div'),
                 a = t('a');
-            var ui = UI.make({ node: self.$mainPanel.get(0) });
-            var report = self.reportData;
-            var events = Events.make({
+            const ui = UI.make({ node: self.$mainPanel.get(0) });
+            const report = self.reportData;
+            const events = Events.make({
                 node: self.$mainPanel.get(0),
             });
 
             // Handle warnings?
             if (report.warnings) {
                 if (report.warnings.length > 0) {
-                    var $warningPanel = $(
+                    const $warningPanel = $(
                         '<div style="max-height:100px;overflow-y:auto;margin:0px 5px 5px 10px;">'
                     );
-                    var warnings = report.warnings;
+                    const warnings = report.warnings;
                     if (warnings.length >= 5) {
                         $warningPanel.append(
                             $('<div>')
@@ -464,7 +467,7 @@ define([
                                 .append('[' + warnings.length + 'Warnings]')
                         );
                     }
-                    for (var k = 0; k < warnings.length; k++) {
+                    for (let k = 0; k < warnings.length; k++) {
                         $warningPanel.append(
                             $('<div>')
                                 .css('margin', '0px 5px 5px 10px')
@@ -478,22 +481,22 @@ define([
             }
 
             if (self.options.showCreatedObjects) {
-                var someDiv = div({ dataElement: 'created-objects' });
+                const someDiv = div({ dataElement: 'created-objects' });
                 self.$mainPanel.append(someDiv);
                 if (report.objects_created) {
                     if (report.objects_created.length > 0) {
-                        var objsCreated = report.objects_created;
+                        const objsCreated = report.objects_created;
 
-                        var objIds = [];
-                        for (var i = 0; i < objsCreated.length; i++) {
+                        const objIds = [];
+                        for (let i = 0; i < objsCreated.length; i++) {
                             objIds.push({ ref: objsCreated[i].ref });
                         }
                         self.ws
                             .get_object_info_new({ objects: objIds })
-                            .then(function (objInfo) {
-                                var pref = new UUID(4).format();
-                                var displayData = [];
-                                var dataNameToInfo = {};
+                            .then((objInfo) => {
+                                const pref = StringUtil.uuid();
+                                const displayData = [];
+                                const dataNameToInfo = {};
                                 for (var k = 0; k < objInfo.length; k++) {
                                     displayData.push({
                                         name:
@@ -519,13 +522,13 @@ define([
                                     $('.report_row_' + pref).click(function (e) {
                                         e.stopPropagation();
                                         e.preventDefault();
-                                        var objName = [$(this).data('objname')];
+                                        const objName = [$(this).data('objname')];
                                         Jupyter.narrative.addViewerCell(dataNameToInfo[objName]);
                                     });
                                 }
 
-                                var numPerPage = 5;
-                                var objTableId = new UUID(4).format();
+                                const numPerPage = 5;
+                                const objTableId = self.uuid();
 
                                 ui.setContent(
                                     'created-objects',
@@ -535,21 +538,24 @@ define([
                                         hidden: false,
                                         type: 'default',
                                         classes: ['kb-panel-container'],
-                                        body: `<div id="${objTableId}" style="margin-top: 10px"></div>`,
+                                        body:
+                                            "<div id = '" +
+                                            objTableId +
+                                            "' style = 'margin-top : 10px'></div>",
                                     })
                                 );
 
-                                var $tblDiv = $('#' + objTableId);
+                                const $tblDiv = $('#' + objTableId);
 
                                 if (displayData.length <= numPerPage) {
-                                    var $objTable = $(
+                                    const $objTable = $(
                                         '<table class="table table-striped table-bordered" style="margin-left: auto; margin-right: auto;">'
                                     );
 
-                                    displayData.sort(function (a, b) {
+                                    displayData.sort((a, b) => {
                                         return a.name < b.name;
                                     });
-                                    var color = '#555';
+                                    const color = '#555';
                                     $objTable.append(
                                         $('<tr>')
                                             .append(
@@ -597,12 +603,12 @@ define([
                                     $tblDiv.append($objTable);
                                     reportRowEvents();
                                 } else {
-                                    var $tbl = $(
+                                    const $tbl = $(
                                         '<table cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin-left: 0px; margin-right: 0px;">'
                                     ).addClass('table table-bordered table-striped');
                                     $tblDiv.append($tbl);
 
-                                    var tblSettings = {
+                                    const tblSettings = {
                                         paginationType: 'full_numbers',
                                         displayLength: numPerPage,
                                         dom: 'ft<ip>',
@@ -622,22 +628,22 @@ define([
                                             emptyTable: 'No created objects.',
                                         },
                                     };
-                                    var objTable = $tbl.dataTable(tblSettings);
+                                    const objTable = $tbl.dataTable(tblSettings);
                                     objTable.fnAddData(displayData);
                                     reportRowEvents();
-                                    objTable.on('draw.dt', function () {
+                                    objTable.on('draw.dt', () => {
                                         reportRowEvents();
                                     });
                                 }
                             })
-                            .catch(function (error) {
+                            .catch((error) => {
                                 console.error(error);
                             });
                     }
                 }
             }
 
-            var showingReport = false;
+            let showingReport = false;
             if (this.options.showReportText) {
                 // REPORT SECTION
 
@@ -647,8 +653,8 @@ define([
                 content within an iframe. Generally the app developer should use either method, not both
                  */
 
-                var hasDirectHtml = false;
-                var hasDirectHtmlIndex = false;
+                let hasDirectHtml = false;
+                let hasDirectHtmlIndex = false;
                 if (report.direct_html && report.direct_html.length > 0) {
                     hasDirectHtml = true;
                 }
@@ -663,11 +669,11 @@ define([
                     (function () {
                         showingReport = true;
                         // an iframe to hold the contents of the report.
-                        var iframe;
+                        let iframe;
                         // a link to view the report (url, name, desc)
-                        var reportLink;
+                        let reportLink;
                         // button to open the report in an external window.
-                        var reportButton;
+                        let reportButton;
                         if (hasDirectHtmlIndex) {
                             reportLink = _this.reportLinks[report.direct_html_link_index];
                             if (reportLink) {
@@ -752,7 +758,7 @@ define([
 
                 if (report.text_message && report.text_message.length > 0) {
                     self.$mainPanel.append(div({ dataElement: 'summary-section' }));
-                    var reportSummary = div(
+                    const reportSummary = div(
                         {
                             style: {
                                 width: '100%',
@@ -765,6 +771,9 @@ define([
                                 maxHeight: report.summary_window_height
                                     ? report.summary_window_height + 'px'
                                     : '500px',
+                                //resize: 'vertical',
+                                //rows: self.options.report_window_line_height,
+                                //readonly: true
                             },
                         },
                         report.text_message
@@ -843,8 +852,8 @@ define([
                             )
                         );
 
-                        setTimeout(function () {
-                            $('#' + link_id).on('click', function (e) {
+                        setTimeout(() => {
+                            $('#' + link_id).on('click', (e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 $('#' + iframe_id).attr(
@@ -855,7 +864,7 @@ define([
                         }, 1);
                     });
 
-                    var $iframe = $.jqElem('iframe').attr('id', iframe_id).css('display', 'none');
+                    const $iframe = $.jqElem('iframe').attr('id', iframe_id).css('display', 'none');
 
                     var body = $.jqElem('div').append($ul).append($iframe).html();
 
@@ -877,7 +886,6 @@ define([
 
             this.loading(false);
         },
-
         loading: function (isLoading) {
             if (isLoading) {
                 this.showMessage('<i class="fa fa-spinner fa-spin"></i>');
@@ -885,21 +893,18 @@ define([
                 this.hideMessage();
             }
         },
-
         showMessage: function (message) {
-            var span = $('<span/>').append(message);
+            const span = $('<span/>').append(message);
             this.$messagePane.append(span);
             this.$messagePane.show();
         },
-
         hideMessage: function () {
             this.$messagePane.hide();
             this.$messagePane.empty();
         },
-
         clientError: function (error) {
             this.loading(false);
-            var errString = 'Unknown error.';
+            let errString = 'Unknown error.';
             console.error(error);
             if (typeof error === 'string') {
                 errString = error;
@@ -911,7 +916,7 @@ define([
                 errString = error.error.error;
             }
 
-            var $errorDiv = $('<div>')
+            const $errorDiv = $('<div>')
                 .addClass('alert alert-danger')
                 .append('<b>Error:</b>')
                 .append('<br>' + errString);

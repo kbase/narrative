@@ -11,7 +11,7 @@
 # Made available under the KBase Open Source License
 #
 
-FROM kbase/narrbase:6.1
+FROM kbase/narrbase:6.2
 
 # These ARGs values are passed in via the docker build command
 ARG BUILD_DATE
@@ -22,15 +22,10 @@ ARG SKIP_MINIFY
 
 EXPOSE 8888
 
-# Remove Debian's older Tornado package - updated/removed in the narrbase package
-#RUN DEBIAN_FRONTEND=noninteractive apt-get remove -y python-tornado
-
-RUN echo Skip=$SKIP_MINIFY
-
 # install pyopenssl cryptography idna and requests is the same as installing
 # requests[security]
-RUN source activate base
-RUN conda install -c conda-forge ndg-httpsclient==0.5.1 pyasn1==0.4.5 pyopenssl==19.0.0 cryptography==2.7 idna==2.8 requests==2.21.0 \
+RUN source activate base && \
+    conda install -c conda-forge ndg-httpsclient==0.5.1 pyasn1==0.4.5 pyopenssl==19.0.0 cryptography==2.7 idna==2.8 requests==2.21.0 \
           beautifulsoup4==4.8.1 html5lib==1.0.1
 
 # Copy in the narrative repo
@@ -39,31 +34,22 @@ ADD ./kbase-logdb.conf /tmp/kbase-logdb.conf
 ADD ./deployment/ /kb/deployment/
 WORKDIR /kb/dev_container/narrative
 
-# Generate a version file that we can scrape later
-RUN mkdir -p /kb/deployment/ui-common/ && ./src/scripts/kb-update-config -f src/config.json.templ -o /kb/deployment/ui-common/narrative_version
-
-# Install Javascript dependencies
-RUN npm install -g grunt-cli && \
+RUN \
+    # Generate a version file that we can scrape later
+    mkdir -p /kb/deployment/ui-common/ && \
+    ./src/scripts/kb-update-config -f src/config.json.templ -o /kb/deployment/ui-common/narrative_version && \
+    # install JS deps
+    npm install -g grunt-cli && \
     npm install && \
-    ./node_modules/.bin/bower install --allow-root --config.interactive=false
-
-# Compile Javascript down into an itty-bitty ball unless SKIP_MINIFY is non-empty
-RUN [ -n "$SKIP_MINIFY" ] || grunt minify
-
-# Add Tini. Tini operates as a process subreaper for jupyter. This prevents
-# kernel crashes. See Jupyter Notebook known issues here:˜
-# http://jupyter-notebook.readthedocs.org/en/latest/public_server.html#known-issues
-# ENV TINI_VERSION v0.8.4
-# ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/bin/tini
-# RUN chmod +x /usr/bin/tini
-
-RUN /bin/bash scripts/install_narrative_docker.sh
-
-# RUN ./fixupURL.sh && chmod 666 /kb/dev_container/narrative/src/config.json
-RUN pip install jupyter-console==6.0.0
-
-WORKDIR /tmp
-RUN mkdir /tmp/narrative && \
+    ./node_modules/.bin/bower install --allow-root --config.interactive=false && \
+    # Compile Javascript down into an itty-bitty ball unless SKIP_MINIFY is non-empty
+    echo Skip=$SKIP_MINIFY && \
+    [ -n "$SKIP_MINIFY" ] || npm run minify && \
+    # install the narrative and jupyter console
+    /bin/bash scripts/install_narrative_docker.sh && \
+    pip install jupyter-console==6.0.0 && \
+    cd /tmp && \
+    mkdir /tmp/narrative && \
     chown -R nobody:www-data /tmp/narrative /kb/dev_container/narrative/kbase-extension; find / -xdev \( -perm -4000 \) -type f -print -exec rm {} \;
 
 # Set a default value for the environment variable VERSION_CHECK that gets expanded in the config.json.templ

@@ -92,10 +92,7 @@ define([
                 (function () {
                     if (args.title) {
                         return div({ class: 'panel-heading' }, [
-                            div({ class: 'panel-title', dataElement: 'title' }, [
-                                args.title,
-                                icon,
-                            ]),
+                            div({ class: 'panel-title', dataElement: 'title' }, [args.title, icon]),
                         ]);
                     }
                 })(),
@@ -327,13 +324,11 @@ define([
 
         $(modalDialogNode).modal('show');
         return new Promise((resolve) => {
-            modalDialogNode
-                .querySelector('[data-element="yes"]')
-                .addEventListener('click', () => {
-                    $(modalDialogNode).modal('hide');
-                    confirmNode.parentElement.removeChild(confirmNode);
-                    resolve(true);
-                });
+            modalDialogNode.querySelector('[data-element="yes"]').addEventListener('click', () => {
+                $(modalDialogNode).modal('hide');
+                confirmNode.parentElement.removeChild(confirmNode);
+                resolve(true);
+            });
             modalDialogNode.addEventListener('keyup', (e) => {
                 if (e.keyCode === 13) {
                     $(modalDialogNode).modal('hide');
@@ -341,18 +336,15 @@ define([
                     resolve(true);
                 }
             });
-            modalDialogNode
-                .querySelector('[data-element="no"]')
-                .addEventListener('click', () => {
-                    confirmNode.parentElement.removeChild(confirmNode);
-                    resolve(false);
-                });
+            modalDialogNode.querySelector('[data-element="no"]').addEventListener('click', () => {
+                confirmNode.parentElement.removeChild(confirmNode);
+                resolve(false);
+            });
             modalDialogNode.addEventListener('hide.bs.modal', () => {
                 resolve(false);
             });
         });
     }
-
 
     function renderInfoDialog(title, content, okLabel, type) {
         let extraClass = '';
@@ -621,19 +613,23 @@ define([
      */
     function loading(arg) {
         arg = arg || {};
-        const prompt = arg.message
-            ? `${arg.message}... &nbsp &nbsp`
-            : '';
+        const prompt = arg.message ? `${arg.message}... &nbsp &nbsp` : '';
         const sizeClass = arg.size ? `fa-${arg.size}` : '';
-        const style = arg.color ? {color: arg.color} : '';
+        const style = arg.color ? { color: arg.color } : '';
         const extraClass = arg.class || '';
 
         return span([
             prompt,
             i({
-                class: ['fa', 'fa-spinner', 'fa-pulse', sizeClass, extraClass, 'fa-fw', 'margin-bottom'].join(
-                    ' '
-                ),
+                class: [
+                    'fa',
+                    'fa-spinner',
+                    'fa-pulse',
+                    sizeClass,
+                    extraClass,
+                    'fa-fw',
+                    'margin-bottom',
+                ].join(' '),
                 style: style,
             }),
         ]);
@@ -641,7 +637,7 @@ define([
 
     function factory(config) {
         const container = config.node,
-            {bus} = config,
+            { bus } = config,
             runtime = Runtime.make();
 
         /*
@@ -736,7 +732,6 @@ define([
             return container.querySelector(selector);
         }
 
-
         function addButtonClickEvent(events, eventName, data) {
             return events.addEvent({
                 type: 'click',
@@ -759,7 +754,7 @@ define([
 
         function makeButton(label, name, options) {
             const klass = options.type || 'default',
-                {events} = options;
+                { events } = options;
             return button(
                 {
                     type: 'button',
@@ -773,7 +768,7 @@ define([
 
         function buildButton(arg) {
             const klass = arg.type || 'default',
-                {events} = arg,
+                { events } = arg,
                 title = arg.title || arg.tip || arg.label;
             let buttonClasses = ['btn', 'btn-' + klass],
                 icon;
@@ -912,8 +907,8 @@ define([
         }
 
         function setContent(path, content) {
-            const node = getElements(path);
-            node.forEach((_node) => {
+            const nodes = getElements(path);
+            nodes.forEach((_node) => {
                 _node.innerHTML = content;
             });
         }
@@ -1026,7 +1021,7 @@ define([
                 const iconNode = tabTab.querySelector('[data-element="icon"]');
                 if (iconNode) {
                     // remove any icons.
-                    let {classList} = iconNode;
+                    let { classList } = iconNode;
                     for (let x = classList.length; classList > 0; classList -= 1) {
                         if (classList.item[x].substring(0, 3) === 'fa-') {
                             classList.remove(classList.item[x]);
@@ -1307,7 +1302,7 @@ define([
         }
 
         function _buildError(err) {
-            return div({}, [
+            return [
                 buildPanel({
                     title: 'Message',
                     body: err.message,
@@ -1334,25 +1329,33 @@ define([
                           classes: ['kb-panel-light'],
                       })
                     : '',
-            ]);
+            ].join('\n');
         }
 
         function buildErrorStacktrace(err) {
-            return div([
-                ol(
-                    {},
-                    err.stack.split(/\n/).map((item) => {
-                        return li(
-                            {
-                                style: {
-                                    marginTop: '6px',
-                                },
-                            },
-                            [htmlEncode(item)]
-                        );
-                    })
-                ),
-            ]);
+            return div(
+                {
+                    class: 'kb-error-dialog__stacktrace_container',
+                },
+                [
+                    ol(
+                        {
+                            class: 'kb-error-dialog__stacktrace_lines',
+                        },
+                        err.stack
+                            .split(/\n/)
+                            .filter((item) => item.length)
+                            .map((item) => {
+                                return li(
+                                    {
+                                        class: 'kb-error-dialog__stacktrace_single_line',
+                                    },
+                                    [htmlEncode(item)]
+                                );
+                            })
+                    ),
+                ]
+            );
         }
 
         function buildErrorTabs(arg) {
@@ -1361,44 +1364,36 @@ define([
                     {
                         label: 'Summary',
                         name: 'summary',
-                        content: div(
-                            {
-                                style: {
-                                    marginTop: '10px',
+                        content: div([
+                            p(
+                                {
+                                    class: 'kb-error-dialog__err_preamble',
                                 },
-                            },
-                            [arg.preamble, p(arg.error.message)]
-                        ),
+                                arg.preamble
+                            ),
+                            p(
+                                {
+                                    class: 'kb-error-dialog__err_message',
+                                },
+                                arg.error.message
+                            ),
+                        ]),
                     },
                     {
                         label: 'Details',
                         name: 'details',
-                        content: div(
-                            {
-                                style: {
-                                    marginTop: '10px',
-                                },
-                            },
-                            [_buildError(arg.error)]
-                        ),
+                        content: div([_buildError(arg.error)]),
                     },
                     {
                         label: 'Stack Trace',
                         name: 'stacktrace',
-                        content: div(
-                            {
-                                style: {
-                                    marginTop: '10px',
-                                },
-                            },
-                            [
-                                buildPanel({
-                                    title: 'Javascript Stack Trace',
-                                    body: buildErrorStacktrace(arg.error),
-                                    classes: ['kb-panel-light'],
-                                }),
-                            ]
-                        ),
+                        content: div([
+                            buildPanel({
+                                title: 'Javascript Stack Trace',
+                                body: buildErrorStacktrace(arg.error),
+                                classes: ['kb-panel-light'],
+                            }),
+                        ]),
                     },
                 ],
             });

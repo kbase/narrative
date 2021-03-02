@@ -3,8 +3,9 @@ define([
     'common/cellComponents/tabs/jobStatus/jobStateList',
     'jquery',
     'common/props',
-    'json!../../../../../data/testAppObj.json',
-], (Jupyter, jobStateList, $, Props, TestAppObject) => {
+    '/test/data/jobsData',
+    '/test/data/testAppObj',
+], (Jupyter, jobStateList, $, Props, JobsData, TestAppObject) => {
     'use strict';
 
     describe('The job status tab module', () => {
@@ -70,7 +71,7 @@ define([
                 expect($(node).find(item).length).toBeGreaterThan(0);
             });
 
-            expect($(node).find('.kb-job-status__row').length).toEqual(7);
+            expect($(node).find('.kb-job-status__row').length).toEqual(JobsData.allJobs.length);
         });
     });
 });

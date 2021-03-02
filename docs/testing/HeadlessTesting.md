@@ -24,11 +24,11 @@ print something that can be meaningfully parsed from stdout
 
 It is relatively straightforward to convert a narrative to be _headless friendly_. Here
 is an example of a normal App Cell based narrative that runs the Megahit app:
-![MegaHit App Cell](images/MegaHitAppCell.png)
+![MegaHit App Cell](../images/MegaHitAppCell.png)
 
 Here is the underlying code cell, notice the 2 parameters that are highlighted:
 
-![Megahit Code Cell](images/MegaHitCodeCell.png)
+![Megahit Code Cell](../images/MegaHitCodeCell.png)
 
 When cell_id and run_id are passed to the AppManager, the AppManager launches the job
 request and then passes the job handle information to the messaging system, which passes
@@ -37,16 +37,16 @@ return value. By removing those 2 parameters, the run_app call will return a job
 that can be monitored for job state. Here is the cell after removing those 2 parameters
 and assigning the return value to a job state variable:
 
-![MegaHit Code Cell modified](images/MegaHitCodeCell2.png)
+![MegaHit Code Cell modified](../images/MegaHitCodeCell2.png)
 
 The next cell will poll the job state and then perform a very simplistic check to see
 if it ran to completion:
 
-![Poll Job Status and Check Result](images/PollJobStatusCodeCell.png)
+![Poll Job Status and Check Result](../images/PollJobStatusCodeCell.png)
 
 The complete testing narrative is simply these 2 cells in sequence:
-![MegaHit Code Cell modified](images/MegaHitCodeCell2.png)
-![Poll Job Status and Check Result](images/PollJobStatusCodeCell.png)
+![MegaHit Code Cell modified](../images/MegaHitCodeCell2.png)
+![Poll Job Status and Check Result](../images/PollJobStatusCodeCell.png)
 You can see this test narrative in the KBase CI environment at this URL:
 https://ci.kbase.us/narrative/ws.11546.obj.1
 
@@ -66,7 +66,7 @@ workspace. This can be the same as the workspace of the narrative being run, or 
 value is substituted into the config.json file's "config" setting to determine the set of endpoints
 to use for services
 
-The [__main__ routine](../src/biokbase/narrative/exporter/run_narrative.py#L126) that runs the
+The [__main__ routine](../../src/biokbase/narrative/exporter/run_narrative.py#L126) that runs the
 narrative accepts some commandline parameters:
 
 * **--all** display the output from all code cells that have run, not just the final one
@@ -77,7 +77,7 @@ narrative to run, in the form of the numeric workspace ID in the format ws_id/ob
 All of the numeric portions can be found from the Narrative GUI by looking at the lefthand
 data panel. The workspace ID and object ID are part of the URL for the narrative, and
 come up when you mouse over a narrative in the data panel:
-![Narrative Workspace ID](images/NarrativeID.png)
+![Narrative Workspace ID](../images/NarrativeID.png)
 
  In the image above, you cannot see the cursor, but it is hovering above the "Integration Test 2" v20
  narrative. The string at the bottom of the window shows that the Integration Test 2 narrative is

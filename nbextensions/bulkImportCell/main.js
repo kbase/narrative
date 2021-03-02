@@ -18,15 +18,8 @@ define([
     'bluebird',
     'common/runtime',
     'common/error',
-    './bulkImportCell'
-], function(
-    $,
-    Jupyter,
-    Promise,
-    Runtime,
-    Error,
-    BulkImportCell
-) {
+    './bulkImportCell',
+], function ($, Jupyter, Promise, Runtime, Error, BulkImportCell) {
     'use strict';
     const CELL_TYPE = 'app-bulk-import';
     const runtime = Runtime.make();
@@ -36,23 +29,26 @@ define([
      * and if it's a bulk import cell, then we init the wrapping BulkImportCell class.
      */
     function setupNotebook() {
-        return Promise.all(Jupyter.notebook.get_cells().map((cell) => {
-            if (BulkImportCell.isBulkImportCell(cell)) {
-                try {
-                    BulkImportCell.make({ cell });
-                }
-                catch(error) {
-                    // If we have an error here, there is a serious problem setting up the cell and it is not usable.
-                    // What to do? The safest thing to do is inform the user, and then strip out the cell, leaving
-                    // in it's place a markdown cell with the error info.
-                    // For now, just pop up an error dialog;
+        return Promise.all(
+            Jupyter.notebook.get_cells().map((cell) => {
+                if (BulkImportCell.isBulkImportCell(cell)) {
+                    try {
+                        BulkImportCell.make({ cell });
+                    } catch (error) {
+                        // If we have an error here, there is a serious problem setting up the cell and it is not usable.
+                        // What to do? The safest thing to do is inform the user, and then strip out the cell, leaving
+                        // in it's place a markdown cell with the error info.
+                        // For now, just pop up an error dialog;
 
-                    Error.reportCellError('Error starting bulk import cell',
-                        'There was an error starting the bulk import cell',
-                        error);
+                        Error.reportCellError(
+                            'Error starting bulk import cell',
+                            'There was an error starting the bulk import cell:',
+                            error
+                        );
+                    }
                 }
-            }
-        }));
+            })
+        );
     }
 
     /*
@@ -66,41 +62,39 @@ define([
         // dataUpdated.Narrative is emitted by the data sidebar list
         // after it has fetched and updated its data. Not the best of
         // triggers that the ws has changed, not the worst.
-        $(document).on('dataUpdated.Narrative', function() {
+        $(document).on('dataUpdated.Narrative', function () {
             // Tell each cell that the workspace has been updated.
             // This is what is interesting, no?
             runtime.bus().emit('workspace-changed');
         });
 
-        return setupNotebook()
-            .then(() => {
-                $([Jupyter.events]).on('insertedAtIndex.Cell', (event, payload) => {
-                    const cell = payload.cell,
-                        setupData = payload.data,
-                        jupyterCellType = payload.type;
+        return setupNotebook().then(() => {
+            $([Jupyter.events]).on('insertedAtIndex.Cell', (event, payload) => {
+                const cell = payload.cell,
+                    setupData = payload.data,
+                    jupyterCellType = payload.type;
 
-                    if (jupyterCellType !== 'code' ||
-                        !setupData ||
-                        setupData.type !== CELL_TYPE) {
-                        return;
-                    }
-                    const importData = setupData.typesToFiles || {};
-                    try {
-                        BulkImportCell.make({
-                            cell,
-                            importData,
-                            specs: setupData.specs,
-                            initialize: true
-                        });
-                    }
-                    catch(error) {
-                        Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(cell));
-                        Error.reportCellError('Error inserting bulk import cell',
-                            'Could not insert the App Cell due to errors.',
-                            error);
-                    }
-                });
+                if (jupyterCellType !== 'code' || !setupData || setupData.type !== CELL_TYPE) {
+                    return;
+                }
+                const importData = setupData.typesToFiles || {};
+                try {
+                    BulkImportCell.make({
+                        cell,
+                        importData,
+                        specs: setupData.specs,
+                        initialize: true,
+                    });
+                } catch (error) {
+                    Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(cell));
+                    Error.reportCellError(
+                        'Error inserting bulk import cell',
+                        'Could not insert the Bulk Import cell due to errors.',
+                        error
+                    );
+                }
             });
+        });
     }
 
     /**
@@ -112,8 +106,7 @@ define([
         /* Only initialize after the notebook is fully loaded. */
         if (Jupyter.notebook._fully_loaded) {
             return load_ipython_extension();
-        }
-        else {
+        } else {
             return Promise.try(() => {
                 $([Jupyter.events]).one('notebook_loaded.Notebook', function () {
                     load_ipython_extension();
@@ -124,7 +117,7 @@ define([
 
     return {
         // This is the sole ipython/jupyter api call
-        load_ipython_extension: load
+        load_ipython_extension: load,
     };
 }, (err) => {
     'use strict';

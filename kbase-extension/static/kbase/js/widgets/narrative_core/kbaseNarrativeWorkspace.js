@@ -20,8 +20,9 @@ define([
     'handlebars',
     'common/props',
     'text!kbase/templates/report_error_button.html',
-    'bootstrap'
-], function (
+
+    'bootstrap',
+], (
     Jupyter,
     Runtime,
     UI,
@@ -33,7 +34,7 @@ define([
     Handlebars,
     Props,
     ReportErrorBtnTmpl
-) {
+) => {
     'use strict';
     return KBWidget({
         name: 'kbaseNarrativeWorkspace',
@@ -116,7 +117,7 @@ define([
         },
 
         uiModeIs: function (modeTest) {
-            return (this.uiMode === modeTest);
+            return this.uiMode === modeTest;
         },
 
         initReadOnlyElements: function () {
@@ -130,9 +131,9 @@ define([
                     container: 'body',
                     delay: {
                         show: Config.get('tooltip').showDelay,
-                        hide: Config.get('tooltip').hideDelay
+                        hide: Config.get('tooltip').hideDelay,
                     },
-                    placement: 'bottom'
+                    placement: 'bottom',
                 });
 
             /* This is the input box for the new narrative name.
@@ -145,15 +146,15 @@ define([
                     title: 'Please enter a name.',
                     container: 'body',
                     placement: 'right',
-                    trigger: 'manual'
+                    trigger: 'manual',
                 })
-                .on('focus', function () {
+                .on('focus', () => {
                     Jupyter.narrative.disableKeyboardManager();
                 })
-                .on('blur', function () {
+                .on('blur', () => {
                     Jupyter.narrative.enableKeyboardManager();
                 })
-                .on('input', function () {
+                .on('input', () => {
                     const v = $newNameInput.val();
                     if (!v) {
                         $newNameInput.tooltip('show');
@@ -165,8 +166,8 @@ define([
                 });
 
             const $errorMessage = $('<div>').css({
-                'color': '#F44336',
-                'padding-top': '5px'
+                color: '#F44336',
+                'padding-top': '5px',
             });
 
             /*
@@ -180,31 +181,37 @@ define([
                     $doCopyBtn.prop('disabled', true);
                     $cancelBtn.prop('disabled', true);
                     $newNameInput.prop('disabled', true);
-                    Jupyter.narrative.getNarrativeRef()
+                    Jupyter.narrative
+                        .getNarrativeRef()
                         .then((narrativeRef) => {
                             return Jupyter.narrative.sidePanel.$narrativesWidget.copyNarrative(
-                                narrativeRef, $newNameInput.val()
+                                narrativeRef,
+                                $newNameInput.val()
                             );
                         })
                         .then((result) => {
                             Jupyter.narrative.sidePanel.$narrativesWidget.refresh();
                             // show go-to button
                             $cancelBtn.html('Close');
-                            $jumpButton.click(function () {
+                            $jumpButton.click(() => {
                                 window.location.href = result.url;
                             });
                             $jumpButton.show();
                             $cancelBtn.prop('disabled', false);
                         })
-                        .catch(function (error) {
+                        .catch((error) => {
                             if (error && error.error && error.error.message) {
                                 $errorMessage.append(error.error.message);
                             } else if (typeof error === 'string') {
                                 $errorMessage.append(error);
                             } else {
-                                $errorMessage.append('Sorry, an error occurred while copying. Please try again.');
+                                $errorMessage.append(
+                                    'Sorry, an error occurred while copying. Please try again.'
+                                );
                             }
-                            $errorMessage.append('<br>If copying continues to fail, please contact KBase with the button below.');
+                            $errorMessage.append(
+                                '<br>If copying continues to fail, please contact KBase with the button below.'
+                            );
                             $errorMessage.append(reportErrorBtn());
                             $doCopyBtn.prop('disabled', false);
                             $cancelBtn.prop('disabled', false);
@@ -220,11 +227,9 @@ define([
                     this.copyModal.hide();
                 });
 
-            var $jumpButton = $('<button>')
-                .addClass('btn btn-info')
-                .text('Open the new Narrative');
+            var $jumpButton = $('<button>').addClass('btn btn-info').text('Open the new Narrative');
 
-            var $copyModalBody = $('<div>')
+            const $copyModalBody = $('<div>')
                 .append($('<div>').append('Enter a name for the new Narrative'))
                 .append($('<div>').append($newNameInput))
                 .append($errorMessage)
@@ -234,10 +239,7 @@ define([
                 title: 'Copy this Narrative',
                 body: $copyModalBody,
                 closeButton: true,
-                buttons: [
-                    $cancelBtn,
-                    $doCopyBtn
-                ]
+                buttons: [$cancelBtn, $doCopyBtn],
             });
 
             $('#kb-view-only-copy').click(() => {
@@ -251,7 +253,6 @@ define([
                 $errorMessage.empty();
                 this.copyModal.show();
             });
-
         },
 
         buildAppCodeCell: function (spec, tag, parameters) {
@@ -273,30 +274,29 @@ define([
             // So, for kicks, we are using the presence of the word "view" in the
             // spec name, as well as the absence of any output paramters.
 
-            var cellType = this.determineCellTypeFromSpec(spec);
+            const cellType = this.determineCellTypeFromSpec(spec);
 
             // This will also trigger the create.Cell event, which is not very
             // useful for us really since we haven't been able to set the
             // metadata yet. Don't worry, I checked, the Jupyter api does not
             // provide a way to set the cell metadata as it is being created.
-            var cellData = {
+            const cellData = {
                 type: cellType,
                 appTag: tag,
-                appSpec: spec
+                appSpec: spec,
             };
-            var cell = Jupyter.narrative.insertAndSelectCellBelow('code', null, cellData);
+            const cell = Jupyter.narrative.insertAndSelectCellBelow('code', null, cellData);
 
             // Finally, if we have parameters, wedge them in the new cell's metadata.
             if (parameters) {
-                var meta = cell.metadata;
-                Object.keys(parameters).forEach(function (param) {
+                const meta = cell.metadata;
+                Object.keys(parameters).forEach((param) => {
                     meta.kbase.appCell.params[param] = parameters[param];
                 });
                 cell.metadata = meta;
             }
             return cell;
         },
-
 
         /*
         For now we need to keep the "spec grokking" in place.
@@ -316,7 +316,13 @@ define([
                     case 'advanced_viewer':
                         return 'advancedView';
                     default:
-                        console.warn('The app ' + spec.info.id + ' does not specify a valid spec.info.app_type "' + spec.info.app_type + '" - defaulting to "app"');
+                        console.warn(
+                            'The app ' +
+                                spec.info.id +
+                                ' does not specify a valid spec.info.app_type "' +
+                                spec.info.app_type +
+                                '" - defaulting to "app"'
+                        );
                         return 'app';
                 }
             }
@@ -346,10 +352,10 @@ define([
             // If this narrative became read-only after the toggle button was rendered,
             // then simply disabling the class-switching is not enough, the entire
             // mechanism should be disabled (and the button hidden as well.)
-            var icon = $('#kb-view-mode span');
-            icon.toggleClass('fa-eye', (this.uiMode === 'view'));
-            icon.toggleClass('fa-pencil', (this.uiMode === 'edit'));
-            Jupyter.narrative.readonly = (this.uiMode === 'view');
+            const icon = $('#kb-view-mode span');
+            icon.toggleClass('fa-eye', this.uiMode === 'view');
+            icon.toggleClass('fa-pencil', this.uiMode === 'edit');
+            Jupyter.narrative.readonly = this.uiMode === 'view';
 
             // Warning, do not look for the code for this ... it will burn your
             // eyes out to their bare sockets.
@@ -357,10 +363,10 @@ define([
             // (see readOnlyMode, readWriteMode), but doesn't seem to work.
             Jupyter.CellToolbar.rebuild_all();
             this.runtime.bus().emit('read-only-changed', {
-                readOnly: (this.uiMode == 'view')
+                readOnly: this.uiMode == 'view',
             });
             this.runtime.bus().emit('ui-mode-changed', {
-                mode: this.uiMode
+                mode: this.uiMode,
             });
         },
 
@@ -371,17 +377,19 @@ define([
          */
         getReadOnlySelectors: function () {
             return [
-                '.kb-app-next',                                 // next steps
-                '#kb-add-code-cell', '#kb-add-md-cell',         // edit btns
-                '#kb-share-btn', '#kb-save-btn',                // action btns
-                '#kb-ipy-menu',                                 // kernel menu
-                '.kb-cell-toolbar .buttons.pull-right',         // Jupyter icons
-                '.kb-title .btn-toolbar .btn .fa-arrow-right',  // data panel slideout
+                '.kb-app-next', // next steps
+                '#kb-add-code-cell',
+                '#kb-add-md-cell', // edit btns
+                '#kb-share-btn',
+                '#kb-save-btn', // action btns
+                '#kb-ipy-menu', // kernel menu
+                '.kb-cell-toolbar .buttons.pull-right', // Jupyter icons
+                '.kb-title .btn-toolbar .btn .fa-arrow-right', // data panel slideout
             ];
         },
 
         toggleCellEditing: function (on) {
-            Jupyter.notebook.get_cells().forEach(function (cell) {
+            Jupyter.notebook.get_cells().forEach((cell) => {
                 if (cell.code_mirror) {
                     if (on) {
                         cell.code_mirror.setOption('readOnly', false);
@@ -416,7 +424,7 @@ define([
             Jupyter.narrative.toggleSidePanel(true);
 
             // Hide things
-            this.getReadOnlySelectors().forEach(id => $(id).hide());
+            this.getReadOnlySelectors().forEach((id) => $(id).hide());
             this.toggleCellEditing(false);
 
             Jupyter.narrative.sidePanel.setReadOnlyMode(true);
@@ -429,10 +437,11 @@ define([
                     html: false,
                     placement: 'bottom',
                     trigger: 'hover',
-                    content: 'You do not have permissions to modify ' +
+                    content:
+                        'You do not have permissions to modify ' +
                         'this narrative. If you want to make your own ' +
                         'copy that can be modified, use the ' +
-                        '"Copy" button.'
+                        '"Copy" button.',
                 });
                 // No view-mode toggle for true read-only.
                 $('#kb-view-mode').hide();
@@ -451,8 +460,9 @@ define([
                     html: false,
                     placement: 'bottom',
                     trigger: 'hover',
-                    content: 'This is narrative in temporary view-only mode. ' +
-                        'This mode shows what any user without write privileges will see.'
+                    content:
+                        'This is narrative in temporary view-only mode. ' +
+                        'This mode shows what any user without write privileges will see.',
                 });
             }
             $('#kb-view-only-msg').removeClass('hidden');
@@ -480,7 +490,7 @@ define([
             $('#kb-view-only-copy').addClass('hidden');
 
             // re-enable clicking on narrative name
-            $('#save_widget').click(function () {
+            $('#save_widget').click(() => {
                 if (Jupyter && Jupyter.save_widget) {
                     Jupyter.save_widget.rename_notebook('Rename your Narrative.', true);
                 }
@@ -489,7 +499,7 @@ define([
 
             // re-enable auto-save status
             $('#autosave_status').show();
-            this.getReadOnlySelectors().forEach(id => $(id).show());
+            this.getReadOnlySelectors().forEach((id) => $(id).show());
 
             Jupyter.narrative.toggleSidePanel(false);
         },
@@ -507,24 +517,26 @@ define([
             if (index === undefined || index === null) {
                 return;
             }
-            var cell = Jupyter.notebook.get_cell(index);
+            const cell = Jupyter.notebook.get_cell(index);
             if (!cell) {
                 return;
             }
-            var kbaseCellType = Props.getDataItem(cell.metadata, 'kbase.type');
-            var cellId = Props.getDataItem(cell.metadata, 'kbase.attributes.id');
-            var p = html.tag('p');
+            const kbaseCellType = Props.getDataItem(cell.metadata, 'kbase.type');
+            const cellId = Props.getDataItem(cell.metadata, 'kbase.attributes.id');
+            const p = html.tag('p');
 
             if (!kbaseCellType || !cellId) {
                 UI.make({ node: this.$elem[0] })
                     .showConfirmDialog({
                         title: 'Confirm Cell Deletion',
                         body: [
-                            p('Cell deletion is permanent. There is no "undo" feature to recover this cell once it is deleted.'),
-                            p('Are you sure you want to delete this cell?')
-                        ]
+                            p(
+                                'Cell deletion is permanent. There is no "undo" feature to recover this cell once it is deleted.'
+                            ),
+                            p('Are you sure you want to delete this cell?'),
+                        ],
                     })
-                    .then(function (confirmed) {
+                    .then((confirmed) => {
                         if (confirmed) {
                             Jupyter.notebook.delete_cell(index);
                         }
@@ -532,14 +544,17 @@ define([
                 return;
             }
 
-            this.runtime.bus().send({}, {
-                channel: {
-                    cell: cellId
-                },
-                key: {
-                    type: 'delete-cell'
+            this.runtime.bus().send(
+                {},
+                {
+                    channel: {
+                        cell: cellId,
+                    },
+                    key: {
+                        type: 'delete-cell',
+                    },
                 }
-            });
+            );
         },
 
         /**
@@ -556,13 +571,13 @@ define([
             }
             var cellData = {
                 type: 'data',
-                objectInfo: data.info
+                objectInfo: data.info,
             };
             if (placement === 'above') {
                 return Jupyter.notebook.insert_cell_above('code', cellIndex, cellData);
             } else {
                 return Jupyter.notebook.insert_cell_below('code', cellIndex, cellData);
             }
-        }
+        },
     });
 });

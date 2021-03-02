@@ -3,7 +3,7 @@ define([
     'base/js/namespace',
     'narrativeConfig',
     'kb_service/client/workspace',
-    './fakeResultsData'
+    './fakeResultsData',
 ], (OutputWidget, Jupyter, Config, Workspace, ResultsData) => {
     'use strict';
 

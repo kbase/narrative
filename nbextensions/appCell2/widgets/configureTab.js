@@ -80,8 +80,7 @@ define(['bluebird', 'common/runtime'], (Promise, runtime) => {
     }
 
     function factory(config) {
-        var container,
-            widget;
+        var container, widget;
 
         function start(arg) {
             container = arg.node;
@@ -90,12 +89,10 @@ define(['bluebird', 'common/runtime'], (Promise, runtime) => {
                 node: container,
                 workspaceInfo: arg.workspaceInfo,
                 appSpec: arg.appSpec,
-                parameters: arg.parameters
-
-            }).then(function(result) {
+                parameters: arg.parameters,
+            }).then(function (result) {
                 widget = result;
             });
-
         }
 
         function stop() {

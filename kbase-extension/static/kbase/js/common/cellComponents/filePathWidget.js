@@ -500,11 +500,13 @@ define([
                 filePathRows.map((filePathRow) => {
                     renderFilePathRow(filePathRow);
                 })
-            ).then(() => {
-                updateRowNumbers(filePathRows);
-            }).catch((error) => {
-                throw new Error('Unable to start filePathWidget: ', error);
-            });
+            )
+                .then(() => {
+                    updateRowNumbers(filePathRows);
+                })
+                .catch((error) => {
+                    throw new Error('Unable to start filePathWidget: ', error);
+                });
         }
 
         function stop() {

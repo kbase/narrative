@@ -1,9 +1,4 @@
-define ([
-    'jquery',
-    'util/display',
-    'narrativeConfig',
-    'util/string'
-], (
+define(['jquery', 'util/display', 'narrativeConfig', 'util/string'], (
     $,
     DisplayUtil,
     Config,
@@ -113,7 +108,7 @@ define ([
         });
 
         it('displayRealName should deal with hackery usernames', (done) => {
-            const userId = '<script>alert(\'Bad actor\')</script>',
+            const userId = "<script>alert('Bad actor')</script>",
                 fullName = 'Really Bad Actor',
                 response = {};
             response[StringUtil.escape(userId)] = fullName;

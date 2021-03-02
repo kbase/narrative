@@ -364,14 +364,12 @@ define([
                 search and render only when input change is detected.
             */
             let inputFieldLastValue = null;
-            $filterInput.change(
-                () => {
-                    inputFieldLastValue = $filterInput.val();
-                    renderInputFieldState();
-                    const _dataSourceID = parseInt($typeInput.val());
-                    this.searchAndRender(_dataSourceID, $filterInput.val());
-                }
-            );
+            $filterInput.change(() => {
+                inputFieldLastValue = $filterInput.val();
+                renderInputFieldState();
+                const _dataSourceID = parseInt($typeInput.val());
+                this.searchAndRender(_dataSourceID, $filterInput.val());
+            });
 
             function renderInputFieldState() {
                 if ($filterInput.val() === '') {
@@ -428,14 +426,11 @@ define([
                 .css('overflow-x', 'hidden')
                 .css('overflow-y', 'auto')
                 .css('height', this.mainListPanelHeight)
-                .on(
-                    'scroll',
-                    (e) => {
-                        if (e.target.scrollTop + e.target.clientHeight >= e.target.scrollHeight) {
-                            this.renderMore();
-                        }
+                .on('scroll', (e) => {
+                    if (e.target.scrollTop + e.target.clientHeight >= e.target.scrollHeight) {
+                        this.renderMore();
                     }
-                )
+                })
                 .append(this.resultPanel)
                 .append(this.resultFooter);
 

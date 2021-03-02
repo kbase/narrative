@@ -43,7 +43,7 @@ define([
             // });
 
             this.spec = Spec.make({
-                appSpec: TestSpec //model.getItem('app.spec'),
+                appSpec: TestSpec, //model.getItem('app.spec'),
             });
 
             this.parameters = this.spec.getSpec().parameters;
@@ -53,10 +53,11 @@ define([
             this.filePathWidgetInstance = FilePathWidget.make({
                 bus: bus,
                 workspaceId: workspaceId,
-                initialParams: { //model.getItem('params'),
+                initialParams: {
+                    //model.getItem('params'),
                     actual_input_object: 'foo',
-                    actual_output_object: 'bar'
-                }
+                    actual_output_object: 'bar',
+                },
             });
         });
 
@@ -85,7 +86,9 @@ define([
                     parameters: this.parameters,
                 })
                 .then(() => {
-                    return new Promise((resolve) => { setTimeout(resolve, 4000)})
+                    return new Promise((resolve) => {
+                        setTimeout(resolve, 4000);
+                    });
                 })
                 .then(() => {
                     const contents = [
@@ -112,7 +115,9 @@ define([
                     parameters: this.parameters,
                 })
                 .then(() => {
-                    return new Promise((resolve) => { setTimeout(resolve, 4000)})
+                    return new Promise((resolve) => {
+                        setTimeout(resolve, 4000);
+                    });
                 })
                 .then(() => {
                     const preClickNumberOfRows = this.node.querySelectorAll('tr').length;
@@ -131,7 +136,9 @@ define([
                     parameters: this.parameters,
                 })
                 .then(() => {
-                    return new Promise((resolve) => { setTimeout(resolve, 4000)})
+                    return new Promise((resolve) => {
+                        setTimeout(resolve, 4000);
+                    });
                 })
                 .then(() => {
                     const preClickNumberOfRows = this.node.querySelectorAll('tr').length;

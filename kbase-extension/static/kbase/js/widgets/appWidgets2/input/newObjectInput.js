@@ -260,10 +260,8 @@ define([
         // LIFECYCLE API
 
         function start() {
-            console.log('NEW OBJECT INPUT STARTING');
             return Promise.try(() => {
                 bus.on('run', (message) => {
-                    console.log('NEW OBJECT INPUT GOT RUN MESSAGE');
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
                     dom = Dom.make({ node: container });
@@ -286,13 +284,13 @@ define([
             });
         }
 
-        function stop () {
+        function stop() {
             return Promise.resolve();
         }
 
         return {
             start,
-            stop
+            stop,
         };
     }
 

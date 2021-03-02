@@ -16,7 +16,7 @@ define([
         span = t('span');
 
     function factory(config) {
-        const {model} = config;
+        const { model } = config;
         let container,
             ui,
             runtime,
@@ -30,26 +30,28 @@ define([
             runtime = Runtime.make();
             nms = new NarrativeMethodStore(runtime.config('services.narrative_method_store.url'));
 
-            const {jobState} = arg;
+            const { jobState } = arg;
 
             return Promise.try(() => {
-
-                const layout = div({
-                    style: {
-                        overflowX: 'auto',
-                        maxWidth: 'inherit'
-                    }
-                }, [
-                    ui.buildCollapsiblePanel({
-                        title: 'Results',
-                        name: 'results',
-                        hidden: true,
-                        type: 'default',
-                        classes: ['kb-panel-container'],
-                    }),
-                    div({dataElement: 'report'}),
-                    div({dataElement: 'next-steps'})
-                ]);
+                const layout = div(
+                    {
+                        style: {
+                            overflowX: 'auto',
+                            maxWidth: 'inherit',
+                        },
+                    },
+                    [
+                        ui.buildCollapsiblePanel({
+                            title: 'Results',
+                            name: 'results',
+                            hidden: true,
+                            type: 'default',
+                            classes: ['kb-panel-container'],
+                        }),
+                        div({ dataElement: 'report' }),
+                        div({ dataElement: 'next-steps' }),
+                    ]
+                );
                 container.innerHTML = layout;
 
                 // If there's a "report_ref" key in the results, load and show the report.
@@ -171,7 +173,6 @@ define([
                 events.attachEvents(container);
             }
         }
-
 
         function stop() {}
 

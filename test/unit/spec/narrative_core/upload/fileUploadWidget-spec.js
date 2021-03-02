@@ -217,12 +217,12 @@ define([
                 path: '/',
                 userInfo: {
                     user: fakeUser,
-                    globusLinked: false
-                }
+                    globusLinked: false,
+                },
             });
 
             // Create file
-            const filename='foo.txt';
+            const filename = 'foo.txt';
             mockUploadEndpoint(filename, fakeUser, false);
             var mockFile = createMockFile(filename);
 
@@ -236,6 +236,5 @@ define([
             expect($cancelButton).toBeDefined();
             expect($cancelButton.attr('data-dz-remove')).toBeDefined();
         });
-
     });
 });

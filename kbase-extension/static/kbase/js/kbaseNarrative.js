@@ -833,8 +833,7 @@ define([
             }
             this.initSharePanel();
             this.initStaticNarrativesPanel();
-            this.updateDocumentVersion()
-                .finally(() => this.sidePanel.render());
+            this.updateDocumentVersion().finally(() => this.sidePanel.render());
         });
         $([Jupyter.events]).on('kernel_connected.Kernel', () => {
             this.loadingWidget.updateProgress('kernel', true);
@@ -1201,22 +1200,18 @@ define([
         const cellType = 'app-bulk-import';
         const cellData = {
             type: cellType,
-            typesToFiles: bulkInput ? bulkInput : {}
+            typesToFiles: bulkInput ? bulkInput : {},
         };
         // get a unique array of app ids we need to look up
-        const appIds = [
-            ...new Set(Object.values(bulkInput)
-                .map((typeInfo) => typeInfo.appId))
-        ];
-        return APIUtil.getAppSpecs(appIds)
-            .then((appSpecs) => {
-                cellData.specs = appSpecs.reduce((allSpecs, spec) => {
-                    allSpecs[spec.info.id] = spec;
-                    return allSpecs;
-                }, {});
-                const cell = this.insertAndSelectCellBelow('code', null, cellData);
-                return cell;
-            });
+        const appIds = [...new Set(Object.values(bulkInput).map((typeInfo) => typeInfo.appId))];
+        return APIUtil.getAppSpecs(appIds).then((appSpecs) => {
+            cellData.specs = appSpecs.reduce((allSpecs, spec) => {
+                allSpecs[spec.info.id] = spec;
+                return allSpecs;
+            }, {});
+            const cell = this.insertAndSelectCellBelow('code', null, cellData);
+            return cell;
+        });
     };
 
     return Narrative;

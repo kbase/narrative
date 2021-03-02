@@ -178,7 +178,7 @@ define([
                 inputPrompt.innerHTML = this.getIcon();
             }
         };
-        cell.getIcon = function() {
+        cell.getIcon = function () {
             return Icon.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.viewCell.app.spec'));
         };
         cell.showInfo = function () {

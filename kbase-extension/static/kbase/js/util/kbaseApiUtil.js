@@ -6,27 +6,27 @@ define([
     'bluebird',
     'kb_service/client/narrativeMethodStore',
     'narrativeConfig',
-    'base/js/namespace'
-], function (
-    Promise,
-    NarrativeMethodStore,
-    Config,
-    Jupyter
-) {
+    'base/js/namespace',
+], function (Promise, NarrativeMethodStore, Config, Jupyter) {
     'use strict';
-    function getAppSpec (id, tag) {
-        return getAppSpecs([id], tag).then(function(result) {
-            return Promise.try(function() {
+    function getAppSpec(id, tag) {
+        return getAppSpecs([id], tag).then(function (result) {
+            return Promise.try(function () {
                 return result[0];
             });
         });
     }
 
-    function getAppVersionTag () {
+    function getAppVersionTag() {
         let tag;
         // TODO: make some form of service / API call for this. Link to runtime module?
         // Also update other modules that dig through the same magic pathway to get that tag.
-        if (Jupyter && Jupyter.narrative && Jupyter.narrative.sidePanel && Jupyter.narrative.sidePanel.$methodsWidget) {
+        if (
+            Jupyter &&
+            Jupyter.narrative &&
+            Jupyter.narrative.sidePanel &&
+            Jupyter.narrative.sidePanel.$methodsWidget
+        ) {
             tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag;
         }
         if (!tag) {
@@ -49,18 +49,19 @@ define([
         const nms = new NarrativeMethodStore(Config.url('narrative_method_store'));
         return Promise.all([
             nms.get_method_spec({
-                ids: idList, tag: tag
+                ids: idList,
+                tag: tag,
             }),
             nms.get_method_full_info({
-                ids: idList, tag: tag
-            })
-        ])
-            .then(([appSpecs, appFullInfos]) => {
-                appFullInfos.forEach((info, idx) => {
-                    appSpecs[idx].full_info = info;
-                });
-                return appSpecs;
+                ids: idList,
+                tag: tag,
+            }),
+        ]).then(([appSpecs, appFullInfos]) => {
+            appFullInfos.forEach((info, idx) => {
+                appSpecs[idx].full_info = info;
             });
+            return appSpecs;
+        });
     }
 
     /**
@@ -80,7 +81,8 @@ define([
         }
 
         const refRegex = /^\w+\/\w+(\/\d+)?$/;
-        if (ref.indexOf(';') === -1) { // if it's not a path, just do the basic regex
+        if (ref.indexOf(';') === -1) {
+            // if it's not a path, just do the basic regex
             if (refRegex.exec(ref)) {
                 return true;
             }
@@ -90,7 +92,7 @@ define([
         const versionRefRegex = /^\w+\/\w+\/\d+?$/;
         var refList = ref.split(';');
         var validRef = true;
-        refList.forEach(function(r) {
+        refList.forEach(function (r) {
             if (!versionRefRegex.exec(r)) {
                 validRef = false;
             }
@@ -118,7 +120,7 @@ define([
      * @param {string} typeString a workspace type string of format:
      *      ModuleName.TypeName-MajorVersion.MinorVersion
      */
-    function parseWorkspaceType (typeString) {
+    function parseWorkspaceType(typeString) {
         if (!typeString) {
             return null;
         }
@@ -141,6 +143,6 @@ define([
         getAppSpecs: getAppSpecs,
         getAppVersionTag: getAppVersionTag,
         checkObjectRef: checkObjectRef,
-        parseWorkspaceType: parseWorkspaceType
+        parseWorkspaceType: parseWorkspaceType,
     };
 });

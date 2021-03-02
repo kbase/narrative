@@ -1,10 +1,4 @@
-define([
-    'util/jobLogViewer',
-    'common/runtime'
-], (
-    JobLogViewer,
-    Runtime
-) => {
+define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
     'use strict';
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('Test the job log viewer module', () => {

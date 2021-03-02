@@ -9,7 +9,7 @@ define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'common/html
     UI,
     format,
     html,
-    Jobs,
+    Jobs
 ) => {
     'use strict';
 

@@ -1,8 +1,8 @@
-define([
-    'util/kbaseApiUtil',
-    'narrativeConfig',
-    'base/js/namespace'
-], (APIUtil, Config, Jupyter) => {
+define(['util/kbaseApiUtil', 'narrativeConfig', 'base/js/namespace'], (
+    APIUtil,
+    Config,
+    Jupyter
+) => {
     'use strict';
 
     /**
@@ -24,28 +24,27 @@ define([
             contentType: 'application/json',
             responseText: JSON.stringify({
                 version: '1.1',
-                result: [ appIds.map((appId) => ({ id: appId })) ]
-            })
+                result: [appIds.map((appId) => ({ id: appId }))],
+            }),
         });
-        jasmine.Ajax.stubRequest(
-            Config.url('narrative_method_store'),
-            /get_method_spec/
-        ).andReturn({
-            status: 200,
-            statusText: 'HTTP/1.1 200 OK',
-            contentType: 'application/json',
-            responseText: JSON.stringify({
-                version: '1.1',
-                result: [
-                    appIds.map((appId) => ({
-                        info: {
-                            id: appId
-                        },
-                        parameters: []
-                    }))
-                ]
-            })
-        });
+        jasmine.Ajax.stubRequest(Config.url('narrative_method_store'), /get_method_spec/).andReturn(
+            {
+                status: 200,
+                statusText: 'HTTP/1.1 200 OK',
+                contentType: 'application/json',
+                responseText: JSON.stringify({
+                    version: '1.1',
+                    result: [
+                        appIds.map((appId) => ({
+                            info: {
+                                id: appId,
+                            },
+                            parameters: [],
+                        })),
+                    ],
+                }),
+            }
+        );
     }
 
     describe('test the API util module', () => {
@@ -57,14 +56,19 @@ define([
                     type: 'Narrative',
                     version: '1.0',
                     majorVersion: '1',
-                    minorVersion: '0'
+                    minorVersion: '0',
                 };
             expect(APIUtil.parseWorkspaceType(type)).toEqual(output);
         });
 
         // parseWorkspaceType - ensure invalid types fail
         const invalidTypes = [
-            'KBaseNarrative.1.0', '.Narrative-1.0', '_&^%$.Narrative-1.0', '', undefined, null
+            'KBaseNarrative.1.0',
+            '.Narrative-1.0',
+            '_&^%$.Narrative-1.0',
+            '',
+            undefined,
+            null,
         ];
         invalidTypes.forEach((badType) => {
             it(`parseWorkspaceType should fail for bad type "${badType}"`, () => {
@@ -73,12 +77,7 @@ define([
         });
 
         // checkObjectRef - ensure valid refs work
-        const validObjRefs = [
-            '1/2/3',
-            '1/2',
-            '1/2/3;4/5/6',
-            '1/2/3;4/5/6;7/8/9'
-        ];
+        const validObjRefs = ['1/2/3', '1/2', '1/2/3;4/5/6', '1/2/3;4/5/6;7/8/9'];
         validObjRefs.forEach((ref) => {
             it(`checkObjectRef should return true for valid object ref "${ref}"`, () => {
                 expect(APIUtil.checkObjectRef(ref)).toBeTrue();
@@ -98,7 +97,7 @@ define([
             '1/2/3/4',
             '1/2/3;',
             '1/2/3;4/5/6;',
-            '1/2;4/5/6'
+            '1/2;4/5/6',
         ];
         invalidObjRefs.forEach((badRef) => {
             it(`checkObjectRef should return false for bad ref "${badRef}"`, () => {
@@ -116,9 +115,9 @@ define([
             Jupyter.narrative = {
                 sidePanel: {
                     $methodsWidget: {
-                        currentTag: testTag
-                    }
-                }
+                        currentTag: testTag,
+                    },
+                },
             };
             expect(APIUtil.getAppVersionTag()).toBe(testTag);
         });

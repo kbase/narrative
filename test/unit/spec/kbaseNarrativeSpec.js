@@ -168,8 +168,8 @@ define([
             // a hacked up mock to avoid wrestling with asynchronous triggers.
             narr.sidePanel = {
                 $methodsWidget: {
-                    currentTag: 'release'
-                }
+                    currentTag: 'release',
+                },
             };
             // mock requests to narrative method store for app spec information
             jasmine.Ajax.stubRequest(
@@ -181,10 +181,14 @@ define([
                 contentType: 'application/json',
                 responseText: JSON.stringify({
                     version: '1.1',
-                    result: [[{
-                        id: appId
-                    }]]
-                })
+                    result: [
+                        [
+                            {
+                                id: appId,
+                            },
+                        ],
+                    ],
+                }),
             });
             jasmine.Ajax.stubRequest(
                 Config.url('narrative_method_store'),
@@ -195,21 +199,26 @@ define([
                 contentType: 'application/json',
                 responseText: JSON.stringify({
                     version: '1.1',
-                    result: [[{
-                        info: {
-                            id: appId
-                        },
-                        parameters: []
-                    }]]
-                })
+                    result: [
+                        [
+                            {
+                                info: {
+                                    id: appId,
+                                },
+                                parameters: [],
+                            },
+                        ],
+                    ],
+                }),
             });
             spyOn(narr, 'insertAndSelectCell');
-            return narr.insertBulkImportCell({
-                someFile: {
-                    files: ['a_file'],
-                    appId: appId
-                }
-            })
+            return narr
+                .insertBulkImportCell({
+                    someFile: {
+                        files: ['a_file'],
+                        appId: appId,
+                    },
+                })
                 .then(() => {
                     expect(narr.insertAndSelectCell).toHaveBeenCalled();
                 });

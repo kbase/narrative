@@ -69,15 +69,17 @@ define([
          * The data cell icon is derived by looking up the type in the
          * narrative configuration.
          */
-        cell.renderIcon = function() {
+        cell.renderIcon = function () {
             var inputPrompt = this.element[0].querySelector('[data-element="icon"]');
             if (inputPrompt) {
                 inputPrompt.innerHTML = this.getIcon();
             }
         };
 
-        cell.getIcon = function() {
-            return Icon.makeToolbarTypeIcon(Props.getDataItem(cell.metadata, 'kbase.dataCell.objectInfo.type'));
+        cell.getIcon = function () {
+            return Icon.makeToolbarTypeIcon(
+                Props.getDataItem(cell.metadata, 'kbase.dataCell.objectInfo.type')
+            );
         };
 
         cell.toggleCodeInputArea = function () {

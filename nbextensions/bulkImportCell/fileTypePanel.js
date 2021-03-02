@@ -1,14 +1,4 @@
-define([
-    'bluebird',
-    'common/ui',
-    'common/html',
-    'common/events'
-], (
-    Promise,
-    UI,
-    html,
-    Events
-) => {
+define(['bluebird', 'common/ui', 'common/html', 'common/events'], (Promise, UI, html, Events) => {
     'use strict';
 
     const div = html.tag('div'),
@@ -74,7 +64,7 @@ define([
                 content = [renderHeader()].concat(renderFileTypes(events)).join('');
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
@@ -82,12 +72,15 @@ define([
          * Renders the header - this should just be a non-clickable label.
          */
         function renderHeader() {
-            return div({
-                class: `${baseCss}__header`
-            }, [
-                span({class: `${baseCss}__header_icon ${header.icon}`}),
-                span({class: `${baseCss}__header_label`}, header.label)
-            ]);
+            return div(
+                {
+                    class: `${baseCss}__header`,
+                },
+                [
+                    span({ class: `${baseCss}__header_icon ${header.icon}` }),
+                    span({ class: `${baseCss}__header_label` }, header.label),
+                ]
+            );
         }
 
         /**
@@ -98,30 +91,38 @@ define([
          * @param {Events} events - an events object used to bind the DOM event
          */
         function renderFileTypes(events) {
-            const layout = Object.keys(fileTypes).sort().map(key => {
-                return button({
-                    class: `${baseCss}__filetype_button`,
-                    dataElement: key,
-                    id: events.addEvent({
-                        type: 'click',
-                        handler: () => {
-                            if (key !== state.selected) {
-                                toggleFileType(key);
-                            }
-                        }
-                    }),
-                    role: 'button',
-                    'aria-label': `toggle ${fileTypes[key].label}`
-                }, [
-                    div({
-                        class: `${baseCss}__filetype_icon fa ${incompleteIcon}`,
-                        dataElement: 'icon'
-                    }),
-                    div({
-                        class: `${baseCss}__filetype_label`
-                    }, fileTypes[key].label)
-                ]);
-            });
+            const layout = Object.keys(fileTypes)
+                .sort()
+                .map((key) => {
+                    return button(
+                        {
+                            class: `${baseCss}__filetype_button`,
+                            dataElement: key,
+                            id: events.addEvent({
+                                type: 'click',
+                                handler: () => {
+                                    if (key !== state.selected) {
+                                        toggleFileType(key);
+                                    }
+                                },
+                            }),
+                            role: 'button',
+                            'aria-label': `toggle ${fileTypes[key].label}`,
+                        },
+                        [
+                            div({
+                                class: `${baseCss}__filetype_icon fa ${incompleteIcon}`,
+                                dataElement: 'icon',
+                            }),
+                            div(
+                                {
+                                    class: `${baseCss}__filetype_label`,
+                                },
+                                fileTypes[key].label
+                            ),
+                        ]
+                    );
+                });
             return layout;
         }
 
@@ -142,14 +143,14 @@ define([
         function updateState(newState) {
             state = newState;
             const selected = `${baseCss}__filetype_button--selected`;
-            state.completed = state.completed || {};  // double-check we have the completed set
+            state.completed = state.completed || {}; // double-check we have the completed set
             /**
              * Tweaking the visual state -
              * 1. deselect everything
              * 2. remove all icons
              * 3. put in the completion icon for each file type
              */
-            Object.keys(fileTypes).forEach(key => {
+            Object.keys(fileTypes).forEach((key) => {
                 ui.getElement(key).classList.remove(selected);
                 ui.getElement(`${key}.icon`).classList.remove(completeIcon, incompleteIcon);
                 let icon = state.completed[key] ? completeIcon : incompleteIcon;
@@ -173,7 +174,7 @@ define([
                 container = args.node;
                 ui = UI.make({
                     node: container,
-                    bus: bus
+                    bus: bus,
                 });
                 const layout = renderLayout();
                 container.innerHTML = layout.content;
@@ -186,18 +187,17 @@ define([
          * Stop the component. Not used just yet.
          */
         function stop() {
-            return Promise.try(() => {
-            });
+            return Promise.try(() => {});
         }
 
         return {
             start: start,
             stop: stop,
-            updateState: updateState
+            updateState: updateState,
         };
     }
 
     return {
-        make: FileTypePanel
+        make: FileTypePanel,
     };
 });

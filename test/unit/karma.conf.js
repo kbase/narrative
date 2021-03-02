@@ -32,7 +32,7 @@ module.exports = function (config) {
             'nbextensions/appCell2/widgets/tabs/*.js': ['coverage'],
             'nbextensions/bulkImportCell/**/*.js': ['coverage'],
             'nbextensions/codeCell/**/*.js': ['coverage'],
-            'kbase-extension/static/kbase/js/*.js': ['coverage']
+            'kbase-extension/static/kbase/js/*.js': ['coverage'],
         },
         // karma defaults:
         // included: true; nocache: false; served: true; watched: true;

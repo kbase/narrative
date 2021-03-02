@@ -25,7 +25,7 @@ define([
 
         afterEach(() => {
             window.kbaseRuntime = null;
-        })
+        });
 
         afterAll(() => {
             Jupyter.narrative = null;
@@ -122,7 +122,7 @@ define([
                 deleteCallback: () => {
                     expect(Jupyter.notebook.delete_cell).toHaveBeenCalled();
                     done();
-                }
+                },
             });
             spyOn(Jupyter.notebook, 'delete_cell').and.callThrough();
             BulkImportCell.make({

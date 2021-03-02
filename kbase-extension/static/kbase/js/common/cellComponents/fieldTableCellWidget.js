@@ -135,7 +135,7 @@ define([
                     });
                 })
                 .catch((error) => {
-                    throw new Error('Unable to start fieldTableCellWidget: ', error);
+                    throw new Error(`Unable to start fieldTableCellWidget: ${error}`);
                 });
         }
 

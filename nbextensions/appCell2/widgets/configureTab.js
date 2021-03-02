@@ -1,4 +1,6 @@
 define(['bluebird', 'common/runtime'], (Promise, runtime) => {
+    'use strict';
+
     function loadParamsWidget(arg) {
         return new Promise((resolve, reject) => {
             require(['./appParamsWidget'], (Widget) => {
@@ -80,7 +82,7 @@ define(['bluebird', 'common/runtime'], (Promise, runtime) => {
     }
 
     function factory(config) {
-        var container, widget;
+        let container, widget;
 
         function start(arg) {
             container = arg.node;
@@ -90,7 +92,7 @@ define(['bluebird', 'common/runtime'], (Promise, runtime) => {
                 workspaceInfo: arg.workspaceInfo,
                 appSpec: arg.appSpec,
                 parameters: arg.parameters,
-            }).then(function (result) {
+            }).then((result) => {
                 widget = result;
             });
         }

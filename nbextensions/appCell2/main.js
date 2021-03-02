@@ -26,9 +26,9 @@ define([
     './appCell',
     'bootstrap',
     'custom/custom',
-], function ($, Jupyter, Promise, Runtime, Clock, Error, serviceUtils, Workspace, AppCell) {
+], ($, Jupyter, Promise, Runtime, Clock, Error, serviceUtils, Workspace, AppCell) => {
     'use strict';
-    var runtime = Runtime.make();
+    const runtime = Runtime.make();
 
     function setupNotebook(workspaceInfo) {
         // console.log(Jupyter.notebook.get_cells());
@@ -125,7 +125,7 @@ define([
                     });
                     appCell
                         .upgradeToAppCell(setupData.appSpec, setupData.appTag, setupData.type)
-                        .catch(function (err) {
+                        .catch((err) => {
                             Error.reportCellError(
                                 'Error inserting app cell',
                                 'Could not insert the app cell due to errors:',
@@ -166,7 +166,7 @@ define([
         // This is the sole ipython/jupyter api call
         load_ipython_extension: load,
     };
-}, function (err) {
+}, (err) => {
     'use strict';
     console.error('ERROR loading appCell main', err);
 });

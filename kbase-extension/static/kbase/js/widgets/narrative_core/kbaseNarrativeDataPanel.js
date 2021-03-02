@@ -1,5 +1,3 @@
-/*eslint-env browser*/
-
 /**
  * Widget to display a table of data objects from a kbase workspace.
  *

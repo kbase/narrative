@@ -5,15 +5,8 @@ define([
     'common/utils',
     'kb_common/html',
     './widgets/codeCell',
-    'custom/custom'
-], (
-    $,
-    Uuid,
-    Jupyter,
-    utils,
-    html,
-    CodeCell
-) => {
+    'custom/custom',
+], ($, Uuid, Jupyter, utils, html, CodeCell) => {
     'use strict';
 
     const t = html.tag,
@@ -53,8 +46,7 @@ define([
 
         cell.getIcon = function () {
             const iconColor = 'silver';
-            let icon;
-            icon = span({ class: 'fa fa-inverse fa-stack-1x fa-' + 'terminal' });
+            const icon = span({ class: 'fa fa-inverse fa-stack-1x fa-' + 'terminal' });
 
             return span({ style: '' }, [
                 span(
@@ -75,6 +67,7 @@ define([
                     true
                 );
                 // NB purely for side effect - toolbar refresh
+                // eslint-disable-next-line no-self-assign
                 cell.metadata = cell.metadata;
             }
         };
@@ -94,9 +87,9 @@ define([
 
         // migrate from 'userSettings' to 'user-settings'
         if (utils.getCellMeta(cell, 'kbase.codeCell')) {
-            let cellMeta = utils.getCellMeta(cell, 'kbase.codeCell'),
-                oldSettings = cellMeta.userSettings,
-                newSettings = cellMeta['user-settings'];
+            const cellMeta = utils.getCellMeta(cell, 'kbase.codeCell');
+            let oldSettings = cellMeta.userSettings;
+            const newSettings = cellMeta['user-settings'];
             if (oldSettings) {
                 if (newSettings) {
                     // merge, with old (saved) settings taking priority
@@ -130,6 +123,7 @@ define([
 
         cell.renderMinMax();
         // force toolbar rerender.
+        // eslint-disable-next-line no-self-assign
         cell.metadata = cell.metadata;
     }
 
@@ -213,7 +207,6 @@ define([
             const cell = payload.cell;
             const setupData = payload.data;
             const jupyterCellType = payload.type;
-            // var hasKBaseMetadata = payload.cell.metadata && payload.cell.metadata.kbase;
             if (jupyterCellType === 'code' && (!setupData || setupData.type === 'code')) {
                 try {
                     upgradeCell(cell, setupData);

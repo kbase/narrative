@@ -1,5 +1,3 @@
-/*eslint-env browser*/
-
 define(['jquery', 'bluebird'], ($, Promise) => {
     'use strict';
 

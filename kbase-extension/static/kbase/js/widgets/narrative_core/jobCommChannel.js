@@ -54,10 +54,7 @@ define([
     'use strict';
 
     const COMM_NAME = 'KBaseJobs',
-        ALL_STATUS = 'all_status',
         JOB_STATUS = 'job_status',
-        STOP_UPDATE_LOOP = 'stop_update_loop',
-        START_UPDATE_LOOP = 'start_update_loop',
         STOP_JOB_UPDATE = 'stop_job_update',
         START_JOB_UPDATE = 'start_job_update',
         CANCEL_JOB = 'cancel_job',
@@ -194,7 +191,15 @@ define([
                 resolve();
             }).catch((err) => {
                 console.error('ERROR sending comm message', err, msgType, jobId, options);
-                throw new Error('ERROR sending comm message', err, msgType, jobId, options);
+                throw new Error(
+                    'ERROR sending comm message: ' +
+                        JSON.stringify({
+                            error: err,
+                            msgType: msgType,
+                            jobId: jobId,
+                            options: options,
+                        })
+                );
             });
         }
 
@@ -290,17 +295,17 @@ define([
                         });
                     }
 
-                    Object.keys(this.jobStates).forEach((jobId) => {
-                        if (!msgData[jobId]) {
+                    Object.keys(this.jobStates).forEach((_jobId) => {
+                        if (!msgData[_jobId]) {
                             // If this job is not found in the incoming list of all
                             // jobs, then we must both delete it locally, and
                             // notify any interested parties.
-                            this.sendBusMessage(JOB, jobId, 'job-deleted', {
-                                jobId: jobId,
+                            this.sendBusMessage(JOB, _jobId, 'job-deleted', {
+                                jobId: _jobId,
                                 via: 'no_longer_exists',
                             });
                             // it is safe to delete properties here
-                            delete this.jobStates[jobId];
+                            delete this.jobStates[_jobId];
                         }
                     });
                     break;

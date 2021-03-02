@@ -393,7 +393,7 @@ define([
 
                     widgets.push(widget);
                     return widget.start({
-                        node: document.getElementById(filePathParams.view[spec.id].id),
+                        node: container.querySelector('#' + filePathParams.view[spec.id].id),
                     });
                 })
                 .catch((ex) => {
@@ -404,11 +404,11 @@ define([
                         [ex.message]
                     );
 
-                    document.getElementById(
-                        filePathParams.view[spec.id].id
+                    container.querySelector(
+                        '#' + filePathParams.view[spec.id].id
                     ).innerHTML = errorDisplay;
 
-                    throw new Error('Error making input field widget', ex);
+                    throw new Error(`Error making input field widget: ${ex}`);
                 });
         }
 
@@ -500,11 +500,13 @@ define([
                 filePathRows.map((filePathRow) => {
                     renderFilePathRow(filePathRow);
                 })
-            ).then(() => {
-                updateRowNumbers(filePathRows);
-            }).catch((error) => {
-                throw new Error('Unable to start filePathWidget: ', error);
-            });
+            )
+                .then(() => {
+                    updateRowNumbers(filePathRows);
+                })
+                .catch((error) => {
+                    throw new Error(`Unable to start filePathWidget: ${error}`);
+                });
         }
 
         function stop() {

@@ -19,7 +19,7 @@ define([
     'uuid',
     'jquery-dataTables',
     'select2',
-], function (
+], (
     $,
     KBaseTabs,
     StagingServiceClient,
@@ -38,7 +38,7 @@ define([
     FilePathHtml,
     Workspace,
     UUID
-) {
+) => {
     'use strict';
     return new KBWidget({
         name: 'StagingAreaViewer',
@@ -51,7 +51,7 @@ define([
         init: function (options) {
             this._super(options);
             this.bulkImportTypes = ['fastq_reads', 'sra_reads'];
-            var runtime = Runtime.make();
+            const runtime = Runtime.make();
 
             this.workspaceClient = new Workspace(Config.url('workspace'), {
                 token: runtime.authToken(),
@@ -129,7 +129,7 @@ define([
                     return this.identifyImporterMappings(files);
                 })
                 .then((files) => {
-                    var scrollTop = this.$elem.parent().scrollTop();
+                    const scrollTop = this.$elem.parent().scrollTop();
                     $('.staging-area-file-metadata').detach();
                     this.$elem.empty();
                     this.renderFileHeader();
@@ -194,9 +194,9 @@ define([
 
             // Add ACL before going to the staging area
             // If it fails, it'll just do so silently.
-            var $globusLink = this.$elem.find('.globus_acl_link');
-            $globusLink.click((e) => {
-                var globusWindow = window.open('', 'globus');
+            const $globusLink = this.$elem.find('.globus_acl_link');
+            $globusLink.click(() => {
+                const globusWindow = window.open('', 'globus');
                 globusWindow.document.write(
                     '<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>'
                 );
@@ -274,26 +274,26 @@ define([
             */
             const fileNames = stagingFiles.map((f) => f['path']);
             const fileList = $.param({ file_list: fileNames }, true);
-            var mappings = [];
+            let mappings = [];
             return Promise.resolve(
                 this.stagingServiceClient.importer_mappings({
                     file_list: fileList,
                 })
             )
-                .then(function (data) {
+                .then((data) => {
                     //Extract mappings, sort by weight, assign mappings to staging files
                     mappings = JSON.parse(data)['mappings'];
-                    mappings.forEach(function (mapping) {
+                    mappings.forEach((mapping) => {
                         if (mapping) {
                             mapping.sort((a, b) => a.app_weight < b.app_weight);
                         }
                     });
-                    stagingFiles.map(function (element, index) {
+                    stagingFiles.map((element, index) => {
                         element['mappings'] = mappings[index] || null;
                     });
                     return stagingFiles;
                 })
-                .catch(function (err) {
+                .catch((err) => {
                     console.error('Error', err);
                 });
         },
@@ -305,7 +305,7 @@ define([
          * keys: files (list of file info) and error (optional error)
          */
         renderFiles: function (files) {
-            let stagingAreaViewer = this;
+            const stagingAreaViewer = this;
             files = files || [];
             const emptyMsg = 'No files found.';
 
@@ -359,9 +359,9 @@ define([
                         targets: 1,
                         render: function (data, type, full) {
                             if (type === 'display') {
-                                var isFolder = data === 'true' ? true : false;
-                                var icon = isFolder ? 'folder' : 'file-o';
-                                var disp = '<span><i class="fa fa-' + icon + '"></i></span>';
+                                const isFolder = data === 'true' ? true : false;
+                                const icon = isFolder ? 'folder' : 'file-o';
+                                let disp = '<span><i class="fa fa-' + icon + '"></i></span>';
                                 if (isFolder) {
                                     disp =
                                         '<button data-name="' +
@@ -441,7 +441,7 @@ define([
                 ],
                 rowCallback: function (row, data) {
                     const getFileFromName = function (fileData) {
-                        return files.filter(function (file) {
+                        return files.filter((file) => {
                             return file.name === fileData;
                         })[0];
                     };
@@ -449,10 +449,10 @@ define([
                     //get the file (or folder) name for this row
                     const rowFileName = data[2];
                     //use the name to look up all the data we have
-                    let rowFileData = getFileFromName(rowFileName);
+                    const rowFileData = getFileFromName(rowFileName);
 
                     //find the initial singly mapped datatype from the staging service
-                    let suggestedTypes = $(data[5]).find('optgroup[label="Suggested Types"]');
+                    const suggestedTypes = $(data[5]).find('optgroup[label="Suggested Types"]');
                     let suggestedType = null;
                     if (suggestedTypes.children().length == 1) {
                         const option = suggestedTypes.find('option');
@@ -469,7 +469,7 @@ define([
                             check state of all checkboxes
                             if any are checked we leave import button enabled
                             */
-                            let anyCheckedBoxes = $(
+                            const anyCheckedBoxes = $(
                                 'input.kb-staging-table-body__checkbox-input:checked'
                             );
 
@@ -495,7 +495,7 @@ define([
                         });
 
                     //First, we find the expansion caret in the first cell.
-                    let $caret = $('td:eq(1)', row).find('i[data-caret]');
+                    const $caret = $('td:eq(1)', row).find('i[data-caret]');
 
                     $caret.off('click');
 
@@ -515,9 +515,9 @@ define([
                     }
 
                     $caret.on('click', (e) => {
-                        let fileExpander = $(e.currentTarget);
+                        const fileExpander = $(e.currentTarget);
                         fileExpander.toggleClass('fa-caret-down fa-caret-right');
-                        let $tr = fileExpander.parent().parent();
+                        const $tr = fileExpander.parent().parent();
 
                         if (fileExpander.hasClass('fa-caret-down')) {
                             $('.kb-dropzone').css('min-height', '75px');
@@ -570,7 +570,7 @@ define([
                         });
 
                     //find the element
-                    let importDropdown = $('td:eq(5)', row).find('select');
+                    const importDropdown = $('td:eq(5)', row).find('select');
 
                     /*
                             when a user selects a data type from the import as dropdown
@@ -637,7 +637,7 @@ define([
                     }
 
                     //set the behavior on the import dropdown when a user selects a type
-                    importDropdown.on('select2:select', function (e) {
+                    importDropdown.on('select2:select', (e) => {
                         const dataType = e.currentTarget.value;
 
                         //store the type we selected along with file data so we can persist on a view update
@@ -907,7 +907,7 @@ define([
         },
 
         renderImportButton: function () {
-            let importButton = $('<button></button>')
+            const importButton = $('<button></button>')
                 .addClass('kb-staging-table-import__button btn btn-xs btn-primary')
                 .text('Import Selected');
 
@@ -936,14 +936,14 @@ define([
         },
 
         enableImportButton: function () {
-            let stagingAreaViewer = this;
+            const stagingAreaViewer = this;
 
             this.$elem
                 .find('button.kb-staging-table-import__button')
                 .removeClass('kb-staging-table-import__button__disabled')
                 .tooltip('disable')
                 .off('click')
-                .on('click keyPress', function () {
+                .on('click keyPress', () => {
                     stagingAreaViewer.initBulkImport();
                 });
         },
@@ -1008,8 +1008,8 @@ define([
             const appInfo = this.uploaders.app_info[type];
             if (appInfo) {
                 const tag = APIUtil.getAppVersionTag();
-                let fileParam = file || '',
-                    inputs = {};
+                let fileParam = file || '';
+                const inputs = {};
 
                 if (this.subpath) {
                     fileParam = this.subpath + '/' + file;

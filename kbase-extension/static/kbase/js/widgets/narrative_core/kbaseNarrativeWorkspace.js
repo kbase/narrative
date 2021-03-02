@@ -226,7 +226,9 @@ define([
                     this.copyModal.hide();
                 });
 
-            const $jumpButton = $('<button>').addClass('btn btn-info').text('Open the new Narrative');
+            const $jumpButton = $('<button>')
+                .addClass('btn btn-info')
+                .text('Open the new Narrative');
 
             const $copyModalBody = $('<div>')
                 .append($('<div>').append('Enter a name for the new Narrative'))

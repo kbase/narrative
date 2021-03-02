@@ -235,14 +235,6 @@ define(['uuid'], (Uuid) => {
      * @param {type} arg
      * @returns {unresolved}
      */
-    function reverse(arr) {
-        const newArray = [];
-        for (let index = arr.length - 1; index >= 0; index -= 1) {
-            newArray.push(arr[index]);
-        }
-        return newArray;
-    }
-
     function makeTabs(arg) {
         const tabsId = arg.id,
             tabsAttribs = {},
@@ -261,7 +253,7 @@ define(['uuid'], (Uuid) => {
             tab.id = genId();
         });
         if (arg.alignRight) {
-            tabTabs = reverse(tabs);
+            tabTabs = tabs.slice().reverse();
             tabStyle.float = 'right';
             activeIndex = tabs.length - 1;
         } else {

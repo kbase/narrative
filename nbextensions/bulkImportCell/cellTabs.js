@@ -115,15 +115,15 @@ define(['bluebird', 'common/html', 'common/ui', 'common/events'], (Promise, html
                         icon: icon,
                     });
                 })
-                .filter(function (x) {
+                .filter((x) => {
                     return x ? true : false;
                 });
             bus.on('control-panel-tab', (message) => {
-                var tab = message.data.tab;
+                const tab = message.data.tab;
                 tabToggleAction(tab);
             });
 
-            var outdatedBtn = a(
+            const outdatedBtn = a(
                 {
                     tabindex: '0',
                     type: 'button',

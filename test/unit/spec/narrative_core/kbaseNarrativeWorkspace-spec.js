@@ -1,4 +1,3 @@
-/*jslint white: true*/
 define([
     'kbaseNarrativeWorkspace',
     'jquery',
@@ -115,7 +114,7 @@ define([
 
         it('should go back and forth between read-only and read-write modes in a writable Narrative', () => {
             const widget = new KBaseNarrativeWorkspace($node);
-            const initialUIMode = 'edit';  // this is the beforeEach starting point
+            const initialUIMode = 'edit'; // this is the beforeEach starting point
             expect(widget.uiModeIs(initialUIMode)).toBeTruthy();
             widget.enterReadOnlyMode();
             expect(widget.uiModeIs(initialUIMode)).toBeFalsy();
@@ -163,14 +162,14 @@ define([
 
         it('should delete KBase extension cells by direct call by bus command', (done) => {
             const cell = Mocks.buildMockCell('code', 'app');
-            Jupyter.notebook.cells[0] = cell;  // manually mock out the notebook state
+            Jupyter.notebook.cells[0] = cell; // manually mock out the notebook state
             const widget = new KBaseNarrativeWorkspace($node),
                 runtime = Runtime.make(),
                 cellBus = runtime.bus().makeChannelBus({
                     name: {
-                        cell: cell.metadata.kbase.attributes.id
+                        cell: cell.metadata.kbase.attributes.id,
                     },
-                    description: 'testing bus'
+                    description: 'testing bus',
                 });
             cellBus.on('delete-cell', (msg) => {
                 expect(msg).toBeDefined();
@@ -185,7 +184,7 @@ define([
                 deleteCallback: () => {
                     expect(Jupyter.notebook.delete_cell).toHaveBeenCalled();
                     done();
-                }
+                },
             });
             spyOn(Jupyter.notebook, 'delete_cell').and.callThrough();
             Jupyter.notebook.insert_cell_above('code', 0);
@@ -198,7 +197,7 @@ define([
 
         it('should delete cells by event', (done) => {
             const cell = Mocks.buildMockCell('code', 'app');
-            Jupyter.notebook.cells[0] = cell;  // manually mock out the notebook state
+            Jupyter.notebook.cells[0] = cell; // manually mock out the notebook state
             new KBaseNarrativeWorkspace($node);
             const runtime = Runtime.make();
             const cellBus = runtime.bus().makeChannelBus({

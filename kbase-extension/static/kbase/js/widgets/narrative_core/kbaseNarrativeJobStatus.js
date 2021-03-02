@@ -87,7 +87,10 @@ define([
                 if (cells.length === 1) {
                     return $(cells[0]).data('cell');
                 }
-                throw new Error('Cannot find the cell node!', cellNode, cells);
+                throw new Error(
+                    'Cannot find the cell node: ' +
+                        JSON.stringify({ cellNode: cellNode, cells: cells })
+                );
             }
 
             this.cell = findCell();

@@ -19,7 +19,7 @@ define([
     'common/runtime',
     'common/error',
     './bulkImportCell',
-], function ($, Jupyter, Promise, Runtime, Error, BulkImportCell) {
+], ($, Jupyter, Promise, Runtime, Error, BulkImportCell) => {
     'use strict';
     const CELL_TYPE = 'app-bulk-import';
     const runtime = Runtime.make();
@@ -62,7 +62,7 @@ define([
         // dataUpdated.Narrative is emitted by the data sidebar list
         // after it has fetched and updated its data. Not the best of
         // triggers that the ws has changed, not the worst.
-        $(document).on('dataUpdated.Narrative', function () {
+        $(document).on('dataUpdated.Narrative', () => {
             // Tell each cell that the workspace has been updated.
             // This is what is interesting, no?
             runtime.bus().emit('workspace-changed');
@@ -108,7 +108,7 @@ define([
             return load_ipython_extension();
         } else {
             return Promise.try(() => {
-                $([Jupyter.events]).one('notebook_loaded.Notebook', function () {
+                $([Jupyter.events]).one('notebook_loaded.Notebook', () => {
                     load_ipython_extension();
                 });
             });

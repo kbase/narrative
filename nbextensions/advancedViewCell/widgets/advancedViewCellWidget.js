@@ -54,19 +54,15 @@ define([
         img = t('img');
 
     function factory(config) {
-        let container,
-            ui,
-            workspaceInfo = config.workspaceInfo,
+        let container, cellBus, fsm, ui;
+        const workspaceInfo = config.workspaceInfo,
             runtime = Runtime.make(),
             cell = config.cell,
             parentBus = config.bus,
-            spec,
             // TODO: the cell bus should be created and managed through main.js,
             // that is, the extension.
-            cellBus,
             bus = runtime.bus().makeChannelBus({ description: 'A view cell widget' }),
             env = {},
-            model,
             eventManager = BusEventManager.make({
                 bus: runtime.bus(),
             }),
@@ -91,7 +87,16 @@ define([
                 },
             },
             widgets = {},
-            fsm;
+            model = Props.make({
+                data: utils.getMeta(cell, 'viewCell'),
+                onUpdate: function (props) {
+                    utils.setMeta(cell, 'viewCell', props.getRawObject());
+                    // saveNarrative();
+                },
+            }),
+            spec = Spec.make({
+                appSpec: model.getItem('app.spec'),
+            });
 
         if (runtime.config('features.developer')) {
             settings.showDeveloper = {
@@ -138,7 +143,7 @@ define([
             ui.setContent('fatal-error.message', model.getItem('fatalError.message'));
         }
 
-        function showFatalError(arg) {
+        function showFatalError() {
             ui.showElement('fatal-error');
         }
 
@@ -179,13 +184,13 @@ define([
         }
 
         function buildPython(cell, cellId, app, params) {
-            var runId = new Uuid(4).format(),
-                app = fixApp(app),
+            const runId = new Uuid(4).format(),
+                fixedApp = fixApp(app),
                 outputWidgetState = utils.getCellMeta(cell, 'viewCell.outputWidgetState') || null,
                 code = PythonInterop.buildAdvancedViewRunner(
                     cellId,
                     runId,
-                    app,
+                    fixedApp,
                     params,
                     outputWidgetState
                 );
@@ -245,7 +250,7 @@ define([
             }
         }
 
-        function toggleCodeInputArea(cell) {
+        function toggleCodeInputArea() {
             if (model.getItem('user-settings.showCodeInputArea')) {
                 model.setItem('user-settings.showCodeInputArea', false);
             } else {
@@ -807,7 +812,7 @@ define([
                         renderUI();
                     }
                 })
-                .catch(function (err) {
+                .catch((err) => {
                     console.error('INTERNAL ERROR', err);
                 });
         }
@@ -864,18 +869,6 @@ define([
 
         // INIT
 
-        model = Props.make({
-            data: utils.getMeta(cell, 'viewCell'),
-            onUpdate: function (props) {
-                utils.setMeta(cell, 'viewCell', props.getRawObject());
-                // saveNarrative();
-            },
-        });
-
-        spec = Spec.make({
-            appSpec: model.getItem('app.spec'),
-        });
-
         return {
             init: init,
             attach: attach,
@@ -890,5 +883,6 @@ define([
         },
     };
 }, (err) => {
+    'use strict';
     console.error('ERROR loading viewCell viewCellWidget', err);
 });

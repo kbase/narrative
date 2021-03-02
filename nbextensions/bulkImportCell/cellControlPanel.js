@@ -24,9 +24,9 @@ define(['common/html', 'common/cellComponents/actionButtons'], (html, ActionButt
      * @param {object} options
      */
     function CellControlPanel(options) {
-        let bus = options.bus;
-        let ui = options.ui;
-        let actionButton = ActionButton.make({
+        const bus = options.bus;
+        const ui = options.ui;
+        const actionButton = ActionButton.make({
             ui: ui,
             bus: bus,
             runAction: options.action.runAction,

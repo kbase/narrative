@@ -1,4 +1,5 @@
 define([], () => {
+    'use strict';
     const fsm = [
         {
             // The 'new' state is the initial entry point for the editor.

@@ -32,12 +32,12 @@ define([
             return Promise.try(() => {
                 container = args.node;
 
-                let events = Events.make();
+                const events = Events.make();
 
-                let filePathNode = document.createElement('div');
+                const filePathNode = document.createElement('div');
                 container.appendChild(filePathNode);
 
-                let paramNode = document.createElement('div');
+                const paramNode = document.createElement('div');
                 container.appendChild(paramNode);
 
                 buildFilePathWidget(filePathNode).then(() => {
@@ -70,8 +70,8 @@ define([
                 initialParams: model.getItem(paramKey),
             });
 
-            paramBus.on('sync-params', function (message) {
-                message.parameters.forEach(function (paramId) {
+            paramBus.on('sync-params', (message) => {
+                message.parameters.forEach((paramId) => {
                     paramBus.send(
                         {
                             parameter: paramId,
@@ -87,8 +87,8 @@ define([
                 });
             });
 
-            paramBus.on('parameter-sync', function (message) {
-                var value = model.getItem([paramKey, message.parameter]);
+            paramBus.on('parameter-sync', (message) => {
+                const value = model.getItem([paramKey, message.parameter]);
                 paramBus.send(
                     {
                         value: value,
@@ -103,7 +103,7 @@ define([
                 );
             });
 
-            paramBus.on('set-param-state', function (message) {
+            paramBus.on('set-param-state', (message) => {
                 model.setItem('paramState', message.id, message.state);
             });
 
@@ -149,7 +149,7 @@ define([
                     appSpec: model.getItem('app.spec'),
                     parameters: spec.getSpec().parameters,
                 })
-                .then(function () {
+                .then(() => {
                     return {
                         bus: paramBus,
                         instance: widget,
@@ -170,8 +170,8 @@ define([
                 initialParams: model.getItem(paramKey),
             });
 
-            paramBus.on('sync-params', function (message) {
-                message.parameters.forEach(function (paramId) {
+            paramBus.on('sync-params', (message) => {
+                message.parameters.forEach((paramId) => {
                     paramBus.send(
                         {
                             parameter: paramId,
@@ -187,8 +187,8 @@ define([
                 });
             });
 
-            paramBus.on('parameter-sync', function (message) {
-                var value = model.getItem([paramKey, message.parameter]);
+            paramBus.on('parameter-sync', (message) => {
+                const value = model.getItem([paramKey, message.parameter]);
                 paramBus.send(
                     {
                         value: value,
@@ -203,7 +203,7 @@ define([
                 );
             });
 
-            paramBus.on('set-param-state', function (message) {
+            paramBus.on('set-param-state', (message) => {
                 model.setItem('paramState', message.id, message.state);
             });
 
@@ -249,7 +249,7 @@ define([
                     appSpec: model.getItem('app.spec'),
                     parameters: spec.getSpec().parameters,
                 })
-                .then(function () {
+                .then(() => {
                     return {
                         bus: paramBus,
                         instance: widget,

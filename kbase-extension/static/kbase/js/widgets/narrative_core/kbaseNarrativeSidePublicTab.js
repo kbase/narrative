@@ -63,7 +63,6 @@ define([
         const $table = $('<table role="table">').css('font-size', '80%');
 
         metadata.forEach((item) => {
-            let $row;
             let value;
             if (item.value instanceof Array) {
                 value = item.value
@@ -75,7 +74,7 @@ define([
                 value = formatValue(item.value);
             }
 
-            $row = $(`<tr role="row" data-test-id="${item.id || item.label}">`)
+            const $row = $(`<tr role="row" data-test-id="${item.id || item.label}">`)
                 .css('margin-bottom', '2px')
                 .append(
                     $('<td role="cell" data-test-id="label">')

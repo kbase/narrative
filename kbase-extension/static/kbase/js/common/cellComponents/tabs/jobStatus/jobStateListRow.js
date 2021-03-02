@@ -168,7 +168,7 @@ define(['bluebird', 'kb_common/html', 'common/events', 'jquery'], (Promise, html
                 updateRowStatus(arg.initialState, arg.name);
                 events.attachEvents(container);
             }).catch((err) => {
-                throw new Error('Unable to start Job State List Row widget: ', err);
+                throw new Error(`Unable to start Job State List Row widget: ${err}`);
             });
         }
 

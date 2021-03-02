@@ -1262,7 +1262,7 @@ define([
                         renderUI();
                     }
                 })
-                .catch(function (err) {
+                .catch((err) => {
                     console.error('INTERNAL ERROR', err);
                 });
         }

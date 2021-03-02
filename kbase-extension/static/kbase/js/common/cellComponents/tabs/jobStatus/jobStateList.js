@@ -147,7 +147,7 @@ define([
                     name: 'Brca1Reads.fastq_reads_' + jobIndex,
                 });
             }).catch((err) => {
-                throw new Error('Unable to create job state widget: ', err);
+                throw new Error(`Unable to create job state widget: ${err}`);
             });
         }
 

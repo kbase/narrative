@@ -85,9 +85,11 @@ define([
             Jupyter.narrative = null;
         });
 
-        beforeEach(async () => {
+        beforeEach(async function () {
+            this.parent = document.createElement('div');
             this.node = document.createElement('div');
-            document.getElementsByTagName('body')[0].appendChild(this.node);
+            document.getElementsByTagName('body')[0].appendChild(this.parent);
+            this.parent.appendChild(this.node);
 
             const model = Props.make({
                 data: TestAppObject,
@@ -116,7 +118,7 @@ define([
             });
         });
 
-        afterEach(async () => {
+        afterEach(async function () {
             if (this.fieldCellWidgetInstance) {
                 await this.fieldCellWidgetInstance.stop().catch((err) => {
                     console.warn(
@@ -125,42 +127,35 @@ define([
                     );
                 });
             }
-            document.body.innerHTML = '';
+            this.parent.innerHTML = '';
             window.kbaseRuntime = null;
         });
 
-        it('has a factory which can be invoked', () => {
+        it('has a factory which can be invoked', function () {
             expect(this.fieldCellWidgetInstance).not.toBe(null);
         });
 
-        it('has the required methods', () => {
+        it('has the required methods', function () {
             ['bus', 'start', 'stop'].forEach((fn) => {
                 expect(this.fieldCellWidgetInstance[fn]).toBeDefined();
             });
         });
 
-        it('has a method start which returns the correct object', () => {
-            return this.fieldCellWidgetInstance
-                .start({
-                    node: this.node,
-                })
-                .then(() => {
-                    expect(this.node.innerHTML).toContain('kb-field-cell__cell_label');
-                    expect(this.node.innerHTML).toContain('kb-field-cell__input_control');
-                });
+        it('has a method start which returns the correct object', async function () {
+            await this.fieldCellWidgetInstance.start({
+                node: this.node,
+            });
+            expect(this.node.innerHTML).toContain('kb-field-cell__cell_label');
+            expect(this.node.innerHTML).toContain('kb-field-cell__input_control');
         });
 
-        it('has a method stop which returns null', () => {
-            return this.fieldCellWidgetInstance
-                .start({
-                    node: this.node,
-                })
-                .then(() => {
-                    this.fieldCellWidgetInstance.stop().then((result) => {
-                        expect(result).toBeNull();
-                        this.fieldCellWidgetInstance = null;
-                    });
-                });
+        it('has a method stop which returns null', async function () {
+            await this.fieldCellWidgetInstance.start({
+                node: this.node,
+            });
+            const result = await this.fieldCellWidgetInstance.stop();
+            expect(result).toBeNull();
+            this.fieldCellWidgetInstance = null;
         });
     });
 });

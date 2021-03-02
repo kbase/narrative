@@ -275,7 +275,7 @@ define([
             // So, for kicks, we are using the presence of the word "view" in the
             // spec name, as well as the absence of any output paramters.
 
-            const cellType = this.determineMethodCellType(spec);
+            const cellType = this.determineCellTypeFromSpec(spec);
 
             // This will also trigger the create.Cell event, which is not very
             // useful for us really since we haven't been able to set the
@@ -553,7 +553,7 @@ define([
                         type: 'delete-cell',
                     },
                 }
-            });
+            );
         },
 
         /**

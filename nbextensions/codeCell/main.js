@@ -6,7 +6,7 @@ define([
     'kb_common/html',
     './widgets/codeCell',
     'custom/custom'
-], function (
+], (
     $,
     Uuid,
     Jupyter,

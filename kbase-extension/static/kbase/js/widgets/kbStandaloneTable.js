@@ -1050,5 +1050,5 @@
 
 	    return renderer;
 	}
-    }
+    });
 }).call(this);

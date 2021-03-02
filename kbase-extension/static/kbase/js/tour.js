@@ -1,12 +1,12 @@
 /**
  * Based on code developed by the Jupyter development team.
  */
-define(['jquery', 'bootstraptour', 'handlebars', 'text!kbase/templates/tour/tour_panel.html'], (
-    $,
-    Tour,
-    Handlebars,
-    TourTmpl
-) => {
+define([
+    'jquery',
+    'bootstraptour',
+    'handlebars',
+    'text!kbase/templates/tour/tour_panel.html',
+], ($, Tour, Handlebars, TourTmpl) => {
     'use strict';
 
     const NarrativeTour = function (narrative, notebook, events) {

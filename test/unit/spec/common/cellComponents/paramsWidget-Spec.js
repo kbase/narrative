@@ -31,7 +31,7 @@ define([
             Jupyter.narrative = null;
         });
 
-        beforeEach(async () => {
+        beforeEach(async function () {
             const bus = Runtime.make().bus();
             this.node = document.createElement('div');
             document.getElementsByTagName('body')[0].appendChild(this.node);
@@ -62,7 +62,7 @@ define([
             });
         });
 
-        afterEach(async () => {
+        afterEach(async function () {
             if (this.paramsWidgetInstance) {
                 await this.paramsWidgetInstance.stop();
             }
@@ -91,7 +91,7 @@ define([
             });
         });
 
-        it('should render with advanced parameters hidden', () => {
+        it('should render with advanced parameters hidden', function () {
             //get all advanced params using the spec
             const advancedParams = [];
             for (const [, entry] of Object.entries(this.parameters.specs)) {
@@ -112,7 +112,7 @@ define([
             });
         });
 
-        it('should stop itself and empty the node it was in', () => {
+        it('should stop itself and empty the node it was in', function () {
             this.paramsWidgetInstance.stop().then(() => {
                 expect(this.node.innerHTML).toEqual('');
                 this.paramsWidgetInstance = null;

@@ -125,7 +125,7 @@ define(['bluebird', 'uuid', 'common/html'], (Promise, Uuid, html) => {
     function convertJobError(jobState) {
         const errorObj = {
             location: 'job execution',
-            detail: 'This error occurred dring execution of the app job.',
+            detail: 'This error occurred during execution of the app job.',
         };
 
         if (jobState.error) {

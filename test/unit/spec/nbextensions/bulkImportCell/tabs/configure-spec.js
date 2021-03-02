@@ -8,7 +8,7 @@ define([
 ], (ConfigureTab, Jupyter, Runtime, Props, Spec, TestAppObject) => {
     'use strict';
 
-    describe('test the bulk import cell configure tab', () => {
+    xdescribe('test the bulk import cell configure tab', () => {
         beforeAll(() => {
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',

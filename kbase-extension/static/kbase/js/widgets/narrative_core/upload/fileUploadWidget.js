@@ -36,7 +36,7 @@ define([
             var runtime = Runtime.make();
             this.stagingServiceClient = new StagingServiceClient({
                 root: Config.url('staging_api_url'),
-                token: runtime.authToken()
+                token: runtime.authToken(),
             });
 
             this.render();
@@ -128,15 +128,21 @@ define([
                     $('#clear-all-btn-container').remove();
                     $('#clear-all-btn').remove();
                     $dropzoneElem.find('#global-info').addClass('hide');
-                    $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0'});
+                    $($dropzoneElem.find('#total-progress .progress-bar')).css({ width: '0' });
                 })
                 .on('canceled', (file) => {
                     let path = file.fullPath ? file.fullPath : file.name;
-                    if (path){
-                        Promise.resolve(this.stagingServiceClient.delete({
-                            path: path
-                        })).catch(xhr => {
-                            throw new Error(xhr.responseText ? xhr.responseText : 'Unknown error - unable to delete file from staging area');
+                    if (path) {
+                        Promise.resolve(
+                            this.stagingServiceClient.delete({
+                                path: path,
+                            })
+                        ).catch((xhr) => {
+                            throw new Error(
+                                xhr.responseText
+                                    ? xhr.responseText
+                                    : 'Unknown error - unable to delete file from staging area'
+                            );
                         });
                     } else {
                         throw new Error('Unable to locate path for file to delete');
@@ -179,14 +185,15 @@ define([
             e.stopPropagation();
             e.preventDefault();
 
-            if(e.target.href === globusUrlLinked) {
+            if (e.target.href === globusUrlLinked) {
                 var globusWindow = window.open('', 'dz-globus');
-                globusWindow.document.write('<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>');
-                this.stagingServiceClient.addAcl()
-                    .done(() => {
-                        window.open($(e.target).attr('href'), 'dz-globus');
-                        return true;
-                    });
+                globusWindow.document.write(
+                    '<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>'
+                );
+                this.stagingServiceClient.addAcl().done(() => {
+                    window.open($(e.target).attr('href'), 'dz-globus');
+                    return true;
+                });
             } else {
                 window.open(e.target.href, '_blank');
             }

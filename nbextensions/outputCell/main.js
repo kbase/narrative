@@ -66,7 +66,7 @@ define([
             }
         };
 
-        cell.getIcon = function() {
+        cell.getIcon = function () {
             return Icon.makeToolbarGenericIcon('arrow-left');
         };
 

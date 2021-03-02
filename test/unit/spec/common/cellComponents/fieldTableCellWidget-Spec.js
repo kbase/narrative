@@ -118,8 +118,7 @@ define([
 
         afterEach(async () => {
             if (this.fieldCellWidgetInstance) {
-                await this.fieldCellWidgetInstance.stop()
-                .catch((err) => {
+                await this.fieldCellWidgetInstance.stop().catch((err) => {
                     console.warn(
                         'got an error when trying to stop, this is normal if stopped already (e.g. after final test run)',
                         err

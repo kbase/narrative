@@ -35,21 +35,21 @@ module.exports = function (grunt) {
                         require('autoprefixer')(),
                         // minify
                         require('cssnano')([
-                            "default",
+                            'default',
                             {
-                                "normalizeWhitespace": {
-                                    "exclude": true
+                                normalizeWhitespace: {
+                                    exclude: true,
                                 },
-                            }
+                            },
                         ]),
                     ],
                 },
                 src: [
                     'kbase-extension/static/kbase/css/*_concat.css',
                     'kbase-extension/static/kbase/css/appCell.css',
-                    'kbase-extension/static/kbase/css/editorCell.css'
+                    'kbase-extension/static/kbase/css/editorCell.css',
                 ],
-            }
+            },
         },
 
         // runs the npm command to compile scss -> css and run autoprefixer on it
@@ -63,9 +63,7 @@ module.exports = function (grunt) {
         // when they change, regenerate the compiled css files
         watch: {
             files: 'kbase-extension/scss/**/*.scss',
-            tasks: [
-                'shell:compile_css',
-            ],
+            tasks: ['shell:compile_css'],
         },
     });
 };

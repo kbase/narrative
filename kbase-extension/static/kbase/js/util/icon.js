@@ -1,10 +1,10 @@
-define([
-    'underscore',
-    'kb_common/html',
-    'common/props',
-    'common/runtime',
-    'narrativeConfig',
-], (_, html, Props, Runtime, NarrativeConfig) => {
+define(['underscore', 'kb_common/html', 'common/props', 'common/runtime', 'narrativeConfig'], (
+    _,
+    html,
+    Props,
+    Runtime,
+    NarrativeConfig
+) => {
     'use strict';
 
     const iconSpec = NarrativeConfig.get('icons'),

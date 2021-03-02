@@ -25,18 +25,8 @@ define([
     'kb_service/client/workspace',
     './appCell',
     'bootstrap',
-    'custom/custom'
-], function(
-    $,
-    Jupyter,
-    Promise,
-    Runtime,
-    Clock,
-    Error,
-    serviceUtils,
-    Workspace,
-    AppCell
-) {
+    'custom/custom',
+], function ($, Jupyter, Promise, Runtime, Clock, Error, serviceUtils, Workspace, AppCell) {
     'use strict';
     var runtime = Runtime.make();
 
@@ -133,8 +123,9 @@ define([
                         cell: cell,
                         workspaceInfo: workspaceInfo,
                     });
-                    appCell.upgradeToAppCell(setupData.appSpec, setupData.appTag, setupData.type)
-                        .catch(function(err) {
+                    appCell
+                        .upgradeToAppCell(setupData.appSpec, setupData.appTag, setupData.type)
+                        .catch(function (err) {
                             Error.reportCellError(
                                 'Error inserting app cell',
                                 'Could not insert the app cell due to errors:',

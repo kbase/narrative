@@ -103,4 +103,6 @@ define([
     'common/utils',
     'common/validation',
     'util/icon',
-], function () { return; });
+], function () {
+    return;
+});

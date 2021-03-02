@@ -253,7 +253,6 @@ define([
                 $errorMessage.empty();
                 this.copyModal.show();
             });
-
         },
 
         buildAppCodeCell: function (spec, tag, parameters) {
@@ -378,12 +377,14 @@ define([
          */
         getReadOnlySelectors: function () {
             return [
-                '.kb-app-next',                                 // next steps
-                '#kb-add-code-cell', '#kb-add-md-cell',         // edit btns
-                '#kb-share-btn', '#kb-save-btn',                // action btns
-                '#kb-ipy-menu',                                 // kernel menu
-                '.kb-cell-toolbar .buttons.pull-right',         // Jupyter icons
-                '.kb-title .btn-toolbar .btn .fa-arrow-right',  // data panel slideout
+                '.kb-app-next', // next steps
+                '#kb-add-code-cell',
+                '#kb-add-md-cell', // edit btns
+                '#kb-share-btn',
+                '#kb-save-btn', // action btns
+                '#kb-ipy-menu', // kernel menu
+                '.kb-cell-toolbar .buttons.pull-right', // Jupyter icons
+                '.kb-title .btn-toolbar .btn .fa-arrow-right', // data panel slideout
             ];
         },
 
@@ -423,7 +424,7 @@ define([
             Jupyter.narrative.toggleSidePanel(true);
 
             // Hide things
-            this.getReadOnlySelectors().forEach(id => $(id).hide());
+            this.getReadOnlySelectors().forEach((id) => $(id).hide());
             this.toggleCellEditing(false);
 
             Jupyter.narrative.sidePanel.setReadOnlyMode(true);
@@ -498,7 +499,7 @@ define([
 
             // re-enable auto-save status
             $('#autosave_status').show();
-            this.getReadOnlySelectors().forEach(id => $(id).show());
+            this.getReadOnlySelectors().forEach((id) => $(id).show());
 
             Jupyter.narrative.toggleSidePanel(false);
         },
@@ -577,6 +578,6 @@ define([
             } else {
                 return Jupyter.notebook.insert_cell_below('code', cellIndex, cellData);
             }
-        }
+        },
     });
 });

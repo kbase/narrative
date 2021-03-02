@@ -154,7 +154,7 @@ define([
             }
         };
 
-        cell.getIcon = function() {
+        cell.getIcon = function () {
             return Icon.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.editorCell.app.spec'));
         };
 

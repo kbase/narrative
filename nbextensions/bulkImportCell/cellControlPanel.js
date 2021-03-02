@@ -1,10 +1,4 @@
-define([
-    'common/html',
-    'common/cellComponents/actionButtons'
-], (
-    html,
-    ActionButton
-) => {
+define(['common/html', 'common/cellComponents/actionButtons'], (html, ActionButton) => {
     'use strict';
 
     const div = html.tag('div'),
@@ -36,59 +30,70 @@ define([
             ui: ui,
             bus: bus,
             runAction: options.action.runAction,
-            actionButtons: options.action.actions
+            actionButtons: options.action.actions,
         });
 
-        function start() {
+        function start() {}
 
-        }
-
-        function stop() {
-
-        }
+        function stop() {}
 
         function setActionState(newState) {
             actionButton.setState(newState);
         }
 
         function buildLayout(events) {
-            return div({
-                class: `${cssCellType}-control-panel__container`,
-                dataElement: 'run-control-panel'
-            }, [
-                div({
-                    class: `${cssCellType}-control-panel__border`,
-                }, [
-                    actionButton.buildLayout(events),
-                    div({
-                        class: `${cssCellType}-control-panel__status_container`,
-                        dataElement: 'status',
-                    }, [
-                        div({
-                            class: `${cssCellType}-control-panel__message_box_holder`,
-                        }, [
-                            div({
-                                class: `${cssCellType}-control-panel__message_box`,
-                            }, [
-                                span({
-                                    class: `${cssCellType}-control-panel__exec_message`,
-                                    dataElement: 'execMessage'
-                                })
-                            ])
-                        ])
-                    ]),
-                ])
-            ]);
+            return div(
+                {
+                    class: `${cssCellType}-control-panel__container`,
+                    dataElement: 'run-control-panel',
+                },
+                [
+                    div(
+                        {
+                            class: `${cssCellType}-control-panel__border`,
+                        },
+                        [
+                            actionButton.buildLayout(events),
+                            div(
+                                {
+                                    class: `${cssCellType}-control-panel__status_container`,
+                                    dataElement: 'status',
+                                },
+                                [
+                                    div(
+                                        {
+                                            class: `${cssCellType}-control-panel__message_box_holder`,
+                                        },
+                                        [
+                                            div(
+                                                {
+                                                    class: `${cssCellType}-control-panel__message_box`,
+                                                },
+                                                [
+                                                    span({
+                                                        class: `${cssCellType}-control-panel__exec_message`,
+                                                        dataElement: 'execMessage',
+                                                    }),
+                                                ]
+                                            ),
+                                        ]
+                                    ),
+                                ]
+                            ),
+                        ]
+                    ),
+                ]
+            );
         }
         return {
             start: start,
             stop: stop,
             buildLayout: buildLayout,
-            setActionState: setActionState
+            setActionState: setActionState,
         };
     }
 
     return {
-        make: CellControlPanel
+        make: CellControlPanel,
     };
 });

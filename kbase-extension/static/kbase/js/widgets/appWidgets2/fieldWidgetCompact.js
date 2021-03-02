@@ -242,7 +242,6 @@ define([
             );
         }
 
-
         function renderInfoTip() {
             let infoTipText;
             if (spec.ui.description && spec.ui.hint !== spec.ui.description) {
@@ -253,30 +252,34 @@ define([
 
             return div([
                 // div({dataElement: 'little-tip'}, parameterInfoLittleTip(spec)),
-                div({ dataElement: 'big-tip', class: 'hidden' }, html.makeTabs({
-                    alignRight: true,
-                    tabs: [{
-                        label: 'Description',
-                        name: 'description',
-                        content: div({ style: { padding: '0px' } }, infoTipText)
-                    },
-                    {
-                        label: 'About',
-                        name: 'about',
-                        content: parameterInfoContent(spec)
-                    },
-                    {
-                        label: 'Rules',
-                        name: 'rules',
-                        content: parameterInfoRules(spec)
-                    },
-                    {
-                        label: 'Spec',
-                        name: 'spec',
-                        content: rawSpec(spec)
-                    }
-                    ]
-                }))
+                div(
+                    { dataElement: 'big-tip', class: 'hidden' },
+                    html.makeTabs({
+                        alignRight: true,
+                        tabs: [
+                            {
+                                label: 'Description',
+                                name: 'description',
+                                content: div({ style: { padding: '0px' } }, infoTipText),
+                            },
+                            {
+                                label: 'About',
+                                name: 'about',
+                                content: parameterInfoContent(spec),
+                            },
+                            {
+                                label: 'Rules',
+                                name: 'rules',
+                                content: parameterInfoRules(spec),
+                            },
+                            {
+                                label: 'Spec',
+                                name: 'spec',
+                                content: rawSpec(spec),
+                            },
+                        ],
+                    })
+                ),
             ]);
         }
 
@@ -309,73 +312,89 @@ define([
                 infoTipText = spec.ui.hint || spec.ui.description;
             }
 
-            var content = div({
-                class: ['form-horizontal', 'kb-app-parameter-row', 'parameter-panel', advanced].join(' '),
-                dataAdvancedParameter: spec.ui.advanced,
-                id: fieldId,
-                style: { position: 'relative' }
-            }, [
-                // disabled mask
-                div({
-                    dataElement: 'field-mask',
-                    class: 'hidden',
-                    style: {
-                        position: 'absolute',
-                        top: '0',
-                        bottom: '0',
-                        left: '0',
-                        right: '0',
-                        backgroundColor: 'rgba(255,255,255, 0.5)',
-                        zIndex: '100'
-                    }
-                }),
-                span({
-                    id: ids.fieldPanel,
-                    class: 'form-group kb-app-parameter-input field-panel',
-                    dataElement: 'field-panel',
-                    style: {
-                        marginBottom: '0'
-                    }
-                }, [
-                    div({ class: 'col-md-3' }, [
-                        label({
-                            class: 'xcontrol-label kb-app-parameter-name control-label',
-                            title: infoTipText,
-                            style: { cursor: 'help' },
-                            id: events.addEvent({
-                                type: 'click',
-                                handler: function() {
-                                    places.infoPanel.querySelector('[data-element="big-tip"]').classList.toggle('hidden');
-                                }
-                            })
-                        }, [
-                            spec.ui.label || spec.ui.id
-                        ])
-                    ]),
-                    div({ class: 'input-group col-md-9' }, [
-                        div({
-                            id: ids.inputControl,
-                            dataElement: 'input-control'
-                        }),
-                        div({
-                            id: ids.feedback,
-                            class: 'input-group-addon kb-input-group-addon kb-app-field-feedback',
-                            dataElement: 'feedback',
+            var content = div(
+                {
+                    class: [
+                        'form-horizontal',
+                        'kb-app-parameter-row',
+                        'parameter-panel',
+                        advanced,
+                    ].join(' '),
+                    dataAdvancedParameter: spec.ui.advanced,
+                    id: fieldId,
+                    style: { position: 'relative' },
+                },
+                [
+                    // disabled mask
+                    div({
+                        dataElement: 'field-mask',
+                        class: 'hidden',
+                        style: {
+                            position: 'absolute',
+                            top: '0',
+                            bottom: '0',
+                            left: '0',
+                            right: '0',
+                            backgroundColor: 'rgba(255,255,255, 0.5)',
+                            zIndex: '100',
+                        },
+                    }),
+                    span(
+                        {
+                            id: ids.fieldPanel,
+                            class: 'form-group kb-app-parameter-input field-panel',
+                            dataElement: 'field-panel',
                             style: {
-                                width: '3px',
-                                height: '100%',
-                                'margin-left': '4px'
-                            }
-                        }, [
-                            div({
-                                id: ids.feedbackIndicator,
-                                dataElement: 'indicator',
-                                style: {
-                                    width: '3px'
-                                }
-                            })
-                        ]),
-                        /*div({
+                                marginBottom: '0',
+                            },
+                        },
+                        [
+                            div({ class: 'col-md-3' }, [
+                                label(
+                                    {
+                                        class: 'xcontrol-label kb-app-parameter-name control-label',
+                                        title: infoTipText,
+                                        style: { cursor: 'help' },
+                                        id: events.addEvent({
+                                            type: 'click',
+                                            handler: function () {
+                                                places.infoPanel
+                                                    .querySelector('[data-element="big-tip"]')
+                                                    .classList.toggle('hidden');
+                                            },
+                                        }),
+                                    },
+                                    [spec.ui.label || spec.ui.id]
+                                ),
+                            ]),
+                            div({ class: 'input-group col-md-9' }, [
+                                div({
+                                    id: ids.inputControl,
+                                    dataElement: 'input-control',
+                                }),
+                                div(
+                                    {
+                                        id: ids.feedback,
+                                        class:
+                                            'input-group-addon kb-input-group-addon kb-app-field-feedback',
+                                        dataElement: 'feedback',
+                                        style: {
+                                            width: '3px',
+                                            height: '100%',
+                                            'margin-left': '4px',
+                                        },
+                                    },
+                                    [
+                                        div({
+                                            id: ids.feedbackIndicator,
+                                            dataElement: 'indicator',
+                                            style: {
+                                                width: '3px',
+                                            },
+                                        }),
+                                    ]
+                                ),
+                                /*div({
                             class: 'input-group-addon kb-input-group-addon',
                             style: {
                                 width: '30px',

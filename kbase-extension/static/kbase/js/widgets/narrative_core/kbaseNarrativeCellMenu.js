@@ -56,7 +56,7 @@ define([
                     icon: 'fa fa-code',
                     text: 'View Job Submission',
                     action: function () {
-                        const {metadata} = this.options.cell,
+                        const { metadata } = this.options.cell,
                             newCell = Jupyter.narrative.insertAndSelectCell(
                                 'code',
                                 'below',
@@ -118,7 +118,7 @@ define([
                     text: 'Duplicate Cell',
                     action: $.proxy(function () {
                         // get the current state, and clear it of its running state
-                        const {kbWidget} = options,
+                        const { kbWidget } = options,
                             currentState = kbWidget.getState();
                         if (this.options.kbWidgetType === 'method') {
                             // put the method in the narrative
@@ -193,26 +193,17 @@ define([
             //     }
             // });
 
-            this.$elem.on(
-                'show-title.toolbar',
-                () => {
-                    this.$elem.find('div.title').css('display', 'inline-block');
-                }
-            );
+            this.$elem.on('show-title.toolbar', () => {
+                this.$elem.find('div.title').css('display', 'inline-block');
+            });
 
-            this.$elem.on(
-                'hide-title.toolbar',
-                () => {
-                    this.$elem.find('div.title').css('display', 'none');
-                }
-            );
+            this.$elem.on('hide-title.toolbar', () => {
+                this.$elem.find('div.title').css('display', 'none');
+            });
 
-            this.$elem.on(
-                'mousedown',
-                () => {
-                    Jupyter.notebook.events.trigger('select.Cell', this.options.cell);
-                }
-            );
+            this.$elem.on('mousedown', () => {
+                Jupyter.notebook.events.trigger('select.Cell', this.options.cell);
+            });
 
             this.$elem.dblclick(function (e) {
                 e.stopPropagation();
@@ -468,9 +459,7 @@ define([
                 if ($kbCell) {
                     switch (type) {
                         case 'kb_app':
-                            this.$subtitle.html(
-                                $kbCell.kbaseNarrativeAppCell('getSubtitle')
-                            );
+                            this.$subtitle.html($kbCell.kbaseNarrativeAppCell('getSubtitle'));
                             break;
                         case 'kb_error':
                             this.$subtitle.html('An error has occurred in this cell!');
@@ -481,12 +470,9 @@ define([
                         case 'function_input':
                             // doing this more declarative causes some funky rendering issues.
                             // we need some better message passing, I think.
-                            $kbCell.trigger(
-                                'get_cell_subtitle.Narrative',
-                                (text) => {
-                                    this.$subtitle.html(text);
-                                }
-                            );
+                            $kbCell.trigger('get_cell_subtitle.Narrative', (text) => {
+                                this.$subtitle.html(text);
+                            });
                             break;
                         default:
                             break;

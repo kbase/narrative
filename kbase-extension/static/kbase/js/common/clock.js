@@ -1,8 +1,7 @@
 define([], () => {
     'use strict';
     function factory(config) {
-        let timer,
-            ticks;
+        let timer, ticks;
         const { resolution } = config,
             { bus } = config;
 

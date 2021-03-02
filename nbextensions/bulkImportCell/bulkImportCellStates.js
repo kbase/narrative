@@ -34,16 +34,15 @@ define([], () => {
         const defaultView = () => ({ enabled: false, visible: false });
 
         const state = {
-            tabs: {
-            }
+            tabs: {},
         };
-        ['configure', 'viewConfigure', 'info', 'jobStatus', 'results', 'error'].forEach(tabId => {
+        ['configure', 'viewConfigure', 'info', 'jobStatus', 'results', 'error'].forEach((tabId) => {
             state.tabs[tabId] = defaultView();
         });
-        enabled.forEach(enabledTab => {
+        enabled.forEach((enabledTab) => {
             state.tabs[enabledTab].enabled = true;
         });
-        visible.forEach(visibleTab => {
+        visible.forEach((visibleTab) => {
             state.tabs[visibleTab].visible = true;
         });
         return state;
@@ -59,22 +58,19 @@ define([], () => {
                 ),
                 action: {
                     name: 'runApp',
-                    disabled: true
-                }
-            }
+                    disabled: true,
+                },
+            },
         },
         // when the cell is in configuration mode, ready to run, but hasn't been started yet
         editingComplete: {
             ui: {
-                tab: tabState(
-                    ['configure', 'info'],
-                    ['configure', 'info', 'jobStatus', 'results']
-                ),
+                tab: tabState(['configure', 'info'], ['configure', 'info', 'jobStatus', 'results']),
                 action: {
                     name: 'runApp',
-                    disabled: false
-                }
-            }
+                    disabled: false,
+                },
+            },
         },
         // the user has clicked "run" and is waiting on the run to start
         launching: {
@@ -85,10 +81,9 @@ define([], () => {
                 ),
                 action: {
                     name: 'cancel',
-                    disabled: false
-                }
-            }
-
+                    disabled: false,
+                },
+            },
         },
         // the main app is queued, no child apps have started yet
         queued: {
@@ -99,10 +94,9 @@ define([], () => {
                 ),
                 action: {
                     name: 'cancel',
-                    disabled: false
-                }
-            }
-
+                    disabled: false,
+                },
+            },
         },
         // apps are running, none are complete yet
         running: {
@@ -113,10 +107,9 @@ define([], () => {
                 ),
                 action: {
                     name: 'cancel',
-                    disabled: false
-                }
-            }
-
+                    disabled: false,
+                },
+            },
         },
         // at least one child job is complete
         appPartialComplete: {
@@ -127,10 +120,9 @@ define([], () => {
                 ),
                 action: {
                     name: 'cancel',
-                    disabled: false
-                }
-            }
-
+                    disabled: false,
+                },
+            },
         },
         // all child jobs are complete
         appComplete: {
@@ -141,10 +133,9 @@ define([], () => {
                 ),
                 action: {
                     name: 'reRunApp',
-                    disabled: false
-                }
-            }
-
+                    disabled: false,
+                },
+            },
         },
         // user canceled the run, and hasn't done anything else yet
         appCanceled: {
@@ -155,9 +146,9 @@ define([], () => {
                 ),
                 action: {
                     name: 'resetApp',
-                    disabled: false
-                }
-            }
+                    disabled: false,
+                },
+            },
         },
         // unrecoverable error(s) occurred during the app run
         appError: {
@@ -168,9 +159,9 @@ define([], () => {
                 ),
                 action: {
                     name: 'reRunApp',
-                    disabled: false
-                }
-            }
+                    disabled: false,
+                },
+            },
         },
         // something tragic and unrecoverable has happened
         generalError: {
@@ -181,11 +172,10 @@ define([], () => {
                 ),
                 action: {
                     name: 'runApp',
-                    disabled: false
-                }
-            }
-
-        }
+                    disabled: false,
+                },
+            },
+        },
     };
     return states;
 });

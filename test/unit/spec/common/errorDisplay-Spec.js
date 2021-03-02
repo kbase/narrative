@@ -148,9 +148,9 @@ define(['common/errorDisplay', 'common/props'], (ErrorDisplay, Props) => {
                                     status: 'error',
                                     errormsg: 'A series of unfortunate events',
                                     error_code: 666,
-                                }
-                            }
-                        }
+                                },
+                            },
+                        },
                     }),
                     out: {
                         type: 'Error code 666',
@@ -158,7 +158,7 @@ define(['common/errorDisplay', 'common/props'], (ErrorDisplay, Props) => {
                         detail: 'This error occurred during execution of the app job.',
                         advice: defaultAdvice,
                         stacktrace: null,
-                    }
+                    },
                 },
                 {
                     desc: 'unknown job error',

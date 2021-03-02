@@ -42,7 +42,7 @@ define([
     'use strict';
     function KbaseAppCard(entry) {
         const self = this;
-        let {favorite} = entry.app;
+        let { favorite } = entry.app;
         const app = entry.app.info;
 
         const shortName = entry.name ? entry.name : app.name;

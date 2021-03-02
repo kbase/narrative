@@ -5,15 +5,8 @@ define([
     'common/utils',
     'kb_common/html',
     './widgets/codeCell',
-    'custom/custom'
-], (
-    $,
-    Uuid,
-    Jupyter,
-    utils,
-    html,
-    CodeCell
-) => {
+    'custom/custom',
+], ($, Uuid, Jupyter, utils, html, CodeCell) => {
     'use strict';
 
     const t = html.tag,
@@ -23,7 +16,10 @@ define([
         cell.minimize = function () {
             const inputArea = this.input.find('.input_area').get(0),
                 outputArea = this.element.find('.output_wrapper'),
-                showCode = utils.getCellMeta(cell, 'kbase.codeCell.user-settings.showCodeInputArea');
+                showCode = utils.getCellMeta(
+                    cell,
+                    'kbase.codeCell.user-settings.showCodeInputArea'
+                );
 
             if (showCode) {
                 inputArea.classList.remove('-show');
@@ -34,7 +30,10 @@ define([
         cell.maximize = function () {
             const inputArea = this.input.find('.input_area').get(0),
                 outputArea = this.element.find('.output_wrapper'),
-                showCode = utils.getCellMeta(cell, 'kbase.codeCell.user-settings.showCodeInputArea');
+                showCode = utils.getCellMeta(
+                    cell,
+                    'kbase.codeCell.user-settings.showCodeInputArea'
+                );
 
             if (showCode) {
                 if (!inputArea.classList.contains('-show')) {
@@ -62,7 +61,12 @@ define([
             const codeInputArea = this.input.find('.input_area')[0];
             if (codeInputArea) {
                 codeInputArea.classList.toggle('-show');
-                utils.setCellMeta(cell, 'kbase.codeCell.user-settings.showCodeInputArea', this.isCodeShowing(), true);
+                utils.setCellMeta(
+                    cell,
+                    'kbase.codeCell.user-settings.showCodeInputArea',
+                    this.isCodeShowing(),
+                    true
+                );
                 // NB purely for side effect - toolbar refresh
                 cell.metadata = cell.metadata;
             }
@@ -151,9 +155,9 @@ define([
             },
             codeCell: {
                 'user-settings': {
-                    showCodeInputArea: true
-                }
-            }
+                    showCodeInputArea: true,
+                },
+            },
         };
 
         if (jobInfo) {
@@ -181,8 +185,8 @@ define([
             cell: cell,
             kbase: {
                 type: 'code',
-                language: 'python'
-            }
+                language: 'python',
+            },
         });
         return true;
     }

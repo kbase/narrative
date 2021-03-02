@@ -90,7 +90,7 @@ define([
                 outputArea.removeClass('hidden');
                 viewInputArea.removeClass('hidden');
             };
-            cell.getIcon = function() {
+            cell.getIcon = function () {
                 return Icon.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.appCell.app.spec'));
             };
             cell.renderIcon = function () {
@@ -199,10 +199,10 @@ define([
                             .then(() => {
                                 return appCellWidget.detach();
                             })
-                            .catch(function(_err) {
+                            .catch(function (_err) {
                                 console.log('ERR in ERR', _err);
                             })
-                            .finally(function() {
+                            .finally(function () {
                                 Error.reportCellError(
                                     'Error starting app cell',
                                     'There was an error starting the app cell:',

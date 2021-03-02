@@ -48,7 +48,7 @@ define([
             <span role="row" data-test-id="${item.id}">
             <span style="color: #AAA; font-weight: normal; font-style: italic" data-test-id="label" role="cell">${
                 item.label
-            }</span>: 
+            }</span>:
             &nbsp;
             <span data-test-id="value" role="cell">${formatValue(item.value)}</span>
             </span>
@@ -358,7 +358,7 @@ define([
                     }
                     this.searchAndRender(newDataSourceID, $filterInput.val());
                 }
-            );
+            });
 
             /*
                 search and render only when input change is detected.

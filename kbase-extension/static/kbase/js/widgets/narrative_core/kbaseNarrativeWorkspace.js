@@ -20,7 +20,6 @@ define([
     'handlebars',
     'common/props',
     'text!kbase/templates/report_error_button.html',
-
     'bootstrap',
 ], (
     Jupyter,
@@ -140,7 +139,7 @@ define([
              * Gets pre-populated with the current narrative name + "- copy"
              * When empty, prompts to enter a name with a tooltip, and disables the copy btn.
              */
-            var $newNameInput = $('<input type="text">')
+            const $newNameInput = $('<input type="text">')
                 .addClass('form-control')
                 .tooltip({
                     title: 'Please enter a name.',
@@ -219,7 +218,7 @@ define([
                         });
                 });
 
-            var $cancelBtn = $('<button>')
+            const $cancelBtn = $('<button>')
                 .addClass('kb-default-btn')
                 .append('Cancel')
                 .click(() => {
@@ -227,7 +226,7 @@ define([
                     this.copyModal.hide();
                 });
 
-            var $jumpButton = $('<button>').addClass('btn btn-info').text('Open the new Narrative');
+            const $jumpButton = $('<button>').addClass('btn btn-info').text('Open the new Narrative');
 
             const $copyModalBody = $('<div>')
                 .append($('<div>').append('Enter a name for the new Narrative'))
@@ -275,7 +274,7 @@ define([
             // So, for kicks, we are using the presence of the word "view" in the
             // spec name, as well as the absence of any output paramters.
 
-            const cellType = this.determineMethodCellType(spec);
+            const cellType = this.determineCellTypeFromSpec(spec);
 
             // This will also trigger the create.Cell event, which is not very
             // useful for us really since we haven't been able to set the
@@ -553,7 +552,7 @@ define([
                         type: 'delete-cell',
                     },
                 }
-            });
+            );
         },
 
         /**
@@ -568,7 +567,7 @@ define([
             if (['above', 'below'].indexOf(placement) === -1) {
                 placement = 'below';
             }
-            var cellData = {
+            const cellData = {
                 type: 'data',
                 objectInfo: data.info,
             };

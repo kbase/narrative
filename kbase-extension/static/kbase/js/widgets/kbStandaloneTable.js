@@ -80,6 +80,7 @@
 
 */
 (function () {
+	'use strict';
     const root = this || {};
     const standaloneTable = (root.standaloneTable = {
         about: {
@@ -1050,5 +1051,5 @@
 
 	    return renderer;
 	}
-    }
+    });
 }).call(this);

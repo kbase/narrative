@@ -75,7 +75,7 @@ define([
     LoadingWidget,
     Workspace,
     APIUtil
-) {
+) => {
     'use strict';
 
     KBaseNarrativePrestart.loadDomEvents();

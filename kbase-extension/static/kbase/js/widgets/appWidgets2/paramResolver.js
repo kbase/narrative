@@ -1,4 +1,10 @@
-define(['bluebird', 'require'], (Promise, require) => {
+define([
+    'bluebird',
+    'require',
+], (
+    Promise,
+    require,
+) => {
     'use strict';
 
     function factory(config) {

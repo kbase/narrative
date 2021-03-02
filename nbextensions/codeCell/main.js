@@ -6,7 +6,7 @@ define([
     'kb_common/html',
     './widgets/codeCell',
     'custom/custom'
-], function (
+], (
     $,
     Uuid,
     Jupyter,
@@ -235,7 +235,7 @@ define([
         // This is the sole ipython/jupyter api call
         load_ipython_extension: load,
     };
-}, function (err) {
+}, (err) => {
     'use strict';
     console.error('ERROR loading codeCell main', err);
 });

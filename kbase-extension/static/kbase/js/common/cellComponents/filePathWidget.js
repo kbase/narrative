@@ -425,7 +425,9 @@ define([
             const filePathParams = makeFilePathsLayout(findPathParams(params));
 
             if (!filePathParams.layout.length) {
-                ui.getElement(`${cssClassType}s-area`).classList.add('hidden');
+                return Promise.resolve(
+                    ui.getElement(`${cssClassType}s-area`).classList.add('hidden')
+                );
             } else {
                 filePathRow.innerHTML = [
                     td({
@@ -476,32 +478,30 @@ define([
         }
 
         function start(arg) {
-            return Promise.try(() => {
-                doAttach(arg.node);
+            doAttach(arg.node);
 
-                model.setItem('appSpec', arg.appSpec);
-                model.setItem('parameters', arg.parameters);
+            model.setItem('appSpec', arg.appSpec);
+            model.setItem('parameters', arg.parameters);
 
-                paramsBus.on('parameter-changed', (message) => {
-                    widgets.forEach((widget) => {
-                        widget.bus.send(message, {
-                            key: {
-                                type: 'parameter-changed',
-                                parameter: message.parameter,
-                            },
-                        });
+            paramsBus.on('parameter-changed', (message) => {
+                widgets.forEach((widget) => {
+                    widget.bus.send(message, {
+                        key: {
+                            type: 'parameter-changed',
+                            parameter: message.parameter,
+                        },
                     });
                 });
+            });
 
-                const filePathRows = ui.getElements(`${cssClassType}-fields-row`);
+            const filePathRows = ui.getElements(`${cssClassType}-fields-row`);
 
-                return Promise.all(
-                    filePathRows.map(async (filePathRow) => {
-                        await renderFilePathRow(filePathRow);
-                    })
-                ).then(() => {
-                    updateRowNumbers(filePathRows);
-                });
+            return Promise.all(
+                filePathRows.map((filePathRow) => {
+                    renderFilePathRow(filePathRow);
+                })
+            ).then(() => {
+                updateRowNumbers(filePathRows);
             }).catch((error) => {
                 throw new Error('Unable to start filePathWidget: ', error);
             });

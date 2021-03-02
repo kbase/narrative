@@ -22,12 +22,16 @@ define([
         someApp: TestAppSpec
     };
 
-    describe('test the bulk import cell module', () => {
+    xdescribe('test the bulk import cell module', () => {
         beforeAll(() => {
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken'
             };
         });
+
+        afterEach(() => {
+            window.kbaseRuntime = null;
+        })
 
         afterAll(() => {
             Jupyter.narrative = null;
@@ -119,7 +123,10 @@ define([
             const runtime = Runtime.make();
             const cell = Mocks.buildMockCell('code');
             Jupyter.notebook = Mocks.buildMockNotebook({
-                deleteCallback: () => done()
+                deleteCallback: () => {
+                    expect(Jupyter.notebook.delete_cell).toHaveBeenCalled();
+                    done();
+                }
             });
             spyOn(Jupyter.notebook, 'delete_cell').and.callThrough();
             BulkImportCell.make({
@@ -156,11 +163,10 @@ define([
                 specs: fakeSpecs,
                 importData
             });
-            let elem = cell.element.find('[data-element="filetype-panel"] [data-element="sra"]');
-            const before = elem[0].outerHTML;
+            const elem = cell.element.find('[data-element="filetype-panel"] [data-element="sra"]'),
+                before = elem[0].outerHTML;
             elem.click();
             expect(elem[0].outerHTML).not.toEqual(before);
-
         });
     });
 });

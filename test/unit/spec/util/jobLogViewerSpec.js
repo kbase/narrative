@@ -1,10 +1,4 @@
-define([
-    'util/jobLogViewer',
-    'common/runtime'
-], (
-    JobLogViewer,
-    Runtime
-) => {
+define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
     'use strict';
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('Test the job log viewer module', () => {
@@ -36,8 +30,8 @@ define([
         });
 
         it('Should be created', () => {
-            let viewer = JobLogViewer.make();
-            ['start', 'stop', 'detach'].forEach(fn => {
+            const viewer = JobLogViewer.make();
+            ['start', 'stop', 'detach'].forEach((fn) => {
                 expect(viewer[fn]).toEqual(jasmine.any(Function));
             });
         });
@@ -241,9 +235,11 @@ define([
                 expect(msg).toEqual({ jobId: jobId });
                 runtimeBus.send(jobData, channelData);
             });
+
             runtimeBus.on('request-job-update', (msg) => {
                 expect(msg).toEqual({ jobId: jobId });
                 runtimeBus.send(jobData, channelData);
+
                 setTimeout(() => {
                     const panel = hostNode.querySelector('[data-element="log-panel"]');
                     expect(panel.children.length).toEqual(1);
@@ -254,14 +250,14 @@ define([
             viewer.start(arg);
         });
 
-        xit('Should render a canceled message for canceled jobs', (done) => {});
+        xit('Should render a canceled message for canceled jobs', () => {});
 
-        xit('Should render an error message for errored jobs', (done) => {});
+        xit('Should render an error message for errored jobs', () => {});
 
-        xit('Should have the top button go to the top', (done) => {});
+        xit('Should have the top button go to the top', () => {});
 
-        xit('Should have the bottom button go to the end', (done) => {});
+        xit('Should have the bottom button go to the end', () => {});
 
-        xit('Should have the stop button make sure it stops', (done) => {});
+        xit('Should have the stop button make sure it stops', () => {});
     });
 });

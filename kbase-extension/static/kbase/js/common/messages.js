@@ -1,11 +1,8 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-define([
-], function () {
+define([], () => {
     'use strict';
 
     function Messagesx(config) {
-        var awaitingResponse = {},
+        let awaitingResponse = {},
             listeners = {},
             lastId = 0,
             root = config.root,
@@ -25,10 +22,11 @@ define([
         }
 
         function receiveMessage(event) {
-            var origin = event.origin || event.originalEvent.origin,
+            let origin = event.origin || event.originalEvent.origin,
                 message = event.data,
-                listener, response;
-            
+                listener,
+                response;
+
             if (message.id && awaitingResponse[message.id]) {
                 try {
                     response = awaitingResponse[message.id];
@@ -41,7 +39,7 @@ define([
             }
 
             if (listeners[message.name]) {
-                listeners[message.name].forEach(function (listener) {
+                listeners[message.name].forEach((listener) => {
                     try {
                         listener.handler(message);
                         return;
@@ -50,7 +48,6 @@ define([
                     }
                 });
             }
-
         }
 
         function sendMessage(message) {
@@ -58,18 +55,18 @@ define([
         }
 
         function sendRequest(message, handler) {
-            var id = genId();
+            const id = genId();
             message.id = id;
             awaitingResponse[id] = {
                 started: new Date(),
-                handler: handler
+                handler: handler,
             };
             sendMessage(message);
         }
-        
+
         function request(message) {
-            return new Promise(function (resolve, reject) {
-                sendRequest(message, function (response) {
+            return new Promise((resolve, reject) => {
+                sendRequest(message, (response) => {
                     resolve(response);
                 });
             });
@@ -77,17 +74,16 @@ define([
 
         config.root.addEventListener('message', receiveMessage, false);
 
-
         return {
             request: request,
             send: sendMessage,
             // sendMessages: sendMessages,
-            listen: listenForMessage
+            listen: listenForMessage,
         };
     }
-    
+
     function Messages(config) {
-        var awaitingResponse = {},
+        let awaitingResponse = {},
             listeners = {},
             lastId = 0,
             root = config.root,
@@ -97,8 +93,8 @@ define([
             lastId += 1;
             return 'msg_' + String(lastId);
         }
-        
-        var partners = {};
+
+        const partners = {};
         function addPartner(config) {
             partners[config.name] = config;
         }
@@ -111,10 +107,11 @@ define([
         }
 
         function receiveMessage(event) {
-            var origin = event.origin || event.originalEvent.origin,
+            let origin = event.origin || event.originalEvent.origin,
                 message = event.data,
-                listener, response;
-            
+                listener,
+                response;
+
             if (message.id && awaitingResponse[message.id]) {
                 try {
                     response = awaitingResponse[message.id];
@@ -127,7 +124,7 @@ define([
             }
 
             if (listeners[message.name]) {
-                listeners[message.name].forEach(function (listener) {
+                listeners[message.name].forEach((listener) => {
                     try {
                         listener.handler(message, event);
                         return;
@@ -136,41 +133,40 @@ define([
                     }
                 });
             }
-
         }
-        
+
         function getPartner(name) {
-            var partner = partners[name];
+            const partner = partners[name];
             if (!partner) {
                 throw new Error('Partner ' + name + ' not registered');
             }
-            return partner;                
+            return partner;
         }
 
         function sendMessage(partnerName, message) {
-            var partner = getPartner(partnerName);
+            const partner = getPartner(partnerName);
             message.from = name;
             partner.window.postMessage(message, partner.host);
         }
 
         function sendRequest(partnerName, message, handler) {
-            var id = genId();
+            const id = genId();
             message.id = id;
             awaitingResponse[id] = {
                 started: new Date(),
-                handler: handler
+                handler: handler,
             };
             sendMessage(partnerName, message);
         }
-        
+
         function request(partnerName, message) {
-            return new Promise(function (resolve, reject) {
-                sendRequest(partnerName, message, function (response) {
+            return new Promise((resolve, reject) => {
+                sendRequest(partnerName, message, (response) => {
                     resolve(response);
                 });
             });
         }
-        
+
         function setName(newName) {
             if (name !== undefined) {
                 throw new Error('Name is already set');
@@ -178,9 +174,7 @@ define([
             name = newName;
         }
 
-        
         root.addEventListener('message', receiveMessage, false);
-
 
         return {
             addPartner: addPartner,
@@ -188,7 +182,7 @@ define([
             send: sendMessage,
             // sendMessages: sendMessages,
             listen: listenForMessage,
-            setName: setName
+            setName: setName,
         };
     }
 

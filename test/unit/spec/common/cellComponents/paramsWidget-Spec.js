@@ -62,7 +62,7 @@ define([
             });
         });
 
-        afterEach(async() => {
+        afterEach(async () => {
             if (this.paramsWidgetInstance) {
                 await this.paramsWidgetInstance.stop();
             }

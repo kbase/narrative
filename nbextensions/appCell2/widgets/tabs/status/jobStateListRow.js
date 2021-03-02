@@ -1,20 +1,14 @@
-define([
-    'bluebird',
-    'kb_common/html'
-], function(
-    Promise,
-    html
-) {
+define(['bluebird', 'kb_common/html'], (Promise, html) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         td = t('td'),
         th = t('th'),
         span = t('span');
 
     function niceState(jobState) {
-        var label, icon, color;
+        let label, icon, color;
         switch (jobState) {
             case 'completed':
                 label = 'success';
@@ -52,71 +46,70 @@ define([
                 color = 'black';
         }
 
-        return td({
-            style: {
-                color: color,
-                fontWeight: 'bold'
+        return td(
+            {
+                style: {
+                    color: color,
+                    fontWeight: 'bold',
+                },
             },
-        }, [
-            span({
-                class: icon
-            }),
-            ' ' + label
-        ]);
+            [
+                span({
+                    class: icon,
+                }),
+                ' ' + label,
+            ]
+        );
     }
 
     function factory() {
-        var container,
-            name,
-            jobId,
-            clickFunction,
-            isParentJob;
+        let container, name, jobId, clickFunction, isParentJob;
 
         function updateRowStatus(jobStatus) {
             jobStatus = jobStatus ? jobStatus : 'Job still pending.';
-            var jobIdDiv = '';
-            container.innerHTML = th({}, [div(isParentJob ? name.toUpperCase() : name), jobIdDiv]) + niceState(jobStatus);
+            const jobIdDiv = '';
+            container.innerHTML =
+                th({}, [div(isParentJob ? name.toUpperCase() : name), jobIdDiv]) +
+                niceState(jobStatus);
         }
 
         function start(arg) {
-            return Promise.try(function() {
-                container = arg.node;               // this is the row (tr) that this renders
+            return Promise.try(() => {
+                container = arg.node; // this is the row (tr) that this renders
                 container.onclick = () => {
                     if (jobId) {
                         clickFunction(container, jobId, isParentJob);
                     }
                 };
 
-                jobId = arg.jobId;                  // id of child job
+                jobId = arg.jobId; // id of child job
                 name = arg.name;
                 isParentJob = arg.isParentJob;
-                clickFunction = arg.clickFunction;  // called on click (after some ui junk)
+                clickFunction = arg.clickFunction; // called on click (after some ui junk)
                 updateRowStatus(arg.initialState);
             });
         }
 
-        function stop() {
-        }
+        function stop() {}
 
         function updateState(newState) {
             if (!jobId) {
                 jobId = newState.job_id;
             }
-            let status = newState.status ? newState.status : null;
+            const status = newState.status ? newState.status : null;
             updateRowStatus(status);
         }
 
         return {
             start: start,
             stop: stop,
-            updateState: updateState
+            updateState: updateState,
         };
     }
 
     return {
-        make: function() {
+        make: function () {
             return factory();
-        }
+        },
     };
-
 });

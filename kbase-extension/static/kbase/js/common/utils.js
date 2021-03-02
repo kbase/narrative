@@ -1,51 +1,40 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
-define([
-    'kb_common/html',
-    'kb_common/format',
-    './props',
-    'bootstrap'
-], function (html, format, Props) {
+define(['kb_common/html', 'kb_common/format', './props', 'bootstrap'], (html, format, Props) => {
     'use strict';
-    var t = html.tag,
+    const t = html.tag,
         div = t('div');
 
     function makePanel(title, elementName) {
-        return  div({class: 'panel panel-primary'}, [
-            div({class: 'panel-heading'}, [
-                div({class: 'panel-title'}, title)
+        return div({ class: 'panel panel-primary' }, [
+            div({ class: 'panel-heading' }, [div({ class: 'panel-title' }, title)]),
+            div({ class: 'panel-body' }, [
+                div({ dataElement: elementName, class: 'container-fluid' }),
             ]),
-            div({class: 'panel-body'}, [
-                div({dataElement: elementName, class: 'container-fluid'})
-            ])
         ]);
     }
 
     function buildPanel(args) {
-        var style = {}, type = args.type || 'primary';
+        const style = {},
+            type = args.type || 'primary';
         if (args.hidden) {
             style.display = 'none';
         }
-        return  div({class: 'panel panel-' + type, dataElement: args.name, style: style}, [
-            div({class: 'panel-heading'}, [
-                div({class: 'panel-title'}, args.title)
-            ]),
-            div({class: 'panel-body'}, [
-                args.body
-            ])
+        return div({ class: 'panel panel-' + type, dataElement: args.name, style: style }, [
+            div({ class: 'panel-heading' }, [div({ class: 'panel-title' }, args.title)]),
+            div({ class: 'panel-body' }, [args.body]),
         ]);
     }
 
     function getElement(container, names) {
-        var selector = names.map(function (name) {
-            return '[data-element="' + name + '"]';
-        }).join(' ');
+        const selector = names
+            .map((name) => {
+                return '[data-element="' + name + '"]';
+            })
+            .join(' ');
 
         return container.querySelector(selector);
     }
     function createMeta(cell, initial) {
-        var meta = cell.metadata;
+        const meta = cell.metadata;
         meta.kbase = initial;
         cell.metadata = meta;
     }
@@ -68,7 +57,7 @@ define([
          * when the metadata preoperty is actually set -- doesn't count if
          * properties of it are.
          */
-        var temp = cell.metadata;
+        const temp = cell.metadata;
         // Handle the case of setting a group to an entire object
         if (value === undefined) {
             temp.kbase[group] = name;
@@ -93,7 +82,7 @@ define([
         return Props.getDataItem(cell.metadata, path, defaultValue);
     }
     function pushMeta(cell, props, value) {
-        var meta = Props.make(cell.metadata.kbase);
+        const meta = Props.make(cell.metadata.kbase);
         meta.incrItem(props, value);
     }
 
@@ -106,7 +95,7 @@ define([
         }
     }
     function horribleHackToHideElement(cell, selector, tries) {
-        var prompt = cell.element.find(selector);
+        const prompt = cell.element.find(selector);
         if (prompt.length > 0) {
             prompt.css('visibility', 'hidden');
             return;
@@ -114,7 +103,7 @@ define([
 
         if (tries > 0) {
             tries -= 1;
-            window.setTimeout(function () {
+            window.setTimeout(() => {
                 horribleHackToHideElement(cell, tries);
             }, 100);
         } else {
@@ -143,5 +132,4 @@ define([
         horribleHackToHideElement: horribleHackToHideElement,
         toBoolean: toBoolean,
     };
-
 });

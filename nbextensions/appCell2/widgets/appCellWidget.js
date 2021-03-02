@@ -65,7 +65,7 @@ define([
     logTabWidget,
     errorTabWidget,
     infoTabWidget,
-    devMode,
+    devMode
 ) => {
     'use strict';
 
@@ -828,9 +828,12 @@ define([
             let content = Object.keys(currentState.state)
                 .map((key) => {
                     return span([
-                        span({
-                            class: 'kb-fsm__key',
-                        }, `${key}:`),
+                        span(
+                            {
+                                class: 'kb-fsm__key',
+                            },
+                            `${key}:`
+                        ),
                         span(
                             {
                                 class: 'kb-fsm__value',
@@ -842,16 +845,21 @@ define([
                 .join('  ');
 
             if (existingJob && existingJob.job_id) {
-                content = span([
-                    span({
-                        class: 'kb-fsm__key',
-                    }, 'job ID:'),
-                    span({
-                            class: 'kb-fsm__value',
-                        },
-                        existingJob.job_id
-                    ),
-                ]) + content;
+                content =
+                    span([
+                        span(
+                            {
+                                class: 'kb-fsm__key',
+                            },
+                            'job ID:'
+                        ),
+                        span(
+                            {
+                                class: 'kb-fsm__value',
+                            },
+                            existingJob.job_id
+                        ),
+                    ]) + content;
             }
             ui.getElement('fsm-display').classList.remove('hidden');
             ui.setContent('fsm-display', content);
@@ -959,16 +967,13 @@ define([
                             // action button widget
                             actionButtonWidget.buildLayout(events),
                             // status stuff
-                            div(
-                                {
-                                    class: `${cssBaseClass}-status__fsm_display hidden`,
-                                    dataElement: 'fsm-display',
-                                },
-                            ),
+                            div({
+                                class: `${cssBaseClass}-status__fsm_display hidden`,
+                                dataElement: 'fsm-display',
+                            }),
                             div({
                                 class: `${cssBaseClass}-status__container`,
-                                dataElement: 'execMessage'
-
+                                dataElement: 'execMessage',
                             }),
                             // toolbar buttons on the RHS
                             div(
@@ -993,7 +998,8 @@ define([
                         },
                         [div({ dataElement: 'widget' })]
                     ),
-                ]);
+                ]
+            );
         }
 
         function renderLayout() {
@@ -1612,7 +1618,6 @@ define([
         let jobListeners = [];
 
         function startListeningForJobMessages(jobId) {
-
             let ev = runtime.bus().listen({
                 channel: {
                     jobId: jobId,
@@ -1771,8 +1776,6 @@ define([
 
         function doOnSuccess() {
             updateJobState();
-
-
 
             // Output Cell Handling
 

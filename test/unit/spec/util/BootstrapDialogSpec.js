@@ -1,7 +1,7 @@
 define(['jquery', 'util/bootstrapDialog'], ($, Dialog) => {
     'use strict';
     const $simpleBody = $('<div>').append('This is a body text'),
-        simpleTitle = 'Title',
+        simpleTitle = 'Simple Modal Title',
         simpleButtons = [
             $('<button>')
                 .append('b1')
@@ -10,46 +10,60 @@ define(['jquery', 'util/bootstrapDialog'], ($, Dialog) => {
                 .append('b2')
                 .click(() => {}),
         ];
-    let simpleDialog;
 
-    beforeEach(() => {
-        simpleDialog = new Dialog({
+    function createSimpleDialog() {
+        return new Dialog({
             title: simpleTitle,
             body: $simpleBody,
             buttons: simpleButtons,
         });
-        // simpleDialog.getElement().appendTo('body');
-    });
+    }
 
     describe('Test the BootstrapDialog module', () => {
+        let simpleDialog;
+        afterEach(() => {
+            try {
+                simpleDialog.destroy();
+                // eslint-disable-next-line no-empty
+            } catch (err) {}
+            simpleDialog = null;
+        });
+
         it('Should create a new dialog object', () => {
+            simpleDialog = createSimpleDialog();
             expect(simpleDialog).toEqual(jasmine.any(Object));
         });
 
         it('Should show on command', () => {
+            simpleDialog = createSimpleDialog();
             simpleDialog.show();
             expect($($.find('.fade.in')).is(':visible')).toBeTruthy();
         });
 
-        it('Should hide on command', () => {
-            simpleDialog.show();
-            simpleDialog.hide();
+        it('Should hide on command', (done) => {
+            simpleDialog = createSimpleDialog();
             simpleDialog.$modal.on('hidden.bs.modal', () => {
                 expect(simpleDialog.$modal.is(':visible')).toBeFalsy();
+                done();
             });
+            simpleDialog.show();
+            simpleDialog.hide();
         });
 
         it('Should get a title string back', () => {
+            simpleDialog = createSimpleDialog();
             const title = simpleDialog.getTitle();
             expect(title).toBe(simpleTitle);
         });
 
         it('Should get the body div back', () => {
+            simpleDialog = createSimpleDialog();
             const body = simpleDialog.getBody();
             expect(body.html()).toBe($simpleBody.html());
         });
 
         it('Should give the buttons back', () => {
+            simpleDialog = createSimpleDialog();
             const buttons = simpleDialog.getButtons();
             expect(buttons.length).toBe(2);
             expect(buttons[0].innerHTML).toBe('b1');
@@ -57,17 +71,20 @@ define(['jquery', 'util/bootstrapDialog'], ($, Dialog) => {
         });
 
         it('Should get the whole modal object back', () => {
+            simpleDialog = createSimpleDialog();
             const $modal = simpleDialog.getElement();
             expect($modal[0].tagName).toBe('DIV');
         });
 
         it('Should write over the title', () => {
+            simpleDialog = createSimpleDialog();
             const newTitle = 'A new title!';
             simpleDialog.setTitle(newTitle);
             expect(simpleDialog.getTitle()).toBe(newTitle);
         });
 
         it('Should create a new body', () => {
+            simpleDialog = createSimpleDialog();
             const $newBody = $('<div>').append('The new body');
             simpleDialog.setBody($newBody);
             expect(simpleDialog.getBody().html()).toBe($newBody.html());
@@ -78,44 +95,43 @@ define(['jquery', 'util/bootstrapDialog'], ($, Dialog) => {
             const btnFn = function () {
                 wasTriggered = true;
             };
-            const dialog = new Dialog({
-                title: 'test',
+            simpleDialog = new Dialog({
+                title: 'Test for command on enter keypress',
                 body: $('<div>'),
-                buttons: [$('<button>').append('foo').click(btnFn)],
+                buttons: [$('<button>').append('Clickable button').click(btnFn)],
                 enterToTrigger: true,
             });
-            dialog.show();
+            simpleDialog.show();
             expect(wasTriggered).toBe(false);
             const e = $.Event('keypress');
             e.which = 13;
             e.keyCode = 13;
-            dialog.getElement().trigger(e);
+            simpleDialog.getElement().trigger(e);
             expect(wasTriggered).toBe(true);
-            dialog.hide();
-            dialog.destroy();
         });
 
         it('Should create a simple alert', () => {
-            const alert = new Dialog({
+            simpleDialog = new Dialog({
                 title: 'Alert',
                 body: $('<div>').append('an alert'),
                 alertOnly: true,
             });
 
-            const btns = alert.getButtons();
+            const btns = simpleDialog.getButtons();
             expect(btns.length).toBe(1);
             expect(btns[0].innerHTML).toBe('Close');
         });
 
         it('Should set the title based on type', () => {
-            const d = new Dialog({
-                title: 'Foo',
+            simpleDialog = new Dialog({
+                title: 'A Title Based on Type',
                 type: 'warning',
             });
-            expect(d.$headerTitle.hasClass('text-warning')).toBe(true);
+            expect(simpleDialog.$headerTitle.hasClass('text-warning')).toBe(true);
         });
 
         it('Should destroy the modal on command', () => {
+            simpleDialog = createSimpleDialog();
             const ret = simpleDialog.destroy();
             expect(ret).toBe(null);
             expect(simpleDialog.getElement()).toBe(null);

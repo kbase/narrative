@@ -4,21 +4,14 @@ define([
     '../../../../../../narrative/nbextensions/bulkImportCell/bulkImportCell',
     'base/js/namespace',
     'narrativeMocks',
-    'json!/test/data/NarrativeTest.test_simple_inputs.spec.json'
-], (
-    $,
-    Main,
-    BulkImportCell,
-    Jupyter,
-    Mocks,
-    TestAppSpec
-) => {
+    'json!/test/data/NarrativeTest.test_simple_inputs.spec.json',
+], ($, Main, BulkImportCell, Jupyter, Mocks, TestAppSpec) => {
     'use strict';
 
     describe('test the bulkImportCell entrypoint module', () => {
         beforeAll(() => {
             Jupyter.narrative = {
-                getAuthToken: () => 'fakeToken'
+                getAuthToken: () => 'fakeToken',
             };
         });
 
@@ -33,7 +26,7 @@ define([
             // a mock BulkImportCell
             Jupyter.notebook = Mocks.buildMockNotebook({
                 cells: [cell],
-                fullyLoaded: true
+                fullyLoaded: true,
             });
         });
 
@@ -49,64 +42,60 @@ define([
             // expect that setupNotebook was called, which we can
             // proxy by checking on Jupyter.notebook.get_cells.
             spyOn(Jupyter.notebook, 'get_cells').and.callThrough();
-            return Main.load_ipython_extension()
-                .then(() => {
-                    expect(Jupyter.notebook.get_cells).toHaveBeenCalled();
-                });
+            return Main.load_ipython_extension().then(() => {
+                expect(Jupyter.notebook.get_cells).toHaveBeenCalled();
+            });
         });
 
         it('should turn a newly inserted cell into a Bulk Import Cell', (done) => {
             const newCell = Mocks.buildMockCell('code');
             Jupyter.notebook.cells.push(newCell);
-            Main.load_ipython_extension()
-                .then(() => {
-                    $([Jupyter.events]).trigger('insertedAtIndex.Cell', {
-                        type: 'code',
-                        index: 1,
-                        cell: newCell,
-                        data: {
-                            type: 'app-bulk-import',
-                            typesToFiles: {
-                                fileType: {
-                                    files: ['a_file'],
-                                    appId: 'someApp'
-                                }
+            Main.load_ipython_extension().then(() => {
+                $([Jupyter.events]).trigger('insertedAtIndex.Cell', {
+                    type: 'code',
+                    index: 1,
+                    cell: newCell,
+                    data: {
+                        type: 'app-bulk-import',
+                        typesToFiles: {
+                            fileType: {
+                                files: ['a_file'],
+                                appId: 'someApp',
                             },
-                            specs: {
-                                someApp: TestAppSpec
-                            }
-                        }
-                    });
-                    // there's no other triggers except to wait a moment
-                    // for the cell to get turned into a bulk import cell
-                    // and if it takes more than 100ms, it SHOULD fail.
-                    setTimeout(() => {
-                        expect(BulkImportCell.isBulkImportCell(newCell)).toBeTruthy();
-                        done();
-                    }, 100);
+                        },
+                        specs: {
+                            someApp: TestAppSpec,
+                        },
+                    },
                 });
+                // there's no other triggers except to wait a moment
+                // for the cell to get turned into a bulk import cell
+                // and if it takes more than 100ms, it SHOULD fail.
+                setTimeout(() => {
+                    expect(BulkImportCell.isBulkImportCell(newCell)).toBeTruthy();
+                    done();
+                }, 100);
+            });
         });
 
         it('should not turn a plain code cell into a Bulk Import Cell', (done) => {
             const newCell = Mocks.buildMockCell('code');
             Jupyter.notebook.cells.push(newCell);
-            Main.load_ipython_extension()
-                .then(() => {
-                    $([Jupyter.events]).trigger('insertedAtIndex.Cell', {
-                        type: 'code',
-                        index: 1,
-                        cell: newCell,
-                        data: {}
-                    });
-                    // there's no other triggers except to wait a moment
-                    // for the cell to get turned into a bulk import cell
-                    // and if it takes more than 100ms, it SHOULD fail.
-                    setTimeout(() => {
-                        expect(BulkImportCell.isBulkImportCell(newCell)).toBeFalsy();
-                        done();
-                    }, 100);
+            Main.load_ipython_extension().then(() => {
+                $([Jupyter.events]).trigger('insertedAtIndex.Cell', {
+                    type: 'code',
+                    index: 1,
+                    cell: newCell,
+                    data: {},
                 });
+                // there's no other triggers except to wait a moment
+                // for the cell to get turned into a bulk import cell
+                // and if it takes more than 100ms, it SHOULD fail.
+                setTimeout(() => {
+                    expect(BulkImportCell.isBulkImportCell(newCell)).toBeFalsy();
+                    done();
+                }, 100);
+            });
         });
-
     });
 });

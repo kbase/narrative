@@ -6,15 +6,8 @@ define([
     'jquery',
     'common/runtime',
     'common/ui',
-    'common/events'
-
-], function(
-    ActionButton,
-    $,
-    Runtime,
-    UI,
-    Events
-) {
+    'common/events',
+], function (ActionButton, $, Runtime, UI, Events) {
     'use strict';
     let mockActionButton,
         ui,
@@ -23,34 +16,32 @@ define([
         actionButtons = {
             current: {
                 name: 'runApp',
-                disabled: false
+                disabled: false,
             },
             availableButtons: {
                 runApp: {
                     help: 'Run the app',
                     type: 'primary',
                     classes: ['-run'],
-                    label: 'Run'
+                    label: 'Run',
                 },
                 cancel: {
                     help: 'Cancel the running app',
                     type: 'danger',
                     classes: ['-cancel'],
-                    label: 'Cancel'
-                }
-            }
+                    label: 'Cancel',
+                },
+            },
         },
         container;
 
-
     describe('The action button widget', () => {
-
-        beforeEach( () => {
+        beforeEach(() => {
             var bus = Runtime.make().bus();
             container = document.createElement('div');
             ui = UI.make({
                 node: container,
-                bus: bus
+                bus: bus,
             });
 
             mockActionButton = ActionButton.make({
@@ -58,7 +49,7 @@ define([
                 actionButtons: actionButtons,
                 bus: bus,
                 runAction: runAction,
-                cssCellType: null
+                cssCellType: null,
             });
         });
 
@@ -104,7 +95,7 @@ define([
             container.innerHTML = layout;
             mockActionButton.setState({
                 name: 'cancel',
-                disabled: true
+                disabled: true,
             });
 
             let $cancelButton = $(container).find('.-cancel');
@@ -113,7 +104,5 @@ define([
             expect($cancelButton.hasClass('hidden')).toBeFalse();
             expect($cancelButton.hasClass('disabled')).toBeTrue();
         });
-
     });
-
 });

@@ -2,46 +2,42 @@
 define([
     '../../../../../../narrative/nbextensions/bulkImportCell/fileTypePanel',
     'common/runtime',
-    'bluebird'
-], (
-    FileTypePanel,
-    Runtime,
-    Promise
-) => {
+    'bluebird',
+], (FileTypePanel, Runtime, Promise) => {
     'use strict';
 
     const fileTypes = {
         file1: {
-            label: 'A File'
+            label: 'A File',
         },
         file2: {
-            label: 'Another File'
+            label: 'Another File',
         },
         file3: {
-            label: 'A Third File'
-        }
+            label: 'A Third File',
+        },
     };
     const header = {
         icon: 'fa fa-times',
-        label: 'File Header'
+        label: 'File Header',
     };
     describe('test the file type panel', () => {
-
         it('should load and start properly with the right available functions', () => {
             let panel = FileTypePanel.make({
                 bus: Runtime.make().bus(),
                 fileTypes: fileTypes,
                 header: header,
-                toggleAction: () => {}
+                toggleAction: () => {},
             });
             expect(panel.start).toBeDefined();
             expect(panel.stop).toBeDefined();
             expect(panel.updateState).toBeDefined();
             let node = document.createElement('div');
-            return panel.start({
-                node: node,
-                state: {}
-            })
+            return panel
+                .start({
+                    node: node,
+                    state: {},
+                })
                 .then(() => {
                     expect(node.innerHTML).toContain(header.label);
                     for (const cat of Object.keys(fileTypes)) {
@@ -55,13 +51,14 @@ define([
                 bus: Runtime.make().bus(),
                 fileTypes: fileTypes,
                 header: header,
-                toggleAction: () => {}
+                toggleAction: () => {},
             });
             let node = document.createElement('div');
-            return panel.start({
-                node: node,
-                state: {}       // start with no state, nothing selected, nothing completed
-            })
+            return panel
+                .start({
+                    node: node,
+                    state: {}, // start with no state, nothing selected, nothing completed
+                })
                 .then(() => {
                     let beforeNode = {},
                         beforeIcon = {};
@@ -71,7 +68,7 @@ define([
                         beforeIcon[cat] = elem.querySelector('[data-element="icon"]').outerHTML;
                     }
                     panel.updateState({
-                        selected: 'file1'
+                        selected: 'file1',
                     });
                     for (const cat of Object.keys(fileTypes)) {
                         const elem = node.querySelector(`[data-element="${cat}"]`);
@@ -80,22 +77,22 @@ define([
                             // different. (really I shouldn't even use the selector, but
                             // I gotta test something)
                             expect(elem.outerHTML).not.toEqual(beforeNode[cat]);
-                        }
-                        else {
+                        } else {
                             expect(elem.outerHTML).toEqual(beforeNode[cat]);
                         }
                     }
                     panel.updateState({
                         completed: {
-                            'file2': true,
-                        }
+                            file2: true,
+                        },
                     });
                     for (const cat of Object.keys(fileTypes)) {
-                        const iconElem = node.querySelector(`[data-element="${cat}"] [data-element="icon"]`);
+                        const iconElem = node.querySelector(
+                            `[data-element="${cat}"] [data-element="icon"]`
+                        );
                         if (cat === 'file2') {
                             expect(iconElem.outerHTML).not.toEqual(beforeIcon[cat]);
-                        }
-                        else {
+                        } else {
                             expect(iconElem.outerHTML).toEqual(beforeIcon[cat]);
                         }
                     }
@@ -108,15 +105,16 @@ define([
                 bus: Runtime.make().bus(),
                 fileTypes: fileTypes,
                 header: header,
-                toggleAction: clickSpy
+                toggleAction: clickSpy,
             });
             let node = document.createElement('div');
-            return panel.start({
-                node: node,
-                state: {
-                    selected: 'file1'
-                }
-            })
+            return panel
+                .start({
+                    node: node,
+                    state: {
+                        selected: 'file1',
+                    },
+                })
                 .then(() => {
                     node.querySelector('[data-element="file1"]').click();
                     expect(clickSpy).not.toHaveBeenCalled();
@@ -130,13 +128,14 @@ define([
                 bus: Runtime.make().bus(),
                 fileTypes: fileTypes,
                 header: header,
-                toggleAction: () => {}
+                toggleAction: () => {},
             });
             let node = document.createElement('div');
-            return panel.start({
-                node: node,
-                state: {}
-            })
+            return panel
+                .start({
+                    node: node,
+                    state: {},
+                })
                 .then(() => {
                     const stopProm = panel.stop();
                     expect(stopProm instanceof Promise).toBeTrue();

@@ -1,12 +1,4 @@
-define ([
-    'jquery',
-    'util/bootstrapSearch',
-    'base/js/namespace'
-], function(
-    $,
-    BootstrapSearch,
-    Jupyter
-) {
+define(['jquery', 'util/bootstrapSearch', 'base/js/namespace'], ($, BootstrapSearch, Jupyter) => {
     'use strict';
     let $targetElem;
 
@@ -14,12 +6,13 @@ define ([
         beforeEach(() => {
             $targetElem = $('<div>');
             Jupyter.narrative = {
-                disableKeyboardManager: () => {}
+                disableKeyboardManager: () => {},
             };
         });
 
         afterEach(() => {
-            $targetElem.empty();
+            $targetElem.remove();
+            Jupyter.narrative = null;
         });
 
         it('Should create a new search object', () => {
@@ -29,9 +22,10 @@ define ([
 
         it('Should fire an input function when triggered by input', (done) => {
             const bsSearch = new BootstrapSearch($targetElem, {
-                inputFunction: () => {
+                inputFunction: (event) => {
+                    expect(event.type).toBe('input');
                     done();
-                }
+                },
             });
             bsSearch.val('stuff');
         });
@@ -82,7 +76,7 @@ define ([
                 addonFunction: () => {
                     expect(bsSearch.val()).toEqual('stuff');
                     done();
-                }
+                },
             });
             bsSearch.val('stuff');
             $targetElem.find('span.input-group-addon').click();
@@ -97,7 +91,10 @@ define ([
         it('Should have a working focus function', (done) => {
             const bsSearch = new BootstrapSearch($targetElem);
             $('body').append($targetElem);
-            $targetElem.find('input.form-control').on('focus', () => {
+            spyOn(Jupyter.narrative, 'disableKeyboardManager');
+            $targetElem.find('input[type="text"]').on('focus', (event) => {
+                expect(event.type).toBe('focus');
+                expect(Jupyter.narrative.disableKeyboardManager).toHaveBeenCalled();
                 done();
             });
             bsSearch.focus();
@@ -105,18 +102,18 @@ define ([
 
         it('Should set placeholder text', () => {
             const placeholder = 'some text';
-            const bsSearch = new BootstrapSearch($targetElem, {
-                placeholder: placeholder
+            new BootstrapSearch($targetElem, {
+                placeholder: placeholder,
             });
             expect($targetElem.find('input.form-control').attr('placeholder')).toEqual(placeholder);
         });
 
         it('Should trigger an escape function', (done) => {
-            const passed = false;
-            const bsSearch = new BootstrapSearch($targetElem, {
-                escFunction: () => {
+            new BootstrapSearch($targetElem, {
+                escFunction: (event) => {
+                    expect(event.type).toBe('keyup');
                     done();
-                }
+                },
             });
             const e = $.Event('keyup');
             e.which = 27;

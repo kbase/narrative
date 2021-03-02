@@ -1,8 +1,4 @@
-define ([
-    'common/ui',
-], (
-    UI
-) => {
+define(['common/ui'], (UI) => {
     'use strict';
 
     // don't require a UI object
@@ -60,25 +56,24 @@ define ([
         'updateTab',
     ];
 
-
     describe('UI module', () => {
         it('should be defined', () => {
             expect(UI).toBeDefined();
         });
 
-        functions.forEach( f => {
-            it (`should have function ${f} defined`, () => {
+        functions.forEach((f) => {
+            it(`should have function ${f} defined`, () => {
                 expect(UI[f]).toBeDefined();
-            })
+            });
         });
         objectFunctions.forEach((f) => {
-            it (`should not have function ${f} defined`, () => {
+            it(`should not have function ${f} defined`, () => {
                 expect(UI[f]).not.toBeDefined();
             });
         });
         it('should have a make function', () => {
             expect(UI.make).toBeDefined();
-        })
+        });
     });
 
     describe('a UI instance', () => {
@@ -89,10 +84,10 @@ define ([
 
         it('should be defined', () => {
             expect(uiInstance).toBeDefined();
-        })
+        });
         // all the UI module methods plus the instance methods
-        functions.concat(objectFunctions).forEach( f => {
-            it (`should have function ${f} defined`, () => {
+        functions.concat(objectFunctions).forEach((f) => {
+            it(`should have function ${f} defined`, () => {
                 expect(uiInstance[f]).toBeDefined();
             });
         });
@@ -133,8 +128,8 @@ define ([
             const spinner = div.getElementsByTagName('i')[0];
             allClasses.forEach((cl) => {
                 expect(spinner).toHaveClass(cl);
-            })
+            });
             expect(spinner.textContent).not.toMatch(/\S/);
-        })
+        });
     });
 });

@@ -1,379 +1,387 @@
-define([], function() {
-    'use strict';
-    var fsm = [{
-        // The 'new' state is the initial entry point for the editor.
-        // When the editor is first instantiated and the editor state loaded,
-        // it is evaluated and the next state selected.
-        state: {
-            mode: 'new'
+define([], () => {
+    const fsm = [
+        {
+            // The 'new' state is the initial entry point for the editor.
+            // When the editor is first instantiated and the editor state loaded,
+            // it is evaluated and the next state selected.
+            state: {
+                mode: 'new',
+            },
+            ui: {
+                buttons: {
+                    enabled: [],
+                    disabled: ['save'],
+                },
+                elements: {
+                    show: [],
+                    hide: ['fatal-error', 'parameters-group'],
+                },
+            },
+            next: [
+                {
+                    mode: 'fatal-error',
+                },
+                // Self
+                {
+                    mode: 'new',
+                },
+                // main next states
+                {
+                    mode: 'editing',
+                    params: 'incomplete',
+                    data: 'clean',
+                },
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    data: 'clean',
+                },
+                // remove this!!!
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    data: 'changed',
+                },
+            ],
         },
-        ui: {
-            buttons: {
-                enabled: [],
-                disabled: ['save']
-            },
-            elements: {
-                show: [],
-                hide: ['fatal-error', 'parameters-group']
-            }
-        },
-        next: [
-            {
-                mode: 'fatal-error'
-            },
-            // Self
-            {
-                mode: 'new'
-            },
-            // main next states
-            {
+        {
+            state: {
                 mode: 'editing',
                 params: 'incomplete',
-                data: 'clean'
+                data: 'clean',
             },
-            {
-                mode: 'editing',
-                params: 'complete',
-                data: 'clean'
+            ui: {
+                buttons: {
+                    enabled: [],
+                    disabled: ['save'],
+                },
+                elements: {
+                    show: ['parameters-group'],
+                    hide: ['fatal-error'],
+                },
             },
-            // remove this!!!
-            {
-                mode: 'editing',
-                params: 'complete',
-                data: 'changed'
-            }
-        ]
-    },
-    {
-        state: {
-            mode: 'editing',
-            params: 'incomplete',
-            data: 'clean'
+            next: [
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    data: 'clean',
+                },
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    data: 'touched',
+                },
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    data: 'changed',
+                },
+                {
+                    mode: 'editing',
+                    params: 'incomplete',
+                    data: 'clean',
+                },
+                {
+                    mode: 'editing',
+                    params: 'incomplete',
+                    data: 'touched',
+                },
+                {
+                    mode: 'editing',
+                    params: 'incomplete',
+                    data: 'changed',
+                },
+                {
+                    mode: 'fatal-error',
+                },
+            ],
         },
-        ui: {
-            buttons: {
-                enabled: [],
-                disabled: ['save']
+        {
+            state: {
+                mode: 'editing',
+                params: 'incomplete',
+                data: 'touched',
             },
-            elements: {
-                show: ['parameters-group'],
-                hide: ['fatal-error']
-            }
+            ui: {
+                buttons: {
+                    enabled: [],
+                    disabled: ['save'],
+                },
+                elements: {
+                    show: ['parameters-group'],
+                    hide: ['fatal-error'],
+                },
+            },
+            next: [
+                {
+                    mode: 'editing',
+                    params: 'incomplete',
+                    data: 'clean',
+                },
+                {
+                    mode: 'editing',
+                    params: 'incomplete',
+                    data: 'touched',
+                },
+                {
+                    mode: 'editing',
+                    params: 'incomplete',
+                    data: 'changed',
+                },
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    data: 'changed',
+                },
+                {
+                    mode: 'fatal-error',
+                },
+            ],
         },
-        next: [
-            {
-                mode: 'editing',
-                params: 'complete',
-                data: 'clean'
-            },
-            {
-                mode: 'editing',
-                params: 'complete',
-                data: 'touched'
-            },
-            {
-                mode: 'editing',
-                params: 'complete',
-                data: 'changed'
-            },
-            {
+        // In the incomplete changed state, the editor has no pending
+        // changes (touched), the model has been updated,
+        // but we can't save it yet because it is incomplete.
+        {
+            state: {
                 mode: 'editing',
                 params: 'incomplete',
-                data: 'clean'
+                data: 'changed',
             },
-            {
-                mode: 'editing',
-                params: 'incomplete',
-                data: 'touched'
+            ui: {
+                buttons: {
+                    enabled: [],
+                    disabled: ['save'],
+                },
+                elements: {
+                    show: ['parameters-group'],
+                    hide: ['fatal-error'],
+                },
             },
-            {
-                mode: 'editing',
-                params: 'incomplete',
-                data: 'changed'
-            },
-            {
-                mode: 'fatal-error'
-            }
-        ]
-    },
-    {
-        state: {
-            mode: 'editing',
-            params: 'incomplete',
-            data: 'touched'
+            next: [
+                {
+                    mode: 'editing',
+                    params: 'incomplete',
+                    data: 'touched',
+                },
+                {
+                    mode: 'editing',
+                    params: 'incomplete',
+                    data: 'changed',
+                },
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    data: 'clean',
+                },
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    data: 'changed',
+                },
+                {
+                    mode: 'fatal-error',
+                },
+            ],
         },
-        ui: {
-            buttons: {
-                enabled: [],
-                disabled: ['save']
-            },
-            elements: {
-                show: ['parameters-group'],
-                hide: ['fatal-error']
-            }
-        },
-        next: [
-            {
-                mode: 'editing',
-                params: 'incomplete',
-                data: 'clean'
-            },
-            {
-                mode: 'editing',
-                params: 'incomplete',
-                data: 'touched'
-            },
-            {
-                mode: 'editing',
-                params: 'incomplete',
-                data: 'changed'
-            },
-            {
+        // the entry state for completed editor, yay!
+        {
+            state: {
                 mode: 'editing',
                 params: 'complete',
-                data: 'changed'
+                data: 'clean',
             },
-            {
-                mode: 'fatal-error'
-            }
-        ]
-    },
-    // In the incomplete changed state, the editor has no pending
-    // changes (touched), the model has been updated,
-    // but we can't save it yet because it is incomplete.
-    {
-        state: {
-            mode: 'editing',
-            params: 'incomplete',
-            data: 'changed'
-        },
-        ui: {
-            buttons: {
-                enabled: [],
-                disabled: ['save']
+            ui: {
+                buttons: {
+                    enabled: [],
+                    disabled: ['save'],
+                },
+                elements: {
+                    show: ['parameters-group'],
+                    hide: ['fatal-error'],
+                },
             },
-            elements: {
-                show: ['parameters-group'],
-                hide: ['fatal-error']
-            }
-        },
-        next: [
-            {
-                mode: 'editing',
-                params: 'incomplete',
-                data: 'touched'
-            },
-            {
-                mode: 'editing',
-                params: 'incomplete',
-                data: 'changed'
-            },
-            {
-                mode: 'editing',
-                params: 'complete',
-                data: 'clean'
-            },
-            {
-                mode: 'editing',
-                params: 'complete',
-                data: 'changed'
-            },
-            {
-                mode: 'fatal-error'
-            }
-        ]
-    },
-    // the entry state for completed editor, yay!
-    {
-        state: {
-            mode: 'editing',
-            params: 'complete',
-            data: 'clean'
-        },
-        ui: {
-            buttons: {
-                enabled: [],
-                disabled: ['save']
-            },
-            elements: {
-                show: ['parameters-group'],
-                hide: ['fatal-error']
-            }
-        },
-        next: [
-            {
-                mode: 'editing',
-                params: 'incomplete',
-                data: 'changed'
-            },
-            {
-                mode: 'editing',
-                params: 'complete',
-                data: 'touched'
-            },
-            {
-                mode: 'editing',
-                params: 'complete',
-                data: 'changed'
-            },
-            {
-                mode: 'editing',
-                params: 'complete',
-                data: 'clean'
-            },
-            {
-                mode: 'editing',
-                params: 'complete',
-                data: 'touched'
-            },
+            next: [
+                {
+                    mode: 'editing',
+                    params: 'incomplete',
+                    data: 'changed',
+                },
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    data: 'touched',
+                },
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    data: 'changed',
+                },
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    data: 'clean',
+                },
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    data: 'touched',
+                },
 
-            {
-                mode: 'saving'
-            },
-            {
-                mode: 'error'
-            },
-            {
-                mode: 'fatal-error'
-            }
-        ]
-    },
-    {
-        state: {
-            mode: 'editing',
-            params: 'complete',
-            data: 'touched'
+                {
+                    mode: 'saving',
+                },
+                {
+                    mode: 'error',
+                },
+                {
+                    mode: 'fatal-error',
+                },
+            ],
         },
-        ui: {
-            buttons: {
-                enabled: [],
-                disabled: ['save']
+        {
+            state: {
+                mode: 'editing',
+                params: 'complete',
+                data: 'touched',
             },
-            elements: {
-                show: ['parameters-group'],
-                hide: ['fatal-error']
-            }
+            ui: {
+                buttons: {
+                    enabled: [],
+                    disabled: ['save'],
+                },
+                elements: {
+                    show: ['parameters-group'],
+                    hide: ['fatal-error'],
+                },
+            },
+            next: [
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    data: 'touched',
+                },
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    data: 'changed',
+                },
+                {
+                    mode: 'saving',
+                },
+                {
+                    mode: 'error',
+                },
+                {
+                    mode: 'fatal-error',
+                },
+            ],
         },
-        next: [
-            {
+        {
+            state: {
                 mode: 'editing',
                 params: 'complete',
-                data: 'touched'
+                data: 'changed',
             },
-            {
-                mode: 'editing',
-                params: 'complete',
-                data: 'changed'
+            ui: {
+                buttons: {
+                    enabled: ['save'],
+                    disabled: [],
+                },
+                elements: {
+                    show: ['parameters-group'],
+                    hide: ['fatal-error'],
+                },
             },
-            {
-                mode: 'saving'
-            },
-            {
-                mode: 'error'
-            },
-            {
-                mode: 'fatal-error'
-            }
-        ]
-    },
-    {
-        state: {
-            mode: 'editing',
-            params: 'complete',
-            data: 'changed'
+            next: [
+                // upon a save, the edit state will be clean
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    data: 'clean',
+                },
+                // continuing edits for a changed editor are still changed
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    data: 'changed',
+                },
+                {
+                    mode: 'editing',
+                    params: 'incomplete',
+                    data: 'changed',
+                },
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    data: 'touched',
+                },
+                {
+                    mode: 'saving',
+                },
+                {
+                    mode: 'error',
+                },
+                {
+                    mode: 'fatal-error',
+                },
+            ],
         },
-        ui: {
-            buttons: {
-                enabled: ['save'],
-                disabled: []
-            },
-            elements: {
-                show: ['parameters-group'],
-                hide: ['fatal-error']
-            }
-        },
-        next: [
-            // upon a save, the edit state will be clean
-            {
-                mode: 'editing',
-                params: 'complete',
-                data: 'clean'
-            },
-            // continuing edits for a changed editor are still changed
-            {
-                mode: 'editing',
-                params: 'complete',
-                data: 'changed'
-            },
-            {
-                mode: 'editing',
-                params: 'incomplete',
-                data: 'changed'
-            },
-            {
-                mode: 'editing',
-                params: 'complete',
-                data: 'touched'
-            },
-            {
-                mode: 'saving'
-            },
-            {
-                mode: 'error'
-            },
-            {
-                mode: 'fatal-error'
-            }
-        ]
-    },
 
-    {
-        state: {
-            mode: 'error'
-        },
-        ui: {
-            buttons: {
-                enabled: [],
-                disabled: ['save']
+        {
+            state: {
+                mode: 'error',
             },
-            elements: {
-                show: [],
-                hide: ['parameters-group']
-            }
-        },
-        next: [
-            {
-                mode: 'error'
+            ui: {
+                buttons: {
+                    enabled: [],
+                    disabled: ['save'],
+                },
+                elements: {
+                    show: [],
+                    hide: ['parameters-group'],
+                },
             },
-            {
-                mode: 'editing',
-                params: 'complete'
-            },
-            {
-                mode: 'fatal-error'
-            }
-        ]
-    },
-    {
-        state: {
-            mode: 'fatal-error'
+            next: [
+                {
+                    mode: 'error',
+                },
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                },
+                {
+                    mode: 'fatal-error',
+                },
+            ],
         },
-        ui: {
-            buttons: {
-                enabled: [],
-                disabled: [],
-                hide: ['save']
+        {
+            state: {
+                mode: 'fatal-error',
             },
-            elements: {
-                show: ['fatal-error'],
-                hide: ['parameters-group', 'edit-object-selector', 'available-actions', 'editor-status']
-            }
+            ui: {
+                buttons: {
+                    enabled: [],
+                    disabled: [],
+                    hide: ['save'],
+                },
+                elements: {
+                    show: ['fatal-error'],
+                    hide: [
+                        'parameters-group',
+                        'edit-object-selector',
+                        'available-actions',
+                        'editor-status',
+                    ],
+                },
+            },
+            next: [
+                {
+                    mode: 'fatal-error',
+                },
+            ],
         },
-        next: [{
-            mode: 'fatal-error'
-        }]
-    }];
+    ];
     return {
-        fsm: fsm
+        fsm: fsm,
     };
 });

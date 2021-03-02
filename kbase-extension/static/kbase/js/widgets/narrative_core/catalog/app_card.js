@@ -258,7 +258,9 @@ define(['kbwidget', 'bootstrap', 'bluebird', 'jquery'], (KBWidget, bootstrap, Pr
 
             if (type === 'method') {
                 const $starDiv = $('<div>').addClass('col-xs-3').css('text-align', 'left');
-                const $star = $('<span>').addClass('kbcb-star').append('<i class="fa fa-star"></i>');
+                const $star = $('<span>')
+                    .addClass('kbcb-star')
+                    .append('<i class="fa fa-star"></i>');
                 if (self.isLoggedIn) {
                     $star.addClass('kbcb-star-nonfavorite');
                     $star.on('click', (event) => {

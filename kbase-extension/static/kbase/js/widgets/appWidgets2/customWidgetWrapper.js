@@ -1,24 +1,18 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
-define([
-    'bluebird',
-    'kb_common/html',
-    'base/js/namespace',
-    'common/runtime'
-], function (
+define(['bluebird', 'kb_common/html', 'base/js/namespace', 'common/runtime'], (
     Promise,
     html,
     Jupyter,
     Runtime
-    ) {
+) => {
     'use strict';
 
-    var t = html.tag,
-        div = t('div'), pre = t('pre');
+    const t = html.tag,
+        div = t('div'),
+        pre = t('pre');
 
     function factory(config) {
-        var parent, container,
+        let parent,
+            container,
             cellId = config.cellId,
             cellBus,
             runtime = Runtime.make(),
@@ -32,37 +26,38 @@ define([
         /*
          * This is a fake widget finder for now...
          * At the moment widget ids are still jquery widget ids which operate
-         * under the given widget id as both a jquery widget name and 
+         * under the given widget id as both a jquery widget name and
          * amd module name (see narrative_paths.js for the mapping)
          */
         function findWidget(widgetId) {
             return {
-                modulePath: widgetId
+                modulePath: widgetId,
             };
         }
 
         function runCustomWidget() {
-            var widgetDef = findWidget(appSpec.widgets.input);
-            require([
-                widgetDef.modulePath
-            ], function (Widget) {
+            const widgetDef = findWidget(appSpec.widgets.input);
+            require([widgetDef.modulePath], (Widget) => {
                 wrappedWidget = new Widget($(container), {
                     appSpec: appSpec,
-                    workspaceName: Jupyter.narrative.getWorkspaceName()
+                    workspaceName: Jupyter.narrative.getWorkspaceName(),
                 });
-                appSpec.parameters.forEach(function (parameter) {
-                    wrappedWidget.addInputListener(parameter.id, function (data) {
-                        runtime.bus().send({
-                            id: parameter.id,
-                            value: data.val
-                        }, {
-                            channel: {
-                                cell: cellId
+                appSpec.parameters.forEach((parameter) => {
+                    wrappedWidget.addInputListener(parameter.id, (data) => {
+                        runtime.bus().send(
+                            {
+                                id: parameter.id,
+                                value: data.val,
                             },
-                            key: {
-                                type: 'parameter-changed'
+                            {
+                                channel: {
+                                    cell: cellId,
+                                },
+                                key: {
+                                    type: 'parameter-changed',
+                                },
                             }
-                        });
+                        );
 
                         // changedParameters[parameter.id] = data.val;
                         // console.log('CHANGED', data);
@@ -73,54 +68,55 @@ define([
         }
 
         function start(params) {
-            return Promise.try(function () {
-                var parent = params.root;
+            return Promise.try(() => {
+                const parent = params.root;
 
                 container = parent.appendChild(document.createElement('div'));
 
                 // Get sorted out with the app and the input widget.
                 // container.innerHTML = render();
                 runCustomWidget();
-                
-                runtime.bus().send({}, {
-                    channel: {
-                        cell: cellId
-                    },
-                    key: {
-                        type: 'sync-params'
+
+                runtime.bus().send(
+                    {},
+                    {
+                        channel: {
+                            cell: cellId,
+                        },
+                        key: {
+                            type: 'sync-params',
+                        },
                     }
-                });
+                );
                 runtime.bus().listen({
                     channel: {
-                        cell: cellId
+                        cell: cellId,
                     },
                     key: {
-                        type: 'parameter-value'
+                        type: 'parameter-value',
                     },
                     handle: function (message) {
                         wrappedWidget.setParameterValue(message.id, message.value);
-                    }                    
-                })
-                
-                runtime.bus().on('workspace-changed', function () {
+                    },
+                });
+
+                runtime.bus().on('workspace-changed', () => {
                     wrappedWidget.refresh();
                 });
             });
         }
 
-        function stop() {
-
-        }
+        function stop() {}
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

@@ -12,8 +12,8 @@ define([
     '../fieldWidgetMicro',
 
     'bootstrap',
-    'css!font-awesome'
-], function(
+    'css!font-awesome',
+], (
     require,
     Promise,
     html,
@@ -25,16 +25,16 @@ define([
     Resolver,
     Validation,
     FieldWidget
-) {
+) => {
     'use strict';
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         button = t('button');
 
     function factory(config) {
-        var spec = config.parameterSpec,
+        let spec = config.parameterSpec,
             itemSpec = spec.parameters.specs.item,
             container,
             parent,
@@ -43,25 +43,24 @@ define([
             channel = busConnection.channel(config.channelName),
             ui,
             model = {
-                value: []
+                value: [],
             },
             viewModel = Props.make({
                 data: {
-                    items: []
-                }
+                    items: [],
+                },
             }),
             resolver = Resolver.make();
 
         function normalizeModel() {
-            var newModel = model.value.filter(function(item) {
+            const newModel = model.value.filter((item) => {
                 return item ? true : false;
             });
             model.value = newModel;
         }
 
-
         function setModelValue(value, index) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (index !== undefined) {
                     if (value) {
                         model.value[index] = value;
@@ -76,19 +75,17 @@ define([
                     }
                 }
                 normalizeModel();
-            })
-                .then(function() {
-                    return render();
-                });
+            }).then(() => {
+                return render();
+            });
         }
 
         function unsetModelValue() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 model.value = [];
-            })
-                .then(function() {
-                    return render();
-                });
+            }).then(() => {
+                return render();
+            });
         }
 
         function resetModelValue() {
@@ -96,100 +93,102 @@ define([
         }
 
         function exportModel() {
-            return viewModel.getItem('items').map(function(value) {
+            return viewModel.getItem('items').map((value) => {
                 return value.value;
             });
         }
 
-
         function validate(rawValue) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 // TODO: validate all items within the list as well!
                 return Validation.validate(rawValue, spec);
             });
         }
 
-        // TODO: wrap this in a new type of field control -- 
+        // TODO: wrap this in a new type of field control --
         //   specialized to be very lightweight for the sequence control.
         function makeSingleViewControl(control) {
-            return resolver.loadViewControl(itemSpec)
-                .then(function(widgetFactory) {
-                    // CONTROL
-                    var postButton,
-                        widgetId = html.genId(),
-                        inputBus = runtime.bus().makeChannelBus({
-                            description: 'Array input control'
-                        }),
-                        fieldWidget = FieldWidget.make({
-                            inputControlFactory: widgetFactory,
-                            showHint: false,
-                            showLabel: false,
-                            showInfo: false,
-                            useRowHighight: true,
-                            initialValue: control.value,
-                            parameterSpec: itemSpec,
-                            referenceType: 'ref',
-                            paramsChannelName: config.paramsChannelName
+            return resolver.loadViewControl(itemSpec).then((widgetFactory) => {
+                // CONTROL
+                let postButton,
+                    widgetId = html.genId(),
+                    inputBus = runtime.bus().makeChannelBus({
+                        description: 'Array input control',
+                    }),
+                    fieldWidget = FieldWidget.make({
+                        inputControlFactory: widgetFactory,
+                        showHint: false,
+                        showLabel: false,
+                        showInfo: false,
+                        useRowHighight: true,
+                        initialValue: control.value,
+                        parameterSpec: itemSpec,
+                        referenceType: 'ref',
+                        paramsChannelName: config.paramsChannelName,
+                    });
+
+                // set up listeners for the input
+                fieldWidget.bus.on('sync', () => {
+                    const value = viewModel.getItem(['items', control.index, 'value']);
+                    if (value) {
+                        inputBus.emit('update', {
+                            value: value,
                         });
+                    }
+                });
 
-                    // set up listeners for the input
-                    fieldWidget.bus.on('sync', function() {
-                        var value = viewModel.getItem(['items', control.index, 'value']);
-                        if (value) {
-                            inputBus.emit('update', {
-                                value: value
+                fieldWidget.bus.respond({
+                    key: {
+                        type: 'get-parameter',
+                    },
+                    handle: function (message) {
+                        if (message.parameterName) {
+                            return channel.request(message, {
+                                key: {
+                                    type: 'get-parameter',
+                                },
                             });
+                        } else {
+                            return null;
                         }
-                    });
+                    },
+                });
 
-                    fieldWidget.bus.respond({
-                        key: {
-                            type: 'get-parameter'
-                        },
-                        handle: function(message) {
-                            if (message.parameterName) {
-                                return channel.request(message, {
-                                    key: {
-                                        type: 'get-parameter'
-                                    }
-                                });
-                            } else {
-                                return null;
-                            }
-                        }
-                    });
-
-                    postButton = div({
+                postButton = div(
+                    {
                         class: 'input-group-addon kb-input-group-addon',
                         style: {
-                            padding: '0'
-                        }
-                    }, button({
-                        class: 'btn btn-link btn-xs',
-                        type: 'button',
-                        style: { width: '4ex' },
-                        dataIndex: String(control.index)
-                    }, ''));
-                    var content = div({
+                            padding: '0',
+                        },
+                    },
+                    button(
+                        {
+                            class: 'btn btn-link btn-xs',
+                            type: 'button',
+                            style: { width: '4ex' },
+                            dataIndex: String(control.index),
+                        },
+                        ''
+                    )
+                );
+                const content = div(
+                    {
                         dataElement: 'input-row',
                         dataIndex: String(control.index),
                         style: {
                             width: '100%',
-                            padding: '2px'
-                        }
-                    }, [
-                        div({ class: 'input-group' }, [
-                            div({ id: widgetId }),
-                            postButton
-                        ])
-                    ]);
-                    return {
-                        id: widgetId,
-                        instance: fieldWidget,
-                        bus: inputBus,
-                        content: content
-                    };
-                });
+                            padding: '2px',
+                        },
+                    },
+                    [div({ class: 'input-group' }, [div({ id: widgetId }), postButton])]
+                );
+                return {
+                    id: widgetId,
+                    instance: fieldWidget,
+                    bus: inputBus,
+                    content: content,
+                };
+            });
         }
 
         // DOM EVENTS & HANDLERS
@@ -204,141 +203,145 @@ define([
               Set focus on the new input control
         */
 
-
         function addNewControl(initialValue) {
             if (initialValue === undefined) {
                 initialValue = lang.copy(itemSpec.data.defaultValue);
             }
-            return Promise.try(function() {
-                var events = Events.make({ node: container });
-                var control = {
+            return Promise.try(() => {
+                const events = Events.make({ node: container });
+                const control = {
                     // current native value.
                     value: initialValue,
                     // the actual input control (or field wrapper around such)
                     inputControl: null,
                     // the actual dome node (used?) to which the input control is attached
                     node: null,
-                    // the current index - note: used by the inputControl 
-                    index: null
+                    // the current index - note: used by the inputControl
+                    index: null,
                 };
-                var index = viewModel.pushItem(['items'], control);
+                const index = viewModel.pushItem(['items'], control);
                 control.index = index;
-                var parent = ui.getElement('control-container');
-                var controlNode = document.createElement('div');
+                const parent = ui.getElement('control-container');
+                const controlNode = document.createElement('div');
                 parent.appendChild(controlNode);
                 return makeSingleViewControl(control, events)
-                    .then(function(inputControl) {
+                    .then((inputControl) => {
                         // This adds the control wrapper html.
                         controlNode.innerHTML = inputControl.content;
                         // Each wrapper has a node inside with id "id" for
                         // the control to attach to.
-                        var attachmentNode = document.getElementById(inputControl.id);
+                        const attachmentNode = document.getElementById(inputControl.id);
                         control.node = controlNode;
                         control.inputControl = inputControl;
 
                         return inputControl.instance.start({
-                            node: attachmentNode
+                            node: attachmentNode,
                         });
                     })
-                    .then(function() {
+                    .then(() => {
                         events.attachEvents();
                         return index;
                     })
-                    .catch(function(err) {
+                    .catch((err) => {
                         console.error('ERROR!!!', err);
                     });
             });
         }
 
         function addEmptyControl() {
-            var controlContainer = ui.getElement('control-container');
-            controlContainer.innerHTML = div({
-                style: {
-                    fontStyle: 'italic',
-                    color: 'gray'
-                }
-            }, 'no items to display');
+            const controlContainer = ui.getElement('control-container');
+            controlContainer.innerHTML = div(
+                {
+                    style: {
+                        fontStyle: 'italic',
+                        color: 'gray',
+                    },
+                },
+                'no items to display'
+            );
         }
 
         function render(initialValue) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 // render now just builds the initial view
                 container.innerHTML = makeLayout();
 
                 if (!initialValue || initialValue.length === 0) {
                     return addEmptyControl();
                 }
-                return Promise.all(initialValue.map(function(value) {
-                    return addNewControl(value);
-                }))
-                    .then(function() {
-                        autoValidate();
-                    });
+                return Promise.all(
+                    initialValue.map((value) => {
+                        return addNewControl(value);
+                    })
+                ).then(() => {
+                    autoValidate();
+                });
             });
         }
 
         function makeLayout() {
-            return div({
-                dataElement: 'main-panel'
-            }, [
-                div({
-                    dataElement: 'control-container'
-                })
-            ]);
+            return div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [
+                    div({
+                        dataElement: 'control-container',
+                    }),
+                ]
+            );
         }
 
         function autoValidate() {
-            return validate(exportModel())
-                .then(function(result) {
-                    channel.emit('validation', result);
-                });
+            return validate(exportModel()).then((result) => {
+                channel.emit('validation', result);
+            });
         }
 
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
-                return render(config.initialValue)
-                    .then(function() {
-                        channel.on('reset-to-defaults', function() {
-                            resetModelValue();
-                        });
-                        channel.on('update', function(message) {
-                            setModelValue(message.value);
-                        });
-                        channel.on('refresh', function() {});
-
-                        return autoValidate();
-                        // bus.emit('sync');
+                return render(config.initialValue).then(() => {
+                    channel.on('reset-to-defaults', () => {
+                        resetModelValue();
                     });
+                    channel.on('update', (message) => {
+                        setModelValue(message.value);
+                    });
+                    channel.on('refresh', () => {});
 
+                    return autoValidate();
+                    // bus.emit('sync');
+                });
             });
         }
 
         function stop() {
-            return Promise.try(function() {
-                return Promise.all(viewModel.getItem('items').map(function(item) {
-                    return item.inputControl.instance.stop();
-                }))
-                    .then(function() {
-                        busConnection.stop();
-                    });
+            return Promise.try(() => {
+                return Promise.all(
+                    viewModel.getItem('items').map((item) => {
+                        return item.inputControl.instance.stop();
+                    })
+                ).then(() => {
+                    busConnection.stop();
+                });
             });
         }
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

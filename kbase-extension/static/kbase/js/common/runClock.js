@@ -13,8 +13,7 @@ define(['bluebird', 'common/runtime', 'common/html', 'common/format'], (
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel('default'),
             clockId = html.genId();
-        let container,
-            startTime;
+        let container, startTime;
 
         function buildLayout() {
             return span({

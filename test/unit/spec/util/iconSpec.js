@@ -82,7 +82,7 @@ define(['util/icon', 'narrativeConfig', 'jquery'], (Icon, narrativeConfig, $) =>
         },
         methods = Object.keys(makeIconTests).sort(),
         types = ['', 'Toolbar'],
-        {cssBaseName} = Icon;
+        { cssBaseName } = Icon;
 
     describe('The Icon util module', () => {
         it('Is alive!', () => {
@@ -156,7 +156,7 @@ define(['util/icon', 'narrativeConfig', 'jquery'], (Icon, narrativeConfig, $) =>
                 const parent = container.childNodes[0],
                     $parent = $jqueryContainer[0].childNodes[0],
                     isStacked = test.args[1],
-                    {iconType} = test.result,
+                    { iconType } = test.result,
                     parentClassList = [`${cssBaseName}__container--${iconType}`, 'fa-stack'];
 
                 parentClassList.forEach((cssClass) => {

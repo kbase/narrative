@@ -1,19 +1,13 @@
-define([
-    'common/runtime',
-    'common/events',
-    'common/ui',
-    'kb_common/html',
-    'base/js/namespace'
-], function(
+define(['common/runtime', 'common/events', 'common/ui', 'kb_common/html', 'base/js/namespace'], (
     Runtime,
     Events,
     UI,
     html,
     Jupyter
-) {
+) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         button = t('button'),
         table = t('table'),
@@ -25,21 +19,23 @@ define([
         li = t('li');
 
     function factory(config) {
-        var runtime = Runtime.make(),
+        let runtime = Runtime.make(),
             bus = runtime.bus().makeChannelBus({ description: 'Output Widget Bus' }),
             cellId = config.cellId,
-            root, container, ui,
+            root,
+            container,
+            ui,
             model = {
                 currentJobState: null,
-                outputs: null
+                outputs: null,
             },
             api;
 
         function findCellForId(id) {
-            var matchingCells = Jupyter.notebook.get_cells().filter(function(cell) {
+            const matchingCells = Jupyter.notebook.get_cells().filter((cell) => {
                 // console.log('REMOVING', JSON.parse(JSON.stringify(cell.metadata)));
                 if (cell.metadata && cell.metadata.kbase && cell.metadata.kbase.attributes) {
-                    return (cell.metadata.kbase.attributes.id === id);
+                    return cell.metadata.kbase.attributes.id === id;
                 }
                 return false;
             });
@@ -53,8 +49,9 @@ define([
         }
 
         function doRemoveOutputCell(index) {
-            var output = model.outputs[index],
-                currentOutput, content;
+            let output = model.outputs[index],
+                currentOutput,
+                content;
 
             if (model.currentJobState && output.jobId === model.currentJobState.job_id) {
                 currentOutput = true;
@@ -68,11 +65,13 @@ define([
                     ul([
                         li('Remove the output cell from the Narrative'),
                         li('Remove this output record'),
-                        li('Reset the app to edit mode')
+                        li('Reset the app to edit mode'),
                     ]),
                     p('Note: This action is not reversible.'),
-                    p('Data produced in this output will remain in your narrative, and may be found in the Data panel.'),
-                    p('Are you sure you want to remove the output cell?')
+                    p(
+                        'Data produced in this output will remain in your narrative, and may be found in the Data panel.'
+                    ),
+                    p('Are you sure you want to remove the output cell?'),
                 ]);
             } else {
                 content = div([
@@ -82,17 +81,19 @@ define([
                         li('Remove this output record'),
                     ]),
                     p('Note: This action is not reversible.'),
-                    p('Data produced in this output will remain in your narrative, and may be found in the Data panel.'),
-                    p('Are you sure you want to remove the output cell?')
+                    p(
+                        'Data produced in this output will remain in your narrative, and may be found in the Data panel.'
+                    ),
+                    p('Are you sure you want to remove the output cell?'),
                 ]);
             }
-            ui.showConfirmDialog({ title: 'Confirm Deletion of Cell Output', body: content })
-                .then(function(answer) {
+            ui.showConfirmDialog({ title: 'Confirm Deletion of Cell Output', body: content }).then(
+                (answer) => {
                     if (!answer) {
                         return;
                     }
                     // remove the output cell
-                    var output = model.outputs[index],
+                    let output = model.outputs[index],
                         outputCell = findCellForId(output.cellId),
                         cellIndex;
 
@@ -103,28 +104,32 @@ define([
 
                     // send a message on the cell bus bus, parent should pick it up, remove the
                     // output from the model, and update us.
-                    bus.bus().send({
-                        jobId: output.jobId
-                    }, {
-                        channel: {
-                            cell: cellId
+                    bus.bus().send(
+                        {
+                            jobId: output.jobId,
                         },
-                        key: {
-                            type: 'output-cell-removed'
+                        {
+                            channel: {
+                                cell: cellId,
+                            },
+                            key: {
+                                type: 'output-cell-removed',
+                            },
                         }
-                    });
-                });
+                    );
+                }
+            );
         }
 
         function render() {
-            var events = Events.make(),
+            let events = Events.make(),
                 content;
 
             if (!model.outputs || model.outputs.length === 0) {
                 content = 'No output yet!';
             } else {
                 content = model.outputs
-                    .sort(function(b, a) {
+                    .sort((b, a) => {
                         if (a.createdTime < b.createdTime) {
                             return -1;
                         }
@@ -133,47 +138,50 @@ define([
                         }
                         return 0;
                     })
-                    .map(function(output, index) {
-                        var rowStyle = {
+                    .map((output, index) => {
+                        let rowStyle = {
                                 border: '1px silver solid',
-                                padding: '3px'
+                                padding: '3px',
                             },
                             message = '';
                         // console.log('JOB MATCH?', output.jobId, model.currentJobState);
-                        if (model.currentJobState && output.jobId === model.currentJobState.job_id) {
+                        if (
+                            model.currentJobState &&
+                            output.jobId === model.currentJobState.job_id
+                        ) {
                             rowStyle.border = '2px blue solid';
                             message = 'This is the most recent output for this app.';
                         }
                         return div({ class: 'row', style: rowStyle }, [
                             div({ class: 'col-md-8' }, [
                                 table({ class: 'table table-striped' }, [
-                                    tr([
-                                        th('Job Id'), td(output.jobId)
-                                    ]),
-                                    tr([
-                                        th('Cell Id'), td(output.cellId)
-                                    ]),
-                                    tr([
-                                        th('Created'), td(output.createdTime.toISOString())
-                                    ])
-                                ])
+                                    tr([th('Job Id'), td(output.jobId)]),
+                                    tr([th('Cell Id'), td(output.cellId)]),
+                                    tr([th('Created'), td(output.createdTime.toISOString())]),
+                                ]),
                             ]),
                             div({ class: 'col-md-4', style: { textAlign: 'right' } }, [
-                                button({
-                                    class: 'btn btn-sm btn-standard',
-                                    type: 'button',
-                                    id: events.addEvent({
-                                        type: 'click',
-                                        handler: function() {
-                                            doRemoveOutputCell(index);
-                                        }
-                                    })
-                                }, '&times;'),
-                                div({ style: { marginTop: '20px' }, dataElement: 'message' }, message)
-
-                            ])
+                                button(
+                                    {
+                                        class: 'btn btn-sm btn-standard',
+                                        type: 'button',
+                                        id: events.addEvent({
+                                            type: 'click',
+                                            handler: function () {
+                                                doRemoveOutputCell(index);
+                                            },
+                                        }),
+                                    },
+                                    '&times;'
+                                ),
+                                div(
+                                    { style: { marginTop: '20px' }, dataElement: 'message' },
+                                    message
+                                ),
+                            ]),
                         ]);
-                    }).join('\n');
+                    })
+                    .join('\n');
             }
             container.innerHTML = content;
             events.attachEvents(container);
@@ -183,22 +191,22 @@ define([
         }
 
         function importModel(outputs) {
-            var output;
+            let output;
             if (outputs.byJob) {
-                model.outputs = Object.keys(outputs.byJob).map(function(jobId) {
+                model.outputs = Object.keys(outputs.byJob).map((jobId) => {
                     output = outputs.byJob[jobId];
                     // console.log(output);
                     return {
                         jobId: jobId,
                         cellId: output.cell.id,
-                        createdTime: new Date(output.createdAt)
+                        createdTime: new Date(output.createdAt),
                     };
                 });
             }
         }
 
         function start() {
-            bus.on('run', function(message) {
+            bus.on('run', (message) => {
                 root = message.node;
                 if (root) {
                     container = root.appendChild(document.createElement('div'));
@@ -210,22 +218,26 @@ define([
                     render();
                 }
 
-                bus.on('update', function(message) {
+                bus.on('update', (message) => {
                     model.currentJobState = message.jobState;
                     importModel(message.output);
                     render();
                 });
             });
-            runtime.bus().on('read-only-changed', function(msg) {
+            runtime.bus().on('read-only-changed', (msg) => {
                 toggleReadOnly(msg.readOnly);
             });
         }
 
         function toggleReadOnly(readOnly) {
             if (readOnly) {
-                container.querySelector('.col-md-4 button.btn.btn-sm.btn-standard').classList.add('hidden');
+                container
+                    .querySelector('.col-md-4 button.btn.btn-sm.btn-standard')
+                    .classList.add('hidden');
             } else {
-                container.querySelector('.col-md-4 button.btn.btn-sm.btn-standard').classList.remove('hidden');
+                container
+                    .querySelector('.col-md-4 button.btn.btn-sm.btn-standard')
+                    .classList.remove('hidden');
             }
         }
 
@@ -235,14 +247,14 @@ define([
 
         api = Object.freeze({
             start: start,
-            bus: getBus
+            bus: getBus,
         });
         return api;
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

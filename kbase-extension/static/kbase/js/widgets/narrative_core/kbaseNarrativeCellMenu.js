@@ -30,14 +30,12 @@ define([
                 '<button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="left" Title="Delete Cell">'
             )
                 .append($('<span class="fa fa-trash-o" style="font-size:14pt;">'))
-                .click(
-                    () => {
-                        this.trigger(
-                            'deleteCell.Narrative',
-                            Jupyter.notebook.find_cell_index(this.options.cell)
-                        );
-                    }
-                );
+                .click(() => {
+                    this.trigger(
+                        'deleteCell.Narrative',
+                        Jupyter.notebook.find_cell_index(this.options.cell)
+                    );
+                });
 
             const $menuBtn = $(
                 '<button type="button" data-toggle="dropdown" aria-haspopup="true" class="btn btn-default btn-xs">'
@@ -45,14 +43,11 @@ define([
 
             this.$collapseBtn = $(
                 '<button type="button" class="btn btn-default btn-xs" role="button" data-button="toggle" style="width:20px"><span class="fa fa-chevron-down" style="color: silver;"></button>'
-            ).on(
-                'click',
-                (e) => {
-                    this.$elem.trigger('toggle.toolbar');
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-            );
+            ).on('click', (e) => {
+                this.$elem.trigger('toggle.toolbar');
+                e.preventDefault();
+                e.stopPropagation();
+            });
 
             this.$menu = $('<ul>').addClass('dropdown-menu dropdown-menu-right');
 
@@ -61,7 +56,7 @@ define([
                     icon: 'fa fa-code',
                     text: 'View Job Submission',
                     action: function () {
-                        const {metadata} = this.options.cell,
+                        const { metadata } = this.options.cell,
                             newCell = Jupyter.narrative.insertAndSelectCell(
                                 'code',
                                 'below',
@@ -123,7 +118,7 @@ define([
                     text: 'Duplicate Cell',
                     action: $.proxy(function () {
                         // get the current state, and clear it of its running state
-                        const {kbWidget} = options,
+                        const { kbWidget } = options,
                             currentState = kbWidget.getState();
                         if (this.options.kbWidgetType === 'method') {
                             // put the method in the narrative
@@ -198,26 +193,17 @@ define([
             //     }
             // });
 
-            this.$elem.on(
-                'show-title.toolbar',
-                () => {
-                    this.$elem.find('div.title').css('display', 'inline-block');
-                }
-            );
+            this.$elem.on('show-title.toolbar', () => {
+                this.$elem.find('div.title').css('display', 'inline-block');
+            });
 
-            this.$elem.on(
-                'hide-title.toolbar',
-                () => {
-                    this.$elem.find('div.title').css('display', 'none');
-                }
-            );
+            this.$elem.on('hide-title.toolbar', () => {
+                this.$elem.find('div.title').css('display', 'none');
+            });
 
-            this.$elem.on(
-                'mousedown',
-                () => {
-                    Jupyter.notebook.events.trigger('select.Cell', this.options.cell);
-                }
-            );
+            this.$elem.on('mousedown', () => {
+                Jupyter.notebook.events.trigger('select.Cell', this.options.cell);
+            });
 
             this.$elem.dblclick(function (e) {
                 e.stopPropagation();
@@ -339,12 +325,9 @@ define([
                 $dropdownMenu.find('.btn').addClass('disabled');
             });
 
-            this.$elem.on(
-                'set-timestamp.toolbar',
-                (e, time) => {
-                    this.$timestamp.text(TimeFormat.readableTimestamp(time));
-                }
-            );
+            this.$elem.on('set-timestamp.toolbar', (e, time) => {
+                this.$timestamp.text(TimeFormat.readableTimestamp(time));
+            });
 
             // this shows on error
             this.$errorIcon = $('<span>')
@@ -476,9 +459,7 @@ define([
                 if ($kbCell) {
                     switch (type) {
                         case 'kb_app':
-                            this.$subtitle.html(
-                                $kbCell.kbaseNarrativeAppCell('getSubtitle')
-                            );
+                            this.$subtitle.html($kbCell.kbaseNarrativeAppCell('getSubtitle'));
                             break;
                         case 'kb_error':
                             this.$subtitle.html('An error has occurred in this cell!');
@@ -489,12 +470,9 @@ define([
                         case 'function_input':
                             // doing this more declarative causes some funky rendering issues.
                             // we need some better message passing, I think.
-                            $kbCell.trigger(
-                                'get_cell_subtitle.Narrative',
-                                (text) => {
-                                    this.$subtitle.html(text);
-                                }
-                            );
+                            $kbCell.trigger('get_cell_subtitle.Narrative', (text) => {
+                                this.$subtitle.html(text);
+                            });
                             break;
                         default:
                             break;

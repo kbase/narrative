@@ -18,7 +18,7 @@ define([
     'kb_service/client/workspace',
     'uuid',
     'jquery-dataTables',
-    'select2'
+    'select2',
 ], function (
     $,
     KBaseTabs,
@@ -45,7 +45,7 @@ define([
 
         options: {
             refreshIntervalDuration: 30000,
-            path: '/'
+            path: '/',
         },
 
         init: function (options) {
@@ -59,7 +59,7 @@ define([
 
             this.stagingServiceClient = new StagingServiceClient({
                 root: Config.url('staging_api_url'),
-                token: runtime.authToken()
+                token: runtime.authToken(),
             });
 
             this.ftpFileTableTmpl = Handlebars.compile(FtpFileTableHtml);
@@ -103,27 +103,32 @@ define([
         },
 
         updateView: function () {
-            return Promise.resolve(this.stagingServiceClient.list({
-                path: this.subpath
-            }))
-                .then(data => {
+            return Promise.resolve(
+                this.stagingServiceClient.list({
+                    path: this.subpath,
+                })
+            )
+                .then((data) => {
                     //list is recursive, so it'd show all files in all subdirectories. This filters 'em out.
-                    let files = JSON.parse(data).filter(f => {
+                    const files = JSON.parse(data).filter((f) => {
                         // this is less complicated than you think. The path is the username,
                         // subpath, and name concatenated. The subpath may be empty so we
                         // filter it out and only join defined things. If that's the same as
                         // the file's path, we're at the right level. If not, we're not.
-                        return [this.userInfo.user, this.subpath, f.name]
-                            .filter(p => p.length > 0)
-                            .join('/') === f.path;
+                        return (
+                            [this.userInfo.user, this.subpath, f.name]
+                                .filter((p) => p.length > 0)
+                                .join('/') === f.path
+                        );
                     });
-                    files.forEach(f => {
+                    files.forEach((f) => {
                         if (!f.isFolder) {
                             f.imported = {};
                         }
                     });
                     return this.identifyImporterMappings(files);
-                }).then(files => {
+                })
+                .then((files) => {
                     var scrollTop = this.$elem.parent().scrollTop();
                     $('.staging-area-file-metadata').detach();
                     this.$elem.empty();
@@ -133,13 +138,16 @@ define([
                     setTimeout(() => {
                         this.$elem.parent().scrollTop(scrollTop);
                     }, 0);
-                }
-                )
-                .catch(xhr => {
+                })
+                .catch((xhr) => {
                     console.error('Staging area failure:', xhr);
                     this.$elem.empty();
                     this.renderFileHeader();
-                    this.renderError(xhr.responseText ? xhr.responseText : 'Unknown error - directory was not found, or may have been deleted');
+                    this.renderError(
+                        xhr.responseText
+                            ? xhr.responseText
+                            : 'Unknown error - directory was not found, or may have been deleted'
+                    );
                 })
                 .finally(() => {
                     this.renderPath();
@@ -154,8 +162,8 @@ define([
         setPath: function (path) {
             this.path = path;
             // factor out the current subdirectory path into its own variable
-            var subpath = path.split('/');
-            var subpathTokens = subpath.length - 1;
+            const subpath = path.split('/');
+            let subpathTokens = subpath.length - 1;
             if (this.path.startsWith('/')) {
                 subpathTokens--;
             }
@@ -171,11 +179,13 @@ define([
 
         renderFileHeader: function () {
             const uploadConfig = Config.get('upload');
-            this.$elem.append(this.ftpFileHeaderTmpl({
-                globusUrl: uploadConfig.globus_upload_url + '&destination_path=' + this.userInfo.user,
-                userInfo: this.userInfo
-            }));
-
+            this.$elem.append(
+                this.ftpFileHeaderTmpl({
+                    globusUrl:
+                        uploadConfig.globus_upload_url + '&destination_path=' + this.userInfo.user,
+                    userInfo: this.userInfo,
+                })
+            );
 
             // Set up the link to the web upload app.
             this.$elem.find('.web_upload_div').click(() => {
@@ -187,14 +197,13 @@ define([
             var $globusLink = this.$elem.find('.globus_acl_link');
             $globusLink.click((e) => {
                 var globusWindow = window.open('', 'globus');
-                globusWindow.document.write('<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>');
-                this.stagingServiceClient.addAcl()
-                    .done(
-                        () => {
-                            window.open($globusLink.attr('href'), 'globus');
-                            return true;
-                        }
-                    );
+                globusWindow.document.write(
+                    '<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>'
+                );
+                this.stagingServiceClient.addAcl().done(() => {
+                    window.open($globusLink.attr('href'), 'globus');
+                    return true;
+                });
             });
 
             // Bind the help button to start the tour.
@@ -204,30 +213,32 @@ define([
         },
 
         renderPath: function () {
-            var splitPath = this.path;
+            let splitPath = this.path;
             if (splitPath.startsWith('/')) {
                 splitPath = splitPath.substring(1);
             }
             // the staging service doesn't want the username as part of the path, but we still want to display it to the user for navigation purposes
-            splitPath = splitPath.split('/').filter(p => p.length);
+            splitPath = splitPath.split('/').filter((p) => p.length);
             splitPath.unshift(this.userInfo.user);
-            var pathTerms = [];
-            for (var i = 0; i < splitPath.length; i++) {
-                var prevPath = '';
+            const pathTerms = [];
+            for (let i = 0; i < splitPath.length; i++) {
+                let prevPath = '';
                 if (i > 0) {
                     prevPath = pathTerms[i - 1].subpath;
                 }
                 pathTerms[i] = {
                     term: splitPath[i],
-                    subpath: prevPath + '/' + splitPath[i]
+                    subpath: prevPath + '/' + splitPath[i],
                 };
             }
             pathTerms[0].subpath = '/';
 
-            this.$elem.find('div.file-path').append(this.filePathTmpl({
-                path: pathTerms
-            }));
-            this.$elem.find('div.file-path a').click(e => {
+            this.$elem.find('div.file-path').append(
+                this.filePathTmpl({
+                    path: pathTerms,
+                })
+            );
+            this.$elem.find('div.file-path a').click((e) => {
                 this.updatePathFn($(e.currentTarget).data().element);
             });
             this.$elem.find('button#refresh').click(() => {
@@ -257,35 +268,34 @@ define([
             this.$elem.append(errorElem);
         },
 
-
         identifyImporterMappings: function (stagingFiles) {
             /*
                 Add a list of top matches for each file, sorted by weight
             */
-            const fileNames = stagingFiles.map(f => f['path']);
-            const fileList = $.param({ 'file_list': fileNames }, true);
+            const fileNames = stagingFiles.map((f) => f['path']);
+            const fileList = $.param({ file_list: fileNames }, true);
             var mappings = [];
             return Promise.resolve(
-                this.stagingServiceClient.importer_mappings(
-                    {
-                        file_list: fileList
-                    }
-                )
-            ).then(function (data) {
-                //Extract mappings, sort by weight, assign mappings to staging files
-                mappings = JSON.parse(data)['mappings'];
-                mappings.forEach(function (mapping) {
-                    if (mapping) {
-                        mapping.sort((a, b) => (a.app_weight < b.app_weight));
-                    }
+                this.stagingServiceClient.importer_mappings({
+                    file_list: fileList,
+                })
+            )
+                .then(function (data) {
+                    //Extract mappings, sort by weight, assign mappings to staging files
+                    mappings = JSON.parse(data)['mappings'];
+                    mappings.forEach(function (mapping) {
+                        if (mapping) {
+                            mapping.sort((a, b) => a.app_weight < b.app_weight);
+                        }
+                    });
+                    stagingFiles.map(function (element, index) {
+                        element['mappings'] = mappings[index] || null;
+                    });
+                    return stagingFiles;
+                })
+                .catch(function (err) {
+                    console.error('Error', err);
                 });
-                stagingFiles.map(function (element, index) {
-                    element['mappings'] = mappings[index] || null;
-                });
-                return stagingFiles;
-            }).catch(function (err) {
-                console.error('Error', err);
-            });
         },
 
         /**
@@ -299,98 +309,136 @@ define([
             files = files || [];
             const emptyMsg = 'No files found.';
 
-            const $fileTable = $(stagingAreaViewer.ftpFileTableTmpl({
-                files: files,
-                uploaders: stagingAreaViewer.uploaders.dropdown_order
-            }));
+            const $fileTable = $(
+                stagingAreaViewer.ftpFileTableTmpl({
+                    files: files,
+                    uploaders: stagingAreaViewer.uploaders.dropdown_order,
+                })
+            );
 
             stagingAreaViewer.$elem.append($fileTable);
 
             const fullDataTable = stagingAreaViewer.$elem.find('table').dataTable({
                 language: {
-                    emptyTable: emptyMsg
+                    emptyTable: emptyMsg,
                 },
                 dom: '<"file-path pull-left">frtip',
                 autoWidth: false,
                 order: [[4, 'desc']],
                 headerCallback: function (thead) {
-                    $(thead).find('th').eq(0)
+                    $(thead)
+                        .find('th')
+                        .eq(0)
                         .on('click keyPress', (e) => {
                             selectAllOrNone(e);
                         });
                 },
-                columnDefs: [{
-                    targets: 0,
-                    orderable: false,
-                    searchable: false,
-                    render: function (data) {
-                        const fileId = new UUID(4).format();
-                        //render checkboxes disabled until the user selects a type
-                        return ('<input class="kb-staging-table-body__checkbox-input"' +
+                columnDefs: [
+                    {
+                        targets: 0,
+                        orderable: false,
+                        searchable: false,
+                        render: function (data) {
+                            const fileId = new UUID(4).format();
+                            //render checkboxes disabled until the user selects a type
+                            return (
+                                '<input class="kb-staging-table-body__checkbox-input"' +
                                 'type="checkbox" role="checkbox" disabled=true ' +
                                 'aria-checked="false" tabindex="0"' +
                                 'aria-label="Select to import file checkbox: disabled until at least one data type is selected"' +
-                                'data-file-name="' + data + '"' +
-                                'id="' + fileId + '">');
-                    }
-                }, {
-                    targets: 1,
-                    render: function (data, type, full) {
-                        if (type === 'display') {
-                            var isFolder = data === 'true' ? true : false;
-                            var icon = isFolder ? 'folder' : 'file-o';
-                            var disp = '<span><i class="fa fa-' + icon + '"></i></span>';
-                            if (isFolder) {
-                                disp = '<button data-name="' + full[0] + '" class="btn btn-xs btn-default">' + disp + '</button>';
+                                'data-file-name="' +
+                                data +
+                                '"' +
+                                'id="' +
+                                fileId +
+                                '">'
+                            );
+                        },
+                    },
+                    {
+                        targets: 1,
+                        render: function (data, type, full) {
+                            if (type === 'display') {
+                                var isFolder = data === 'true' ? true : false;
+                                var icon = isFolder ? 'folder' : 'file-o';
+                                var disp = '<span><i class="fa fa-' + icon + '"></i></span>';
+                                if (isFolder) {
+                                    disp =
+                                        '<button data-name="' +
+                                        full[0] +
+                                        '" class="btn btn-xs btn-default">' +
+                                        disp +
+                                        '</button>';
+                                } else {
+                                    disp =
+                                        '<i class="fa fa-caret-right kb-pointer" data-caret="' +
+                                        full[0] +
+                                        '"></i> ' +
+                                        disp;
+                                }
+                                return disp;
                             } else {
-                                disp = '<i class="fa fa-caret-right kb-pointer" data-caret="' + full[0] + '"></i> ' + disp;
+                                return data;
                             }
-                            return disp;
-                        } else {
-                            return data;
-                        }
-                    }
-                }, {
-                    targets: 2,
-                    render: function (data, type, full) {
-                        if (type === 'display') {
-                            let decompressButton = '';
+                        },
+                    },
+                    {
+                        targets: 2,
+                        render: function (data, type, full) {
+                            if (type === 'display') {
+                                let decompressButton = '';
 
-                            if (data.match(/\.(zip|tar\.gz|tgz|tar\.bz|tar\.bz2|tar|gz|bz2)$/)) {
-                                decompressButton = '<button class="btn btn-default btn-xs kb-staging-table-body__decompress" data-decompress="' + data + '"><i class="fa fa-expand"></i></button>';
-                            }
+                                if (
+                                    data.match(/\.(zip|tar\.gz|tgz|tar\.bz|tar\.bz2|tar|gz|bz2)$/)
+                                ) {
+                                    decompressButton =
+                                        '<button class="btn btn-default btn-xs kb-staging-table-body__decompress" data-decompress="' +
+                                        data +
+                                        '"><i class="fa fa-expand"></i></button>';
+                                }
 
-                            if (full[1] === 'true') {
-                                data = '<span class="kb-staging-table-body__folder" data-name="' + data + '">' + data + '</span>';
-                            }
+                                if (full[1] === 'true') {
+                                    data =
+                                        '<span class="kb-staging-table-body__folder" data-name="' +
+                                        data +
+                                        '">' +
+                                        data +
+                                        '</span>';
+                                }
 
-                            return '<div class="kb-staging-table-body__name">' + decompressButton +
+                                return (
+                                    '<div class="kb-staging-table-body__name">' +
+                                    decompressButton +
                                     data +
-                                    '</div>';
-                        }
-                        return data;
-                    }
-                }, {
-                    targets: 3,
-                    type: 'num',
-                    render: function (data, type) {
-                        if (type === 'display') {
-                            return StringUtil.readableBytes(Number(data));
-                        } else {
-                            return Number(data);
-                        }
-                    }
-                }, {
-                    targets: 4,
-                    type: 'num',
-                    render: function (data, type) {
-                        if (type === 'display') {
-                            return TimeFormat.getShortTimeStampStr(Number(data));
-                        } else {
+                                    '</div>'
+                                );
+                            }
                             return data;
-                        }
-                    }
-                }],
+                        },
+                    },
+                    {
+                        targets: 3,
+                        type: 'num',
+                        render: function (data, type) {
+                            if (type === 'display') {
+                                return StringUtil.readableBytes(Number(data));
+                            } else {
+                                return Number(data);
+                            }
+                        },
+                    },
+                    {
+                        targets: 4,
+                        type: 'num',
+                        render: function (data, type) {
+                            if (type === 'display') {
+                                return TimeFormat.getShortTimeStampStr(Number(data));
+                            } else {
+                                return data;
+                            }
+                        },
+                    },
+                ],
                 rowCallback: function (row, data) {
                     const getFileFromName = function (fileData) {
                         return files.filter(function (file) {
@@ -408,7 +456,7 @@ define([
                     let suggestedType = null;
                     if (suggestedTypes.children().length == 1) {
                         const option = suggestedTypes.find('option');
-                        suggestedType = { 'id': option.val(), 'title': option.html() };
+                        suggestedType = { id: option.val(), title: option.html() };
                     }
 
                     //Get selected
@@ -421,7 +469,9 @@ define([
                             check state of all checkboxes
                             if any are checked we leave import button enabled
                             */
-                            let anyCheckedBoxes = $('input.kb-staging-table-body__checkbox-input:checked');
+                            let anyCheckedBoxes = $(
+                                'input.kb-staging-table-body__checkbox-input:checked'
+                            );
 
                             if (!anyCheckedBoxes.length) {
                                 stagingAreaViewer.disableImportButton();
@@ -429,17 +479,19 @@ define([
                         }
                     }
 
-                    $('td:eq(0)', row).find('input.kb-staging-table-body__checkbox-input')
+                    $('td:eq(0)', row)
+                        .find('input.kb-staging-table-body__checkbox-input')
                         .off('click')
                         .on('click keyPress', (e) => {
                             changeImportButton(e);
                         });
 
-                    $('td:eq(1)', row).find('button[data-name]')
+                    $('td:eq(1)', row)
+                        .find('button[data-name]')
                         .off('click')
-                        .on('click', e => {
+                        .on('click', (e) => {
                             $(e.currentTarget).off('click');
-                            stagingAreaViewer.updatePathFn(this.path += '/' + rowFileName);
+                            stagingAreaViewer.updatePathFn((this.path += '/' + rowFileName));
                         });
 
                     //First, we find the expansion caret in the first cell.
@@ -455,13 +507,14 @@ define([
                         $caret.toggleClass('fa-caret-down fa-caret-right');
                         //and append the detailed view, which we do in a timeout in the next pass through to ensure that everything is properly here.
                         setTimeout(() => {
-                            $caret.parent().parent().after(
-                                stagingAreaViewer.renderMoreFileInfo(rowFileData)
-                            );
+                            $caret
+                                .parent()
+                                .parent()
+                                .after(stagingAreaViewer.renderMoreFileInfo(rowFileData));
                         }, 0);
                     }
 
-                    $caret.on('click', e => {
+                    $caret.on('click', (e) => {
                         let fileExpander = $(e.currentTarget);
                         fileExpander.toggleClass('fa-caret-down fa-caret-right');
                         let $tr = fileExpander.parent().parent();
@@ -469,9 +522,7 @@ define([
                         if (fileExpander.hasClass('fa-caret-down')) {
                             $('.kb-dropzone').css('min-height', '75px');
                             stagingAreaViewer.openFileInfo[rowFileName] = rowFileData;
-                            $tr.after(
-                                this.renderMoreFileInfo(rowFileData)
-                            );
+                            $tr.after(this.renderMoreFileInfo(rowFileData));
                         } else {
                             $('.kb-dropzone').css('min-height', '200px');
                             $tr.next().detach();
@@ -479,39 +530,43 @@ define([
                         }
                     });
 
-                    $('td:eq(2)', row).find('.kb-staging-table-body__name')
+                    $('td:eq(2)', row)
+                        .find('.kb-staging-table-body__name')
                         .tooltip({
                             title: rowFileName,
                             placement: 'top',
                             delay: {
                                 show: Config.get('tooltip').showDelay,
-                                hide: Config.get('tooltip').hideDelay
-                            }
+                                hide: Config.get('tooltip').hideDelay,
+                            },
                         });
 
-                    $('td:eq(2)', row).find('span.kb-staging-table-body__folder')
+                    $('td:eq(2)', row)
+                        .find('span.kb-staging-table-body__folder')
                         .off('click')
-                        .on('click', e => {
+                        .on('click', (e) => {
                             $(e.currentTarget).off('click');
-                            this.updatePathFn(this.path += '/' + rowFileName);
+                            this.updatePathFn((this.path += '/' + rowFileName));
                         });
 
-                    $('td:eq(2)', row).find('button[data-decompress]')
+                    $('td:eq(2)', row)
+                        .find('button[data-decompress]')
                         .off('click')
-                        .on('click', e => {
+                        .on('click', (e) => {
                             const decompressButton = $(e.currentTarget);
-                            decompressButton.replaceWith($.jqElem('i').addClass('fa fa-spinner fa-spin'));
+                            decompressButton.replaceWith(
+                                $.jqElem('i').addClass('fa fa-spinner fa-spin')
+                            );
 
                             stagingAreaViewer.stagingServiceClient
                                 .decompress({
-                                    path: rowFileName
+                                    path: rowFileName,
                                 })
                                 .then(() => stagingAreaViewer.updateView())
-                                .fail(xhr => {
+                                .fail((xhr) => {
                                     console.error('FAILED', xhr);
                                     alert('Error ' + xhr.status + '\r' + xhr.responseText);
                                 });
-
                         });
 
                     //find the element
@@ -541,7 +596,6 @@ define([
                         $('#staging_table_select_all')
                             .prop('disabled', false)
                             .attr('aria-label', 'Select to import all files checkbox');
-
                     }
 
                     const storedFileData = stagingAreaViewer.selectedFileTypes[rowFileName];
@@ -550,7 +604,7 @@ define([
                         //tell select2 which option to set
                         importDropdown
                             .select2({
-                                containerCssClass: 'kb-staging-table-body__import-dropdown'
+                                containerCssClass: 'kb-staging-table-body__import-dropdown',
                             })
                             .val(storedFileData.dataType)
                             .trigger('change');
@@ -564,7 +618,8 @@ define([
                         if (suggestedType) {
                             importDropdown
                                 .select2({
-                                    containerCssClass: 'kb-staging-table-body__import-dropdown kb-staging-table-body__import-type-selected',
+                                    containerCssClass:
+                                        'kb-staging-table-body__import-dropdown kb-staging-table-body__import-type-selected',
                                     placeholder: 'make the empty option disappear',
                                 })
                                 .val(suggestedType.id)
@@ -573,39 +628,37 @@ define([
                                     type: 'select2:select',
                                 });
                             enableCheckboxes(suggestedType.id);
+                        } else {
+                            importDropdown.select2({
+                                placeholder: 'Select a type',
+                                containerCssClass: 'kb-staging-table-body__import-dropdown',
+                            });
                         }
-                        else {
-                            importDropdown
-                                .select2({
-                                    placeholder: 'Select a type',
-                                    containerCssClass: 'kb-staging-table-body__import-dropdown'
-                                });
-                        }
-
                     }
 
                     //set the behavior on the import dropdown when a user selects a type
-                    importDropdown
-                        .on('select2:select', function (e) {
-                            const dataType = e.currentTarget.value;
+                    importDropdown.on('select2:select', function (e) {
+                        const dataType = e.currentTarget.value;
 
-                            //store the type we selected along with file data so we can persist on a view update
-                            rowFileData.dataType = dataType;
-                            stagingAreaViewer.selectedFileTypes[rowFileName] = rowFileData;
+                        //store the type we selected along with file data so we can persist on a view update
+                        rowFileData.dataType = dataType;
+                        stagingAreaViewer.selectedFileTypes[rowFileName] = rowFileData;
 
-                            enableCheckboxes(dataType);
-                        });
+                        enableCheckboxes(dataType);
+                    });
 
-                    $('td:eq(5)', row).find('button[data-import]')
+                    $('td:eq(5)', row)
+                        .find('button[data-import]')
                         .off('click')
-                        .on('click', e => {
+                        .on('click', (e) => {
                             const dataImportButton = $(e.currentTarget);
                             const importType = dataImportButton.prevAll('select').val();
                             stagingAreaViewer.initImportApp(importType, rowFileName);
                             stagingAreaViewer.updateView();
                         });
 
-                    $('td:eq(5)', row).find('button[data-download]')
+                    $('td:eq(5)', row)
+                        .find('button[data-download]')
                         .off('click')
                         .on('click', () => {
                             let filePath = rowFileName;
@@ -618,21 +671,24 @@ define([
                             stagingAreaViewer.downloadFile(url);
                         });
 
-                    $('td:eq(5)', row).find('button[data-delete]')
+                    $('td:eq(5)', row)
+                        .find('button[data-delete]')
                         .off('click')
                         .on('click', () => {
                             if (window.confirm('Really delete ' + rowFileName + '?')) {
-                                stagingAreaViewer.stagingServiceClient.delete({
-                                    path: stagingAreaViewer.subpath + '/' + rowFileName
-                                }).then(() => {
-                                    stagingAreaViewer.updateView();
-                                }).fail(xhr => {
-                                    alert('Error ' + xhr.status + '\r' + xhr.responseText);
-                                });
+                                stagingAreaViewer.stagingServiceClient
+                                    .delete({
+                                        path: stagingAreaViewer.subpath + '/' + rowFileName,
+                                    })
+                                    .then(() => {
+                                        stagingAreaViewer.updateView();
+                                    })
+                                    .fail((xhr) => {
+                                        alert('Error ' + xhr.status + '\r' + xhr.responseText);
+                                    });
                             }
                         });
-
-                }.bind(stagingAreaViewer)
+                }.bind(stagingAreaViewer),
             });
 
             /*
@@ -659,20 +715,20 @@ define([
                     stagingAreaViewer.disableImportButton();
                 }
             }
-
         },
 
         renderMoreFileInfo: function (fileData) {
-            var self = this;
+            const self = this;
 
             if (fileData.loaded) {
                 return fileData.loaded;
             }
 
-            var $tabsDiv = $.jqElem('div')
-                .append('<i class="fa fa-spinner fa-spin"></i> Loading file info...please wait');
+            const $tabsDiv = $.jqElem('div').append(
+                '<i class="fa fa-spinner fa-spin"></i> Loading file info...please wait'
+            );
 
-            var filePath = this.subpath;
+            let filePath = this.subpath;
             if (filePath.length) {
                 filePath += '/';
             }
@@ -683,28 +739,37 @@ define([
             // the UI after they're completed. It's a smidgen slower this way (maybe 0.25 seconds) - we could load the metadata and display
             // it to the user immediately, then add the JGI tab if it exists. But that causes a brief blink where the JGI tab isn't there and
             // pops into being later. This way, it all shows up fully built. It seemed like the lesser of the evils.
-            var $tabs;
+            let $tabs;
 
-            this.stagingServiceClient.metadata({
-                path: filePath
-            })
-                .then(function (dataString, status, xhr) {
-                    var $tabsContainer = $.jqElem('div');
-                    var data = JSON.parse(dataString);
+            this.stagingServiceClient
+                .metadata({
+                    path: filePath,
+                })
+                .then((dataString) => {
+                    const $tabsContainer = $.jqElem('div');
+                    const data = JSON.parse(dataString);
 
-                    var $upaField = $.jqElem('span')
-                        .append('<i class="fa fa-spinner fa-spin">');
+                    const $upaField = $.jqElem('span').append('<i class="fa fa-spinner fa-spin">');
 
-                    var $upa = data.UPA ?
-                        $.jqElem('li').append($.jqElem('span').addClass('kb-data-staging-metadata-list').append('Imported as')).append($upaField) :
-                        '';
+                    const $upa = data.UPA
+                        ? $.jqElem('li')
+                              .append(
+                                  $.jqElem('span')
+                                      .addClass('kb-data-staging-metadata-list')
+                                      .append('Imported as')
+                              )
+                              .append($upaField)
+                        : '';
 
-                    self.workspaceClient.get_object_info_new({
-                        objects: [{
-                            ref: data.UPA
-                        }]
-                    })
-                        .then(function (name) {
+                    self.workspaceClient
+                        .get_object_info_new({
+                            objects: [
+                                {
+                                    ref: data.UPA,
+                                },
+                            ],
+                        })
+                        .then((name) => {
                             $upaField.empty();
                             $upaField.append(
                                 $.jqElem('a')
@@ -713,17 +778,17 @@ define([
                                     .append(name[0][1])
                             );
                         })
-                        .catch(function (xhr) {
+                        .catch((xhr) => {
                             $upaField.empty();
                             $upaField.addClass('alert alert-danger');
                             $upaField.css({
                                 padding: '0px',
-                                margin: '0px'
+                                margin: '0px',
                             });
                             $upaField.append(xhr.error.message);
                         });
 
-                    var lineCount = parseInt(data.lineCount, 10);
+                    let lineCount = parseInt(data.lineCount, 10);
                     if (!Number.isNaN(lineCount)) {
                         lineCount = lineCount.toLocaleString();
                     } else {
@@ -731,59 +796,101 @@ define([
                     }
 
                     $tabs = new KBaseTabs($tabsContainer, {
-                        tabs: [{
-                            tab: 'Info',
-                            content: $.jqElem('ul')
-                                .css('list-style', 'none')
-                                .append($.jqElem('li').append($.jqElem('span').addClass('kb-data-staging-metadata-list').append('Name')).append(data.name))
-                                .append($.jqElem('li').append($.jqElem('span').addClass('kb-data-staging-metadata-list').append('Created')).append(TimeFormat.reformatDate(new Date(data.mtime))))
-                                .append($.jqElem('li').append($.jqElem('span').addClass('kb-data-staging-metadata-list').append('Size')).append(StringUtil.readableBytes(Number(data.size))))
-                                .append($.jqElem('li').append($.jqElem('span').addClass('kb-data-staging-metadata-list').append('Line Count')).append(lineCount))
-                                .append($.jqElem('li').append($.jqElem('span').addClass('kb-data-staging-metadata-list').append('MD5')).append(data.md5 || 'Not provided'))
-                                .append($upa)
-                        },
-                        {
-                            tab: 'First 1024 chars',
-                            content: $.jqElem('div')
-                                .addClass('kb-data-staging-metadata-file-lines')
-                                .append(data.head)
-                        },
-                        {
-                            tab: 'Last 1024 chars',
-                            content: $.jqElem('div')
-                                .addClass('kb-data-staging-metadata-file-lines')
-                                .append(data.tail)
-                        }]
+                        tabs: [
+                            {
+                                tab: 'Info',
+                                content: $.jqElem('ul')
+                                    .css('list-style', 'none')
+                                    .append(
+                                        $.jqElem('li')
+                                            .append(
+                                                $.jqElem('span')
+                                                    .addClass('kb-data-staging-metadata-list')
+                                                    .append('Name')
+                                            )
+                                            .append(data.name)
+                                    )
+                                    .append(
+                                        $.jqElem('li')
+                                            .append(
+                                                $.jqElem('span')
+                                                    .addClass('kb-data-staging-metadata-list')
+                                                    .append('Created')
+                                            )
+                                            .append(TimeFormat.reformatDate(new Date(data.mtime)))
+                                    )
+                                    .append(
+                                        $.jqElem('li')
+                                            .append(
+                                                $.jqElem('span')
+                                                    .addClass('kb-data-staging-metadata-list')
+                                                    .append('Size')
+                                            )
+                                            .append(StringUtil.readableBytes(Number(data.size)))
+                                    )
+                                    .append(
+                                        $.jqElem('li')
+                                            .append(
+                                                $.jqElem('span')
+                                                    .addClass('kb-data-staging-metadata-list')
+                                                    .append('Line Count')
+                                            )
+                                            .append(lineCount)
+                                    )
+                                    .append(
+                                        $.jqElem('li')
+                                            .append(
+                                                $.jqElem('span')
+                                                    .addClass('kb-data-staging-metadata-list')
+                                                    .append('MD5')
+                                            )
+                                            .append(data.md5 || 'Not provided')
+                                    )
+                                    .append($upa),
+                            },
+                            {
+                                tab: 'First 1024 chars',
+                                content: $.jqElem('div')
+                                    .addClass('kb-data-staging-metadata-file-lines')
+                                    .append(data.head),
+                            },
+                            {
+                                tab: 'Last 1024 chars',
+                                content: $.jqElem('div')
+                                    .addClass('kb-data-staging-metadata-file-lines')
+                                    .append(data.tail),
+                            },
+                        ],
                     });
 
                     // attempt to load up a jgi metadata file, via the jgi-metadata endpoint. It'll only succeed if a jgi metadata file exists
                     // We can't do it in parallel, since if the metadata file doesn't exist the promise wouldn't properly complete.
 
-                    self.stagingServiceClient.jgi_metadata({
-                        path: filePath
-                    })
-                        .then(function (dataString, status, xhr) {
+                    self.stagingServiceClient
+                        .jgi_metadata({
+                            path: filePath,
+                        })
+                        .then((_dataString) => {
                             // XXX - while doing this, I ran into a NaN issue in the file, specifically on the key illumina_read_insert_size_avg_insert.
                             //       So we nuke any NaN fields to make it valid again.
-                            var metadataJSON = JSON.parse(dataString.replace(/NaN/g, '\"\"'));
-                            var metadataContents = JSON.stringify(metadataJSON, null, 2);
+                            const metadataJSON = JSON.parse(_dataString.replace(/NaN/g, '""'));
+                            const metadataContents = JSON.stringify(metadataJSON, null, 2);
 
                             $tabs.addTab({
                                 tab: 'JGI Metadata',
                                 content: $.jqElem('div')
                                     .addClass('kb-data-staging-metadata-file-lines')
-                                    .append(metadataContents)
+                                    .append(metadataContents),
                             });
                         })
                         // there's nothing to catch here - if the jgi_metadata method errors, we just assume the file doesn't have any.
-                        .always(function () {
+                        .always(() => {
                             // finally, empty and append the tabs container. no matter what
                             $tabsDiv.empty();
                             $tabsDiv.append($tabsContainer);
                         });
-
                 })
-                .fail(function (xhr) {
+                .fail((xhr) => {
                     $tabsDiv.empty();
                     $tabsDiv.append(
                         $.jqElem('div')
@@ -792,18 +899,14 @@ define([
                     );
                 });
 
-            return fileData.loaded = $.jqElem('tr')
+            return (fileData.loaded = $.jqElem('tr')
                 .addClass('staging-area-file-metadata')
                 .append(
-                    $.jqElem('td')
-                        .attr('colspan', 5)
-                        .css('vertical-align', 'top')
-                        .append($tabsDiv)
-                );
+                    $.jqElem('td').attr('colspan', 5).css('vertical-align', 'top').append($tabsDiv)
+                ));
         },
 
         renderImportButton: function () {
-
             let importButton = $('<button></button>')
                 .addClass('kb-staging-table-import__button btn btn-xs btn-primary')
                 .text('Import Selected');
@@ -817,16 +920,17 @@ define([
         },
 
         disableImportButton: function () {
-
-            this.$elem.find('button.kb-staging-table-import__button')
+            this.$elem
+                .find('button.kb-staging-table-import__button')
                 .addClass('kb-staging-table-import__button__disabled')
                 .tooltip({
                     title: 'Select a file/s to continue.',
                     delay: {
                         show: Config.get('tooltip').showDelay,
-                        hide: Config.get('tooltip').hideDelay
+                        hide: Config.get('tooltip').hideDelay,
                     },
-                    template: '<div class="kb-staging-table-import__tooltip tooltip" role="tooltip"><div class="tooltip-inner"></div></div>'
+                    template:
+                        '<div class="kb-staging-table-import__tooltip tooltip" role="tooltip"><div class="tooltip-inner"></div></div>',
                 })
                 .off('click');
         },
@@ -834,7 +938,8 @@ define([
         enableImportButton: function () {
             let stagingAreaViewer = this;
 
-            this.$elem.find('button.kb-staging-table-import__button')
+            this.$elem
+                .find('button.kb-staging-table-import__button')
                 .removeClass('kb-staging-table-import__button__disabled')
                 .tooltip('disable')
                 .off('click')
@@ -871,28 +976,25 @@ define([
              */
             const bulkMapping = {};
             // get all of the selected checkbox file names and import type
-            $('input.kb-staging-table-body__checkbox-input:checked')
-                .each(function () {
-                    const importType = $(this).attr('data-type');
-                    const importFile = $(this).attr('data-file-name');
-                    if (stagingAreaViewer.bulkImportTypes.includes(importType)) {
-                        if (!(importType in bulkMapping)) {
-                            bulkMapping[importType] = {
-                                appId: stagingAreaViewer.uploaders.app_info[importType].app_id,
-                                files: []
-                            };
-                        }
-                        bulkMapping[importType].files.push(importFile);
+            $('input.kb-staging-table-body__checkbox-input:checked').each(function () {
+                const importType = $(this).attr('data-type');
+                const importFile = $(this).attr('data-file-name');
+                if (stagingAreaViewer.bulkImportTypes.includes(importType)) {
+                    if (!(importType in bulkMapping)) {
+                        bulkMapping[importType] = {
+                            appId: stagingAreaViewer.uploaders.app_info[importType].app_id,
+                            files: [],
+                        };
                     }
-                    else {
-                        stagingAreaViewer.initImportApp(importType, importFile);
-                    }
-                });
+                    bulkMapping[importType].files.push(importFile);
+                } else {
+                    stagingAreaViewer.initImportApp(importType, importFile);
+                }
+            });
             Jupyter.narrative.hideOverlay();
             if (Object.keys(bulkMapping).length) {
                 return Jupyter.narrative.insertBulkImportCell(bulkMapping);
-            }
-            else {
+            } else {
                 return Promise.resolve();
             }
         },
@@ -904,7 +1006,6 @@ define([
          */
         initImportApp: function (type, file) {
             const appInfo = this.uploaders.app_info[type];
-
             if (appInfo) {
                 const tag = APIUtil.getAppVersionTag();
                 let fileParam = file || '',
@@ -923,7 +1024,8 @@ define([
                 }
 
                 if (appInfo.app_output_param) {
-                    inputs[appInfo.app_output_param] = file.replace(/\s/g, '_') + appInfo.app_output_suffix;
+                    inputs[appInfo.app_output_param] =
+                        file.replace(/\s/g, '_') + appInfo.app_output_suffix;
                 }
 
                 if (appInfo.app_static_params) {
@@ -938,14 +1040,10 @@ define([
         },
 
         startTour: function () {
-            var tourStartFn = function () { };
-
             if (!this.tour) {
-                this.tour = new UploadTour.Tour(
-                    this.$elem.parent(), this.globus_name, tourStartFn, this.updateView.bind(this)
-                );
+                this.tour = new UploadTour.Tour(this.$elem.parent(), this.globus_name);
             }
             this.tour.start();
-        }
+        },
     });
 });

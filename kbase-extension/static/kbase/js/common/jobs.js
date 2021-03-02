@@ -87,7 +87,7 @@ define(['common/html', 'common/format', 'common/ui'], (html, format, UI) => {
             ) {
                 return true;
             }
-        // eslint-disable-next-line no-empty
+            // eslint-disable-next-line no-empty
         } catch (err) {}
         return false;
     }
@@ -204,9 +204,9 @@ define(['common/html', 'common/format', 'common/ui'], (html, format, UI) => {
                         return jobState.job_output.result[0].batch_results[item].final_job_state;
                     }
                 );
+            } catch (e) {
+                // eslint-disable-next-line no-empty
             }
-            // eslint-disable-next-line no-empty
-            catch (e) {}
         }
         return jobState;
     }

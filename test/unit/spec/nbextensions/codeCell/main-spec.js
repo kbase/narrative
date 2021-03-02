@@ -3,12 +3,7 @@ define([
     '../../../../../../narrative/nbextensions/codeCell/main',
     'base/js/namespace',
     'narrativeMocks',
-], (
-    $,
-    Main,
-    Jupyter,
-    Mocks,
-) => {
+], ($, Main, Jupyter, Mocks) => {
     'use strict';
 
     function isCodeCell(cell) {
@@ -21,7 +16,7 @@ define([
     describe('test the codeCell entrypoint module', () => {
         beforeAll(() => {
             Jupyter.narrative = {
-                getAuthToken: () => 'fakeToken'
+                getAuthToken: () => 'fakeToken',
             };
         });
 
@@ -36,7 +31,7 @@ define([
             // a mock codeCell
             Jupyter.notebook = Mocks.buildMockNotebook({
                 cells: [cell],
-                fullyLoaded: true
+                fullyLoaded: true,
             });
         });
 
@@ -65,8 +60,8 @@ define([
                 index: 1,
                 cell: newCell,
                 data: {
-                    type: 'code'
-                }
+                    type: 'code',
+                },
             });
             // there's no other triggers except to wait a moment
             // for the cell to get turned into a bulk import cell
@@ -85,7 +80,7 @@ define([
                 type: 'code',
                 index: 1,
                 cell: newCell,
-                data: {}
+                data: {},
             });
             // there's no other triggers except to wait a moment
             // for the cell to get turned into a bulk import cell
@@ -108,8 +103,8 @@ define([
                 index: 1,
                 cell: newCell,
                 data: {
-                    type: 'code'
-                }
+                    type: 'code',
+                },
             });
             // there's no other triggers except to wait a moment
             // for the cell to get turned into a bulk import cell
@@ -119,8 +114,8 @@ define([
                 expect(newCell.metadata.kbase.codeCell.userSettings).not.toBeDefined();
                 expect(newCell.metadata.kbase.codeCell).toEqual({
                     'user-settings': {
-                        showCodeInputArea: true
-                    }
+                        showCodeInputArea: true,
+                    },
                 });
                 done();
             }, 100);
@@ -140,16 +135,16 @@ define([
                 index: 1,
                 cell: newCell,
                 data: {
-                    type: 'code'
-                }
+                    type: 'code',
+                },
             });
             setTimeout(() => {
                 expect(isCodeCell(newCell)).toBeTruthy();
                 expect(newCell.metadata.kbase.codeCell.userSettings).not.toBeDefined();
                 expect(newCell.metadata.kbase.codeCell).toEqual({
                     'user-settings': {
-                        showCodeInputArea: true
-                    }
+                        showCodeInputArea: true,
+                    },
                 });
                 done();
             }, 100);

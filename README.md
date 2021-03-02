@@ -97,14 +97,20 @@ A number of commands are available to automate parts of the development process.
 
 ## Git Hooks
 
-The narrative repo uses the NPM module [Husky](https://www.npmjs.com/package/husky) to install and execute git hooks. This includes compiling css from the scss source files, and updating the current list of browsers used by Autoprefixer to generate the appropriate browser prefixes in the css files. If you run `npm install`, or use the standard install process, husky (and thus the husky git hooks) will automatically be installed and run.
+The narrative repo uses the NPM module [Husky](https://www.npmjs.com/package/husky) to install and execute git hooks. Please ensure that any other git hook packages (e.g. the python `pre-commit` package) have been fully uninstalled first. If you run `npm install`, or use the standard install process, husky and the husky git hooks will be installed. If you are adding the module to an existing npm installation, you will need to run
 
-The `husky` key in [package.json](package.json) lists the hooks that are run. See [docs/developer/running_tasks.md](docs/developer/running_tasks.md) for more information on the npm scripts that are executed.
+```js
+npx husky install
+```
+
+to enable git hooks.
+
+The `.husky` directory contains the hooks that are run. See the [package.json](package.json) file and [docs/developer/running_tasks.md](docs/developer/running_tasks.md) for more information on the npm scripts that are executed, and the [Husky documentation](https://typicode.github.io/husky/) for details on how to add or edit hooks.
 
 Husky hooks can be skipped by setting the environment variable:
 
 ```
-HUSKY_SKIP_HOOKS=1
+HUSKY=0
 ```
 
 ## Submitting code

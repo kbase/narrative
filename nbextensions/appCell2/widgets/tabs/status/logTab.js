@@ -149,9 +149,7 @@ define([
                 });
 
                 function startDetails(arg) {
-                    const jobId = arg.jobId
-                        ? arg.jobId
-                        : model.getItem('exec.jobState.job_id');
+                    const jobId = arg.jobId ? arg.jobId : model.getItem('exec.jobState.job_id');
                     config.clickedId = jobId;
                     return Promise.all([
                         widgets.params.start({

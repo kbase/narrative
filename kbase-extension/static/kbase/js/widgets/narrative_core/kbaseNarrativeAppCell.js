@@ -12,7 +12,6 @@
  */
 
 (function ($, undefined) {
-    'use strict';
     require([
         'kbwidget',
         'bootstrap',
@@ -36,6 +35,7 @@
         kbaseAccordion,
         kbaseNarrativeOutputCell
     ) => {
+        'use strict';
         return KBWidget({
             name: 'kbaseNarrativeAppCell',
             parent: kbaseAuthenticatedWidget,
@@ -215,7 +215,7 @@
             render: function (stepSpecs) {
                 this.methodSpecs = {};
 
-                const self = this;
+                var self = this;
                 this.$runButton = $('<button>')
                     .attr('type', 'button')
                     .attr('value', 'Run')
@@ -260,7 +260,7 @@
                     .attr('value', 'Get State')
                     .addClass('btn btn-danger btn-sm')
                     .append('Get State')
-                    .click(() => {
+                    .click((event) => {
                         console.log(self.getState());
                     });
 
@@ -272,7 +272,7 @@
                     .append('Cancel')
                     .css({ 'margin-right': '5px' })
                     .click(
-                        $.proxy(() => {
+                        $.proxy((event) => {
                             self.stopAppRun();
                         }, this)
                     )
@@ -285,7 +285,7 @@
                     .append('Edit and Re-Run')
                     .css({ 'margin-right': '5px', 'margin-left': '10px' })
                     .click(
-                        $.proxy(() => {
+                        $.proxy((event) => {
                             self.resetAppRun(false);
                         }, this)
                     )
@@ -298,6 +298,7 @@
                 const stepHeaderText = 'Step ';
                 this.inputSteps = [];
                 this.inputStepLookup = {};
+                const inputStep = {};
                 for (let i = 0; i < stepSpecs.length; i++) {
                     const $stepPanel = this.renderStepDiv(
                         this.appSpec.steps[i].step_id,
@@ -379,7 +380,9 @@
 
                 // Add minimize/restore actions.
                 // These mess with the CSS on the cells!
+                const $mintarget = $cellPanel;
                 this.panel_minimized = false;
+                var self = this;
                 this.refresh();
             },
 
@@ -403,6 +406,7 @@
                 // First setup the Input widget header
                 const $inputWidgetDiv = $('<div>');
                 const methodId = stepSpec.info.id + '-step-details-' + StringUtil.uuid();
+                const buttonLabel = 'details';
                 const methodDesc = stepSpec.info.subtitle;
                 const $header = $('<div>').css({ 'margin-top': '4px' }).addClass('kb-func-desc');
                 const $staticMethodInfo = $('<div>')
@@ -430,7 +434,7 @@
 
                 // Next the min/max controls
                 const $controlsSpan = $('<div>').addClass('pull-left');
-                const $minimizeControl = $('<span class=\'glyphicon glyphicon-chevron-down\'>').css({
+                const $minimizeControl = $("<span class='glyphicon glyphicon-chevron-down'>").css({
                     color: '#888',
                     fontSize: '14pt',
                     cursor: 'pointer',
@@ -547,9 +551,9 @@
             linkStepsTogether: function () {
                 const self = this;
                 if (this.appSpec && this.inputSteps) {
-                    const {steps} = this.appSpec;
+                    const steps = this.appSpec.steps;
                     for (let s = 0; s < steps.length; s++) {
-                        const {input_mapping} = steps[s];
+                        var input_mapping = steps[s].input_mapping;
                         for (let m = 0; m < input_mapping.length; m++) {
                             if (input_mapping[m].is_from_input) {
                                 // should be 1 for true, 0 for false
@@ -565,8 +569,8 @@
                                         const step_source =
                                             self.inputStepLookup[input_mapping[localM].step_source]
                                                 .widget;
-                                        const {from} = input_mapping[localM];
-                                        const {to} = input_mapping[localM];
+                                        const from = input_mapping[localM].from;
+                                        const to = input_mapping[localM].to;
                                         // set the value to the original value
                                         step_target.setParameterValue(
                                             to,
@@ -627,7 +631,7 @@
             prepareDataBeforeRun: function () {
                 if (this.inputSteps) {
                     for (let i = 0; i < this.inputSteps.length; i++)
-                        this.inputSteps[i].widget.prepareDataBeforeRun();
+                        var v = this.inputSteps[i].widget.prepareDataBeforeRun();
                 }
             },
 
@@ -798,7 +802,7 @@
                 if (this.inputSteps) {
                     for (let i = 0; i < this.inputSteps.length; i++) {
                         const stepId = this.inputSteps[i].id;
-                        const {methodId} = this.inputSteps[i];
+                        const methodId = this.inputSteps[i].methodId;
                         const values = this.inputSteps[i].widget.getAllParameterValues();
                         allValues.push({ stepId: stepId, methodId: methodId, values: values });
                     }
@@ -815,7 +819,7 @@
                 // get the state of each step and return (all other properties of this.state should be set elsewhere)
                 if (this.inputSteps) {
                     for (let i = 0; i < this.inputSteps.length; i++) {
-                        const {id} = this.inputSteps[i];
+                        const id = this.inputSteps[i].id;
                         this.state.step[id].inputState = this.inputSteps[i].widget.getState();
                         // if there is an output widget, then we need to set its state too
                         if (
@@ -849,8 +853,8 @@
                 //console.log(state);
                 // set the step states
                 if (this.inputSteps && state.step) {
-                    for (let i = 0; i < this.inputSteps.length; i++) {
-                        const {id} = this.inputSteps[i];
+                    for (var i = 0; i < this.inputSteps.length; i++) {
+                        var id = this.inputSteps[i].id;
                         if (state.step.hasOwnProperty(id)) {
                             // set the input states
                             if (state.step[id].inputState) {
@@ -883,7 +887,7 @@
                         } else if (state.runningState.appRunState === 'error') {
                             this.setErrorState(true);
                             this.minimizeAllSteps();
-                            for (let i = 0; i < this.inputSteps.length; i++) {
+                            for (var i = 0; i < this.inputSteps.length; i++) {
                                 if (
                                     this.inputSteps[i].$stepContainer.hasClass(
                                         'kb-app-step-running'
@@ -904,7 +908,7 @@
                             this.$runButton.hide();
                             // start minimized if done, todo: save minimization state of steps
                             this.minimizeAllSteps();
-                            for (let i = 0; i < this.inputSteps.length; i++) {
+                            for (var i = 0; i < this.inputSteps.length; i++) {
                                 this.inputSteps[i].widget.lockInputs();
                             }
                         }
@@ -914,8 +918,8 @@
 
                 // set the output state (we do this last so that in case we run into an error, we still show that we are running)
                 if (this.inputSteps && state.step) {
-                    for (let i = 0; i < this.inputSteps.length; i++) {
-                        const {id} = this.inputSteps[i];
+                    for (var i = 0; i < this.inputSteps.length; i++) {
+                        var id = this.inputSteps[i].id;
                         if (state.step.hasOwnProperty(id)) {
                             // set the output states
                             if (state.step[id].outputState) {
@@ -970,14 +974,14 @@
                 state = state.toLowerCase();
                 if (state === 'error') {
                     this.setErrorState(true);
-                    for (let i = 0; i < this.inputSteps.length; i++) {
+                    for (var i = 0; i < this.inputSteps.length; i++) {
                         if (this.inputSteps[i].$stepContainer.hasClass('kb-app-step-running')) {
                             this.inputSteps[i].$stepContainer.removeClass('kb-app-step-running');
                             this.inputSteps[i].$stepContainer.addClass('kb-app-step-error');
                         }
                     }
                 } else if (state === 'complete' || state === 'done') {
-                    for (let i = 0; i < this.inputSteps.length; i++) {
+                    for (var i = 0; i < this.inputSteps.length; i++) {
                         this.inputSteps[i].$stepContainer.removeClass('kb-app-step-running');
                     }
                     this.state.runningState.runningStep = null;
@@ -1010,17 +1014,18 @@
                 //console.debug("Find next steps for app", app);
                 // fetch full info, which contains suggested next steps
                 const params = { ids: [app.info.id] };
+                const result = {};
                 this.methClient.get_app_full_info(
                     params,
                     $.proxy(function (info_list) {
                         //console.debug("Got full info for app:", info_list);
                         const sugg = info_list[0].suggestions;
                         //console.debug("Suggestions for app:", sugg);
-                        const _params = { apps: sugg.next_apps, methods: sugg.next_methods };
+                        const params = { apps: sugg.next_apps, methods: sugg.next_methods };
                         //console.debug("Getting function specs, params=", params);
                         // Pass callback to render each retrieved function spec
                         this.trigger('getFunctionSpecs.Narrative', [
-                            _params,
+                            params,
                             function (specs) {
                                 render_cb(specs);
                             },

@@ -1,29 +1,22 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-define([
-    'jquery',
-    'KBModeling'
-], function($, kbm) {
-    describe('test the KBModeling module', function() {
-        it('should load a function', function() {
+define(['jquery', 'KBModeling'], ($, kbm) => {
+    'use strict';
+    describe('test the KBModeling module', () => {
+        it('should load a function', () => {
             expect(KBModeling).toEqual(jasmine.any(Function));
         });
 
-        it('KBModeling should return an api object', function() {
-            var fakeToken = 'mytoken';
-            var api = new KBModeling(fakeToken);
+        it('KBModeling should return an api object', () => {
+            const fakeToken = 'mytoken';
+            const api = new KBModeling(fakeToken);
             expect(api.token).toEqual(fakeToken);
             expect(api.kbapi).toEqual(jasmine.any(Function));
         });
 
-        it('should create a loading plugin', function() {
+        it('should create a loading plugin', () => {
             expect($.fn.loading).toBeDefined();
         });
 
-        it('should create a rmloading plugin', function() {
+        it('should create a rmloading plugin', () => {
             expect($.fn.rmLoading).toBeDefined();
         });
     });

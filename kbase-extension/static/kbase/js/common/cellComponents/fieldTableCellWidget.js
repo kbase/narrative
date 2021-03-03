@@ -135,30 +135,28 @@ define([
                     });
                 })
                 .catch((error) => {
-                    throw new Error('Unable to start fieldTableCellWidget: ', error);
+                    throw new Error(`Unable to start fieldTableCellWidget: ${error}`);
                 });
         }
 
         function stop() {
-            return Promise.try(() => {
-                return inputControl
-                    .stop()
-                    .then(() => {
-                        if (parent && container) {
-                            parent.removeChild(container);
-                        }
-                        bus.stop();
-                        return null;
-                    })
-                    .catch((err) => {
-                        console.error('Error stopping fieldTableCellWidget: ', err);
-                        if (parent && container) {
-                            parent.removeChild(container);
-                        }
-                        bus.stop();
-                        return null;
-                    });
-            });
+            return inputControl
+                .stop()
+                .then(() => {
+                    if (parent && container) {
+                        parent.removeChild(container);
+                    }
+                    bus.stop();
+                    return null;
+                })
+                .catch((err) => {
+                    console.error('Error stopping fieldTableCellWidget: ', err);
+                    if (parent && container) {
+                        parent.removeChild(container);
+                    }
+                    bus.stop();
+                    return null;
+                });
         }
 
         return {

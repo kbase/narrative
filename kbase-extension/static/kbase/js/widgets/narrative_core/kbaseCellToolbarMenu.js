@@ -542,7 +542,7 @@ define([
                                             div(
                                                 {
                                                     style: {
-                                                        margin: '0px 0px 0px auto',
+                                                        margin: '0 0 0 auto',
                                                         minWidth: '65px',
                                                     },
                                                 },

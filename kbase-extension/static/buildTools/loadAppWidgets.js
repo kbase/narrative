@@ -103,6 +103,7 @@ define([
     'common/utils',
     'common/validation',
     'util/icon',
-], function () {
+], () => {
+    'use strict';
     return;
 });

@@ -70,7 +70,7 @@ define([
          * narrative configuration.
          */
         cell.renderIcon = function () {
-            var inputPrompt = this.element[0].querySelector('[data-element="icon"]');
+            const inputPrompt = this.element[0].querySelector('[data-element="icon"]');
             if (inputPrompt) {
                 inputPrompt.innerHTML = this.getIcon();
             }

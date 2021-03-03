@@ -16,20 +16,18 @@ define([
         input = t('input');
 
     function factory(config) {
-        let options = {},
+        const options = {},
             spec = config.parameterSpec,
             workspaceId = config.workspaceId,
-            parent,
-            container,
             bus = config.bus,
             model = {
                 value: undefined,
             },
-            dom,
             runtime = Runtime.make(),
             otherOutputParams = config.closeParameters.filter((value) => {
                 return value !== spec.id;
             });
+        let parent, container, dom;
 
         // Validate configuration.
         // Nothing to do...
@@ -46,11 +44,7 @@ define([
          */
 
         function getInputValue() {
-            const val = dom.getElement('input-container.input').value;
-            // if (!val) {
-            //     return null;  // empty strings should -> null, otherwise it throws off validation.
-            // }
-            return val;
+            return dom.getElement('input-container.input').value;
         }
 
         function setModelValue(value) {
@@ -60,7 +54,7 @@ define([
                     return true;
                 }
                 return false;
-            }).then((changed) => {
+            }).then(() => {
                 render();
             });
         }
@@ -68,7 +62,7 @@ define([
         function unsetModelValue() {
             return Promise.try(() => {
                 model.value = undefined;
-            }).then((changed) => {
+            }).then(() => {
                 render();
             });
         }
@@ -97,36 +91,32 @@ define([
                         diagnosis: 'disabled',
                     };
                 });
-            } else {
-                const rawValue = getInputValue();
-                return validateUniqueOutput(rawValue)
-                    .then((isUnique) => {
-                        if (!isUnique) {
-                            return {
-                                isValid: false,
-                                diagnosis: 'invalid',
-                                errorMessage:
-                                    'Every output object from a single app run must have a unique name.',
-                            };
-                        } else {
-                            const validationOptions = {
-                                required: spec.data.constraints.required,
-                                shouldNotExist: true,
-                                workspaceId: workspaceId,
-                                types: spec.data.constraints.types,
-                                authToken: runtime.authToken(),
-                                workspaceServiceUrl: runtime.config('services.workspace.url'),
-                            };
-                            return Validation.validateWorkspaceObjectName(
-                                rawValue,
-                                validationOptions
-                            );
-                        }
-                    })
-                    .then((validationResult) => {
-                        return validationResult;
-                    });
             }
+            const rawValue = getInputValue();
+            return validateUniqueOutput(rawValue)
+                .then((isUnique) => {
+                    if (!isUnique) {
+                        return {
+                            isValid: false,
+                            diagnosis: 'invalid',
+                            errorMessage:
+                                'Every output object from a single app run must have a unique name.',
+                        };
+                    } else {
+                        const validationOptions = {
+                            required: spec.data.constraints.required,
+                            shouldNotExist: true,
+                            workspaceId: workspaceId,
+                            types: spec.data.constraints.types,
+                            authToken: runtime.authToken(),
+                            workspaceServiceUrl: runtime.config('services.workspace.url'),
+                        };
+                        return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
+                    }
+                })
+                .then((validationResult) => {
+                    return validationResult;
+                });
         }
 
         /* Validate that this is a unique value among all output parameters */
@@ -207,7 +197,7 @@ define([
          * Places it into the dom node
          * Hooks up event listeners
          */
-        function makeInputControl(currentValue, events, bus) {
+        function makeInputControl(currentValue, events) {
             // CONTROL
             return input({
                 id: events.addEvents({
@@ -222,7 +212,7 @@ define([
         function render() {
             Promise.try(() => {
                 const events = Events.make(),
-                    inputControl = makeInputControl(model.value, events, bus);
+                    inputControl = makeInputControl(model.value, events);
 
                 dom.setContent('input-container', inputControl);
                 events.attachEvents(container);
@@ -272,11 +262,11 @@ define([
                     container.innerHTML = theLayout.content;
                     events.attachEvents(container);
 
-                    bus.on('reset-to-defaults', (message) => {
+                    bus.on('reset-to-defaults', () => {
                         resetModelValue();
                     });
-                    bus.on('update', (message) => {
-                        setModelValue(message.value);
+                    bus.on('update', (_message) => {
+                        setModelValue(_message.value);
                     });
                     bus.on('refresh', () => {});
                     bus.emit('sync');
@@ -284,8 +274,13 @@ define([
             });
         }
 
+        function stop() {
+            return Promise.resolve();
+        }
+
         return {
-            start: start,
+            start,
+            stop,
         };
     }
 

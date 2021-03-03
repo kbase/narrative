@@ -31,10 +31,13 @@ define([
             Jupyter.narrative = null;
         });
 
-        beforeEach(async () => {
+        beforeEach(async function () {
             const bus = Runtime.make().bus();
+
+            this.parent = document.createElement('div');
             this.node = document.createElement('div');
-            document.getElementsByTagName('body')[0].appendChild(this.node);
+            document.getElementsByTagName('body')[0].appendChild(this.parent);
+            this.parent.appendChild(this.node);
 
             const model = Props.make({
                 data: TestAppObject,
@@ -62,12 +65,12 @@ define([
             });
         });
 
-        afterEach(async () => {
+        afterEach(async function () {
             if (this.paramsWidgetInstance) {
                 await this.paramsWidgetInstance.stop();
             }
             window.kbaseRuntime = null;
-            document.body.innerHTML = '';
+            this.parent.innerHTML = '';
         });
 
         it('should render the correct parameters', () => {
@@ -91,7 +94,7 @@ define([
             });
         });
 
-        it('should render with advanced parameters hidden', () => {
+        it('should render with advanced parameters hidden', function () {
             //get all advanced params using the spec
             const advancedParams = [];
             for (const [, entry] of Object.entries(this.parameters.specs)) {
@@ -112,11 +115,10 @@ define([
             });
         });
 
-        it('should stop itself and empty the node it was in', () => {
-            this.paramsWidgetInstance.stop().then(() => {
-                expect(this.node.innerHTML).toEqual('');
-                this.paramsWidgetInstance = null;
-            });
+        it('should stop itself and empty the node it was in', async function () {
+            await this.paramsWidgetInstance.stop();
+            expect(this.node.innerHTML).toEqual('');
+            this.paramsWidgetInstance = null;
         });
     });
 });

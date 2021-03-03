@@ -153,7 +153,7 @@ define(['bluebird', 'common/ui', 'common/html', 'common/events'], (Promise, UI, 
             Object.keys(fileTypes).forEach((key) => {
                 ui.getElement(key).classList.remove(selected);
                 ui.getElement(`${key}.icon`).classList.remove(completeIcon, incompleteIcon);
-                let icon = state.completed[key] ? completeIcon : incompleteIcon;
+                const icon = state.completed[key] ? completeIcon : incompleteIcon;
                 ui.getElement(`${key}.icon`).classList.add(icon);
             });
             // if the "selected" file type is real, select it

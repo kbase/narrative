@@ -1,7 +1,7 @@
 define(['bluebird', 'require'], (Promise, require) => {
     'use strict';
 
-    function factory(config) {
+    function factory() {
         function getWidgetModule(spec) {
             const dataType = spec.data.type,
                 controlType = spec.ui.control;
@@ -76,13 +76,7 @@ define(['bluebird', 'require'], (Promise, require) => {
                 case 'workspaceObjectRef':
                     switch (spec.ui.class) {
                         case 'input':
-                            //return 'singleObjectInput';
-                            return {
-                                input: 'select2ObjectInput',
-                                view: 'select2ObjectView',
-                            };
                         case 'parameter':
-                            // return 'singleObjectInput';
                             return {
                                 input: 'select2ObjectInput',
                                 view: 'select2ObjectView',
@@ -165,8 +159,8 @@ define(['bluebird', 'require'], (Promise, require) => {
         };
     }
     return {
-        make: function (config) {
-            return factory(config);
+        make: function () {
+            return factory();
         },
     };
 });

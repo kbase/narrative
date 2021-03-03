@@ -162,7 +162,6 @@ define([
         });
 
         it('Should create a new bulk import cell on request', () => {
-            let narr = new Narrative();
             Jupyter.narrative = narr;
             const appId = 'SomeModule/some_import_app';
             // a hacked up mock to avoid wrestling with asynchronous triggers.

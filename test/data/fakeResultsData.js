@@ -36,6 +36,8 @@ define([], () => {
             '10/11/12': [11, 'SomeOtherObject', 'KBaseGenomeAnnotations.Assembly-2.0'],
         },
 
+        // gets fed directly to common/cellComponents/tabs/results/reportWidget and
+        // common/cellComponents/tabs/results/outputWidget
         objectData: [
             {
                 name: 'SomeObject',

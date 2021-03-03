@@ -1,14 +1,10 @@
 define([
     'common/cellComponents/tabs/results/outputWidget',
     'base/js/namespace',
-    'narrativeConfig',
-    'kb_service/client/workspace',
     '/test/data/fakeResultsData',
 ], (
     OutputWidget,
     Jupyter,
-    Config,
-    Workspace,
     ResultsData
 ) => {
     'use strict';

@@ -98,7 +98,13 @@ define(['bluebird', 'jquery', 'common/html', 'common/ui', 'common/events', 'kbas
          *
          * @param {object} arg
          * - node - the DOM node to build this under
-         * - reports - a list of report ids to fetch the relevant info from
+         * - objectData - a list of objectData elements, used to produce reports.
+         *   Each element has these keys:
+         *   - description - string, description of the object
+         *   - name - string, name of the object
+         *   - ref - string, the object UPA
+         *   - reportRef - string, the report UPA
+         *   - type - string, the registered workspace type of the object
          * - workspaceClient - a workspace client to use
          */
         function start(arg) {
@@ -115,8 +121,9 @@ define(['bluebird', 'jquery', 'common/html', 'common/ui', 'common/events', 'kbas
         }
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
+            toggleReportView
         };
     }
 

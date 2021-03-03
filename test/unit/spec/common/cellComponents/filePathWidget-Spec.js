@@ -55,7 +55,7 @@ define([
         });
 
         afterEach(function () {
-            $(this.parent).remove();
+            this.parent.remove();
             window.kbaseRuntime = null;
         });
 

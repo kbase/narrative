@@ -37,6 +37,7 @@ define([
 
         afterEach(() => {
             Jupyter.notebook = null;
+            window.kbaseRuntime = null;
         });
 
         it('should have a load_ipython_extension function', () => {
@@ -64,7 +65,7 @@ define([
                 },
             });
             // there's no other triggers except to wait a moment
-            // for the cell to get turned into a bulk import cell
+            // for the cell to get turned into a code cell
             // and if it takes more than 100ms, it SHOULD fail.
             setTimeout(() => {
                 expect(isCodeCell(newCell)).toBeTruthy();

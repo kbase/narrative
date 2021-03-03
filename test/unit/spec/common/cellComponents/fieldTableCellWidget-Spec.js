@@ -1,12 +1,11 @@
 define([
-    'jquery',
     'base/js/namespace',
     'common/cellComponents/fieldTableCellWidget',
     'widgets/appWidgets2/paramResolver',
     'common/props',
     'common/spec',
     '/test/data/testAppObj',
-], ($, Jupyter, FieldCellWidget, ParamResolver, Props, Spec, TestAppObject) => {
+], (Jupyter, FieldCellWidget, ParamResolver, Props, Spec, TestAppObject) => {
     'use strict';
 
     describe('The Field Table Cell Widget module', () => {
@@ -127,7 +126,7 @@ define([
                     );
                 });
             }
-            $(this.parent).remove();
+            this.parent.remove();
             window.kbaseRuntime = null;
         });
 

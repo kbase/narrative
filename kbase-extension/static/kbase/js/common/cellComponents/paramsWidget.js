@@ -435,7 +435,7 @@ define([
                         parameterInfo.view[paramSpec.id].id
                     ).innerHTML = errorDisplay;
 
-                    throw new Error('Error making input field widget', ex);
+                    throw new Error(`Error making input field widget: ${ex}`);
                 });
         }
 
@@ -523,7 +523,7 @@ define([
                     attachEvents();
                 })
                 .catch((error) => {
-                    throw new Error('Unable to start paramsWidget: ', error);
+                    throw new Error(`Unable to start paramsWidget: ${error}`);
                 });
         }
 

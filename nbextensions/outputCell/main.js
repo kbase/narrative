@@ -233,5 +233,6 @@ define([
         load_ipython_extension: load,
     };
 }, (err) => {
+    'use strict';
     console.error('ERROR loading outputCell main', err);
 });

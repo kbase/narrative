@@ -450,5 +450,6 @@ define([
         // These are kbase api calls
     };
 }, (err) => {
+    'use strict';
     console.log('ERROR loading editorCell main', err);
 });

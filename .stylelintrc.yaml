@@ -6,7 +6,7 @@ extends:
 plugins:
 - stylelint-color-format
 - stylelint-scss
-- stylelint-no-indistinguishable-colors
+# - stylelint-no-indistinguishable-colors
 
 ignoreFiles:
 - kbase-extension/static/**/*.{less,scss,css}
@@ -30,7 +30,7 @@ rules:
   max-nesting-depth: 10
   no-descending-specificity: null
   # set to true to enable
-  plugin/stylelint-no-indistinguishable-colors: false
+  # plugin/stylelint-no-indistinguishable-colors: false
   selector-class-pattern: null
   selector-max-compound-selectors: 5
   selector-max-class: 5

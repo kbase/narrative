@@ -139,7 +139,7 @@ define([
             // If there are no next apps to suggest, don't even show the Suggested Next Steps panel
             if (apps.length > 0) {
                 appList = apps
-                    .map((app, index) => {
+                    .map((app) => {
                         return div([
                             a(
                                 {

@@ -27,7 +27,7 @@ define([
 ) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div');
 
     function isAppCell(cell) {
@@ -199,10 +199,10 @@ define([
                             .then(() => {
                                 return appCellWidget.detach();
                             })
-                            .catch(function (_err) {
+                            .catch((_err) => {
                                 console.log('ERR in ERR', _err);
                             })
-                            .finally(function () {
+                            .finally(() => {
                                 Error.reportCellError(
                                     'Error starting app cell',
                                     'There was an error starting the app cell:',

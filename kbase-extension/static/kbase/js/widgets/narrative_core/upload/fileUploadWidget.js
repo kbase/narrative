@@ -33,7 +33,7 @@ define([
             this.stagingUrl = Config.url('staging_api_url');
             this.userInfo = options.userInfo;
 
-            var runtime = Runtime.make();
+            const runtime = Runtime.make();
             this.stagingServiceClient = new StagingServiceClient({
                 root: Config.url('staging_api_url'),
                 token: runtime.authToken(),
@@ -80,7 +80,7 @@ define([
                         width: progress + '%',
                     });
                 })
-                .on('addedfile', (file) => {
+                .on('addedfile', () => {
                     $dropzoneElem.find('#global-info').removeClass('hide');
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
 
@@ -131,7 +131,7 @@ define([
                     $($dropzoneElem.find('#total-progress .progress-bar')).css({ width: '0' });
                 })
                 .on('canceled', (file) => {
-                    let path = file.fullPath ? file.fullPath : file.name;
+                    const path = file.fullPath ? file.fullPath : file.name;
                     if (path) {
                         Promise.resolve(
                             this.stagingServiceClient.delete({
@@ -186,7 +186,7 @@ define([
             e.preventDefault();
 
             if (e.target.href === globusUrlLinked) {
-                var globusWindow = window.open('', 'dz-globus');
+                const globusWindow = window.open('', 'dz-globus');
                 globusWindow.document.write(
                     '<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>'
                 );

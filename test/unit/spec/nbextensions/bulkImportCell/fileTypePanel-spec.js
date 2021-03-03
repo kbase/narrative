@@ -1,4 +1,3 @@
-/* global describe it expect jasmine */
 define([
     '../../../../../../narrative/nbextensions/bulkImportCell/fileTypePanel',
     'common/runtime',
@@ -23,7 +22,7 @@ define([
     };
     describe('test the file type panel', () => {
         it('should load and start properly with the right available functions', () => {
-            let panel = FileTypePanel.make({
+            const panel = FileTypePanel.make({
                 bus: Runtime.make().bus(),
                 fileTypes: fileTypes,
                 header: header,
@@ -32,7 +31,7 @@ define([
             expect(panel.start).toBeDefined();
             expect(panel.stop).toBeDefined();
             expect(panel.updateState).toBeDefined();
-            let node = document.createElement('div');
+            const node = document.createElement('div');
             return panel
                 .start({
                     node: node,
@@ -47,20 +46,20 @@ define([
         });
 
         it('should respond to an update state signal modifying elements', () => {
-            let panel = FileTypePanel.make({
+            const panel = FileTypePanel.make({
                 bus: Runtime.make().bus(),
                 fileTypes: fileTypes,
                 header: header,
                 toggleAction: () => {},
             });
-            let node = document.createElement('div');
+            const node = document.createElement('div');
             return panel
                 .start({
                     node: node,
                     state: {}, // start with no state, nothing selected, nothing completed
                 })
                 .then(() => {
-                    let beforeNode = {},
+                    const beforeNode = {},
                         beforeIcon = {};
                     for (const cat of Object.keys(fileTypes)) {
                         const elem = node.querySelector(`[data-element="${cat}"]`);
@@ -101,13 +100,13 @@ define([
 
         it('should respond to clicking on an unselected file type', () => {
             const clickSpy = jasmine.createSpy('clickSpy');
-            let panel = FileTypePanel.make({
+            const panel = FileTypePanel.make({
                 bus: Runtime.make().bus(),
                 fileTypes: fileTypes,
                 header: header,
                 toggleAction: clickSpy,
             });
-            let node = document.createElement('div');
+            const node = document.createElement('div');
             return panel
                 .start({
                     node: node,
@@ -124,13 +123,13 @@ define([
         });
 
         it('should return a promise from a stop command', () => {
-            let panel = FileTypePanel.make({
+            const panel = FileTypePanel.make({
                 bus: Runtime.make().bus(),
                 fileTypes: fileTypes,
                 header: header,
                 toggleAction: () => {},
             });
-            let node = document.createElement('div');
+            const node = document.createElement('div');
             return panel
                 .start({
                     node: node,

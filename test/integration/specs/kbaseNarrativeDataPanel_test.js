@@ -254,7 +254,7 @@ describe('Tabbing within the data panel should work', () => {
         // Make sure the main elements of the import tab have been rendered.
         const fileDropZone = await tabPanel.$('.kb-dropzone');
         await fileDropZone.waitForExist();
-        const fileListContainer = await tabPanel.$('#kb-data-staging-table_wrapper');
+        const fileListContainer = await tabPanel.$('table.kb-staging-table');
         await fileListContainer.waitForExist();
     });
 

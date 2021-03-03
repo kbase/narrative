@@ -393,7 +393,7 @@ define([
 
                     widgets.push(widget);
                     return widget.start({
-                        node: document.getElementById(filePathParams.view[spec.id].id),
+                        node: container.querySelector('#' + filePathParams.view[spec.id].id),
                     });
                 })
                 .catch((ex) => {
@@ -404,11 +404,11 @@ define([
                         [ex.message]
                     );
 
-                    document.getElementById(
-                        filePathParams.view[spec.id].id
+                    container.querySelector(
+                        '#' + filePathParams.view[spec.id].id
                     ).innerHTML = errorDisplay;
 
-                    throw new Error('Error making input field widget', ex);
+                    throw new Error(`Error making input field widget: ${ex}`);
                 });
         }
 
@@ -425,7 +425,9 @@ define([
             const filePathParams = makeFilePathsLayout(findPathParams(params));
 
             if (!filePathParams.layout.length) {
-                ui.getElement(`${cssClassType}s-area`).classList.add('hidden');
+                return Promise.resolve(
+                    ui.getElement(`${cssClassType}s-area`).classList.add('hidden')
+                );
             } else {
                 filePathRow.innerHTML = [
                     td({
@@ -476,35 +478,35 @@ define([
         }
 
         function start(arg) {
-            return Promise.try(() => {
-                doAttach(arg.node);
+            doAttach(arg.node);
 
-                model.setItem('appSpec', arg.appSpec);
-                model.setItem('parameters', arg.parameters);
+            model.setItem('appSpec', arg.appSpec);
+            model.setItem('parameters', arg.parameters);
 
-                paramsBus.on('parameter-changed', (message) => {
-                    widgets.forEach((widget) => {
-                        widget.bus.send(message, {
-                            key: {
-                                type: 'parameter-changed',
-                                parameter: message.parameter,
-                            },
-                        });
+            paramsBus.on('parameter-changed', (message) => {
+                widgets.forEach((widget) => {
+                    widget.bus.send(message, {
+                        key: {
+                            type: 'parameter-changed',
+                            parameter: message.parameter,
+                        },
                     });
                 });
-
-                const filePathRows = ui.getElements(`${cssClassType}-fields-row`);
-
-                return Promise.all(
-                    filePathRows.map(async (filePathRow) => {
-                        await renderFilePathRow(filePathRow);
-                    })
-                ).then(() => {
-                    updateRowNumbers(filePathRows);
-                });
-            }).catch((error) => {
-                throw new Error('Unable to start filePathWidget: ', error);
             });
+
+            const filePathRows = ui.getElements(`${cssClassType}-fields-row`);
+
+            return Promise.all(
+                filePathRows.map((filePathRow) => {
+                    renderFilePathRow(filePathRow);
+                })
+            )
+                .then(() => {
+                    updateRowNumbers(filePathRows);
+                })
+                .catch((error) => {
+                    throw new Error(`Unable to start filePathWidget: ${error}`);
+                });
         }
 
         function stop() {

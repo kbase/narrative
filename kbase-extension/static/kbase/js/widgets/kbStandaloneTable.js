@@ -80,6 +80,7 @@
 
 */
 (function () {
+    'use strict';
     const root = this || {};
     const standaloneTable = (root.standaloneTable = {
         about: {
@@ -157,11 +158,11 @@
         },
 
         create: function (params) {
-            var renderer = this;
+            const renderer = this;
             if (!window.hasOwnProperty('rendererTable')) {
                 window.rendererTable = [];
             }
-            var instance = { settings: {}, index: params.index };
+            const instance = { settings: {}, index: params.index };
             jQuery.extend(true, instance, renderer);
             jQuery.extend(true, instance.settings, renderer.about.defaults, params);
             window.rendererTable.push(instance);
@@ -170,7 +171,7 @@
         },
 
         importDataFromDiv: function (index, id) {
-            var renderer = rendererTable[index];
+            const renderer = rendererTable[index];
             renderer.settings.data = JSON.parse(document.getElementById(id).innerHTML);
         },
 
@@ -199,12 +200,12 @@
             };
         },
         update_visible_columns: function (index) {
-            var renderer = rendererTable[index];
+            const renderer = rendererTable[index];
 
-            var t = document.getElementById('table_colsel_table_' + index);
-            var r = t.firstChild.childNodes;
-            var inv = {};
-            for (var i = 0; i < r.length; i++) {
+            const t = document.getElementById('table_colsel_table_' + index);
+            const r = t.firstChild.childNodes;
+            const inv = {};
+            for (let i = 0; i < r.length; i++) {
                 if (!r[i].firstChild.firstChild.checked) {
                     inv[i] = 1;
                 }
@@ -213,7 +214,7 @@
             renderer.render(index);
         },
         render: function (index) {
-            var renderer = rendererTable[index];
+            const renderer = rendererTable[index];
 
             renderer.settings.target.innerHTML = '';
             if (renderer.settings.synchronous == false) {
@@ -231,7 +232,7 @@
             }
 
             // if a header has already been initialized, don't touch it again
-            var header;
+            let header;
             if (renderer.settings.header) {
                 header = renderer.settings.header;
             } else {
@@ -244,14 +245,14 @@
             }
 
             // check if we have already parsed the data
-            var tdata = [];
+            let tdata = [];
             if (renderer.settings.tdata) {
                 tdata = renderer.settings.tdata;
             } else {
                 // the data has not been parsed, do it now
-                for (var i = 0; i < renderer.settings.data.data.length; i++) {
+                for (let i = 0; i < renderer.settings.data.data.length; i++) {
                     tdata[tdata.length] = {};
-                    for (var h = 0; h < renderer.settings.data.data[i].length; h++) {
+                    for (let h = 0; h < renderer.settings.data.data[i].length; h++) {
                         tdata[tdata.length - 1][header[h]] =
                             renderer.settings.data.data[i][h] || '';
                     }
@@ -262,12 +263,12 @@
 
             // if we are to auto determine sort functions, do so
             if (renderer.settings.sort_autodetect) {
-                for (var i = 0; i < header.length; i++) {
+                for (let i = 0; i < header.length; i++) {
                     if (!renderer.settings.sorttype[i]) {
                         if (!tdata[0] || typeof tdata[0][header[i]].replace != 'function') {
                             renderer.settings.sorttype[i] = 'number';
                         } else {
-                            var testval = tdata[0][header[i]].replace(/<(.|\n)*?>/g, '');
+                            const testval = tdata[0][header[i]].replace(/<(.|\n)*?>/g, '');
                             if (isNaN(parseFloat(testval))) {
                                 renderer.settings.sorttype[i] = 'string';
                             } else {
@@ -279,9 +280,9 @@
             }
 
             // create filter elements
-            var filter = renderer.settings.filter;
-            var filter_present = false;
-            for (var i in filter) {
+            const filter = renderer.settings.filter;
+            let filter_present = false;
+            for (const i in filter) {
                 if (filter.hasOwnProperty(i)) {
                     if (filter[i].hasOwnProperty('searchword') && filter[i].searchword.length > 0) {
                         filter_present = true;
@@ -292,11 +293,11 @@
 
             // check for data filtering
             if (filter_present && renderer.settings.synchronous) {
-                var newdata = [];
+                let newdata = [];
                 if (renderer.settings.filter_changed) {
                     renderer.settings.offset = 0;
-                    for (var i in filter) {
-                        var re;
+                    for (const i in filter) {
+                        let re;
                         if (filter[i].case_sensitive) {
                             re = new RegExp(filter[i].searchword);
                         } else {
@@ -320,11 +321,11 @@
                             }
                         }
                     }
-                    var htmlFilter = new RegExp('<.+?>', 'ig');
-                    for (var h = 0; h < tdata.length; h++) {
-                        var pass = 1;
-                        for (var i in filter) {
-                            var word = tdata[h][header[i]] + '';
+                    const htmlFilter = new RegExp('<.+?>', 'ig');
+                    for (let h = 0; h < tdata.length; h++) {
+                        let pass = 1;
+                        for (const i in filter) {
+                            let word = tdata[h][header[i]] + '';
                             if (!filter[i].keepHTML) {
                                 word = word.replace(htmlFilter, '');
                             }
@@ -386,44 +387,44 @@
             }
 
             // initialize the options
-            var offset = renderer.settings.offset;
-            var rows =
+            const offset = renderer.settings.offset;
+            const rows =
                 renderer.settings.rows_per_page < 0
                     ? tdata.length
                     : renderer.settings.rows_per_page;
-            var sortcol = renderer.settings.sortcol;
-            var sortdir = renderer.settings.sortdir;
-            var sorttype = renderer.settings.sorttype;
-            var target = renderer.settings.target;
+            const sortcol = renderer.settings.sortcol;
+            const sortdir = renderer.settings.sortdir;
+            const sorttype = renderer.settings.sorttype;
+            const target = renderer.settings.target;
 
             // check width and height
-            var defined_width = '';
+            let defined_width = '';
             if (renderer.settings.width) {
                 defined_width = 'width: ' + renderer.settings.width + 'px; ';
             }
-            var defined_height = '';
+            let defined_height = '';
             if (renderer.settings.height) {
                 defined_height = 'height: ' + renderer.settings.height + 'px; ';
             }
 
             // create the actual table header
-            var table_element = document.createElement('table');
+            const table_element = document.createElement('table');
             table_element.setAttribute(
                 'class',
                 'table table-striped table-bordered table-condensed'
             );
             table_element.setAttribute('style', 'margin-bottom: 2px; margin-top: 7px;');
-            var thead = document.createElement('thead');
-            var tr = document.createElement('tr');
+            const thead = document.createElement('thead');
+            const tr = document.createElement('tr');
             tr.setAttribute('style', 'height: 30px; border-top: 1px solid lightgray;');
-            for (var i = 0; i < header.length; i++) {
+            for (let i = 0; i < header.length; i++) {
                 // check if this column is visible
                 if (!renderer.settings.invisible_columns[i]) {
                     // create sorting elements
-                    var asc = document.createElement('i');
+                    const asc = document.createElement('i');
                     asc.setAttribute('class', 'fa fa-chevron-down');
                     asc.setAttribute('title', 'sort ascending');
-                    var desc = document.createElement('i');
+                    const desc = document.createElement('i');
                     desc.setAttribute('class', 'fa fa-chevron-up');
                     desc.setAttribute('title', 'sort descending');
                     if (i == sortcol) {
@@ -435,8 +436,8 @@
                             desc.i = i;
                             desc.index = index;
                             desc.onclick = function () {
-                                var index = this.index;
-                                var renderer = rendererTable[index];
+                                const index = this.index;
+                                const renderer = rendererTable[index];
                                 renderer.settings.sortcol = this.i;
                                 renderer.settings.sortdir = 'desc';
                                 if (typeof renderer.settings.navigation_callback == 'function') {
@@ -457,8 +458,8 @@
                             asc.i = i;
                             asc.index = index;
                             asc.onclick = function () {
-                                var index = this.index;
-                                var renderer = rendererTable[index];
+                                const index = this.index;
+                                const renderer = rendererTable[index];
                                 renderer.settings.sortcol = this.i;
                                 renderer.settings.sortdir = 'asc';
                                 if (typeof renderer.settings.navigation_callback == 'function') {
@@ -477,8 +478,8 @@
                         asc.i = i;
                         asc.index = index;
                         asc.onclick = function () {
-                            var index = this.index;
-                            var renderer = rendererTable[index];
+                            const index = this.index;
+                            const renderer = rendererTable[index];
                             renderer.settings.sortcol = this.i;
                             renderer.settings.sortdir = 'asc';
                             if (typeof renderer.settings.navigation_callback == 'function') {
@@ -495,8 +496,8 @@
                         desc.i = i;
                         desc.index = index;
                         desc.onclick = function () {
-                            var index = this.index;
-                            var renderer = rendererTable[index];
+                            const index = this.index;
+                            const renderer = rendererTable[index];
                             renderer.settings.sortcol = this.i;
                             renderer.settings.sortdir = 'desc';
                             if (typeof renderer.settings.navigation_callback == 'function') {
@@ -519,9 +520,9 @@
                                 renderer.settings.filter[i].operator = ['=', '<', '>', '><'];
                                 renderer.settings.filter[i].active_operator = 0;
                             }
-                            var selopts = [];
-                            var numopts = 0;
-                            for (var h = 0; h < tdata.length; h++) {
+                            const selopts = [];
+                            let numopts = 0;
+                            for (let h = 0; h < tdata.length; h++) {
                                 if (!selopts[tdata[h][header[i]]]) {
                                     numopts++;
                                 }
@@ -538,9 +539,9 @@
                         if (!renderer.settings.filter[i].searchword) {
                             renderer.settings.filter[i].searchword = '';
                         }
-                        var filter_elem;
+                        let filter_elem;
                         if (renderer.settings.filter[i].type == 'text') {
-                            var filter_text = document.createElement('input');
+                            const filter_text = document.createElement('input');
                             filter_text.setAttribute('type', 'text');
                             filter_text.value = filter[i].searchword;
                             filter_text.setAttribute(
@@ -550,16 +551,16 @@
                             filter_text.i = i;
                             filter_text.index = index;
                             filter_text.onkeypress = function (e) {
-                                var index = this.index;
-                                var renderer = rendererTable[index];
+                                const index = this.index;
+                                const renderer = rendererTable[index];
                                 e = e || window.event;
                                 if (e.keyCode == 13) {
                                     renderer.settings.filter[this.i].searchword = this.value;
                                     if (
                                         typeof renderer.settings.navigation_callback == 'function'
                                     ) {
-                                        var query = [];
-                                        for (var x in renderer.settings.filter) {
+                                        const query = [];
+                                        for (const x in renderer.settings.filter) {
                                             if (
                                                 renderer.settings.filter.hasOwnProperty(x) &&
                                                 renderer.settings.filter[x].hasOwnProperty(
@@ -599,7 +600,7 @@
                                     'float: left; margin-bottom: 0px; display: none; position: absolute; margin-top: 2px; height: 16px; z-index: 100;'
                                 );
                                 filter_elem.className = 'input-prepend';
-                                var operator_span = document.createElement('span');
+                                const operator_span = document.createElement('span');
                                 operator_span.setAttribute(
                                     'style',
                                     'cursor: pointer; height: 16px;'
@@ -607,9 +608,9 @@
                                 operator_span.i = i;
                                 operator_span.index = index;
                                 operator_span.onclick = function () {
-                                    var index = this.index;
-                                    var renderer = rendererTable[index];
-                                    for (var x = 0; x < this.childNodes.length; x++) {
+                                    const index = this.index;
+                                    const renderer = rendererTable[index];
+                                    for (let x = 0; x < this.childNodes.length; x++) {
                                         if (this.childNodes[x].style.display == '') {
                                             this.childNodes[x].style.display = 'none';
                                             if (x == this.childNodes.length - 1) {
@@ -629,11 +630,11 @@
                                 };
                                 operator_span.className = 'add-on';
                                 for (
-                                    var h = 0;
+                                    let h = 0;
                                     h < renderer.settings.filter[i].operator.length;
                                     h++
                                 ) {
-                                    var operator = document.createElement('span');
+                                    const operator = document.createElement('span');
                                     operator.innerHTML = renderer.settings.filter[i].operator[h];
                                     if (h == renderer.settings.filter[i].active_operator) {
                                         operator.setAttribute(
@@ -668,13 +669,13 @@
                                 'position: absolute; height: 26px; margin-bottom: 0px; margin-top: 2px; z-index: 100; display: none;'
                             );
                             filter_elem.add(new Option('-show all-', ''), null);
-                            var selopts = [];
-                            for (var h = 0; h < tdata.length; h++) {
+                            const selopts = [];
+                            for (let h = 0; h < tdata.length; h++) {
                                 if (tdata[h][header[i]].length) {
                                     selopts[tdata[h][header[i]]] = 1;
                                 }
                             }
-                            for (var h in selopts) {
+                            for (let h in selopts) {
                                 if (typeof selopts[h] != 'function') {
                                     if (h == renderer.settings.filter[i].searchword) {
                                         filter_elem.add(new Option(h, h, true), null);
@@ -686,8 +687,8 @@
                             filter_elem.i = i;
                             filter_elem.index = index;
                             filter_elem.onchange = function () {
-                                var index = this.index;
-                                var renderer = rendererTable[index];
+                                const index = this.index;
+                                const renderer = rendererTable[index];
                                 renderer.settings.filter[this.i].searchword = this.options[
                                     this.selectedIndex
                                 ].value;
@@ -704,7 +705,7 @@
                                 'position: absolute; height: 26px; margin-bottom: 0px; margin-top: 2px; z-index: 100; display: none;'
                             );
                             for (
-                                var ind = 0;
+                                let ind = 0;
                                 ind < renderer.settings.filter[i].options.length;
                                 ind++
                             ) {
@@ -733,14 +734,14 @@
                             filter_elem.i = i;
                             filter_elem.index = index;
                             filter_elem.onchange = function () {
-                                var index = this.index;
-                                var renderer = rendererTable[index];
+                                const index = this.index;
+                                const renderer = rendererTable[index];
                                 renderer.settings.filter[this.i].searchword = this.options[
                                     this.selectedIndex
                                 ].value;
                                 if (typeof renderer.settings.navigation_callback == 'function') {
-                                    var query = [];
-                                    for (var x in renderer.settings.filter) {
+                                    const query = [];
+                                    for (const x in renderer.settings.filter) {
                                         if (
                                             renderer.settings.filter.hasOwnProperty(x) &&
                                             renderer.settings.filter[x].hasOwnProperty('searchword')
@@ -769,18 +770,18 @@
                     }
 
                     // build header cell
-                    var caret = document.createElement('table');
+                    const caret = document.createElement('table');
                     caret.setAttribute('style', 'float: right; margin: 0px; border: 0;');
-                    var caret_tr1 = document.createElement('tr');
+                    const caret_tr1 = document.createElement('tr');
                     caret_tr1.setAttribute('style', 'border: 0;');
-                    var caret_td1 = document.createElement('td');
+                    const caret_td1 = document.createElement('td');
                     caret_td1.setAttribute(
                         'style',
                         'padding: 0px 2px; line-height: 0px; border: 0;'
                     );
-                    var caret_tr2 = document.createElement('tr');
+                    const caret_tr2 = document.createElement('tr');
                     caret_tr2.setAttribute('style', 'border: 0;');
-                    var caret_td2 = document.createElement('td');
+                    const caret_td2 = document.createElement('td');
                     caret_td2.setAttribute(
                         'style',
                         'padding: 0px 2px; line-height: 0px; border: 0;'
@@ -791,8 +792,8 @@
                     caret_tr2.appendChild(caret_td2);
                     caret.appendChild(caret_tr1);
                     caret.appendChild(caret_tr2);
-                    var th = document.createElement('th');
-                    var mw = 1;
+                    const th = document.createElement('th');
+                    let mw = 1;
                     if (renderer.settings.minwidths && renderer.settings.minwidths[i]) {
                         mw = renderer.settings.minwidths[i];
                     }
@@ -800,7 +801,7 @@
                         'style',
                         'padding: 0px; padding-left: 4px; min-width: ' + mw + 'px;'
                     );
-                    var th_div = document.createElement('div');
+                    const th_div = document.createElement('div');
                     th_div.setAttribute('style', 'float: left; position: relative; height: 25px;');
                     th_div.innerHTML = header[i];
                     th.appendChild(th_div);
@@ -809,9 +810,9 @@
                         th_div.style.top = '4px';
                     }
                     if (filter[i]) {
-                        var filter_icon = document.createElement('i');
+                        const filter_icon = document.createElement('i');
                         filter_icon.className = 'fa fa-search';
-                        var is_active = '';
+                        let is_active = '';
                         if (filter[i].searchword) {
                             is_active = ' border: 1px solid blue;';
                             filter_icon.setAttribute(
@@ -819,7 +820,7 @@
                                 "filtered for: '" + filter[i].searchword + "'"
                             );
                         }
-                        var pos = '3';
+                        let pos = '3';
                         if (!renderer.settings.disable_sort[i]) {
                             pos = '7';
                         }
@@ -847,16 +848,16 @@
             }
             thead.appendChild(tr);
             table_element.appendChild(thead);
-            var tinner_elem = document.createElement('tbody');
+            const tinner_elem = document.createElement('tbody');
 
             // check if the data is sorted, otherwise sort now
-            var disp;
+            let disp;
             if (renderer.settings.sorted) {
                 disp = tdata;
             } else {
-                disp = tdata.sort(function (a, b) {
+                disp = tdata.sort((a, b) => {
                     if (sortdir == 'desc') {
-                        var c = a;
+                        const c = a;
                         a = b;
                         b = c;
                     }
@@ -882,7 +883,6 @@
                                         return -1;
                                 }
                                 return 1;
-                                break;
                             case 'string':
                                 if (
                                     a[header[sortcol]].replace(/<(.|\n)*?>/g, '') ==
@@ -895,7 +895,6 @@
                                 )
                                     return -1;
                                 return 1;
-                                break;
                         }
                     } else {
                         if (
@@ -929,33 +928,33 @@
             }
 
             // create the table rows
-            for (var i = 0; i < disp.length; i++) {
-                var tinner_row = document.createElement('tr');
-                for (var h = 0; h < header.length; h++) {
+            for (let i = 0; i < disp.length; i++) {
+                const tinner_row = document.createElement('tr');
+                for (let h = 0; h < header.length; h++) {
                     if (!renderer.settings.invisible_columns[h]) {
-                        var tinner_cell = document.createElement('td');
+                        const tinner_cell = document.createElement('td');
                         tinner_cell.innerHTML = disp[i][header[h]];
                         if (renderer.settings.editable[h]) {
                             tinner_cell.index = index;
                             tinner_cell.addEventListener('click', function (e) {
-                                var index = this.index;
+                                const index = this.index;
                                 e = e || window.event;
-                                var ot = e.originalTarget || e.srcElement;
-                                var clicked_row_index;
-                                var clicked_cell_index;
-                                for (var x = 0; x < ot.parentNode.children.length; x++) {
+                                const ot = e.originalTarget || e.srcElement;
+                                let clicked_row_index;
+                                let clicked_cell_index;
+                                for (let x = 0; x < ot.parentNode.children.length; x++) {
                                     if (ot.parentNode.children[x] == ot) {
                                         clicked_cell_index = x;
                                     }
                                 }
-                                for (var y = 0; y < ot.parentNode.parentNode.children.length; y++) {
+                                for (let y = 0; y < ot.parentNode.parentNode.children.length; y++) {
                                     if (ot.parentNode.parentNode.children[y] == ot.parentNode) {
                                         clicked_row_index = y + offset;
                                         break;
                                     }
                                 }
 
-                                var edit = document.createElement('input');
+                                const edit = document.createElement('input');
                                 edit.setAttribute('type', 'text');
                                 edit.setAttribute(
                                     'value',
@@ -965,8 +964,8 @@
                                 );
                                 edit.index = index;
                                 edit.addEventListener('keypress', function (e) {
-                                    var index = this.index;
-                                    var renderer = rendererTable[index];
+                                    const index = this.index;
+                                    const renderer = rendererTable[index];
                                     e = e || window.event;
                                     if (e.keyCode == 13) {
                                         renderer.settings.tdata[clicked_row_index][
@@ -985,8 +984,8 @@
                                 });
                                 edit.index = index;
                                 edit.addEventListener('blur', function () {
-                                    var index = this.index;
-                                    var renderer = rendererTable[index];
+                                    const index = this.index;
+                                    const renderer = rendererTable[index];
                                     renderer.render(index);
                                 });
                                 ot.innerHTML = '';
@@ -1011,11 +1010,11 @@
 
             // create the navigation
             // first, previous
-            var prev_td = document.createElement('td');
+            const prev_td = document.createElement('td');
             prev_td.setAttribute('style', 'text-align: left; width: 45px; border: 0;');
             prev_td.innerHTML = '&nbsp;';
             if (offset > 0) {
-                var first = document.createElement('i');
+                const first = document.createElement('i');
                 first.setAttribute('class', 'fa fa-fast-backward');
                 first.setAttribute('title', 'first');
                 first.setAttribute('style', 'cursor: pointer;');
@@ -1023,17 +1022,17 @@
                 first.onclick =
                     typeof renderer.settings.navigation_callback == 'function'
                         ? function () {
-                              var index = this.index;
-                              var renderer = rendererTable[index];
+                              const index = this.index;
+                              const renderer = rendererTable[index];
                               renderer.settings.navigation_callback('first', index);
                           }
                         : function () {
-                              var index = this.index;
-                              var renderer = rendererTable[index];
+                              const index = this.index;
+                              const renderer = rendererTable[index];
                               renderer.settings.offset = 0;
                               renderer.render(index);
                           };
-                var prev = document.createElement('i');
+                const prev = document.createElement('i');
                 prev.setAttribute('class', 'fa fa-backward');
                 prev.setAttribute('title', 'previous');
                 prev.setAttribute('style', 'cursor: pointer; margin-left: 5px;');
@@ -1041,13 +1040,13 @@
                 prev.onclick =
                     typeof renderer.settings.navigation_callback == 'function'
                         ? function () {
-                              var index = this.index;
-                              var renderer = rendererTable[index];
+                              const index = this.index;
+                              const renderer = rendererTable[index];
                               renderer.settings.navigation_callback('previous', index);
                           }
                         : function () {
-                              var index = this.index;
-                              var renderer = rendererTable[index];
+                              const index = this.index;
+                              const renderer = rendererTable[index];
                               renderer.settings.offset -= rows;
                               if (renderer.settings.offset < 0) {
                                   renderer.settings.offset = 0;
@@ -1059,11 +1058,11 @@
             }
 
             // next, last
-            var next_td = document.createElement('td');
+            const next_td = document.createElement('td');
             next_td.setAttribute('style', 'text-align: right; width: 45px; border: 0;');
             next_td.innerHTML = '&nbsp;';
             if (offset + rows < (renderer.settings.numrows || tdata.length)) {
-                var last = document.createElement('i');
+                const last = document.createElement('i');
                 last.setAttribute('class', 'fa fa-fast-forward');
                 last.setAttribute('title', 'last');
                 last.setAttribute('style', 'cursor: pointer;');
@@ -1071,20 +1070,20 @@
                 last.onclick =
                     typeof renderer.settings.navigation_callback == 'function'
                         ? function () {
-                              var index = this.index;
-                              var renderer = rendererTable[index];
+                              const index = this.index;
+                              const renderer = rendererTable[index];
                               renderer.settings.navigation_callback('last', index);
                           }
                         : function () {
-                              var index = this.index;
-                              var renderer = rendererTable[index];
+                              const index = this.index;
+                              const renderer = rendererTable[index];
                               renderer.settings.offset = tdata.length - rows;
                               if (renderer.settings.offset < 0) {
                                   renderer.settings.offset = 0;
                               }
                               renderer.render(index);
                           };
-                var next = document.createElement('i');
+                const next = document.createElement('i');
                 next.setAttribute('class', 'fa fa-forward');
                 next.setAttribute('title', 'next');
                 next.setAttribute('style', 'cursor: pointer; margin-right: 5px;');
@@ -1092,13 +1091,13 @@
                 next.onclick =
                     typeof renderer.settings.navigation_callback == 'function'
                         ? function () {
-                              var index = this.index;
-                              var renderer = rendererTable[index];
+                              const index = this.index;
+                              const renderer = rendererTable[index];
                               renderer.settings.navigation_callback('next', index);
                           }
                         : function () {
-                              var index = this.index;
-                              var renderer = rendererTable[index];
+                              const index = this.index;
+                              const renderer = rendererTable[index];
                               renderer.settings.offset += rows;
                               if (renderer.settings.offset > tdata.length - 1) {
                                   renderer.settings.offset = tdata.length - rows;
@@ -1113,7 +1112,7 @@
             }
 
             // display of window offset
-            var showing = document.createElement('td');
+            const showing = document.createElement('td');
             showing.setAttribute('style', 'text-align: center; border: 0;');
             showing.innerHTML =
                 'showing rows ' +
@@ -1124,9 +1123,9 @@
                 (renderer.settings.numrows || tdata.length);
 
             // create the table to host navigation
-            var bottom_table = document.createElement('table');
+            const bottom_table = document.createElement('table');
             bottom_table.setAttribute('style', 'width: 100%; border: 0;');
-            var bottom_row = document.createElement('tr');
+            const bottom_row = document.createElement('tr');
             bottom_row.setAttribute('style', 'border: 0;');
             bottom_row.appendChild(prev_td);
             bottom_row.appendChild(showing);
@@ -1134,9 +1133,9 @@
             bottom_table.appendChild(bottom_row);
 
             // goto
-            var goto_label = document.createElement('span');
+            const goto_label = document.createElement('span');
             goto_label.innerHTML = 'goto row ';
-            var goto_text = document.createElement('input');
+            const goto_text = document.createElement('input');
             goto_text.setAttribute('value', offset + 1);
             goto_text.setAttribute('type', 'text');
             goto_text.setAttribute(
@@ -1145,8 +1144,8 @@
             );
             goto_text.index = index;
             goto_text.onkeypress = function (e) {
-                var index = this.index;
-                var renderer = rendererTable[index];
+                const index = this.index;
+                const renderer = rendererTable[index];
                 e = e || window.event;
                 if (e.keyCode == 13) {
                     if (typeof renderer.settings.navigation_callback == 'function') {
@@ -1168,17 +1167,17 @@
             };
 
             // clear filter button
-            var clear_btn = document.createElement('input');
+            const clear_btn = document.createElement('input');
             clear_btn.setAttribute('type', 'button');
             clear_btn.setAttribute('class', 'btn btn-xs btn-default');
             clear_btn.setAttribute('value', 'clear all filters');
             clear_btn.style.marginLeft = '10px';
             clear_btn.index = index;
             clear_btn.onclick = function () {
-                var index = this.index;
-                var renderer = rendererTable[index];
+                const index = this.index;
+                const renderer = rendererTable[index];
                 renderer.settings.filter_changed = true;
-                for (var i in renderer.settings.filter) {
+                for (const i in renderer.settings.filter) {
                     renderer.settings.filter[i].searchword = '';
                 }
                 if (typeof renderer.settings.navigation_callback == 'function') {
@@ -1197,7 +1196,7 @@
             };
 
             // rows per page
-            var perpage = document.createElement('input');
+            const perpage = document.createElement('input');
             perpage.setAttribute('type', 'text');
             perpage.setAttribute('value', rows);
             perpage.setAttribute(
@@ -1206,8 +1205,8 @@
             );
             perpage.index = index;
             perpage.onkeypress = function (e) {
-                var index = this.index;
-                var renderer = rendererTable[index];
+                const index = this.index;
+                const renderer = rendererTable[index];
                 e = e || window.event;
                 if (e.keyCode == 13) {
                     if (typeof renderer.settings.navigation_callback == 'function') {
@@ -1222,36 +1221,36 @@
                     }
                 }
             };
-            var ppspan1 = document.createElement('span');
+            const ppspan1 = document.createElement('span');
             ppspan1.innerHTML = ' show ';
-            var ppspan2 = document.createElement('span');
+            const ppspan2 = document.createElement('span');
             ppspan2.innerHTML = ' rows at a time';
 
             // handle onclick event
             if (renderer.settings.onclick) {
                 table_element.index = index;
                 table_element.onclick = function (e) {
-                    var index = this.index;
-                    var renderer = rendererTable[index];
+                    const index = this.index;
+                    const renderer = rendererTable[index];
                     e = e || window.event;
-                    var ot = e.originalTarget || e.srcElement;
+                    const ot = e.originalTarget || e.srcElement;
                     if (ot.nodeName == 'TD') {
-                        var clicked_row = [];
-                        var clicked_row_index;
-                        var clicked_cell_index;
-                        for (var x = 0; x < ot.parentNode.children.length; x++) {
+                        const clicked_row = [];
+                        let clicked_row_index;
+                        let clicked_cell_index;
+                        for (let x = 0; x < ot.parentNode.children.length; x++) {
                             if (ot.parentNode.children[x] == ot) {
                                 clicked_cell_index = x;
                             }
                             clicked_row.push(ot.parentNode.children[x].innerHTML);
                         }
-                        for (var y = 0; y < ot.parentNode.parentNode.children.length; y++) {
+                        for (let y = 0; y < ot.parentNode.parentNode.children.length; y++) {
                             if (ot.parentNode.parentNode.children[y] == ot.parentNode) {
                                 clicked_row_index = y + offset;
                                 break;
                             }
                         }
-                        var clicked_cell = ot.innerHTML;
+                        const clicked_cell = ot.innerHTML;
                         renderer.settings.onclick(
                             clicked_row,
                             clicked_cell,
@@ -1262,24 +1261,24 @@
                 };
             }
 
-            var col_sel_span = document.createElement('span');
-            var col_sel_btn = document.createElement('input');
+            const col_sel_span = document.createElement('span');
+            const col_sel_btn = document.createElement('input');
             col_sel_btn.setAttribute('class', 'btn btn-xs btn-default');
             col_sel_btn.setAttribute('type', 'button');
             col_sel_btn.setAttribute('value', 'select columns');
-            var col_sel = document.createElement('div');
+            const col_sel = document.createElement('div');
             col_sel.setAttribute(
                 'style',
                 'position: absolute; left: 528px; min-width: 150px; border: 1px solid #BBB; background-color: white; z-index: 99000; display: none; box-shadow: 4px 4px 4px #666; padding: 2px;'
             );
-            col_sel_btn.addEventListener('click', function () {
+            col_sel_btn.addEventListener('click', () => {
                 if (col_sel.style.display == 'none') {
                     col_sel.style.display = '';
                 } else {
                     col_sel.style.display = 'none';
                 }
             });
-            var colsel_html =
+            let colsel_html =
                 "<input type='button' class='btn btn-xs btn-default' style='float: right;' value='OK' onclick='rendererTable[" +
                 index +
                 '].update_visible_columns(' +
@@ -1287,8 +1286,8 @@
                 ");'><table id='table_colsel_table_" +
                 index +
                 "' style='border: 0;'>";
-            for (var ii = 0; ii < renderer.settings.header.length; ii++) {
-                var checked = ' checked';
+            for (let ii = 0; ii < renderer.settings.header.length; ii++) {
+                let checked = ' checked';
                 if (renderer.settings.invisible_columns[ii]) {
                     checked = '';
                 }
@@ -1304,7 +1303,7 @@
             col_sel_span.appendChild(col_sel_btn);
             col_sel_span.appendChild(col_sel);
 
-            var options_icon = document.createElement('div');
+            const options_icon = document.createElement('div');
             options_icon.innerHTML = "<i class='fa fa-cog'></i>";
             options_icon.title = 'table options, click to show';
             options_icon.className = 'btn btn-xs btn-default';
@@ -1313,7 +1312,7 @@
                 this.nextSibling.style.display = '';
                 this.style.display = 'none';
             };
-            var options_span = document.createElement('div');
+            const options_span = document.createElement('div');
             options_span.setAttribute('style', 'display: none;');
             options_span.innerHTML =
                 "<div title='close options' onclick='this.parentNode.previousSibling.style.display=\"\";this.parentNode.style.display=\"none\";' style='cursor: pointer; margin-right: 5px;' class='btn btn-xs btn-default'><i class='fa fa-times'></div>";

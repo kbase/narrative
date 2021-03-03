@@ -2,7 +2,7 @@ define([
     'jquery',
     'widgets/loadingWidget',
     'text!/kbase_templates/loading.html',
-    // 'css!/narrative/static/kbase/css/kbaseNarrative.css',
+    'css!/narrative/static/kbase/css/all_concat.css',
 ], ($, LoadingWidget, LoadingTemplate) => {
     'use strict';
 
@@ -57,16 +57,17 @@ define([
 
         it('Should not show the loading warning when first starting', function () {
             const widget = new LoadingWidget({ node: this.node });
-            const $warning = $(this.node).find('.loading-warning');
+            const $warning = $(this.node).find('.kb-loading-blocker__text--warning');
             expect($warning.length).toBe(1);
             expect($warning.is(':visible')).toBeFalsy();
             widget.clearTimeout();
+            widget.remove();
         });
 
         it('Should show the loading warning after a timeout', function (done) {
             const widget = new LoadingWidget({ node: this.node, timeout: 1 });
             spyOn(widget, 'showTimeoutWarning').and.callThrough();
-            const $warningNode = $(this.node).find('.loading-warning');
+            const $warningNode = $(this.node).find('.kb-loading-blocker__text--warning');
             expect($warningNode.length).toBe(1);
             spyOn($warningNode.__proto__, 'fadeIn').and.callThrough();
             expect(widget.timeoutShown).toBeFalse();

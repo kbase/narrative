@@ -15,7 +15,7 @@ define(['common/html'], (html) => {
             expect(html.genId()).toMatch(/^kb_html_.*$/);
         });
 
-        // Looading
+        // Loading
         it('Makes a loading message', () => {
             let loading = html.loading();
             expect(loading).toEqual(

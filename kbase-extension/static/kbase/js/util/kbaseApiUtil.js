@@ -7,11 +7,11 @@ define([
     'kb_service/client/narrativeMethodStore',
     'narrativeConfig',
     'base/js/namespace',
-], function (Promise, NarrativeMethodStore, Config, Jupyter) {
+], (Promise, NarrativeMethodStore, Config, Jupyter) => {
     'use strict';
     function getAppSpec(id, tag) {
-        return getAppSpecs([id], tag).then(function (result) {
-            return Promise.try(function () {
+        return getAppSpecs([id], tag).then((result) => {
+            return Promise.try(() => {
                 return result[0];
             });
         });
@@ -90,9 +90,9 @@ define([
         }
 
         const versionRefRegex = /^\w+\/\w+\/\d+?$/;
-        var refList = ref.split(';');
-        var validRef = true;
-        refList.forEach(function (r) {
+        const refList = ref.split(';');
+        let validRef = true;
+        refList.forEach((r) => {
             if (!versionRefRegex.exec(r)) {
                 validRef = false;
             }

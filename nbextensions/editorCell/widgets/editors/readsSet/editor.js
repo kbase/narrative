@@ -1222,7 +1222,7 @@ define([
                     renderUI();
                 })
                 .catch((err) => {
-                    alert('internal error'), console.error('INTERNAL ERROR', err);
+                    console.error('INTERNAL ERROR', err);
                 });
         }
 
@@ -1464,5 +1464,6 @@ define([
         },
     };
 }, (err) => {
+    'use strict';
     console.error('ERROR loading editorCell editorCellWidget', err);
 });

@@ -39,20 +39,15 @@ define([
         };
 
     function factory(config) {
-        let ui,
-            runtime = Runtime.make(),
+        let ui, places, parent, container, inputControl, enabled;
+        const runtime = Runtime.make(),
             bus = runtime.bus().makeChannelBus({
                 description: 'Field bus',
             }),
-            places,
-            parent,
-            container,
             inputControlFactory = config.inputControlFactory,
-            inputControl,
             options = {},
             fieldId = html.genId(),
             spec = config.parameterSpec,
-            enabled,
             closeParameters = config.closeParameters;
 
         try {
@@ -194,51 +189,50 @@ define([
             places.feedbackIndicator.className = 'kb-app-parameter-right-error-bar';
         }
 
-        function rawSpec(spec) {
-            const specText = JSON.stringify(spec, false, 3),
+        function rawSpec(_spec) {
+            const specText = JSON.stringify(_spec, false, 3),
                 fixedSpec = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
             return pre({ class: 'prettyprint lang-json', style: { fontSize: '80%' } }, fixedSpec);
         }
 
-        function parameterInfoContent(spec) {
+        function parameterInfoContent(_spec) {
             return div({ style: { padding: '0px' } }, [
-                div({ style: { fontWeight: 'bold' } }, spec.ui.label),
-                div({ style: { fontStyle: 'italic' } }, spec.id),
-                div({ style: { fontSize: '80%' } }, spec.ui.description),
+                div({ style: { fontWeight: 'bold' } }, _spec.ui.label),
+                div({ style: { fontStyle: 'italic' } }, _spec.id),
+                div({ style: { fontSize: '80%' } }, _spec.ui.description),
             ]);
         }
 
-        function parameterInfoTypeRules(spec) {
-            switch (spec.data.type) {
+        function parameterInfoTypeRules(_spec) {
+            switch (_spec.data.type) {
                 case 'float':
                 case 'int':
                     return [
-                        tr([th('Min'), td(spec.data.constraints.min)]),
-                        tr([th('Max'), td(spec.data.constraints.max)]),
+                        tr([th('Min'), td(_spec.data.constraints.min)]),
+                        tr([th('Max'), td(_spec.data.constraints.max)]),
                     ];
             }
         }
 
-        function parameterInfoRules(spec) {
+        function parameterInfoRules(_spec) {
             return table(
                 { class: 'table table-striped' },
                 [
-                    tr([th('Required'), td(spec.data.constraints.required ? 'yes' : 'no')]),
-                    tr([th('Data type'), td(spec.data.type)]),
-                    // tr([th('Field type'), td(spec.spec.field_type)]),
-                    tr([th('Multiple values?'), td(spec.multipleItems ? 'yes' : 'no')]),
+                    tr([th('Required'), td(_spec.data.constraints.required ? 'yes' : 'no')]),
+                    tr([th('Data type'), td(_spec.data.type)]),
+                    tr([th('Multiple values?'), td(_spec.multipleItems ? 'yes' : 'no')]),
                     (function () {
-                        return tr([th('Default value'), td(spec.data.defaultValue)]);
+                        return tr([th('Default value'), td(_spec.data.defaultValue)]);
                     })(),
                     (function () {
-                        if (spec.data.constraints.types) {
+                        if (_spec.data.constraints.types) {
                             return tr([
                                 th('Valid types'),
-                                td(spec.data.constraints.types.join('<br>')),
+                                td(_spec.data.constraints.types.join('<br>')),
                             ]);
                         }
                     })(),
-                ].concat(parameterInfoTypeRules(spec))
+                ].concat(parameterInfoTypeRules(_spec))
             );
         }
 
@@ -251,7 +245,6 @@ define([
             }
 
             return div([
-                // div({dataElement: 'little-tip'}, parameterInfoLittleTip(spec)),
                 div(
                     { dataElement: 'big-tip', class: 'hidden' },
                     html.makeTabs({
@@ -312,7 +305,7 @@ define([
                 infoTipText = spec.ui.hint || spec.ui.description;
             }
 
-            var content = div(
+            const content = div(
                 {
                     class: [
                         'form-horizontal',
@@ -394,26 +387,6 @@ define([
                                         }),
                                     ]
                                 ),
-                                /*div({
-                            class: 'input-group-addon kb-input-group-addon',
-                            style: {
-                                width: '30px',
-                                padding: '0'
-                            }
-                        }, [
-                            div({ dataElement: 'info' }, button({
-                                class: 'btn btn-link btn-xs',
-                                type: 'button',
-                                tabindex: '-1',
-                                id: events.addEvent({
-                                    type: 'click',
-                                    handler: function () {
-                                        places.infoPanel.querySelector('[data-element="big-tip"]').classList.toggle('hidden');
-                                        // ui.getElement('big-tip').classList.toggle('hidden');
-                                    }
-                                })
-                            }, span({ class: 'fa fa-info-circle' })))
-                        ])*/
                             ]),
                         ]
                     ),
@@ -519,16 +492,10 @@ define([
                             break;
                     }
                 });
-                // bus.on('touched', function (message) {
-                //     places.feedback.style.backgroundColor = 'yellow';
-                // });
-                // bus.on('changed', function () {
-                //     places.feedback.style.backgroundColor = '';
-                // });
-                bus.on('enable', (message) => {
+                bus.on('enable', () => {
                     doEnable();
                 });
-                bus.on('disable', (message) => {
+                bus.on('disable', () => {
                     doDisable();
                 });
 

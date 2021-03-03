@@ -75,15 +75,15 @@ define(['bluebird', 'jquery', 'common/html', 'common/ui', 'common/events', 'kbas
             const events = Events.make();
             // this is the main layout div. don't do anything yet.
             container.innerHTML = div({
-                dataElement: 'created-objects',
-                class: 'kb-created-objects',
+                dataElement: 'reports-view',
+                class: 'kb-reports-view',
             });
 
             ui.setContent(
-                'created-objects',
+                'reports-view',
                 ui.buildCollapsiblePanel({
                     title: 'Reports',
-                    name: 'created-objects-toggle',
+                    name: 'reports-view-toggle',
                     hidden: false,
                     type: 'default',
                     classes: ['kb-panel-container'],

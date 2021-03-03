@@ -201,6 +201,10 @@ define(['common/format'], (format) => {
                     label: 'success',
                 },
             },
+            result: [{
+                report_name: "kb_megahit_report_33c8f76d-0aaa-4b27-a0f9-4569b69fef3e",
+                report_ref: "57373/16/1"
+            }],
         },
     ];
 

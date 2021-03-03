@@ -25,7 +25,7 @@ define(['jquery', 'narrativeLogin', 'narrativeConfig', 'narrativeMocks'], (
             $(document).off();
             jasmine.Ajax.uninstall();
             Mocks.clearAuthToken();
-            $node.destroy();
+            $node.remove();
         });
 
         it('Should instantiate and have expected functions', () => {

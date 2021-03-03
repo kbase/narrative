@@ -3,7 +3,11 @@
 'use strict';
 const tests = [
     ...['text', 'json'],
-    ...Object.keys(window.__karma__.files).filter((file) => /[sS]pec\.js$/.test(file)),
+    // Keep only the test spec files under the test directory.
+    // Karma prepends these with /base/, so make sure that's included.
+    ...Object.keys(window.__karma__.files).filter((file) =>
+        /^\/base\/test\/.*[sS]pec\.js$/.test(file)
+    ),
 ];
 
 // hack to make jed (the i18n library that Jupyter uses) happy.

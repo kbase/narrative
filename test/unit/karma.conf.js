@@ -10,7 +10,7 @@ module.exports = function (config) {
                 DEFAULT_TIMEOUT_INTERVAL: 20000,
                 failSpecWithNoExpectations: true,
             },
-            requireJsShowNoTimestampsError: '^(?!.*(^/narrative/))',
+            requireJsShowNoTimestampsError: '^(?!.*(^/narrative|test/))',
             clearContext: false,
         },
         plugins: [

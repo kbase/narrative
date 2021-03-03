@@ -2,7 +2,7 @@ define([
     'jquery',
     'widgets/loadingWidget',
     'text!/kbase_templates/loading.html',
-    'css!/narrative/static/kbase/css/kbaseNarrative.css',
+    // 'css!/narrative/static/kbase/css/kbaseNarrative.css',
 ], ($, LoadingWidget, LoadingTemplate) => {
     'use strict';
 

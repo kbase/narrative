@@ -92,7 +92,7 @@ define(['bluebird', 'common/ui', 'common/events', './outputWidget', './reportWid
             const reportLookupParam = reports.map((ref) => {
                 return {
                     ref: ref,
-                    included: ['objects_created']
+                    included: ['objects_created'],
                 };
             });
             /* when we do the lookup, data will get returned as:
@@ -111,11 +111,12 @@ define(['bluebird', 'common/ui', 'common/events', './outputWidget', './reportWid
             // fetch the names later.
             const createdObjects = {};
             let objectKeys = [];
-            return workspaceClient.get_objects2({objects: reportLookupParam})
+            return workspaceClient
+                .get_objects2({ objects: reportLookupParam })
                 .then((reportData) => {
                     reportData.data.forEach((report, idx) => {
                         if ('objects_created' in report.data) {
-                            report.data.objects_created.forEach(obj => {
+                            report.data.objects_created.forEach((obj) => {
                                 createdObjects[obj.ref] = obj;
                                 createdObjects[obj.ref].reportRef = reportLookupParam[idx].ref;
                             });
@@ -125,8 +126,8 @@ define(['bluebird', 'common/ui', 'common/events', './outputWidget', './reportWid
                     // the same order.
                     objectKeys = Object.keys(createdObjects);
                     // turn the refs into an array: [{"ref": ref}]
-                    const infoLookupParam = objectKeys.map(ref => ({'ref': ref}));
-                    return workspaceClient.get_object_info_new({objects: infoLookupParam});
+                    const infoLookupParam = objectKeys.map((ref) => ({ ref: ref }));
+                    return workspaceClient.get_object_info_new({ objects: infoLookupParam });
                 })
                 .then((objectInfo) => {
                     objectInfo.forEach((info, idx) => {

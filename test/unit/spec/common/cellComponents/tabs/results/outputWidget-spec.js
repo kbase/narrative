@@ -3,8 +3,14 @@ define([
     'base/js/namespace',
     'narrativeConfig',
     'kb_service/client/workspace',
-    './fakeResultsData',
-], (OutputWidget, Jupyter, Config, Workspace, ResultsData) => {
+    '/test/data/fakeResultsData',
+], (
+    OutputWidget,
+    Jupyter,
+    Config,
+    Workspace,
+    ResultsData
+) => {
     'use strict';
 
     describe('test the created objects viewer', () => {
@@ -22,32 +28,31 @@ define([
             const node = document.createElement('div');
             document.getElementsByTagName('body')[0].appendChild(node);
             const widget = OutputWidget.make();
-            return widget.start({node, objectData: ResultsData.objectData})
-                .then(() => {
-                    // we should have a table with a header and two rows.
-                    expect(node.querySelectorAll('tr').length).toBe(3);
-                    expect(node.innerHTML).toContain('Objects');
-                });
+            return widget.start({ node, objectData: ResultsData.objectData }).then(() => {
+                // we should have a table with a header and two rows.
+                expect(node.querySelectorAll('tr').length).toBe(3);
+                expect(node.innerHTML).toContain('Objects');
+            });
         });
 
         it('should start and render an empty area with a message saying there is no data', () => {
             const node = document.createElement('div');
             document.getElementsByTagName('body')[0].appendChild(node);
             const widget = OutputWidget.make();
-            return widget.start({node, objectData: []})
-                .then(() => {
-                    // should make an outer, classed node with nothing in it
-                    const objNode = node.querySelector('div.kb-created-objects');
-                    expect(objNode).toBeDefined();
-                    expect(objNode.innerHTML).toContain('No objects created');
-                });
+            return widget.start({ node, objectData: [] }).then(() => {
+                // should make an outer, classed node with nothing in it
+                const objNode = node.querySelector('div.kb-created-objects');
+                expect(objNode).toBeDefined();
+                expect(objNode.innerHTML).toContain('No objects created');
+            });
         });
 
         it('should stop and clear its node', () => {
             const node = document.createElement('div');
             document.getElementsByTagName('body')[0].appendChild(node);
             const widget = OutputWidget.make();
-            return widget.start({node, objectData: ResultsData.objectData})
+            return widget
+                .start({ node, objectData: ResultsData.objectData })
                 .then(() => {
                     // we should have a table with a header and two rows.
                     expect(node.querySelectorAll('tr').length).toBe(3);
@@ -58,6 +63,5 @@ define([
                     expect(node.innerHTML).toEqual('');
                 });
         });
-
     });
 });

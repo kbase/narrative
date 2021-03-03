@@ -1,14 +1,7 @@
 /**
  * This renders a list of KBase Report objects. Each one is expandable and loads up under a caret.
  */
-define([
-    'bluebird',
-    'jquery',
-    'common/html',
-    'common/ui',
-    'common/events',
-    'kbaseReportView'
-], (
+define(['bluebird', 'jquery', 'common/html', 'common/ui', 'common/events', 'kbaseReportView'], (
     Promise,
     $,
     html,
@@ -18,7 +11,7 @@ define([
 ) => {
     'use strict';
 
-    let tag = html.tag,
+    const tag = html.tag,
         div = tag('div'),
         a = tag('a');
 
@@ -39,15 +32,18 @@ define([
         function renderReports(objectData, events) {
             return objectData.map((objInfo) => {
                 return div([
-                    a({
-                        class: 'kb-report__toggle collapsed',
-                        dataToggle: 'collapse',
-                        ariaExpanded: false,
-                        id: events.addEvent({
-                            type: 'click',
-                            handler: (e) => toggleReportView(e, objInfo)
-                        })
-                    }, objInfo.name)
+                    a(
+                        {
+                            class: 'kb-report__toggle collapsed',
+                            dataToggle: 'collapse',
+                            ariaExpanded: false,
+                            id: events.addEvent({
+                                type: 'click',
+                                handler: (e) => toggleReportView(e, objInfo),
+                            }),
+                        },
+                        objInfo.name
+                    ),
                 ]);
             });
         }
@@ -56,11 +52,10 @@ define([
             const toggleHeader = e.target;
             if (!toggleHeader.classList.contains('collapsed')) {
                 toggleHeader.parentElement.lastElementChild.remove();
-            }
-            else {
+            } else {
                 const reportContainer = document.createElement('div');
                 toggleHeader.parentElement.appendChild(reportContainer);
-                new KBaseReportView($(reportContainer), {report_ref: objInfo.reportRef});
+                new KBaseReportView($(reportContainer), { report_ref: objInfo.reportRef });
             }
             toggleHeader.classList.toggle('collapsed');
         }
@@ -77,14 +72,15 @@ define([
             ui = UI.make({
                 node: container,
             });
-            let events = Events.make();
+            const events = Events.make();
             // this is the main layout div. don't do anything yet.
             container.innerHTML = div({
                 dataElement: 'created-objects',
-                class: 'kb-created-objects'
+                class: 'kb-created-objects',
             });
 
-            ui.setContent('created-objects',
+            ui.setContent(
+                'created-objects',
                 ui.buildCollapsiblePanel({
                     title: 'Reports',
                     name: 'created-objects-toggle',
@@ -92,7 +88,8 @@ define([
                     type: 'default',
                     classes: ['kb-panel-container'],
                     body: renderReports(arg.objectData, events),
-                }));
+                })
+            );
 
             events.attachEvents(container);
         }
@@ -106,10 +103,9 @@ define([
          */
         function start(arg) {
             // send parent the ready message
-            return Promise.resolve(doAttach(arg))
-                .catch((err) => {
-                    console.error('Error while starting the created objects view', err);
-                });
+            return Promise.resolve(doAttach(arg)).catch((err) => {
+                console.error('Error while starting the created objects view', err);
+            });
         }
 
         function stop() {

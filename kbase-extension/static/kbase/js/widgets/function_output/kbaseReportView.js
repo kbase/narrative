@@ -19,7 +19,6 @@ define([
 
     'jquery-dataTables',
 ], (
-    bootstrap,
     $,
     Jupyter,
     KBWidget,
@@ -110,7 +109,7 @@ define([
             );
 
             this.ws
-                .get_objects2({objects: [this.objIdentity]})
+                .get_objects2({ objects: [this.objIdentity] })
                 .then((result) => {
                     this.reportData = result.data[0].data;
                     return this.getLinks(this.reportData);
@@ -188,20 +187,22 @@ define([
                 ]),
                 // the main content wrapper inside the iframe
                 iframeContent = this.wrapHtmlDoc(
-                    div({
-                        id: iframeId,
-                        dataFrame: iframeId,
-                        style: {
-                            overflow: 'hidden',
+                    div(
+                        {
+                            id: iframeId,
+                            dataFrame: iframeId,
+                            style: {
+                                overflow: 'hidden',
+                            },
+                            dataParams: encodeURIComponent(
+                                JSON.stringify({
+                                    parentHost: iframeOrigin,
+                                    iframeId: iframeId,
+                                    serviceId: iframeMessages.serviceId,
+                                })
+                            ),
                         },
-                        dataParams: encodeURIComponent(
-                            JSON.stringify({
-                                parentHost: iframeOrigin,
-                                iframeId: iframeId,
-                                serviceId: iframeMessages.serviceId,
-                            })
-                        ),
-                    }, arg.content + iframeScript
+                        arg.content + iframeScript
                     )
                 ).replace(/"/g, '&quot;'),
                 width = arg.width || '100%',
@@ -300,12 +301,12 @@ define([
                 '<': '&lt;',
                 '>': '&gt;',
                 '"': '&quot;',
-                '\'': '&#39;',
+                "'": '&#39;',
                 '/': '&#x2F;',
                 '`': '&#x60;',
                 '=': '&#x3D;',
             };
-            return String(string).replace(/[&<>"'`=\/]/g, (s) => {
+            return String(string).replace(/[&<>"'`=/]/g, (s) => {
                 return entityMap[s];
             });
         },
@@ -908,11 +909,9 @@ define([
             console.error(error);
             if (typeof error === 'string') {
                 errString = error;
-            }
-            else if (error.error && error.error.message) {
+            } else if (error.error && error.error.message) {
                 errString = error.error.message;
-            }
-            else if (error.error && error.error.error && typeof error.error.error === 'string') {
+            } else if (error.error && error.error.error && typeof error.error.error === 'string') {
                 errString = error.error.error;
             }
 

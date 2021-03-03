@@ -21,7 +21,6 @@ define([
                 description: 'Field bus',
             }),
             inputControlFactory = config.inputControlFactory,
-            fieldId = html.genId(),
             spec = config.parameterSpec;
         let places, parent, container, inputControl;
 
@@ -67,6 +66,7 @@ define([
                             id: events.addEvent({
                                 type: 'click',
                                 handler: function () {
+                                    // FIXME: places.infoPanel is not set anywhere!
                                     places.infoPanel
                                         .querySelector('[data-element="big-tip"]')
                                         .classList.toggle('hidden');
@@ -85,7 +85,7 @@ define([
 
             return {
                 content: content,
-                places: ids,
+                ids: ids,
             };
         }
 
@@ -110,15 +110,8 @@ define([
             PR.prettyPrint(null, container);
 
             places = {
-                field: document.getElementById(fieldId),
-                message: document.getElementById(rendered.places.message),
-                inputControl: document.getElementById(rendered.places.inputControl),
+                inputControl: container.querySelector('#' + rendered.ids.inputControl),
             };
-
-            //TODO: why do this? it seems recursive? could we even call attach in this case? it's not a public method
-            // if (inputControl.attach) {
-            //     return inputControl.attach(places.inputControl);
-            // }
         }
 
         function start(arg) {

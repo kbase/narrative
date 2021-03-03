@@ -16,37 +16,29 @@
  */
 define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) => {
     'use strict';
-    let instanceId = 0;
-
-    function newInstance() {
-        instanceId += 1;
-        return instanceId;
-    }
 
     function factory(cfg) {
-        let api,
-            config = cfg || {},
+        const config = cfg || {},
             listenerRegistry = {},
             verbose = config.verbose || false,
             chatty = config.chatty || false,
-            transientMessages = [],
-            requestMap = [],
             interval = 0,
-            timer,
-            instanceId = newInstance(),
             channels = {},
-            doLogMessages = false,
             strictMode = config.strict;
 
-        function warn(message) {
+        let transientMessages = [],
+            timer;
+
+        function warn(...messages) {
             if (verbose) {
-                console.warn(message);
+                console.warn(messages);
             }
         }
 
-        function log(message) {
+        function log(...messages) {
             if (chatty) {
-                console.log(message);
+                // eslint-disable-next-line no-console
+                console.log(messages);
             }
         }
 
@@ -89,7 +81,7 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
 
         function ensureChannel(name) {
             if (!channels[name]) {
-                warn('Channel implicitly created', name);
+                warn(`Channel implicitly created: ${name}`);
                 makeChannel({ name: name });
             }
             return channels[name];
@@ -130,11 +122,11 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
         }
 
         function processKeyListeners(channel, item) {
-            let listeners = channel.keyListeners[item.envelope.key],
-                handled = false;
+            const listeners = channel.keyListeners[item.envelope.key];
             if (!listeners) {
                 return;
             }
+            let handled = false;
             listeners.forEach((listener) => {
                 handled = true;
                 log('PROCESSING KEY LISTENER', channel, item);
@@ -193,8 +185,7 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
         }
 
         function listen(spec) {
-            let id = new Uuid(4).format(),
-                key,
+            const id = new Uuid(4).format(),
                 channelName = canonicalizeChannelName(spec.channel),
                 channel = ensureChannel(channelName),
                 listener = {
@@ -205,7 +196,7 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
                 };
 
             if (spec.key) {
-                key = encodeKey(spec.key);
+                const key = encodeKey(spec.key);
                 if (!channel.keyListeners[key]) {
                     channel.keyListeners[key] = [];
                 }
@@ -236,17 +227,15 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
         }
 
         function removeListener(id) {
-            let listenerToRemove = listenerRegistry[id],
-                channel,
-                listeners,
-                newListeners;
+            const listenerToRemove = listenerRegistry[id];
             if (!listenerToRemove) {
                 return;
             }
-            channel = getChannel(listenerToRemove.channelName);
+            const channel = getChannel(listenerToRemove.channelName);
             if (!channel) {
                 return;
             }
+            let listeners;
             if (listenerToRemove.key) {
                 listeners = channel.keyListeners[listenerToRemove.key];
                 if (!listeners) {
@@ -274,8 +263,6 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
 
         // PROCESSING ENGINE
 
-        // PROCESSING ENGINE
-
         function processTestListeners(channel, item) {
             let handled = false;
             channel.testListeners.forEach((listener) => {
@@ -290,13 +277,13 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
         }
 
         function processQueueItem(item) {
-            let channel = getChannel(item.envelope.channel),
-                handled;
+            const channel = getChannel(item.envelope.channel);
 
             if (!channel) {
                 return;
             }
 
+            let handled;
             if (item.envelope.listenerId) {
                 log('PROCESSING BY LISTENER ID', channel, item);
                 handled = processListener(channel, item);
@@ -345,14 +332,13 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
         // SENDING
 
         function setPersistentMessage(message, envelope) {
-            let channel = ensureChannel(envelope.channel),
-                key = envelope.key,
-                existingMessage;
+            const channel = ensureChannel(envelope.channel),
+                key = envelope.key;
             if (!key) {
                 throw new Error('Persistent messages require a key');
             }
 
-            existingMessage = channel.persistentMessages[key];
+            const existingMessage = channel.persistentMessages[key];
             if (existingMessage) {
                 if (utils.isEqual(existingMessage.message, message)) {
                     return;
@@ -439,12 +425,11 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
         }
 
         function get(spec, defaultValue) {
-            let key,
-                channelName = canonicalizeChannelName(spec.channel),
+            const channelName = canonicalizeChannelName(spec.channel),
                 channel = ensureChannel(channelName);
 
             if (spec.key) {
-                key = encodeKey(spec.key);
+                const key = encodeKey(spec.key);
 
                 const persistentMessage = channel.persistentMessages[key];
                 if (!persistentMessage) {
@@ -452,17 +437,12 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
                 }
 
                 return persistentMessage.message;
-            } else if (spec.test) {
-                // TODO
-                // listener.test = spec.test;
-                // listener.handle = spec.handle;
-                // channel.testListeners.push(listener);
-                warn('Not current support for test filtering on get');
-                return defaultValue;
-            } else {
-                warn('listen: nothing to listen on (test or key)');
-                return defaultValue;
             }
+            const msg = spec.test
+                ? 'No current support for test filtering on get'
+                : 'listen: nothing to listen on (test or key)';
+            warn(msg);
+            return defaultValue;
         }
 
         /*
@@ -497,7 +477,7 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
          * pending requests - which is a map of all request messages.
          */
         function request(message, address) {
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
                 const requestId = new Uuid(4).format();
 
                 // when this listener with a key set to the request id
@@ -524,20 +504,6 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
             });
         }
 
-        // function get(address) {
-        //     return new Promise(function(resolve, reject) {
-        //         console.log('GOT? request with', address);
-        //         listen({
-        //             channel: address.channel,
-        //             key: address.key,
-        //             // once: true,
-        //             timeout: address.timeout || 10000,
-        //             handle: function(message) {
-        //                 resolve(message);
-        //             }
-        //         });
-        //     });
-        // }
         function plisten(spec) {
             let initialized = false;
             let id;
@@ -603,14 +569,6 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
             send(message, {
                 key: { type: type },
             });
-        }
-
-        function logMessages(doLog) {
-            if (doLog) {
-                doLogMessages = true;
-            } else {
-                doLogMessages = false;
-            }
         }
 
         // CHANNEL BUS
@@ -875,7 +833,7 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
         makeChannel({ name: 'default', description: 'The Default Channel' });
 
         // API
-        api = {
+        const api = {
             listen: listen,
             send: send,
             respond: respond,
@@ -888,7 +846,6 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
             makeChannelBus: makeChannelBus,
             makeChannel: makeChannel,
             removeChannel: removeChannel,
-            logMessages: logMessages,
             removeListener: removeListener,
             removeListeners: removeListeners,
             connect: connect,

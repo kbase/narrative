@@ -1,13 +1,11 @@
 define([
     'base/js/namespace',
     'common/cellComponents/filePathWidget',
+    'jquery',
     'common/runtime',
-    'common/props',
     'common/spec',
-    // '/test/data/testAppObj',
     'json!/test/data/NarrativeTest.test_input_params.spec.json',
-    'narrativeMocks',
-], (Jupyter, FilePathWidget, Runtime, Props, Spec, /*TestAppObject*/ TestSpec, Mocks) => {
+], (Jupyter, FilePathWidget, $, Runtime, Spec, TestSpec) => {
     'use strict';
 
     describe('The file path widget module', () => {
@@ -34,41 +32,36 @@ define([
 
         beforeEach(function () {
             const bus = Runtime.make().bus();
+            this.parent = document.createElement('div');
             this.node = document.createElement('div');
-            document.getElementsByTagName('body')[0].appendChild(this.node);
-
-            // const model = Props.make({
-            //     data: TestAppObject,
-            //     onUpdate: () => {},
-            // });
+            document.getElementsByTagName('body')[0].appendChild(this.parent);
+            this.parent.appendChild(this.node);
 
             this.spec = Spec.make({
-                appSpec: TestSpec //model.getItem('app.spec'),
+                appSpec: TestSpec,
             });
 
             this.parameters = this.spec.getSpec().parameters;
 
             const workspaceId = 54745;
-
             this.filePathWidgetInstance = FilePathWidget.make({
                 bus: bus,
                 workspaceId: workspaceId,
-                initialParams: { //model.getItem('params'),
+                initialParams: {
                     actual_input_object: 'foo',
-                    actual_output_object: 'bar'
-                }
+                    actual_output_object: 'bar',
+                },
             });
         });
 
         afterEach(function () {
-            document.body.innerHTML = '';
+            $(this.parent).remove();
             window.kbaseRuntime = null;
-            this.node.remove();
-            this.node = null;
         });
 
         it('has a make function that returns an object', function () {
-            expect(this.filePathWidgetInstance).not.toBe(null);
+            expect(this.filePathWidgetInstance).not.toBeNull();
+            expect(this.filePathWidgetInstance).toEqual(jasmine.any(Object));
         });
 
         it('has the required methods', function () {
@@ -77,69 +70,57 @@ define([
             });
         });
 
-        it('should start and render itself', function () {
-            return this.filePathWidgetInstance
-                .start({
+        xdescribe('the started widget', () => {
+            beforeEach(async function () {
+                await this.filePathWidgetInstance.start({
                     node: this.node,
                     appSpec: this.spec,
                     parameters: this.parameters,
-                })
-                .then(() => {
-                    return new Promise((resolve) => { setTimeout(resolve, 4000)})
-                })
-                .then(() => {
-                    const contents = [
-                        'File Paths',
-                        'kb-file-path__table',
-                        'kb-file-path__table_row',
-                        'kb-file-path__file_number',
-                        '1',
-                        'actual_output_object', // 'fastq_rev_staging_file_name',
-                        'fa fa-trash-o fa-lg',
-                        'Add Row',
-                    ];
-                    contents.forEach((item) => {
-                        expect(this.node.innerHTML).toContain(item);
-                    });
                 });
-        });
+            });
 
-        xit('should add a row when Add Row button is clicked', function () {
-            return this.filePathWidgetInstance
-                .start({
-                    node: this.node,
-                    appSpec: this.spec,
-                    parameters: this.parameters,
-                })
-                .then(() => {
-                    return new Promise((resolve) => { setTimeout(resolve, 4000)})
-                })
-                .then(() => {
-                    const preClickNumberOfRows = this.node.querySelectorAll('tr').length;
-                    expect(preClickNumberOfRows).toEqual(1);
-                    this.node.querySelector('.kb-file-path__button--add_row').click();
-                    const postClickNumberOfRows = this.node.querySelectorAll('tr').length;
+            afterEach(async function () {
+                await this.filePathWidgetInstance.stop();
+            });
+
+            it('should start and render itself', function () {
+                const jasmineContext = this;
+                const contents = [
+                    'File Paths',
+                    'kb-file-path__table',
+                    'kb-file-path__table_row',
+                    'kb-file-path__file_number',
+                    '1',
+                    'actual_output_object',
+                    'fa fa-trash-o fa-lg',
+                    'Add Row',
+                ];
+                contents.forEach((item) => {
+                    expect(jasmineContext.node.innerHTML).toContain(item);
+                });
+            });
+
+            it('should add a row when Add Row button is clicked', function () {
+                const $node = $(this.node);
+                const preClickNumberOfRows = $node.find('tr').length;
+                expect(preClickNumberOfRows).toEqual(1);
+                $node.find('.kb-file-path__button--add_row').click();
+                setTimeout(() => {
+                    const postClickNumberOfRows = $node.find('tr').length;
                     expect(postClickNumberOfRows).toEqual(2);
-                });
-        });
+                }, 1000);
+            });
 
-        xit('should delete a row when trashcan button is clicked', function () {
-            return this.filePathWidgetInstance
-                .start({
-                    node: this.node,
-                    appSpec: this.spec,
-                    parameters: this.parameters,
-                })
-                .then(() => {
-                    return new Promise((resolve) => { setTimeout(resolve, 4000)})
-                })
-                .then(() => {
-                    const preClickNumberOfRows = this.node.querySelectorAll('tr').length;
-                    expect(preClickNumberOfRows).toEqual(1);
-                    this.node.querySelector('.kb-file-path__button--delete').click();
-                    const postClickNumberOfRows = this.node.querySelectorAll('tr').length;
+            it('should delete a row when trashcan button is clicked', function () {
+                const $node = $(this.node);
+                const preClickNumberOfRows = $node.find('tr').length;
+                expect(preClickNumberOfRows).toEqual(1);
+                $node.find('.kb-file-path__button--delete').click();
+                setTimeout(() => {
+                    const postClickNumberOfRows = $node.find('tr').length;
                     expect(postClickNumberOfRows).toEqual(0);
-                });
+                }, 1000);
+            });
         });
     });
 });

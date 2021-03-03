@@ -9,23 +9,23 @@ define([
     'use strict';
     const narrativeConfig = Props.make({ data: Config.getConfig() });
 
-    function factory(config) {
+    function factory() {
         function createRuntime() {
-            const bus = Bus.make();
+            const theBus = Bus.make();
 
             const clock = Clock.make({
-                bus: bus,
+                bus: theBus,
                 resolution: 1000,
             });
             clock.start();
 
             $(document).on('dataUpdated.Narrative', () => {
-                bus.emit('workspace-changed');
+                theBus.emit('workspace-changed');
             });
 
             return {
                 created: new Date(),
-                bus: bus,
+                bus: theBus,
                 env: Props.make({}),
             };
         }
@@ -58,12 +58,11 @@ define([
         }
 
         function getUserSetting(settingKey, defaultValue) {
-            let settings = Jupyter.notebook.metadata.kbase.userSettings,
-                setting;
+            const settings = Jupyter.notebook.metadata.kbase.userSettings;
             if (!settings) {
                 return defaultValue;
             }
-            setting = settings[settingKey];
+            const setting = settings[settingKey];
             if (setting === undefined) {
                 return defaultValue;
             }
@@ -104,8 +103,8 @@ define([
     }
 
     return {
-        make: function (config) {
-            return factory(config);
+        make: function () {
+            return factory();
         },
     };
 });

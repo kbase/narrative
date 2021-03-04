@@ -123,7 +123,7 @@ define(['bluebird', 'jquery', 'common/html', 'common/ui', 'common/events', 'kbas
         return {
             start,
             stop,
-            toggleReportView
+            toggleReportView,
         };
     }
 

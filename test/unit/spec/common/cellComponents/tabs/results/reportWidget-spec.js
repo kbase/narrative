@@ -31,6 +31,17 @@ define([
             expect(this.node.innerHTML).toContain('Reports');
         });
 
+        it('should clear itself after stopping', async function () {
+            const widget = ReportWidget.make();
+            await widget.start({
+                node: this.node,
+                objectData: ResultsData.objectData
+            });
+            expect(this.node.innerHTML).toContain('Reports');
+            await widget.stop();
+            expect(this.node.innerHTML).toBe('');
+        })
+
         it('should expand and create a kbaseReportView widget on toggle', async function () {
             const widget = ReportWidget.make();
             // just take a single object to render

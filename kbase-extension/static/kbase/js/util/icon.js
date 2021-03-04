@@ -1,4 +1,4 @@
-define(['underscore', 'kb_common/html', 'common/props', 'common/runtime', 'narrativeConfig'], (
+define(['underscore', 'common/html', 'common/props', 'common/runtime', 'narrativeConfig'], (
     _,
     html,
     Props,

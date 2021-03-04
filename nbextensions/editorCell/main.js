@@ -436,14 +436,6 @@ define([
         }
     }
 
-    // runtime.bus().logMessages(true);
-    // there is not a service/component lifecycle for the narrative is there?
-    // so the clock starts, and is never stopped.
-
-    //    runtime.bus().on('clock-tick', function (message) {
-    //       console.log('TICK', message);
-    //    });
-
     return {
         // This is the sole ipython/jupyter api call
         load_ipython_extension: load,

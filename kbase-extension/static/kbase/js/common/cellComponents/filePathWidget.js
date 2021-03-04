@@ -291,12 +291,7 @@ define([
         }
 
         // MESSAGE HANDLERS
-        function doAttach(node) {
-            container = node;
-            ui = UI.make({
-                node: container,
-                bus: bus,
-            });
+        function doAttach() {
             const layout = renderLayout();
             container.innerHTML = layout;
             events.attachEvents(container);
@@ -397,6 +392,7 @@ define([
                     });
                 })
                 .catch((ex) => {
+                    console.error(`Error making input field widget: ${ex}`);
                     const errorDisplay = div(
                         {
                             class: 'kb-field-widget__error_message--file-paths',
@@ -428,57 +424,62 @@ define([
                 return Promise.resolve(
                     ui.getElement(`${cssClassType}s-area`).classList.add('hidden')
                 );
-            } else {
-                filePathRow.innerHTML = [
-                    td({
-                        class: `${cssBaseClass}__file_number`,
-                    }),
-                    td(
+            }
+
+            filePathRow.innerHTML = [
+                td({
+                    class: `${cssBaseClass}__file_number`,
+                }),
+                td(
+                    {
+                        class: `${cssBaseClass}__params`,
+                    },
+                    [
+                        div(
+                            {
+                                class: `${cssBaseClass}__param_container row`,
+                            },
+                            [filePathParams.content]
+                        ),
+                    ]
+                ),
+                td({}, [
+                    button(
                         {
-                            class: `${cssBaseClass}__params`,
+                            class: `${cssBaseClass}__button--delete btn btn__text`,
+                            type: 'button',
+                            id: events.addEvent({
+                                type: 'click',
+                                handler: function (e) {
+                                    deleteRow(e);
+                                },
+                            }),
                         },
                         [
-                            div(
-                                {
-                                    class: `${cssBaseClass}__param_container row`,
-                                },
-                                [filePathParams.content]
-                            ),
+                            icon({
+                                class: 'fa fa-trash-o fa-lg',
+                            }),
                         ]
                     ),
-                    td({}, [
-                        button(
-                            {
-                                class: `${cssBaseClass}__button--delete btn btn__text`,
-                                type: 'button',
-                                id: events.addEvent({
-                                    type: 'click',
-                                    handler: function (e) {
-                                        deleteRow(e);
-                                    },
-                                }),
-                            },
-                            [
-                                icon({
-                                    class: 'fa fa-trash-o fa-lg',
-                                }),
-                            ]
-                        ),
-                    ]),
-                ].join('');
+                ]),
+            ].join('');
 
-                return Promise.all(
-                    filePathParams.layout.map(async (parameterId) => {
-                        await createFilePathWidget(appSpec, filePathParams, parameterId);
-                    })
-                ).then(() => {
-                    events.attachEvents(container);
-                });
-            }
+            return Promise.all(
+                filePathParams.layout.map(async (parameterId) => {
+                    await createFilePathWidget(appSpec, filePathParams, parameterId);
+                })
+            ).then(() => {
+                events.attachEvents(container);
+            });
         }
 
         function start(arg) {
-            doAttach(arg.node);
+            container = arg.node;
+            ui = UI.make({
+                node: container,
+                bus: bus,
+            });
+            doAttach();
 
             model.setItem('appSpec', arg.appSpec);
             model.setItem('parameters', arg.parameters);
@@ -512,6 +513,9 @@ define([
         function stop() {
             return Promise.try(() => {
                 // really unhook things here.
+                if (container) {
+                    container.innerHTML = '';
+                }
             });
         }
 

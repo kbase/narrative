@@ -1,12 +1,11 @@
 define([
-    'jquery',
     'base/js/namespace',
     'common/cellComponents/paramsWidget',
     'common/runtime',
     'common/props',
     'common/spec',
     '/test/data/testAppObj',
-], ($, Jupyter, ParamsWidget, Runtime, Props, Spec, TestAppObject) => {
+], (Jupyter, ParamsWidget, Runtime, Props, Spec, TestAppObject) => {
     'use strict';
 
     describe('The Parameter module', () => {
@@ -70,32 +69,43 @@ define([
                 await this.paramsWidgetInstance.stop();
             }
             window.kbaseRuntime = null;
-            this.parent.innerHTML = '';
+            this.parent.remove();
         });
 
-        it('should render the correct parameters', () => {
+        it('should render the correct parameters', function () {
             //Regular (non-advanced) params
-            const paramContainers = $('div.kb-field-cell__param_container');
+            const paramContainers = this.node.querySelectorAll(
+                'div.kb-field-cell__param_container'
+            );
+            const titleList = Object.values(this.parameters.specs).map((item) => {
+                return item.ui.label;
+            });
 
-            paramContainers.each(function () {
+            paramContainers.forEach((paramNode) => {
                 //each param container should have ONE label
-                const label = $(this).find('label.kb-field-cell__cell_label');
+                const labelArr = paramNode.querySelectorAll('label.kb-field-cell__cell_label');
+                expect(labelArr.length).toBe(1);
+                const label = labelArr[0];
                 expect(label).toBeDefined();
-                expect(label.length).toBe(1);
+                expect(titleList.includes(label.innerText)).toBeTrue();
 
                 //each label should also have a title
-                const title = label.attr('title');
+                const title = label.getAttribute('title');
                 expect(title).toBeDefined();
+                expect(titleList.includes(title)).toBeTrue();
 
                 //each param container should have ONE input control
-                const inputControl = $(this).find('div.kb-field-cell__input_control');
-                expect(inputControl).toBeDefined();
-                expect(inputControl.length).toBe(1);
+                const inputControlArr = paramNode.querySelectorAll(
+                    'div.kb-field-cell__input_control'
+                );
+                expect(inputControlArr).toBeDefined();
+                expect(inputControlArr.length).toBe(1);
             });
         });
 
         it('should render with advanced parameters hidden', function () {
             //get all advanced params using the spec
+            const thisNode = this.node;
             const advancedParams = [];
             for (const [, entry] of Object.entries(this.parameters.specs)) {
                 if (entry.ui.advanced) {
@@ -105,13 +115,13 @@ define([
 
             //search for these on the rendered page, make sure they are there and have the correct class
             advancedParams.forEach((param) => {
-                const renderedAdvancedParam = $('div[data-advanced-parameter="' + param + '"]');
+                const renderedAdvancedParam = thisNode.querySelector(
+                    `div[data-advanced-parameter="${param}"]`
+                );
                 expect(renderedAdvancedParam).toBeDefined();
-                const hidden = renderedAdvancedParam.hasClass(
+                expect(renderedAdvancedParam).toHaveClass(
                     'kb-app-params__fields--parameters__hidden_field'
                 );
-
-                expect(hidden).toBeTrue();
             });
         });
 

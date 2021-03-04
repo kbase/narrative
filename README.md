@@ -113,6 +113,12 @@ Husky hooks can be skipped by setting the environment variable:
 HUSKY=0
 ```
 
+e.g.
+
+```
+HUSKY=0 git push origin <branch_name>
+```
+
 ## Submitting code
 
 Follow the gitflow directions located at [docs/git-workflow.md](docs/git-workflow.md) to submit code to this repository.

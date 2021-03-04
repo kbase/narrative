@@ -495,7 +495,7 @@ define([
                         self.ws
                             .get_object_info_new({ objects: objIds })
                             .then((objInfo) => {
-                                const pref = StringUtil.uuid();
+                                const pref = new UUID(4).format();
                                 const displayData = [];
                                 const dataNameToInfo = {};
                                 for (var k = 0; k < objInfo.length; k++) {

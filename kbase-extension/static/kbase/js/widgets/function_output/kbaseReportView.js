@@ -10,13 +10,12 @@ define([
     'kbaseAuthenticatedWidget',
     'narrativeConfig',
     'uuid',
-    'kb_common/html',
+    'common/html',
     'kb_sdk_clients/genericClient',
     'kb_service/client/workspace',
     'common/ui',
     'common/iframe/hostMessages',
     'common/events',
-
     'jquery-dataTables',
 ], (
     $,
@@ -495,10 +494,10 @@ define([
                         self.ws
                             .get_object_info_new({ objects: objIds })
                             .then((objInfo) => {
-                                const pref = StringUtil.uuid();
+                                const pref = new UUID(4).format();
                                 const displayData = [];
                                 const dataNameToInfo = {};
-                                for (var k = 0; k < objInfo.length; k++) {
+                                for (let k = 0; k < objInfo.length; k++) {
                                     displayData.push({
                                         name:
                                             '<a href="#" style="cursor: pointer;" class="report_row_' +
@@ -575,7 +574,7 @@ define([
                                                     ';"><b>Description</b></th>'
                                             )
                                     );
-                                    for (var k = 0; k < displayData.length; k++) {
+                                    for (let k = 0; k < displayData.length; k++) {
                                         $objTable.append(
                                             $('<tr>')
                                                 .append(
@@ -798,10 +797,10 @@ define([
 
             if (self.options.showHTML) {
                 if (self.reportLinks && self.reportLinks.length) {
-                    var $ul = $.jqElem('ul');
-                    self.reportLinks.forEach(function (reportLink) {
-                        var link_id = new UUID(4).format();
-                        var $linkItem = $.jqElem('li').append(
+                    const $ul = $.jqElem('ul');
+                    self.reportLinks.forEach((reportLink) => {
+                        const link_id = new UUID(4).format();
+                        const $linkItem = $.jqElem('li').append(
                             $.jqElem('a')
                                 .attr('href', reportLink.url)
                                 .attr('target', '_blank')
@@ -837,9 +836,9 @@ define([
                 if (report.file_links && report.file_links.length) {
                     self.$mainPanel.append(div({ dataElement: 'downloadable-files' }));
 
-                    var iframe_id = new UUID(4).format();
+                    const iframe_id = new UUID(4).format();
 
-                    var $ul = $.jqElem('ul');
+                    const $ul = $.jqElem('ul');
                     $.each(report.file_links, function (i, v) {
                         var link_id = new UUID(4).format();
                         $ul.append(

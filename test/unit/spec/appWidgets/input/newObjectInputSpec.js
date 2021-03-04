@@ -5,7 +5,6 @@ define([
     'narrativeMocks',
 ], (Runtime, NewObjectInput, Jupyter, Mocks) => {
     'use strict';
-    let bus, testConfig, runtime, node;
     const AUTH_TOKEN = 'fakeAuthToken',
         required = false,
         defaultValue = 'apple',
@@ -67,6 +66,7 @@ define([
 
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('New Object Input tests', () => {
+        let bus, testConfig, runtime, node;
         beforeEach(() => {
             runtime = Runtime.make();
             Mocks.setAuthToken(AUTH_TOKEN);

@@ -34,11 +34,10 @@ define([
     'util/icon',
     'bluebird',
     'util/bootstrapDialog',
-    'util/display',
     'kbase/js/widgets/narrative_core/kbaseCardLayout',
     'narrativeConfig',
     'jquery',
-], (bootstrap, Icon, Promise, BootstrapDialog, DisplayUtil, kbaseCardLayout, Config, $) => {
+], (bootstrap, Icon, Promise, BootstrapDialog, kbaseCardLayout, Config, $) => {
     'use strict';
     function KbaseAppCard(entry) {
         const self = this;
@@ -114,21 +113,7 @@ define([
                 },
             });
 
-        const $logo = $('<div>');
-        if (app.icon && app.icon.url) {
-            const url = Config.url('narrative_method_store_image') + app.icon.url;
-            $logo.append(
-                DisplayUtil.getAppIcon({
-                    url: url,
-                    cursor: 'pointer',
-                    setColor: true,
-                    size: '50px',
-                })
-            );
-        } else {
-            $logo.append(DisplayUtil.getAppIcon({ cursor: 'pointer', setColor: true }));
-        }
-
+        const $logo = $('<div>').append(Icon.makeAppIcon(entry.app));
         const $name = $('<div>').addClass('kb-data-list-name').append(shortName);
         const $version = $('<span>').addClass('kb-data-list-version').append(version);
         const $type = $('<span>').addClass('kb-data-list-type').append(type).append($version);

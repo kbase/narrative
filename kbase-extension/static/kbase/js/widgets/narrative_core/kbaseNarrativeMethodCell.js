@@ -17,7 +17,7 @@ define([
     'base/js/namespace',
     'util/string',
     'util/bootstrapDialog',
-    'util/display',
+    'util/icon',
     'kb_service/client/narrativeMethodStore',
     'handlebars',
     'kbaseAuthenticatedWidget',
@@ -32,7 +32,7 @@ define([
     Jupyter,
     StringUtil,
     BootstrapDialog,
-    Display,
+    Icon,
     NarrativeMethodStore,
     Handlebars,
     kbaseAuthenticatedWidget,
@@ -250,12 +250,7 @@ define([
             this.$elem.closest('.cell').trigger('set-title.cell', [self.method.info.name]);
 
             const $logo = $('<div>');
-            if (this.method.info.icon && this.method.info.icon.url) {
-                const url = this.options.methodStoreURL.slice(0, -3) + this.method.info.icon.url;
-                $logo.append(Display.getAppIcon({ url: url }));
-            } else {
-                $logo.append(Display.getAppIcon({}));
-            }
+            $logo.append(Icon.makeAppIcon(this.method));
 
             this.$elem.closest('.cell').trigger('set-icon.cell', [$logo.html()]);
 

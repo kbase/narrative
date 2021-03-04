@@ -421,18 +421,19 @@ define([
 
                     widgets.push(widget);
                     return widget.start({
-                        node: document.getElementById(parameterInfo.view[paramSpec.id].id),
+                        node: container.querySelector('#' + parameterInfo.view[paramSpec.id].id),
                     });
                 })
                 .catch((ex) => {
+                    console.error(`Error making params input field widget: ${ex}`);
                     const errorDisplay = div(
                         {
                             class: 'kb-field-widget__error_message--parameters',
                         },
                         [ex.message]
                     );
-                    document.getElementById(
-                        parameterInfo.view[paramSpec.id].id
+                    container.querySelector(
+                        '#' + parameterInfo.view[paramSpec.id].id
                     ).innerHTML = errorDisplay;
 
                     throw new Error(`Error making input field widget: ${ex}`);

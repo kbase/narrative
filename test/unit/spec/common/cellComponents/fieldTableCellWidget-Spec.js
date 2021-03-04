@@ -75,7 +75,6 @@ define([
         ];
 
         beforeAll(() => {
-            window.kbaseRuntime = null;
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',
             };
@@ -127,7 +126,7 @@ define([
                     );
                 });
             }
-            this.parent.innerHTML = '';
+            this.parent.remove();
             window.kbaseRuntime = null;
         });
 

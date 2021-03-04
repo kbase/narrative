@@ -11,10 +11,6 @@ define([
         '/narrative/static/kbase/images/kbase_animated_logo.gif'
     );
     describe('Test the LoadingWidget module', () => {
-        beforeAll(() => {
-            document.body.innerHTML = '';
-        });
-
         beforeEach(function () {
             this.node = document.createElement('div');
             document.body.appendChild(this.node);
@@ -24,7 +20,6 @@ define([
         afterEach(function () {
             this.node.remove();
             this.node = null;
-            document.body.innerHTML = '';
         });
 
         it('Should instantiate with a null node', () => {

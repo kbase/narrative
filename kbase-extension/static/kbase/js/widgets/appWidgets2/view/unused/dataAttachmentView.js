@@ -503,8 +503,6 @@ define([
 
         function start() {
             return Promise.try(() => {
-                // runtime.bus().logMessages(true);
-
                 bus.on('run', (message) => {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));

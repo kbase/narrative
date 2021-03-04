@@ -2,11 +2,7 @@ define([
     'common/cellComponents/tabs/results/reportWidget',
     'base/js/namespace',
     '/test/data/fakeResultsData',
-], (
-    ReportWidget,
-    Jupyter,
-    ResultsData
-) => {
+], (ReportWidget, Jupyter, ResultsData) => {
     'use strict';
 
     describe('Test the app/bulk import cell report widget', () => {
@@ -23,7 +19,7 @@ define([
             const widget = ReportWidget.make();
             await widget.start({
                 node: this.node,
-                objectData: ResultsData.objectData
+                objectData: ResultsData.objectData,
             });
             // we should have a div with two <a> elements, each with the
             // name of an object
@@ -35,12 +31,12 @@ define([
             const widget = ReportWidget.make();
             await widget.start({
                 node: this.node,
-                objectData: ResultsData.objectData
+                objectData: ResultsData.objectData,
             });
             expect(this.node.innerHTML).toContain('Reports');
             await widget.stop();
             expect(this.node.innerHTML).toBe('');
-        })
+        });
 
         it('should expand and create a kbaseReportView widget on toggle', async function () {
             const widget = ReportWidget.make();
@@ -49,7 +45,7 @@ define([
 
             await widget.start({
                 node: this.node,
-                objectData: [singleDataObject]
+                objectData: [singleDataObject],
             });
             // there should be only one
             expect(this.node.querySelectorAll('a.kb-report__toggle').length).toBe(1);
@@ -75,7 +71,7 @@ define([
 
             await widget.start({
                 node: this.node,
-                objectData: [singleDataObject]
+                objectData: [singleDataObject],
             });
             const toggleNode = this.node.querySelector('a.kb-report__toggle');
             // expect it to be collapsed and not to have any siblings

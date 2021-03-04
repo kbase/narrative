@@ -2,11 +2,7 @@ define([
     'common/cellComponents/tabs/results/outputWidget',
     'base/js/namespace',
     '/test/data/fakeResultsData',
-], (
-    OutputWidget,
-    Jupyter,
-    ResultsData
-) => {
+], (OutputWidget, Jupyter, ResultsData) => {
     'use strict';
 
     describe('test the created objects viewer', () => {

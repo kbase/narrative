@@ -48,8 +48,8 @@ module.exports = function (config) {
             { pattern: 'test/data/**/*', included: false },
             // JS files
             'kbase-extension/static/narrative_paths.js',
-            { pattern: 'kbase-extension/static/**/*.js', included: false, nocache: true },
-            { pattern: 'nbextensions/**/*.js', included: false, nocache: true },
+            { pattern: 'kbase-extension/static/**/*.js', included: false },
+            { pattern: 'nbextensions/**/*.js', included: false },
             { pattern: 'nbextensions/**/*.json', included: false },
             // static resources
             { pattern: 'kbase-extension/kbase_templates/*.html', included: false },
@@ -93,7 +93,7 @@ module.exports = function (config) {
                     subdir: 'html',
                 },
                 {
-                    type: 'lcov',
+                    type: 'lcovonly',
                     subdir: 'lcov',
                 },
             ],

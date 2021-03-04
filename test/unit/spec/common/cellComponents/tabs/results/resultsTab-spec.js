@@ -11,10 +11,10 @@ define([
             objects_created: [
                 {
                     description: 'Assembled Contigs',
-                    ref: '11/22/33'
-                }
-            ]
-        }
+                    ref: '11/22/33',
+                },
+            ],
+        },
     };
 
     const newObjectInfo = [
@@ -28,7 +28,7 @@ define([
         'some_workspace_name',
         'hash',
         12345,
-        null
+        null,
     ];
 
     describe('test the bulk import cell results tab', () => {
@@ -47,7 +47,7 @@ define([
             this.node = document.createElement('div');
             this.model = Props.make({
                 data: TestAppObject,
-                onUpdate: () => {}
+                onUpdate: () => {},
             });
             document.body.appendChild(this.node);
         });
@@ -63,7 +63,7 @@ define([
         it('should start and render itself', function () {
             const resultsTabInstance = ResultsTab.make({
                 model: this.model,
-                workspaceClient: this.workspaceClient
+                workspaceClient: this.workspaceClient,
             });
             return resultsTabInstance
                 .start({
@@ -79,7 +79,7 @@ define([
         it('should stop itself and empty the node it was in', function () {
             const resultsTabInstance = ResultsTab.make({
                 model: this.model,
-                workspaceClient: this.workspaceClient
+                workspaceClient: this.workspaceClient,
             });
             return resultsTabInstance
                 .start({
@@ -97,14 +97,13 @@ define([
             const workspaceClient = {
                 get_objects2: () =>
                     Promise.resolve({
-                        data: [reportObject]
+                        data: [reportObject],
                     }),
-                get_object_info_new: () =>
-                    Promise.resolve([newObjectInfo])
+                get_object_info_new: () => Promise.resolve([newObjectInfo]),
             };
             const resultsTabInstance = ResultsTab.make({
                 model: this.model,
-                workspaceClient
+                workspaceClient,
             });
             return resultsTabInstance
                 .start({

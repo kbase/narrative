@@ -31,32 +31,56 @@ define([
             expect(this.node.innerHTML).toContain('Reports');
         });
 
-        it('should expand and create a kbaseReportView widget on toggle', function () {
+        it('should expand and create a kbaseReportView widget on toggle', async function () {
             const widget = ReportWidget.make();
             // just take a single object to render
             const singleDataObject = ResultsData.objectData[0];
 
-            return widget.start({
+            await widget.start({
                 node: this.node,
                 objectData: [singleDataObject]
-            })
-                .then(() => {
-                    // there should be only one
-                    expect(this.node.querySelectorAll('a.kb-report__toggle').length).toBe(1);
-                    // get a handle on it
-                    const toggleNode = this.node.querySelector('a.kb-report__toggle');
-                    // expect it to be collapsed and not to have any siblings
-                    expect(toggleNode.classList.contains('collapsed')).toBeTruthy();
-                    expect(toggleNode.nextSibling).toBeNull();
+            });
+            // there should be only one
+            expect(this.node.querySelectorAll('a.kb-report__toggle').length).toBe(1);
+            // get a handle on it
+            const toggleNode = this.node.querySelector('a.kb-report__toggle');
+            // expect it to be collapsed and not to have any siblings
+            expect(toggleNode.classList.contains('collapsed')).toBeTruthy();
+            expect(toggleNode.nextSibling).toBeNull();
 
-                    toggleNode.click();
-                    // expect it to open up and make a div as a sibling
-                    expect(toggleNode.classList.contains('collapsed')).toBeFalsy();
-                    const reportNode = toggleNode.nextSibling;
-                    expect(reportNode).toBeDefined();
-                    expect(reportNode.innerHTML).toContain('report-widget');
-                });
+            toggleNode.click();
+            // expect it to open up and make a div as a sibling
+            expect(toggleNode.classList.contains('collapsed')).toBeFalsy();
+            const reportNode = toggleNode.nextSibling;
+            expect(reportNode).toBeDefined();
+            // marker for running kbaseReportView
+            expect(reportNode.innerHTML).toContain('report-widget');
+        });
 
+        it('should expand and collapse again on click', async function () {
+            const widget = ReportWidget.make();
+            // just take a single object to render
+            const singleDataObject = ResultsData.objectData[0];
+
+            await widget.start({
+                node: this.node,
+                objectData: [singleDataObject]
+            });
+            const toggleNode = this.node.querySelector('a.kb-report__toggle');
+            // expect it to be collapsed and not to have any siblings
+            expect(toggleNode.classList.contains('collapsed')).toBeTruthy();
+            expect(toggleNode.nextSibling).toBeNull();
+
+            toggleNode.click();
+            // expect it to open up and make a div as a sibling
+            expect(toggleNode.classList.contains('collapsed')).toBeFalsy();
+            const reportNode = toggleNode.nextSibling;
+            expect(reportNode).toBeDefined();
+
+            // close again on another click
+            toggleNode.click();
+            expect(toggleNode.classList.contains('collapsed')).toBeTruthy();
+            expect(toggleNode.nextSibling).toBeNull();
         });
     });
 });

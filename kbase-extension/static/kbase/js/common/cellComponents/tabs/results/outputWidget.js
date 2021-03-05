@@ -24,18 +24,16 @@ define(['bluebird', 'common/html', 'common/ui', 'util/kbaseApiUtil'], (
          * @param {Array} objectData an array of report object references
          */
         function renderOutput(objectData) {
-            const emptyData = div('No objects created');
             if (objectData.length === 0) {
-                return emptyData;
+                return div('No objects created');
             }
-            const objectTable = table({ class: 'table table-bordered table-striped' }, [
+            return table({ class: 'table table-bordered table-striped' }, [
                 tr([th('Created Object Name'), th('Type'), th('Description')]),
                 ...objectData.map((obj) => {
                     const parsedType = APIUtil.parseWorkspaceType(obj.type);
                     return tr([td(obj.name), td(parsedType.type), td(obj.description)]);
                 }),
             ]);
-            return objectTable;
         }
 
         /**

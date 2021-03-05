@@ -6,54 +6,54 @@ define([
     'use strict';
 
     describe('test the created objects viewer', () => {
-        beforeEach(() => {
+        beforeEach(function () {
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',
             };
+            this.node = document.createElement('div');
+            document.body.appendChild(this.node);
+            this.widget = OutputWidget.make();
         });
 
-        afterEach(() => {
+        afterEach(function () {
             Jupyter.narrative = null;
+            this.node.remove();
         });
 
-        it('should start and render with data', () => {
-            const node = document.createElement('div');
-            document.getElementsByTagName('body')[0].appendChild(node);
-            const widget = OutputWidget.make();
-            return widget.start({ node, objectData: ResultsData.objectData }).then(() => {
-                // we should have a table with a header and two rows.
-                expect(node.querySelectorAll('tr').length).toBe(3);
-                expect(node.innerHTML).toContain('Objects');
+        it('should start and render with data', async function () {
+            await this.widget.start({
+                node: this.node,
+                objectData: ResultsData.objectData,
+            });
+            // we should have a table with a header and two rows.
+            expect(this.node.querySelectorAll('tr').length).toBe(3);
+            expect(this.node.innerHTML).toContain('Objects');
+            ResultsData.objectData.forEach((obj) => {
+                expect(this.node.innerHTML).toContain(obj.name);
             });
         });
 
-        it('should start and render an empty area with a message saying there is no data', () => {
-            const node = document.createElement('div');
-            document.getElementsByTagName('body')[0].appendChild(node);
-            const widget = OutputWidget.make();
-            return widget.start({ node, objectData: [] }).then(() => {
-                // should make an outer, classed node with nothing in it
-                const objNode = node.querySelector('div.kb-created-objects');
-                expect(objNode).toBeDefined();
-                expect(objNode.innerHTML).toContain('No objects created');
+        it('should start and render an empty area with a message saying there is no data', async function () {
+            await this.widget.start({
+                node: this.node,
+                objectData: [],
             });
+            // should make an outer, classed node with nothing in it
+            const objNode = this.node.querySelector('div.kb-created-objects');
+            expect(objNode).toBeDefined();
+            expect(objNode.innerHTML).toContain('No objects created');
         });
 
-        it('should stop and clear its node', () => {
-            const node = document.createElement('div');
-            document.getElementsByTagName('body')[0].appendChild(node);
-            const widget = OutputWidget.make();
-            return widget
-                .start({ node, objectData: ResultsData.objectData })
-                .then(() => {
-                    // we should have a table with a header and two rows.
-                    expect(node.querySelectorAll('tr').length).toBe(3);
-                    expect(node.innerHTML).toContain('Objects');
-                    return widget.stop();
-                })
-                .then(() => {
-                    expect(node.innerHTML).toEqual('');
-                });
+        it('should stop and clear its node', async function () {
+            await this.widget.start({
+                node: this.node,
+                objectData: ResultsData.objectData,
+            });
+            // just double check it was made and the node was modified,
+            // deeper tests are above
+            expect(this.node.innerHTML).toContain('Objects');
+            await this.widget.stop();
+            expect(this.node.innerHTML).toEqual('');
         });
     });
 });

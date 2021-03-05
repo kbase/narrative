@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'base/js/namespace',
@@ -9,23 +7,17 @@ define([
     'common/props',
 
     'bootstrap',
-    'css!font-awesome'
-], function(
-    Promise,
-    Jupyter,
-    html,
-    Events,
-    UI,
-    Props) {
+    'css!font-awesome',
+], (Promise, Jupyter, html, Events, UI, Props) => {
     'use strict';
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         input = t('input');
 
     function factory(config) {
-        var spec = config.parameterSpec,
+        let spec = config.parameterSpec,
             bus = config.bus,
             parent,
             container,
@@ -56,10 +48,9 @@ define([
          * Hooks up event listeners
          */
 
-
         function makeViewControl(currentValue) {
             // CONTROL
-            var initialControlValue,
+            let initialControlValue,
                 min = spec.data.constraints.min,
                 max = spec.data.constraints.max;
             if (typeof currentValue === 'number') {
@@ -67,57 +58,74 @@ define([
             }
             return div({ style: { width: '100%' }, dataElement: 'input-wrapper' }, [
                 div({ class: 'input-group', style: { width: '100%' } }, [
-                    (typeof min === 'number' ? div({ class: 'input-group-addon kb-input-group-addon', fontFamily: 'monospace' }, String(min) + ' &#8804; ') : ''),
+                    typeof min === 'number'
+                        ? div(
+                              {
+                                  class: 'input-group-addon kb-input-group-addon',
+                                  fontFamily: 'monospace',
+                              },
+                              String(min) + ' &#8804; '
+                          )
+                        : '',
                     input({
                         class: 'form-control',
                         dataElement: 'input',
                         dataType: 'float',
                         style: {
-                            textAlign: 'right'
+                            textAlign: 'right',
                         },
                         value: initialControlValue,
-                        readonly: true
+                        readonly: true,
                     }),
-                    (typeof max === 'number' ? div({ class: 'input-group-addon kb-input-group-addon', fontFamily: 'monospace' }, ' &#8804; ' + String(max)) : '')
+                    typeof max === 'number'
+                        ? div(
+                              {
+                                  class: 'input-group-addon kb-input-group-addon',
+                                  fontFamily: 'monospace',
+                              },
+                              ' &#8804; ' + String(max)
+                          )
+                        : '',
                 ]),
-                div({ dataElement: 'message', style: { backgroundColor: 'red', color: 'white' } })
+                div({ dataElement: 'message', style: { backgroundColor: 'red', color: 'white' } }),
             ]);
         }
 
         function render() {
-            return Promise.try(function() {
-                var inputControl = makeViewControl(model.getItem('value'));
+            return Promise.try(() => {
+                const inputControl = makeViewControl(model.getItem('value'));
                 ui.setContent('input-container', inputControl);
             });
         }
 
         function layout() {
-            var content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' })
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
             return {
-                content: content
+                content: content,
             };
         }
 
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
-                var theLayout = layout();
+                const theLayout = layout();
 
                 container.innerHTML = theLayout.content;
 
-                bus.on('reset-to-defaults', function() {
+                bus.on('reset-to-defaults', () => {
                     resetModelValue();
                 });
-                bus.on('update', function(message) {
+                bus.on('update', (message) => {
                     model.setItem('value', message.value);
                 });
 
@@ -126,7 +134,7 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (container) {
                     parent.removeChild(container);
                 }
@@ -137,21 +145,21 @@ define([
 
         model = Props.make({
             data: {
-                value: spec.data.nullValue
+                value: spec.data.nullValue,
             },
-            onUpdate: function() {}
+            onUpdate: function () {},
         });
         setModelValue(config.initialValue);
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

@@ -1,12 +1,8 @@
-/*global describe, it*/
-/*jslint white: true*/
-define([
-    'kbaseFeatureSet'
-], function() {
+define(['kbaseFeatureSet'], (Widget) => {
     'use strict';
-    describe('Test the kbaseFeatureSet widget', function() {
-        it('Should do things', function() {
-
+    describe('The kbaseFeatureSet widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
         });
     });
 });

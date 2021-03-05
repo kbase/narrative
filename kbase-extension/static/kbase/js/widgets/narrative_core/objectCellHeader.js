@@ -9,37 +9,30 @@ define([
     'kbwidget',
     'kb_service/client/workspace',
     'common/runtime',
-    'util/timeFormat'
-], function(
-    $,
-    Promise,
-    KBWidget,
-    Workspace,
-    Runtime,
-    TimeFormat
-) {
+    'util/timeFormat',
+], ($, Promise, KBWidget, Workspace, Runtime, TimeFormat) => {
     'use strict';
 
     return KBWidget({
         name: 'objectCellHeader',
         options: {
-            upas: {},   // key = some id string, value = either string (single upa) or array (many)
+            upas: {}, // key = some id string, value = either string (single upa) or array (many)
             versionCallback: null,
-            primaryUpaId: null // main key in the upas object
+            primaryUpaId: null, // main key in the upas object
         },
         objectInfo: {},
 
-        init: function(options) {
+        init: function (options) {
             options.upas = options.upas || {};
             this._super(options);
-            var runtime = Runtime.make();
+            const runtime = Runtime.make();
             this.workspace = new Workspace(runtime.config('services.workspace.url'), {
-                token: runtime.authToken()
+                token: runtime.authToken(),
             });
             this.fetchObjectInfo();
         },
 
-        updateUpas: function(upas) {
+        updateUpas: function (upas) {
             this.options.upas = upas;
             this.fetchObjectInfo();
         },
@@ -48,17 +41,16 @@ define([
          * Fetches general info about all UPAs in options.upas.
          * Stores this info in a map from upa->info (this.objectInfo)
          */
-        fetchObjectInfo: function() {
+        fetchObjectInfo: function () {
             // parse upas dict into a list.
-            var self = this;
+            const self = this;
             self.objectInfo = {};
-            Object.keys(self.options.upas).forEach(function(key) {
-                var upa = self.options.upas[key];
+            Object.keys(self.options.upas).forEach((key) => {
+                const upa = self.options.upas[key];
                 if (typeof upa === 'string') {
                     self.objectInfo[upa] = {};
-                }
-                else if (Array.isArray(upa)) {
-                    upa.forEach(function(subUpa) {
+                } else if (Array.isArray(upa)) {
+                    upa.forEach((subUpa) => {
                         self.options.upas[subUpa] = {};
                         self.objectInfo[subUpa] = {};
                     });
@@ -66,47 +58,49 @@ define([
             });
 
             // prep workspace call.
-            var wsInfoCall = [];
-            Object.keys(self.objectInfo).forEach(function(upa) {
-                wsInfoCall.push({'ref': upa});
+            const wsInfoCall = [];
+            Object.keys(self.objectInfo).forEach((upa) => {
+                wsInfoCall.push({ ref: upa });
             });
 
-            var allPromises = [];
+            const allPromises = [];
             // do ws call.
-            var objInfoProm = self.workspace.get_object_info_new({'objects': wsInfoCall})
-                .then(function(infos) {
-                    wsInfoCall.forEach(function(upaRef, idx) {
+            const objInfoProm = self.workspace
+                .get_object_info_new({ objects: wsInfoCall })
+                .then((infos) => {
+                    wsInfoCall.forEach((upaRef, idx) => {
                         self.objectInfo[upaRef.ref].info = infos[idx];
                     });
                 });
             allPromises.push(objInfoProm);
 
-            wsInfoCall.forEach(function(upaRef) {
+            wsInfoCall.forEach((upaRef) => {
                 if (upaRef.ref.indexOf(';') === -1) {
-                    var histPromise = self.workspace.get_object_history(upaRef)
-                        .then(function(history) {
+                    const histPromise = self.workspace
+                        .get_object_history(upaRef)
+                        .then((history) => {
                             self.objectInfo[upaRef.ref].history = history;
                         });
                     allPromises.push(histPromise);
                 }
             });
             Promise.all(allPromises)
-                .then(function() {
+                .then(() => {
                     self.render();
                 })
-                .catch(function(error) {
+                .catch((error) => {
                     // console.error(error);
                 });
         },
 
-        buildObjectInfo: function(upa) {
-            var $info = $('<div>');
+        buildObjectInfo: function (upa) {
+            const $info = $('<div>');
             if (!this.objectInfo[upa]) {
                 return $info;
             }
-            var objInfo = this.objectInfo[upa].info;
+            const objInfo = this.objectInfo[upa].info;
 
-            var addField = function(key, value) {
+            const addField = function (key, value) {
                 $info.append($('<div><span>' + key + '</span>: <span>' + value + '</span></div>'));
             };
 
@@ -129,54 +123,52 @@ define([
             return $info;
         },
 
-        buildVersionToggle: function(upaId) {
-            var upa = this.options.upas[upaId];
+        buildVersionToggle: function (upaId) {
+            const upa = this.options.upas[upaId];
             if (!upa || !this.objectInfo[upa] || !this.objectInfo[upa].history) {
                 return $('<div>Other object versions unavailable!</div>');
             }
-            var $versions = $('<div>');
-            var curVersion = this.objectInfo[upa].info[4];
-            var totalVersions = this.objectInfo[upa].history.length;
+            const $versions = $('<div>');
+            const curVersion = this.objectInfo[upa].info[4];
+            const totalVersions = this.objectInfo[upa].history.length;
             $versions.append('<div>version ' + curVersion + ' of ' + totalVersions + '</div>');
 
-            var $backBtn = $('<button>')
+            const $backBtn = $('<button>')
                 .addClass('btn btn-default kb-data-obj disabled')
                 .append($('<span>').addClass('fa fa-arrow-left'))
-                .click(function() {
+                .click(() => {
                     // move back version
                     if (curVersion > 1) {
-                        this.options.versionCallback(upaId, curVersion-1);
+                        this.options.versionCallback(upaId, curVersion - 1);
                     }
-                }.bind(this));
+                });
             if (curVersion > 1) {
                 $backBtn.removeClass('disabled');
             }
 
-            var $fwdBtn = $('<button>')
+            const $fwdBtn = $('<button>')
                 .addClass('btn btn-default kb-data-obj disabled')
                 .append($('<span>').addClass('fa fa-arrow-right'))
-                .click(function() {
+                .click(() => {
                     if (curVersion < totalVersions) {
-                        this.options.versionCallback(upaId, curVersion+1);
+                        this.options.versionCallback(upaId, curVersion + 1);
                     }
-                }.bind(this));
+                });
             if (curVersion < totalVersions) {
                 $fwdBtn.removeClass('disabled');
             }
 
-            $versions.append(
-                $('<div>').append($fwdBtn).append($backBtn)
-            );
+            $versions.append($('<div>').append($fwdBtn).append($backBtn));
             return $versions;
         },
 
-        detach: function() {
+        detach: function () {
             // remove events from buttons.
             this.$elem.find('button').off('click');
         },
 
-        render: function() {
-            var mainUpa = null,
+        render: function () {
+            let mainUpa = null,
                 mainUpaId = null,
                 numUpas = Object.keys(this.objectInfo).length;
             if (this.options.primaryUpaId) {
@@ -185,20 +177,22 @@ define([
                 mainUpaId = Object.keys(this.options.upas)[0];
             }
             mainUpa = this.options.upas[mainUpaId];
-            var $body = $('<div style="display:flex; flex-direction:row; justify-content: space-between">'),
+            let $body = $(
+                    '<div style="display:flex; flex-direction:row; justify-content: space-between">'
+                ),
                 $info;
             if (mainUpa) {
                 $info = this.buildObjectInfo(mainUpa);
-            }
-            else {
-                $info = $('<div>Lots of info available for ' + numUpas + ' object on display!</div>');
+            } else {
+                $info = $(
+                    '<div>Lots of info available for ' + numUpas + ' object on display!</div>'
+                );
             }
 
-            var $versionToggle = this.buildVersionToggle(mainUpaId);
+            const $versionToggle = this.buildVersionToggle(mainUpaId);
 
-            $body.append($info)
-                .append($versionToggle);
+            $body.append($info).append($versionToggle);
             this.$elem.empty().append($body);
-        }
+        },
     });
 });

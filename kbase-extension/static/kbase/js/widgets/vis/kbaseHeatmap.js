@@ -38,106 +38,95 @@
 
 */
 
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'd3',
-		'kbaseVisWidget',
-		'RGBColor',
-		'geometry_rectangle',
-		'geometry_point',
-		'geometry_size'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		d3,
-		kbaseVisWidget,
-		RGBColor,
-		geometry_rectangle,
-		geometry_point,
-		geometry_size
-	) {
-
+define([
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+    'd3',
+    'kbaseVisWidget',
+    'RGBColor',
+    'geometry_rectangle',
+    'geometry_point',
+    'geometry_size',
+], (
+    KBWidget,
+    bootstrap,
+    $,
+    d3,
+    kbaseVisWidget,
+    RGBColor,
+    geometry_rectangle,
+    geometry_point,
+    geometry_size
+) => {
     'use strict';
 
     return KBWidget({
+        name: 'kbaseHeatmap',
+        parent: kbaseVisWidget,
 
-	    name: "kbaseHeatmap",
-	  parent : kbaseVisWidget,
-
-        version: "1.0.0",
+        version: '1.0.0',
         options: {
-            scaleAxes   : true,
-            xScaleType  : 'ordinal',
-            yScaleType  : 'ordinal',
-            yGutter     : 80,
-            yPadding    : 20,
+            scaleAxes: true,
+            xScaleType: 'ordinal',
+            yScaleType: 'ordinal',
+            yGutter: 80,
+            yPadding: 20,
 
-            xPadding    : 150,
-            xGutter     : 110,
-            overColor   : '#999900',
-            hmBGColor     : 'lightgray',
-            colors : ['#0000FF', '#FFFFFF', '#FF0000'],
+            xPadding: 150,
+            xGutter: 110,
+            overColor: '#999900',
+            hmBGColor: 'lightgray',
+            colors: ['#0000FF', '#FFFFFF', '#FF0000'],
 
             //clickCallback : function(d, $hm) {
             //    $hm.debug(d);
             //},
 
-            rx : 2,
-            ry : 2,
+            rx: 2,
+            ry: 2,
 
-            cellPadding : 1,
-
+            cellPadding: 1,
         },
 
-        _accessors : [
-            'spectrum',
-        ],
+        _accessors: ['spectrum'],
 
-        init : function(options) {
+        init: function (options) {
             this._super(options);
 
             return this;
         },
 
-        setDataset : function(newDataset) {
-            if (newDataset.data != undefined && ! $.isArray(newDataset.data) ) {
+        setDataset: function (newDataset) {
+            if (newDataset.data != undefined && !$.isArray(newDataset.data)) {
                 newDataset = newDataset.data;
             }
 
             this._super(newDataset);
 
-            var colorScaleDomain = this.colorScale().nice().domain();
+            const colorScaleDomain = this.colorScale().nice().domain();
 
-            var zeroPercent = 100 * Math.abs(colorScaleDomain[0]) / (Math.abs(colorScaleDomain[0]) + Math.abs(colorScaleDomain[2]));
+            const zeroPercent =
+                (100 * Math.abs(colorScaleDomain[0])) /
+                (Math.abs(colorScaleDomain[0]) + Math.abs(colorScaleDomain[2]));
 
             this.callAfterInit(
-              $.proxy(function() {
-                this.options.gradientID = this.linearGradient(
-                    {
-                        colors : this.options.colors,
-                        gradStops : ['0%', zeroPercent + '%', '100%'],
-                    }
-                );
-              }, this)
+                $.proxy(function () {
+                    this.options.gradientID = this.linearGradient({
+                        colors: this.options.colors,
+                        gradStops: ['0%', zeroPercent + '%', '100%'],
+                    });
+                }, this)
             );
         },
 
-        setSpectrum : function(newSpectrum) {
-            this.spectrum(
-                d3.scale.ordinal()
-                    .domain(d3.range(0,1))
-                    .range(newSpectrum)
-            );
+        setSpectrum: function (newSpectrum) {
+            this.spectrum(d3.scale.ordinal().domain(d3.range(0, 1)).range(newSpectrum));
         },
 
-        defaultXDomain : function() {
-
+        defaultXDomain: function () {
             if (this.dataset() == undefined) {
-                return [0,0];
+                return [0, 0];
             }
 
             //return this.dataset().map(function(d) { return d.x });
@@ -146,10 +135,9 @@ define (
             return this.dataset().column_labels;
         },
 
-        defaultYDomain : function() {
-
+        defaultYDomain: function () {
             if (this.dataset() == undefined) {
-                return [0,0];
+                return [0, 0];
             }
 
             //return this.dataset().map(function(d) { return d.y });
@@ -158,7 +146,7 @@ define (
             return this.dataset().row_labels;
         },
 
-        setXScaleRange : function(range, xScale) {
+        setXScaleRange: function (range, xScale) {
             if (xScale == undefined) {
                 xScale = this.xScale();
             }
@@ -167,8 +155,7 @@ define (
             return xScale;
         },
 
-        setYScaleRange : function(range, yScale) {
-
+        setYScaleRange: function (range, yScale) {
             if (yScale == undefined) {
                 yScale = this.yScale();
             }
@@ -178,16 +165,12 @@ define (
             return yScale;
         },
 
-        renderXAxis : function() {
-
+        renderXAxis: function () {
             if (this.xScale() == undefined || this.xScale().domain == undefined) {
                 return;
             }
 
-            var xAxis =
-                d3.svg.axis()
-                    .scale(this.xScale())
-                    .orient('top');
+            const xAxis = d3.svg.axis().scale(this.xScale()).orient('top');
 
             /*xAxis.tickFormat(function(d) {
                 if (d.length > 15) {
@@ -196,22 +179,19 @@ define (
                 return d;
             });*/
 
-            var gxAxis = this.D3svg().select('.yGutter').select('.xAxis');
+            let gxAxis = this.D3svg().select('.yGutter').select('.xAxis');
 
             if (gxAxis[0][0] == undefined) {
-                gxAxis = this.D3svg().select('.yGutter')
+                gxAxis = this.D3svg()
+                    .select('.yGutter')
                     .append('g')
-                        .attr('class', 'xAxis axis')
-                        .attr("transform", "translate(0," + this.yGutterBounds().size.height + ")")
+                    .attr('class', 'xAxis axis')
+                    .attr('transform', 'translate(0,' + this.yGutterBounds().size.height + ')');
             }
 
-            var $hm = this;
+            const $hm = this;
 
-            gxAxis
-                .transition()
-                .duration(0)
-                .call(xAxis)
-            ;
+            gxAxis.transition().duration(0).call(xAxis);
 
             /*
                 As is typical, my life is pain. Here's the deal -
@@ -242,122 +222,115 @@ define (
 
             */
 
-            gxAxis.selectAll('text').each(function(d,i) {
-
-                var label = d3.select(this).text();
+            gxAxis.selectAll('text').each(function (d, i) {
+                const label = d3.select(this).text();
                 if (label.length > 15) {
-                    d3.select(this).text(label.substring(0,12) + '...');
+                    d3.select(this).text(label.substring(0, 12) + '...');
                 }
 
-                var label_idx = $hm.dataset().column_labels.indexOf(label);
+                const label_idx = $hm.dataset().column_labels.indexOf(label);
 
                 d3.select(this).attr('data-id', $hm.dataset().column_ids[label_idx]);
                 d3.select(this)
-                    .attr("transform", function (d, i) {
-                        var bounds = $hm.yGutterBounds();
+                    .attr('transform', function (d, i) {
+                        const bounds = $hm.yGutterBounds();
                         //bullshit hardwired magic numbers. The xAxis is "known"(?) to position @ (0,-9)
                         //arbitrarily rotate around -12 because it looks right. I got nothin'.
                         //then we move it 5 pixels to the right, which in our rotate coordinate system is
                         //5 pixels up. Whee!
 
-                        var width = d3.select(this).node().getComputedTextLength();
-                        return "rotate(-45,0,0) translate(" + (width / 2 + 5) + ",5)";// translate(2,3)";
+                        const width = d3.select(this).node().getComputedTextLength();
+                        return 'rotate(-45,0,0) translate(' + (width / 2 + 5) + ',5)'; // translate(2,3)";
                     })
-                    .on('mouseover', function(d) {
+                    .on('mouseover', function (d) {
                         d3.select(this).attr('fill', $hm.options.overColor);
-                        var d3this = d3.select(this);
+                        const d3this = d3.select(this);
 
                         if ($hm.options.labelOver) {
                             $hm.options.labelOver.call(this, d);
-                        }
-                        else if (d3this.text() != label) {
-                            $hm.showToolTip(
-                                {
-                                    label : label
-                                }
-                            );
+                        } else if (d3this.text() != label) {
+                            $hm.showToolTip({
+                                label: label,
+                            });
                         }
                     })
-                    .on('mouseout', function(d) {
+                    .on('mouseout', function (d) {
                         d3.select(this).attr('fill', 'black');
 
                         if ($hm.options.labelOut) {
                             $hm.options.labelOut.call(this, d);
-                        }
-                        else {
+                        } else {
                             $hm.hideToolTip();
                         }
-                    })
+                    });
             });
-
         },
 
-        renderXLabel : function() {
-            var yGutterBounds = this.yGutterBounds();
+        renderXLabel: function () {
+            const yGutterBounds = this.yGutterBounds();
 
-            var xLabeldataset = [this.xLabel()];
+            const xLabeldataset = [this.xLabel()];
 
-            var xLabel = this.D3svg().select('.yPadding').selectAll('.xLabel');
+            const xLabel = this.D3svg().select('.yPadding').selectAll('.xLabel');
             xLabel
                 .data(xLabeldataset)
-                    .text( this.xLabel() )
+                .text(this.xLabel())
                 .enter()
-                    .append('text')
-                        .attr('class', 'xLabel')
-                        .attr('x', yGutterBounds.size.width / 2)
-                        .attr('y', yGutterBounds.size.height / 2 + 3)
-                        .attr('text-anchor', 'middle')
-                        .attr('font-size', '11px')
-                        .attr('font-family', 'sans-serif')
-                        .attr('fill', 'black')
-                        .text(this.xLabel());
-            ;
-
+                .append('text')
+                .attr('class', 'xLabel')
+                .attr('x', yGutterBounds.size.width / 2)
+                .attr('y', yGutterBounds.size.height / 2 + 3)
+                .attr('text-anchor', 'middle')
+                .attr('font-size', '11px')
+                .attr('font-family', 'sans-serif')
+                .attr('fill', 'black')
+                .text(this.xLabel());
         },
 
-        renderYLabel : function() {
-            var xGutterBounds = this.xGutterBounds();
+        renderYLabel: function () {
+            const xGutterBounds = this.xGutterBounds();
 
-            var yLabel = this.D3svg().select( this.region('xGutter') ).selectAll('.yLabel').data([0]);
+            const yLabel = this.D3svg()
+                .select(this.region('xGutter'))
+                .selectAll('.yLabel')
+                .data([0]);
 
-            yLabel.enter()
+            yLabel
+                .enter()
                 .append('rect')
-                    .attr('x', 5)
-                    .attr('y', 0)
-                    .attr('width',  xGutterBounds.size.width / 3)
-                    .attr('height', xGutterBounds.size.height)
-                    .attr('font-size', '11px')
-                    .attr('font-family', 'sans-serif')
-                    .attr('fill', 'black')
-                    .attr('fill', 'url(#' + this.options.gradientID + ')')
-            ;
+                .attr('x', 5)
+                .attr('y', 0)
+                .attr('width', xGutterBounds.size.width / 3)
+                .attr('height', xGutterBounds.size.height)
+                .attr('font-size', '11px')
+                .attr('font-family', 'sans-serif')
+                .attr('fill', 'black')
+                .attr('fill', 'url(#' + this.options.gradientID + ')');
 
-            var colorScale = this.colorScale();
+            const colorScale = this.colorScale();
 
-            var domain = [ colorScale.domain()[colorScale.domain().length - 1], colorScale.domain()[0] ];
+            const domain = [
+                colorScale.domain()[colorScale.domain().length - 1],
+                colorScale.domain()[0],
+            ];
 
-            var tempScale =
-                d3.scale.linear()
-                    .domain( domain )
-                    .range( [0, xGutterBounds.size.height] )
-                    .nice();
+            const tempScale = d3.scale
+                .linear()
+                .domain(domain)
+                .range([0, xGutterBounds.size.height])
+                .nice();
 
-            var tempAxis =
-                d3.svg.axis()
-                    .scale(tempScale)
-                    .orient('right')
-            ;
+            const tempAxis = d3.svg.axis().scale(tempScale).orient('right');
+            let gtempAxis = this.D3svg().select(this.region('xGutter')).select('.tempAxis');
 
-
-            var gtempAxis = this.D3svg().select( this.region('xGutter') ).select('.tempAxis');
-
-            var $hm = this;
+            const $hm = this;
 
             if (gtempAxis[0][0] == undefined) {
-                gtempAxis = this.D3svg().select( this.region('xGutter') )
+                gtempAxis = this.D3svg()
+                    .select(this.region('xGutter'))
                     .append('g')
-                        .attr('class', 'tempAxis axis')
-                        .attr("transform", "translate(" + (xGutterBounds.size.width / 3 + 6) + ",0)")
+                    .attr('class', 'tempAxis axis')
+                    .attr('transform', 'translate(' + (xGutterBounds.size.width / 3 + 6) + ',0)');
             }
 
             tempAxis.tickFormat(
@@ -371,29 +344,24 @@ define (
             );
 
             gtempAxis.transition().call(tempAxis);
-
-
         },
 
-        renderYAxis : function() {
-
+        renderYAxis: function () {
             if (this.yScale() == undefined) {
                 return;
             }
-            var yAxis =
-                d3.svg.axis()
-                    .scale(this.yScale())
-                    .orient('left');
+            const yAxis = d3.svg.axis().scale(this.yScale()).orient('left');
 
-            var gyAxis = this.D3svg().select( this.region('xPadding') ).select('.yAxis');
+            let gyAxis = this.D3svg().select(this.region('xPadding')).select('.yAxis');
 
-            var $hm = this;
+            const $hm = this;
 
             if (gyAxis[0][0] == undefined) {
-                gyAxis = this.D3svg().select( this.region('xPadding') )
+                gyAxis = this.D3svg()
+                    .select(this.region('xPadding'))
                     .append('g')
-                        .attr('class', 'yAxis axis')
-                        .attr("transform", "translate(" + this.xPaddingBounds().size.width + ",0)")
+                    .attr('class', 'yAxis axis')
+                    .attr('transform', 'translate(' + this.xPaddingBounds().size.width + ',0)');
             }
 
             /*yAxis.tickFormat(function(d) {
@@ -409,60 +377,52 @@ define (
 
             gyAxis.transition().call(yAxis);
 
-            gyAxis.selectAll('text').each(function(d,i) {
-
-                var label = d3.select(this).text();
+            gyAxis.selectAll('text').each(function (d, i) {
+                const label = d3.select(this).text();
                 if (label.length > 23) {
-                    d3.select(this).text(label.substring(0,18) + '...');
+                    d3.select(this).text(label.substring(0, 18) + '...');
                 }
 
-                var label_idx = $hm.dataset().row_labels.indexOf(label);
+                const label_idx = $hm.dataset().row_labels.indexOf(label);
 
                 d3.select(this).attr('data-id', $hm.dataset().row_ids[label_idx]);
                 d3.select(this)
-                    .on('mouseover', function(d) {
+                    .on('mouseover', function (d) {
                         d3.select(this).attr('fill', $hm.options.overColor);
-                        var d3this = d3.select(this);
+                        const d3this = d3.select(this);
 
                         if ($hm.options.labelOver) {
                             $hm.options.labelOver.call(this, d);
-                        }
-                        else if (d3this.text() != label) {
-                            $hm.showToolTip(
-                                {
-                                    label : label
-                                }
-                            );
+                        } else if (d3this.text() != label) {
+                            $hm.showToolTip({
+                                label: label,
+                            });
                         }
                     })
-                    .on('mouseout', function(d) {
+                    .on('mouseout', function (d) {
                         d3.select(this).attr('fill', 'black');
                         if ($hm.options.labelOut) {
                             $hm.options.labelOut.call(this, d);
-                        }
-                        else {
+                        } else {
                             $hm.hideToolTip();
                         }
-                    })
+                    });
             });
-
         },
 
-        colorScale : function() {
-
-            var colorScale = this.options.colorScale;
+        colorScale: function () {
+            let colorScale = this.options.colorScale;
 
             if (colorScale == undefined) {
-
-                var max = this.options.maxValue;
-                var min = this.options.minValue;
+                let max = this.options.maxValue;
+                let min = this.options.minValue;
                 if (this.dataset() != undefined) {
                     if (max == undefined || min == undefined) {
                         max = 0;
                         min = 0;
-                        for (var i = 0; i < this.dataset().data.length; i++) {
-                            var row = this.dataset().data[i];
-                            for (var j = 0; j < row.length; j++) {
+                        for (let i = 0; i < this.dataset().data.length; i++) {
+                            const row = this.dataset().data[i];
+                            for (let j = 0; j < row.length; j++) {
                                 if (row[j] > max) {
                                     max = row[j];
                                 }
@@ -475,72 +435,60 @@ define (
                 }
 
                 //var domain = d3.range(min, max, (max - min) / this.options.colors.length);
-                var domain = [min, 0, max];
+                const domain = [min, 0, max];
                 domain[0] = min;
                 domain[domain.length - 1] = max;
 
-                colorScale = d3.scale.linear()
-                    .domain(domain)
-                    .range(this.options.colors);
+                colorScale = d3.scale.linear().domain(domain).range(this.options.colors);
             }
 
             return colorScale;
         },
 
-        cellHeight : function cellHeight() {
-            return this.yScale().rangeBand() - this.options.cellPadding * 2
+        cellHeight: function cellHeight() {
+            return this.yScale().rangeBand() - this.options.cellPadding * 2;
         },
 
-        renderChart : function() {
-
-            var $hm = this;
-            var bounds = this.chartBounds();
+        renderChart: function () {
+            const $hm = this;
+            const bounds = this.chartBounds();
 
             if (this.dataset() == undefined) {
                 return;
             }
 
+            const yIdScale = this.yScale().copy();
+            yIdScale.domain(this.dataset().row_ids);
 
-        var yIdScale = this.yScale().copy();
-        yIdScale.domain(this.dataset().row_ids);
+            const xIdScale = this.xScale().copy();
+            xIdScale.domain(this.dataset().column_ids);
 
-        var xIdScale = this.xScale().copy();
-        xIdScale.domain(this.dataset().column_ids);
-
-        var funkyTown = function() {
-            this
-                .attr('x',
-                    function (d) {
-                        var xId = d.x;
-                        if ($hm.options.useIDMapping) {
-                            xId = $hm.xIDMap()[xId];
-                        }
-
-                        var scaled = xIdScale(xId) + 1;
-                        return scaled;//$hm.xScale()(xId) + 1
+            const funkyTown = function () {
+                this.attr('x', (d) => {
+                    let xId = d.x;
+                    if ($hm.options.useIDMapping) {
+                        xId = $hm.xIDMap()[xId];
                     }
-                )
-                .attr('y',
-                    function (d) {
 
-                        var yId = d.y;
+                    const scaled = xIdScale(xId) + 1;
+                    return scaled; //$hm.xScale()(xId) + 1
+                })
+                    .attr('y', (d) => {
+                        let yId = d.y;
                         if ($hm.options.useIDMapping) {
                             yId = $hm.yIDMap()[yId];
                         }
 
-                        var scaled = yIdScale(yId) + 1;
-                        return scaled;//$hm.yScale()(yId) + 1
-                    }
-                )
-                //.attr('y', function (d) { return $hm.yScale()(d.y) })
-                //.attr('opacity', function (d) { return d.value })
-                .attr('width', $hm.xScale().rangeBand() - $hm.options.cellPadding * 2)
-                .attr('height', $hm.cellHeight())
-                .attr('rx', $hm.options.rx)
-                .attr('ry', $hm.options.ry)
-                .attr('fill',
-                    function(d) {
-
+                        const scaled = yIdScale(yId) + 1;
+                        return scaled; //$hm.yScale()(yId) + 1
+                    })
+                    //.attr('y', function (d) { return $hm.yScale()(d.y) })
+                    //.attr('opacity', function (d) { return d.value })
+                    .attr('width', $hm.xScale().rangeBand() - $hm.options.cellPadding * 2)
+                    .attr('height', $hm.cellHeight())
+                    .attr('rx', $hm.options.rx)
+                    .attr('ry', $hm.options.ry)
+                    .attr('fill', (d) => {
                         /*var colorScale = d3.scale.linear()
                             .domain([0,1])
                             .range(['white', d.color]);
@@ -548,163 +496,147 @@ define (
                         return colorScale(d.value);*/
 
                         return d.color;
-                    }
-                )
-                ;
-            return this;
-        }
+                    });
+                return this;
+            };
 
-            var mouseAction = function() {
-                this.on('mouseover', function(d) {
+            const mouseAction = function () {
+                this.on('mouseover', function (d) {
                     if ($hm.options.overColor) {
                         d3.select(this)
                             //.attr('fill', $hm.options.overColor)
                             .attr('stroke', $hm.options.overColor)
-//                            .attr('opacity', '100%')
+                            //                            .attr('opacity', '100%')
                             .attr('stroke-width', 5);
 
-                        $hm.D3svg().select('.yGutter').selectAll('g g text')
-                            .attr("fill",
-                                function(r,ri){
-                                    var xId = d.x;
-                                    if ($hm.options.useIDMapping) {
-                                        xId = $hm.xIDMap()[xId];
-                                    }
-
-                                    if (d3.select(this).attr('data-id') == xId) {
-                                        return $hm.options.overColor;
-                                    }
+                        $hm.D3svg()
+                            .select('.yGutter')
+                            .selectAll('g g text')
+                            .attr('fill', function (r, ri) {
+                                let xId = d.x;
+                                if ($hm.options.useIDMapping) {
+                                    xId = $hm.xIDMap()[xId];
                                 }
-                        );
 
-                        $hm.D3svg().select('.xPadding').selectAll('g g text')
-                            .attr("fill",
-                                function(r,ri){
-                                    var yId = d.y;
-                                    if ($hm.options.useIDMapping) {
-                                        yId = $hm.yIDMap()[yId];
-                                    }
-                                    if (d3.select(this).attr('data-id') == yId) {
-                                        return $hm.options.overColor;
-                                    }
+                                if (d3.select(this).attr('data-id') == xId) {
+                                    return $hm.options.overColor;
                                 }
-                        );
+                            });
 
-                        var xId = d.x;
+                        $hm.D3svg()
+                            .select('.xPadding')
+                            .selectAll('g g text')
+                            .attr('fill', function (r, ri) {
+                                let yId = d.y;
+                                if ($hm.options.useIDMapping) {
+                                    yId = $hm.yIDMap()[yId];
+                                }
+                                if (d3.select(this).attr('data-id') == yId) {
+                                    return $hm.options.overColor;
+                                }
+                            });
+
+                        let xId = d.x;
                         if ($hm.options.useIDMapping) {
                             xId = $hm.xIDMap()[xId];
                         }
-                        var yId = d.y;
+                        let yId = d.y;
                         if ($hm.options.useIDMapping) {
                             yId = $hm.yIDMap()[yId];
                         }
 
-                        $hm.showToolTip(
-                            {
-                                label : d.label || 'Value for: ' + d.row + ' - ' + d.column + '<br>is ' + d.value.toPrecision(4),
-                            }
-                        );
-
+                        $hm.showToolTip({
+                            label:
+                                d.label ||
+                                'Value for: ' +
+                                    d.row +
+                                    ' - ' +
+                                    d.column +
+                                    '<br>is ' +
+                                    d.value.toPrecision(4),
+                        });
                     }
                 })
-                .on('mouseout', function(d) {
-                    if ($hm.options.overColor) {
-                        d3.select(this)
-                            //.transition()
-                            //.attr('fill', d.color)
-//                            .attr('opacity', function (d) { return d.value })
-                            .attr('stroke', 0);
+                    .on('mouseout', function (d) {
+                        if ($hm.options.overColor) {
+                            d3.select(this)
+                                //.transition()
+                                //.attr('fill', d.color)
+                                //                            .attr('opacity', function (d) { return d.value })
+                                .attr('stroke', 0);
 
-                        $hm.D3svg().select('.yGutter').selectAll('g g text')
-                            .attr("fill",
-                                function(r,ri){
-                                   return 'black';
-                                }
-                        );
+                            $hm.D3svg()
+                                .select('.yGutter')
+                                .selectAll('g g text')
+                                .attr('fill', (r, ri) => {
+                                    return 'black';
+                                });
 
-                        $hm.D3svg().select('.xPadding').selectAll('g g text')
-                            .attr("fill",
-                                function(r,ri){
-                                   return 'black';
-                                }
-                        );
+                            $hm.D3svg()
+                                .select('.xPadding')
+                                .selectAll('g g text')
+                                .attr('fill', (r, ri) => {
+                                    return 'black';
+                                });
 
-                        $hm.hideToolTip();
-
-                    }
-                })
-                .on('click', function(d) {
-                    if ($hm.options.clickCallback) {
-                        $hm.options.clickCallback(d, $hm);
-                    }
-                })
+                            $hm.hideToolTip();
+                        }
+                    })
+                    .on('click', (d) => {
+                        if ($hm.options.clickCallback) {
+                            $hm.options.clickCallback(d, $hm);
+                        }
+                    });
                 return this;
             };
 
-            var transitionTime = this.initialized
-                ? this.options.transitionTime
-                : 0;
+            const transitionTime = this.initialized ? this.options.transitionTime : 0;
 
-            var heatmap = this.D3svg().select( this.region('chart') ).selectAll('.hmBG').data([0]);
+            const heatmap = this.D3svg().select(this.region('chart')).selectAll('.hmBG').data([0]);
 
             heatmap
                 .enter()
-                    .append('rect')
-                        .attr('x', 0 )
-                        .attr('y', 0 )
-                        .attr('width',  bounds.size.width )
-                        .attr('height', bounds.size.height )
-                        .attr('fill', $hm.options.hmBGColor )
-                        .attr('class', 'hmBG');
+                .append('rect')
+                .attr('x', 0)
+                .attr('y', 0)
+                .attr('width', bounds.size.width)
+                .attr('height', bounds.size.height)
+                .attr('fill', $hm.options.hmBGColor)
+                .attr('class', 'hmBG');
 
+            const oldStyleDataset = [];
 
-            var oldStyleDataset = [];
+            const colorScale = this.colorScale();
 
-            var colorScale = this.colorScale();
-
-            for (var i = 0; i < this.dataset().data.length; i++) {
-                var row = this.dataset().data[i];
-                for (var j = 0; j < row.length; j++) {
-                    oldStyleDataset.push(
-                        {
-                            x : this.dataset().column_ids[j],
-                            y : this.dataset().row_ids[i],
-                            column : this.dataset().column_labels[j],
-                            row : this.dataset().row_labels[i],
-                            value : row[j],//valScale(row[j]),
-                            color : colorScale(row[j]),
-                        }
-                    );
+            for (let i = 0; i < this.dataset().data.length; i++) {
+                const row = this.dataset().data[i];
+                for (let j = 0; j < row.length; j++) {
+                    oldStyleDataset.push({
+                        x: this.dataset().column_ids[j],
+                        y: this.dataset().row_ids[i],
+                        column: this.dataset().column_labels[j],
+                        row: this.dataset().row_labels[i],
+                        value: row[j], //valScale(row[j]),
+                        color: colorScale(row[j]),
+                    });
                 }
             }
 
-
-            var chart = this.D3svg().select( this.region('chart') ).selectAll('.davis-cell').data(oldStyleDataset);
-            chart
-                .enter()
-                    .append('rect')
-                    .attr('class', 'davis-cell')
-            ;
+            const chart = this.D3svg()
+                .select(this.region('chart'))
+                .selectAll('.davis-cell')
+                .data(oldStyleDataset);
+            chart.enter().append('rect').attr('class', 'davis-cell');
 
             chart
                 .call(mouseAction)
                 .transition()
                 .duration(transitionTime)
                 .call(funkyTown)
-                .call($hm.endall, function() {
+                .call($hm.endall, () => {
                     $hm.initialized = true;
                 });
-            ;
-
-            chart
-                .data(oldStyleDataset)
-                .exit()
-                    .remove();
-
-
+            chart.data(oldStyleDataset).exit().remove();
         },
-
-
     });
-
-} );
+});

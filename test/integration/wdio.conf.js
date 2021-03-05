@@ -1,6 +1,5 @@
 /* eslint-env node */
 /* eslint no-console: 0 */
-/* eslint {strict: ['error', 'global']} */
 'use strict';
 
 const testConfig = require('../testConfig');
@@ -12,7 +11,7 @@ const CHROME_BINARY = require('puppeteer').executablePath();
 // process.env.
 
 // Import environment variables used to control the tests.
-// Note that most have defaults, and many are only applicable 
+// Note that most have defaults, and many are only applicable
 // to testing services
 
 // For testing services
@@ -37,7 +36,7 @@ function processPreset(preset) {
                 BROWSER: 'chrome',
                 BROWSER_VERSION: e.BROWSER_VERSION || 'latest',
                 HEADLESS: e.HEADLESS || 'f',
-                SERVICE: 'browserstack'
+                SERVICE: 'browserstack',
             };
         case 'bs-win-firefox':
             return {
@@ -46,7 +45,7 @@ function processPreset(preset) {
                 BROWSER: 'firefox',
                 BROWSER_VERSION: e.BROWSER_VERSION || 'latest',
                 HEADLESS: e.HEADLESS || 'f',
-                SERVICE: 'browserstack'
+                SERVICE: 'browserstack',
             };
         case 'bs-mac-chrome':
             return {
@@ -55,7 +54,7 @@ function processPreset(preset) {
                 BROWSER: 'chrome',
                 BROWSER_VERSION: e.BROWSER_VERSION || 'latest',
                 HEADLESS: e.HEADLESS || 'f',
-                SERVICE: 'browserstack'
+                SERVICE: 'browserstack',
             };
         case 'bs-mac-firefox':
             return {
@@ -64,27 +63,27 @@ function processPreset(preset) {
                 BROWSER: 'firefox',
                 BROWSER_VERSION: e.BROWSER_VERSION || 'latest',
                 HEADLESS: e.HEADLESS || 'f',
-                SERVICE: 'browserstack'
+                SERVICE: 'browserstack',
             };
         case 'ss-firefox':
             // TODO: detect platform
             return {
                 OS: null, // not used by selenium standalone -- it runs on the current host
-                OS_VERSION: null, 
+                OS_VERSION: null,
                 BROWSER: 'firefox',
                 BROWSER_VERSION: null, // will use the installed browser on this host
                 HEADLESS: e.HEADLESS || 't',
-                SERVICE: 'selenium-standalone'
+                SERVICE: 'selenium-standalone',
             };
         case 'ss-chrome':
             // TODO: detect platform
             return {
                 OS: null, // not used by selenium standalone -- it runs on the current host
-                OS_VERSION: null, 
+                OS_VERSION: null,
                 BROWSER: 'chrome',
                 BROWSER_VERSION: null, // will use the installed browser on this host
                 HEADLESS: e.HEADLESS || 't',
-                SERVICE: 'selenium-standalone'
+                SERVICE: 'selenium-standalone',
             };
         case 'cd':
             // TODO: detect platform
@@ -94,9 +93,9 @@ function processPreset(preset) {
                 BROWSER: 'chrome',
                 BROWSER_VERSION: null, // will use the installed chrome on this host
                 HEADLESS: e.HEADLESS || 't',
-                SERVICE: 'chromedriver'
+                SERVICE: 'chromedriver',
             };
-        default: 
+        default:
             throw new Error(`Sorry, "${preset}" is not a preset`);
     }
 }
@@ -108,15 +107,19 @@ function makeConfig() {
 
     const [width, height] = (() => {
         switch (e.PRESET_DIMENSIONS || 'sxga') {
-            case 'xga': return [1024, 768];
-            case 'sxga': return [1280, 1024];
-            case 'hd': return [1920, 1080];
-            default: throw new Error(`Not a valid PRESET_DIMENSIONS: "${e.PRESET_DIMENSIONS}"`);
+            case 'xga':
+                return [1024, 768];
+            case 'sxga':
+                return [1280, 1024];
+            case 'hd':
+                return [1920, 1080];
+            default:
+                throw new Error(`Not a valid PRESET_DIMENSIONS: "${e.PRESET_DIMENSIONS}"`);
         }
     })();
 
     return {
-        ...presetConfig, 
+        ...presetConfig,
         WIDTH: e.WIDTH || width,
         HEIGHT: e.HEIGHT || height,
         // Note that these service configs are only used for browserstack.
@@ -125,7 +128,7 @@ function makeConfig() {
 
         BASE_URL: e.BASE_URL || 'http://localhost:8888',
         ENV: e.ENV || 'ci',
-        HEADLESS: e.HEADLESS || 't'
+        HEADLESS: e.HEADLESS || 't',
     };
 }
 
@@ -133,10 +136,14 @@ const authToken = (() => {
     if (process.env.KBASE_TEST_TOKEN) {
         console.log('loading auth token from environment variable KBASE_TEST_TOKEN');
         return process.env.KBASE_TEST_TOKEN;
-    } else if (testConfig && testConfig.token && testConfig.token.file && fs.existsSync(testConfig.token.file)) {
+    } else if (
+        testConfig &&
+        testConfig.token &&
+        testConfig.token.file &&
+        fs.existsSync(testConfig.token.file)
+    ) {
         console.log('loading auth token from file ' + testConfig.token.file);
         return fs.readFileSync(testConfig.token.file, 'utf-8').trim();
-        
     } else {
         console.warn('continuing without valid test token');
         return 'fakeToken';
@@ -145,10 +152,10 @@ const authToken = (() => {
 
 // Each wdio service supported requires an entry here, even
 // if it doesn't have any specific configuration.
-// TODO: The relation between selenium-standalone test drivers, as shown 
+// TODO: The relation between selenium-standalone test drivers, as shown
 // in the example below, and the installed browser is tricky.
 //
-// For testing services, we can supply the browser version for supported 
+// For testing services, we can supply the browser version for supported
 // browsers. But for local or github based tests, the tests use whichever
 // browser version is installed.
 //
@@ -156,23 +163,23 @@ const authToken = (() => {
 // (although warnings may be printed when running tests), but it can be
 // an error for a newer browse and older driver. This can happen if
 // the selenium-standalone drivers are out of date, but the host is not.
-// 
-// One way to keep this deterministic is to pin the drivers, as show in the 
+//
+// One way to keep this deterministic is to pin the drivers, as show in the
 // example below (and the commented out "drivers" setting in the service configs),
 // and at the same time pin the browser version in the host.
 //
 // The host browser can be pinned across testing environments by installing
 // the required browsers via npm. E.g. puppeteer installs a local chrome binary, which
 // can be specified as the Chrome binary. I could not find a similar method
-// for installing Firefox, so gave up on that effort. 
-// 
-// The default behavior is to use the latest available, which should 
-// normally be what we want. However, this ability in selenium-standalone is 
+// for installing Firefox, so gave up on that effort.
+//
+// The default behavior is to use the latest available, which should
+// normally be what we want. However, this ability in selenium-standalone is
 // relatively recent, and not yet implemented for Firefox (12/12/2020).
-// 
+//
 // Thus, we should keep the selenium-standalone dependency up to date to ensure
 // the most recent version of Firefox is supported.
-// 
+//
 // const drivers = {
 //     chrome: {
 //         version: '87.0.4280.20',
@@ -184,15 +191,14 @@ const authToken = (() => {
 
 const serviceConfigs = {
     'selenium-standalone': {
-        logPath: 'selenium-standalone-logs'
+        logPath: 'selenium-standalone-logs',
         // drivers
     },
     chromedriver: {},
     browserstack: {
         browserstackLocal: true,
-        opts: {
-        }
-    }
+        opts: {},
+    },
 };
 
 const testParams = makeConfig();
@@ -205,13 +211,17 @@ const testParams = makeConfig();
  */
 function makeCapabilities(config) {
     switch (config.SERVICE) {
-        case 'chromedriver': 
+        case 'chromedriver':
             return (() => {
-                const args = ['--disable-gpu', '--no-sandbox', `window-size=${config.WIDTH},${config.HEIGHT}`];
+                const args = [
+                    '--disable-gpu',
+                    '--no-sandbox',
+                    `window-size=${config.WIDTH},${config.HEIGHT}`,
+                ];
                 if (config.HEADLESS === 't') {
                     args.push('--headless');
                 }
-                return  {
+                return {
                     browserName: 'chrome',
                     acceptInsecureCerts: true,
                     maxInstances: 1,
@@ -221,21 +231,25 @@ function makeCapabilities(config) {
                     }
                 };
             })();
-        case 'selenium-standalone': 
+        case 'selenium-standalone':
             switch (config.BROWSER) {
                 case 'chrome':
                     return (() => {
-                        const args = ['--disable-gpu', '--no-sandbox', `window-size=${config.WIDTH},${config.HEIGHT}`];
+                        const args = [
+                            '--disable-gpu',
+                            '--no-sandbox',
+                            `window-size=${config.WIDTH},${config.HEIGHT}`,
+                        ];
                         if (config.HEADLESS === 't') {
                             args.push('--headless');
                         }
-                        return  {
+                        return {
                             browserName: 'chrome',
                             acceptInsecureCerts: true,
                             maxInstances: 1,
                             'goog:chromeOptions': {
-                                args
-                            }
+                                args,
+                            },
                         };
                     })();
                 case 'firefox':
@@ -249,11 +263,11 @@ function makeCapabilities(config) {
                             acceptInsecureCerts: true,
                             maxInstances: 1,
                             'moz:firefoxOptions': {
-                                args
-                            }
+                                args,
+                            },
                         };
                     })();
-                default: 
+                default:
                     throw new Error(`Browser not supported "${config.BROWSER}"`);
             }
         case 'browserstack':
@@ -263,7 +277,7 @@ function makeCapabilities(config) {
                 os_version: `${config.OS_VERSION}`,
                 browser: `${config.BROWSER}`,
                 browser_version: `${config.BROWSER_VERSION}`,
-                resolution: `${config.WIDTH}x${config.HEIGHT}`
+                resolution: `${config.WIDTH}x${config.HEIGHT}`,
             };
     }
 }
@@ -305,9 +319,7 @@ const wdioConfig = {
     // NPM script (see https://docs.npmjs.com/cli/run-script) then the current working
     // directory is where your package.json resides, so `wdio` will be called from there.
     //
-    specs: [
-        './test/integration/specs/**/*.js'
-    ],
+    specs: ['./test/integration/specs/**/*.js'],
     // Patterns to exclude.
     exclude: [
         // 'path/to/excluded/files'
@@ -350,9 +362,7 @@ const wdioConfig = {
     //     // excludeDriverLogs: ['*'], // pass '*' to exclude all driver session logs
     //     // excludeDriverLogs: ['bugreport', 'server'],
     // }],
-    capabilities: [
-        CAPABILITIES
-    ],
+    capabilities: [CAPABILITIES],
     //
     // ===================
     // Test Configurations
@@ -419,7 +429,7 @@ const wdioConfig = {
         // an assertion fails.
         expectationResultHandler: function (/*passed, assertion*/) {
             // do something
-        }
+        },
     },
     //
     // The number of times to retry the entire specfile when it fails as a whole
@@ -441,7 +451,7 @@ const wdioConfig = {
     // See the full list at http://mochajs.org/
     mochaOpts: {
         ui: 'bdd',
-        timeout: 60000
+        timeout: 60000,
     },
     //
     // =====
@@ -522,7 +532,6 @@ const wdioConfig = {
     // afterTest: function(test, context, { error, result, duration, passed, retries }) {
     // },
 
-
     /**
      * Hook that gets executed after the suite has ended
      * @param {Object} suite suite details
@@ -566,10 +575,10 @@ const wdioConfig = {
     // onComplete: function(exitCode, config, capabilities, results) {
     // },
     /**
-    * Gets executed when a refresh happens.
-    * @param {String} oldSessionId session ID of the old session
-    * @param {String} newSessionId session ID of the new session
-    */
+     * Gets executed when a refresh happens.
+     * @param {String} oldSessionId session ID of the old session
+     * @param {String} newSessionId session ID of the new session
+     */
     //onReload: function(oldSessionId, newSessionId) {
     //}
 };

@@ -22,15 +22,8 @@ define([
     // For effect
     'bootstrap',
     'jquery-dataTables',
-    'kbaseFeatureValues-client-api'
-], function (
-    $,
-    Config,
-    KBWidget,
-    kbaseAuthenticatedWidget,
-    kbaseTabs,
-    DynamicServiceClient
-) {
+    'kbaseFeatureValues-client-api',
+], ($, Config, KBWidget, kbaseAuthenticatedWidget, kbaseTabs, DynamicServiceClient) => {
     'use strict';
 
     return KBWidget({
@@ -43,7 +36,7 @@ define([
             expressionMatrixID: null,
             conditionIds: null,
 
-            loadingImage: 'static/kbase/images/ajax-loader.gif'
+            loadingImage: 'static/kbase/images/ajax-loader.gif',
         },
 
         // Prefix for all div ids
@@ -55,7 +48,7 @@ define([
         // Matrix set stat
         submatrixStat: null,
 
-        init: function(options) {
+        init: function (options) {
             this._super(options);
             this.pref = this.uuid();
 
@@ -66,11 +59,11 @@ define([
             return this;
         },
 
-        loggedInCallback: function(event, auth) {
+        loggedInCallback: function (event, auth) {
             this.featureValues = new DynamicServiceClient({
                 module: 'KBaseFeatureValues',
                 url: Config.url('service_wizard'),
-                token: auth.token
+                token: auth.token,
             });
 
             // Let's go...
@@ -78,24 +71,27 @@ define([
             return this;
         },
 
-        loggedOutCallback: function() {
+        loggedOutCallback: function () {
             this.isLoggedIn = false;
             return this;
         },
 
-        setTestParameters: function(){
+        setTestParameters: function () {
             this.options.workspaceID = '645';
             this.options.expressionMatrixID = '9';
-            this.options.conditionIds = 'ni__0500um_vs_NRC-1c,ni__1500um_vs_NRC-1c,ura3_Mn_1500um_b_vs_NRC-1d.sig';
+            this.options.conditionIds =
+                'ni__0500um_vs_NRC-1c,ni__1500um_vs_NRC-1c,ura3_Mn_1500um_b_vs_NRC-1d.sig';
         },
 
         // To be overriden to specify additional parameters
-        getSubmtrixParams: function(){
-            var self = this;
+        getSubmtrixParams: function () {
+            const self = this;
             self.setTestParameters();
-            var conditions = [];
-            if(self.options.conditionIds) { conditions = $.map(self.options.conditionIds.split(','), $.trim); }
-            return{
+            let conditions = [];
+            if (self.options.conditionIds) {
+                conditions = $.map(self.options.conditionIds.split(','), $.trim);
+            }
+            return {
                 input_data: self.options.workspaceID + '/' + self.options.expressionMatrixID,
                 column_ids: conditions,
                 fl_column_set_stat: 1,
@@ -103,109 +99,115 @@ define([
             };
         },
 
-        loadAndRender: function(){
-            var self = this;
+        loadAndRender: function () {
+            const self = this;
             self.loading(true);
 
-            var getSubmatrixStatsAndRender = function() {
-                var smParams = self.getSubmtrixParams();
+            const getSubmatrixStatsAndRender = function () {
+                const smParams = self.getSubmtrixParams();
 
                 // some parameter checking
-                if(!smParams.column_ids || smParams.column_ids.length===0) {
-                    self.clientError('No Conditions selected.  Please include at least one Condition from the data.');
+                if (!smParams.column_ids || smParams.column_ids.length === 0) {
+                    self.clientError(
+                        'No Conditions selected.  Please include at least one Condition from the data.'
+                    );
                     return;
                 }
 
-                self.featureValues.callFunc('get_submatrix_stat', [
-                    smParams
-                ])
-                    .spread(function (data) {
+                self.featureValues
+                    .callFunc('get_submatrix_stat', [smParams])
+                    .spread((data) => {
                         self.submatrixStat = data;
                         self.render();
                         self.loading(false);
                     })
-                    .error(function (err) {
+                    .error((err) => {
                         self.clientError(err);
                     });
             };
             getSubmatrixStatsAndRender();
         },
 
-        render: function(){
-            var $overviewContainer = $('<div/>');
-            this.$elem.append( $overviewContainer );
-            this.buildOverviewDiv( $overviewContainer );
+        render: function () {
+            const $overviewContainer = $('<div/>');
+            this.$elem.append($overviewContainer);
+            this.buildOverviewDiv($overviewContainer);
 
             // Separator
-            this.$elem.append( $('<div style="margin-top:1em"></div>') );
+            this.$elem.append($('<div style="margin-top:1em"></div>'));
 
-            var $vizContainer = $('<div/>');
-            this.$elem.append( $vizContainer );
-            this.buildWidget( $vizContainer );
+            const $vizContainer = $('<div/>');
+            this.$elem.append($vizContainer);
+            this.buildWidget($vizContainer);
         },
 
-        buildOverviewDiv: function($containerDiv){
-            var self = this;
-            var pref = this.pref;
+        buildOverviewDiv: function ($containerDiv) {
+            const self = this;
+            const pref = this.pref;
 
-            var $overviewSwitch = $('<a/>').html('[Show/Hide Selected Conditions]');
+            const $overviewSwitch = $('<a/>').html('[Show/Hide Selected Conditions]');
             $containerDiv.append($overviewSwitch);
 
-            var $overviewContainer = $('<div hidden style="margin:1em 0 4em 0"/>');
+            const $overviewContainer = $('<div hidden style="margin:1em 0 4em 0"/>');
             $containerDiv.append($overviewContainer);
 
-            var conditionsData = self.buildConditionsTableData();
-            var iDisplayLength = 10;
-            var style = 'lftip';
-            if(conditionsData.length<=iDisplayLength) { style = 'fti'; }
+            const conditionsData = self.buildConditionsTableData();
+            const iDisplayLength = 10;
+            let style = 'lftip';
+            if (conditionsData.length <= iDisplayLength) {
+                style = 'fti';
+            }
 
-            $overviewContainer.append($('<table id="'+pref+'condition-table"  \
+            $overviewContainer.append(
+                $(
+                    '<table id="' +
+                        pref +
+                        'condition-table"  \
                 class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">\
-                </table>')
-                .dataTable( {
-                    'sDom': style,
-                    'iDisplayLength': iDisplayLength,
-                    'aaData': conditionsData,
-                    'aoColumns': [
-                        { sTitle: 'Name', mData: 'id'},
+                </table>'
+                ).dataTable({
+                    sDom: style,
+                    iDisplayLength: iDisplayLength,
+                    aaData: conditionsData,
+                    aoColumns: [
+                        { sTitle: 'Name', mData: 'id' },
                         // { sTitle: "Function", mData: "function"},
-                        { sTitle: 'Min', mData:'min' },
-                        { sTitle: 'Max', mData:'max' },
-                        { sTitle: 'Avg', mData:'avg' },
-                        { sTitle: 'Std', mData:'std'},
-                        { sTitle: 'Missing', mData:'missing_values' }
+                        { sTitle: 'Min', mData: 'min' },
+                        { sTitle: 'Max', mData: 'max' },
+                        { sTitle: 'Avg', mData: 'avg' },
+                        { sTitle: 'Std', mData: 'std' },
+                        { sTitle: 'Missing', mData: 'missing_values' },
                     ],
-                    'oLanguage': {
-                        'sEmptyTable': 'No conditions found!',
-                        'sSearch': 'Search: '
-                    }
-                }));
+                    oLanguage: {
+                        sEmptyTable: 'No conditions found!',
+                        sSearch: 'Search: ',
+                    },
+                })
+            );
 
-            $overviewSwitch.click(function(){
+            $overviewSwitch.click(() => {
                 $overviewContainer.toggle();
             });
         },
 
-        buildConditionsTableData: function(){
-            var submatrixStat = this.submatrixStat;
-            var tableData = [];
-            var stat = submatrixStat.column_set_stat;
+        buildConditionsTableData: function () {
+            const submatrixStat = this.submatrixStat;
+            const tableData = [];
+            const stat = submatrixStat.column_set_stat;
             //console.log(submatrixStat);
-            for(var i = 0; i < submatrixStat.column_descriptors.length; i++){
-                var desc = submatrixStat.column_descriptors[i];
+            for (let i = 0; i < submatrixStat.column_descriptors.length; i++) {
+                const desc = submatrixStat.column_descriptors[i];
 
-                tableData.push(
-                    {
-                        'index': desc.index,
-                        'id': desc.id,
-                        'name': desc.name ? desc.name : ' ',
-                        'min': stat.mins[i] == null? ' ' : stat.mins[i].toFixed(2),
-                        'max': stat.maxs[i] == null? ' ' : stat.maxs[i].toFixed(2),
-                        'avg': stat.avgs[i] == null? ' ' : stat.avgs[i].toFixed(2),
-                        'std': stat.stds[i] == null? ' ' : stat.stds[i].toFixed(2),
-                        'missing_values': stat.missing_values[i]
-                    }
-                );
+                tableData.push({
+                    index: desc.index,
+                    id: desc.id,
+                    name: desc.name ? desc.name : ' ',
+                    min: stat.mins[i] == null ? ' ' : stat.mins[i].toFixed(2),
+                    max: stat.maxs[i] == null ? ' ' : stat.maxs[i].toFixed(2),
+                    avg: stat.avgs[i] == null ? ' ' : stat.avgs[i].toFixed(2),
+                    std: stat.stds[i] == null ? ' ' : stat.stds[i].toFixed(2),
+                    missing_values: stat.missing_values[i],
+                });
             }
             return tableData;
         },
@@ -213,54 +215,53 @@ define([
         // To be overriden
         buildWidget: null,
 
-        makeRow: function(name, value) {
-            var $row = $('<tr/>')
-                .append($('<th />').css('width','20%').append(name))
+        makeRow: function (name, value) {
+            const $row = $('<tr/>')
+                .append($('<th />').css('width', '20%').append(name))
                 .append($('<td />').append(value));
             return $row;
         },
 
-        loading: function(isLoading) {
-            if (isLoading)
-                this.showMessage('<img src=\'' + this.options.loadingImage + '\'/>');
-            else
-                this.hideMessage();
+        loading: function (isLoading) {
+            if (isLoading) this.showMessage("<img src='" + this.options.loadingImage + "'/>");
+            else this.hideMessage();
         },
 
-        showMessage: function(message) {
-            var span = $('<span/>').append(message);
+        showMessage: function (message) {
+            const span = $('<span/>').append(message);
 
             this.$messagePane.append(span);
             this.$messagePane.show();
         },
 
-        hideMessage: function() {
+        hideMessage: function () {
             this.$messagePane.hide();
             this.$messagePane.empty();
         },
 
-        clientError: function(error){
+        clientError: function (error) {
             this.loading(false);
-            var errString = 'Unknown error.';
+            let errString = 'Unknown error.';
             console.error(error);
-            if (typeof error === 'string')
-                errString = error;
-            else if (error.error && error.error.message)
-                errString = error.error.message;
-            else if (error.error && error.error.error && typeof error.error.error==='string') {
+            if (typeof error === 'string') errString = error;
+            else if (error.error && error.error.message) errString = error.error.message;
+            else if (error.error && error.error.error && typeof error.error.error === 'string') {
                 errString = error.error.error;
-                if(errString.indexOf('java.lang.NullPointerException') > -1 &&
-                    errString.indexOf('buildIndeces(KBaseFeatureValuesImpl.java:708)') > -1) {
+                if (
+                    errString.indexOf('java.lang.NullPointerException') > -1 &&
+                    errString.indexOf('buildIndeces(KBaseFeatureValuesImpl.java:708)') > -1
+                ) {
                     // this is a null pointer due to an unknown feature ID.  TODO: handle this gracefully
                     errString = 'Feature IDs not found.<br><br>';
-                    errString += 'Currently all Features included in a FeatureSet must be present' +
-                                 ' in the Expression Data Matrix.  Please rebuild the FeatureSet ' +
-                                 'so that it only includes these features.  This is a known issue '+
-                                 'and will be fixed shortly.';
+                    errString +=
+                        'Currently all Features included in a FeatureSet must be present' +
+                        ' in the Expression Data Matrix.  Please rebuild the FeatureSet ' +
+                        'so that it only includes these features.  This is a known issue ' +
+                        'and will be fixed shortly.';
                 }
             }
 
-            var $errorDiv = $('<div>')
+            const $errorDiv = $('<div>')
                 .addClass('alert alert-danger')
                 .append('<b>Error:</b>')
                 .append('<br>' + errString);
@@ -268,35 +269,29 @@ define([
             this.$elem.append($errorDiv);
         },
 
-        uuid: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
-                function(c) {
-                    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                    return v.toString(16);
-                });
+        uuid: function () {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+                const r = (Math.random() * 16) | 0,
+                    v = c == 'x' ? r : (r & 0x3) | 0x8;
+                return v.toString(16);
+            });
         },
 
-        buildObjectIdentity: function(workspaceID, objectID, objectVer, wsRef) {
-            var obj = {};
+        buildObjectIdentity: function (workspaceID, objectID, objectVer, wsRef) {
+            const obj = {};
             if (wsRef) {
                 obj['ref'] = wsRef;
             } else {
-                if (/^\d+$/.exec(workspaceID))
-                    obj['wsid'] = workspaceID;
-                else
-                    obj['workspace'] = workspaceID;
+                if (/^\d+$/.exec(workspaceID)) obj['wsid'] = workspaceID;
+                else obj['workspace'] = workspaceID;
 
                 // same for the id
-                if (/^\d+$/.exec(objectID))
-                    obj['objid'] = objectID;
-                else
-                    obj['name'] = objectID;
+                if (/^\d+$/.exec(objectID)) obj['objid'] = objectID;
+                else obj['name'] = objectID;
 
-                if (objectVer)
-                    obj['ver'] = objectVer;
+                if (objectVer) obj['ver'] = objectVer;
             }
             return obj;
-        }
-
+        },
     });
 });

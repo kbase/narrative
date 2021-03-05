@@ -7,33 +7,27 @@ define([
     'common/props',
     '../inputUtils',
     'bootstrap',
-    'css!font-awesome'
-], function(
-    Promise,
-    html,
-    Validation,
-    Events,
-    UI,
-    Props,
-    inputUtils) {
+    'css!font-awesome',
+], (Promise, html, Validation, Events, UI, Props, inputUtils) => {
     'use strict';
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         textarea = t('textarea');
 
     function factory(config) {
-        var spec = config.parameterSpec,
-            parent, container,
+        let spec = config.parameterSpec,
+            parent,
+            container,
             bus = config.bus,
             model = {
-                value: undefined
+                value: undefined,
             },
             ui,
             options = {
                 enabled: true,
-                rowCount: spec.ui.nRows || 5
+                rowCount: spec.ui.nRows || 5,
             };
 
         // CONTROL
@@ -52,7 +46,7 @@ define([
         // MODEL
 
         // NB this is a trusted method. The value had better be valid,
-        // since it won't (can't) be validated. Validation is an event 
+        // since it won't (can't) be validated. Validation is an event
         // which sits between the control and the model.
         function setModelValue(value) {
             if (value === undefined) {
@@ -73,29 +67,27 @@ define([
             setControlValue(model.getItem('value', null));
         }
 
-
         // VALIDATION
 
         function importControlValue() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 return Validation.importString(getControlValue());
             });
         }
 
         function validate(value) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 return Validation.validate(value, spec);
             });
         }
 
         function autoValidate() {
-            return validate(model.getItem('value'))
-                .then(function(result) {
-                    bus.emit('validation', result);
-                });
+            return validate(model.getItem('value')).then((result) => {
+                bus.emit('validation', result);
+            });
         }
 
-        var autoChangeTimer;
+        let autoChangeTimer;
 
         function cancelTouched() {
             if (autoChangeTimer) {
@@ -105,34 +97,34 @@ define([
         }
 
         function handleTouched(interval) {
-            var editPauseInterval = interval || 100;
+            const editPauseInterval = interval || 100;
             return {
                 type: 'keyup',
-                handler: function(e) {
+                handler: function (e) {
                     bus.emit('touched');
                     cancelTouched();
-                    autoChangeTimer = window.setTimeout(function() {
+                    autoChangeTimer = window.setTimeout(() => {
                         autoChangeTimer = null;
                         e.target.dispatchEvent(new Event('change'));
                     }, editPauseInterval);
-                }
+                },
             };
         }
 
         function handleChanged() {
             return {
                 type: 'change',
-                handler: function() {
+                handler: function () {
                     cancelTouched();
                     importControlValue()
-                        .then(function(value) {
+                        .then((value) => {
                             model.setItem('value', value);
                             bus.emit('changed', {
-                                newValue: value
+                                newValue: value,
                             });
                             return validate(value);
                         })
-                        .then(function(result) {
+                        .then((result) => {
                             if (result.isValid) {
                                 if (config.showOwnMessages) {
                                     ui.setContent('input-container.message', '');
@@ -142,11 +134,11 @@ define([
                             } else {
                                 if (config.showOwnMessages) {
                                     // show error message -- new!
-                                    var message = inputUtils.buildMessageAlert({
+                                    const message = inputUtils.buildMessageAlert({
                                         title: 'ERROR',
                                         type: 'danger',
                                         id: result.messageId,
-                                        message: result.errorMessage
+                                        message: result.errorMessage,
                                     });
                                     ui.setContent('input-container.message', message.content);
                                     message.events.attachEvents();
@@ -154,14 +146,14 @@ define([
                             }
                             bus.emit('validation', result);
                         })
-                        .catch(function(err) {
+                        .catch((err) => {
                             bus.emit('validation', {
                                 isValid: false,
                                 diagnosis: 'invalid',
-                                errorMessage: err.message
+                                errorMessage: err.message,
                             });
                         });
-                }
+                },
             };
         }
 
@@ -173,36 +165,35 @@ define([
         function makeInputControl(events) {
             return textarea({
                 id: events.addEvents({
-                    events: [handleChanged(), handleTouched()]
+                    events: [handleChanged(), handleTouched()],
                 }),
                 class: 'form-control',
                 dataElement: 'input',
-                rows: options.rowCount
+                rows: options.rowCount,
             });
         }
 
         function render(events) {
-            var content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' }, [
-                    makeInputControl(events)
-                ])
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' }, [makeInputControl(events)])]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
         // LIFECYCLE API
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
-                var events = Events.make(),
+                const events = Events.make(),
                     theLayout = render(events);
 
                 setModelValue(config.initialValue);
@@ -210,10 +201,10 @@ define([
                 container.innerHTML = theLayout.content;
                 events.attachEvents(container);
 
-                bus.on('reset-to-defaults', function() {
+                bus.on('reset-to-defaults', () => {
                     resetModelValue();
                 });
-                bus.on('update', function(message) {
+                bus.on('update', (message) => {
                     setModelValue(message.value);
                 });
                 // bus.emit('sync');
@@ -223,7 +214,7 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (parent && container) {
                     parent.removeChild(container);
                 }
@@ -234,22 +225,22 @@ define([
 
         model = Props.make({
             data: {
-                value: null
+                value: null,
             },
-            onUpdate: function() {}
+            onUpdate: function () {},
         });
 
         setModelValue(config.initialValue);
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

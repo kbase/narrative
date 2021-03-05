@@ -30,7 +30,7 @@ define ([
 
     return KBWidget({
         name: 'kbaseFeatureSet',
-        parent : kbaseAuthenticatedWidget,
+        parent: kbaseAuthenticatedWidget,
         version: '0.0.1',
         options: {
             featureset_name: null,
@@ -39,7 +39,7 @@ define ([
             loadingImage: Config.get('loading_gif'),
         },
 
-        init: function(options) {
+        init: function (options) {
             this._super(options);
 
             this.$messagePane = $('<div/>').addClass('kbwidget-message-pane kbwidget-hide-message');
@@ -71,13 +71,13 @@ define ([
         render: function() {
             this.genomeSearchAPI = new DynamicServiceClient({
                 module: 'GenomeSearchUtil',
-                url: Config.url('service_wizard'), 
+                url: Config.url('service_wizard'),
                 token: this.token,
                 timeout: TIMEOUT
             });
             this.workspace = new ServiceClient({
                 module: 'Workspace',
-                url: Config.url('workspace'), 
+                url: Config.url('workspace'),
                 token: this.token,
                 timeout: TIMEOUT
             });
@@ -86,7 +86,7 @@ define ([
             this.loadFeatureSet();
         },
 
-        features: null, 
+        features: null,
 
         loadFeatureSet: function() {
             this.features = {};
@@ -157,10 +157,10 @@ define ([
             //
             // "this.features" is an object whose keys are genome object references (gid), and
             // whose values are lists of feature ids (fid).
-            // 
+            //
             // For each pair of gid and fid we need to fetch the genome object information from the workspace
             // and the feature info from the genome search api.
-            // 
+            //
             // To keep this all sorted out, and in the original order, we do this as an array of promises for
             // each pair, and each pair itself is an array of the actual api calls which are themselves promises.
 
@@ -175,7 +175,7 @@ define ([
             }])
                 .then(([result]) => {
                     return Promise.all(result.infos.map((info) => {
-                      
+
                         const [/* typeModule */, typeName, /*typeVersionMajor*/, /*typeVersionMinor*/] = info[2].split(/[.-]/);
                         // console.log('object', info[1], typeModule, typeName, typeVersionMajor, typeVersionMinor);
 
@@ -189,7 +189,7 @@ define ([
                                         return this.search(objectRef, {'feature_id': featuresToFind}, featuresToFind.length)
                                             .then(({features}) => {
                                                 return features;
-                                            }); 
+                                            });
                                     case 'AnnotatedMetagenomeAssembly':
                                         return Promise.resolve(featuresToFind.map((feature_id) => {
                                             return {
@@ -306,19 +306,14 @@ define ([
             if (wsRef) {
                 obj['ref'] = wsRef;
             } else {
-                if (/^\d+$/.exec(workspaceID))
-                    obj['wsid'] = workspaceID;
-                else
-                    obj['workspace'] = workspaceID;
+                if (/^\d+$/.exec(workspaceID)) obj['wsid'] = workspaceID;
+                else obj['workspace'] = workspaceID;
 
                 // same for the id
-                if (/^\d+$/.exec(objectID))
-                    obj['objid'] = objectID;
-                else
-                    obj['name'] = objectID;
+                if (/^\d+$/.exec(objectID)) obj['objid'] = objectID;
+                else obj['name'] = objectID;
 
-                if (objectVer)
-                    obj['ver'] = objectVer;
+                if (objectVer) obj['ver'] = objectVer;
             }
             return obj;
         },
@@ -337,12 +332,12 @@ define ([
             this.$messagePane.show();
         },
 
-        hideMessage: function() {
+        hideMessage: function () {
             this.$messagePane.hide();
             this.$messagePane.empty();
         },
 
-        loggedInCallback: function(event, auth) {
+        loggedInCallback: function (event, auth) {
             if (this.token == null) {
                 this.token = auth.token;
                 this.render();

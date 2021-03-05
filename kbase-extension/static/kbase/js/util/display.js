@@ -1,41 +1,25 @@
-/*global define*/
-/*jslint white: true*/
 /**
  * A few string utility functions. These are kinda unrelated, but used in several places.
  *
  * @author Bill Riehl wjriehl@lbl.gov
  */
 define([
-    'kbwidget',
     'bootstrap',
     'jquery',
     'underscore',
     'bluebird',
     'narrativeConfig',
-    'util/timeFormat',
     'util/string',
     'kbase-client-api',
     'kbaseAccordion',
-    'api/auth'
-], function (
-    KBWidget,
-    bootstrap,
-    $,
-    _,
-    Promise,
-    Config,
-    TimeFormat,
-    StringUtil,
-    kbase_client_api,
-    KBaseAccordion,
-    Auth
-) {
+    'api/auth',
+], (bootstrap, $, _, Promise, Config, StringUtil, kbase_client_api, KBaseAccordion, Auth) => {
     'use strict';
 
-    var profileClient = new UserProfile(Config.url('user_profile'));
-    var authClient = Auth.make({url: Config.url('auth')});
-    var profilePageUrl = Config.url('profile_page');
-    var cachedUserIds = {};
+    const profileClient = new UserProfile(Config.url('user_profile'));
+    const authClient = Auth.make({ url: Config.url('auth') });
+    const profilePageUrl = Config.url('profile_page');
+    const cachedUserIds = {};
 
     function lookupUserProfile(username) {
         if (!cachedUserIds[username]) {
@@ -59,8 +43,9 @@ define([
      * @param {string} displayName - optional, the display name to use. If given, then an auth call isn't made.
      */
     function displayRealName(username, $target, displayName) {
-        let safeUser = StringUtil.escape(username),
-            usernameLink = '<a href="' + profilePageUrl + safeUser + '" target="_blank">' + safeUser + '</a>';
+        const safeUser = StringUtil.escape(username);
+        let usernameLink =
+            '<a href="' + profilePageUrl + safeUser + '" target="_blank">' + safeUser + '</a>';
         if (displayName) {
             return new Promise((resolve) => {
                 $target.text(displayName);
@@ -68,7 +53,8 @@ define([
                 resolve();
             });
         }
-        return authClient.getUserNames(null, [username])
+        return authClient
+            .getUserNames(null, [username])
             .then((user) => {
                 if (user[safeUser]) {
                     $target.text(user[safeUser]);
@@ -83,41 +69,24 @@ define([
             });
     }
 
-    /**
-     * @method
-     * loadingSpinner
-     * creates and returns a loading spinner DOM element with optional caption.
-     * This node is a div with the usual loading gif centered, with the (optional)
-     * caption centered below.
-     */
-    function loadingSpinner(caption) {
-        var spinner = '<span class="fa fa-spinner fa-pulse fa-2x fa-fw">';
-        if (caption) {
-            spinner += caption + '... &nbsp; &nbsp;'
-        }
-        spinner += '</span>';
-        return spinner;
-    }
-
     function loadingDiv(caption) {
-        var $caption = $('<span>');
-        var $loader = $('<div>').addClass('kb-data-loading')
+        const $caption = $('<span>');
+        const $loader = $('<div>')
+            .addClass('kb-data-loading')
             .append('<img src="' + Config.get('loading_gif') + '" style="margin:auto">')
             .append('<br>')
             .append($caption);
-        if (caption)
-            setText(caption);
+        if (caption) setText(caption);
 
-        function setText(caption) {
-            $caption.text(caption);
+        function setText(_caption) {
+            $caption.text(_caption);
         }
 
         return {
             div: $loader,
-            setText: setText
+            setText: setText,
         };
     }
-
 
     /**
      * @method
@@ -136,45 +105,47 @@ define([
      * }
      */
     function getAppIcon(params) {
-
-        var cursor = 'default';
+        let cursor = 'default';
         if (params.cursor) {
             cursor = params.cursor;
         }
 
         if (params.url) {
-            var size = '50px';
+            let size = '50px';
             if (params.size) {
                 size = params.size;
             }
-            return $('<img src="' + params.url + '">').css({'max-width': size, 'max-height': size, 'cursor': cursor});
+            return $('<img src="' + params.url + '">').css({
+                'max-width': size,
+                'max-height': size,
+                cursor: cursor,
+            });
         }
 
         // no url, so show default
-        var icons = Config.get('icons'); // icon default parameters are set in a config
+        const icons = Config.get('icons'); // icon default parameters are set in a config
 
-        var isApp = false;
+        let isApp = false;
         if (params['isApp']) {
             isApp = params['isApp'];
         }
 
-        var name = isApp ? "app" : "method";
-        var icon_color = isApp ? icons.colors[9] : icons.colors[5];
-        var icon_class = isApp ? 'app-icon' : 'method-icon';
+        const name = isApp ? 'app' : 'method';
+        const icon_color = isApp ? icons.colors[9] : icons.colors[5];
+        const icon_class = isApp ? 'app-icon' : 'method-icon';
 
-        var icon = icons.methods[name];
-        var $icon = $('<i>');
+        const icon = icons.methods[name];
+        const $icon = $('<i>');
         // background
-        $icon.addClass("fa-stack fa-2x").css({'cursor': cursor});
-        var $i = $('<i>').addClass('fa fa-square fa-stack-2x ' + icon_class);
+        $icon.addClass('fa-stack fa-2x').css({ cursor: cursor });
+        const $i = $('<i>').addClass('fa fa-square fa-stack-2x ' + icon_class);
         if (params.setColor) {
-            $i.css({color: icon_color});
+            $i.css({ color: icon_color });
         }
         $icon.append($i);
         // add stack of font-awesome icons
-        _.each(icon, function (cls) {
-            $icon.append($('<i>')
-                .addClass("fa fa-inverse fa-stack-1x " + cls));
+        _.each(icon, (cls) => {
+            $icon.append($('<i>').addClass('fa fa-inverse fa-stack-1x ' + cls));
         });
         return $icon;
     }
@@ -196,9 +167,13 @@ define([
      *                         hidden behind an accordion.
      */
     function createError(title, error, stackTrace) {
-        var $errorPanel = $('<div>')
+        const $errorPanel = $('<div>')
             .addClass('alert alert-danger')
-            .append('<b>' + title + '</b><br>Please contact the KBase team at <a href="https://www.kbase.us/support/">https://www.kbase.us/support/</a> with the information below.');
+            .append(
+                '<b>' +
+                    title +
+                    '</b><br>Please contact the KBase team at <a href="https://www.kbase.us/support/">https://www.kbase.us/support/</a> with the information below.'
+            );
 
         $errorPanel.append('<br><br>');
 
@@ -209,36 +184,35 @@ define([
 
         // If it's an object, expect an error object
         else if (typeof error === 'object') {
-            var errObj = error;
+            let errObj = error;
             if (error.status && error.error && error.error.error) {
                 errObj = {
                     status: error.status,
                     code: error.error.code,
                     message: error.error.message,
-                    name: error.error.name
+                    name: error.error.name,
                 };
                 if (!stackTrace) {
                     stackTrace = error.error.error;
                 }
             }
-            Object.keys(errObj).forEach(function(key) {
+            Object.keys(errObj).forEach((key) => {
                 $errorPanel.append($('<div>').append('<b>' + key + ':</b> ' + errObj[key]));
             });
-        }
-        else if (error) {
+        } else if (error) {
             $errorPanel.append('No other information available. Sorry!');
         }
         if (stackTrace) {
-            var $traceAccordion = $('<div>');
+            const $traceAccordion = $('<div>');
             $errorPanel.append($traceAccordion);
             new KBaseAccordion($traceAccordion, {
                 elements: [
                     {
                         title: 'Error Details',
-                        body: $('<pre>').addClass('kb-function-error-traceback').append(stackTrace)
-                    }
-                ]}
-            );
+                        body: $('<pre>').addClass('kb-function-error-traceback').append(stackTrace),
+                    },
+                ],
+            });
         }
         return $errorPanel;
     }
@@ -250,8 +224,8 @@ define([
      */
     function simpleButton(sizeClass, iconClass) {
         return $('<button>')
-               .addClass('btn btn-default ' + sizeClass)
-               .append($('<span>').addClass(iconClass));
+            .addClass('btn btn-default ' + sizeClass)
+            .append($('<span>').addClass(iconClass));
     }
 
     /**
@@ -262,13 +236,15 @@ define([
         if (!element) {
             return true;
         }
-        let rect = element.getBoundingClientRect();
+        const rect = element.getBoundingClientRect();
         if (rect.top === 0 && rect.bottom === 0) {
             return false;
         }
         return (
-            (rect.top >= 0 && rect.top <= (window.innerHeight || document.documentElement.clientHeight)) ||
-            (rect.bottom >= 0 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight))
+            (rect.top >= 0 &&
+                rect.top <= (window.innerHeight || document.documentElement.clientHeight)) ||
+            (rect.bottom >= 0 &&
+                rect.bottom <= (window.innerHeight || document.documentElement.clientHeight))
         );
     }
 
@@ -279,6 +255,6 @@ define([
         getAppIcon: getAppIcon,
         createError: createError,
         simpleButton: simpleButton,
-        verticalInViewport: verticalInViewport
+        verticalInViewport: verticalInViewport,
     };
 });

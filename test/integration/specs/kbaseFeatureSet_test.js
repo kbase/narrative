@@ -1,12 +1,11 @@
-/*global describe, it, browser, expect, afterEach, beforeEach*/
+'use strict';
+
 const {login} = require('../wdioUtils.js');
 const {NarrativeTesting} = require('../NarrativeTesting');
 const testData = require('./kbaseFeatureSet_data.json');
 const TIMEOUT = 30000;
 
 describe('Test kbaseFeatureSet', () => {
-    'use strict';
-
     beforeEach(async () => {
         await browser.setTimeout({ 'implicit': 30000 });
         await browser.reloadSession();
@@ -18,7 +17,7 @@ describe('Test kbaseFeatureSet', () => {
     });
 
     // sync version
-    it('opens a narrative which should have a sample set', async () => {
+    it('opens a narrative which should have a feature set', async () => {
         const t = new NarrativeTesting({testData, timeout: TIMEOUT, caseLabel: 'CASE_1'});
 
         const notebookContainer = await t.openNarrative(t.caseData.narrativeId);
@@ -66,9 +65,5 @@ describe('Test kbaseFeatureSet', () => {
                 }
             }
         }
-    });
-
-    it('does nothing important (but triggers lost sessions if there are async errors above)', async () => {
-        await expect(true).toEqual(true);
     });
 });

@@ -63,6 +63,7 @@ function* range(start, end) {
         return;
     }
     yield* range(start + 1, end);
+}
 
 /**
  * Navigates the wdio browser to a workspace as given by its id, and waits until the
@@ -105,7 +106,7 @@ async function openNarrative(workspaceId) {
         return userLabelText && userLabelText.length > 0;
     });
     const text = await userLabelElement.getText();
-    console.warn(`Logged in as user ${text}`);
+    console.warn(`Logged in as user "${text}`);
     await loginButton.click();
 
     // Ensure narrative notebook has displayed
@@ -133,4 +134,4 @@ module.exports = {
     clickWhenReady,
     waitForClass,
     range
-};
+}

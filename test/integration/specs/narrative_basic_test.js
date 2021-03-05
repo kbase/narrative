@@ -1,12 +1,10 @@
-/*global describe, it, browser, expect, beforeEach, afterEach $*/
+'use strict';
 const { login, makeURL } = require('../wdioUtils');
 const env = process.env.ENV || 'ci';
 const testData = require('./narrative_basic_data.json');
 const testCases = testData.envs[env];
 
 describe('Narrative tree page with login', () => {
-    'use strict';
-
     beforeEach(async () => {
         await browser.setTimeout({ 'implicit': 30000 });
         await browser.reloadSession();

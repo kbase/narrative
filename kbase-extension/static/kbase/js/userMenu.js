@@ -6,7 +6,15 @@ define([
     'kb_common/html',
     'util/bootstrapDialog',
     'util/string',
-], ($, NarrativeConfig, UserProfile, Gravatar, html, BootstrapDialog, StringUtil) => {
+], (
+    $,
+    NarrativeConfig,
+    UserProfile,
+    Gravatar,
+    html,
+    BootstrapDialog,
+    StringUtil
+) => {
     'use strict';
 
     function factory(config) {
@@ -88,13 +96,12 @@ define([
                                         }),
                                     ]
                                 ),
-                                div(
-                                    {
-                                        style: 'display: inline-block',
-                                        'data-element': 'user-label',
-                                    },
-                                    [displayName, br(), i({}, userName)]
-                                ),
+                                 div({style: 'display: inline-block', 'data-element': 'user-label'}, [
+                                     span({'data-element': 'realname'}, displayName),
+                                     br(),
+                                     i({}, userName),
+                                     i({'data-element': 'username'}, userName)
+                                 ])
                             ]
                         ),
                     ]),

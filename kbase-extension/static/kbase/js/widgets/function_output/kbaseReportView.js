@@ -815,7 +815,7 @@ define([
                     });
 
                     self.$mainPanel.append(div({ dataElement: 'downloadable-html' }));
-                    body = $.jqElem('div').append($ul).html();
+                    const body = $.jqElem('div').append($ul).html();
                     ui.setContent(
                         'downloadable-html',
                         ui.buildCollapsiblePanel({
@@ -836,37 +836,36 @@ define([
                 if (report.file_links && report.file_links.length) {
                     self.$mainPanel.append(div({ dataElement: 'downloadable-files' }));
 
-                    const iframe_id = new UUID(4).format();
+                    const iframeId = new UUID(4).format();
 
                     const $ul = $.jqElem('ul');
-                    $.each(report.file_links, function (i, v) {
-                        var link_id = new UUID(4).format();
+                    report.file_links.forEach((fileInfo, index) => {
+                        const linkId = new UUID(4).format();
                         $ul.append(
                             $.jqElem('li').append(
                                 $.jqElem('a')
-                                    .attr('id', link_id)
+                                    .attr('id', linkId)
                                     .attr('href', '#')
-                                    .append(v.name || v.URL)
+                                    .append(fileInfo.name || fileInfo.URL)
                                     .prop('download', true)
                                     .attr('download', 'download')
                             )
                         );
-
                         setTimeout(() => {
-                            $('#' + link_id).on('click', (e) => {
+                            $('#' + linkId).on('click', (e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                $('#' + iframe_id).attr(
+                                $('#' + iframeId).attr(
                                     'src',
-                                    self.importExportLink(v.URL, v.name || 'download-' + i)
+                                    self.importExportLink(fileInfo.URL, fileInfo.name || 'download-' + index)
                                 );
                             });
                         }, 1);
+
                     });
+                    const $iframe = $.jqElem('iframe').attr('id', iframeId).css('display', 'none');
 
-                    const $iframe = $.jqElem('iframe').attr('id', iframe_id).css('display', 'none');
-
-                    var body = $.jqElem('div').append($ul).append($iframe).html();
+                    const body = $.jqElem('div').append($ul).append($iframe).html();
 
                     ui.setContent(
                         'downloadable-files',

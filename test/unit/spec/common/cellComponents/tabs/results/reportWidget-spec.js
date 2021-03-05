@@ -9,6 +9,7 @@ define([
         beforeEach(function () {
             this.node = document.createElement('div');
             document.body.appendChild(this.node);
+            this.widget = ReportWidget.make();
         });
 
         afterEach(function () {
@@ -16,8 +17,7 @@ define([
         });
 
         it('should start and render with data', async function () {
-            const widget = ReportWidget.make();
-            await widget.start({
+            await this.widget.start({
                 node: this.node,
                 objectData: ResultsData.objectData,
             });
@@ -25,25 +25,26 @@ define([
             // name of an object
             expect(this.node.querySelectorAll('a').length).toBe(2);
             expect(this.node.innerHTML).toContain('Reports');
+            ResultsData.objectData.forEach((obj) => {
+                expect(this.node.innerHTML).toContain(obj.name);
+            });
         });
 
         it('should clear itself after stopping', async function () {
-            const widget = ReportWidget.make();
-            await widget.start({
+            await this.widget.start({
                 node: this.node,
                 objectData: ResultsData.objectData,
             });
             expect(this.node.innerHTML).toContain('Reports');
-            await widget.stop();
+            await this.widget.stop();
             expect(this.node.innerHTML).toBe('');
         });
 
         it('should expand and create a kbaseReportView widget on toggle', async function () {
-            const widget = ReportWidget.make();
             // just take a single object to render
             const singleDataObject = ResultsData.objectData[0];
 
-            await widget.start({
+            await this.widget.start({
                 node: this.node,
                 objectData: [singleDataObject],
             });
@@ -52,12 +53,12 @@ define([
             // get a handle on it
             const toggleNode = this.node.querySelector('a.kb-report__toggle');
             // expect it to be collapsed and not to have any siblings
-            expect(toggleNode.classList.contains('collapsed')).toBeTruthy();
+            expect(toggleNode).toHaveClass('collapsed');
             expect(toggleNode.nextSibling).toBeNull();
 
             toggleNode.click();
             // expect it to open up and make a div as a sibling
-            expect(toggleNode.classList.contains('collapsed')).toBeFalsy();
+            expect(toggleNode).not.toHaveClass('collapsed');
             const reportNode = toggleNode.nextSibling;
             expect(reportNode).toBeDefined();
             // marker for running kbaseReportView
@@ -65,28 +66,27 @@ define([
         });
 
         it('should expand and collapse again on click', async function () {
-            const widget = ReportWidget.make();
             // just take a single object to render
             const singleDataObject = ResultsData.objectData[0];
 
-            await widget.start({
+            await this.widget.start({
                 node: this.node,
                 objectData: [singleDataObject],
             });
             const toggleNode = this.node.querySelector('a.kb-report__toggle');
             // expect it to be collapsed and not to have any siblings
-            expect(toggleNode.classList.contains('collapsed')).toBeTruthy();
+            expect(toggleNode).toHaveClass('collapsed');
             expect(toggleNode.nextSibling).toBeNull();
 
             toggleNode.click();
             // expect it to open up and make a div as a sibling
-            expect(toggleNode.classList.contains('collapsed')).toBeFalsy();
+            expect(toggleNode).not.toHaveClass('collapsed');
             const reportNode = toggleNode.nextSibling;
             expect(reportNode).toBeDefined();
 
             // close again on another click
             toggleNode.click();
-            expect(toggleNode.classList.contains('collapsed')).toBeTruthy();
+            expect(toggleNode).toHaveClass('collapsed');
             expect(toggleNode.nextSibling).toBeNull();
         });
     });

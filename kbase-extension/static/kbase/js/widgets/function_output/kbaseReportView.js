@@ -4,36 +4,30 @@
  */
 
 define([
-    'bootstrap',
     'jquery',
     'base/js/namespace',
-
     'kbwidget',
     'kbaseAuthenticatedWidget',
     'narrativeConfig',
-    'util/string',
+    'uuid',
     'kb_common/html',
     'kb_sdk_clients/genericClient',
     'kb_service/client/workspace',
-    'kb_service/utils',
     'common/ui',
     'common/iframe/hostMessages',
     'common/events',
 
     'jquery-dataTables',
 ], (
-    bootstrap,
     $,
     Jupyter,
-
     KBWidget,
     kbaseAuthenticatedWidget,
     Config,
-    StringUtil,
+    UUID,
     html,
     GenericClient,
     Workspace,
-    ServiceUtils,
     UI,
     HostMessages,
     Events
@@ -52,7 +46,7 @@ define([
             showFiles: true,
             showHTML: true,
             inNarrative: true, // todo: toggles whether data links show in narrative or new page
-
+            report_ref: null,
             wsURL: Config.url('workspace'),
         },
         // workspace client
@@ -77,7 +71,7 @@ define([
             this.loadAndRender();
             return this;
         },
-        loggedOutCallback: function (event, auth) {
+        loggedOutCallback: function () {
             this.isLoggedIn = false;
             return this;
         },
@@ -86,7 +80,6 @@ define([
         // this is an ugly hack. It'd be prettier to hand in just the shock node ID, but I don't have one of those yet.
         // Also, this is embedding the token into the html and the URL, both of which are potentially security concerns.
         // TODO: update to put the auth token into the url... should be working in CI already.
-        // TODO: NO HARDCODING OF URLS!!!
         importExportLink: function (shock_url, name) {
             const m = shock_url.match(/\/node\/(.+)$/);
             if (m) {
@@ -101,34 +94,32 @@ define([
                         return [key, query[key]].map(encodeURIComponent).join('=');
                     })
                     .join('&');
-                const url = Config.get('urls').data_import_export + '/download?' + queryString;
-                return url;
+                return Config.get('urls').data_import_export + '/download?' + queryString;
             }
         },
 
         loadAndRender: function () {
-            const self = this;
-            self.loading(true);
+            this.loading(true);
 
-            self.objIdentity = self.buildObjectIdentity(
+            this.objIdentity = this.buildObjectIdentity(
                 this.options.workspace_name,
                 this.options.report_name,
                 null,
                 this.options.report_ref
             );
 
-            self.ws
-                .get_objects([self.objIdentity])
+            this.ws
+                .get_objects2({ objects: [this.objIdentity] })
                 .then((result) => {
-                    self.reportData = result[0].data;
-                    return self.getLinks(self.reportData);
+                    this.reportData = result.data[0].data;
+                    return this.getLinks(this.reportData);
                 })
                 .then((links) => {
-                    self.reportLinks = links;
-                    return self.render();
+                    this.reportLinks = links;
+                    return this.render();
                 })
                 .catch((err) => {
-                    self.clientError(err);
+                    this.clientError(err);
                 });
         },
 
@@ -315,11 +306,15 @@ define([
                 '`': '&#x60;',
                 '=': '&#x3D;',
             };
-            return String(string).replace(/[&<>"'`=\/]/g, (s) => {
+            return String(string).replace(/[&<>"'`=/]/g, (s) => {
                 return entityMap[s];
             });
         },
 
+        /**
+         * Returns a Promise that resolves into a list of links to the hosted report
+         * @param {string} report
+         */
         getLinks: function (report) {
             // NOTE: this returns a promise -- we must look up the html file set service url first.
             const _this = this;
@@ -368,7 +363,6 @@ define([
                         display: 'block',
                         width: width,
                         height: arg.height,
-                        // maxHeight: maxHeight,
                         margin: 0,
                         padding: 0,
                     },
@@ -501,7 +495,7 @@ define([
                         self.ws
                             .get_object_info_new({ objects: objIds })
                             .then((objInfo) => {
-                                const pref = StringUtil.uuid();
+                                const pref = new UUID(4).format();
                                 const displayData = [];
                                 const dataNameToInfo = {};
                                 for (var k = 0; k < objInfo.length; k++) {
@@ -805,9 +799,9 @@ define([
             if (self.options.showHTML) {
                 if (self.reportLinks && self.reportLinks.length) {
                     var $ul = $.jqElem('ul');
-                    self.reportLinks.forEach((reportLink) => {
-                        const link_id = StringUtil.uuid();
-                        const $linkItem = $.jqElem('li').append(
+                    self.reportLinks.forEach(function (reportLink) {
+                        var link_id = new UUID(4).format();
+                        var $linkItem = $.jqElem('li').append(
                             $.jqElem('a')
                                 .attr('href', reportLink.url)
                                 .attr('target', '_blank')
@@ -843,11 +837,11 @@ define([
                 if (report.file_links && report.file_links.length) {
                     self.$mainPanel.append(div({ dataElement: 'downloadable-files' }));
 
-                    const iframe_id = StringUtil.uuid();
+                    var iframe_id = new UUID(4).format();
 
                     var $ul = $.jqElem('ul');
-                    $.each(report.file_links, (i, v) => {
-                        const link_id = StringUtil.uuid();
+                    $.each(report.file_links, function (i, v) {
+                        var link_id = new UUID(4).format();
                         $ul.append(
                             $.jqElem('li').append(
                                 $.jqElem('a')
@@ -913,9 +907,11 @@ define([
             this.loading(false);
             let errString = 'Unknown error.';
             console.error(error);
-            if (typeof error === 'string') errString = error;
-            else if (error.error && error.error.message) errString = error.error.message;
-            else if (error.error && error.error.error && typeof error.error.error === 'string') {
+            if (typeof error === 'string') {
+                errString = error;
+            } else if (error.error && error.error.message) {
+                errString = error.error.message;
+            } else if (error.error && error.error.error && typeof error.error.error === 'string') {
                 errString = error.error.error;
             }
 
@@ -926,19 +922,22 @@ define([
             this.$elem.empty();
             this.$elem.append($errorDiv);
         },
-        buildObjectIdentity: function (workspaceID, objectID, objectVer, wsRef) {
+        /**
+         * Converts from several possible inputs into a Workspace ObjectIdentity structure.
+         * @param {string | number} workspaceId - an identifier for the workspace, either a numerical id or a name string
+         * @param {string | number} objectId - an identifier for the object, either a numerical id or a name string
+         * @param {string | number} objectVer - a number for the object version
+         * @param {string} wsRef - expected to be a valid workspace reference - using this overrides the other options
+         */
+        buildObjectIdentity: function (workspaceId, objectId, objectVer, wsRef) {
             const obj = {};
             if (wsRef) {
-                obj['ref'] = wsRef;
+                obj.ref = wsRef;
             } else {
-                if (/^\d+$/.exec(workspaceID)) obj['wsid'] = workspaceID;
-                else obj['workspace'] = workspaceID;
-
-                // same for the id
-                if (/^\d+$/.exec(objectID)) obj['objid'] = objectID;
-                else obj['name'] = objectID;
-
-                if (objectVer) obj['ver'] = objectVer;
+                obj.ref = `${workspaceId}/${objectId}`;
+                if (objectVer) {
+                    obj.ref += `/${objectVer}`;
+                }
             }
             return obj;
         },

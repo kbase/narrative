@@ -393,3 +393,21 @@ div.code_cell {
     content: '\f054 ';
   }
 }
+
+/* up/down caret expander */
+[data-toggle=vertical-collapse-after] {
+  cursor: pointer;
+
+  &::after {
+    display: inline-block;
+    width: 1em;
+    content: ' \f0d8';
+    font: normal 400 130%/1 $typeface-font-awesome;
+    text-align: right;
+    vertical-align: baseline;
+  }
+}
+
+.vertical_collapse--open [data-toggle=vertical-collapse-after]::after {
+  content: ' \f0d7';
+}

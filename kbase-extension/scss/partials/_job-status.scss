@@ -1,98 +1,24 @@
+
 .kb-job-status {
   box-shadow: none;
 
-  &__row {
-    min-height: 40px;
-
-    .show_log {
-      display: none;
-    }
-
-    .selected_log {
-      display: none;
-    }
-
-    &:hover {
-      background: use-color('disabled-light');
-
-      .show_log {
-        display: inline;
-      }
-    }
-
-    &_selected {
-      background: use-color('primary-lighter');
-
-      &:hover {
-        background: use-color('base-lightest');
-
-        .show_log {
-          display: none;
-        }
-      }
-    }
-  }
-
-  &__icon {
-    margin: 4px;
-
-    &--completed{
-      color: use-color('secondary-dark');
-    }
-
-    &--error,
-    &--does_not_exist,
-    &--terminated  {
-      color: use-color('error');
-    }
-
-    &--queued,
-    &--created,
-    &--estimating,
-    &--running {
-      color: use-color('info');
-    }
-  }
-
-  &__summary {
-    color: use-color('ink');
-    font-weight: 700;
-
-    &--completed {
-      color: use-color('success');
-      font-weight: 700;
-    }
-
-    &--error,
-    &--does_not_exist {
-      color: use-color('error');
-      font-weight: 700;
-    }
-
-    &--terminated {
-      color: use-color('warning');
-      font-weight: 700;
-    }
-  }
-
   &__table {
+    @include tabular-text;
+    padding: 0;
     white-space: nowrap;
-    font: normal 400 14px/40px $typeface-page-text;
-
     width: 100%;
-    margin-bottom: 18px;
-    padding: 0px;
 
+    /* .kb-job-status__table_body */
     &_body {
-      border-bottom: 2px solid rgb(196,196,196);
-      border-top: 2px solid rgb(196,196,196);
+      border-bottom: 2px solid use-color('base-light');
+      border-top: 2px solid use-color('base-light');
     }
 
     &_head {
-      font-weight: 700px;
-      line-height: 20px;
-
+      /* .kb-job-status__table_head_row */
       &_row {
+        font-weight: 700;
+
         .sorting::after,
         .sorting_asc::after,
         .sorting_desc::after {
@@ -103,47 +29,139 @@
         }
       }
 
+      /* .kb-job-status__table_head_cell */
+      &_cell {
+        @include table-cell;
+      }
     }
 
+    /* .kb-job-status__table_footer */
     &_footer {
-      font-size: 14px;
-      line-height: 18px;
+      @include body-text;
+    }
+  }
+
+  &__row {
+    border-bottom: 1px solid use-color('base-lightest');
+
+    &:hover {
+      background: use-color('disabled-light');
+    }
+
+    /* .kb-job-status__row--selected */
+    &--selected {
+      background: use-color('primary-lighter');
+
+      &:hover {
+        background: use-color('base-lightest');
+      }
     }
   }
 
   &__cell {
-    border: none;
-    padding-left: 5px;
-
-    &_container {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-
-      &_btn {
-        min-width: 98px;
-        margin-left: 5px;
-      }
+    /* .kb-job-status__table_cell--action */
+    &--action {
+      text-transform: uppercase;
     }
 
-    &_log_btn {
-      border: none;
-      background: none;
-      color: use-color('black');
-      min-width: 90px;
-        &:hover {
-          text-decoration: none;
-        }
-    }
-
-    &_action{
-      &--created,
-      &--estimating,
-      &--queued,
-      &--running {
-        color: use-color('error');
-      }
+    /*
+      .kb-job-status__table_cell--action,
+      .kb-job-status__table_cell--log-view,
+      .kb-job-status__table_cell--object,
+      .kb-job-status__table_cell--status
+    */
+    &--action,
+    &--log-view,
+    &--object,
+    &--status {
+      @include table-cell;
     }
   }
 
+  &__icon {
+    margin: 4px;
+
+    /*
+      .kb-job-status__icon--completed
+    */
+    &--completed {
+      color: use-color('success-dark');
+    }
+
+    /*
+      .kb-job-status__icon--error,
+      .kb-job-status__icon--does_not_exist
+    */
+    &--error,
+    &--does_not_exist {
+      color: use-color('error');
+    }
+
+    /*
+      .kb-job-status__icon--terminated
+    */
+    &--terminated {
+      color: use-color('warning-dark');
+    }
+
+    /*
+      .kb-job-status__icon--queued,
+      .kb-job-status__icon--created,
+      .kb-job-status__icon--estimating,
+      .kb-job-status__icon--running
+    */
+    &--queued,
+    &--created,
+    &--estimating,
+    &--running {
+      color: use-color('info');
+    }
+  }
+
+  /* .kb-job-status__summary */
+  &__summary {
+    color: use-color('ink');
+    font-weight: 700;
+
+    /* .kb-job-status__summary--completed */
+    &--completed {
+      color: use-color('success-dark');
+      font-weight: 700;
+    }
+
+    /*
+      .kb-job-status__summary--error,
+      .kb-job-status__summary--does_not_exist
+    */
+    &--error,
+    &--does_not_exist {
+      color: use-color('error');
+      font-weight: 700;
+    }
+
+    /*
+      .kb-job-status__summary--terminated
+    */
+    &--terminated {
+      color: use-color('warning-dark');
+      font-weight: 700;
+    }
+  }
+
+
+
+  /* .kb-job-status__param_list */
+  &__param_list {
+    @include body-text;
+    list-style-type: none;
+    margin: 1rem 0;
+    padding: 0;
+  }
+
+  /* .kb-job-status__log_container */
+  &__log_container {
+    background-color: use-color('info-lighter');
+    border-bottom: 1px solid use-color('base-lightest');
+    padding: 1rem;
+  }
 }

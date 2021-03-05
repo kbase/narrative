@@ -167,6 +167,8 @@ define([
                 if (!Jobs.isValidJobStateObject(args.jobState)) {
                     throw new Error('invalid job object supplied');
                 }
+                jobId = args.jobState.job_id;
+
                 container = args.node;
                 ui = UI.make({ node: container });
                 container.innerHTML = buildRow(args.name);
@@ -174,7 +176,7 @@ define([
                     selectRow(e);
                     showHideChildRow(e);
                 };
-                jobId = args.jobState.job_id;
+
                 _updateRowStatus(args.jobState);
             }).catch((err) => {
                 throw new Error(`Unable to start Job State List Row widget: ${err}`);

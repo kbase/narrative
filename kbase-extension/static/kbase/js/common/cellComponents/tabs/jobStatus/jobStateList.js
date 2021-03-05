@@ -105,7 +105,7 @@ define([
             fnDrawCallback: () => {
                 // Hide pagination controls if length is less than or equal to table length
                 if (rowCount <= dataTablePageLength) {
-                    $('.dataTables_paginate').hide();
+                    $container.find('.dataTables_paginate').hide();
                 }
             },
         });
@@ -183,50 +183,44 @@ define([
 
         function createJobStateListRowWidget(jobState, jobIndex) {
             widgetsById[jobState.job_id] = JobStateListRow.make();
-            return Promise.try(() => {
-                widgetsById[jobState.job_id].start({
-                    node: createTableRow(tableBody, jobIndex),
-                    jobState: jobState,
-                    // this will be replaced once the job-info call runs
-                    name: jobState.description || 'Child Job ' + (jobIndex + 1),
-                });
+            return widgetsById[jobState.job_id].start({
+                node: createTableRow(tableBody, jobIndex),
+                jobState: jobState,
+                // this will be replaced once the job-info call runs
+                name: jobState.description || 'Child Job ' + (jobIndex + 1),
             });
         }
 
         function start(args) {
-            return Promise.try(() => {
-                const requiredArgs = ['node', 'jobState'];
-                if (!requiredArgs.every((arg) => arg in args && args[arg])) {
-                    throw new Error(
-                        'start argument must have these keys: ' + requiredArgs.join(', ')
-                    );
-                }
-                $container = $(args.node);
-                $container.append($(createTable()));
-                [tableBody] = $container.find('tbody');
-                const jobState = Jobs.updateJobModel(args.jobState);
+            const requiredArgs = ['node', 'jobState'];
+            if (!requiredArgs.every((arg) => arg in args && args[arg])) {
+                throw new Error('start argument must have these keys: ' + requiredArgs.join(', '));
+            }
+            $container = $(args.node);
+            $container.append($(createTable()));
+            [tableBody] = $container.find('tbody');
+            const jobState = Jobs.updateJobModel(args.jobState);
 
-                return Promise.all(
-                    jobState.child_jobs.map((childJob, index) => {
-                        createJobStateListRowWidget(childJob, index);
-                    })
-                ).then(() => {
-                    renderTable($container, jobState.child_jobs.length);
+            return Promise.all(
+                jobState.child_jobs.map((childJob, index) => {
+                    createJobStateListRowWidget(childJob, index);
+                })
+            ).then(() => {
+                renderTable($container, jobState.child_jobs.length);
 
-                    // TODO: depending on which strategy we use for updating the job status
-                    // table, we can remove either the parent listener or that for the
-                    // child jobs
-                    startJobListener(jobState.job_id);
+                // TODO: depending on which strategy we use for updating the job status
+                // table, we can remove either the parent listener or that for the
+                // child jobs
+                startJobListener(jobState.job_id);
 
-                    jobState.child_jobs.forEach((childJob) => {
-                        startJobListener(childJob.job_id);
-                        // populate the params for the child jobs
-                        startParamsListener(childJob.job_id);
-                        bus.emit('request-job-info', {
-                            jobId: childJob.job_id,
-                            // TODO: check whether this param is required in ee2.5
-                            // parentJobId: jobState.job_id,
-                        });
+                jobState.child_jobs.forEach((childJob) => {
+                    startJobListener(childJob.job_id);
+                    // populate the params for the child jobs
+                    startParamsListener(childJob.job_id);
+                    bus.emit('request-job-info', {
+                        jobId: childJob.job_id,
+                        // TODO: check whether this param is required in ee2.5
+                        // parentJobId: jobState.job_id,
                     });
                 });
             });

@@ -14,7 +14,7 @@ define([
     'knhx',
     'widgetMaxWidthCorrection',
     'bootstrap',
-], function (KBWidget, $, Config, kbaseAuthenticatedWidget, DynamicServiceClient, ServiceClient) {
+], (KBWidget, $, Config, kbaseAuthenticatedWidget, DynamicServiceClient, ServiceClient) => {
     'use strict';
 
     // TODO: should have a configurable global service call timeout.

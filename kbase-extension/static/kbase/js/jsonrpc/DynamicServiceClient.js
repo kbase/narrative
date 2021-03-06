@@ -1,5 +1,5 @@
 /*jslint white:true,browser:true,jsnomen:true*/
-define(['./JSON-RPC_1.1'], function (jsonRpc) {
+define(['./JSON-RPC_1.1'], (jsonRpc) => {
     'use strict';
     class DynamicServiceClient {
         constructor({ module, url, timeout, version, token }) {

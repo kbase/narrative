@@ -1,7 +1,7 @@
 {
     "token": {
-        "user": "narrativetest",
-        "file": "test/narrativetest.tok"
+        "user": "kbaseutest",
+        "file": "test/kbaseuitest.tok"
     },
     "currentNarrative": "bar",
     "data": [

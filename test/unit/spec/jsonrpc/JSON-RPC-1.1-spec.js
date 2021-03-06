@@ -1,14 +1,12 @@
-/*global describe, it, expect*/
-/*jslint white: true*/
-define(['jsonrpc/JSON-RPC_1.1', 'narrativeConfig', 'testUtil'], function (
+define(['jsonrpc/JSON-RPC_1.1', 'narrativeConfig', 'testUtil'], (
     JSONRPC,
     NarrativeConfig,
     testUtil
-) {
+) => {
     'use strict';
     const { request, JSONRPCMethodError, JSONRPCError } = JSONRPC;
     describe('Test JSONRPCError', () => {
-        it('Create an error object and inspect properties', function () {
+        it('Create an error object and inspect properties', () => {
             const error = new JSONRPCError('test error', {
                 module: 'AModule',
                 func: 'afunc',

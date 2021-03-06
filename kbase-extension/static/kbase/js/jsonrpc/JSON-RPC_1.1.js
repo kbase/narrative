@@ -1,5 +1,5 @@
 /*jslint white:true,browser:true*/
-define(['uuid'], function (Uuid) {
+define(['uuid'], (Uuid) => {
     'use strict';
 
     /* 

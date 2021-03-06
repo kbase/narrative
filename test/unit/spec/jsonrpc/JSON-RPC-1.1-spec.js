@@ -1,26 +1,22 @@
 /*global describe, it, expect*/
 /*jslint white: true*/
-define([
-    'jsonrpc/JSON-RPC_1.1',
-    'narrativeConfig',
-    'testUtil',
-], function(
+define(['jsonrpc/JSON-RPC_1.1', 'narrativeConfig', 'testUtil'], function (
     JSONRPC,
     NarrativeConfig,
     testUtil
 ) {
     'use strict';
-    const {request, JSONRPCMethodError, JSONRPCError} = JSONRPC;
+    const { request, JSONRPCMethodError, JSONRPCError } = JSONRPC;
     describe('Test JSONRPCError', () => {
-        it('Create an error object and inspect properties', function() {
+        it('Create an error object and inspect properties', function () {
             const error = new JSONRPCError('test error', {
                 module: 'AModule',
                 func: 'afunc',
                 params: {
-                    param1: 'value1'
+                    param1: 'value1',
                 },
                 url: 'a url',
-                originalMessage: 'Original message'
+                originalMessage: 'Original message',
             });
             expect(error.message).toEqual('test error');
             expect(error.module).toEqual('AModule');
@@ -28,25 +24,25 @@ define([
             expect(error.url).toEqual('a url');
             expect(error.originalMessage).toEqual('Original message');
             expect(error.params).toEqual({
-                param1: 'value1'
+                param1: 'value1',
             });
         });
     });
 
     describe('Test JSONRPCMethodError', () => {
-        it('Create an error object and inspect properties', function() {
+        it('Create an error object and inspect properties', function () {
             const error = new JSONRPCMethodError('test error', {
                 module: 'AModule',
                 func: 'afunc',
                 params: {
-                    param1: 'value1'
+                    param1: 'value1',
                 },
                 url: 'a url',
                 originalMessage: 'Original message',
                 error: {
                     anything: 'goes',
-                    here: 123
-                }
+                    here: 123,
+                },
             });
             expect(error.message).toEqual('test error');
             expect(error.module).toEqual('AModule');
@@ -54,7 +50,7 @@ define([
             expect(error.url).toEqual('a url');
             expect(error.originalMessage).toEqual('Original message');
             expect(error.params).toEqual({
-                param1: 'value1'
+                param1: 'value1',
             });
             expect(error.error.anything).toEqual('goes');
             expect(error.error.here).toEqual(123);
@@ -89,28 +85,31 @@ define([
                 expect(result.state).toEqual('OK');
                 expect(result.git_url).toEqual('https://github.com/kbase/catalog');
             } catch (ex) {
-                expect(false).toBeTrue(`Exception thrown: ${ex.message}: ${JSON.stringify(ex.toJSON())}`);
+                expect(false).toBeTrue(
+                    `Exception thrown: ${ex.message}: ${JSON.stringify(ex.toJSON())}`
+                );
             } finally {
                 done();
             }
-            
-        }); 
+        });
 
         it('Call the status method of the Catalog service, with token in options', async (done) => {
             // Get the catalog status.
             const url = NarrativeConfig.config.urls.catalog;
             try {
                 const [result] = await request(url, 'Catalog', 'status', [], {
-                    token: testUtil.getAuthToken()
+                    token: testUtil.getAuthToken(),
                 });
                 expect(result).toBeDefined();
                 expect(result.state).toEqual('OK');
                 expect(result.git_url).toEqual('https://github.com/kbase/catalog');
             } catch (ex) {
-                expect(false).toBeTrue(`Exception thrown: ${ex.message}: ${JSON.stringify(ex.toJSON())}`);
+                expect(false).toBeTrue(
+                    `Exception thrown: ${ex.message}: ${JSON.stringify(ex.toJSON())}`
+                );
             } finally {
                 done();
             }
-        }); 
+        });
     });
 });

@@ -1,14 +1,4 @@
-/*global describe, it, expect*/
-/*jslint white: true*/
-define([
-    'jsonrpc/ServiceClient',
-    'narrativeConfig',
-    'testUtil',
-], (
-    ServiceClient,
-    NarrativeConfig,
-    // testUtil
-) => {
+define(['jsonrpc/ServiceClient', 'narrativeConfig'], (ServiceClient, NarrativeConfig) => {
     'use strict';
     describe('Test ServiceClient', () => {
         it('Creates a minimal client, does not call it', () => {
@@ -17,11 +7,9 @@ define([
                 url,
                 module: 'Catalog',
                 version: null,
-                timeout: 1000
+                timeout: 1000,
             });
             expect(client).toBeDefined();
         });
     });
-
-
 });

@@ -1,7 +1,7 @@
 /**
  * @public
  */
-define ([
+define([
     'kbwidget',
     'jquery',
     'narrativeConfig',
@@ -14,14 +14,7 @@ define ([
     'knhx',
     'widgetMaxWidthCorrection',
     'bootstrap',
-], function (
-    KBWidget,
-    $,
-    Config,
-    kbaseAuthenticatedWidget,
-    DynamicServiceClient,
-    ServiceClient
-) {
+], function (KBWidget, $, Config, kbaseAuthenticatedWidget, DynamicServiceClient, ServiceClient) {
     'use strict';
 
     // TODO: should have a configurable global service call timeout.
@@ -68,18 +61,18 @@ define ([
             return this;
         },
 
-        render: function() {
+        render: function () {
             this.genomeSearchAPI = new DynamicServiceClient({
                 module: 'GenomeSearchUtil',
                 url: Config.url('service_wizard'),
                 token: this.token,
-                timeout: TIMEOUT
+                timeout: TIMEOUT,
             });
             this.workspace = new ServiceClient({
                 module: 'Workspace',
                 url: Config.url('workspace'),
                 token: this.token,
-                timeout: TIMEOUT
+                timeout: TIMEOUT,
             });
             this.$mainPanel.hide();
             this.$mainPanel.empty();
@@ -88,23 +81,30 @@ define ([
 
         features: null,
 
-        loadFeatureSet: function() {
+        loadFeatureSet: function () {
             this.features = {};
             this.loading(true);
-            this.workspace.callFunc('get_objects', [[{
-                ref: `${this.options.workspaceName}/${this.options.featureset_name}`
-            }]])
+            this.workspace
+                .callFunc('get_objects', [
+                    [
+                        {
+                            ref: `${this.options.workspaceName}/${this.options.featureset_name}`,
+                        },
+                    ],
+                ])
                 .then(([data]) => {
                     const fs = data[0].data;
-                    if(fs.description) {
-                        this.$mainPanel.append($('<div test-id="description">')
-                            .append('<i test-id="label">Description</i>: ')
-                            .append(`<span test-id="value">${fs.description}</value>`));
+                    if (fs.description) {
+                        this.$mainPanel.append(
+                            $('<div test-id="description">')
+                                .append('<i test-id="label">Description</i>: ')
+                                .append(`<span test-id="value">${fs.description}</value>`)
+                        );
                     }
 
                     for (const fid in fs.elements) {
                         if (fid in fs.elements) {
-                            for (let k=0; k<fs.elements[fid].length; k++) {
+                            for (let k = 0; k < fs.elements[fid].length; k++) {
                                 const gid = fs.elements[fid][k];
                                 if (gid in this.features) {
                                     this.features[gid].push(fid);
@@ -124,14 +124,17 @@ define ([
                 });
         },
 
-        search: function(genome_ref, query, limit) {
-            return this.genomeSearchAPI.callFunc('search', [{
-                ref: genome_ref,
-                structured_query: query,
-                sort_by: [['contig_id',1]],
-                start: 0,
-                limit: limit
-            }])
+        search: function (genome_ref, query, limit) {
+            return this.genomeSearchAPI
+                .callFunc('search', [
+                    {
+                        ref: genome_ref,
+                        structured_query: query,
+                        sort_by: [['contig_id', 1]],
+                        start: 0,
+                        limit: limit,
+                    },
+                ])
                 .then(([result]) => {
                     return result;
                 });
@@ -141,7 +144,7 @@ define ([
         genomeObjectInfo: null, //{},
         featureTableData: null, // list for datatables
 
-        getGenomeData: function() {
+        getGenomeData: function () {
             if (Object.keys(this.features).length === 0) {
                 this.loading(false);
                 this.showMessage('This feature set is empty.');
@@ -166,75 +169,87 @@ define ([
 
             // get the object info for all feature-containing objects.
             const objectRefs = Object.keys(this.features);
-            return this.workspace.callFunc('get_object_info3', [{
-                objects: objectRefs.map((ref) => {
-                    return {
-                        ref
-                    };
-                })
-            }])
+            return this.workspace
+                .callFunc('get_object_info3', [
+                    {
+                        objects: objectRefs.map((ref) => {
+                            return {
+                                ref,
+                            };
+                        }),
+                    },
+                ])
                 .then(([result]) => {
-                    return Promise.all(result.infos.map((info) => {
+                    return Promise.all(
+                        result.infos.map((info) => {
+                            const [
+                                ,
+                                /* typeModule */ typeName /*typeVersionMajor*/ /*typeVersionMinor*/,
+                                ,
+                            ] = info[2].split(/[.-]/);
+                            // console.log('object', info[1], typeModule, typeName, typeVersionMajor, typeVersionMinor);
 
-                        const [/* typeModule */, typeName, /*typeVersionMajor*/, /*typeVersionMinor*/] = info[2].split(/[.-]/);
-                        // console.log('object', info[1], typeModule, typeName, typeVersionMajor, typeVersionMinor);
+                            const objectRef = [info[6], info[0], info[4]].join('/');
+                            const featuresToFind = this.features[objectRef];
 
-                        const objectRef = [info[6], info[0], info[4]].join('/');
-                        const featuresToFind = this.features[objectRef];
-
-                        return Promise.all([
-                            (() => {
-                                switch (typeName) {
-                                    case 'Genome':
-                                        return this.search(objectRef, {'feature_id': featuresToFind}, featuresToFind.length)
-                                            .then(({features}) => {
+                            return Promise.all([
+                                (() => {
+                                    switch (typeName) {
+                                        case 'Genome':
+                                            return this.search(
+                                                objectRef,
+                                                { feature_id: featuresToFind },
+                                                featuresToFind.length
+                                            ).then(({ features }) => {
                                                 return features;
                                             });
-                                    case 'AnnotatedMetagenomeAssembly':
-                                        return Promise.resolve(featuresToFind.map((feature_id) => {
-                                            return {
-                                                feature_id,
-                                                aliases: {na: 'na'},
-                                                feature_type: 'na',
-                                                function: 'na'
-                                            };
-                                        }));
-                                }
-                            })(),
-                            objectRef,
-                            typeName,
-                            info
-                        ]);
-                    }));
+                                        case 'AnnotatedMetagenomeAssembly':
+                                            return Promise.resolve(
+                                                featuresToFind.map((feature_id) => {
+                                                    return {
+                                                        feature_id,
+                                                        aliases: { na: 'na' },
+                                                        feature_type: 'na',
+                                                        function: 'na',
+                                                    };
+                                                })
+                                            );
+                                    }
+                                })(),
+                                objectRef,
+                                typeName,
+                                info,
+                            ]);
+                        })
+                    );
                 })
                 .then((result) => {
-                    const unsupportedTypeAttributes = 'title="Features not yet fully supported for AnnotatedMetagenomeAssembly" style="font-style: italic; color: gray; cursor: help;"';
+                    const unsupportedTypeAttributes =
+                        'title="Features not yet fully supported for AnnotatedMetagenomeAssembly" style="font-style: italic; color: gray; cursor: help;"';
                     for (const [features, objectRef, objectType, objectInfo] of result) {
                         const objectName = objectInfo[1];
                         for (const feature of features) {
                             if (objectType === 'AnnotatedMetagenomeAssembly') {
                                 // This is a special case because AMAs are not fully supported yet.
-                                this.featureTableData.push(
-                                    {
-                                        fid: `<a href="/#dataview/${objectRef}?sub=Feature&subid=${feature.feature_id}" target="_blank">${feature.feature_id}</a>`,
-                                        objectType,
-                                        gid: `<a href="/#dataview/${objectRef}" target="_blank">${objectName}</a>`,
-                                        aliases: `<span ${unsupportedTypeAttributes}>${Object.keys(feature.aliases).join(', ')}</a>`,
-                                        type: `<span ${unsupportedTypeAttributes}>${feature.feature_type}</a>`,
-                                        func: `<span ${unsupportedTypeAttributes}>${feature.function}</a>`
-                                    }
-                                );
+                                this.featureTableData.push({
+                                    fid: `<a href="/#dataview/${objectRef}?sub=Feature&subid=${feature.feature_id}" target="_blank">${feature.feature_id}</a>`,
+                                    objectType,
+                                    gid: `<a href="/#dataview/${objectRef}" target="_blank">${objectName}</a>`,
+                                    aliases: `<span ${unsupportedTypeAttributes}>${Object.keys(
+                                        feature.aliases
+                                    ).join(', ')}</a>`,
+                                    type: `<span ${unsupportedTypeAttributes}>${feature.feature_type}</a>`,
+                                    func: `<span ${unsupportedTypeAttributes}>${feature.function}</a>`,
+                                });
                             } else {
-                                this.featureTableData.push(
-                                    {
-                                        fid: `<a href="/#dataview/${objectRef}?sub=Feature&subid=${feature.feature_id}" target="_blank">${feature.feature_id}</a>`,
-                                        objectType,
-                                        gid: `<a href="/#dataview/${objectRef}" target="_blank">${objectName}</a>`,
-                                        aliases: Object.keys(feature.aliases).join(', '),
-                                        type: feature.feature_type,
-                                        func: feature.function
-                                    }
-                                );
+                                this.featureTableData.push({
+                                    fid: `<a href="/#dataview/${objectRef}?sub=Feature&subid=${feature.feature_id}" target="_blank">${feature.feature_id}</a>`,
+                                    objectType,
+                                    gid: `<a href="/#dataview/${objectRef}" target="_blank">${objectName}</a>`,
+                                    aliases: Object.keys(feature.aliases).join(', '),
+                                    type: feature.feature_type,
+                                    func: feature.function,
+                                });
                             }
                         }
                     }
@@ -245,17 +260,18 @@ define ([
                 });
         },
 
-        $featureTableDiv : null,
-        renderFeatureTable: function() {
+        $featureTableDiv: null,
+        renderFeatureTable: function () {
             if (!this.$featureTableDiv) {
-                this.$featureTableDiv = $('<div>').css({'margin':'5px'});
+                this.$featureTableDiv = $('<div>').css({ margin: '5px' });
                 this.$mainPanel.append(this.$featureTableDiv);
             }
 
             this.$featureTableDiv.empty();
 
-            const $tbl = $('<table cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin-left: 0px; margin-right: 0px;">')
-                .addClass('table table-bordered table-striped');
+            const $tbl = $(
+                '<table cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin-left: 0px; margin-right: 0px;">'
+            ).addClass('table table-bordered table-striped');
             this.$featureTableDiv.append($tbl);
 
             const sDom = `ft<${this.featureTableData.length <= 10 ? 'i' : 'ip'}>`;
@@ -264,26 +280,29 @@ define ([
                 sPaginationType: 'full_numbers',
                 iDisplayLength: 10,
                 sDom: sDom,
-                aaSorting: [[ 2, 'asc' ], [0, 'asc']],
+                aaSorting: [
+                    [2, 'asc'],
+                    [0, 'asc'],
+                ],
                 aoColumns: [
-                    {sTitle: 'Feature ID', mData: 'fid'},
-                    {sTitle: 'Type', mData: 'type'},
-                    {sTitle: 'Aliases', mData: 'aliases'},
-                    {sTitle: 'Function', mData: 'func'},
-                    {sTitle: 'Container Object', mData: 'gid'},
-                    {sTitle: 'Type', mData: 'objectType'},
+                    { sTitle: 'Feature ID', mData: 'fid' },
+                    { sTitle: 'Type', mData: 'type' },
+                    { sTitle: 'Aliases', mData: 'aliases' },
+                    { sTitle: 'Function', mData: 'func' },
+                    { sTitle: 'Container Object', mData: 'gid' },
+                    { sTitle: 'Type', mData: 'objectType' },
                 ],
                 aaData: [],
                 oLanguage: {
                     sSearch: 'Search features:',
-                    sEmptyTable: 'This FeatureSet is empty'
-                }
+                    sEmptyTable: 'This FeatureSet is empty',
+                },
             };
             const featuresTable = $tbl.dataTable(tblSettings);
             featuresTable.fnAddData(this.featureTableData);
         },
 
-        renderError: function(error) {
+        renderError: function (error) {
             let errString;
             if (typeof error === 'string') {
                 errString = error;
@@ -301,7 +320,7 @@ define ([
             this.$elem.append($errorDiv);
         },
 
-        buildObjectIdentity: function(workspaceID, objectID, objectVer, wsRef) {
+        buildObjectIdentity: function (workspaceID, objectID, objectVer, wsRef) {
             const obj = {};
             if (wsRef) {
                 obj['ref'] = wsRef;
@@ -318,15 +337,15 @@ define ([
             return obj;
         },
 
-        loading: function(loading) {
+        loading: function (loading) {
             if (loading) {
-                this.showMessage('<img src=\'' + this.options.loadingImage + '\'/>');
+                this.showMessage("<img src='" + this.options.loadingImage + "'/>");
             } else {
                 this.hideMessage();
             }
         },
 
-        showMessage: function(message) {
+        showMessage: function (message) {
             const span = $('<span/>').append(message);
             this.$messagePane.append(span);
             this.$messagePane.show();
@@ -345,9 +364,9 @@ define ([
             return this;
         },
 
-        loggedOutCallback: function() {
+        loggedOutCallback: function () {
             this.render();
             return this;
-        }
+        },
     });
 });

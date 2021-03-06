@@ -1,13 +1,13 @@
 'use strict';
 
-const {login} = require('../wdioUtils.js');
-const {NarrativeTesting} = require('../NarrativeTesting');
+const { login } = require('../wdioUtils.js');
+const { NarrativeTesting } = require('../NarrativeTesting');
 const testData = require('./kbaseFeatureSet_data.json');
 const TIMEOUT = 30000;
 
 describe('Test kbaseFeatureSet', () => {
     beforeEach(async () => {
-        await browser.setTimeout({ 'implicit': 30000 });
+        await browser.setTimeout({ implicit: 30000 });
         await browser.reloadSession();
         await login();
     });
@@ -18,7 +18,7 @@ describe('Test kbaseFeatureSet', () => {
 
     // sync version
     it('opens a narrative which should have a feature set', async () => {
-        const t = new NarrativeTesting({testData, timeout: TIMEOUT, caseLabel: 'CASE_1'});
+        const t = new NarrativeTesting({ testData, timeout: TIMEOUT, caseLabel: 'CASE_1' });
 
         const notebookContainer = await t.openNarrative(t.caseData.narrativeId);
 
@@ -48,7 +48,7 @@ describe('Test kbaseFeatureSet', () => {
                     return colElement;
                 })();
                 if (colDef.attrs) {
-                    for (const {key, value, regex} of colDef.attrs) {
+                    for (const { key, value, regex } of colDef.attrs) {
                         if (value) {
                             await expect(elementToInspect).toHaveAttribute(key, value);
                         } else if (regex) {

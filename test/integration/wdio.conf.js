@@ -227,8 +227,8 @@ function makeCapabilities(config) {
                     maxInstances: 1,
                     'goog:chromeOptions': {
                         args,
-                        binary: CHROME_BINARY
-                    }
+                        binary: CHROME_BINARY,
+                    },
                 };
             })();
         case 'selenium-standalone':

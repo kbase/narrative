@@ -1,13 +1,7 @@
-/*global describe, it, expect*/
 /*jslint white: true*/
-define([
-    'jsonrpc/DynamicServiceClient',
-    'narrativeConfig',
-    'testUtil',
-], (
+define(['jsonrpc/DynamicServiceClient', 'narrativeConfig'], (
     DynamicServiceClient,
-    NarrativeConfig,
-    // testUtil
+    NarrativeConfig
 ) => {
     'use strict';
     describe('Test DynamicServiceClient', () => {
@@ -17,7 +11,7 @@ define([
                 url,
                 module: 'Catalog',
                 version: null,
-                timeout: 1000
+                timeout: 1000,
             });
             expect(client).toBeDefined();
         });

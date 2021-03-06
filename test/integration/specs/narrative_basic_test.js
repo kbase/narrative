@@ -6,7 +6,7 @@ const testCases = testData.envs[env];
 
 describe('Narrative tree page with login', () => {
     beforeEach(async () => {
-        await browser.setTimeout({ 'implicit': 30000 });
+        await browser.setTimeout({ implicit: 30000 });
         await browser.reloadSession();
         await login();
     });

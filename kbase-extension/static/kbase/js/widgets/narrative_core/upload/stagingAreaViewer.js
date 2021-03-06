@@ -729,10 +729,7 @@ define([
 
         startTour: function () {
             if (!this.tour) {
-                this.tour = new UploadTour.Tour(
-                    this.$elem.parent(),
-                    this.globus_name
-                );
+                this.tour = new UploadTour.Tour(this.$elem.parent(), this.globus_name);
             }
             this.tour.start();
         },

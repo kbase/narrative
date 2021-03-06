@@ -133,5 +133,5 @@ module.exports = {
     openNarrative,
     clickWhenReady,
     waitForClass,
-    range
-}
+    range,
+};

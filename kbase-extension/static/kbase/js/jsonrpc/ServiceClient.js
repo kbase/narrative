@@ -1,15 +1,13 @@
 /*jslint white:true,browser:true,jsnomen:true*/
-define([
-    './JSON-RPC_1.1'
-], function (jsonRpc) {
+define(['./JSON-RPC_1.1'], function (jsonRpc) {
     'use strict';
     class ServiceClient {
-        constructor({module, url, timeout, token}) {
+        constructor({ module, url, timeout, token }) {
             this.module = module;
             this.url = url;
             this.timeout = timeout;
             this.token = token;
-        
+
             if (!module) {
                 throw new Error('"module" is required, it was not provided');
             }
@@ -24,7 +22,7 @@ define([
         callFunc(funcName, params) {
             const options = {
                 timeout: this.timeout,
-                authorization: this.token
+                authorization: this.token,
             };
             return jsonRpc.request(this.url, this.module, funcName, params, options);
         }

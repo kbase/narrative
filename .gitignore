@@ -15,6 +15,7 @@ node_modules/
 install.log
 /src/build/
 /venvs/
+/venv/
 .projectKnowledge
 nbproject
 static/dist
@@ -23,6 +24,7 @@ narrative_venv/
 new_narrative_env_2/
 js-coverage
 cover
+_attic
 
 # From https://github.com/github/gitignore/blob/master/Python.gitignore
 
@@ -73,6 +75,8 @@ nosetests.xml
 coverage.xml
 *,cover
 .hypothesis/
+karma-result.json
+test/*.tok
 
 # Integration test logs
 /selenium-standalone-logs/
@@ -93,3 +97,7 @@ target/
 # IDE / Editor
 .vscode
 /tags
+.idea
+
+# For yarn users
+yarn.lock

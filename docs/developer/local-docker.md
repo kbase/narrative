@@ -24,10 +24,10 @@ The following changes are required:
       - `ENV` sets the `CONFIG_ENV` environment variable for the Docker container; ci is the environment in which you are working (needs to be same as the ui is running on.)
       - `PORT` sets the host port that can be used. E.g. if you use PORT=12345, then http://localhost:12345 will start the Narrative. Default is 8888.
         - Note that the logging on the console will always show 8888 since that will be used internal to the container.
-      - uses the config set $env; makes it easy to test different environments alongside ui
-      - uses kbase-dev network; allows interoperation with the kbase-ui proxier
-      - uses name "narrative"; same
-      - mounts kbase static directory inside container; allows editing files on host and having changes reflected with a Narrative reload
+      - uses the config set in `$ENV`; makes it easy to test different environments alongside ui
+      - uses `kbase-dev` network; allows interoperation with the kbase-ui proxier to access local services
+      - uses container host name "narrative"
+      - mounts `kbase-extension/static/kbase` directory inside container; allows editing files on host and having changes reflected with a Narrative reload
       - removes container when done; easy cleanup
       - uses "dev" tagged container; matches the docker build task above
 

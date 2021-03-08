@@ -1,0 +1,207 @@
+{
+    "common": {},
+    "cases": {
+        "CASE_1": {}
+    },
+    "envs": {
+        "ci": {
+            "CASE_1": {
+                "narrativeId": 59136,
+                "cells": [
+                    {
+                        "cell": 3,
+                        "description": "Genome Feature Set",
+                        "rowCount": 6,
+                        "row": 3,
+                        "cols": [
+                            {
+                                "selector": "a",
+                                "attrs": [
+                                    {
+                                        "key": "href",
+                                        "regex": "^.*\\/#dataview\\/59134\\/6\\/1\\?sub=Feature&subid=SN13_RS00015$"
+                                    },
+                                    {
+                                        "key": "target",
+                                        "value": "_blank"
+                                    }
+                                ],
+                                "text": "SN13_RS00015"
+                            },
+                            {
+                                "text": "gene"
+                            },
+                            {
+                                "text": "SN13_00015, SN13_RS00015, WP_005376575.1"
+                            },
+                            {
+                                "text": "hypothetical protein"
+                            },
+                            {
+                                "selector": "a",
+                                "attrs": [
+                                    {
+                                        "key": "href",
+                                        "regex": "^.*\\/#dataview\\/59134\\/6\\/1$"
+                                    },
+                                    {
+                                        "key": "target",
+                                        "value": "_blank"
+                                    }
+                                ],
+                                "text": "Vibrio_alginolyticus"
+                            },
+                            {
+                                "text": "Genome"
+                            }
+                        ]
+                    },
+                    {
+                        "cell": 4,
+                        "description": "BLASTp_Search filtered",
+                        "rowCount": 7,
+                        "row": 4,
+                        "cols": [
+                            {
+                                "selector": "a",
+                                "attrs": [
+                                    {
+                                        "key": "href",
+                                        "regex": "^.*\\/#dataview\\/59134\\/15\\/1\\?sub=Feature&subid=FLCBBPKP_13265$"
+                                    },
+                                    {
+                                        "key": "target",
+                                        "value": "_blank"
+                                    }
+                                ],
+                                "text": "FLCBBPKP_13265"
+                            },
+                            {
+                                "text": "na"
+                            },
+                            {
+                                "text": "na"
+                            },
+                            {
+                                "text": "na"
+                            },
+                            {
+                                "selector": "a",
+                                "attrs": [
+                                    {
+                                        "key": "href",
+                                        "regex": "^.*\\/#dataview\\/59134\\/15\\/1$"
+                                    },
+                                    {
+                                        "key": "target",
+                                        "value": "_blank"
+                                    }
+                                ],
+                                "text": "KBase_derived_mygenome.gff_edited.gff_metagenome"
+                            },
+                            {
+                                "text": "AnnotatedMetagenomeAssembly"
+                            }
+                        ]
+                    },
+                    {
+                        "cell": 5,
+                        "description": "Merged Feature Sets",
+                        "rowCount": 10,
+                        "row": 4,
+                        "cols": [
+                            {
+                                "selector": "a",
+                                "attrs": [
+                                    {
+                                        "key": "href",
+                                        "regex": "^.*\\/#dataview\\/59134\\/15\\/1\\?sub=Feature&subid=FLCBBPKP_13265$"
+                                    },
+                                    {
+                                        "key": "target",
+                                        "value": "_blank"
+                                    }
+                                ],
+                                "text": "FLCBBPKP_13265"
+                            },
+                            {
+                                "text": "na"
+                            },
+                            {
+                                "text": "na"
+                            },
+                            {
+                                "text": "na"
+                            },
+                            {
+                                "selector": "a",
+                                "attrs": [
+                                    {
+                                        "key": "href",
+                                        "regex": "^.*\\/#dataview\\/59134\\/15\\/1$"
+                                    },
+                                    {
+                                        "key": "target",
+                                        "value": "_blank"
+                                    }
+                                ],
+                                "text": "KBase_derived_mygenome.gff_edited.gff_metagenome"
+                            },
+                            {
+                                "text": "AnnotatedMetagenomeAssembly"
+                            }
+                        ]
+                    },
+                    {
+                        "cell": 5,
+                        "description": "Merged Feature Sets",
+                        "rowCount": 10,
+                        "row": 9,
+                        "cols": [
+                            {
+                                "selector": "a",
+                                "attrs": [
+                                    {
+                                        "key": "href",
+                                        "regex": "^.*\\/#dataview\\/59134\\/6\\/1\\?sub=Feature&subid=SN13_RS00010$"
+                                    },
+                                    {
+                                        "key": "target",
+                                        "value": "_blank"
+                                    }
+                                ],
+                                "text": "SN13_RS00010"
+                            },
+                            {
+                                "text": "gene"
+                            },
+                            {
+                                "text": "SN13_00010, SN13_RS00010, WP_042520711.1"
+                            },
+                            {
+                                "text": "hypothetical protein"
+                            },
+                            {
+                                "selector": "a",
+                                "attrs": [
+                                    {
+                                        "key": "href",
+                                        "regex": "^.*\\/#dataview\\/59134\\/6\\/1$"
+                                    },
+                                    {
+                                        "key": "target",
+                                        "value": "_blank"
+                                    }
+                                ],
+                                "text": "Vibrio_alginolyticus"
+                            },
+                            {
+                                "text": "Genome"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    }
+}

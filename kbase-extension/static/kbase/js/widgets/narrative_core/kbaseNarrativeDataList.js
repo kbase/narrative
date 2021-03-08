@@ -277,7 +277,10 @@ define([
                     height: this.mainListPanelHeight,
                 })
                 .on('scroll', (event) => {
-                    if ($(event.target).scrollTop() + $(event.target).innerHeight() >= event.target.scrollHeight) {
+                    if (
+                        $(event.target).scrollTop() + $(event.target).innerHeight() >=
+                        event.target.scrollHeight
+                    ) {
                         this.renderMore();
                     }
                 });
@@ -411,7 +414,8 @@ define([
                     }
                 })
                 .catch((error) => {
-                    console.trace('dumping stacktrace!')
+                    // eslint-disable-next-line no-console
+                    console.trace('dumping stacktrace!');
                     console.error('DataList: when checking for updates:', error);
                     if (showError) {
                         this.showBlockingError(

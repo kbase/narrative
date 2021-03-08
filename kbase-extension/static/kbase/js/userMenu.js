@@ -93,7 +93,12 @@ define([
                                         style: 'display: inline-block',
                                         'data-element': 'user-label',
                                     },
-                                    [displayName, br(), i({}, userName)]
+                                    [
+                                        span({ 'data-element': 'realname' }, displayName),
+                                        br(),
+                                        i({}, userName),
+                                        i({ 'data-element': 'username' }, userName),
+                                    ]
                                 ),
                             ]
                         ),

@@ -28,7 +28,7 @@ define(['jsonrpc/JSON-RPC_1.1', 'narrativeConfig', 'testUtil'], (
     });
 
     describe('Test JSONRPCMethodError', () => {
-        it('Create an error object and inspect properties', function () {
+        it('Create an error object and inspect properties', () => {
             const error = new JSONRPCMethodError('test error', {
                 module: 'AModule',
                 func: 'afunc',

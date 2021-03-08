@@ -20,7 +20,7 @@ function mergeObjects(listOfObjects) {
         // we don't overwrite properties of shared objects.
         targetObj = JSON.parse(JSON.stringify(targetObj));
 
-        Object.keys(sourceObj).forEach(function (key) {
+        Object.keys(sourceObj).forEach((key) => {
             if (isSimpleObject(targetObj[key]) && isSimpleObject(sourceObj[key])) {
                 targetObj[key] = merge(targetObj[key], sourceObj[key]);
             } else {

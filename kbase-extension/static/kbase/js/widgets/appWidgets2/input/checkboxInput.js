@@ -160,7 +160,6 @@ define([
                     syncModelToControl();
                 });
 
-                // bus.emit('sync');
                 return null;
             });
         }

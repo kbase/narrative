@@ -108,39 +108,44 @@ define([
 
     function factory() {
         function getWidgetModule(spec) {
-            const dataType = spec.data.type,
+            let dataType = null,
+                controlType = null;
+            try {
+                dataType = spec.data.type;
                 controlType = spec.ui.control;
+            } catch (e) {
+                // eslint-disable-next-line no-empty
+            }
 
             switch (dataType) {
+                case 'boolean':
+                    return 'toggleButton';
+                case 'custom':
+                case 'customSubdata':
+                case 'float':
+                case 'sequence':
+                case 'struct':
+                case 'subdata':
+                    return dataType;
+                case 'int':
+                    return controlType === 'checkbox' ? controlType : dataType;
                 case 'string':
                     switch (controlType) {
-                        case 'textarea':
-                        case 'file':
-                            return controlType;
-
+                        case 'autocomplete':
+                            return 'taxonomyRef';
                         case 'custom_textsubdata':
                             return 'customSubdata';
                         case 'dropdown':
                             return 'select';
-                        case 'autocomplete':
-                            return 'taxonomyRef';
                         case 'dynamic_dropdown':
                             return 'dynamicDropdown';
+                        case 'file':
+                        case 'textarea':
+                            return controlType;
                         case 'text':
                         default:
                             return 'text';
                     }
-                case 'sequence':
-                case 'float':
-                case 'subdata':
-                case 'customSubdata':
-                case 'struct':
-                case 'custom':
-                    return dataType;
-                case 'boolean':
-                    return 'toggleButton';
-                case 'int':
-                    return controlType === 'checkbox' ? controlType : dataType;
                 case 'workspaceObjectRef':
                     switch (spec.ui.class) {
                         case 'input':
@@ -149,6 +154,7 @@ define([
                         default:
                             return 'undefined';
                     }
+
                 // IS THIS used anywhere other than in output areas??
                 case 'workspaceObjectName':
                     switch (spec.ui.class) {
@@ -158,45 +164,77 @@ define([
                         default:
                             return 'undefined';
                     }
+
                 default:
                     console.error('ERROR could not determine control modules for this spec', spec);
                     throw new Error('Could not determine control modules for this spec');
             }
         }
 
-        function loadModule(type, name) {
-            return new Promise((resolve, reject) => {
-                require(['./' + type + '/' + name], (Module) => {
-                    resolve(Module);
-                }, (err) => {
-                    reject(err);
+        /**
+         *
+         * @param {string} module - the widget module, as returned by getWidgetModule
+         * @param {string} typeString - module type, either 'input' or 'view'
+         * @param {boolean} includeMetadata - whether to return the loaded module or the loaded
+         *                                    module and some metadata
+         */
+        function _loadModule(module, typeString, includeMetadata = false) {
+            const type = typeString.toLowerCase();
+
+            if (type !== 'input' && type !== 'view') {
+                throw new Error(`invalid input to ParamResolver: ${typeString}`);
+            }
+
+            const typeTitle = type.charAt(0).toUpperCase() + type.substr(1).toLowerCase(),
+                moduleName = module + typeTitle,
+                path = `./${type}/${moduleName}`;
+
+            // the sequence(Input|View) and struct(Input|View) modules
+            // require ParamResolver, so have to be loaded dynamically
+            if (module === 'sequence' || module === 'struct') {
+                return new Promise((resolve, reject) => {
+                    require([path], (Module) => {
+                        resolve(
+                            includeMetadata
+                                ? {
+                                      module: Module,
+                                      path: path,
+                                      moduleName: moduleName,
+                                  }
+                                : Module
+                        );
+                    }, (err) => {
+                        reject(err);
+                    });
                 });
-            });
+            }
+            return Promise.resolve(
+                includeMetadata
+                    ? {
+                          module: inputModules[path],
+                          path: path,
+                          moduleName: moduleName,
+                      }
+                    : inputModules[path]
+            );
         }
 
         function loadInputControl(parameterSpec) {
-            const module = getWidgetModule(parameterSpec);
-            // the sequence(Input|View) and struct(Input|View) modules
-            // require ParamResolver, so have to be loaded dynamically
-            if (module === 'sequence' || module === 'struct') {
-                return loadModule('input', `${module}Input`);
-            }
-            return Promise.resolve(inputModules[`./input/${module}Input`]);
+            return _loadModule(getWidgetModule(parameterSpec), 'input');
         }
 
         function loadViewControl(parameterSpec) {
-            const module = getWidgetModule(parameterSpec);
-            // the sequence(Input|View) and struct(Input|View) modules
-            // require ParamResolver, so have to be loaded dynamically
-            if (module === 'sequence' || module === 'struct') {
-                return loadModule('view', `${module}View`);
-            }
-            return Promise.resolve(inputModules[`./view/${module}View`]);
+            return _loadModule(getWidgetModule(parameterSpec), 'view');
+        }
+
+        function getControlData(parameterSpec, type) {
+            return _loadModule(getWidgetModule(parameterSpec), type, true);
         }
 
         return {
             loadInputControl,
             loadViewControl,
+            getControlData,
         };
     }
     return {

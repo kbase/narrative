@@ -16,7 +16,7 @@ define([
         someApp: TestAppSpec,
     };
 
-    xdescribe('test the bulk import cell module', () => {
+    describe('test the bulk import cell module', () => {
         beforeAll(() => {
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',

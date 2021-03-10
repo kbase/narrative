@@ -382,8 +382,7 @@ define([
                         inputWidget,
                         appSpec,
                         spec,
-                        initialParams[spec.id],
-                        filePathParams.layout
+                        initialParams[spec.id]
                     );
 
                     widgets.push(widget);
@@ -416,7 +415,6 @@ define([
 
         function renderFilePathRow(filePathRow) {
             const appSpec = model.getItem('appSpec');
-
             const params = model.getItem('parameters');
             const filePathParams = makeFilePathsLayout(findPathParams(params));
 

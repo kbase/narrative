@@ -1,5 +1,5 @@
 define([
-    '../../../../../../../narrative/nbextensions/bulkImportCell/tabs/configure',
+    '/narrative/nbextensions/bulkImportCell/tabs/configure',
     'base/js/namespace',
     'common/runtime',
     'common/props',
@@ -8,10 +8,15 @@ define([
 ], (ConfigureTab, Jupyter, Runtime, Props, Spec, TestAppObject) => {
     'use strict';
 
-    xdescribe('test the bulk import cell configure tab', () => {
+    describe('test the bulk import cell configure tab', () => {
         beforeAll(() => {
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',
+            };
+
+            const params = TestAppObject.params;
+            TestAppObject.params = {
+                fastq_reads: params,
             };
         });
 
@@ -23,6 +28,7 @@ define([
             const bus = Runtime.make().bus();
             const node = document.createElement('div');
             document.getElementsByTagName('body')[0].appendChild(node);
+
             const model = Props.make({
                 data: TestAppObject,
                 onUpdate: () => {},
@@ -31,7 +37,7 @@ define([
                 appSpec: model.getItem('app.spec'),
             });
 
-            const configure = ConfigureTab.make({ bus, model, spec });
+            const configure = ConfigureTab.make({ bus, model, spec, fileType: 'fastq_reads' });
             return configure
                 .start({
                     node: node,
@@ -55,7 +61,7 @@ define([
                 appSpec: model.getItem('app.spec'),
             });
 
-            const configure = ConfigureTab.make({ bus, model, spec });
+            const configure = ConfigureTab.make({ bus, model, spec, fileType: 'fastq_reads' });
             return configure
                 .start({
                     node: node,

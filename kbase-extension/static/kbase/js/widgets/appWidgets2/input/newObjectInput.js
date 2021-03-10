@@ -1,13 +1,13 @@
 define([
     'bluebird',
-    'kb_common/html',
+    'common/html',
     '../validation',
     'common/events',
     'common/runtime',
-    'common/dom',
+    'common/ui',
     'bootstrap',
     'css!font-awesome',
-], (Promise, html, Validation, Events, Runtime, Dom) => {
+], (Promise, html, Validation, Events, Runtime, UI) => {
     'use strict';
 
     // Constants
@@ -24,10 +24,12 @@ define([
                 value: undefined,
             },
             runtime = Runtime.make(),
-            otherOutputParams = config.closeParameters.filter((value) => {
-                return value !== spec.id;
-            });
-        let parent, container, dom;
+            otherOutputParams = config.closeParameters
+                ? config.closeParameters.filter((value) => {
+                      return value !== spec.id;
+                  })
+                : [];
+        let parent, container, ui;
 
         // Validate configuration.
         // Nothing to do...
@@ -44,7 +46,7 @@ define([
          */
 
         function getInputValue() {
-            return dom.getElement('input-container.input').value;
+            return ui.getElement('input-container.input').value;
         }
 
         function setModelValue(value) {
@@ -214,7 +216,7 @@ define([
                 const events = Events.make(),
                     inputControl = makeInputControl(model.value, events);
 
-                dom.setContent('input-container', inputControl);
+                ui.setContent('input-container', inputControl);
                 events.attachEvents(container);
             }).then(() => {
                 return autoValidate();
@@ -254,7 +256,7 @@ define([
                 bus.on('run', (message) => {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
-                    dom = Dom.make({ node: container });
+                    ui = UI.make({ node: container });
 
                     const events = Events.make(),
                         theLayout = layout(events);

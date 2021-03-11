@@ -1,11 +1,25 @@
 /**
  * Should get fed data to view.
  */
-define(['bluebird', 'common/html', 'common/ui', 'util/kbaseApiUtil'], (
+define([
+    'bluebird',
+    'base/js/namespace',
+    'uuid',
+    'common/html',
+    'common/ui',
+    'util/kbaseApiUtil',
+    'common/events',
+    'jquery',
+    'jquery-dataTables',
+], (
     Promise,
+    Jupyter,
+    UUID,
     html,
     UI,
-    APIUtil
+    APIUtil,
+    Events,
+    $
 ) => {
     'use strict';
 
@@ -14,26 +28,57 @@ define(['bluebird', 'common/html', 'common/ui', 'util/kbaseApiUtil'], (
         tr = tag('tr'),
         th = tag('th'),
         td = tag('td'),
-        table = tag('table');
+        thead = tag('thead'),
+        tbody = tag('tbody'),
+        table = tag('table'),
+        a = tag('a'),
+        tablePageLength = 50;
 
     function OutputWidget() {
         let container, ui;
 
         /**
          *
-         * @param {Array} objectData an array of report object references
+         * @param {Array} objectData an array of object data. Each element is expected
+         *  to have these properties:
+         *  - type - the workspace object type
+         *  - name - the name of the object
+         *  - description - a description of the object
          */
         function renderOutput(objectData) {
             if (objectData.length === 0) {
-                return div('No objects created');
+                return {
+                    layout: div('No objects created')
+                };
             }
-            return table({ class: 'table table-bordered table-striped' }, [
-                tr([th('Created Object Name'), th('Type'), th('Description')]),
-                ...objectData.map((obj) => {
-                    const parsedType = APIUtil.parseWorkspaceType(obj.type);
-                    return tr([td(obj.name), td(parsedType.type), td(obj.description)]);
-                }),
+            const events = Events.make();
+            const layout = table({
+                class: 'table table-bordered',
+                dataElement: 'objects-table',
+            }, [
+                thead(
+                    tr([th('Created Object Name'), th('Type'), th('Description')]),
+                ),
+                tbody(
+                    [...objectData.map((obj) => {
+                        const parsedType = APIUtil.parseWorkspaceType(obj.type);
+                        const objLink = a({
+                            href: '#',
+                            style: 'cursor: pointer;',
+                            dataObjRef: obj.ref,
+                            id: events.addEvent({
+                                type: 'click',
+                                handler: () => {
+                                    Jupyter.narrative.addViewerCell(obj.wsInfo);
+                                }
+                            })
+                        }, [obj.name]);
+                        return tr([td(objLink), td(parsedType.type), td(obj.description)]);
+                    })]
+                ),
             ]);
+
+            return {layout, events};
         }
 
         /**
@@ -43,7 +88,6 @@ define(['bluebird', 'common/html', 'common/ui', 'util/kbaseApiUtil'], (
          * @param {object}
          *  - node - the DOM node to attach to
          *  - objectData -
-         *  - workspaceClient
          * @returns {Promise} resolves when the layout is complete
          */
         function doAttach(arg) {
@@ -65,9 +109,24 @@ define(['bluebird', 'common/html', 'common/ui', 'util/kbaseApiUtil'], (
                     hidden: false,
                     type: 'default',
                     classes: ['kb-panel-container'],
-                    body: renderedOutput,
+                    body: renderedOutput.layout,
                 })
             );
+            if (arg.objectData.length) {
+                const $objTable = $(ui.getElement('objects-table'));
+                $objTable.DataTable({
+                    searching: false,
+                    pageLength: tablePageLength,
+                    lengthChange: false,
+                    fnDrawCallback: () => {
+                        // Hide pagination controls if length is less than or equal to table length
+                        if (arg.objectData.length <= tablePageLength) {
+                            $(container).find('.dataTables_paginate').hide();
+                        }
+                    },
+                });
+                renderedOutput.events.attachEvents(container);
+            }
         }
 
         /**
@@ -75,8 +134,7 @@ define(['bluebird', 'common/html', 'common/ui', 'util/kbaseApiUtil'], (
          * wraps a Promise around the rendering process.
          * @param {object} arg
          * - node - the DOM node to build this under
-         * - reports - a list of report ids to fetch the relevant info from
-         * - workspaceClient - a workspace client to use
+         * - objectData - an array of object data to render
          */
         function start(arg) {
             // send parent the ready message

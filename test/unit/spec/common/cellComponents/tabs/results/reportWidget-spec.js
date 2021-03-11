@@ -6,6 +6,16 @@ define([
     'use strict';
 
     describe('Test the app/bulk import cell report widget', () => {
+        beforeAll(() => {
+            Jupyter.narrative = {
+                getAuthToken: () => 'fakeToken'
+            };
+        });
+
+        afterAll(() => {
+            Jupyter.narrative = null;
+        });
+
         beforeEach(function () {
             this.node = document.createElement('div');
             document.body.appendChild(this.node);

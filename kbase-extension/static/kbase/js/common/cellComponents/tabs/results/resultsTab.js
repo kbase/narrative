@@ -134,6 +134,7 @@ define(['bluebird', 'common/ui', 'common/events', './outputWidget', './reportWid
                         const ref = objectKeys[idx];
                         createdObjects[ref].name = info[1];
                         createdObjects[ref].type = info[2];
+                        createdObjects[ref].wsInfo = info;
                     });
                     return Object.values(createdObjects);
                 });

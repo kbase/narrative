@@ -215,7 +215,8 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
      *  body: 'get_objects2',
      *  statusCode: 500,
      *  statusText: 'http/1.1 500 Internal Service Error',
-     *  response: {error: 'something bad happened'}
+     *  response: {error: 'something bad happened'},
+     *  isError: true
      * })
      * @param {object} args
      * - url - the url endpoint to mock
@@ -225,14 +226,20 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
      * - statusCode - int, default = 200 - the HTTP status code your request should return
      * - statusText - string, default = "HTTP/1.1 200 OK" - a status string your request will return
      * - response - object - the data your request should return as an object.
+     * - isError - boolean - if truthy, will format the JSON-RPC response with an error field
      */
     function mockJsonRpc1Call(args) {
         const requestBody = args.body || '';
         const jsonRpcResponse = {
             version: '1.1',
             id: '12345',
-            result: [args.response],
         };
+        if (args.isError) {
+            jsonRpcResponse.error = args.response;
+        }
+        else {
+            jsonRpcResponse.result = [args.response];
+        }
         const serviceResponse = {
             status: args.statusCode || 200,
             statusText: args.statusText || 'HTTP/1.1 200 OK',

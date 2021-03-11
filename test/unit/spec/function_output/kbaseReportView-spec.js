@@ -124,6 +124,7 @@ define(['kbaseReportView', 'base/js/namespace', 'jquery', 'narrativeMocks', 'nar
         });
 
         it('should build a report view without object info or file links from a report object', async function () {
+            // copy the base report here so we don't modify it for future tests
             const reportData = Object.assign({}, REPORT_OBJ);
             reportData.file_links = [];
             reportData.objects_created = [];
@@ -186,12 +187,125 @@ define(['kbaseReportView', 'base/js/namespace', 'jquery', 'narrativeMocks', 'nar
             // expect to see one file and a downloader iframe
         });
 
-        it('should build a report view with direct HTML content', () => {
-
+        it('should build a report view with direct HTML content, not in an HTML tag', async function () {
+            const reportData = Object.assign({}, REPORT_OBJ);
+            delete reportData.direct_html_link_index;  // the link index takes precedence, so take it out.
+            mockReportLookup(reportData);
+            const reportWidget = new ReportView(this.$node, {
+                report_ref: REPORT_REF,
+            });
+            await reportWidget.loadAndRender();
+            // get the iframe node
+            const $iframe = this.$node.find('iframe.kb-report-view__report_iframe');
+            expect($iframe.length).toEqual(1);
+            expect($iframe.attr('srcdoc')).toContain(reportData.direct_html);
         });
 
-        it('should build a report view with HTML from the file set service', () => {
+        it('should build a report view with HTML from the file set service', async function () {
+            mockReportLookup(REPORT_OBJ);
+            const reportWidget = new ReportView(this.$node, {
+                report_ref: REPORT_REF,
+            });
+            await reportWidget.loadAndRender();
+            const $iframe = this.$node.find('iframe.kb-report-view__report_iframe');
+            expect($iframe.length).toEqual(1);
+            const htmlIndex = REPORT_OBJ.direct_html_link_index;
+            const expectedIframeSrc = [
+                FAKE_SERV_URL,
+                'api',
+                'v1',
+                REPORT_REF,
+                '$',
+                htmlIndex,
+                REPORT_OBJ.html_links[htmlIndex].name
+            ].join('/');
+            expect($iframe.attr('src')).toEqual(expectedIframeSrc);
+        });
 
+        it('should build a report view with direct HTML content, in an HTML tag, and warn the console', async function () {
+            const fakeReportHtml = '<html><body>This is a dummy report. BEHOLD!</body></html>';
+            const reportData = Object.assign({}, REPORT_OBJ);
+            reportData.direct_html = fakeReportHtml;
+            delete reportData.direct_html_link_index;
+            mockReportLookup(reportData);
+            const reportWidget = new ReportView(this.$node, { report_ref: REPORT_REF });
+            spyOn(console, 'warn');
+            await reportWidget.loadAndRender();
+            const $iframe = this.$node.find('iframe.kb-report-view__report_iframe');
+            expect($iframe.length).toEqual(1);
+            expect($iframe.attr('src')).toContain(encodeURIComponent(fakeReportHtml));
+            expect(console.warn).toHaveBeenCalled();
+        });
+
+        // A counter for the warnings should only appear for 5 or more. Might be overkill, but we'll test it!
+        const warningsCount = [1, 2, 3, 4, 5, 6, 7];
+        warningsCount.forEach((count) => {
+            const withCounter = count >= 5;
+            it(`should make a list of warnings ${withCounter ? 'with a counter ' : ''}for ${count} html report(s)`, async function () {
+                const reportData = Object.assign({}, REPORT_OBJ);
+                reportData.warnings = [];
+                for (let i=0; i<count; i++) {
+                    reportData.warnings.push(`warning #${i}`);
+                }
+                mockReportLookup(reportData);
+                const reportWidget = new ReportView(this.$node, { report_ref: REPORT_REF });
+                await reportWidget.loadAndRender();
+                const $reportWarnings = this.$node.find('div.kb-report-view__warning__container');
+                expect($reportWarnings.length).toEqual(1);
+                const $warningCounter = $reportWarnings.find('div.kb-report-view__warning__count');
+                if (withCounter) {
+                    expect($warningCounter.length).toEqual(1);
+                    expect($warningCounter.html()).toContain(`${count} warnings`);
+                }
+                else {
+                    expect($warningCounter.length).toEqual(0);
+                }
+                expect($reportWarnings.find('div.kb-report-view__warning__text').length).toEqual(count);
+            });
+        });
+
+        it('should build a proper export link from a file url, or return null', function () {
+            // just unit testing the importExportLink function here, not even calling render,
+            // so we don't need to set up mocks.
+            const reportWidget = new ReportView(this.$node, { report_ref: REPORT_REF }),
+                shockNode = 'some-magic-shock-node',
+                goodUrl = 'https://ci.kbase.us/services/shock-api/node/' + shockNode,
+                name = 'some_file.txt',
+                badUrl = 'https://ci.kbase.us/not/a/shock/url';
+            expect(reportWidget.importExportLink(badUrl, name)).toBeNull();
+            const result = reportWidget.importExportLink(goodUrl, name);
+            expect(result).toMatch(new RegExp('^' + Config.url('data_import_export')));
+            expect(result).toContain('wszip=0');
+            expect(result).toContain('name=some_file.txt');
+            expect(result).toContain('id=' + shockNode);
+        });
+
+        it('should respond to errors by rendering an error string', async function () {
+            const errorMessage = 'This is an error message';
+            Mocks.mockJsonRpc1Call({
+                url: Config.url('workspace'),
+                response: {
+                    error: 'This would be an error stacktrace',
+                    message: errorMessage,
+                    code: -32500,
+                    name: 'JSONRPCError'
+                },
+                statusCode: 500,
+                statusText: 'HTTP 1.1 / 500 internal service error',
+                isError: true
+            });
+            const reportWidget = new ReportView(this.$node, { report_ref: REPORT_REF });
+            await reportWidget.loadAndRender();
+            verifyPanelPresence({
+                createdObjects: false,
+                htmlPanel: false,
+                summary: false,
+                htmlLinks: false,
+                fileLinks: false
+            }, this.$node);
+            const $errorNode = this.$node.find('div.alert.alert-danger');
+            expect($errorNode.html()).toContain('Error:');
+            expect($errorNode.html()).toContain(errorMessage);
         });
     });
 });

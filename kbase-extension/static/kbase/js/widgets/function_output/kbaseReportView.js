@@ -66,15 +66,12 @@ define([
         },
 
         // this is an ugly hack. It'd be prettier to hand in just the shock node ID, but I don't
-        // have one of those yet. Also, this is embedding the token into the html and the URL,
-        // both of which are potentially security concerns.
-        // TODO: update to put the auth token into the url... should be working in CI already.
+        // have one of those yet.
         importExportLink: function (shockUrl, name) {
             const m = shockUrl.match(/\/node\/(.+)$/);
             if (m) {
-                const shockId = m[1];
                 const query = {
-                    id: shockId,
+                    id: m[1],
                     wszip: 0,
                     name: name,
                 };
@@ -85,6 +82,7 @@ define([
                     .join('&');
                 return Config.url('data_import_export') + '/download?' + queryString;
             }
+            return null;
         },
 
         loadAndRender: function () {
@@ -111,7 +109,7 @@ define([
                     return this.render();
                 })
                 .catch((err) => {
-                    this.clientError(err);
+                    this.showClientError(err);
                 });
         },
 
@@ -540,7 +538,7 @@ define([
                             reportLink = _this.reportLinks[report.direct_html_link_index];
                             if (reportLink) {
                                 reportButton = div(
-                                    { class: this.baseCssClass + '__report_button' },
+                                    { class: _this.baseCssClass + '__report_button' },
                                     a(
                                         {
                                             href: reportLink.url,
@@ -641,8 +639,8 @@ define([
 
             // HTML LINKS SECTION
             if (this.options.showHTML && this.reportLinks && this.reportLinks.length) {
-                const htmlReportLinksBody = this.buildHtmlLinksPanel(this.reportLinks);
                 this.$mainPanel.append(div({ dataElement: 'downloadable-html' }));
+                const htmlReportLinksBody = this.buildHtmlLinksPanel(this.reportLinks);
                 ui.setContent(
                     'downloadable-html',
                     ui.buildCollapsiblePanel({
@@ -678,38 +676,44 @@ define([
         },
         loading: function (isLoading) {
             if (isLoading) {
-                this.showMessage('<i class="fa fa-spinner fa-spin"></i>');
+                const span = html.tag('span'),
+                    i = html.tag('i'),
+                    loadingMsg = span(
+                        i({
+                            class: 'fa fa-spinner fa-spin'
+                        })
+                    );
+                this.$messagePane.append(loadingMsg);
+                this.$messagePane.show();
             } else {
-                this.hideMessage();
+                this.$messagePane.hide();
+                this.$messagePane.empty();
             }
         },
-        showMessage: function (message) {
-            const span = $('<span/>').append(message);
-            this.$messagePane.append(span);
-            this.$messagePane.show();
-        },
-        hideMessage: function () {
-            this.$messagePane.hide();
-            this.$messagePane.empty();
-        },
-        clientError: function (error) {
+        showClientError: function (error) {
             this.loading(false);
             let errString = 'Unknown error.';
-            console.error(error);
+            console.error(JSON.stringify(error));
+            // if we get a basic error as a string
             if (typeof error === 'string') {
                 errString = error;
+            // this can be thrown from certain network error cases
             } else if (error.error && error.error.message) {
                 errString = error.error.message;
+            // this mess can come from a workspace API error
             } else if (error.error && error.error.error && typeof error.error.error === 'string') {
                 errString = error.error.error;
             }
 
-            const $errorDiv = $('<div>')
-                .addClass('alert alert-danger')
-                .append('<b>Error:</b>')
-                .append('<br>' + errString);
-            this.$elem.empty();
-            this.$elem.append($errorDiv);
+            const div = html.tag('div'),
+                b = html.tag('b'),
+                br = html.tag('br', { close: false });
+            const errorDiv = div({ class: 'alert alert-danger'}, [
+                b('Error:'),
+                br(),
+                errString
+            ])
+            this.$elem.empty().append(errorDiv);
         },
         /**
          * Converts from several possible inputs into a Workspace ObjectIdentity structure.

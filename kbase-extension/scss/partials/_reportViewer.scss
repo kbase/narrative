@@ -1,0 +1,48 @@
+.kb-report-view {
+    &__warning {
+        &__count {
+            margin: 5px;
+        }
+
+        &__container {
+            max-height: 100px;
+            overflow-y: auto;
+            margin: 0 5px 5px 10px;
+        }
+
+        &__text {
+            margin: 0 5px 5px 10px;
+        }
+    }
+
+    &__summary {
+        width: '100%';
+        font-family: Monaco,monospace;
+        font-size: '9pt';
+        color: '#555';
+        white-space: 'pre-wrap';
+        overflow: 'auto';
+        height: 'auto';
+        max-height: '500px';
+    }
+
+    &__download-iframe {
+        display: none;
+    }
+
+    &__download_button {
+        cursor: pointer;
+    }
+
+    &__report_iframe {
+        display: 'block';
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 'auto';
+    }
+
+    &__report_button {
+        margin: 4px 4px 8px 0;
+    }
+}

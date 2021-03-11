@@ -18,10 +18,10 @@ define([
     function ConfigureWidget(options) {
         const model = options.model,
             spec = options.spec,
-            fileType = options.fileType;
-
-        let container = null,
+            fileType = options.fileType,
             runtime = Runtime.make();
+
+        let container = null;
 
         /**
          * args includes:

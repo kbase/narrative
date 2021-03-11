@@ -483,20 +483,21 @@ define([
             const appSpec = model.getItem('appSpec');
             const params = model.getItem('parameters');
             const filteredParams = makeParamsLayout(filterParameters(params));
+
             //if there aren't any parameters we can just hide the whole area
             if (!filteredParams.layout.length) {
-                ui.getElement('parameters-area').classList.add('hidden');
-            } else {
-                places.parameterFields.innerHTML = filteredParams.content;
-
-                return Promise.all(
-                    filteredParams.layout.map(async (parameterId) => {
-                        await createParameterWidget(appSpec, filteredParams, parameterId);
-                    })
-                ).then(() => {
-                    renderAdvanced();
-                });
+                return Promise.resolve(ui.getElement('parameters-area').classList.add('hidden'));
             }
+
+            places.parameterFields.innerHTML = filteredParams.content;
+
+            return Promise.all(
+                filteredParams.layout.map(async (parameterId) => {
+                    await createParameterWidget(appSpec, filteredParams, parameterId);
+                })
+            ).then(() => {
+                renderAdvanced();
+            });
         }
 
         function start(arg) {

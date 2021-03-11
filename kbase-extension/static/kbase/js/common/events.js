@@ -1,10 +1,11 @@
 define(['jquery', 'kb_common/html'], ($, html) => {
     'use strict';
 
-    function factory(config) {
-        var events = [],
-            config = config || {},
+    function factory(args) {
+        let events = [];
+        const config = args || {},
             globalRoot = config.node;
+
         function addEvent(event) {
             let selector, id;
             if (event.id) {
@@ -27,6 +28,7 @@ define(['jquery', 'kb_common/html'], ($, html) => {
             });
             return id;
         }
+
         function addEvents(newEvents) {
             let selector, id;
             if (newEvents.id) {
@@ -50,6 +52,7 @@ define(['jquery', 'kb_common/html'], ($, html) => {
             });
             return id;
         }
+
         function attachEvents(eventsRoot) {
             const root = globalRoot || eventsRoot;
             events.forEach((event) => {

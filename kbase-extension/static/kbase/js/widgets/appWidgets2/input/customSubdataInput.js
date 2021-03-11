@@ -39,22 +39,31 @@ define([
         button = t('button');
 
     function factory(config) {
-        let spec = config.parameterSpec,
+        const spec = config.parameterSpec,
             appSpec = config.appSpec,
             runtime = Runtime.make(),
             workspaceId = runtime.getEnv('workspaceId'),
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(config.channelName),
-            parent,
-            container,
-            model,
-            subdataMethods,
-            options = {
-                objectSelectionPageSize: 20,
-            },
-            ui;
+            model = Props.make({
+                data: {
+                    referenceObjectName: null,
+                    availableValues: [],
+                    selectedItems: [],
+                    value: null,
+                    showFrom: 0,
+                    showTo: 5,
+                },
+                onUpdate: function () {
+                    renderStats();
+                    renderToolbar();
+                    renderAvailableItems();
+                    renderSelectedItems();
+                },
+            }),
+            subdataMethods = SubdataMethods.make();
 
-        subdataMethods = SubdataMethods.make();
+        let parent, container, ui;
 
         function buildOptions() {
             const availableValues = model.getItem('availableValues'),
@@ -65,9 +74,9 @@ define([
             }
             return selectOptions.concat(
                 availableValues.map((availableValue) => {
-                    let selected = false,
-                        optionLabel = availableValue.id,
+                    const optionLabel = availableValue.id,
                         optionValue = availableValue.id;
+                    let selected = false;
                     // TODO: pull the value out of the object
                     if (value.indexOf(availableValue.id) >= 0) {
                         selected = true;
@@ -115,13 +124,7 @@ define([
 
         function didChange() {
             validate().then((result) => {
-                if (result.isValid) {
-                    model.setItem('value', result.value);
-                    updateInputControl('value');
-                    channel.emit('changed', {
-                        newValue: result.value,
-                    });
-                } else if (result.diagnosis === 'required-missing') {
+                if (result.isValid || result.diagnosis === 'required-missing') {
                     model.setItem('value', result.value);
                     updateInputControl('value');
                     channel.emit('changed', {
@@ -177,14 +180,14 @@ define([
         }
 
         function renderAvailableItems() {
-            let selected = model.getItem('selectedItems', []),
+            const selected = model.getItem('selectedItems', []),
                 allowSelection = spec.ui.multiSelection || selected.length === 0,
                 items = model.getItem('filteredAvailableItems', []),
                 from = model.getItem('showFrom'),
                 to = model.getItem('showTo'),
                 itemsToShow = items.slice(from, to),
-                events = Events.make({ node: container }),
-                content;
+                events = Events.make({ node: container });
+            let content;
 
             if (itemsToShow.length === 0) {
                 content = div({ style: { textAlign: 'center' } }, 'no available values');
@@ -310,10 +313,10 @@ define([
         }
 
         function renderSelectedItems() {
-            let selectedItems = model.getItem('selectedItems', []),
+            const selectedItems = model.getItem('selectedItems', []),
                 valuesMap = model.getItem('availableValuesMap', {}),
-                events = Events.make({ node: container }),
-                content;
+                events = Events.make({ node: container });
+            let content;
 
             if (selectedItems.length === 0) {
                 content = div({ style: { textAlign: 'center' } }, 'no selected values');
@@ -372,8 +375,6 @@ define([
                                         style: {
                                             xdisplay: 'inline-block',
                                             xwidth: '10%',
-                                            //minWidth: '6em',
-                                            //maxWidth: '6em',
                                             padding: '2px',
                                             textAlign: 'right',
                                             verticalAlign: 'top',
@@ -411,14 +412,8 @@ define([
         }
 
         function renderSearchBox() {
-            let items = model.getItem('availableValues', []),
-                events = Events.make({ node: container }),
-                content;
-
-            //if (items.length === 0) {
-            //    content = '';
-            //} else {
-            content = input({
+            const events = Events.make({ node: container });
+            const content = input({
                 class: 'form-contol',
                 style: { xwidth: '100%' },
                 placeholder: 'search',
@@ -438,13 +433,6 @@ define([
                             },
                         },
                         {
-                            type: 'blur',
-                            handler: function () {
-                                console.log('SingleSubData Search BLUR');
-                                // Jupyter.narrative.enableKeyboardManager();
-                            },
-                        },
-                        {
                             type: 'click',
                             handler: function () {
                                 Jupyter.narrative.disableKeyboardManager();
@@ -453,16 +441,15 @@ define([
                     ],
                 }),
             });
-            //}
 
             ui.setContent('search-box', content);
             events.attachEvents();
         }
 
         function renderStats() {
-            let availableItems = model.getItem('availableValues', []),
-                filteredItems = model.getItem('filteredAvailableItems', []),
-                content;
+            const availableItems = model.getItem('availableValues', []),
+                filteredItems = model.getItem('filteredAvailableItems', []);
+            let content;
 
             if (availableItems.length === 0) {
                 content = span({ style: { fontStyle: 'italic' } }, [' - no available items']);
@@ -477,9 +464,9 @@ define([
         }
 
         function renderToolbar() {
-            let items = model.getItem('filteredAvailableItems', []),
-                events = Events.make({ node: container }),
-                content;
+            const items = model.getItem('filteredAvailableItems', []),
+                events = Events.make({ node: container });
+            let content;
 
             if (items.length === 0) {
                 content = '';
@@ -549,11 +536,11 @@ define([
         }
 
         function setPageStart(newFrom) {
-            let from = model.getItem('showFrom'),
+            const from = model.getItem('showFrom'),
                 to = model.getItem('to'),
-                newTo,
                 total = model.getItem('filteredAvailableItems', []).length,
                 pageSize = 5;
+            let newTo;
 
             if (newFrom <= 0) {
                 newFrom = 0;
@@ -609,7 +596,7 @@ define([
             }
         }
 
-        function makeInputControl(events) {
+        function makeInputControl() {
             // There is an input control, and a dropdown,
             // TODO select2 after we get a handle on this...
             const availableValues = model.getItem('availableValues');
@@ -689,26 +676,15 @@ define([
          *
          */
         function updateInputControl(changedProperty) {
-            switch (changedProperty) {
-                case 'value':
-                    // just change the selections.
-                    var count = buildCount();
-                    ui.setContent('input-control.count', count);
-
-                    break;
-                case 'availableValues':
-                    // rebuild the options
-                    // re-apply the selections from the value
-                    var options = buildOptions();
-                    ui.setContent('input-control.input', options);
-                    ui.setContent('input-control.count', count);
-
-                    break;
-                case 'referenceObjectName':
-                // refetch the available values
-                // set available values
-                // update input control for available values
-                // set value to null
+            const count = buildCount();
+            if (changedProperty === 'value') {
+                // just change the selections.
+                ui.setContent('input-control.count', count);
+            } else if (changedProperty === 'availableValues') {
+                // rebuild the options
+                // re-apply the selections from the value
+                ui.setContent('input-control.input', buildOptions());
+                ui.setContent('input-control.count', count);
             }
         }
 
@@ -721,17 +697,6 @@ define([
          * values.
          */
         function getInputValue() {
-            //            var control = ui.getElement('input-container.input');
-            //            if (!control) {
-            //                return null;
-            //            }
-            //            var input = control.selectedOptions,
-            //                i, values = [];
-            //            for (i = 0; i < input.length; i += 1) {
-            //                values.push(input.item(i).value);
-            //            }
-            //            // cute ... allows selecting multiple values but does not expect a sequence...
-            //            return values;
             return model.getItem('selectedItems');
         }
 
@@ -768,23 +733,6 @@ define([
                 getRef: subdataInfo.getRef,
                 included: subdataInfo.included,
                 extractItems: subdataInfo.extractItems,
-            });
-        }
-
-        function fetchDatax() {
-            let referenceObjectName = model.getItem('referenceObjectName'),
-                referenceObjectRef = spec.data.constraints.subdataSelection.constant_ref;
-
-            if (!referenceObjectRef) {
-                if (!referenceObjectName) {
-                    return [];
-                }
-                referenceObjectRef = workspaceId + '/' + referenceObjectName;
-            }
-
-            return subdataMethods.fetchData({
-                referenceObjectRef: referenceObjectRef,
-                spec: spec,
             });
         }
 
@@ -828,10 +776,6 @@ define([
                     map[datum.id] = datum;
                 });
 
-                //var availableIds = data.map(function (datum) {
-                //    return datum.id;
-                //});
-
                 model.setItem('availableValuesMap', map);
 
                 doFilterItems();
@@ -856,7 +800,7 @@ define([
             return Promise.try(() => {
                 // check to see if we have to render inputControl.
                 const events = Events.make({ node: container }),
-                    inputControl = makeInputControl(events),
+                    inputControl = makeInputControl(),
                     content = div(
                         {
                             class: 'input-group',
@@ -925,8 +869,8 @@ define([
             // primary value.
             // TODO: we need to get this via the message bus!!!
             if (
-                subdataInfo.params.dependencies.some((paramId) => {
-                    return model.getItem(['required-params', paramId], null) === null;
+                subdataInfo.params.dependencies.some((_paramId) => {
+                    return model.getItem(['required-params', _paramId], null) === null;
                 })
             ) {
                 resetModelValue();
@@ -945,9 +889,8 @@ define([
              * Issued when thre is a need to have all params reset to their
              * default value.
              */
-            channel.on('reset-to-defaults', (message) => {
+            channel.on('reset-to-defaults', () => {
                 resetModelValue();
-                // model.reset();
                 // TODO: this should really be set when the linked field is reset...
                 model.setItem('availableValues', []);
                 model.setItem('referenceObjectName', null);
@@ -958,9 +901,6 @@ define([
                 renderToolbar();
                 renderAvailableItems();
                 renderSelectedItems();
-
-                // updateInputControl('availableValues');
-                // updateInputControl('value');
             });
 
             /*
@@ -976,29 +916,6 @@ define([
              * any parameter which has a dependency upon any other.
              *
              */
-
-            // channel.listen({
-            //     key: {
-            //         type: 'parameter-changed',
-            //         parameter: spec.data.constraints.subdataSelection.constant_ref
-            //     },
-            //     handle: function(message) {
-            //         var newValue = message.newValue;
-            //         if (message.newValue === '') {
-            //             newValue = null;
-            //         }
-            //         // reset the entire model.
-            //         model.reset();
-            //         model.setItem('referenceObjectName', newValue);
-            //         syncAvailableValues()
-            //             .then(function() {
-            //                 updateInputControl('availableValues');
-            //             })
-            //             .catch(function(err) {
-            //                 console.error('ERROR syncing available values', err);
-            //             });
-            //     }
-            // });
 
             if (subdataInfo.params.dependencies) {
                 subdataInfo.params.dependencies.forEach((paramId) => {
@@ -1041,62 +958,12 @@ define([
                 });
             }
 
-            // channel.listen({
-            //     key: {
-            //         type: 'parameter-changed',
-            //         parameter: spec.data.constraints.subdataSelection.parameter_id
-            //     },
-            //     handle: function(message) {
-            //         var newValue = message.newValue;
-            //         if (message.newValue === '') {
-            //             newValue = null;
-            //         }
-            //         // reset the entire model.
-            //         model.reset();
-            //         model.setItem('referenceObjectName', newValue);
-            //         syncAvailableValues()
-            //             .then(function() {
-            //                 updateInputControl('availableValues');
-            //             })
-            //             .catch(function(err) {
-            //                 console.error('ERROR syncing available values', err);
-            //             });
-            //     }
-            // });
-
-            // channel.listen({
-            //     key: {
-            //         type: 'parameter-value',
-            //         parameter: spec.data.constraints.subdataSelection.parameter_id
-            //     },
-            //     handle: function(message) {
-            //         var newValue = message.newValue;
-            //         if (message.newValue === '') {
-            //             newValue = null;
-            //         }
-            //         model.reset();
-            //         model.setItem('referenceObjectName', newValue);
-            //         syncAvailableValues()
-            //             .then(function() {
-            //                 updateInputControl('availableValues');
-            //             })
-            //             .catch(function(err) {
-            //                 console.error('ERROR syncing available values', err);
-            //             });
-            //     }
-            // });
-
             // This control has a dependency relationship in that its
             // selection of available values is dependent upon a sub-property
             // of an object referenced by another parameter.
             // Rather than explicitly refer to that parameter, we have a
             // generic capability to receive updates for that value, after
             // which we re-fetch the values, and re-render the control.
-            //            bus.on('update-reference-object', function (message) {
-            //                model.setItem('referenceObjectName', value)
-            //                setReferenceValue(message.objectRef);
-            //            });
-            // channel.emit('sync');
 
             channel
                 .request(
@@ -1109,7 +976,7 @@ define([
                         },
                     }
                 )
-                .then((message) => {
+                .then(() => {
                     // console.log('Now i got it again', message);
                 });
         }
@@ -1172,23 +1039,6 @@ define([
         }
 
         // MAIN
-
-        model = Props.make({
-            data: {
-                referenceObjectName: null,
-                availableValues: [],
-                selectedItems: [],
-                value: null,
-                showFrom: 0,
-                showTo: 5,
-            },
-            onUpdate: function (props) {
-                renderStats();
-                renderToolbar();
-                renderAvailableItems();
-                renderSelectedItems();
-            },
-        });
 
         return {
             start: start,

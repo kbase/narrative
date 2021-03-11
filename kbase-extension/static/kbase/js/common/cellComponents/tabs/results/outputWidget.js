@@ -11,16 +11,7 @@ define([
     'common/events',
     'jquery',
     'jquery-dataTables',
-], (
-    Promise,
-    Jupyter,
-    UUID,
-    html,
-    UI,
-    APIUtil,
-    Events,
-    $
-) => {
+], (Promise, Jupyter, UUID, html, UI, APIUtil, Events, $) => {
     'use strict';
 
     const tag = html.tag,
@@ -48,37 +39,41 @@ define([
         function renderOutput(objectData) {
             if (objectData.length === 0) {
                 return {
-                    layout: div('No objects created')
+                    layout: div('No objects created'),
                 };
             }
             const events = Events.make();
-            const layout = table({
-                class: 'table table-bordered',
-                dataElement: 'objects-table',
-            }, [
-                thead(
-                    tr([th('Created Object Name'), th('Type'), th('Description')]),
-                ),
-                tbody(
-                    [...objectData.map((obj) => {
-                        const parsedType = APIUtil.parseWorkspaceType(obj.type);
-                        const objLink = a({
-                            href: '#',
-                            style: 'cursor: pointer;',
-                            dataObjRef: obj.ref,
-                            id: events.addEvent({
-                                type: 'click',
-                                handler: () => {
-                                    Jupyter.narrative.addViewerCell(obj.wsInfo);
-                                }
-                            })
-                        }, [obj.name]);
-                        return tr([td(objLink), td(parsedType.type), td(obj.description)]);
-                    })]
-                ),
-            ]);
+            const layout = table(
+                {
+                    class: 'table table-bordered',
+                    dataElement: 'objects-table',
+                },
+                [
+                    thead(tr([th('Created Object Name'), th('Type'), th('Description')])),
+                    tbody([
+                        ...objectData.map((obj) => {
+                            const parsedType = APIUtil.parseWorkspaceType(obj.type);
+                            const objLink = a(
+                                {
+                                    href: '#',
+                                    style: 'cursor: pointer;',
+                                    dataObjRef: obj.ref,
+                                    id: events.addEvent({
+                                        type: 'click',
+                                        handler: () => {
+                                            Jupyter.narrative.addViewerCell(obj.wsInfo);
+                                        },
+                                    }),
+                                },
+                                [obj.name]
+                            );
+                            return tr([td(objLink), td(parsedType.type), td(obj.description)]);
+                        }),
+                    ]),
+                ]
+            );
 
-            return {layout, events};
+            return { layout, events };
         }
 
         /**

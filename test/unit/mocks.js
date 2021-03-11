@@ -236,8 +236,7 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
         };
         if (args.isError) {
             jsonRpcResponse.error = args.response;
-        }
-        else {
+        } else {
             jsonRpcResponse.result = [args.response];
         }
         const serviceResponse = {

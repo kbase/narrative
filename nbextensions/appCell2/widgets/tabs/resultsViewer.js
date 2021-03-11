@@ -107,10 +107,9 @@ define([
                 document
                     .querySelector('#notebook-container')
                     .removeEventListener('scroll', lazyRenderReport);
-                reportViewer.loadAndRender()
-                    .then(() => {
-                        reportRendered = true;
-                    });
+                reportViewer.loadAndRender().then(() => {
+                    reportRendered = true;
+                });
             }
         }
 

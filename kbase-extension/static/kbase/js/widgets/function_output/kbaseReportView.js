@@ -61,12 +61,17 @@ define([
 
             this.$mainPanel = $('<div>').addClass(this.baseCssClass);
             this.$elem.append(this.$mainPanel);
-            this.ws = new Workspace(Config.url('workspace'), {token: this.runtime.authToken()})
+            this.ws = new Workspace(Config.url('workspace'), { token: this.runtime.authToken() });
             return this;
         },
 
-        // this is an ugly hack. It'd be prettier to hand in just the shock node ID, but I don't
-        // have one of those yet.
+        /**
+         * This builds a link to the data_import_export service for downloading some file from
+         * a shock node. This gets used for downloading files referenced from the report object.
+         * If the given url is not really a shock node, this returns null.
+         * @param {string} shockUrl - the URL to the shock node containing some file to fetch
+         * @param {string} name - the name of the file to download
+         */
         importExportLink: function (shockUrl, name) {
             const m = shockUrl.match(/\/node\/(.+)$/);
             if (m) {
@@ -85,6 +90,10 @@ define([
             return null;
         },
 
+        /**
+         * Loads report information and renders the widget. This returns a Promise that
+         * resolves when complete.
+         */
         loadAndRender: function () {
             this.loading(true);
 
@@ -95,12 +104,13 @@ define([
                 this.options.report_ref
             );
 
-            return this.ws.get_objects2({ objects: [this.objIdentity] })
+            return this.ws
+                .get_objects2({ objects: [this.objIdentity] })
                 .then((result) => {
                     this.reportData = result.data[0].data;
                     return Promise.all([
                         this.getLinks(this.reportData),
-                        this.getCreatedObjectInfo(this.reportData)
+                        this.getCreatedObjectInfo(this.reportData),
                     ]);
                 })
                 .spread((links, createdObjects) => {
@@ -113,6 +123,10 @@ define([
                 });
         },
 
+        /**
+         * Wraps an HTML document in HTML tags, to be embedded in an iframe for the report view.
+         * @param {string} content
+         */
         wrapHtmlDoc: function (content) {
             if (/<html/.test(content)) {
                 console.warn('Html document inserted into iframe');
@@ -137,6 +151,15 @@ define([
             ]);
         },
 
+        /**
+         * This builds an IFrame from an embedded document that's not given as an entire HTML document.
+         * It gets wrapped in an HTML tag and embedded with code that lets click events and other
+         * messages pass through from the Narrative into it.
+         * @param {object} arg - an object with the following properties
+         *  - content - the HTML content to embed in the iframe.
+         *  - maxHeight - optional (default 'auto') - a maximum height for the iframe, usually provided
+         *    by the report object
+         */
         makeIframe: function (arg) {
             const t = html.tag,
                 div = t('div'),
@@ -217,7 +240,9 @@ define([
         },
 
         /**
-         *
+         * This builds an IFrame for the report view from either a source URL, or from an embedded
+         * HTML document. If BOTH are provided, then the source URL will be used and the embedded
+         * content will be ignored.
          * @param {Object} arg - properties are:
          *  - height - height of the iframe, default = 'auto'
          *  - src - source url of the iframe (either this OR content should be used)
@@ -230,26 +255,27 @@ define([
             const iframe = html.tag('iframe'),
                 iframeId = 'frame_' + html.genId(),
                 height = arg.height || 'auto',
-                src = arg.src || 'data:text/html;charset=utf-8,' + encodeURIComponent(arg.content)
+                src = arg.src || 'data:text/html;charset=utf-8,' + encodeURIComponent(arg.content);
             const iframeHtml = iframe({
                 class: this.baseCssClass + '__report_iframe',
                 style: {
-                    height: height
+                    height: height,
                 },
                 dataFrame: iframeId,
                 frameborder: '0',
                 scrolling: 'yes',
                 id: iframeId,
-                src: src
+                src: src,
             });
             return {
                 id: iframeId,
-                content: iframeHtml
+                content: iframeHtml,
             };
         },
 
         /**
-         * Returns a Promise that resolves into a list of links to the hosted report
+         * Returns a Promise that resolves into a list of links to the hosted report. This needs
+         * to talk to the Service Wizard to get the HTMLFileSetServ URL.
          * @param {object} report
          */
         getLinks: function (report) {
@@ -278,20 +304,24 @@ define([
                             index,
                             item.name,
                         ].join('/'),
-                    }
-                })
+                    };
+                });
             });
         },
 
         /**
-         * Returns a Promise that resolves into an array of created object, or an
-         * empty array if there are none.
+         * Returns a Promise that resolves into an array of created objects, or an
+         * empty array if there are none. Also, if the showCreatedObjects option isn't set,
+         * this just returns a Promise that resolves into an empty array and doesn't call out
+         * to the Workspace service.
          * @param {object} report
          */
         getCreatedObjectInfo: function (report) {
-            if (!this.options.showCreatedObjects ||    // if we're not showing it, just return an empty array
+            if (
+                !this.options.showCreatedObjects || // if we're not showing it, just return an empty array
                 !report.objects_created ||
-                report.objects_created.length === 0) {
+                report.objects_created.length === 0
+            ) {
                 return Promise.resolve([]);
             }
             const lookupInfos = report.objects_created.map((obj) => {
@@ -299,21 +329,17 @@ define([
             });
             // will be in the same order as the report.objects_created array
             // we're just gonna update that as we go.
-            return this.ws.get_object_info_new({ objects: lookupInfos })
-                .then((infos) => {
-                    const objectInfos = infos.map((info, idx) => {
-                        return Object.assign(
-                            report.objects_created[idx],
-                            {
-                                name: info[1],
-                                simpleType: info[2].split('-')[0].split('.')[1],
-                                type: info[2],
-                                wsInfo: info
-                            }
-                        );
+            return this.ws.get_object_info_new({ objects: lookupInfos }).then((infos) => {
+                const objectInfos = infos.map((info, idx) => {
+                    return Object.assign(report.objects_created[idx], {
+                        name: info[1],
+                        simpleType: info[2].split('-')[0].split('.')[1],
+                        type: info[2],
+                        wsInfo: info,
                     });
-                    return objectInfos;
                 });
+                return objectInfos;
+            });
         },
 
         setupHostComm: function (iframe, container) {
@@ -378,42 +404,52 @@ define([
         },
 
         /**
-         * Warnings is an array of strings, with potential warnings about
-         * the report.
+         * Warnings is an array of strings, with potential warnings about the report. These get
+         * rendered as a set of divs and returned.
          * @param {Array} warnings
          * @returns {string} warnings panel html
          */
-        buildReportWarnings: function(warnings) {
+        buildReportWarnings: function (warnings) {
             const div = html.tag('div'),
                 span = html.tag('span'),
                 warningClass = this.baseCssClass + '__warning';
 
             let warningCount = '';
             if (warnings.length >= 5) {
-                warningCount = div({class: warningClass + '__count'}, `[${warnings.length} warnings]`);
+                warningCount = div(
+                    { class: warningClass + '__count' },
+                    `[${warnings.length} warnings]`
+                );
             }
-            const warningPanel = div({
-                class: warningClass + '__container'
-            }, [
-                warningCount,
-                ...warnings.map((warning) => {
-                    return div({
-                        class: warningClass + '__text'
-                    },
-                    [
-                        span({class: 'label label-warning'}, warning)
-                    ]
-                )})
-            ]);
+            const warningPanel = div(
+                {
+                    class: warningClass + '__container',
+                },
+                [
+                    warningCount,
+                    ...warnings.map((warning) => {
+                        return div(
+                            {
+                                class: warningClass + '__text',
+                            },
+                            [span({ class: 'label label-warning' }, warning)]
+                        );
+                    }),
+                ]
+            );
             return warningPanel;
         },
 
         /**
-         *
+         * This builds some HTML that resolves in links to download any of the files associated
+         * with the report.
          * @param {Array} fileLinks - the array of file links from the report object
+         * @param {object} ui - the UI object that will hold the constructed HTML
          * @param {object} events - the events object for binding the download event
+         * @returns {string} the constructed HTML. This will add events to the passed events object
+         *   that should be bound to the container where the HTML will get attached.
          */
-        buildFileLinksPanel: function(fileLinks, ui, events) {
+        buildFileLinksPanel: function (fileLinks, ui, events) {
             const ul = html.tag('ul'),
                 li = html.tag('li'),
                 a = html.tag('a'),
@@ -425,66 +461,72 @@ define([
                 fileLinks.map((link, idx) => {
                     const linkText = link.name || link.URL;
                     return li(
-                        a({
-                            id: events.addEvent({
-                                type: 'click',
-                                handler: () => {
-                                    const dlLink = this.importExportLink(link.URL, link.name || 'download-' + idx);
-                                    ui.getElement(downloadIframeId)
-                                        .setAttribute('src', dlLink);
-                                }
-                            }),
-                            class: this.baseCssClass + '__download_button',
-                            type: 'button',
-                            ariaLabel: `download file ${linkText}`,
-                            download: 'download'
-                        },
-                        linkText)
+                        a(
+                            {
+                                id: events.addEvent({
+                                    type: 'click',
+                                    handler: () => {
+                                        const dlLink = this.importExportLink(
+                                            link.URL,
+                                            link.name || 'download-' + idx
+                                        );
+                                        ui.getElement(downloadIframeId).setAttribute('src', dlLink);
+                                    },
+                                }),
+                                class: this.baseCssClass + '__download_button',
+                                type: 'button',
+                                ariaLabel: `download file ${linkText}`,
+                                download: 'download',
+                            },
+                            linkText
+                        )
                     );
                 })
             );
             const dlIframe = iframe({
                 dataElement: downloadIframeId,
-                class: this.baseCssClass + '__download-iframe'
+                class: this.baseCssClass + '__download-iframe',
             });
-            return div([
-                linkList,
-                dlIframe
-            ]);
+            return div([linkList, dlIframe]);
         },
 
         /**
-         *
+         * This builds a set of HTML links from the list of report links. It converts the raw URLs
+         * into some HTML with links out to each report page that open in new tabs.
          * @param {Array} htmlLinks list of html report links, provided by the report object and
          * the main link to the HTMLFileSetServ service.
          */
-        buildHtmlLinksPanel: function(htmlLinks) {
+        buildHtmlLinksPanel: function (htmlLinks) {
             const ul = html.tag('ul'),
                 li = html.tag('li'),
                 a = html.tag('a'),
                 div = html.tag('div'),
-                br = html.tag('br', { close: false })
+                br = html.tag('br', { close: false });
 
-            const linkList = ul({},
+            const linkList = ul(
+                {},
                 htmlLinks.map((link) => {
                     const linkText = link.label || link.name;
                     return li({}, [
-                        a({
-                            href: link.url,
-                            target: '_blank',
-                            ariaLabel: `open ${linkText} in another window`
-                        },
-                            linkText,
+                        a(
+                            {
+                                href: link.url,
+                                target: '_blank',
+                                ariaLabel: `open ${linkText} in another window`,
+                            },
+                            linkText
                         ),
-                        link.description ? (br() + link.description) : ''
-                    ])
+                        link.description ? br() + link.description : '',
+                    ]);
                 })
             );
             return div({}, linkList);
         },
 
         /**
-         * Returns a promise that resolves when each internal component completes rendering.
+         * This returns a Promise that resolves when the created objects is done rendering, as it's the
+         * only widget that resolves as a Promise. If that's not rendered, then still resolves an empty
+         * Promise.
          */
         render: function () {
             const _this = this;
@@ -507,10 +549,12 @@ define([
                 const objectWidget = OutputWidget.make();
                 const objectsNode = document.createElement('div');
                 this.$mainPanel.append(objectsNode);
-                renderPromises.push(objectWidget.start({
-                    node: objectsNode,
-                    objectData: this.createdObjects || []
-                }));
+                renderPromises.push(
+                    objectWidget.start({
+                        node: objectsNode,
+                        objectData: this.createdObjects || [],
+                    })
+                );
             }
 
             let showingReport = false;
@@ -524,7 +568,9 @@ define([
                 */
 
                 const hasDirectHtml = report.direct_html && report.direct_html.length;
-                const hasDirectHtmlIndex = typeof report.direct_html_link_index === 'number' && report.direct_html_link_index >= 0;
+                const hasDirectHtmlIndex =
+                    typeof report.direct_html_link_index === 'number' &&
+                    report.direct_html_link_index >= 0;
                 if (hasDirectHtml || hasDirectHtmlIndex) {
                     (function () {
                         showingReport = true;
@@ -544,7 +590,7 @@ define([
                                             href: reportLink.url,
                                             target: '_blank',
                                             class: 'btn btn-default',
-                                            type: 'button'
+                                            type: 'button',
                                         },
                                         'View report in separate window'
                                     )
@@ -617,7 +663,7 @@ define([
                         {
                             class: this.baseCssClass + '__summary',
                             style: report.summary_window_height
-                                ? { maxHeight: report.summary_window_height + 'px'}
+                                ? { maxHeight: report.summary_window_height + 'px' }
                                 : null,
                         },
                         report.text_message
@@ -680,7 +726,7 @@ define([
                     i = html.tag('i'),
                     loadingMsg = span(
                         i({
-                            class: 'fa fa-spinner fa-spin'
+                            class: 'fa fa-spinner fa-spin',
                         })
                     );
                 this.$messagePane.append(loadingMsg);
@@ -690,6 +736,25 @@ define([
                 this.$messagePane.empty();
             }
         },
+        /**
+         * This shows an error from either a string or an object, wiping out everything else in this
+         * widget's body.
+         * The common KBase JSON-RPC error object format is:
+         * {
+         *   error: {
+         *     error: 'some error message',
+         *     ... other keys ...
+         *   },
+         *   status: 500
+         * }
+         * though this is possible, too:
+         * {
+         *   error: {
+         *     message: 'some message'
+         *   }
+         * }
+         * @param {Object | String} error
+         */
         showClientError: function (error) {
             this.loading(false);
             let errString = 'Unknown error.';
@@ -697,10 +762,10 @@ define([
             // if we get a basic error as a string
             if (typeof error === 'string') {
                 errString = error;
-            // this can be thrown from certain network error cases
+                // this can be thrown from certain network error cases
             } else if (error.error && error.error.message) {
                 errString = error.error.message;
-            // this mess can come from a workspace API error
+                // this mess can come from a workspace API error
             } else if (error.error && error.error.error && typeof error.error.error === 'string') {
                 errString = error.error.error;
             }
@@ -708,11 +773,7 @@ define([
             const div = html.tag('div'),
                 b = html.tag('b'),
                 br = html.tag('br', { close: false });
-            const errorDiv = div({ class: 'alert alert-danger'}, [
-                b('Error:'),
-                br(),
-                errString
-            ])
+            const errorDiv = div({ class: 'alert alert-danger' }, [b('Error:'), br(), errString]);
             this.$elem.empty().append(errorDiv);
         },
         /**

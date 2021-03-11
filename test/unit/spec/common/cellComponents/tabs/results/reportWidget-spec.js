@@ -8,7 +8,7 @@ define([
     describe('Test the app/bulk import cell report widget', () => {
         beforeAll(() => {
             Jupyter.narrative = {
-                getAuthToken: () => 'fakeToken'
+                getAuthToken: () => 'fakeToken',
             };
         });
 
@@ -72,7 +72,7 @@ define([
             const reportNode = toggleNode.nextSibling;
             expect(reportNode).toBeDefined();
             // marker for running kbaseReportView
-            expect(reportNode.innerHTML).toContain('report-widget');
+            expect(reportNode.innerHTML).toContain('kb-report-view');
         });
 
         it('should expand and collapse again on click', async function () {

@@ -153,16 +153,16 @@ const allTestCases = {
                 {
                     id: 'features',
                     label: 'Features',
-                    value: '3,862'
-                }
-            ]
+                    value: '3,862',
+                },
+            ],
         },
         TEST_CASE_6: {
             narrativeId: 53983,
             row: 30,
             scrollTo: true,
             scrolls: [
-                20
+                20,
             ],
             searchFor: 'coli',
             foundCount: '2,317',
@@ -171,29 +171,29 @@ const allTestCases = {
                 {
                     id: 'lineage',
                     label: 'Lineage',
-                    value: '	Bacteria > Proteobacteria > Gammaproteobacteria > Enterobacterales > Enterobacteriaceae > Escherichia'
+                    value: '	Bacteria > Proteobacteria > Gammaproteobacteria > Enterobacterales > Enterobacteriaceae > Escherichia',
                 },
                 {
                     id: 'kbase_id',
                     label: 'KBase ID',
-                    value: 'GCF_000752615.1'
+                    value: 'GCF_000752615.1',
                 },
                 {
                     id: 'refseq_id',
                     label: 'RefSeq ID',
-                    value: 'NZ_CCVR01000001'
+                    value: 'NZ_CCVR01000001',
                 },
                 {
                     id: 'contigs',
                     label: 'Contigs',
-                    value: '447'
+                    value: '447',
                 },
                 {
                     id: 'features',
                     label: 'Features',
-                    value: '5,847'
-                }
-            ]
+                    value: '5,847',
+                },
+            ],
         },
         TEST_CASE_7: {
             narrativeId: 53983,
@@ -204,63 +204,63 @@ const allTestCases = {
                 {
                     id: 'lineage',
                     label: 'Lineage',
-                    value: 'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter'
+                    value: 'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter',
                 },
                 {
                     id: 'kbase_id',
                     label: 'KBase ID',
-                    value: 'GCF_001662905.1'
+                    value: 'GCF_001662905.1',
                 },
                 {
                     id: 'refseq_id',
                     label: 'RefSeq ID',
-                    value: 'NZ_LYUD01000001'
+                    value: 'NZ_LYUD01000001',
                 },
                 {
                     id: 'contigs',
                     label: 'Contigs',
-                    value: '184'
+                    value: '184',
                 },
                 {
                     id: 'features',
                     label: 'Features',
-                    value: '3,093'
-                }
-            ]
-        }
+                    value: '3,093',
+                },
+            ],
+        },
     },
-    'narrative-dev':  {
+    'narrative-dev': {
         TEST_CASE_1: {
             narrativeId: 78050,
             row: 3,
-            name: "'Massilia aquatica' Holochova et al. 2020",
+            name: '\'Massilia aquatica\' Holochova et al. 2020',
             metadata: [
                 {
                     id: 'lineage',
                     label: 'Lineage',
-                    value: 'Bacteria > Proteobacteria > Betaproteobacteria > Burkholderiales > Oxalobacteraceae > Massilia'
+                    value: 'Bacteria > Proteobacteria > Betaproteobacteria > Burkholderiales > Oxalobacteraceae > Massilia',
                 },
                 {
                     id: 'kbase_id',
                     label: 'KBase ID',
-                    value: 'GCF_011682045.1'
+                    value: 'GCF_011682045.1',
                 },
                 {
                     id: 'refseq_id',
                     label: 'RefSeq ID',
-                    value: 'NZ_VVIW01000010'
+                    value: 'NZ_VVIW01000010',
                 },
                 {
                     id: 'contigs',
                     label: 'Contigs',
-                    value: '99'
+                    value: '99',
                 },
                 {
                     id: 'features',
                     label: 'Features',
-                    value: '6,692'
-                }
-            ]
+                    value: '6,692',
+                },
+            ],
         },
         TEST_CASE_2: {
             narrativeId: 78050,
@@ -368,16 +368,16 @@ const allTestCases = {
                 {
                     id: 'features',
                     label: 'Features',
-                    value: '2,539'
-                }
-            ]
+                    value: '2,539',
+                },
+            ],
         },
         TEST_CASE_6: {
             narrativeId: 78050,
             row: 30,
             scrollTo: true,
             scrolls: [
-                20
+                20,
             ],
             searchFor: 'orientalis',
             foundCount: '',
@@ -386,29 +386,29 @@ const allTestCases = {
                 {
                     id: 'lineage',
                     label: 'Lineage',
-                    value: 'Bacteria > Proteobacteria > Gammaproteobacteria > Thiotrichales > Francisellaceae > Francisella > Francisella noatunensis'
+                    value: 'Bacteria > Proteobacteria > Gammaproteobacteria > Thiotrichales > Francisellaceae > Francisella > Francisella noatunensis',
                 },
                 {
                     id: 'kbase_id',
                     label: 'KBase ID',
-                    value: 'GCF_016600715.1'
+                    value: 'GCF_016600715.1',
                 },
                 {
                     id: 'refseq_id',
                     label: 'RefSeq ID',
-                    value: 'NZ_JACVJP010000001'
+                    value: 'NZ_JACVJP010000001',
                 },
                 {
                     id: 'contigs',
                     label: 'Contigs',
-                    value: '60'
+                    value: '60',
                 },
                 {
                     id: 'features',
                     label: 'Features',
-                    value: '1,864'
-                }
-            ]
+                    value: '1,864',
+                },
+            ],
         },
         TEST_CASE_7: {
             narrativeId: 78050,
@@ -419,42 +419,42 @@ const allTestCases = {
                 {
                     id: 'lineage',
                     label: 'Lineage',
-                    value: 'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter'
+                    value: 'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter',
                 },
                 {
                     id: 'kbase_id',
                     label: 'KBase ID',
-                    value: 'GCF_001662905.1'
+                    value: 'GCF_001662905.1',
                 },
                 {
                     id: 'refseq_id',
                     label: 'RefSeq ID',
-                    value: 'NZ_LYUD01000001'
+                    value: 'NZ_LYUD01000001',
                 },
                 {
                     id: 'contigs',
                     label: 'Contigs',
-                    value: '184'
+                    value: '184',
                 },
                 {
                     id: 'features',
                     label: 'Features',
-                    value: '3,093'
-                }
-            ]
-        }
-    }
+                    value: '3,093',
+                },
+            ],
+        },
+    },
 };
 
 const testCases = allTestCases[browser.config.testParams.ENV];
 
 async function testField({ container, id, label, value }) {
     const lineageLabel = await container.$(
-        `[role="row"][data-test-id="${id}"] [data-test-id="label"]`
+        `[role="row"][data-test-id="${id}"] [data-test-id="label"]`,
     );
     expect(lineageLabel).toHaveText(label);
     const lineageValue = await container.$(
-        `[role="row"][data-test-id="${id}"] [data-test-id="value"]`
+        `[role="row"][data-test-id="${id}"] [data-test-id="value"]`,
     );
     expect(lineageValue).toHaveText(value);
 }
@@ -503,7 +503,7 @@ async function doSearch(publicPanel, testCase) {
 }
 
 async function doScrolling(publicPanel, testCase) {
-     // get rows
+    // get rows
     // When using roles, we sometimes need to be very specific in our queries.
     // Maybe roles are not suitable for integration tests, then.
     for (const scrollRow of testCase.scrolls) {
@@ -518,12 +518,12 @@ async function validateResultRow(row, testCase) {
     expect(nameCell).toHaveText(testCase.name);
 
     // Confirm the metadata fields.
-    for (const {id, label, value} of testCase.metadata) {
+    for (const { id, label, value } of testCase.metadata) {
         await testField({
             container: row,
             id,
             label,
-            value
+            value,
         });
     }
 }
@@ -537,9 +537,9 @@ async function getRow(publicPanel, testCase) {
 }
 
 async function scrollToRow(publicPanel, testCase) {
-     const row = await getRow(publicPanel, testCase);
-     await row.scrollIntoView();
-     return row;
+    const row = await getRow(publicPanel, testCase);
+    await row.scrollIntoView();
+    return row;
 }
 
 async function validateFoundCount(publicPanel, testCase) {

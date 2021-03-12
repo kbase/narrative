@@ -5,13 +5,19 @@ The search data source performs a fresh search with every new query.
 Whereas the workspace data source fetches the data once, and then performs
 a search against these cached results
 */
-define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
+define([
+    'bluebird',
+    'handlebars',
+    'common/searchAPI2',
+    './common',
+], function(
     Promise,
     Handlebars,
     SearchAPI2,
-    common
+    common,
 ) {
     'use strict';
+
     class RefDataSearch {
         constructor({ url, token, timeout }) {
             this.url = url;
@@ -32,11 +38,11 @@ define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
                             },
                             {
                                 term: {
-                                    source
-                                }
-                            }
-                        ]
-                    }
+                                    source,
+                                },
+                            },
+                        ],
+                    },
                 },
                 only_public: true,
                 indexes: ['genome'],
@@ -44,8 +50,7 @@ define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
                 from: 0,
                 track_total_hits: true,
             };
-            return this.searchAPI2
-                .search_objects({ params, timeout: this.timeout })
+            return this.searchAPI2.search_objects({ params, timeout: this.timeout })
                 .then((result) => {
                     return result.count;
                 });
@@ -63,15 +68,15 @@ define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
                             },
                             {
                                 term: {
-                                    source
-                                }
-                            }
-                        ]
-                    }
+                                    source,
+                                },
+                            },
+                        ],
+                    },
                 },
                 sort: [
                     { 'scientific_name.raw': { order: 'asc' } },
-                    { genome_id: { order: 'asc' } },
+                    { 'genome_id': { order: 'asc' } },
                 ],
                 only_public: true,
                 indexes: ['genome'],
@@ -84,9 +89,9 @@ define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
                     'match': {
                         'scientific_name': {
                             'query': query,
-                            'operator': 'AND'
-                        }
-                    }
+                            'operator': 'AND',
+                        },
+                    },
                 });
             }
             return this.searchAPI2.search_objects({ params, timeout: this.timeout });
@@ -98,12 +103,13 @@ define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
             return Promise.all([
                 this.referenceGenomeTotal({ source }),
                 this.referenceGenomeDataSearch({ source, query, offset, limit }),
-            ]).then(([totalAvailable, result]) => {
-                return {
-                    totalAvailable,
-                    result,
-                };
-            });
+            ])
+                .then(([totalAvailable, result]) => {
+                    return {
+                        totalAvailable,
+                        result,
+                    };
+                });
         }
     }
 
@@ -125,12 +131,12 @@ define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
 
     return Object.create({}, {
         init: {
-            value: function (arg) {
+            value: function(arg) {
                 common.requireArg(arg, 'config');
                 common.requireArg(arg, 'token');
                 common.requireArg(arg, 'urls.searchapi2');
                 common.requireArg(arg, 'pageSize');
-                const {config, token, urls: {searchapi2}, pageSize} = arg;
+                const { config, token, urls: { searchapi2 }, pageSize } = arg;
 
                 this.pageSize = pageSize;
 
@@ -144,18 +150,18 @@ define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
                 this.searchApi = new RefDataSearch({
                     url: searchapi2,
                     token,
-                    timeout: config.timeout
+                    timeout: config.timeout,
                 });
                 this.searchState = {
                     lastSearchAt: null,
                     inProgress: false,
                     lastQuery: null,
-                    currentQueryState: null
+                    currentQueryState: null,
                 };
                 this.titleTemplate = Handlebars.compile(this.config.templates.title);
                 this.metadataTemplates = common.compileTemplates(this.config.templates.metadata);
                 return this;
-            }
+            },
         },
         search: {
             value: function(query) {
@@ -188,7 +194,7 @@ define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
                         // itself, not the user.
                         newQuery = queryInput.split(/[ ]+/)
                             .map((term) => {
-                                if (term.charAt(term.length-1) === '*') {
+                                if (term.charAt(term.length - 1) === '*') {
                                     return term.slice(0, -1);
                                 } else {
                                     return term;
@@ -205,7 +211,7 @@ define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
                         page,
                         started: now,
                         promise: null,
-                        canceled: false
+                        canceled: false,
                     };
 
                     // And update the uber-search-state.
@@ -213,11 +219,11 @@ define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
                     this.searchState.lastSearchAt = now;
                     this.searchState.lastQuery = newQuery;
 
-                    queryState.promise  = this.searchApi.referenceGenomeSearch({
+                    queryState.promise = this.searchApi.referenceGenomeSearch({
                         source: this.config.source,
                         pageSize: this.pageSize,
                         query: this.queryExpression,
-                        page: this.page - 1
+                        page: this.page - 1,
                     })
                         .then((result) => {
                             this.availableDataCount = result.totalAvailable;
@@ -230,21 +236,29 @@ define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
                                 const name = this.titleTemplate(genomeRecord);
                                 const metadata = common.applyMetadataTemplates(this.metadataTemplates, genomeRecord);
                                 return {
-                                    rowNumber: index + (this.page -1) * this.pageSize + 1,
+                                    rowNumber: index + (this.page - 1) * this.pageSize + 1,
                                     info: null,
                                     id: genomeRecord.genome_id,
                                     objectId: null,
-                                    name: name,
+                                    name,
                                     objectName: genomeRecord.object_name,
-                                    metadata: metadata,
+                                    metadata,
                                     ws: this.config.workspaceName,
                                     type: this.config.type,
                                     attached: false,
+                                    workspaceReference: { ref: genomeRecord.ws_ref },
                                 };
                             });
                             // assume that all items before the page have been fetched
                             this.fetchedDataCount = (this.page - 1) * this.pageSize + this.availableData.length;
                             return this.availableData;
+                        })
+                        .catch((error) => {
+                            if (error instanceof DOMException && error.name === 'AbortError') {
+                                const errorMsg = `Request canceled - perhaps timed out after ${this.config.timeout}ms`;
+                                throw new Error(errorMsg);
+                            }
+                            throw(error);
                         });
 
                     return queryState.promise;
@@ -252,12 +266,12 @@ define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
                     .finally(() => {
                         this.searchState.currentQueryState = null;
                     });
-            }
+            },
         },
         setQuery: {
             value: function(query) {
-                this.queryExpression = query.replace(/[*]/g,' ').trim().toLowerCase();
-            }
+                this.queryExpression = query.replace(/[*]/g, ' ').trim().toLowerCase();
+            },
         },
         applyQuery: {
             value: () => {
@@ -265,12 +279,12 @@ define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
                     source: this.config.source,
                     pageSize: this.itemsPerPage,
                     query: this.queryExpression,
-                    page: this.page
+                    page: this.page,
                 })
                     .then((result) => {
                         this.availableDataCount = result.totalAvailable;
                         this.filteredDataCount = result.result.count;
-                        this.availableData = result.result.objects.map(function (item) {
+                        this.availableData = result.result.objects.map(function(item) {
                             // This call gives us a normalized genome result object.
                             // In porting this over, we are preserving the field names.
                             const genomeRecord = parseGenomeSearchResultItem(item);
@@ -286,11 +300,21 @@ define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
                                 metadata,
                                 ws: this.config.workspaceName,
                                 type: this.config.type,
-                                attached: false
+                                attached: false,
                             };
                         });
-                },
+                        return this.availableData;
+                    });
             },
-        }
+        },
+        load: {
+            value: function() {
+                return common.listObjectsWithSets(this.narrativeService, this.config.workspaceName, this.config.type)
+                    .then((data) => {
+                        this.availableData = data;
+                        this.availableDataCount = this.availableData.length;
+                    });
+            },
+        },
     });
 });

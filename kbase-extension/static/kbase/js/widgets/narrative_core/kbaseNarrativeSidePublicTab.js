@@ -32,25 +32,25 @@ define([
     Icon,
     WorkspaceDataSource,
     SearchDataSource,
-    DataSourceConfig
+    DataSourceConfig,
 ) => {
     'use strict';
 
     function formatValue(value) {
-        if (typeof value === 'undefined' || (typeof value === 'string' && value.length === 0)) {
+        if (typeof value === 'undefined' ||
+            (typeof value === 'string' && value.length === 0)) {
             return '<span style="color: #AAA; font-weight: normal; font-style: italic">n/a</span>';
         } else {
             return String(value);
         }
     }
+
     function formatItem(item) {
         return `
-            <span role="row" data-test-id="${item.id}">
-            <span style="color: #AAA; font-weight: normal; font-style: italic" data-test-id="label" role="cell">${
-                item.label
-            }</span>:
+            <span role='row' data-test-id='${item.id}'>
+            <span style='color: #AAA; font-weight: normal; font-style: italic' data-test-id='label' role='cell'>${item.label}</span>: 
             &nbsp;
-            <span data-test-id="value" role="cell">${formatValue(item.value)}</span>
+            <span data-test-id='value' role='cell'>${formatValue(item.value)}</span>
             </span>
         `;
     }
@@ -63,17 +63,17 @@ define([
         const $table = $('<table role="table">')
             .css('font-size', '80%');
 
-        metadata.forEach((field) => {
+        metadata.forEach((item) => {
             let value;
-            if (field.value instanceof Array) {
-                value = field.value.map((item) => {
+            if (item.value instanceof Array) {
+                value = item.value.map((item) => {
                     return formatItem(item);
                 }).join('&nbsp;&nbsp;&nbsp;');
             } else {
-                value = formatValue(field.value);
+                value = formatValue(item.value);
             }
 
-            const $row = $(`<tr role="row" data-test-id="${field.id || field.label}">`)
+            const $row = $(`<tr role='row' data-test-id='${item.id || item.label}'>`)
                 .css('margin-bottom', '2px')
                 .append($('<td role="cell" data-test-id="label">')
                     .css('width', '7em')
@@ -83,7 +83,7 @@ define([
                     .css('color', '#AAA')
                     .css('vertical-align', 'top')
                     .css('padding-bottom', '2px')
-                    .text(field.label))
+                    .text(item.label))
                 .append($('<td role="cell" data-test-id="value">')
                     // .css('font-weight', 'bold')
                     .css('vertical-align', 'top')
@@ -98,25 +98,21 @@ define([
     function renderTotals(found, total) {
         const $totals = $('<span>').addClass('kb-data-list-type');
         if (total === 0) {
-            $totals.append($('<span>None available</span>'));
+            $totals
+                .append($('<span>None available</span>'));
         } else if (found === 0) {
             $totals
-                .append(
-                    $('<span data-test-id="found-count">').css('font-weight', 'bold').text('None')
-                )
+                .append($('<span data-test-id="found-count">').css('font-weight', 'bold').text('None'))
                 .append($('<span>').text(' found out of '))
                 .append($('<span>').css('font-weight', 'bold').text(numeral(total).format('0,0')))
                 .append($('<span>').text(' available'));
         } else if (total > found) {
             $totals
-                .append(
-                    $('<span data-test-id="found-count">')
-                        .css('font-weight', 'bold')
-                        .text(numeral(found).format('0,0'))
-                )
+                .append($('<span data-test-id="found-count">').css('font-weight', 'bold').text(numeral(found).format('0,0')))
                 .append($('<span>').text(' found out of '))
                 .append($('<span>').css('font-weight', 'bold').text(numeral(total).format('0,0')))
                 .append($('<span>').text(' available'));
+
         } else {
             $totals
                 .append($('<span>').text(numeral(total).format('0,0')))
@@ -149,6 +145,7 @@ define([
             m = correctedTargetNameRe.exec(name);
             if (m) {
                 maxSuffix = Math.max(maxSuffix || 0, parseInt(m[1], 10));
+                return;
             }
         });
 
@@ -172,6 +169,7 @@ define([
         }
         return null;
     }
+
     const dataSourceTypes = {
         search: {
             serviceDependencies: {
@@ -220,7 +218,7 @@ define([
         narrativeObjects: {},
         narrativeObjectsClean: null,
 
-        init: function (options) {
+        init: function(options) {
             this._super(options);
 
             this.data_icons = Config.get('icons').data;
@@ -234,20 +232,16 @@ define([
             return this;
         },
 
-        loadObjects: function () {
+        loadObjects: function() {
             this.narrativeObjectsClean = false;
-            $(document).trigger('dataLoadedQuery.Narrative', [
-                null,
-                this.IGNORE_VERSION,
-                function (objects) {
-                    this.narrativeObjects = objects;
-                    this.narrativeObjectsClean = true;
-                }.bind(this),
-            ]);
+            $(document).trigger('dataLoadedQuery.Narrative', [null, this.IGNORE_VERSION, function(objects) {
+                this.narrativeObjects = objects;
+                this.narrativeObjectsClean = true;
+            }.bind(this)]);
         },
 
-        render: function () {
-            if (!this.token || !this.wsName) {
+        render: function() {
+            if ((!this.token) || (!this.wsName)) {
                 return;
             }
 
@@ -265,7 +259,9 @@ define([
 
             this.infoPanel = $('<div>');
             this.dataPolicyPanel = $('<div>');
-            this.$elem.empty().append(this.infoPanel).append(this.dataPolicyPanel);
+            this.$elem.empty()
+                .append(this.infoPanel)
+                .append(this.dataPolicyPanel);
 
             this.narrativeService = new DynamicServiceClient({
                 module: 'NarrativeService',
@@ -278,7 +274,7 @@ define([
                 token: this.token,
             });
 
-            const margin = {margin: '10px 0px 10px 0px'};
+            const margin = { margin: '10px 0px 10px 0px' };
             const $typeInput = $('<select class="form-control">')
                 .css(margin);
 
@@ -333,7 +329,8 @@ define([
                 this.$dataSourceLogo.empty();
                 if (dataSource) {
                     if (dataSource.logoUrl) {
-                        this.$dataSourceLogo.append($('<img>').attr('src', dataSource.logoUrl));
+                        this.$dataSourceLogo.append($('<img>')
+                            .attr('src', dataSource.logoUrl));
                     }
                 }
                 this.searchAndRender(newDataSourceID, $filterInput.val());
@@ -346,7 +343,8 @@ define([
             $filterInput.change(() => {
                 inputFieldLastValue = $filterInput.val();
                 renderInputFieldState();
-                this.searchAndRender(parseInt($typeInput.val()), $filterInput.val());
+                const dataSourceID = parseInt($typeInput.val());
+                this.searchAndRender(dataSourceID, $filterInput.val());
             });
 
             function renderInputFieldState() {
@@ -367,11 +365,11 @@ define([
 
             const searchFilter = $('<div class="col-sm-8">').append($filterInputField);
 
-            const header = $('<div class="row">').css({'margin': '0px 10px 0px 10px'})
+            const header = $('<div class="row">').css({ 'margin': '0px 10px 0px 10px' })
                 .append(typeFilter)
                 .append(searchFilter);
             this.$elem.append(header);
-            this.totalPanel = $('<div>').css({ margin: '0px 0px 0px 10px' });
+            this.totalPanel = $('<div>').css({ 'margin': '0px 0px 0px 10px' });
             this.$elem.append(this.totalPanel);
 
             this.resultPanel = $('<div role="table" data-test-id="result">');
@@ -402,19 +400,20 @@ define([
                 .append(this.resultFooter);
 
             this.$elem.append(this.resultArea);
-            this.searchAndRender(parseInt($typeInput.val(), 10), $filterInput.val());
+            const dataSourceID = parseInt($typeInput.val(), 10);
+            this.searchAndRender(dataSourceID, $filterInput.val());
             return this;
         },
 
-        hideResultFooter: function () {
+        hideResultFooter: function() {
             this.resultFooter.addClass('hide');
         },
 
-        showResultFooter: function () {
+        showResultFooter: function() {
             this.resultFooter.removeClass('hide');
         },
 
-        searchAndRender: function (category, query) {
+        searchAndRender: function(category, query) {
             if (query) {
                 query = query.trim();
                 if (query.length == 0) {
@@ -433,11 +432,7 @@ define([
             }
 
             // Duplicate queries are suppressed.
-            if (
-                this.currentQuery &&
-                this.currentQuery === query &&
-                category === this.currentCategory
-            ) {
+            if (this.currentQuery && this.currentQuery === query && category === this.currentCategory) {
                 return;
             }
 
@@ -452,23 +447,22 @@ define([
             return this.renderInitial();
         },
 
-        renderTotalsPanel: function () {
+        renderTotalsPanel: function() {
             const $totals = renderTotals(this.currentFilteredResults, this.totalAvailable);
             this.totalPanel.html($totals);
         },
 
-        renderInitial: function () {
+        renderInitial: function() {
             // Get and render the first batch of data.
             // Note that the loading ui is only displayed on the initial load.
             // Reset the ui.
             this.totalPanel.empty();
             this.resultPanel.empty();
             this.resultsFooterMessage.empty();
-            this.totalPanel.append(
-                $('<span>')
+            this.totalPanel
+                .append($('<span>')
                     .addClass('kb-data-list-type')
-                    .append('<img src="' + this.loadingImage + '"/> searching...')
-            );
+                    .append('<img src="' + this.loadingImage + '"/> searching...'));
 
             this.hideError();
             this.showResultFooter();
@@ -477,16 +471,14 @@ define([
             return this.renderFromDataSource(this.currentCategory, true);
         },
 
-        renderError: function () {
+        renderError: function() {
             this.totalPanel.empty();
             this.hideResultFooter();
             this.resultsFooterMessage.empty();
-            this.totalPanel.html(
-                '<div class="alert alert-danger">An error occurred executing this search!</div>'
-            );
+            this.totalPanel.html('<div class="alert alert-danger">An error occurred executing this search!</div>');
         },
 
-        renderMore: function () {
+        renderMore: function() {
             this.hideError();
 
             // suss out whether we really need more...
@@ -522,7 +514,7 @@ define([
             return dataSource.search(query);
         },
 
-        getDataSource: function (dataSourceID) {
+        getDataSource: function(dataSourceID) {
             let dataSource;
             const dataSourceConfig = this.dataSourceConfigs[dataSourceID];
             if (this.currentDataSource && this.currentDataSource.config === dataSourceConfig) {
@@ -535,15 +527,14 @@ define([
                         const configKey = dataSourceType.serviceDependencies[key];
                         accumUrls[key] = Config.url(configKey);
                         return accumUrls;
-                    },
-                    {}
-                );
-                dataSource = Object.create(dataSourceType.baseObject).init({
-                    config: dataSourceConfig,
-                    urls,
-                    token: this.token,
-                    pageSize: this.itemsPerPage,
-                });
+                    }, {});
+                dataSource = Object.create(dataSourceType.baseObject)
+                    .init({
+                        config: dataSourceConfig,
+                        urls,
+                        token: this.token,
+                        pageSize: this.itemsPerPage,
+                    });
                 this.currentDataSource = dataSource;
             }
             return dataSource;
@@ -552,8 +543,8 @@ define([
         renderFromDataSource: function(dataSourceID, initial) {
             const dataSource = this.getDataSource(dataSourceID);
             this.resultsFooterMessage.html(`
-                <span>fetching another ${this.itemsPerPage} items</span>
-                <span class="fa fa-spinner fa-spin" style="margin-left: 1ex"/>
+                <span>fetching another ${this.itemsPerPage} items</span> 
+                <span class='fa fa-spinner fa-spin' style='margin-left: 1ex'/>
             `);
 
             return this.fetchFromDataSource(dataSource, initial)
@@ -600,7 +591,7 @@ define([
                 });
         },
 
-        clearRows: function () {
+        clearRows: function() {
             this.resultPanel.empty();
         },
 
@@ -609,7 +600,7 @@ define([
             this.resultPanel.append($row);
         },
 
-        escapeSearchQuery: function (str) {
+        escapeSearchQuery: function(str) {
             return str.replace(/[%]/g, '').replace(/[:"\\]/g, '\\$&');
         },
 
@@ -622,14 +613,14 @@ define([
             const copyText = ' Add';
 
             let shortName = object.name;
-            let isShortened=false;
-            if (shortName.length>this.maxNameLength) {
-                shortName = shortName.substring(0,this.maxNameLength-3)+'…';
-                isShortened=true;
+            let isShortened = false;
+            if (shortName.length > this.maxNameLength) {
+                shortName = shortName.substring(0, this.maxNameLength - 3) + '…';
+                isShortened = true;
             }
 
             // TODO: more failsafe method for building these urls.
-            // e.g. not clear what the form of the config url is:
+            // e.g. not clear wht the form of the config url is:
             // path or url?
             // terminal / or not?
             // absolute or relative (initial /)
@@ -655,7 +646,7 @@ define([
                 .attr('role', 'toolbar')
                 .hide();
             const btnClasses = 'btn btn-xs btn-default';
-            const css = {'color':'#888'};
+            const css = { 'color': '#888' };
             const $openLandingPage = $('<span>')
                 // tooltips showing behind pullout, need to fix!
                 //.tooltip({title:'Explore data', 'container':'#'+this.mainListId})
@@ -674,7 +665,9 @@ define([
                     e.stopPropagation();
                     window.open(provenanceLink);
                 });
-            $btnToolbar.append($openLandingPage).append($openProvenance);
+            $btnToolbar
+                .append($openLandingPage)
+                .append($openProvenance);
 
             // Action Column
 
@@ -682,30 +675,29 @@ define([
                 $('<div>').append(
                     $('<button>')
                         .addClass('kb-primary-btn')
-                        .css({'white-space':'nowrap', padding: '10px 15px'})
+                        .css({ 'white-space': 'nowrap', padding: '10px 15px' })
                         .append($('<span>')
                             .addClass('fa fa-chevron-circle-left'))
                         .append(copyText)
-                        .on('click',function() { // probably should move action outside of render func, but oh well
+                        .on('click', function() { // probably should move action outside of render func, but oh well
                             $(this).attr('disabled', 'disabled');
-                            $(this).html('<img src="'+self.loadingImage+'">');
+                            $(this).html('<img src="' + self.loadingImage + '">');
 
                             let targetName = object.name;
 
                             // object name cannot start with digits.
                             if (/^[\d]/.test(targetName)) {
-                                targetName = targetName.replace(/^[\d]+/,'_');
+                                targetName = targetName.replace(/^[\d]+/, '_');
                             }
 
-                        // to avoid weird object names, replace entities with underscores.
-                        targetName = targetName.replace(/&[^;]*;/g, '_');
+                            // to avoid weird object names, replace entities with underscores.
+                            targetName = targetName.replace(/&[^;]*;/g, '_');
 
-                        // replace characters which are invalid for a workspace object name with underscores.
-                        targetName = targetName.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+                            // replace characters which are invalid for a workspace object name with underscores.
+                            targetName = targetName.replace(/[^a-zA-Z0-9.\-_]/g, '_');
 
-                        self.copy(object, targetName, this);
-                    })
-            );
+                            self.copy(object, targetName, this);
+                        }));
 
             const $actionColumn = $('<div>')
                 .css('flex', '0 0 90px')
@@ -754,11 +746,11 @@ define([
                 .css('flex-direction', 'row')
 
                 // show/hide ellipses on hover, show extra info on click
-                .mouseenter(()=> {
+                .mouseenter(() => {
                     $addDiv.show();
                     $btnToolbar.show();
                 })
-                .mouseleave(()=> {
+                .mouseleave(() => {
                     $addDiv.hide();
                     $btnToolbar.hide();
                 })
@@ -793,7 +785,7 @@ define([
             that is the only possible error.
         */
 
-        copy: function (object, targetName, thisBtn, nextSuffix, tries) {
+        copy: function(object, targetName, thisBtn, nextSuffix, tries) {
             if (tries > 10) {
                 throw new Error('Too many rename tries (10)');
             }
@@ -829,20 +821,14 @@ define([
                 objects: [{
                     ref: this.wsName + '/' + correctedTargetName,
                 }],
-                ignoreErrors: 1
+                ignoreErrors: 1,
             }])
                 .spread((infos) => {
                     // If an object already exists with this name, the attempt again,
                     // incrementing the suffix by 1. NB this will loop until a unique
                     // filename is found.
                     if (infos[0] !== null) {
-                        return this.copy(
-                            object,
-                            targetName,
-                            thisBtn,
-                            suffix ? suffix + 1 : 1,
-                            tries ? tries + 1 : 1
-                        );
+                        return this.copy(object, targetName, thisBtn, suffix ? suffix + 1 : 1, tries ? tries + 1 : 1);
                     }
                     return this.copyFinal(object, correctedTargetName, thisBtn);
                 })
@@ -856,7 +842,7 @@ define([
             return this.narrativeService.callFunc('copy_object', [{
                 ref: object.workspaceReference.ref,
                 target_ws_name: this.wsName,
-                target_name: targetName
+                target_name: targetName,
             }])
                 .spread(() => {
                     $(thisBtn).prop('disabled', false);
@@ -867,26 +853,21 @@ define([
                     $(thisBtn).html('Error');
                     if (error.error && error.error.message) {
                         if (error.error.message.indexOf('may not write to workspace') >= 0) {
-                            this.options.$importStatus.html(
-                                $('<div>')
-                                    .css({ color: '#F44336', width: '500px' })
-                                    .append(
-                                        'Error: you do not have permission to add data to this Narrative.'
-                                    )
-                            );
+                            this.options.$importStatus.html($('<div>').css({
+                                'color': '#F44336',
+                                'width': '500px',
+                            }).append('Error: you do not have permission to add data to this Narrative.'));
                         } else {
-                            this.options.$importStatus.html(
-                                $('<div>')
-                                    .css({ color: '#F44336', width: '500px' })
-                                    .append('Error: ' + error.error.message)
-                            );
+                            this.options.$importStatus.html($('<div>').css({
+                                'color': '#F44336',
+                                'width': '500px',
+                            }).append('Error: ' + error.error.message));
                         }
                     } else {
-                        this.options.$importStatus.html(
-                            $('<div>')
-                                .css({ color: '#F44336', width: '500px' })
-                                .append('Unknown error!')
-                        );
+                        this.options.$importStatus.html($('<div>').css({
+                            'color': '#F44336',
+                            'width': '500px',
+                        }).append('Unknown error!'));
                     }
                     console.error(error);
                     this.showError(error);
@@ -909,16 +890,16 @@ define([
             this.infoPanel.append('<div class="alert alert-danger">Error: ' + errorMsg + '</span>');
         },
 
-        hideError: function () {
+        hideError: function() {
             this.infoPanel.empty();
         },
 
-        loggedInCallback: function (event, auth) {
+        loggedInCallback: function(event, auth) {
             this.token = auth.token;
             return this;
         },
 
-        loggedOutCallback: function () {
+        loggedOutCallback: function() {
             this.token = null;
             return this;
         },

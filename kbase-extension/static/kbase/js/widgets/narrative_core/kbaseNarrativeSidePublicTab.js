@@ -62,17 +62,17 @@ define ([
         const $table = $('<table role="table">')
             .css('font-size', '80%');
 
-        metadata.forEach((item) => {
+        metadata.forEach((field) => {
             let value;
-            if (item.value instanceof Array) {
-                value = item.value.map((item) => {
+            if (field.value instanceof Array) {
+                value = field.value.map((item) => {
                     return formatItem(item);
                 }).join('&nbsp;&nbsp;&nbsp;');
             } else {
-                value = formatValue(item.value);
+                value = formatValue(field.value);
             }
 
-            const $row = $(`<tr role="row" data-test-id="${item.id || item.label}">`)
+            const $row = $(`<tr role="row" data-test-id="${field.id || field.label}">`)
                 .css('margin-bottom', '2px')
                 .append($('<td role="cell" data-test-id="label">')
                     .css('width', '7em')
@@ -82,7 +82,7 @@ define ([
                     .css('color', '#AAA')
                     .css('vertical-align', 'top')
                     .css('padding-bottom', '2px')
-                    .text(item.label))
+                    .text(field.label))
                 .append($('<td role="cell" data-test-id="value">')
                     // .css('font-weight', 'bold')
                     .css('vertical-align', 'top')
@@ -144,7 +144,6 @@ define ([
             m = correctedTargetNameRe.exec(name);
             if (m) {
                 maxSuffix = Math.max(maxSuffix || 0, parseInt(m[1], 10));
-                return;
             }
         });
 
@@ -341,8 +340,7 @@ define ([
             $filterInput.change(() => {
                 inputFieldLastValue = $filterInput.val();
                 renderInputFieldState();
-                const dataSourceID = parseInt($typeInput.val());
-                this.searchAndRender(dataSourceID, $filterInput.val());
+                this.searchAndRender(parseInt($typeInput.val()), $filterInput.val());
             });
 
             function renderInputFieldState() {
@@ -398,8 +396,7 @@ define ([
                 .append(this.resultFooter);
 
             this.$elem.append(this.resultArea);
-            const dataSourceID = parseInt($typeInput.val(), 10);
-            this.searchAndRender(dataSourceID, $filterInput.val());
+            this.searchAndRender(parseInt($typeInput.val(), 10), $filterInput.val());
             return this;
         },
 
@@ -618,7 +615,7 @@ define ([
             }
 
             // TODO: more failsafe method for building these urls.
-            // e.g. not clear wht the form of the config url is:
+            // e.g. not clear what the form of the config url is:
             // path or url?
             // terminal / or not?
             // absolute or relative (initial /)

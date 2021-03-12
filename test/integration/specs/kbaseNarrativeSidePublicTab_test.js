@@ -459,7 +459,7 @@ async function waitForRows(panel, count) {
         const rows = await panel.$$('[role="table"][data-test-id="result"] > div > [role="row"]');
         return rows.length >= count;
     });
-    return await panel.$$('[role="table"][data-test-id="result"] > div > [role="row"]');
+    return panel.$$('[role="table"][data-test-id="result"] > div > [role="row"]');
 }
 
 async function openPublicData() {
@@ -532,9 +532,7 @@ async function getRow(publicPanel, testCase) {
 }
 
 async function scrollToRow(publicPanel, testCase) {
-     const rows = await waitForRows(publicPanel, testCase.row);
-     expect(rows.length).toBeGreaterThanOrEqual(testCase.row);
-     const row = rows[testCase.row - 1];
+     const row = await getRow(publicPanel, testCase);
      await row.scrollIntoView();
      return row;
 }

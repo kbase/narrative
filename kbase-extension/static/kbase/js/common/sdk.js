@@ -1,15 +1,11 @@
-define([
-    'common/props'
-], function (
-    Props
-) {
+define(['common/props'], (Props) => {
     'use strict';
 
     function coerceToBoolean(value) {
         if (!value) {
             return false;
         }
-        var intValue = parseInt(value);
+        const intValue = parseInt(value);
         if (!isNaN(intValue)) {
             if (value > 0) {
                 return 1;
@@ -20,18 +16,18 @@ define([
             return false;
         }
         switch (value.toLowerCase(value)) {
-        case 'true':
-        case 't':
-        case 'yes':
-        case 'y':
-            return true;
-        case 'false':
-        case 'f':
-        case 'no':
-        case 'n':
-            return false;
-        default:
-            return false;
+            case 'true':
+            case 't':
+            case 'yes':
+            case 'y':
+                return true;
+            case 'false':
+            case 'f':
+            case 'no':
+            case 'n':
+                return false;
+            default:
+                return false;
         }
     }
 
@@ -43,26 +39,26 @@ define([
         if (converted.multipleItems) {
             return [];
         }
-        var nullValue = (function () {
+        const nullValue = (function () {
             switch (converted.data.type) {
-            case 'string':
-                return '';
-            case 'int':
-                return null;
-            case 'float':
-                return null;
-            case 'workspaceObjectRef':
-                return null;
-            case 'workspaceObjectName':
-                return null;
-            case 'struct':
-                return {};
-            case '[]struct':
-                return [];
-            default:
-                return null;
+                case 'string':
+                    return '';
+                case 'int':
+                    return null;
+                case 'float':
+                    return null;
+                case 'workspaceObjectRef':
+                    return null;
+                case 'workspaceObjectName':
+                    return null;
+                case 'struct':
+                    return {};
+                case '[]struct':
+                    return [];
+                default:
+                    return null;
             }
-        }());
+        })();
         return nullValue;
     }
 
@@ -75,59 +71,58 @@ define([
      */
     function defaultToNative(converted, defaultValue) {
         switch (converted.data.type) {
-        case 'string':
-            return defaultValue;
-        case 'int':
-            return parseInt(defaultValue);
-        case 'float':
-            return parseFloat(defaultValue);
-        case 'workspaceObjectRef':
-            if (defaultValue === '') {
-                return null;
-            }
-            return defaultValue;
-        case 'workspaceObjectName':
-            return defaultValue;
-        case 'boolean':
-            return coerceToBoolean(defaultValue);
-        default:
-            // Assume it is a string...
-            return defaultValue;
+            case 'string':
+                return defaultValue;
+            case 'int':
+                return parseInt(defaultValue);
+            case 'float':
+                return parseFloat(defaultValue);
+            case 'workspaceObjectRef':
+                if (defaultValue === '') {
+                    return null;
+                }
+                return defaultValue;
+            case 'workspaceObjectName':
+                return defaultValue;
+            case 'boolean':
+                return coerceToBoolean(defaultValue);
+            default:
+                // Assume it is a string...
+                return defaultValue;
         }
     }
 
     function defaultValue(converted, spec) {
-        var defaultValues = spec.default_values || [];
+        const defaultValues = spec.default_values || [];
         // No default value and not required? null value
 
         // special special cases.
         switch (spec.field_type) {
-        case 'checkbox':
-            /*
-             * handle the special case of a checkbox with no or empty
-             * default value. It will promote to the "unchecked value"
-             * TODO: more cases of bad default value? Or a generic
-             * default value validator?
-             */
-            if (!defaultValues ||
-                defaultValues.length === 0) {
-                return spec.checkbox_options.unchecked_value;
-            }
-            return coerceToIntBoolean(defaultValues[0]);
-        case 'custom_textsubdata':
-            if (!defaultValues) {
-                // ??
-            }
-            break;
-        case 'textsubdata':
-            if (spec.default_values) {
-                if (spec.default_values.length === 1 && spec.default_values[0] === '') {
+            case 'checkbox':
+                /*
+                 * handle the special case of a checkbox with no or empty
+                 * default value. It will promote to the "unchecked value"
+                 * TODO: more cases of bad default value? Or a generic
+                 * default value validator?
+                 */
+                if (!defaultValues || defaultValues.length === 0) {
+                    return spec.checkbox_options.unchecked_value;
+                }
+                return coerceToIntBoolean(defaultValues[0]);
+            case 'custom_textsubdata':
+                if (!defaultValues) {
+                    // ??
+                }
+                break;
+            case 'textsubdata':
+                if (spec.default_values) {
+                    if (spec.default_values.length === 1 && spec.default_values[0] === '') {
+                        return [];
+                    }
+                    return spec.default_values[0].split(',');
+                } else {
                     return [];
                 }
-                return spec.default_values[0].split(',');
-            } else {
-                return [];
-            }
         }
 
         // No default in spec, yet required.
@@ -159,40 +154,40 @@ define([
          * is actually an int, although Mike says it can be any type...
          */
         switch (spec.field_type) {
-        case 'checkbox':
-            return 'int';
-        case 'file':
-            // file datatype is really a file which is uploaded to shock, which results in a
-            // shock file handle. maybe this field type should be "shock_file"
-            return 'string';
-        case 'textarea':
-            return 'string';
-        case 'dropdown':
-            return 'string';
-        case 'dynamic_dropdown':
-            return 'string';
-        case 'textsubdata':
-            return 'subdata';
-        case 'custom_textsubdata':
-            return 'customSubdata';
-        case 'custom_button':
-            switch (spec.id) {
-            case 'input_check_other_params':
-                return 'boolean';
-            default:
-                return 'unspecified';
-            }
-        case 'custom_widget':
-            if (spec.dropdown_options) {
-                return '[]string';
-            }
-            break;
-        case 'group':
-            return 'struct';
-        case 'autocomplete':
-            return 'string';
-        case 'custom':
-            return 'custom';
+            case 'checkbox':
+                return 'int';
+            case 'file':
+                // file datatype is really a file which is uploaded to shock, which results in a
+                // shock file handle. maybe this field type should be "shock_file"
+                return 'string';
+            case 'textarea':
+                return 'string';
+            case 'dropdown':
+                return 'string';
+            case 'dynamic_dropdown':
+                return 'string';
+            case 'textsubdata':
+                return 'subdata';
+            case 'custom_textsubdata':
+                return 'customSubdata';
+            case 'custom_button':
+                switch (spec.id) {
+                    case 'input_check_other_params':
+                        return 'boolean';
+                    default:
+                        return 'unspecified';
+                }
+            case 'custom_widget':
+                if (spec.dropdown_options) {
+                    return '[]string';
+                }
+                break;
+            case 'group':
+                return 'struct';
+            case 'autocomplete':
+                return 'string';
+            case 'custom':
+                return 'custom';
         }
 
         /*
@@ -202,7 +197,7 @@ define([
             // consider it plain, unconstrained text.
             return 'string';
         }
-        var validateAs = spec.text_options.validate_as;
+        const validateAs = spec.text_options.validate_as;
         if (validateAs) {
             // For int and float, "validateAs" overrides the type.
             if (validateAs === 'int' || validateAs === 'float') {
@@ -215,15 +210,17 @@ define([
         if (spec.text_options.valid_ws_types && spec.text_options.valid_ws_types.length > 0) {
             // we now have refs, but no way of specifying that the
             switch (spec.ui_class) {
-            case 'input':
-            case 'parameter':
-                // input objects are any valid ws object reference:
-                // name, traditional ref, ref path.
-                return 'workspaceObjectRef';
-            case 'output':
-                return 'workspaceObjectName';
-            default:
-                throw new Error('Unspecified ui_class, cannot determine object param data type');
+                case 'input':
+                case 'parameter':
+                    // input objects are any valid ws object reference:
+                    // name, traditional ref, ref path.
+                    return 'workspaceObjectRef';
+                case 'output':
+                    return 'workspaceObjectName';
+                default:
+                    throw new Error(
+                        'Unspecified ui_class, cannot determine object param data type'
+                    );
             }
         }
 
@@ -232,8 +229,8 @@ define([
         // the text_options, we assume it is a string.
 
         switch (spec.field_type) {
-        case 'text':
-            return 'string';
+            case 'text':
+                return 'string';
         }
 
         console.error('ERROR could not determine type from spec', spec);
@@ -242,20 +239,26 @@ define([
     }
 
     function updateUI(converted, spec) {
-        var dataType = converted.data.type;
+        const dataType = converted.data.type;
 
         switch (dataType) {
-        case 'subdata':
-            converted.ui.multiSelection = spec.textsubdata_options.multiselection ? true : false;
-            converted.ui.showSourceObject = spec.textsubdata_options.show_src_obj ? true : false;
-            break;
-        case 'customSubdata':
-            if (spec.textsubdata) {
-                converted.ui.multiSelection = spec.textsubdata_options.multiselection ? true : false;
-            } else {
-                converted.ui.multiSelection = false;
-            }
-            break;
+            case 'subdata':
+                converted.ui.multiSelection = spec.textsubdata_options.multiselection
+                    ? true
+                    : false;
+                converted.ui.showSourceObject = spec.textsubdata_options.show_src_obj
+                    ? true
+                    : false;
+                break;
+            case 'customSubdata':
+                if (spec.textsubdata) {
+                    converted.ui.multiSelection = spec.textsubdata_options.multiselection
+                        ? true
+                        : false;
+                } else {
+                    converted.ui.multiSelection = false;
+                }
+                break;
         }
     }
 
@@ -263,9 +266,9 @@ define([
      * These need to be really fleshed out...
      */
     function updateConstraints(converted, spec) {
-        var dataType = converted.data.type;
-        var fieldType = converted.ui.type;
-        var constraints;
+        const dataType = converted.data.type;
+        const fieldType = converted.ui.type;
+        let constraints;
 
         // NOTE:
         // field_type is text or dropdown, but does not always correspond to the
@@ -273,113 +276,113 @@ define([
         // a dropdown even though the field_type is 'text'.
 
         switch (dataType) {
-        case 'custom':
-            constraints = {
-                type: Props.getDataItem(spec, 'text_options.validate_as')
-            };
-            // HACK
-            converted.ui.class = 'parameter';
-            break;
-        case 'sequence':
-            constraints = {};
-            break;
-        case 'string':
-        case 'text':
-            switch (fieldType) {
-            case 'dynamic_dropdown':
+            case 'custom':
                 constraints = {
-                    options: spec.text_options,
-                    min_length: Props.getDataItem(spec, 'text_options.min_length', 1),
-                    max_length: Props.getDataItem(spec, 'text_options.max_length', 10000)
+                    type: Props.getDataItem(spec, 'text_options.validate_as'),
                 };
+                // HACK
+                converted.ui.class = 'parameter';
                 break;
-            case 'text':
-                constraints = {
-                    min: Props.getDataItem(spec, 'text_options.min_length'),
-                    max: Props.getDataItem(spec, 'text_options.max_length'),
-                    regexp: Props.getDataItem(spec, 'text_options.regex_constraint'),
-                    validate: Props.getDataItem(spec, 'text_options.validate_as')
-                };
-                break;
-            case 'dropdown':
-                constraints = {
-                    options: spec.dropdown_options ? spec.dropdown_options.options : {}
-                };
-                break;
-            case 'textarea':
-                constraints = {
-                    min: Props.getDataItem(spec, 'text_options.min_length'),
-                    max: Props.getDataItem(spec, 'text_options.max_length'),
-                    nRows: Props.getDataItem(spec, 'text_options.n_rows', 5)
-                };
-                break;
-            case 'autocomplete':
+            case 'sequence':
                 constraints = {};
                 break;
-            case 'file':
-                constraints = {};
-                break;
-            default:
-                throw new Error('Unknown text param field type "' + fieldType + '"');
-            }
-            break;
-        case 'int':
-            switch (fieldType) {
+            case 'string':
             case 'text':
+                switch (fieldType) {
+                    case 'dynamic_dropdown':
+                        constraints = {
+                            options: spec.text_options,
+                            min_length: Props.getDataItem(spec, 'text_options.min_length', 1),
+                            max_length: Props.getDataItem(spec, 'text_options.max_length', 10000),
+                        };
+                        break;
+                    case 'text':
+                        constraints = {
+                            min: Props.getDataItem(spec, 'text_options.min_length'),
+                            max: Props.getDataItem(spec, 'text_options.max_length'),
+                            regexp: Props.getDataItem(spec, 'text_options.regex_constraint'),
+                            validate: Props.getDataItem(spec, 'text_options.validate_as'),
+                        };
+                        break;
+                    case 'dropdown':
+                        constraints = {
+                            options: spec.dropdown_options ? spec.dropdown_options.options : {},
+                        };
+                        break;
+                    case 'textarea':
+                        constraints = {
+                            min: Props.getDataItem(spec, 'text_options.min_length'),
+                            max: Props.getDataItem(spec, 'text_options.max_length'),
+                            nRows: Props.getDataItem(spec, 'text_options.n_rows', 5),
+                        };
+                        break;
+                    case 'autocomplete':
+                        constraints = {};
+                        break;
+                    case 'file':
+                        constraints = {};
+                        break;
+                    default:
+                        throw new Error('Unknown text param field type "' + fieldType + '"');
+                }
+                break;
+            case 'int':
+                switch (fieldType) {
+                    case 'text':
+                        constraints = {
+                            min: Props.getDataItem(spec, 'text_options.min_int'),
+                            max: Props.getDataItem(spec, 'text_options.max_int'),
+                        };
+                        break;
+                    case 'checkbox':
+                        // In theory, the checkbox
+                        constraints = {
+                            min: 0,
+                            max: 0,
+                        };
+                        break;
+                }
+                break;
+            case 'float':
                 constraints = {
-                    min: Props.getDataItem(spec, 'text_options.min_int'),
-                    max: Props.getDataItem(spec, 'text_options.max_int')
+                    min: Props.getDataItem(spec, 'text_options.min_float'),
+                    max: Props.getDataItem(spec, 'text_options.max_float'),
                 };
                 break;
-            case 'checkbox':
-                // In theory, the checkbox
+            case 'workspaceObjectRef':
+            case 'workspaceObjectName':
                 constraints = {
-                    min: 0,
-                    max: 0
+                    types: spec.text_options.valid_ws_types,
                 };
                 break;
-            }
-            break;
-        case 'float':
-            constraints = {
-                min: Props.getDataItem(spec, 'text_options.min_float'),
-                max: Props.getDataItem(spec, 'text_options.max_float')
-            };
-            break;
-        case 'workspaceObjectRef':
-        case 'workspaceObjectName':
-            constraints = {
-                types: spec.text_options.valid_ws_types
-            };
-            break;
-        case '[]string':
-            switch (fieldType) {
-            case 'dynamic_dropdown':
+            case '[]string':
+                switch (fieldType) {
+                    case 'dynamic_dropdown':
+                        constraints = {
+                            options: spec.text_options,
+                        };
+                        break;
+                    case 'dropdown':
+                        break;
+                    case 'text':
+                        break;
+                    case 'textarea':
+                        break;
+                    default:
+                    // throw new Error('Unknown []string field type: ' + fieldType);
+                }
+                break;
+            case 'subdata':
                 constraints = {
-                    options: spec.text_options
+                    multiple: false,
+                    subdataSelection: spec.textsubdata_options.subdata_selection,
                 };
                 break;
-            case 'dropdown':
+            case 'customSubdata':
+                constraints = {
+                    multiple: false,
+                };
                 break;
-            case 'text':
-                break;
-            case 'textarea':
-                break;
-            default:
-                // throw new Error('Unknown []string field type: ' + fieldType);
-            }
-            break;
-        case 'subdata':
-            constraints = {
-                multiple: false,
-                subdataSelection: spec.textsubdata_options.subdata_selection
-            };
-            break;
-        case 'customSubdata':
-            constraints = {
-                multiple: false
-            };
-            break;
             //                case 'xxinput_property_x':
             //                    return {
             //                        defaultValue: defaultValue(),
@@ -449,57 +452,56 @@ define([
             //                                    });
             //                        }
             //                    };
-        case 'struct':
-            break;
-        case 'unspecified':
-            // a bunch of field types are untyped, and there are no
-            // options for them...
-            switch (fieldType) {
-            case 'text':
-            case 'checkbox':
-            case 'textarea':
-            case 'dropdown':
-            case 'dynamic_dropdown':
-            case 'custom_button':
-            case 'textsubdata':
-            case 'file':
-            case 'custom_textsubdata':
-            case 'custom_widget':
-            case 'tab':
+            case 'struct':
+                break;
+            case 'unspecified':
+                // a bunch of field types are untyped, and there are no
+                // options for them...
+                switch (fieldType) {
+                    case 'text':
+                    case 'checkbox':
+                    case 'textarea':
+                    case 'dropdown':
+                    case 'dynamic_dropdown':
+                    case 'custom_button':
+                    case 'textsubdata':
+                    case 'file':
+                    case 'custom_textsubdata':
+                    case 'custom_widget':
+                    case 'tab':
+                        break;
+                    default:
+                        console.error('ERROR unspecified field type', converted, spec);
+                        throw new Error('Unknown unspecified field type');
+                }
                 break;
             default:
-                console.error('ERROR unspecified field type', converted, spec)
-                throw new Error('Unknown unspecified field type');
-            }
-            break;
-        default:
-            console.error('Unknown data type', dataType);
-            throw new Error('Unknown data type: ' + dataType);
+                console.error('Unknown data type', dataType);
+                throw new Error('Unknown data type: ' + dataType);
         }
         if (constraints) {
-            Object.keys(constraints).forEach(function (key) {
+            Object.keys(constraints).forEach((key) => {
                 converted.data.constraints[key] = constraints[key];
             });
         }
     }
 
-
     // Stepwise conversion
     function updateData(converted, spec) {
         switch (converted.data.type) {
-        case 'subdata':
-            converted.data.multiple = spec.textsubdata_options.multipleitems ? true : false;
-            break;
-        default:
+            case 'subdata':
+                converted.data.multiple = spec.textsubdata_options.multipleitems ? true : false;
+                break;
+            default:
         }
     }
 
     // now with grouped params
 
     function convertSequenceParameter(spec) {
-        var dataType = grokDataType(spec);
+        const dataType = grokDataType(spec);
 
-        var required = (spec.optional ? false : true);
+        const required = spec.optional ? false : true;
 
         // This is the spec that applies to each item in the sequence.
         // It is essentially like the main spec, but is not a sequence
@@ -507,7 +509,7 @@ define([
         // The sequence, if it has a default value sequence, will
         // be responsible for creating a sequence of values using
         // those default values.
-        var itemSpec = {
+        const itemSpec = {
             id: null,
             ui: {
                 label: spec.ui_name,
@@ -518,15 +520,15 @@ define([
                 control: spec.field_type,
                 // If embedded in an advanced sequence control,
                 // the subcontrol does not need the advanced flag.
-                advanced: false
+                advanced: false,
             },
             data: {
                 type: dataType,
                 sequence: false,
                 constraints: {
-                    required: required
+                    required: required,
                 },
-                defaultValue: null
+                defaultValue: null,
             },
             original: spec,
         };
@@ -536,7 +538,7 @@ define([
         updateUI(itemSpec, spec);
         updateData(itemSpec, spec);
 
-        var converted = {
+        const converted = {
             id: spec.id,
             // TODO we should be able to remove this.
             multipleItems: true,
@@ -547,28 +549,27 @@ define([
                 class: spec.ui_class,
                 type: spec.field_type,
                 control: spec.field_type,
-                advanced: spec.advanced ? true : false
+                advanced: spec.advanced ? true : false,
             },
             data: {
                 type: 'sequence',
                 constraints: {
-                    required: required
+                    required: required,
                 },
                 defaultValue: [],
-                nullValue: null
+                nullValue: null,
             },
             parameters: {
                 layout: ['item'],
                 specs: {
-                    item: itemSpec
-                }
-            }
+                    item: itemSpec,
+                },
+            },
         };
 
         updateConstraints(converted, spec);
         updateUI(converted, spec);
         updateData(converted, spec);
-
 
         return converted;
     }
@@ -579,17 +580,17 @@ define([
             if (spec.field_type === 'custom_textsubdata') {
                 spec.allow_multiple === 0;
                 spec.textsubdata_options = {
-                    multiselection: 1
+                    multiselection: 1,
                 };
             } else {
                 return convertSequenceParameter(spec);
             }
         }
-        var multiple = (spec.allow_multiple ? true : false);
-        var dataType = grokDataType(spec);
+        const multiple = spec.allow_multiple ? true : false;
+        const dataType = grokDataType(spec);
 
-        var required = (spec.optional ? false : true);
-        var converted = {
+        const required = spec.optional ? false : true;
+        const converted = {
             id: spec.id,
             multipleItems: multiple,
             ui: {
@@ -599,16 +600,16 @@ define([
                 class: spec.ui_class,
                 type: spec.field_type,
                 control: spec.field_type,
-                advanced: spec.advanced ? true : false
+                advanced: spec.advanced ? true : false,
             },
             data: {
                 type: dataType,
                 sequence: multiple,
                 constraints: {
-                    required: required
-                }
+                    required: required,
+                },
             },
-            original: spec
+            original: spec,
         };
 
         updateNullValue(converted, spec);
@@ -622,28 +623,28 @@ define([
 
     function convertGroupToStruct(group, params) {
         // Collect params into group and remove from original params collection.
-        var groupParams = {};
-        group.parameter_ids.forEach(function (id) {
+        const groupParams = {};
+        group.parameter_ids.forEach((id) => {
             groupParams[id] = params[id];
             delete params[id];
 
             // TODO: figure out what to do with advanced params within groups
             groupParams[id].ui.advanced = false;
         });
-        var required = group.optional ? false : true;
+        const required = group.optional ? false : true;
 
-        var defaultValue;
-        var nullValue;
-        var zeroValue;
+        let defaultValue;
+        let nullValue;
+        let zeroValue;
 
         nullValue = null;
         defaultValue = {};
-        Object.keys(groupParams).forEach(function (id) {
+        Object.keys(groupParams).forEach((id) => {
             defaultValue[id] = groupParams[id].data.defaultValue;
         });
         zeroValue = defaultValue;
 
-        var structSpec = {
+        const structSpec = {
             id: group.id,
             multipleItems: false,
             ui: {
@@ -653,21 +654,21 @@ define([
                 class: group.ui_class || 'parameter',
                 control: '',
                 layout: group.parameter_ids,
-                advanced: group.advanced ? true : false
+                advanced: group.advanced ? true : false,
             },
             data: {
                 type: 'struct',
                 constraints: {
-                    required: required
+                    required: required,
                 },
                 defaultValue: defaultValue,
                 nullValue: nullValue,
-                zeroValue: zeroValue
+                zeroValue: zeroValue,
             },
             parameters: {
                 layout: group.parameter_ids,
-                specs: groupParams
-            }
+                specs: groupParams,
+            },
         };
         return structSpec;
     }
@@ -676,7 +677,6 @@ define([
     // group spec is not as fully populated, so we have to
     // fill in some gaps.
     function makeGroupSequence(spec, itemSpec) {
-
         // in the context of a sequence, a struct is always "required",
         // no matter what the spec says.
         // itemSpec.data.constraints.required = true;
@@ -686,8 +686,8 @@ define([
         // We introduce a new "disableable" - http://www.urbandictionary.com/define.php?term=disableable
         itemSpec.data.constraints.disableable = false;
 
-        var required = (spec.optional ? false : true);
-        var converted = {
+        const required = spec.optional ? false : true;
+        const converted = {
             id: spec.id,
             // TODO we should be able to remove this.
             multipleItems: true,
@@ -696,22 +696,22 @@ define([
                 hint: spec.short_hint,
                 description: spec.description,
                 class: 'parameter',
-                advanced: spec.advanced ? true : false
+                advanced: spec.advanced ? true : false,
             },
             data: {
                 type: 'sequence',
                 constraints: {
-                    required: required
+                    required: required,
                 },
                 defaultValue: [],
-                nullValue: null
+                nullValue: null,
             },
             parameters: {
                 layout: ['item'],
                 specs: {
-                    item: itemSpec
-                }
-            }
+                    item: itemSpec,
+                },
+            },
         };
 
         updateConstraints(converted, spec);
@@ -722,7 +722,7 @@ define([
     }
 
     function convertGroup(group, params) {
-        var structSpec = convertGroupToStruct(group, params);
+        const structSpec = convertGroupToStruct(group, params);
 
         // Skip groups with no parameters.
         // A spec which defines a group with no members should probably not
@@ -739,12 +739,13 @@ define([
         }
 
         // The first parameter defines the position of the group within the parameter layout.
-        params[group.id]._position = structSpec.parameters.specs[structSpec.parameters.layout[0]]._position;
+        params[group.id]._position =
+            structSpec.parameters.specs[structSpec.parameters.layout[0]]._position;
     }
 
     function convertAppSpec(sdkAppSpec) {
         // Parameters
-        var parameterSpecs = {},
+        let parameterSpecs = {},
             parameterLayout;
 
         // First convert all parameters
@@ -753,15 +754,15 @@ define([
         // and populate it with the specified parameters, removing them from
         // the top level of parameters.
 
-        sdkAppSpec.parameters.forEach(function (parameter, index) {
+        sdkAppSpec.parameters.forEach((parameter, index) => {
             parameterSpecs[parameter.id] = convertParameter(parameter);
             parameterSpecs[parameter.id]._position = index;
         });
 
-        var groups = [];
+        let groups = [];
         if (sdkAppSpec.parameter_groups) {
             groups = sdkAppSpec.parameter_groups;
-            sdkAppSpec.parameter_groups.forEach(function (group) {
+            sdkAppSpec.parameter_groups.forEach((group) => {
                 convertGroup(group, parameterSpecs);
                 // don't know how the group is ordered in the spec ... so just append it later.
             });
@@ -770,57 +771,58 @@ define([
         // first filter out the paramters which have been moved into groups,
         // and then add the groups in.
         parameterLayout = sdkAppSpec.parameters
-            .filter(function (parameter) {
+            .filter((parameter) => {
                 if (parameterSpecs[parameter.id]) {
                     return true;
                 }
                 return false;
             })
-            .map(function (parameter) {
+            .map((parameter) => {
                 return {
                     position: parameterSpecs[parameter.id]._position,
-                    id: parameter.id
+                    id: parameter.id,
                 };
             })
-            .concat(groups
-                // first filter out any groups which were not added to the parameters.
-                // This includes ones with no parameters specified
-                .filter(function (group) {
-                    if (parameterSpecs[group.id]) {
-                        return true;
-                    }
-                    return false;
-                })
-                .map(function (group) {
-                    return {
-                        position: parameterSpecs[group.id]._position,
-                        id: group.id
-                    };
-                }));
+            .concat(
+                groups
+                    // first filter out any groups which were not added to the parameters.
+                    // This includes ones with no parameters specified
+                    .filter((group) => {
+                        if (parameterSpecs[group.id]) {
+                            return true;
+                        }
+                        return false;
+                    })
+                    .map((group) => {
+                        return {
+                            position: parameterSpecs[group.id]._position,
+                            id: group.id,
+                        };
+                    })
+            );
 
-        var sortedLayout = parameterLayout
-            .sort(function (a, b) {
+        const sortedLayout = parameterLayout
+            .sort((a, b) => {
                 if (a.position < b.position) {
                     return -1;
                 } else if (a.position === b.position) {
                     return 0;
                 }
                 return 1;
-
             })
-            .map(function (item) {
+            .map((item) => {
                 return item.id;
             });
 
         return {
             parameters: {
                 layout: sortedLayout,
-                specs: parameterSpecs
-            }
+                specs: parameterSpecs,
+            },
         };
     }
 
     return {
-        convertAppSpec: convertAppSpec
+        convertAppSpec: convertAppSpec,
     };
 });

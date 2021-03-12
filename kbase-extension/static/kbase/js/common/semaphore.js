@@ -1,8 +1,4 @@
-define([
-    'bluebird'
-], function(
-    Promise
-) {
+define(['bluebird'], (Promise) => {
     'use strict';
 
     // Ensure semaphore structure is in place when the module is loaded.
@@ -12,7 +8,6 @@ define([
     if (!window.__kbase_semaphores__) {
         window.__kbase_semaphores__ = {};
     }
-
 
     /*
     The sempahores mechanism has a functional interface.
@@ -28,7 +23,7 @@ define([
         }
 
         function get(name, defaultValue) {
-            var value = window.__kbase_semaphores__[name];
+            const value = window.__kbase_semaphores__[name];
             if (value === undefined) {
                 return defaultValue;
             }
@@ -40,19 +35,27 @@ define([
         }
 
         function when(name, value, timeout) {
-            var startTime = new Date().getTime();
-            return new Promise(function (resolve, reject) {
+            const startTime = new Date().getTime();
+            return new Promise((resolve, reject) => {
                 function waiter() {
-                    var elapsed = new Date().getTime() - startTime;
+                    const elapsed = new Date().getTime() - startTime;
                     if (elapsed > timeout) {
-                        reject(new Error('Timed out waiting for semaphore "' + name + '" with value "' + value + '"'));
+                        reject(
+                            new Error(
+                                'Timed out waiting for semaphore "' +
+                                    name +
+                                    '" with value "' +
+                                    value +
+                                    '"'
+                            )
+                        );
                         return;
                     }
                     if (get(name) === value) {
                         resolve();
                         return;
                     }
-                    window.setTimeout(function () {
+                    window.setTimeout(() => {
                         waiter();
                     }, 100);
                 }
@@ -64,13 +67,13 @@ define([
             add: add,
             set: set,
             remove: remove,
-            when: when
+            when: when,
         });
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

@@ -1,14 +1,25 @@
-/*global define*/
-/*jslint white: true*/
 /**
  * A few utility functions. These are kinda unrelated, but used in several places.
  *
  * @author Bill Riehl wjriehl@lbl.gov
  */
-define([], function() {
+define([], () => {
     'use strict';
 
-    var monthLookup = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthLookup = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+    ];
 
     /**
      * @method makePrettyTimestamp
@@ -21,15 +32,22 @@ define([], function() {
      * @return a span element with the timestamp calculated to be in terms of how long ago, with a tooltip containing the exact time.
      * @private
      */
-    function prettyTimestamp (timestamp) {
-        var d = parseDate(timestamp);
+    function prettyTimestamp(timestamp) {
+        const d = parseDate(timestamp);
 
-        var parsedTime = reformatDate(d);
-        var timediff = calcTimeFromNow(d);
-        var timeMillis = d ? d.getTime() : '';
+        const parsedTime = reformatDate(d);
+        const timediff = calcTimeFromNow(d);
+        const timeMillis = d ? d.getTime() : '';
 
-        var timeHtml = '<span href="#" data-toggle="tooltip" title="' + parsedTime + '" millis="' + timeMillis + '" >' + timediff + '</span>';
-        return timeHtml;
+        return (
+            '<span href="#" data-toggle="tooltip" title="' +
+            parsedTime +
+            '" millis="' +
+            timeMillis +
+            '" >' +
+            timediff +
+            '</span>'
+        );
     }
 
     /**
@@ -39,7 +57,7 @@ define([], function() {
      * @param {String} time - the timestamp to convert to a Date
      * @returns {Object} - a Date object or null if the timestamp's invalid.
      */
-    function parseDate (time) {
+    function parseDate(time) {
         /**
          * Some trickery here based on this StackOverflow post:
          * http://stackoverflow.com/questions/1353684/detecting-an-invalid-date-date-instance-in-javascript
@@ -49,9 +67,9 @@ define([], function() {
          * timestamp style in certain browsers' implementations. From breaking it apart, build a
          * new Date object directly.
          */
-        var d = new Date(time);
+        let d = new Date(time);
         if (Object.prototype.toString.call(d) !== '[object Date]' || isNaN(d.getTime())) {
-            var t = time.split(/[^0-9]/);
+            const t = time.split(/[^0-9]/);
             // if t[0] is 0 or empty string, then just bail now and return null. This means that the
             // given timestamp was not valid.
             if (!t[0]) {
@@ -60,23 +78,19 @@ define([], function() {
             while (t.length < 7) {
                 t.push(0);
             }
-            d = new Date(t[0], t[1]-1, t[2], t[3], t[4], t[5], t[6]);
+            d = new Date(t[0], t[1] - 1, t[2], t[3], t[4], t[5], t[6]);
             // Test the new Date object
             if (Object.prototype.toString.call(d) === '[object Date]') {
-                // This would mean its got the 'Invalid Date' status.
+                // This would mean it has the 'Invalid Date' status.
                 if (isNaN(d.getTime())) {
                     return null;
                 }
-                else {
-                    d.setFullYear(t[0]);
-                    return d;
-                }
+                d.setFullYear(t[0]);
+                return d;
             }
             return null;
         }
-        else {
-            return d;
-        }
+        return d;
     }
 
     /**
@@ -98,8 +112,8 @@ define([], function() {
      * @returns {String} a parsed timestamp in the format "YYYY-MM-DD HH:MM:SS" in the browser's local time.
      * @private
      */
-    function reformatISOTimeString (timestamp) {
-        var dateObj = parseDate(timestamp);
+    function reformatISOTimeString(timestamp) {
+        const dateObj = parseDate(timestamp);
         if (dateObj === null) {
             return timestamp;
         }
@@ -122,11 +136,11 @@ define([], function() {
      * @returns {String} a parsed timestamp as above in the browser's local time.
      * @private
      */
-    function reformatDate (dateObj) {
+    function reformatDate(dateObj) {
         if (Object.prototype.toString.call(dateObj) !== '[object Date]') {
             return dateObj;
         }
-        var addLeadingZero = function (value) {
+        const addLeadingZero = function (value) {
             value = String(value);
             if (value.length === 1) {
                 return '0' + value;
@@ -134,12 +148,19 @@ define([], function() {
             return value;
         };
 
-        return dateObj.getFullYear() + '-' +
-               addLeadingZero(dateObj.getMonth() + 1) + '-' +
-               addLeadingZero(dateObj.getDate()) + ' ' +
-               addLeadingZero(dateObj.getHours()) + ':' +
-               addLeadingZero(dateObj.getMinutes()) + ':' +
-               addLeadingZero(dateObj.getSeconds());
+        return (
+            dateObj.getFullYear() +
+            '-' +
+            addLeadingZero(dateObj.getMonth() + 1) +
+            '-' +
+            addLeadingZero(dateObj.getDate()) +
+            ' ' +
+            addLeadingZero(dateObj.getHours()) +
+            ':' +
+            addLeadingZero(dateObj.getMinutes()) +
+            ':' +
+            addLeadingZero(dateObj.getSeconds())
+        );
     }
 
     /**
@@ -150,14 +171,13 @@ define([], function() {
      * @param {String} time - the timestamp to calculate a difference from
      * @returns {String} - a string representing the time difference between the two parameter strings
      */
-    function calcTimeFromNow (timestamp, dateObj) {
-        var now = new Date();
-        var time = null;
+    function calcTimeFromNow(timestamp, dateObj) {
+        const now = new Date();
+        let time = null;
 
         if (timestamp) {
             time = parseDate(timestamp);
-        }
-        else if (dateObj) {
+        } else if (dateObj) {
             time = dateObj;
         }
         if (time === null) {
@@ -165,12 +185,11 @@ define([], function() {
         }
 
         // so now, 'time' and 'now' are both Date() objects
-        var timediff = calcTimeDifference(now, time);
+        let timediff = calcTimeDifference(now, time);
 
         if (time > now) {
             timediff += ' from now';
-        }
-        else {
+        } else {
             timediff += ' ago';
         }
 
@@ -186,11 +205,11 @@ define([], function() {
      *
      * @return {string} Time difference.
      */
-    function calcTimeDifference (d1, d2) {
+    function calcTimeDifference(d1, d2) {
         // start with seconds
-        var timeDiff = Math.abs((d2 - d1) / 1000 );
+        let timeDiff = Math.abs((d2 - d1) / 1000);
 
-        var unit = ' sec';
+        let unit = ' sec';
 
         // if > 60 seconds, go to minutes.
         if (timeDiff >= 60) {
@@ -235,22 +254,24 @@ define([], function() {
      * Ported out from data list widget... needs updating.
      * edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
      */
-    function getTimeStampStr (objInfoTimeStamp, alwaysExact) {
-
-        var date = new Date(objInfoTimeStamp);
-        var seconds = Math.floor((new Date() - date) / 1000);
+    function getTimeStampStr(objInfoTimeStamp, alwaysExact) {
+        let date = new Date(objInfoTimeStamp);
+        let seconds = Math.floor((new Date() - date) / 1000);
         if (seconds < 0) {
             seconds = 0;
         }
 
-        var exactDate = function(date) {
-            return monthLookup[date.getMonth()] + ' ' + date.getDate() + ', ' + date.getFullYear();
+        const exactDate = function (_date) {
+            return (
+                monthLookup[_date.getMonth()] + ' ' + _date.getDate() + ', ' + _date.getFullYear()
+            );
         };
 
         // f-ing safari, need to add extra ':' delimiter to parse the timestamp
         if (isNaN(seconds)) {
-            var tokens = objInfoTimeStamp.split('+');  // this is just the date without the GMT offset
-            var newTimestamp = tokens[0] + '+' + tokens[1].substr(0, 2) + ':' + tokens[1].substr(2, 2);
+            const tokens = objInfoTimeStamp.split('+'); // this is just the date without the GMT offset
+            const newTimestamp =
+                tokens[0] + '+' + tokens[1].substr(0, 2) + ':' + tokens[1].substr(2, 2);
             date = new Date(newTimestamp);
             seconds = Math.floor((new Date() - date) / 1000);
             if (isNaN(seconds)) {
@@ -260,8 +281,8 @@ define([], function() {
             }
         }
 
-        var pluralizeTimeStr = function(num, timeSpan) {
-            var suffix = '';
+        const pluralizeTimeStr = function (num, timeSpan) {
+            let suffix = '';
             if (num > 1 || num === 0) {
                 suffix = 's';
             }
@@ -272,7 +293,7 @@ define([], function() {
             return exactDate(date);
         }
 
-        var interval = Math.floor(seconds / 31536000);
+        let interval = Math.floor(seconds / 31536000);
         if (interval > 1) {
             return exactDate(date);
         }
@@ -304,8 +325,8 @@ define([], function() {
     // * Replace "long" durations with shortened ones.
     // * drop " ago" from the end.
 
-    function getShortTimeStampStr (objInfoTimeStamp, alwaysExact) {
-        var longTimeStampStr = getTimeStampStr(objInfoTimeStamp, alwaysExact);
+    function getShortTimeStampStr(objInfoTimeStamp, alwaysExact) {
+        let longTimeStampStr = getTimeStampStr(objInfoTimeStamp, alwaysExact);
         longTimeStampStr = longTimeStampStr.replace(/month/, 'mon');
         longTimeStampStr = longTimeStampStr.replace(/hour/, 'hr');
         longTimeStampStr = longTimeStampStr.replace(/minute/, 'min');
@@ -316,18 +337,6 @@ define([], function() {
     }
 
     /**
-     * @private
-     * @method
-     * Checks if the timestamp looks like it should be ISO 8601 format.
-     * If so, it "cleans" it up to make sure (if it has a trailing +0000, it converts it
-     * to a trailing +00:00, for example)
-     */
-    function cleanupISOFormat (timestamp) {
-        // check if ISO.
-
-    };
-
-    /**
      * Converts a timestamp to a simple string.
      * Do this American style - HH:MM:SS MM/DD/YYYY
      *
@@ -335,27 +344,25 @@ define([], function() {
      * ISO8601 format that new Date() can deal with.
      * @return {string} a human readable timestamp
      */
-    function readableTimestamp (timestamp) {
+    function readableTimestamp(timestamp) {
         if (!timestamp) {
             timestamp = 0;
         }
-        var format = function (x) {
-            if (x < 10)
-                x = '0' + x;
+        const format = function (x) {
+            if (x < 10) x = '0' + x;
             return x;
         };
 
-        var d = parseDate(timestamp);
-        var hours = format(d.getHours());
-        var minutes = format(d.getMinutes());
-        var seconds = format(d.getSeconds());
-        var month = d.getMonth() + 1;
-        var day = format(d.getDate());
-        var year = d.getFullYear();
+        const d = parseDate(timestamp);
+        const hours = format(d.getHours());
+        const minutes = format(d.getMinutes());
+        const seconds = format(d.getSeconds());
+        const month = d.getMonth() + 1;
+        const day = format(d.getDate());
+        const year = d.getFullYear();
 
         return hours + ':' + minutes + ':' + seconds + ', ' + month + '/' + day + '/' + year;
     }
-
 
     return {
         parseDate: parseDate,
@@ -365,7 +372,7 @@ define([], function() {
         reformatDate: reformatDate,
         reformatISOTimeString: reformatISOTimeString,
         getTimeStampStr: getTimeStampStr,
-        getShortTimeStampStr : getShortTimeStampStr,
-        readableTimestamp: readableTimestamp
+        getShortTimeStampStr: getShortTimeStampStr,
+        readableTimestamp: readableTimestamp,
     };
 });

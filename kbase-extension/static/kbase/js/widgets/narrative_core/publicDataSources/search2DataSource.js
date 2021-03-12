@@ -2,15 +2,10 @@
 search2DataSource
 
 The search data source performs a fresh search with every new query.
-Whereas the workspace data source fetches the data once, and then performs 
+Whereas the workspace data source fetches the data once, and then performs
 a search against these cached results
 */
-define([
-    'bluebird',
-    'handlebars',
-    'common/searchAPI2',
-    './common'
-], function (
+define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
     Promise,
     Handlebars,
     SearchAPI2,
@@ -18,22 +13,22 @@ define([
 ) {
     'use strict';
     class RefDataSearch {
-        constructor({url, token, timeout}) {
+        constructor({ url, token, timeout }) {
             this.url = url;
             this.token = token;
-            this.searchAPI2 = new SearchAPI2({url: this.url, token: this.token});
+            this.searchAPI2 = new SearchAPI2({ url: this.url, token: this.token });
             this.timeout = timeout;
         }
 
-        referenceGenomeTotal({source}) {
+        referenceGenomeTotal({ source }) {
             const params = {
                 query: {
                     bool: {
                         must: [
                             {
                                 term: {
-                                    tags: 'refdata'
-                                }
+                                    tags: 'refdata',
+                                },
                             },
                             {
                                 term: {
@@ -47,23 +42,24 @@ define([
                 indexes: ['genome'],
                 size: 0,
                 from: 0,
-                track_total_hits: true
+                track_total_hits: true,
             };
-            return this.searchAPI2.search_objects({params, timeout: this.timeout})
+            return this.searchAPI2
+                .search_objects({ params, timeout: this.timeout })
                 .then((result) => {
                     return result.count;
                 });
         }
 
-        referenceGenomeDataSearch({source, query, offset, limit}) {
+        referenceGenomeDataSearch({ source, query, offset, limit }) {
             const params = {
                 query: {
                     bool: {
                         must: [
                             {
                                 term: {
-                                    tags: 'refdata'
-                                }
+                                    tags: 'refdata',
+                                },
                             },
                             {
                                 term: {
@@ -74,14 +70,14 @@ define([
                     }
                 },
                 sort: [
-                    {'scientific_name.raw': {order: 'asc'}},
-                    {'genome_id': {order: 'asc'}}
+                    { 'scientific_name.raw': { order: 'asc' } },
+                    { genome_id: { order: 'asc' } },
                 ],
                 only_public: true,
                 indexes: ['genome'],
                 size: limit,
                 from: offset,
-                track_total_hits: true
+                track_total_hits: true,
             };
             if (query !== null) {
                 params.query.bool.must.push({
@@ -93,26 +89,25 @@ define([
                     }
                 });
             }
-            return this.searchAPI2.search_objects({params, timeout: this.timeout});
+            return this.searchAPI2.search_objects({ params, timeout: this.timeout });
         }
 
-        referenceGenomeSearch({source, query, page, pageSize}) {
+        referenceGenomeSearch({ source, query, page, pageSize }) {
             const offset = page * pageSize;
             const limit = pageSize;
             return Promise.all([
-                this.referenceGenomeTotal({source}),
-                this.referenceGenomeDataSearch({source, query, offset, limit})
-            ])
-                .then(([totalAvailable, result]) => {
-                    return {
-                        totalAvailable,
-                        result
-                    };
-                });
+                this.referenceGenomeTotal({ source }),
+                this.referenceGenomeDataSearch({ source, query, offset, limit }),
+            ]).then(([totalAvailable, result]) => {
+                return {
+                    totalAvailable,
+                    result,
+                };
+            });
         }
     }
 
-    function parseGenomeSearchResultItem (item) {
+    function parseGenomeSearchResultItem(item) {
         return {
             genome_id: item.doc.genome_id,
             genome_source: item.doc.source,
@@ -124,7 +119,7 @@ define([
             ws_ref: [item.doc.access_group, item.doc.obj_id, item.doc.version].join('/'),
             workspace_name: null,
             taxonomy: item.doc.taxonomy,
-            object_name: item.doc.obj_name
+            object_name: item.doc.obj_name,
         };
     }
 
@@ -157,7 +152,7 @@ define([
                     lastQuery: null,
                     currentQueryState: null
                 };
-                this.titleTemplate = Handlebars.compile(this.config.templates.title);             
+                this.titleTemplate = Handlebars.compile(this.config.templates.title);
                 this.metadataTemplates = common.compileTemplates(this.config.templates.metadata);
                 return this;
             }
@@ -187,7 +182,7 @@ define([
                         newQuery = null;
                     } else {
                         // strip off "*" suffix from any terms in this search; it does not
-                        // act as a wildcard for search2, and would be interpreted as a 
+                        // act as a wildcard for search2, and would be interpreted as a
                         // literal part of the search string.
                         // The "*" will have been added by the generic search ui code handling
                         // itself, not the user.
@@ -231,7 +226,7 @@ define([
                                 // This call gives us a normalized genome result object.
                                 // In porting this over, we are preserving the field names.
                                 const genomeRecord = parseGenomeSearchResultItem(item);
-    
+
                                 const name = this.titleTemplate(genomeRecord);
                                 const metadata = common.applyMetadataTemplates(this.metadataTemplates, genomeRecord);
                                 return {
@@ -239,31 +234,23 @@ define([
                                     info: null,
                                     id: genomeRecord.genome_id,
                                     objectId: null,
-                                    name,
+                                    name: name,
                                     objectName: genomeRecord.object_name,
-                                    metadata,
+                                    metadata: metadata,
                                     ws: this.config.workspaceName,
                                     type: this.config.type,
                                     attached: false,
-                                    workspaceReference: {ref: genomeRecord.ws_ref}
                                 };
                             });
                             // assume that all items before the page have been fetched
                             this.fetchedDataCount = (this.page - 1) * this.pageSize + this.availableData.length;
                             return this.availableData;
-                        })
-                        .catch((error) => {
-                            if (error instanceof DOMException && error.name === 'AbortError') {
-                                const errorMsg = `Request canceled - perhaps timed out after ${this.config.timeout}ms`;
-                                throw new Error(errorMsg);
-                            }
-                            throw(error);
                         });
 
                     return queryState.promise;
                 })
                     .finally(() => {
-                        this.searchState.currentQueryState = null;      
+                        this.searchState.currentQueryState = null;
                     });
             }
         },
@@ -302,18 +289,8 @@ define([
                                 attached: false
                             };
                         });
-                        return this.availableData;
-                    });
-            }
-        },
-        load: {
-            value: function() {
-                return common.listObjectsWithSets(this.narrativeService, this.config.workspaceName, this.config.type)
-                    .then((data) => {
-                        this.availableData = data;
-                        this.availableDataCount = this.availableData.length;
-                    });
-            }
+                },
+            },
         }
     });
 });

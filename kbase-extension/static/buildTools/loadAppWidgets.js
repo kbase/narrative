@@ -102,5 +102,7 @@ define([
     'common/ui',
     'common/unodep',
     'common/utils',
-    'common/validation'
-], function () { return; });
+    'common/validation',
+], () => {
+    return;
+});

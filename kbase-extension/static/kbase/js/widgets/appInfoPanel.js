@@ -1,4 +1,3 @@
-/*jslint white:true,browser:true*/
 /**
  * Creates an informational panel for Apps, based on some general app info.
  * Needs the following keys in its config:
@@ -13,15 +12,8 @@ define([
     'kb_service/client/catalog',
     'kb_service/client/narrativeMethodStore',
     'handlebars',
-    'text!kbase/templates/app_info_panel.html'
-], (
-    Promise,
-    Runtime,
-    Catalog,
-    NarrativeMethodStore,
-    Handlebars,
-    appInfoPanelTmpl
-) => {
+    'text!kbase/templates/app_info_panel.html',
+], (Promise, Runtime, Catalog, NarrativeMethodStore, Handlebars, appInfoPanelTmpl) => {
     'use strict';
 
     function factory(config) {
@@ -38,44 +30,40 @@ define([
         function start(arg) {
             container = arg.node;
 
-            var infoProms = [
+            const infoProms = [
                 /* Get the method full info so we can populate the description */
-                nms.get_method_full_info({ 'ids': [appId], 'tag': tag })
-                    .then(function(methodInfo) {
-                        methodInfo = methodInfo[0] || {};
-                        var desc = methodInfo.description || '';
-                        info.description = new Handlebars.SafeString(desc);
+                nms.get_method_full_info({ ids: [appId], tag: tag }).then((methodInfo) => {
+                    methodInfo = methodInfo[0] || {};
+                    const desc = methodInfo.description || '';
+                    info.description = new Handlebars.SafeString(desc);
 
-                        var authorList = methodInfo.authors || [];
-                        info.authorList = authorList.join(', ');
-                        info.multiAuthors = authorList.length > 1;
-                    }),
+                    const authorList = methodInfo.authors || [];
+                    info.authorList = authorList.join(', ');
+                    info.multiAuthors = authorList.length > 1;
+                }),
 
                 /* Get the method stats so we know how many times it was run. */
-                catalog.get_exec_aggr_stats({ 'full_app_ids': [appId] })
-                    .then(function(appStats) {
-                        appStats = appStats[0] || {};
-                        info.runCount = appStats.number_of_calls || 'unknown';
-                    }),
+                catalog.get_exec_aggr_stats({ full_app_ids: [appId] }).then((appStats) => {
+                    appStats = appStats[0] || {};
+                    info.runCount = appStats.number_of_calls || 'unknown';
+                }),
 
                 /* Get the module info so we know when it was last updated. */
-                catalog.get_module_info({ 'module_name': appModule })
-                    .then(function(moduleInfo) {
-                        moduleInfo = moduleInfo[tag] || {};
-                        var timestamp = moduleInfo.timestamp || 'unknown';
-                        var dateString = 'unknown';
-                        try {
-                            dateString = new Date(timestamp).toLocaleDateString();
-                        } catch (e) {
-                            //pass
-                        }
-                        info.updateDate = dateString;
-                    })
+                catalog.get_module_info({ module_name: appModule }).then((moduleInfo) => {
+                    moduleInfo = moduleInfo[tag] || {};
+                    const timestamp = moduleInfo.timestamp || 'unknown';
+                    let dateString = 'unknown';
+                    try {
+                        dateString = new Date(timestamp).toLocaleDateString();
+                    } catch (e) {
+                        //pass
+                    }
+                    info.updateDate = dateString;
+                }),
             ];
-            return Promise.all(infoProms)
-                .then(() => {
-                    container.html(infoPanel(info));
-                });
+            return Promise.all(infoProms).then(() => {
+                container.html(infoPanel(info));
+            });
         }
 
         function stop() {
@@ -84,13 +72,13 @@ define([
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

@@ -1,14 +1,8 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-define([
-    'kbaseNarrativeDataCell'
-], function(Widget) {
-    describe('Test the kbaseNarrativeDataCell widget', function() {
-        it('Should do things', function() {
-
+define(['kbaseNarrativeDataCell'], (Widget) => {
+    'use strict';
+    describe('The kbaseNarrativeDataCell widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
         });
     });
 });

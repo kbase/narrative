@@ -44,13 +44,13 @@ RUN \
     ./node_modules/.bin/bower install --allow-root --config.interactive=false && \
     # Compile Javascript down into an itty-bitty ball unless SKIP_MINIFY is non-empty
     echo Skip=$SKIP_MINIFY && \
-    [ -n "$SKIP_MINIFY" ] || grunt minify && \
+    [ -n "$SKIP_MINIFY" ] || npm run minify && \
     # install the narrative and jupyter console
     /bin/bash scripts/install_narrative_docker.sh && \
     pip install jupyter-console==6.0.0 && \
     cd /tmp && \
     mkdir /tmp/narrative && \
-    chown -R nobody:www-data /tmp/narrative /kb/dev_container/narrative/kbase-extension; find / -xdev \( -perm -4000 \) -type f -print -exec rm {} \;
+    chown -R nobody:www-data /tmp/narrative /kb/dev_container/narrative ; find / -xdev \( -perm -4000 \) -type f -print -exec rm {} \;
 
 # Set a default value for the environment variable VERSION_CHECK that gets expanded in the config.json.templ
 # into the location to check for a new narrative version. Normally we would put this in the template itself
@@ -61,7 +61,7 @@ ENV VERSION_CHECK /narrative_version
 # Set the default environment to be CI, can be overriden by passing new CONFIG_ENV setting at container start
 ENV CONFIG_ENV ci
 
-USER root
+USER nobody
 
 LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.vcs-url="https://github.com/kbase/narrative.git" \
@@ -78,10 +78,6 @@ CMD [ "--template", \
       "/kb/dev_container/narrative/src/config.json.templ:/kb/dev_container/narrative/src/config.json", \
       "--template", \
       "/kb/dev_container/narrative/src/config.json.templ:/kb/dev_container/narrative/kbase-extension/static/kbase/config/config.json", \
-      "-euid", \
-      "65534", \
-      "-egid", \
-      "65534", \
       "kbase-narrative"]
 #ONBUILD USER root
 #ONBUILD ADD url.cfg /kb/dev_container/narrative/url.cfg

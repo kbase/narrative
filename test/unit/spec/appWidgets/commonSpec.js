@@ -1,17 +1,8 @@
-/*global define*/ // eslint-disable-line no-redeclare
-/*global describe, expect, it*/
-/*jslint white: true*/
-
-define([
-    'common/events',
-    'common/ui',
-    'kb_common/html',
-    'widgets/appWidgets2/common',
-], (
+define(['common/events', 'common/ui', 'kb_common/html', 'widgets/appWidgets2/common'], (
     Events,
     UI,
     html,
-    WidgetCommon,
+    WidgetCommon
 ) => {
     'use strict';
     const div = html.tag('div');
@@ -29,23 +20,34 @@ define([
         it('Should be able to produce content with a clipboard icon', () => {
             const input = document.createElement('div');
             const content = WidgetCommon.containerContent(
-                div, button, events, ui, container, input
+                div,
+                button,
+                events,
+                ui,
+                container,
+                input
             );
             container.innerHTML = content;
-            expect(container
-                .querySelectorAll('[data-element=icon]')[0]
-                .classList.contains('fa-clipboard')
+            expect(
+                container
+                    .querySelectorAll('[data-element=icon]')[0]
+                    .classList.contains('fa-clipboard')
             ).toBeTrue();
         });
 
         it('Should be able to create the clipboard icon', () => {
             const clipboardButton = WidgetCommon.clipboardButton(
-                div, button, events, ui, container
+                div,
+                button,
+                events,
+                ui,
+                container
             );
             container.innerHTML = clipboardButton;
-            expect(container
-                .querySelectorAll('[data-element=icon]')[0]
-                .classList.contains('fa-clipboard')
+            expect(
+                container
+                    .querySelectorAll('[data-element=icon]')[0]
+                    .classList.contains('fa-clipboard')
             ).toBeTrue();
         });
     });

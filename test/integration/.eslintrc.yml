@@ -1,0 +1,7 @@
+extends: '../.eslintrc.yml'
+env:
+  jquery: true
+globals:
+  browser: writable
+rules:
+  strict: ['error', 'global']

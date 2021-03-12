@@ -1,21 +1,21 @@
-/* eslint-disable strict */
+/* eslint {strict: ['error', 'global']} */
 /* global requirejs */
+'use strict';
 const tests = [
     ...['text', 'json'],
-    ...Object.keys(window.__karma__.files).filter(file => /[sS]pec\.js$/.test(file))
+    ...Object.keys(window.__karma__.files).filter((file) => /[sS]pec\.js$/.test(file)),
 ];
 
 // hack to make jed (the i18n library that Jupyter uses) happy.
 document.nbjs_translations = {
-    'domain': 'nbjs',
-    'locale_data':
-    {
-        'nbjs': {
+    domain: 'nbjs',
+    locale_data: {
+        nbjs: {
             '': {
-                'domain': 'nbjs'
-            }
-        }
-    }
+                domain: 'nbjs',
+            },
+        },
+    },
 };
 
 // hack to spoof createReactClass, needed by a Jupyter component we aren't testing.
@@ -33,7 +33,7 @@ requirejs.config({
         narrativeMocks: '../../test/unit/mocks',
         bluebird: 'ext_components/bluebird/js/browser/bluebird.min',
         jed: 'components/jed/jed',
-        custom: 'kbase/custom'
+        custom: 'kbase/custom',
     },
     map: {
         '*': {
@@ -46,21 +46,19 @@ requirejs.config({
     shim: {
         jquery: {
             deps: [],
-            exports: 'jquery'
+            exports: 'jquery',
         },
         bootstraptour: {
             deps: ['bootstrap'],
-            exports: 'Tour'
+            exports: 'Tour',
         },
         bootstrap: {
             deps: ['jquery'],
-            exports: 'Bootstrap'
+            exports: 'Bootstrap',
         },
     },
 
-    callback: function() {
-        'use strict';
-
+    callback: function () {
         require(['testUtil'], (TestUtil) => {
             TestUtil.make().then(() => {
                 window.__karma__.start();
@@ -70,5 +68,5 @@ requirejs.config({
             console.error(error);
             throw error;
         });
-    }
+    },
 });

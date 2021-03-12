@@ -1,4 +1,3 @@
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'kb_common/html',
@@ -8,8 +7,8 @@ define([
     'common/props',
 
     'bootstrap',
-    'css!font-awesome'
-], function (Promise, html, Validation, Events, UI, Props) {
+    'css!font-awesome',
+], (Promise, html, Validation, Events, UI, Props) => {
     'use strict';
 
     // Constants
@@ -21,7 +20,8 @@ define([
     function factory(config) {
         let options = {},
             spec = config.parameterSpec,
-            parent, container,
+            parent,
+            container,
             bus = config.bus,
             model,
             ui;
@@ -78,7 +78,7 @@ define([
                     return {
                         isValid: true,
                         validated: false,
-                        diagnosis: 'disabled'
+                        diagnosis: 'disabled',
                     };
                 }
 
@@ -87,7 +87,7 @@ define([
                     // make this a validation option, although not specified as
                     // such in the spec.
                     validationOptions = {
-                        required: spec.required()
+                        required: spec.required(),
                     };
 
                 return Validation.validateBoolean(rawValue, validationOptions);
@@ -100,8 +100,8 @@ define([
          * Hooks up event listeners
          */
         function makeInputControl(events, bus) {
-            let value = model.getItem('value'),
-                isChecked = (value ? true : false);
+            const value = model.getItem('value'),
+                isChecked = value ? true : false;
 
             return label([
                 input({
@@ -110,34 +110,36 @@ define([
                     value: 'true',
                     checked: isChecked,
                     id: events.addEvents({
-                        events: [{
-                            type: 'change',
-                            handler: () => {
-                                validate()
-                                    .then((result) => {
+                        events: [
+                            {
+                                type: 'change',
+                                handler: () => {
+                                    validate().then((result) => {
                                         if (result.isValid) {
                                             bus.emit('changed', {
-                                                newValue: result.parsedValue
+                                                newValue: result.parsedValue,
                                             });
                                             setModelValue(result.parsedValue);
                                         }
                                         bus.emit('validation', {
                                             errorMessage: result.errorMessage,
-                                            diagnosis: result.diagnosis
+                                            diagnosis: result.diagnosis,
                                         });
                                     });
-                            }
-                        }]})
-                })]);
+                                },
+                            },
+                        ],
+                    }),
+                }),
+            ]);
         }
         function autoValidate() {
-            return validate()
-                .then((result) => {
-                    bus.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
+            return validate().then((result) => {
+                bus.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
         function render() {
             return Promise.try(() => {
@@ -151,17 +153,17 @@ define([
         }
 
         function layout(events) {
-            var content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({dataElement: 'input-container'})
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
-
 
         // LIFECYCLE API
         function start() {
@@ -170,14 +172,13 @@ define([
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
 
-                    const events = Events.make({node: container}),
+                    const events = Events.make({ node: container }),
                         theLayout = layout(events);
 
                     container.innerHTML = theLayout.content;
                     events.attachEvents();
 
-                    ui = UI.make({node: container});
-
+                    ui = UI.make({ node: container });
 
                     bus.on('reset-to-defaults', () => {
                         resetModelValue();
@@ -200,20 +201,20 @@ define([
 
         model = Props.make({
             data: {
-                value: null
+                value: null,
             },
-            onUpdate: () => render()
+            onUpdate: () => render(),
         });
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

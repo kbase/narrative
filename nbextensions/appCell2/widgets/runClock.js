@@ -1,15 +1,10 @@
-define([
-    'bluebird',
-    'common/runtime',
-    'kb_common/html',
-    'common/format'
-], function (
+define(['bluebird', 'common/runtime', 'kb_common/html', 'common/format'], (
     Promise,
     Runtime,
     html,
     format
-) {
-    var t = html.tag,
+) => {
+    const t = html.tag,
         span = t('span');
 
     function factory(config) {
@@ -24,7 +19,7 @@ define([
         function buildLayout() {
             return span({
                 id: clockId,
-                style: {}
+                style: {},
             });
         }
 
@@ -32,14 +27,14 @@ define([
             if (!startTime) {
                 return;
             }
-            var now = new Date(),
+            const now = new Date(),
                 elapsed = now.getTime() - startTime;
 
-            var clockNode = document.getElementById(clockId);
+            const clockNode = document.getElementById(clockId);
 
             if (config.on && config.on.tick) {
                 try {
-                    var result = config.on.tick(elapsed);
+                    const result = config.on.tick(elapsed);
                     clockNode.innerHTML = result.content;
                     if (result.stop) {
                         busConnection.stop();
@@ -54,39 +49,43 @@ define([
                     stop();
                     return;
                 }
-                clockNode.innerHTML = [config.prefix || '', format.niceDuration(elapsed), config.suffix || ''].join('');
+                clockNode.innerHTML = [
+                    config.prefix || '',
+                    format.niceDuration(elapsed),
+                    config.suffix || '',
+                ].join('');
             }
         }
 
         function start(arg) {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 container = arg.node;
-                var layout = buildLayout();
+                const layout = buildLayout();
                 container.innerHTML = layout;
 
                 startTime = arg.startTime;
 
-                channel.on('clock-tick', function () {
+                channel.on('clock-tick', () => {
                     renderClock();
                 });
             });
         }
 
         function stop() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 busConnection.stop();
             });
         }
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

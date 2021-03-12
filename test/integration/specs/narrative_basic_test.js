@@ -1,4 +1,4 @@
-/*global describe, it, browser, expect, beforeEach $*/
+'use strict';
 const Utils = require('../wdioUtils');
 
 const env = process.env.ENV || 'ci';
@@ -6,22 +6,19 @@ const env = process.env.ENV || 'ci';
 const allTestCases = {
     ci: {
         CASE1: {
-            narrativeId: 31932
-        }
-        
+            narrativeId: 31932,
+        },
     },
     'narrative-dev': {
         CASE1: {
-            narrativeId: 78050
-        }
-    }
+            narrativeId: 78050,
+        },
+    },
 };
 
 const testCases = allTestCases[env];
 
 describe('Narrative tree page with login', () => {
-    'use strict';
-
     beforeEach(async () => await Utils.login());
 
     it('opens a narrative', async () => {

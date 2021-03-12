@@ -55,9 +55,10 @@ define([
                             const parsedType = APIUtil.parseWorkspaceType(obj.type);
                             const objLink = a(
                                 {
-                                    href: '#',
-                                    style: 'cursor: pointer;',
+                                    class: 'kb-output-widget__object_link',
                                     dataObjRef: obj.ref,
+                                    type: 'button',
+                                    ariaLabel: 'show viewer for ' + obj.name,
                                     id: events.addEvent({
                                         type: 'click',
                                         handler: () => {

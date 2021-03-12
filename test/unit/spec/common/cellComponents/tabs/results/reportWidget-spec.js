@@ -72,7 +72,7 @@ define([
             const reportNode = toggleNode.nextSibling;
             expect(reportNode).toBeDefined();
             // marker for running kbaseReportView
-            expect(reportNode.innerHTML).toContain('kb-report-view');
+            expect(reportNode.innerHTML).toContain('kb-report-view__container');
         });
 
         it('should expand and collapse again on click', async function () {

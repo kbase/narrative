@@ -59,7 +59,7 @@ define([
             this.$messagePane = $('<div/>').addClass('kbwidget-message-pane kbwidget-hide-message');
             this.$elem.append(this.$messagePane);
 
-            this.$mainPanel = $('<div>').addClass(this.baseCssClass);
+            this.$mainPanel = $('<div>').addClass(this.baseCssClass + '__container');
             this.$elem.append(this.$mainPanel);
             this.ws = new Workspace(Config.url('workspace'), { token: this.runtime.authToken() });
             return this;

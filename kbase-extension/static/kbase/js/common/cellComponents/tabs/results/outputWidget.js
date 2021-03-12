@@ -4,14 +4,13 @@
 define([
     'bluebird',
     'base/js/namespace',
-    'uuid',
     'common/html',
     'common/ui',
     'util/kbaseApiUtil',
     'common/events',
     'jquery',
     'jquery-dataTables',
-], (Promise, Jupyter, UUID, html, UI, APIUtil, Events, $) => {
+], (Promise, Jupyter, html, UI, APIUtil, Events, $) => {
     'use strict';
 
     const tag = html.tag,

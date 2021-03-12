@@ -320,7 +320,7 @@ define([
             if (
                 !this.options.showCreatedObjects || // if we're not showing it, just return an empty array
                 !report.objects_created ||
-                report.objects_created.length === 0
+                !report.objects_created.length
             ) {
                 return Promise.resolve([]);
             }
@@ -722,14 +722,7 @@ define([
         },
         loading: function (isLoading) {
             if (isLoading) {
-                const span = html.tag('span'),
-                    i = html.tag('i'),
-                    loadingMsg = span(
-                        i({
-                            class: 'fa fa-spinner fa-spin',
-                        })
-                    );
-                this.$messagePane.append(loadingMsg);
+                this.$messagePane.append(UI.loading());
                 this.$messagePane.show();
             } else {
                 this.$messagePane.hide();
@@ -771,9 +764,9 @@ define([
             }
 
             const div = html.tag('div'),
-                b = html.tag('b'),
+                strong = html.tag('strong'),
                 br = html.tag('br', { close: false });
-            const errorDiv = div({ class: 'alert alert-danger' }, [b('Error:'), br(), errString]);
+            const errorDiv = div({ class: 'alert alert-danger' }, [strong('Error:'), br(), errString]);
             this.$elem.empty().append(errorDiv);
         },
         /**

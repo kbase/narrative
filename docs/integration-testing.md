@@ -275,7 +275,7 @@ It is possible to override the drivers and provide driver options, but at presen
 | `BROWSER_VERSION` | null                | n           |
 | `HEADLESS`        | t                   | Y           |
 
-#### `ss-FireFox`
+#### `ss-firefox`
 
 This is a preset for selenium-standalone using FireFox.
 
@@ -451,9 +451,9 @@ export KBASE_TEST_TOKEN={MYTOKEN}
 export SERVICE_USER={MYSERVICEUSER}
 export SERVICE_KEY={MYSERVICEKEY}
 PRESET=bs-mac-chrome make test-integration
-PRESET=bs-mac-FireFox make test-integration
+PRESET=bs-mac-firefox make test-integration
 PRESET=bs-windows-chrome make test-integration
-PRESET=bs-windows-FireFox make test-integration
+PRESET=bs-windows-firefox make test-integration
 ```
 
 #### With overrides
@@ -484,7 +484,7 @@ BROWSER=safari PRESET=bs-mac-chrome make test-integration
 ##### To test a different OS Version
 
 ```bash
-OS_VERSION="Mojave" PRESET=bs-mac-FireFox make test-integration
+OS_VERSION="Mojave" PRESET=bs-mac-firefox make test-integration
 ```
 
 ##### To test a different OS:

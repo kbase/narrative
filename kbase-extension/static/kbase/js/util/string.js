@@ -44,14 +44,17 @@ define([], () => {
         if (!str) {
             return str;
         }
+        const charMap = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+            '/': '&#x2F;',
+            '`': '&#x60;',
+            '=': '&#x3D;',
+        };
         return str.replace(/[&<>"']/g, (s) => {
-            const charMap = {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#39;',
-            };
             return charMap[s];
         });
     }

@@ -6,6 +6,16 @@ define([
     'use strict';
 
     describe('Test the app/bulk import cell report widget', () => {
+        beforeAll(() => {
+            Jupyter.narrative = {
+                getAuthToken: () => 'fakeToken',
+            };
+        });
+
+        afterAll(() => {
+            Jupyter.narrative = null;
+        });
+
         beforeEach(function () {
             this.node = document.createElement('div');
             document.body.appendChild(this.node);
@@ -62,7 +72,7 @@ define([
             const reportNode = toggleNode.nextSibling;
             expect(reportNode).toBeDefined();
             // marker for running kbaseReportView
-            expect(reportNode.innerHTML).toContain('report-widget');
+            expect(reportNode.innerHTML).toContain('kb-report-view__container');
         });
 
         it('should expand and collapse again on click', async function () {

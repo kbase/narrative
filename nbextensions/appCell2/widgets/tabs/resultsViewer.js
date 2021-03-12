@@ -103,11 +103,13 @@ define([
             }
             const reportElem = ui.getElement('report-widget');
             if (DisplayUtil.verticalInViewport(reportElem)) {
-                new KBaseReportView($(reportElem), reportParams);
-                reportRendered = true;
+                const reportViewer = new KBaseReportView($(reportElem), reportParams);
                 document
                     .querySelector('#notebook-container')
                     .removeEventListener('scroll', lazyRenderReport);
+                reportViewer.loadAndRender().then(() => {
+                    reportRendered = true;
+                });
             }
         }
 

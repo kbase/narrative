@@ -55,7 +55,9 @@ define(['bluebird', 'jquery', 'common/html', 'common/ui', 'common/events', 'kbas
             } else {
                 const reportContainer = document.createElement('div');
                 toggleHeader.parentElement.appendChild(reportContainer);
-                new KBaseReportView($(reportContainer), { report_ref: objInfo.reportRef });
+                new KBaseReportView($(reportContainer), {
+                    report_ref: objInfo.reportRef,
+                }).loadAndRender();
             }
             toggleHeader.classList.toggle('collapsed');
         }

@@ -15,6 +15,7 @@ node_modules/
 install.log
 /src/build/
 /venvs/
+/venv/
 .projectKnowledge
 nbproject
 static/dist
@@ -73,6 +74,7 @@ nosetests.xml
 coverage.xml
 *,cover
 .hypothesis/
+karma-result.json
 
 # Integration test logs
 /selenium-standalone-logs/
@@ -93,3 +95,4 @@ target/
 # IDE / Editor
 .vscode
 /tags
+.idea

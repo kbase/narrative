@@ -107,7 +107,7 @@ define(['jquery', 'kbaseNarrativeStagingDataTab', 'base/js/namespace'], (
 
         it('can deactivate its staging area viewer', async () => {
             await stagingWidget.render();
-            spyOn(stagingWidget.stagingAreaViewer, 'deactivate');
+            spyOn(stagingWidget.stagingAreaViewer, 'deactivate').and.callThrough();
             stagingWidget.activate();
             stagingWidget.deactivate();
             expect(stagingWidget.stagingAreaViewer.deactivate).toHaveBeenCalled();

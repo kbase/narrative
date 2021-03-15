@@ -22,6 +22,8 @@ module.exports = function (config) {
             'karma-mocha-reporter',
             'karma-es6-shim',
             'karma-json-result-reporter',
+            'karma-brief-reporter',
+            'karma-jasmine-html-reporter',
         ],
         preprocessors: {
             'kbase-extension/static/kbase/js/**/!(api)/*.js': ['coverage'],
@@ -39,9 +41,9 @@ module.exports = function (config) {
         files: [
             'node_modules/jasmine-ajax/lib/mock-ajax.js',
             // tests and test resources
-            'test/unit/testUtil.js',
-            'test/unit/mocks.js',
-            'test/unit/test-main.js',
+            { pattern: 'test/unit/testUtil.js', nocache: true },
+            { pattern: 'test/unit/mocks.js', nocache: true },
+            { pattern: 'test/unit/test-main.js', nocache: true },
             { pattern: 'test/unit/spec/**/*.js', included: false, nocache: true },
             { pattern: 'test/testConfig.json', included: false, nocache: true },
             { pattern: 'test/*.tok', included: false, nocache: true },

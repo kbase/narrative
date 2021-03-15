@@ -9,9 +9,11 @@ define([
     'use strict';
     const narrativeConfig = Props.make({ data: Config.getConfig() });
 
-    function factory() {
+    function factory(config = {}) {
+        const busArgs = config.bus || {};
+
         function createRuntime() {
-            const theBus = Bus.make();
+            const theBus = Bus.make(busArgs);
 
             const clock = Clock.make({
                 bus: theBus,
@@ -103,8 +105,8 @@ define([
     }
 
     return {
-        make: function () {
-            return factory();
+        make: function (config) {
+            return factory(config);
         },
     };
 });

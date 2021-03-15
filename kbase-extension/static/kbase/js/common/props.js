@@ -20,8 +20,8 @@ define([], () => {
             return;
         }
         // pop off the last property for setting at the end.
-        let propKey = path.pop(),
-            key,
+        const propKey = path.pop();
+        let key,
             temp = data;
         // Walk the path, creating empty objects if need be.
         while (path.length > 0) {
@@ -46,8 +46,8 @@ define([], () => {
             return;
         }
         // pop off the last property for setting at the end.
-        let propKey = path.pop(),
-            key,
+        const propKey = path.pop();
+        let key,
             temp = data;
         // Walk the path, creating empty objects if need be.
         while (path.length > 0) {
@@ -117,14 +117,14 @@ define([], () => {
         if (!config) {
             config = {};
         }
+        const updateHandler = config.onUpdate,
+            historyEnabled = updateHandler ? true : false;
+
         let obj = config.data || {},
             lastObj,
             historyCount = 0,
-            updateHandler = config.onUpdate,
-            historyEnabled = updateHandler ? true : false,
             lastValueSaved = false,
-            timer,
-            api;
+            timer;
 
         /*
          * In enabled by setting an update handler via the onUpdate factory
@@ -242,8 +242,8 @@ define([], () => {
                 return;
             }
             increment = increment === undefined ? 1 : increment;
-            let propKey = path.pop(),
-                key,
+            const propKey = path.pop();
+            let key,
                 temp = obj;
             while (path.length > 0) {
                 key = path.shift();
@@ -273,8 +273,8 @@ define([], () => {
             if (path.length === 0) {
                 return;
             }
-            let propKey = path.pop(),
-                key,
+            const propKey = path.pop();
+            let key,
                 temp = obj;
             while (path.length > 0) {
                 key = path.shift();
@@ -289,7 +289,7 @@ define([], () => {
             return true;
         }
 
-        api = {
+        const api = {
             setItem: setItem,
             hasItem: hasItem,
             getItem: getItem,

@@ -14,17 +14,24 @@
     /* .kb-job-status__dropdown-menu */
     &-menu {
       @include body-text;
+      line-height: 2.5;
+      padding: 0;
 
       /* .kb-job-status__dropdown-menu-item */
       &-item {
+
         /* .kb-job-status__dropdown-menu-item-link */
         &-link {
 
           &--retry,
           &--cancel {
             @include body-text;
-            width: 100%;
+            background: use_color('white');
             border: 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+            line-height: 2.5;
+            text-align: left;
+            width: 100%;
           }
 
           &--retry {
@@ -32,8 +39,8 @@
 
             &:hover,
             &:active {
-              color: use_color('white');
               background: use_color('primary');
+              color: use_color('white');
             }
           }
 
@@ -42,8 +49,8 @@
 
             &:hover,
             &:active {
-              color: use_color('white');
               background: use_color('error');
+              color: use_color('white');
             }
           }
         }

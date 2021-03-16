@@ -11,7 +11,6 @@ define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
         });
         beforeEach(() => {
             hostNode = document.createElement('div');
-            document.body.appendChild(hostNode);
             runtimeBus = Runtime.make().bus();
         });
 
@@ -36,36 +35,43 @@ define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
             });
         });
 
-        it('Should fail to start without a node', () => {
-            const viewer = JobLogViewer.make();
-            const jobId = 'fakejob';
-            const arg = {
-                jobId: jobId,
-            };
-            expect(() => viewer.start(arg)).toThrow(new Error('Requires a node to start'));
+        it('Should fail to start without a node', async function () {
+            const jobLogViewerInstance = JobLogViewer.make();
+            try {
+                await jobLogViewerInstance.start({
+                    jobId: 'fakejob',
+                });
+                fail('this should not have completed successfully');
+            } catch (error) {
+                expect(error).toMatch(/Requires a node to start/);
+            }
         });
 
-        it('Should fail to start without a jobId', () => {
-            const viewer = JobLogViewer.make();
-            const arg = {
-                node: hostNode,
-            };
-            expect(() => viewer.start(arg)).toThrow(new Error('Requires a job id to start'));
+        it('Should fail to start without a jobId', async function () {
+            const jobLogViewerInstance = JobLogViewer.make();
+            try {
+                await jobLogViewerInstance.start({
+                    node: hostNode,
+                });
+                fail('this should not have completed successfully');
+            } catch (error) {
+                expect(error).toMatch(/Requires a job id to start/);
+            }
         });
 
-        it('Should start as expected with inputs, and be stoppable and detachable', () => {
+        it('Should start as expected with inputs, and be stoppable and detachable', async () => {
             const viewer = JobLogViewer.make();
             const arg = {
                 node: hostNode,
                 jobId: 'someFakeJob',
             };
-            viewer.start(arg);
+            await viewer.start(arg);
             expect(hostNode.querySelector('div[data-element="kb-log"]')).toBeDefined();
             viewer.detach();
             expect(hostNode.innerHTML).toBe('');
         });
 
-        it('Should send a bus messages requesting job status information at startup', (done) => {
+        it('Should send a bus messages requesting job status information at startup', async (done) => {
             const viewer = JobLogViewer.make();
             const jobId = 'testJob1';
             const arg = {
@@ -77,10 +83,10 @@ define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
                 viewer.detach();
                 done();
             });
-            viewer.start(arg);
+            await viewer.start(arg);
         });
 
-        it('Should react to job status messages', (done) => {
+        it('Should react to job status messages', async (done) => {
             const viewer = JobLogViewer.make();
             const jobId = 'testJobStatusMsg';
             const arg = {
@@ -108,17 +114,17 @@ define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
                 viewer.detach();
                 done();
             });
-            viewer.start(arg);
+            await viewer.start(arg);
         });
 
-        it('Should start with all buttons disabled', () => {
+        it('Should start with all buttons disabled', async () => {
             const viewer = JobLogViewer.make();
             const jobId = 'testBtnState';
             const arg = {
                 node: hostNode,
                 jobId: jobId,
             };
-            viewer.start(arg);
+            await viewer.start(arg);
             const btns = hostNode.querySelectorAll('div[data-element="header"] button');
             btns.forEach((btn) => {
                 expect(btn.classList.contains('disabled')).toBeTruthy();
@@ -126,7 +132,7 @@ define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
             viewer.detach();
         });
 
-        it('Should render on job-logs messages immediately on startup', (done) => {
+        it('Should render on job-logs messages immediately on startup', async (done) => {
             const viewer = JobLogViewer.make();
             const jobId = 'testJobLogMsgResp';
             const arg = {
@@ -206,10 +212,10 @@ define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
                     done();
                 }, 500);
             });
-            viewer.start(arg);
+            await viewer.start(arg);
         });
 
-        it('Should render a queued message for queued jobs', (done) => {
+        it('Should render a queued message for queued jobs', async (done) => {
             const viewer = JobLogViewer.make();
             const jobId = 'testJobQueued',
                 arg = {
@@ -247,7 +253,7 @@ define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
                     done();
                 }, 500);
             });
-            viewer.start(arg);
+            await viewer.start(arg);
         });
 
         xit('Should render a canceled message for canceled jobs', () => {});

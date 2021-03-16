@@ -61,21 +61,7 @@ define([
                         ]),
                     }),
                     ui.buildCollapsiblePanel({
-                        title: 'Job Status',
-                        name: 'job-status-section-toggle',
-                        hidden: false,
-                        type: 'default',
-                        collapsed: true,
-                        classes: ['kb-panel-container'],
-                        body: div({}, [
-                            ui.buildPanel({
-                                name: 'jobState',
-                                classes: ['kb-panel-light'],
-                            }),
-                        ]),
-                    }),
-                    ui.buildCollapsiblePanel({
-                        title: 'Job Log',
+                        title: 'Job Status and Logs',
                         name: 'job-log-section-toggle',
                         hidden: false,
                         type: 'default',
@@ -102,21 +88,6 @@ define([
             );
         }
 
-        function singleLayout() {
-            return div({}, [
-                ui.buildPanel({
-                    title: 'Job Status',
-                    name: 'jobState',
-                    classes: ['kb-panel-light'],
-                }),
-                ui.buildPanel({
-                    title: 'Job Log',
-                    name: 'log',
-                    classes: ['kb-panel-light'],
-                }),
-            ]);
-        }
-
         function getSelectedJobId() {
             return config.clickedId;
         }
@@ -129,10 +100,7 @@ define([
                 widgets.params = JobInputParams.make({
                     model: model,
                 });
-                widgets.log = JobLogViewer.make();
-                widgets.jobState = JobStateViewer.make({
-                    model: model,
-                });
+                widgets.log = JobLogViewer.make({ showHistory: true });
 
                 //rows as widgets to get live update
                 widgets.stateList = JobStateList.make({
@@ -160,11 +128,6 @@ define([
                         }),
                         widgets.log.start({
                             node: ui.getElement('log.body'),
-                            jobId: jobId,
-                            parentJobId: model.getItem('exec.jobState.job_id'),
-                        }),
-                        widgets.jobState.start({
-                            node: ui.getElement('jobState.body'),
                             jobId: jobId,
                             parentJobId: model.getItem('exec.jobState.job_id'),
                         }),
@@ -230,21 +193,14 @@ define([
 
         function startSingle() {
             return Promise.try(() => {
-                container.innerHTML = singleLayout();
-                widgets.log = JobLogViewer.make();
-                widgets.jobState = JobStateViewer.make({
-                    model: model,
+                container.innerHTML = div({
+                    dataElement: 'log',
                 });
-                return Promise.all([
-                    widgets.log.start({
-                        node: ui.getElement('log.body'),
-                        jobId: model.getItem('exec.jobState.job_id'),
-                    }),
-                    widgets.jobState.start({
-                        node: ui.getElement('jobState.body'),
-                        jobId: model.getItem('exec.jobState.job_id'),
-                    }),
-                ]);
+                widgets.log = JobLogViewer.make({ showHistory: true });
+                return widgets.log.start({
+                    node: ui.getElement('log'),
+                    jobId: model.getItem('exec.jobState.job_id'),
+                });
             });
         }
 

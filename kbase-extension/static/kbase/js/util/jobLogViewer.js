@@ -7,13 +7,14 @@
  * })
  */
 define([
+    'bluebird',
     'common/runtime',
     'common/props',
     'common/ui',
     'common/events',
     'common/fsm',
-    'kb_common/html',
-], (Runtime, Props, UI, Events, Fsm, html) => {
+    'common/html',
+], (Promise, Runtime, Props, UI, Events, Fsm, html) => {
     'use strict';
 
     const t = html.tag,
@@ -1105,31 +1106,33 @@ define([
          *   - jobId - string, a job id for this log
          */
         function start(arg) {
-            detach(); // if we're alive, remove ourselves before restarting
-            const hostNode = arg.node;
-            if (!hostNode) {
-                throw new Error('Requires a node to start');
-            }
-            jobId = arg.jobId;
-            if (!jobId) {
-                throw new Error('Requires a job id to start');
-            }
+            return Promise.try(() => {
+                detach(); // if we're alive, remove ourselves before restarting
+                const hostNode = arg.node;
+                if (!hostNode) {
+                    throw new Error('Requires a node to start');
+                }
+                jobId = arg.jobId;
+                if (!jobId) {
+                    throw new Error('Requires a job id to start');
+                }
 
-            container = hostNode.appendChild(document.createElement('div'));
-            ui = UI.make({ node: container });
+                container = hostNode.appendChild(document.createElement('div'));
+                ui = UI.make({ node: container });
 
-            const layout = renderLayout();
-            container.innerHTML = layout.content;
-            layout.events.attachEvents(container);
+                const layout = renderLayout();
+                container.innerHTML = layout.content;
+                layout.events.attachEvents(container);
 
-            initializeFSM();
-            renderFSM();
-            startEventListeners();
+                initializeFSM();
+                renderFSM();
+                startEventListeners();
 
-            runtime.bus().emit('request-job-status', {
-                jobId: jobId,
+                runtime.bus().emit('request-job-status', {
+                    jobId: jobId,
+                });
+                listeningForJob = true;
             });
-            listeningForJob = true;
         }
 
         function stop() {

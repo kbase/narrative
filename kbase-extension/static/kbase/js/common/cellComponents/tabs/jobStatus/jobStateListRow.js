@@ -108,7 +108,7 @@ define([
             $currentRow.toggleClass(`${cssBaseClass}__row--selected`);
         }
 
-        function showHideChildRow(e) {
+        async function showHideChildRow(e) {
             const $currentRow = $(e.target).closest('tr');
             const $dtTable = $(e.target).closest('table').DataTable();
             const dtRow = $dtTable.row($currentRow);
@@ -134,7 +134,7 @@ define([
 
             // add the log widget to the next `tr` element
             widgets.log = JobLogViewer.make({ showHistory: true });
-            widgets.log.start({
+            await widgets.log.start({
                 node: $currentRow.next().find('[data-element="job-log-container"]')[0],
                 jobId: jobId,
                 jobState: jobState,

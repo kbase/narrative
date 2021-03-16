@@ -66,8 +66,9 @@ define([
             this.jobId = this.options.jobId;
             this.state = this.options.state;
             this.outputWidgetInfo = this.options.outputWidgetInfo;
-            this.widgets = {};
-            this.widgets.JobLogViewer = JobLogViewer.make();
+            this.widgets = {
+                JobLogViewer: JobLogViewer.make({ showHistory: true }),
+            };
 
             // expects:
             // name, id, version for appInfo
@@ -237,11 +238,13 @@ define([
                     },
                 ],
             });
-            this.widgets.JobLogViewer.start({
-                node: $jobLogDiv[0],
-                jobId: this.jobId,
-            });
             this.$elem.append($tabDiv);
+            Promise.try(async () => {
+                await this.widgets.JobLogViewer.start({
+                    node: $jobLogDiv[0],
+                    jobId: this.jobId,
+                });
+            });
         },
 
         initLogView: function () {
@@ -377,7 +380,7 @@ define([
             let ret = [];
             switch (type) {
                 case '[object String]':
-                    if (obj.match(/^[^\/]+\/[^\/]+(\/[^\/]+)?$/)) {
+                    if (obj.match(/^[^/]+\/[^/]+(\/[^/]+)?$/)) {
                         return [obj];
                     }
                     return null;

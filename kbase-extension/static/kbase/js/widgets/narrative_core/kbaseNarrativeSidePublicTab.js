@@ -32,25 +32,25 @@ define([
     Icon,
     WorkspaceDataSource,
     SearchDataSource,
-    DataSourceConfig
+    DataSourceConfig,
 ) => {
     'use strict';
 
     function formatValue(value) {
-        if (typeof value === 'undefined' || (typeof value === 'string' && value.length === 0)) {
+        if (typeof value === 'undefined' ||
+            (typeof value === 'string' && value.length === 0)) {
             return '<span style="color: #AAA; font-weight: normal; font-style: italic">n/a</span>';
         } else {
             return String(value);
         }
     }
+
     function formatItem(item) {
         return `
-            <span role="row" data-test-id="${item.id}">
-            <span style="color: #AAA; font-weight: normal; font-style: italic" data-test-id="label" role="cell">${
-                item.label
-            }</span>: 
+            <span role='row' data-test-id='${item.id}'>
+            <span style='color: #AAA; font-weight: normal; font-style: italic' data-test-id='label' role='cell'>${item.label}</span>: 
             &nbsp;
-            <span data-test-id="value" role="cell">${formatValue(item.value)}</span>
+            <span data-test-id='value' role='cell'>${formatValue(item.value)}</span>
             </span>
         `;
     }
@@ -60,41 +60,35 @@ define([
     // an array of the same.
     //
     function metadataToTable(metadata) {
-        const $table = $('<table role="table">').css('font-size', '80%');
+        const $table = $('<table role="table">')
+            .css('font-size', '80%');
 
         metadata.forEach((item) => {
-            let $row;
             let value;
             if (item.value instanceof Array) {
-                value = item.value
-                    .map((item) => {
-                        return formatItem(item);
-                    })
-                    .join('&nbsp;&nbsp;&nbsp;');
+                value = item.value.map((item) => {
+                    return formatItem(item);
+                }).join('&nbsp;&nbsp;&nbsp;');
             } else {
                 value = formatValue(item.value);
             }
 
-            $row = $(`<tr role="row" data-test-id="${item.id || item.label}">`)
+            const $row = $(`<tr role='row' data-test-id='${item.id || item.label}'>`)
                 .css('margin-bottom', '2px')
-                .append(
-                    $('<td role="cell" data-test-id="label">')
-                        .css('width', '7em')
-                        .css('font-weight', 'normal')
-                        .css('font-style', 'italic')
-                        .css('padding-right', '4px')
-                        .css('color', '#AAA')
-                        .css('vertical-align', 'top')
-                        .css('padding-bottom', '2px')
-                        .text(item.label)
-                )
-                .append(
-                    $('<td role="cell" data-test-id="value">')
-                        // .css('font-weight', 'bold')
-                        .css('vertical-align', 'top')
-                        .css('padding-bottom', '2px')
-                        .html(value)
-                );
+                .append($('<td role="cell" data-test-id="label">')
+                    .css('width', '7em')
+                    .css('font-weight', 'normal')
+                    .css('font-style', 'italic')
+                    .css('padding-right', '4px')
+                    .css('color', '#AAA')
+                    .css('vertical-align', 'top')
+                    .css('padding-bottom', '2px')
+                    .text(item.label))
+                .append($('<td role="cell" data-test-id="value">')
+                    // .css('font-weight', 'bold')
+                    .css('vertical-align', 'top')
+                    .css('padding-bottom', '2px')
+                    .html(value));
 
             $table.append($row);
         });
@@ -104,25 +98,21 @@ define([
     function renderTotals(found, total) {
         const $totals = $('<span>').addClass('kb-data-list-type');
         if (total === 0) {
-            $totals.append($('<span>None available</span>'));
+            $totals
+                .append($('<span>None available</span>'));
         } else if (found === 0) {
             $totals
-                .append(
-                    $('<span data-test-id="found-count">').css('font-weight', 'bold').text('None')
-                )
+                .append($('<span data-test-id="found-count">').css('font-weight', 'bold').text('None'))
                 .append($('<span>').text(' found out of '))
                 .append($('<span>').css('font-weight', 'bold').text(numeral(total).format('0,0')))
                 .append($('<span>').text(' available'));
         } else if (total > found) {
             $totals
-                .append(
-                    $('<span data-test-id="found-count">')
-                        .css('font-weight', 'bold')
-                        .text(numeral(found).format('0,0'))
-                )
+                .append($('<span data-test-id="found-count">').css('font-weight', 'bold').text(numeral(found).format('0,0')))
                 .append($('<span>').text(' found out of '))
                 .append($('<span>').css('font-weight', 'bold').text(numeral(total).format('0,0')))
                 .append($('<span>').text(' available'));
+
         } else {
             $totals
                 .append($('<span>').text(numeral(total).format('0,0')))
@@ -137,7 +127,7 @@ define([
     by a previous failed attempt to save the object, return either:
     - null if the target name is not found in the object set
     - 1 if the target name was found, but no target names with a suffix
-    - the greatest of the failed suffix passed in or the greatest suffix in the data 
+    - the greatest of the failed suffix passed in or the greatest suffix in the data
       set, incremented by one.
     */
     function getNextAutoSuffix(targetName, narrativeObjects, nextSuffix) {
@@ -179,6 +169,7 @@ define([
         }
         return null;
     }
+
     const dataSourceTypes = {
         search: {
             serviceDependencies: {
@@ -227,7 +218,7 @@ define([
         narrativeObjects: {},
         narrativeObjectsClean: null,
 
-        init: function (options) {
+        init: function(options) {
             this._super(options);
 
             this.data_icons = Config.get('icons').data;
@@ -241,20 +232,16 @@ define([
             return this;
         },
 
-        loadObjects: function () {
+        loadObjects: function() {
             this.narrativeObjectsClean = false;
-            $(document).trigger('dataLoadedQuery.Narrative', [
-                null,
-                this.IGNORE_VERSION,
-                function (objects) {
-                    this.narrativeObjects = objects;
-                    this.narrativeObjectsClean = true;
-                }.bind(this),
-            ]);
+            $(document).trigger('dataLoadedQuery.Narrative', [null, this.IGNORE_VERSION, function(objects) {
+                this.narrativeObjects = objects;
+                this.narrativeObjectsClean = true;
+            }.bind(this)]);
         },
 
-        render: function () {
-            if (!this.token || !this.wsName) {
+        render: function() {
+            if ((!this.token) || (!this.wsName)) {
                 return;
             }
 
@@ -263,20 +250,18 @@ define([
                 this.loadObjects();
                 this.loaded = true;
                 $(document).on('dataUpdated.Narrative', () => {
-                    $(document).trigger('dataLoadedQuery.Narrative', [
-                        null,
-                        this.IGNORE_VERSION,
-                        function (objects) {
-                            this.narrativeObjects = objects;
-                            this.narrativeObjectsClean = true;
-                        }.bind(this),
-                    ]);
+                    $(document).trigger('dataLoadedQuery.Narrative', [null, this.IGNORE_VERSION, function(objects) {
+                        this.narrativeObjects = objects;
+                        this.narrativeObjectsClean = true;
+                    }.bind(this)]);
                 });
             }
 
             this.infoPanel = $('<div>');
             this.dataPolicyPanel = $('<div>');
-            this.$elem.empty().append(this.infoPanel).append(this.dataPolicyPanel);
+            this.$elem.empty()
+                .append(this.infoPanel)
+                .append(this.dataPolicyPanel);
 
             this.narrativeService = new DynamicServiceClient({
                 module: 'NarrativeService',
@@ -290,19 +275,12 @@ define([
             });
 
             const margin = { margin: '10px 0px 10px 0px' };
-            const $typeInput = $('<select class="form-control">').css(margin);
+            const $typeInput = $('<select class="form-control">')
+                .css(margin);
 
             this.dataSourceConfigs.forEach((config, index) => {
-                $typeInput.append(
-                    '<option value="' + String(index) + '">' + config.name + '</option>'
-                );
+                $typeInput.append('<option value="' + String(index) + '">' + config.name + '</option>');
             });
-
-            // for (var catPos in this.categories) {
-            //     var cat = this.categories[catPos];
-            //     var catName = this.dataSourceConfigs[cat].name;
-            //     $typeInput.append('<option value="'+cat+'">'+catName+'</option>');
-            // }
 
             const $dataSourceLogo = $('<span>')
                 .addClass('input-group-addon')
@@ -314,36 +292,33 @@ define([
                 .css('background-color', 'transparent');
             this.$dataSourceLogo = $dataSourceLogo;
 
-            const $inputGroup = $('<div>').addClass('input-group').css('width', '100%');
+            const $inputGroup = $('<div>')
+                .addClass('input-group')
+                .css('width', '100%');
 
-            const typeFilter = $('<div class="col-sm-4">').append(
-                $inputGroup.append($typeInput).append($dataSourceLogo)
-            );
+            const typeFilter = $('<div class="col-sm-4">')
+                .append($inputGroup
+                    .append($typeInput)
+                    .append($dataSourceLogo));
 
-            const $filterInput = $(
-                '<input type="text" class="form-control" placeholder="Filter data..." data-test-id="search-input">'
-            );
+            const $filterInput = $('<input type="text" class="form-control" placeholder="Filter data..." data-test-id="search-input">');
             const $filterInputField = $('<div class="input-group">')
                 .css(margin)
                 .append($filterInput)
-                .append(
-                    $('<div class="input-group-addon btn btn-default">')
-                        .append($('<span class="fa fa-search">'))
-                        .css('padding', '4px 8px')
-                        .click(() => {
-                            $filterInput.change();
-                        })
-                )
-                .append(
-                    $('<div class="input-group-addon btn btn-default">')
-                        .append($('<span class="fa fa-times">'))
-                        .css('padding', '4px 8px')
-                        .click(() => {
-                            $filterInput.val('');
-                            inputFieldLastValue = '';
-                            $filterInput.change();
-                        })
-                );
+                .append($('<div class="input-group-addon btn btn-default">')
+                    .append($('<span class="fa fa-search">'))
+                    .css('padding', '4px 8px')
+                    .click(() => {
+                        $filterInput.change();
+                    }))
+                .append($('<div class="input-group-addon btn btn-default">')
+                    .append($('<span class="fa fa-times">'))
+                    .css('padding', '4px 8px')
+                    .click(() => {
+                        $filterInput.val('');
+                        inputFieldLastValue = '';
+                        $filterInput.change();
+                    }));
 
             /*
                 search and render when the type dropdown changes.
@@ -354,7 +329,8 @@ define([
                 this.$dataSourceLogo.empty();
                 if (dataSource) {
                     if (dataSource.logoUrl) {
-                        this.$dataSourceLogo.append($('<img>').attr('src', dataSource.logoUrl));
+                        this.$dataSourceLogo.append($('<img>')
+                            .attr('src', dataSource.logoUrl));
                     }
                 }
                 this.searchAndRender(newDataSourceID, $filterInput.val());
@@ -363,7 +339,7 @@ define([
             /*
                 search and render only when input change is detected.
             */
-            var inputFieldLastValue = null;
+            let inputFieldLastValue = null;
             $filterInput.change(() => {
                 inputFieldLastValue = $filterInput.val();
                 renderInputFieldState();
@@ -383,37 +359,26 @@ define([
                 }
             }
 
-            // function inputFieldDirty() {
-            //     if (inputFieldLastValue !== $filterInput.val()) {
-            //         return true;
-            //     }
-            //     return false;
-            // }
-
             $filterInput.keyup(() => {
                 renderInputFieldState();
             });
 
-            /*
-                search and render for every keystroke!
-            */
-            // filterInput.keyup(function() {
-            //     this.searchAndRender(typeInput.val(), filterInput.val());
-            // }.bind(this));
-
             const searchFilter = $('<div class="col-sm-8">').append($filterInputField);
 
-            const header = $('<div class="row">')
-                .css({ margin: '0px 10px 0px 10px' })
+            const header = $('<div class="row">').css({ 'margin': '0px 10px 0px 10px' })
                 .append(typeFilter)
                 .append(searchFilter);
             this.$elem.append(header);
-            this.totalPanel = $('<div>').css({ margin: '0px 0px 0px 10px' });
+            this.totalPanel = $('<div>').css({ 'margin': '0px 0px 0px 10px' });
             this.$elem.append(this.totalPanel);
 
             this.resultPanel = $('<div role="table" data-test-id="result">');
 
-            this.resultsFooterMessage = $('<div>');
+            this.resultsFooterMessage = $('<div>')
+                .css('display', 'flex')
+                .css('flex-direction', 'row')
+                .css('align-items', 'center')
+                .css('justify-content', 'center');
 
             this.resultFooter = $('<div>')
                 .css('background-color', 'rgba(200,200,200,0.5')
@@ -440,15 +405,15 @@ define([
             return this;
         },
 
-        hideResultFooter: function () {
+        hideResultFooter: function() {
             this.resultFooter.addClass('hide');
         },
 
-        showResultFooter: function () {
+        showResultFooter: function() {
             this.resultFooter.removeClass('hide');
         },
 
-        searchAndRender: function (category, query) {
+        searchAndRender: function(category, query) {
             if (query) {
                 query = query.trim();
                 if (query.length == 0) {
@@ -467,11 +432,7 @@ define([
             }
 
             // Duplicate queries are suppressed.
-            if (
-                this.currentQuery &&
-                this.currentQuery === query &&
-                category === this.currentCategory
-            ) {
+            if (this.currentQuery && this.currentQuery === query && category === this.currentCategory) {
                 return;
             }
 
@@ -486,23 +447,22 @@ define([
             return this.renderInitial();
         },
 
-        renderTotalsPanel: function () {
+        renderTotalsPanel: function() {
             const $totals = renderTotals(this.currentFilteredResults, this.totalAvailable);
             this.totalPanel.html($totals);
         },
 
-        renderInitial: function () {
+        renderInitial: function() {
             // Get and render the first batch of data.
             // Note that the loading ui is only displayed on the initial load.
             // Reset the ui.
             this.totalPanel.empty();
             this.resultPanel.empty();
             this.resultsFooterMessage.empty();
-            this.totalPanel.append(
-                $('<span>')
+            this.totalPanel
+                .append($('<span>')
                     .addClass('kb-data-list-type')
-                    .append('<img src="' + this.loadingImage + '"/> searching...')
-            );
+                    .append('<img src="' + this.loadingImage + '"/> searching...'));
 
             this.hideError();
             this.showResultFooter();
@@ -511,16 +471,14 @@ define([
             return this.renderFromDataSource(this.currentCategory, true);
         },
 
-        renderError: function () {
+        renderError: function() {
             this.totalPanel.empty();
             this.hideResultFooter();
             this.resultsFooterMessage.empty();
-            this.totalPanel.html(
-                '<div class="alert alert-danger">An error occurred executing this search!</div>'
-            );
+            this.totalPanel.html('<div class="alert alert-danger">An error occurred executing this search!</div>');
         },
 
-        renderMore: function () {
+        renderMore: function() {
             this.hideError();
 
             // suss out whether we really need more...
@@ -531,23 +489,32 @@ define([
                 }
             }
 
+            // We use a flag here as a lock on rendering more, so that a renderMore
+            // request will complete before advancing the page and firing off another
+            // data fetch and render request.
+            if (this.renderingMore) {
+                return;
+            }
+            this.renderingMore = true;
+
             this.currentPage += 1;
 
-            return this.renderFromDataSource(this.currentCategory, false);
+            return this.renderFromDataSource(this.currentCategory, false)
+                .finally(() => {
+                    this.renderingMore = false;
+                });
         },
 
-        fetchFromDataSource: function (dataSource) {
-            const _this = this;
-
+        fetchFromDataSource: function(dataSource) {
             const query = {
-                input: _this.currentQuery,
-                page: _this.currentPage,
+                input: this.currentQuery,
+                page: this.currentPage,
             };
 
             return dataSource.search(query);
         },
 
-        getDataSource: function (dataSourceID) {
+        getDataSource: function(dataSourceID) {
             let dataSource;
             const dataSourceConfig = this.dataSourceConfigs[dataSourceID];
             if (this.currentDataSource && this.currentDataSource.config === dataSourceConfig) {
@@ -555,96 +522,92 @@ define([
             } else {
                 const dataSourceType = dataSourceTypes[dataSourceConfig.sourceType];
 
-                const urls = Object.keys(dataSourceType.serviceDependencies).reduce(
-                    (accumUrls, key) => {
+                const urls = Object.keys(dataSourceType.serviceDependencies)
+                    .reduce((accumUrls, key) => {
                         const configKey = dataSourceType.serviceDependencies[key];
                         accumUrls[key] = Config.url(configKey);
                         return accumUrls;
-                    },
-                    {}
-                );
-                dataSource = Object.create(dataSourceType.baseObject).init({
-                    config: dataSourceConfig,
-                    urls,
-                    token: this.token,
-                    pageSize: this.itemsPerPage,
-                });
+                    }, {});
+                dataSource = Object.create(dataSourceType.baseObject)
+                    .init({
+                        config: dataSourceConfig,
+                        urls,
+                        token: this.token,
+                        pageSize: this.itemsPerPage,
+                    });
                 this.currentDataSource = dataSource;
             }
             return dataSource;
         },
 
-        renderFromDataSource: function (dataSourceID, initial) {
-            const _this = this;
+        renderFromDataSource: function(dataSourceID, initial) {
             const dataSource = this.getDataSource(dataSourceID);
-            this.resultsFooterMessage.html(html.loading('fetching another ' + this.itemsPerPage));
-            this.fetchFromDataSource(dataSource, initial)
+            this.resultsFooterMessage.html(`
+                <span>fetching another ${this.itemsPerPage} items</span> 
+                <span class='fa fa-spinner fa-spin' style='margin-left: 1ex'/>
+            `);
+
+            return this.fetchFromDataSource(dataSource, initial)
                 .then((result) => {
                     // a null result means that the search was not run for some
                     // reason -- most likely it was canceled due to overlapping
                     // queries.
                     if (result) {
-                        // _this.removeLastRowPlaceholder();
                         if (initial) {
-                            _this.totalPanel.empty();
-                            _this.resultPanel.empty();
-                            _this.resultsFooterMessage.empty();
+                            this.totalPanel.empty();
+                            this.resultPanel.empty();
+                            this.resultsFooterMessage.empty();
                         }
                         result.forEach((item, index) => {
-                            _this.addRow(dataSource, item, index);
+                            this.addRow(dataSource, item, index);
                         });
-                        // _this.addLastRowPlaceholder();
 
-                        _this.totalAvailable = dataSource.availableDataCount;
-                        _this.currentFilteredResults = dataSource.filteredDataCount;
+                        this.totalAvailable = dataSource.availableDataCount;
+                        this.currentFilteredResults = dataSource.filteredDataCount;
 
                         let message;
                         if (dataSource.filteredDataCount) {
                             if (dataSource.fetchedDataCount === dataSource.filteredDataCount) {
-                                message = 'all ' + _this.currentFilteredResults + ' fetched';
+                                message = 'all ' + this.currentFilteredResults + ' fetched';
                             } else {
-                                message =
-                                    'fetched ' +
-                                    result.length +
-                                    ' of ' +
-                                    _this.currentFilteredResults;
+                                message = 'fetched ' + dataSource.fetchedDataCount + ' of ' + this.currentFilteredResults;
                             }
-                            _this.showResultFooter();
+                            this.showResultFooter();
                         } else {
                             message = '';
-                            _this.hideResultFooter();
+                            this.hideResultFooter();
                         }
-                        _this.resultsFooterMessage.text(message);
+                        this.resultsFooterMessage.text(message);
 
-                        _this.renderTotalsPanel();
+                        this.renderTotalsPanel();
                     }
 
-                    _this.currentDataSource = dataSource;
+                    this.currentDataSource = dataSource;
                 })
                 .catch((err) => {
                     console.error('Error rendering from data source', dataSource, err);
-                    _this.showError(err);
-                    _this.renderError();
+                    this.showError(err);
+                    this.renderError();
                 });
         },
 
-        clearRows: function () {
+        clearRows: function() {
             this.resultPanel.empty();
         },
 
-        addRow: function (dataSource, row) {
+        addRow: function(dataSource, row) {
             const $row = this.renderObjectRow(dataSource, row);
             this.resultPanel.append($row);
         },
 
-        escapeSearchQuery: function (str) {
+        escapeSearchQuery: function(str) {
             return str.replace(/[%]/g, '').replace(/[:"\\]/g, '\\$&');
         },
 
         /*
         renderObjectRow
         */
-        renderObjectRow: function (dataSource, object) {
+        renderObjectRow: function(dataSource, object) {
             const self = this;
             const type = object.type.split('.')[1].split('-')[0];
             const copyText = ' Add';
@@ -683,7 +646,7 @@ define([
                 .attr('role', 'toolbar')
                 .hide();
             const btnClasses = 'btn btn-xs btn-default';
-            const css = { color: '#888' };
+            const css = { 'color': '#888' };
             const $openLandingPage = $('<span>')
                 // tooltips showing behind pullout, need to fix!
                 //.tooltip({title:'Explore data', 'container':'#'+this.mainListId})
@@ -695,45 +658,46 @@ define([
                 });
 
             const $openProvenance = $('<span>')
-                .addClass(btnClasses)
-                .css(css)
+                .addClass(btnClasses).css(css)
                 //.tooltip({title:'View data provenance and relationships', 'container':'body'})
                 .append($('<span>').addClass('fa fa-sitemap fa-rotate-90').css(css))
                 .click((e) => {
                     e.stopPropagation();
                     window.open(provenanceLink);
                 });
-            $btnToolbar.append($openLandingPage).append($openProvenance);
+            $btnToolbar
+                .append($openLandingPage)
+                .append($openProvenance);
 
             // Action Column
 
-            const $addDiv = $('<div>').append(
-                $('<button>')
-                    .addClass('kb-primary-btn')
-                    .css({ 'white-space': 'nowrap', padding: '10px 15px' })
-                    .append($('<span>').addClass('fa fa-chevron-circle-left'))
-                    .append(copyText)
-                    .on('click', function () {
-                        // probably should move action outside of render func, but oh well
-                        $(this).attr('disabled', 'disabled');
-                        $(this).html('<img src="' + self.loadingImage + '">');
+            const $addDiv =
+                $('<div>').append(
+                    $('<button>')
+                        .addClass('kb-primary-btn')
+                        .css({ 'white-space': 'nowrap', padding: '10px 15px' })
+                        .append($('<span>')
+                            .addClass('fa fa-chevron-circle-left'))
+                        .append(copyText)
+                        .on('click', function() { // probably should move action outside of render func, but oh well
+                            $(this).attr('disabled', 'disabled');
+                            $(this).html('<img src="' + self.loadingImage + '">');
 
-                        let targetName = object.name;
+                            let targetName = object.name;
 
-                        // object name cannot start with digits.
-                        if (/^[\d]/.test(targetName)) {
-                            targetName = targetName.replace(/^[\d]+/, '_');
-                        }
+                            // object name cannot start with digits.
+                            if (/^[\d]/.test(targetName)) {
+                                targetName = targetName.replace(/^[\d]+/, '_');
+                            }
 
-                        // to avoid weird object names, replace entities with underscores.
-                        targetName = targetName.replace(/&[^;]*;/g, '_');
+                            // to avoid weird object names, replace entities with underscores.
+                            targetName = targetName.replace(/&[^;]*;/g, '_');
 
-                        // replace characters which are invalid for a workspace object name with underscores.
-                        targetName = targetName.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+                            // replace characters which are invalid for a workspace object name with underscores.
+                            targetName = targetName.replace(/[^a-zA-Z0-9.\-_]/g, '_');
 
-                        self.copy(object, targetName, this);
-                    })
-            );
+                            self.copy(object, targetName, this);
+                        }));
 
             const $actionColumn = $('<div>')
                 .css('flex', '0 0 90px')
@@ -794,8 +758,18 @@ define([
                 .append($iconColumn)
                 .append($resultColumn);
 
-            const $divider = $('<hr>').addClass('kb-data-list-row-hr').css('width', '100%');
-            const $rowContainer = $('<div>').append($divider).append($row);
+            const $divider = $('<hr>')
+                .addClass('kb-data-list-row-hr')
+                .css('width', '100%');
+
+
+            const $rowContainer = $('<div>')
+                .append($divider)
+                .append($row);
+
+            if ('rowNumber' in object) {
+                $rowContainer.attr('data-row-number', String(object.rowNumber));
+            }
 
             return $rowContainer;
         },
@@ -807,11 +781,11 @@ define([
             be here or should be a precondition (just let if fail otherwise.)
 
             the check for existence fo the object should not throw an error; the null value
-            means the object could not be read, and since we have read access to this narrative, 
+            means the object could not be read, and since we have read access to this narrative,
             that is the only possible error.
         */
 
-        copy: function (object, targetName, thisBtn, nextSuffix, tries) {
+        copy: function(object, targetName, thisBtn, nextSuffix, tries) {
             if (tries > 10) {
                 throw new Error('Too many rename tries (10)');
             }
@@ -843,29 +817,18 @@ define([
             // TODO: request ws api changes to support this. It is bad that we force a 500
             // error for the failure case (which is actually success!)
             // There really should be an "stat_object" call which provides object info
-            return this.workspace
-                .callFunc('get_object_info_new', [
-                    {
-                        objects: [
-                            {
-                                ref: this.wsName + '/' + correctedTargetName,
-                            },
-                        ],
-                        ignoreErrors: 1,
-                    },
-                ])
+            return this.workspace.callFunc('get_object_info_new', [{
+                objects: [{
+                    ref: this.wsName + '/' + correctedTargetName,
+                }],
+                ignoreErrors: 1,
+            }])
                 .spread((infos) => {
                     // If an object already exists with this name, the attempt again,
                     // incrementing the suffix by 1. NB this will loop until a unique
                     // filename is found.
                     if (infos[0] !== null) {
-                        return this.copy(
-                            object,
-                            targetName,
-                            thisBtn,
-                            suffix ? suffix + 1 : 1,
-                            tries ? tries + 1 : 1
-                        );
+                        return this.copy(object, targetName, thisBtn, suffix ? suffix + 1 : 1, tries ? tries + 1 : 1);
                     }
                     return this.copyFinal(object, correctedTargetName, thisBtn);
                 })
@@ -875,15 +838,12 @@ define([
                 });
         },
 
-        copyFinal: function (object, targetName, thisBtn) {
-            return this.narrativeService
-                .callFunc('copy_object', [
-                    {
-                        ref: object.workspaceReference.ref,
-                        target_ws_name: this.wsName,
-                        target_name: targetName,
-                    },
-                ])
+        copyFinal: function(object, targetName, thisBtn) {
+            return this.narrativeService.callFunc('copy_object', [{
+                ref: object.workspaceReference.ref,
+                target_ws_name: this.wsName,
+                target_name: targetName,
+            }])
                 .spread(() => {
                     $(thisBtn).prop('disabled', false);
                     $(thisBtn).html('<span class="fa fa-chevron-circle-left"/> Add');
@@ -893,33 +853,28 @@ define([
                     $(thisBtn).html('Error');
                     if (error.error && error.error.message) {
                         if (error.error.message.indexOf('may not write to workspace') >= 0) {
-                            this.options.$importStatus.html(
-                                $('<div>')
-                                    .css({ color: '#F44336', width: '500px' })
-                                    .append(
-                                        'Error: you do not have permission to add data to this Narrative.'
-                                    )
-                            );
+                            this.options.$importStatus.html($('<div>').css({
+                                'color': '#F44336',
+                                'width': '500px',
+                            }).append('Error: you do not have permission to add data to this Narrative.'));
                         } else {
-                            this.options.$importStatus.html(
-                                $('<div>')
-                                    .css({ color: '#F44336', width: '500px' })
-                                    .append('Error: ' + error.error.message)
-                            );
+                            this.options.$importStatus.html($('<div>').css({
+                                'color': '#F44336',
+                                'width': '500px',
+                            }).append('Error: ' + error.error.message));
                         }
                     } else {
-                        this.options.$importStatus.html(
-                            $('<div>')
-                                .css({ color: '#F44336', width: '500px' })
-                                .append('Unknown error!')
-                        );
+                        this.options.$importStatus.html($('<div>').css({
+                            'color': '#F44336',
+                            'width': '500px',
+                        }).append('Unknown error!'));
                     }
                     console.error(error);
                     this.showError(error);
                 });
         },
 
-        showError: function (error) {
+        showError: function(error) {
             let errorMsg;
             if (error.error && error.error.message) {
                 // handle errors thrown by kbase service clients
@@ -935,16 +890,16 @@ define([
             this.infoPanel.append('<div class="alert alert-danger">Error: ' + errorMsg + '</span>');
         },
 
-        hideError: function () {
+        hideError: function() {
             this.infoPanel.empty();
         },
 
-        loggedInCallback: function (event, auth) {
+        loggedInCallback: function(event, auth) {
             this.token = auth.token;
             return this;
         },
 
-        loggedOutCallback: function () {
+        loggedOutCallback: function() {
             this.token = null;
             return this;
         },

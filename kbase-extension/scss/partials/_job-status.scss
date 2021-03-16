@@ -1,5 +1,55 @@
+%dropdown-menu-item-link {
+  @include body-text;
+}
+
 .kb-job-status {
   box-shadow: none;
+
+  &__dropdown {
+    &_header {
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    /* .kb-job-status__dropdown-menu */
+    &-menu {
+      @include body-text;
+
+      /* .kb-job-status__dropdown-menu-item */
+      &-item {
+        /* .kb-job-status__dropdown-menu-item-link */
+        &-link {
+
+          &--retry,
+          &--cancel {
+            @include body-text;
+            width: 100%;
+            border: 0;
+          }
+
+          &--retry {
+            color: use_color('primary');
+
+            &:hover,
+            &:active {
+              color: use_color('white');
+              background: use_color('primary');
+            }
+          }
+
+          &--cancel {
+            color: use_color('error-dark');
+
+            &:hover,
+            &:active {
+              color: use_color('white');
+              background: use_color('error');
+            }
+          }
+        }
+      }
+    }
+  }
 
   &__table {
     @include tabular-text;

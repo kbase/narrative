@@ -15,9 +15,89 @@ define([
         tr = t('tr'),
         th = t('th'),
         tbody = t('tbody'),
-        i = t('i'),
+        span = t('span'),
+        button = t('button'),
+        ul = t('ul'),
+        li = t('li'),
+        div = t('div'),
         dataTablePageLength = 50,
         cssBaseClass = 'kb-job-status';
+
+    function createActionsDropdown() {
+        // each button has an action, either 'cancel' or 'retry',
+        // and a target, which refers to the status of the jobs
+        // that the action will be performed upon.
+
+        const actionArr = [
+            {
+                label: 'Cancel queued jobs',
+                action: 'cancel',
+                target: 'queued',
+            },
+            {
+                label: 'Cancel running jobs',
+                action: 'cancel',
+                target: 'running',
+            },
+            {
+                label: 'Retry cancelled jobs',
+                action: 'retry',
+                target: 'terminated',
+            },
+            {
+                label: 'Retry failed jobs',
+                action: 'retry',
+                target: 'error',
+            },
+        ];
+        const uniqueId = html.genId();
+        return div(
+            {
+                class: `${cssBaseClass}__dropdown dropdown`,
+            },
+            [
+                button(
+                    {
+                        id: uniqueId,
+                        type: 'button',
+                        dataToggle: 'dropdown',
+                        ariaHaspopup: true,
+                        ariaExpanded: false,
+                        class: `btn btn-default ${cssBaseClass}__dropdown_header`,
+                    },
+                    [
+                        'Cancel / retry all',
+                        span({
+                            class: `fa fa-caret-down kb-pointer ${cssBaseClass}__icon`,
+                        }),
+                    ]
+                ),
+                ul(
+                    {
+                        class: `${cssBaseClass}__dropdown-menu dropdown-menu`,
+                        ariaLabelledby: uniqueId,
+                    },
+                    actionArr.map((actionObj) => {
+                        return li(
+                            {
+                                class: `${cssBaseClass}__dropdown-menu-item`,
+                            },
+                            button(
+                                {
+                                    class: `${cssBaseClass}__dropdown-menu-item-link--${actionObj.action}`,
+                                    type: 'button',
+                                    // TODO: add action listener and implementation here
+                                    dataAction: actionObj.action,
+                                    dataTarget: actionObj.target,
+                                },
+                                actionObj.label
+                            )
+                        );
+                    })
+                ),
+            ]
+        );
+    }
 
     function createTable() {
         return table(
@@ -51,14 +131,7 @@ define([
                                     {
                                         class: `${cssBaseClass}__table_head_cell col-sm-3`,
                                     },
-                                    [
-                                        // TODO: this will be a dropdown featuring
-                                        // several options
-                                        'Action',
-                                        i({
-                                            class: `fa fa-caret-down kb-pointer ${cssBaseClass}__icon`,
-                                        }),
-                                    ]
+                                    createActionsDropdown()
                                 ),
                                 th(
                                     {

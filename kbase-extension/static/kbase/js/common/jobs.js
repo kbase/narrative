@@ -6,8 +6,8 @@ define(['common/html', 'common/format', 'common/ui'], (html, format, UI) => {
 
     const cssBaseClass = 'kb-job-status',
         jobNotFound = [
-            'This job was not found, or may not have been registered with this Narrative.',
-            'You will not be able to inspect the job status or view the job log',
+            'This job was not found, or may not have been registered with this narrative.',
+            'You will not be able to inspect the job status or view the job log.',
         ],
         jobStatusUnknown = ['Determining job state...'],
         // valid job states from ee2, plus 'does_not_exist'
@@ -244,7 +244,7 @@ define(['common/html', 'common/format', 'common/ui'], (html, format, UI) => {
         }
 
         if (jobState.status === 'does_not_exist') {
-            return jobStatusUnknown;
+            return jobNotFound;
         }
 
         const jobLines = [];
@@ -363,6 +363,8 @@ define(['common/html', 'common/format', 'common/ui'], (html, format, UI) => {
         isValidJobInfoObject: isValidJobInfoObject,
         jobAction: jobAction,
         jobLabel: jobLabel,
+        jobNotFound: jobNotFound,
+        jobStatusUnknown: jobStatusUnknown,
         niceState: niceState,
         updateJobModel: updateJobModel,
         validJobStates: validJobStates,

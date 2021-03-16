@@ -4,7 +4,7 @@ define(['./jobsData'], (JobsData) => {
     const jobData = JobsData.allJobs;
     const jobRemapping = {
         'job cancelled whilst in the queue': '5ffdc18a06653f3fce3dac53',
-        'job running': '6022c09d4a1de16a18b7528d',
+        'job running': '6047a6bf68469577045ed88f',
         'job cancelled during run': '60145f8c6fc98a309e1a27e1',
         'job died with error': '6001e992b1fc2820d22ee7f5',
         'job finished with success': '5ff4dcd6b254b87cbf066b15',

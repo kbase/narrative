@@ -328,10 +328,8 @@ define([
                     this.sendBusMessage(CELL, msgData.cell_id, 'run-status', msgData);
                     break;
                 case 'job_canceled':
-                    // eslint-disable-next-line no-case-declarations
-                    const canceledId = msgData.job_id;
-                    this.sendBusMessage(JOB, canceledId, 'job-canceled', {
-                        jobId: canceledId,
+                    this.sendBusMessage(JOB, msgData.job_id, 'job-canceled', {
+                        jobId: msgData.job_id,
                         via: 'job_canceled',
                     });
                     break;

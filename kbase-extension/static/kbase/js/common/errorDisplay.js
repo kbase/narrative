@@ -175,12 +175,11 @@ define(['bluebird', 'common/html'], (Promise, html) => {
     }
 
     function convertUnknownError(rawError) {
-        const errorObject = {
+        return {
             type: 'Unknown error',
             message: 'error in unknown format',
             errorDump: rawError,
         };
-        return errorObject;
     }
 
     function convertInternalError(rawError) {

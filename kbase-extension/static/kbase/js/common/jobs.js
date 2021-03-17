@@ -1,4 +1,9 @@
-define(['common/html', 'common/format', 'common/ui'], (html, format, UI) => {
+define(['common/html', 'common/format', 'common/ui', 'common/errorDisplay'], (
+    html,
+    format,
+    UI,
+    ErrorDisplay
+) => {
     'use strict';
 
     const t = html.tag,
@@ -95,11 +100,12 @@ define(['common/html', 'common/format', 'common/ui'], (html, format, UI) => {
     /**
      * Given a job state, return the appropriate action to offer in the UI
      *
-     * @param {string} jobStatus
+     * @param {object} jobState
      * @returns {string} label
      */
 
-    function jobAction(jobStatus) {
+    function jobAction(jobState) {
+        const jobStatus = jobState.status || 'does_not_exist';
         const cancel = 'Cancel',
             // statuses not listed here are 'error', 'terminated', and 'does_not_exist'
             // the action for all those should be 'Retry'
@@ -116,11 +122,12 @@ define(['common/html', 'common/format', 'common/ui'], (html, format, UI) => {
     /**
      * Convert a job state into a short string to present in the UI
      *
-     * @param {string} jobStatus
+     * @param {object} jobState
      * @returns {string} label
      */
 
-    function jobLabel(jobStatus) {
+    function jobLabel(jobState) {
+        const jobStatus = jobState.status || 'does_not_exist';
         // covers 'does_not_exist' or invalid job states
         let label = 'Job not found';
         switch (jobStatus) {
@@ -136,7 +143,7 @@ define(['common/html', 'common/format', 'common/ui'], (html, format, UI) => {
                 label = 'Success';
                 break;
             case 'error':
-                label = 'Failed';
+                label = 'Failed: ' + ErrorDisplay.normaliseErrorObject({ jobState: jobState }).type;
                 break;
             case 'terminated':
                 label = 'Cancelled';

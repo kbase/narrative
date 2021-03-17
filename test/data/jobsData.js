@@ -174,7 +174,7 @@ define(['common/format'], (format) => {
                     history: [jobStrings.queueHistory, jobStrings.runHistory, jobStrings.error],
                 },
                 jobAction: jobStrings.action.retry,
-                jobLabel: 'Failed',
+                jobLabel: 'Failed: Server error',
                 niceState: {
                     class: 'kb-job-status__summary--error',
                     label: 'error',

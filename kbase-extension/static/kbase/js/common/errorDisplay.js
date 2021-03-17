@@ -1,4 +1,4 @@
-define(['bluebird', 'uuid', 'common/html'], (Promise, Uuid, html) => {
+define(['bluebird', 'common/html'], (Promise, html) => {
     'use strict';
 
     const t = html.tag,
@@ -12,13 +12,41 @@ define(['bluebird', 'uuid', 'common/html'], (Promise, Uuid, html) => {
             'If the app fails consistently, please contact us at ' +
             '<a href="https://www.kbase.us/support">https://www.kbase.us/support</a>.';
 
+    /**
+     * Ingests the raw object from the model supplied when initialising the module, or
+     * passed in directly. Note that jobState objects containing errors should be passed in
+     * in the form `{ jobState: <jobStateObject> }` so that the function knows it is a
+     * jobState without going through the hassle of creating a proper object system.
+     *
+     * @param {object} rawObject
+     * @returns {object} normalised error object
+     */
+
+    function normaliseErrorObject(rawObject) {
+        if (rawObject.exec && rawObject.exec.jobState) {
+            rawObject = { jobState: rawObject.exec.jobState };
+        }
+
+        let errorObject;
+        if (rawObject.jobState && (rawObject.jobState.error || rawObject.jobState.errormsg)) {
+            errorObject = convertJobError(rawObject.jobState);
+        } else if (rawObject.internalError) {
+            errorObject = convertInternalError(rawObject.internalError);
+        }
+
+        if (!errorObject) {
+            // unknown error format
+            return convertUnknownError(rawObject);
+        }
+        return errorObject;
+    }
+
     function defaultError() {
         return {
             location: 'unknown',
             type: 'unknown',
             message: 'An unknown error was detected.',
-            advice: defaultAdvice,
-            detail: null,
+            advice: [defaultAdvice],
         };
     }
 
@@ -52,7 +80,17 @@ define(['bluebird', 'uuid', 'common/html'], (Promise, Uuid, html) => {
                 {
                     class: `${cssBaseClass}__advice`,
                 },
-                [errorObject.advice]
+                ul(
+                    { class: `${cssBaseClass}__advice_list` },
+                    errorObject.advice.map((adv) => {
+                        return li(
+                            {
+                                class: `${cssBaseClass}__advice_list_item`,
+                            },
+                            adv
+                        );
+                    })
+                )
             ),
 
             errorObject.detail
@@ -77,6 +115,34 @@ define(['bluebird', 'uuid', 'common/html'], (Promise, Uuid, html) => {
                   )
                 : '',
 
+            errorObject.errorDump
+                ? div(
+                      {
+                          class: `${cssBaseClass}__error_dump_container`,
+                      },
+                      [
+                          div(
+                              {
+                                  class: `${cssBaseClass}__error_dump_title collapsed`,
+                                  role: 'button',
+                                  dataToggle: 'collapse',
+                                  dataTarget: `#${uniqueID}__dump`,
+                                  ariaExpanded: 'false',
+                                  ariaControls: `${uniqueID}__dump`,
+                              },
+                              [span({}, ['Raw error JSON'])]
+                          ),
+                          pre(
+                              {
+                                  class: `${cssBaseClass}__error_dump_code collapse`,
+                                  id: `${uniqueID}__dump`,
+                              },
+                              [JSON.stringify(errorObject.errorDump, null, 1)]
+                          ),
+                      ]
+                  )
+                : '',
+
             errorObject.stacktrace
                 ? div(
                       {
@@ -88,16 +154,16 @@ define(['bluebird', 'uuid', 'common/html'], (Promise, Uuid, html) => {
                                   class: `${cssBaseClass}__stacktrace_title collapsed`,
                                   role: 'button',
                                   dataToggle: 'collapse',
-                                  dataTarget: `#${uniqueID}`,
+                                  dataTarget: `#${uniqueID}__trace`,
                                   ariaExpanded: 'false',
-                                  ariaControls: uniqueID,
+                                  ariaControls: `${uniqueID}__trace`,
                               },
                               [span({}, ['Error stacktrace'])]
                           ),
                           pre(
                               {
                                   class: `${cssBaseClass}__stacktrace_code collapse`,
-                                  id: uniqueID,
+                                  id: `${uniqueID}__trace`,
                               },
                               [errorObject.stacktrace]
                           ),
@@ -109,10 +175,22 @@ define(['bluebird', 'uuid', 'common/html'], (Promise, Uuid, html) => {
     }
 
     function convertUnknownError(rawError) {
-        rawError.errorDisplayId = new Uuid(4).format();
-        console.error(rawError);
-        rawError.message = `Unknown error: check console for error with errorDisplayId ${rawError.errorDisplayId}.`;
-        return rawError;
+        const errorObject = {
+            type: 'Unknown error',
+            message: 'error in unknown format',
+            errorDump: rawError,
+        };
+        return errorObject;
+    }
+
+    function convertInternalError(rawError) {
+        return Object.assign(defaultError(), {
+            location: 'app cell',
+            type: rawError.title,
+            message: rawError.message,
+            advice: rawError.advice,
+            detail: rawError.detail,
+        });
     }
 
     /**
@@ -140,7 +218,7 @@ define(['bluebird', 'uuid', 'common/html'], (Promise, Uuid, html) => {
                 errorObj.type = jobState.error.name;
                 errorObj.message = jobState.error.message;
                 errorObj.stacktrace = jobState.error.error;
-                errorObj.detail = null;
+                delete errorObj.detail;
             } else if (jobState.error.name) {
                 /**
                  * jobState.error = {
@@ -151,8 +229,10 @@ define(['bluebird', 'uuid', 'common/html'], (Promise, Uuid, html) => {
                 errorObj.type = jobState.error.name;
                 errorObj.message = 'Error code: ' + String(jobState.error.code);
             }
+
             if (!errorObj.message) {
                 jobState.error.location = 'job execution';
+
                 return convertUnknownError(jobState.error);
             }
         } else if (jobState.errormsg) {
@@ -167,26 +247,6 @@ define(['bluebird', 'uuid', 'common/html'], (Promise, Uuid, html) => {
         }
 
         return errorObj;
-    }
-
-    function convertInternalError(rawError) {
-        return Object.assign(defaultError(), {
-            location: 'app cell',
-            type: rawError.title,
-            message: rawError.message,
-            advice: ul(
-                { class: `${cssBaseClass}__advice_list` },
-                rawError.advice.map((adv) => {
-                    return li(
-                        {
-                            class: `${cssBaseClass}__advice_list_item`,
-                        },
-                        adv
-                    );
-                })
-            ),
-            detail: rawError.detail,
-        });
     }
 
     function factory(config) {
@@ -210,23 +270,10 @@ define(['bluebird', 'uuid', 'common/html'], (Promise, Uuid, html) => {
 
         function start(arg) {
             return Promise.try(() => {
+                const rawObject = model.getRawObject();
                 container = arg.node;
                 container.classList.add(`${cssBaseClass}__container`);
-                let errorObject;
-
-                if (
-                    model.hasItem('exec.jobState.error') ||
-                    model.hasItem('exec.jobState.errormsg')
-                ) {
-                    errorObject = convertJobError(model.getItem('exec.jobState'));
-                } else if (model.hasItem('internalError')) {
-                    errorObject = convertInternalError(model.getItem('internalError'));
-                } else {
-                    // unknown error format
-                    errorObject = convertUnknownError(model.getRawObject());
-                }
-
-                container.innerHTML = renderErrorLayout(errorObject);
+                container.innerHTML = renderErrorLayout(normaliseErrorObject(rawObject));
             });
         }
 
@@ -248,5 +295,6 @@ define(['bluebird', 'uuid', 'common/html'], (Promise, Uuid, html) => {
         },
         defaultAdvice: defaultAdvice,
         cssBaseClass: cssBaseClass,
+        normaliseErrorObject: normaliseErrorObject,
     };
 });

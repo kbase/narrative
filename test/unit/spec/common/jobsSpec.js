@@ -103,28 +103,26 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
             ['does_not_exist', 'Job not found'],
             ['estimating', 'Queued'],
             ['queued', 'Queued'],
-            ['error', 'Failed'],
+            ['error', 'Failed: Unknown error'], // no error object present
             ['terminated', 'Cancelled'],
             ['running', 'Running'],
         ];
         labelToState.forEach((entry) => {
             it(`should create an abbreviated label when given the job state ${entry[0]}`, () => {
-                expect(Jobs.jobLabel(entry[0])).toEqual(entry[1]);
+                expect(Jobs.jobLabel({ status: entry[0] })).toEqual(entry[1]);
             });
         });
     });
 
-    describe('jobAction, valid data', () => {
-        JobsData.allJobs.forEach((state) => {
-            it(`should generate a job action with the job state ${state.status}`, () => {
-                expect(Jobs.jobAction(state.status)).toEqual(state.meta.jobAction);
-            });
-        });
-    });
-    describe('jobAction, invalid data', () => {
+    describe('jobAction', () => {
         badStates.forEach((item) => {
             it(`should generate a retry action with the job state ${item}`, () => {
-                expect(Jobs.jobAction(item)).toEqual(JobsData.jobStrings.action.retry);
+                expect(Jobs.jobAction({ status: item })).toEqual(JobsData.jobStrings.action.retry);
+            });
+        });
+        JobsData.allJobs.forEach((state) => {
+            it(`should generate a job action with the job state ${state.status}`, () => {
+                expect(Jobs.jobAction(state)).toEqual(state.meta.jobAction);
             });
         });
     });
@@ -132,12 +130,12 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
     describe('jobLabel', () => {
         badStates.forEach((item) => {
             it(`creates an appropriate label with the input ${JSON.stringify(item)}`, () => {
-                expect(Jobs.jobLabel(item)).toEqual('Job not found');
+                expect(Jobs.jobLabel({ status: item })).toEqual('Job not found');
             });
         });
         JobsData.allJobs.forEach((state) => {
             it(`creates an appropriate label with input in state ${state.status}`, () => {
-                expect(Jobs.jobLabel(state.status)).toEqual(state.meta.jobLabel);
+                expect(Jobs.jobLabel(state)).toEqual(state.meta.jobLabel);
             });
         });
     });

@@ -1,9 +1,11 @@
-define(['common/html', 'common/cellComponents/actionButtons'], (html, ActionButton) => {
+define(['common/html', 'common/cellComponents/actionButtons', 'common/jobs'], (
+    html,
+    ActionButton,
+    Jobs
+) => {
     'use strict';
 
-    const div = html.tag('div'),
-        span = html.tag('span'),
-        cssCellType = 'kb-bulk-import';
+    const div = html.tag('div');
 
     /**
      * options -
@@ -41,55 +43,54 @@ define(['common/html', 'common/cellComponents/actionButtons'], (html, ActionButt
             actionButton.setState(newState);
         }
 
+        /**
+         * Update the cell status line to take into account the new job state
+         * @param {object} jobState
+         */
+        function updateJobState(jobState) {
+            ui.setContent('run-control-panel.execMessage', Jobs.createCombinedJobState(jobState));
+        }
+
         function buildLayout(events) {
+            const cssBaseClass = 'kb-rcp';
             return div(
                 {
-                    class: `${cssCellType}-control-panel__container`,
+                    class: cssBaseClass,
                     dataElement: 'run-control-panel',
                 },
                 [
                     div(
                         {
-                            class: `${cssCellType}-control-panel__border`,
+                            class: `${cssBaseClass}__layout_div`,
                         },
                         [
+                            // action button widget
                             actionButton.buildLayout(events),
-                            div(
-                                {
-                                    class: `${cssCellType}-control-panel__status_container`,
-                                    dataElement: 'status',
-                                },
-                                [
-                                    div(
-                                        {
-                                            class: `${cssCellType}-control-panel__message_box_holder`,
-                                        },
-                                        [
-                                            div(
-                                                {
-                                                    class: `${cssCellType}-control-panel__message_box`,
-                                                },
-                                                [
-                                                    span({
-                                                        class: `${cssCellType}-control-panel__exec_message`,
-                                                        dataElement: 'execMessage',
-                                                    }),
-                                                ]
-                                            ),
-                                        ]
-                                    ),
-                                ]
-                            ),
+                            // status stuff
+                            div({
+                                class: `${cssBaseClass}-status__fsm_display hidden`,
+                                dataElement: 'fsm-display',
+                            }),
+                            div({
+                                class: `${cssBaseClass}-status__container`,
+                                dataElement: 'execMessage',
+                            }),
+                            div({
+                                class: `${cssBaseClass}__toolbar`,
+                                dataElement: 'toolbar',
+                            }),
                         ]
                     ),
                 ]
             );
         }
+
         return {
             start: start,
             stop: stop,
             buildLayout: buildLayout,
             setActionState: setActionState,
+            updateJobState: updateJobState,
         };
     }
 

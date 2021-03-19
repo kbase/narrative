@@ -513,11 +513,8 @@ define([
                 workspaceClient: workspaceClient,
             });
 
-            const node = document.createElement('div');
-            ui.getElement('body.tab-pane.widget-container.widget').appendChild(node);
-
             return tabWidget.start({
-                node: node,
+                node: ui.getElement('body.tab-pane.widget'),
                 currentApp: typesToFiles[state.fileType.selected].appId,
             });
         }
@@ -688,6 +685,7 @@ define([
                             },
                             [
                                 buildActionButton(events),
+
                                 div(
                                     {
                                         class: `${cssCellType}__tab_pane`,
@@ -698,22 +696,10 @@ define([
                                             class: `${cssCellType}__filetype_panel`,
                                             dataElement: 'filetype-panel',
                                         }),
-                                        div(
-                                            {
-                                                class: `${cssCellType}__tab_pane_widget_container`,
-                                                dataElement: 'widget-container',
-                                            },
-                                            [
-                                                div({
-                                                    class: `${cssCellType}__tab_pane_widget_container_tabs`,
-                                                    dataElement: 'tab-container',
-                                                }),
-                                                div({
-                                                    class: `${cssCellType}__tab_pane_widget_container_widget`,
-                                                    dataElement: 'widget',
-                                                }),
-                                            ]
-                                        ),
+                                        div({
+                                            class: `${cssCellType}__tab_pane_widget`,
+                                            dataElement: 'widget',
+                                        }),
                                     ]
                                 ),
                             ]
@@ -735,7 +721,7 @@ define([
             kbaseNode.innerHTML = layout.content;
             const proms = [
                 buildFileTypePanel(ui.getElement('body.tab-pane.filetype-panel')),
-                buildTabs(ui.getElement('body.tab-pane.widget-container.tab-container')),
+                buildTabs(ui.getElement('body.run-control-panel.toolbar')),
             ];
             return Promise.all(proms).then(() => {
                 layout.events.attachEvents(kbaseNode);

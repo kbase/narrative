@@ -23,12 +23,10 @@ define(['bluebird', 'common/html', 'common/ui', 'common/events'], (Promise, html
      *     }
      */
     function CellTabs(options) {
-        let bus = options.bus,
-            ui,
+        const bus = options.bus,
             tabToggleAction = options.toggleAction,
-            controlBarTabs = options.tabs,
-            state,
-            container;
+            controlBarTabs = options.tabs;
+        let ui, state, container;
 
         /**
          * State should have the following structure:
@@ -62,16 +60,9 @@ define(['bluebird', 'common/html', 'common/ui', 'common/events'], (Promise, html
             const events = Events.make(),
                 content = div(
                     {
-                        class: `${cssCellType}-tabs__container`,
+                        class: 'kb-rcp__btn-toolbar btn-toolbar',
                     },
-                    [
-                        div(
-                            {
-                                class: `${cssCellType}-tabs__toolbar btn-toolbar`,
-                            },
-                            [buildTabButtons(events)]
-                        ),
-                    ]
+                    [buildTabButtons(events)]
                 );
             return {
                 content: content,

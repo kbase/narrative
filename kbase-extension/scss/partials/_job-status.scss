@@ -120,6 +120,9 @@
       text-transform: uppercase;
     }
 
+    &--status {
+      text-transform: capitalize;
+    }
     /*
       .kb-job-status__table_cell--action,
       .kb-job-status__table_cell--log-view,

@@ -25,6 +25,8 @@ define([
 
     function factory(config) {
         const runtime = Runtime.make(),
+            // paramsBus is used to communicate from this parameter container to the parent that
+            // created and owns it
             paramsBus = config.bus,
             workspaceId = config.workspaceId,
             initialParams = config.initialParams,
@@ -32,6 +34,7 @@ define([
             paramResolver = ParamResolver.make(),
             widgets = [],
             events = Events.make(),
+            // this bus comes from
             bus = runtime.bus().makeChannelBus({
                 description: 'A file path widget',
             });

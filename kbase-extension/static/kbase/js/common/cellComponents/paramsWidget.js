@@ -91,6 +91,7 @@ define([
 
             // Forward all changed parameters to the controller. That is our main job!
             fieldWidget.bus.on('changed', (message) => {
+                console.log('SENDING PARAMETER CHANGED MESSAGE');
                 bus.send(
                     {
                         parameter: parameterSpec.id,

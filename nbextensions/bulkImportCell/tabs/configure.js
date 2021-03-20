@@ -1,12 +1,10 @@
 define([
     'bluebird',
-    'common/ui',
-    'common/html',
     'common/events',
     'common/runtime',
     'common/cellComponents/paramsWidget',
     'common/cellComponents/filePathWidget',
-], (Promise, UI, html, Events, Runtime, ParamsWidget, FilePathWidget) => {
+], (Promise, Events, Runtime, ParamsWidget, FilePathWidget) => {
     'use strict';
 
     /*
@@ -19,7 +17,8 @@ define([
         const model = options.model,
             spec = options.spec,
             fileType = options.fileType,
-            runtime = Runtime.make();
+            runtime = Runtime.make(),
+            cellBus = options.bus;
 
         let container = null;
 
@@ -58,90 +57,15 @@ define([
             we make the bulk import work with multiple data types
         */
         function buildParamsWidget(node) {
-            const paramBus = runtime
-                .bus()
-                .makeChannelBus({ description: 'Parent comm bus for input widget' });
             // This is the key in the model that maps to the list of params for the current app.
-            const paramKey = `params.${fileType}`;
+            const paramKey = `${fileType}`;
+            const paramBus = buildMessageBus(paramKey, 'Parent comm bus for parameters widget');
 
             const widget = ParamsWidget.make({
                 bus: paramBus,
                 workspaceId: runtime.workspaceId(),
-                initialParams: model.getItem(paramKey),
+                initialParams: model.getItem(['params', paramKey]),
             });
-
-            paramBus.on('sync-params', (message) => {
-                message.parameters.forEach((paramId) => {
-                    paramBus.send(
-                        {
-                            parameter: paramId,
-                            value: model.getItem([paramKey, message.parameter]),
-                        },
-                        {
-                            key: {
-                                type: 'update',
-                                parameter: message.parameter,
-                            },
-                        }
-                    );
-                });
-            });
-
-            paramBus.on('parameter-sync', (message) => {
-                const value = model.getItem([paramKey, message.parameter]);
-                paramBus.send(
-                    {
-                        value: value,
-                    },
-                    {
-                        // This points the update back to a listener on this key
-                        key: {
-                            type: 'update',
-                            parameter: message.parameter,
-                        },
-                    }
-                );
-            });
-
-            paramBus.on('set-param-state', (message) => {
-                model.setItem('paramState', message.id, message.state);
-            });
-
-            paramBus.respond({
-                key: {
-                    type: 'get-param-state',
-                },
-                handle: function (message) {
-                    return {
-                        state: model.getItem('paramState', message.id),
-                    };
-                },
-            });
-
-            paramBus.respond({
-                key: {
-                    type: 'get-parameter',
-                },
-                handle: function (message) {
-                    return {
-                        value: model.getItem([paramKey, message.parameterName]),
-                    };
-                },
-            });
-
-            //TODO: disabling for now until we figure out what to do about state
-            // paramBus.on('parameter-changed', function(message) {
-            //     // TODO: should never get these in the following states....
-
-            //     let state = fsm.getCurrentState().state;
-            //     let isError = Boolean(message.isError);
-            //     if (state.mode === 'editing') {
-            //         model.setItem(['params', message.parameter], message.newValue);
-            //         evaluateAppState(isError);
-            //     } else {
-            //         console.warn('parameter-changed event detected when not in editing mode - ignored');
-            //     }
-            // });
 
             return widget
                 .start({
@@ -158,90 +82,15 @@ define([
         }
 
         function buildFilePathWidget(node) {
-            const paramBus = runtime
-                .bus()
-                .makeChannelBus({ description: 'Parent comm bus for input widget' });
             // This is the key in the model that maps to the list of params for the current app.
-            const paramKey = `params.${fileType}`;
+            const paramKey = `${fileType}`;
+            const paramBus = buildMessageBus(paramKey, 'Parent comm bus for filePath widget');
 
             const widget = FilePathWidget.make({
                 bus: paramBus,
                 workspaceId: runtime.workspaceId(),
-                initialParams: model.getItem(paramKey),
+                initialParams: model.getItem(['params', paramKey]),
             });
-
-            paramBus.on('sync-params', (message) => {
-                message.parameters.forEach((paramId) => {
-                    paramBus.send(
-                        {
-                            parameter: paramId,
-                            value: model.getItem([paramKey, message.parameter]),
-                        },
-                        {
-                            key: {
-                                type: 'update',
-                                parameter: message.parameter,
-                            },
-                        }
-                    );
-                });
-            });
-
-            paramBus.on('parameter-sync', (message) => {
-                const value = model.getItem([paramKey, message.parameter]);
-                paramBus.send(
-                    {
-                        value: value,
-                    },
-                    {
-                        // This points the update back to a listener on this key
-                        key: {
-                            type: 'update',
-                            parameter: message.parameter,
-                        },
-                    }
-                );
-            });
-
-            paramBus.on('set-param-state', (message) => {
-                model.setItem('paramState', message.id, message.state);
-            });
-
-            paramBus.respond({
-                key: {
-                    type: 'get-param-state',
-                },
-                handle: function (message) {
-                    return {
-                        state: model.getItem('paramState', message.id),
-                    };
-                },
-            });
-
-            paramBus.respond({
-                key: {
-                    type: 'get-parameter',
-                },
-                handle: function (message) {
-                    return {
-                        value: model.getItem([paramKey, message.parameterName]),
-                    };
-                },
-            });
-
-            //TODO: disabling for now until we figure out what to do about state
-            // paramBus.on('parameter-changed', function(message) {
-            //     // TODO: should never get these in the following states....
-
-            //     let state = fsm.getCurrentState().state;
-            //     let isError = Boolean(message.isError);
-            //     if (state.mode === 'editing') {
-            //         model.setItem(['params', message.parameter], message.newValue);
-            //         evaluateAppState(isError);
-            //     } else {
-            //         console.warn('parameter-changed event detected when not in editing mode - ignored');
-            //     }
-            // });
 
             return widget
                 .start({
@@ -256,6 +105,92 @@ define([
                     };
                 });
         }
+
+        function buildMessageBus(paramKey, description) {
+            const bus = runtime
+                .bus()
+                .makeChannelBus({ description: description });
+
+                bus.on('sync-params', (message) => {
+                    message.parameters.forEach((paramId) => {
+                        bus.send(
+                            {
+                                parameter: paramId,
+                                value: model.getItem([paramKey, message.parameter]),
+                            },
+                            {
+                                key: {
+                                    type: 'update',
+                                    parameter: message.parameter,
+                                },
+                            }
+                        );
+                    });
+                });
+
+                bus.on('parameter-sync', (message) => {
+                    const value = model.getItem([paramKey, message.parameter]);
+                    bus.send(
+                        {
+                            value: value,
+                        },
+                        {
+                            // This points the update back to a listener on this key
+                            key: {
+                                type: 'update',
+                                parameter: message.parameter,
+                            },
+                        }
+                    );
+                });
+
+                bus.on('set-param-state', (message) => {
+                    model.setItem('paramState', message.id, message.state);
+                });
+
+                bus.respond({
+                    key: {
+                        type: 'get-param-state',
+                    },
+                    handle: function (message) {
+                        return {
+                            state: model.getItem('paramState', message.id),
+                        };
+                    },
+                });
+
+                bus.respond({
+                    key: {
+                        type: 'get-parameter',
+                    },
+                    handle: function (message) {
+                        return {
+                            value: model.getItem([paramKey, message.parameterName]),
+                        };
+                    },
+                });
+
+                //TODO: disabling for now until we figure out what to do about state
+                bus.on('parameter-changed', (message) => {
+                    // TODO: should never get these in the following states....
+                    console.log('GOT PARAMETER CHANGED MESSAGE - ' + JSON.stringify(message));
+                    updateModelParameterValue(paramKey, message.parameter, message.newValue);
+
+                    // const state = fsm.getCurrentState().state,
+                    //     isError = Boolean(message.isError);
+                    // if (state.mode === 'editing') {
+                    //     model.setItem(['params', message.parameter], message.newValue);
+                    //     evaluateAppState(isError);
+                    // } else {
+                    //     console.warn('parameter-changed event detected when not in editing mode - ignored');
+                    // }
+                });
+            return bus;
+        }
+
+        function updateModelParameterValue(paramKey, param, newValue) {
+            model.setItem(['params', paramKey, param], newValue);
+        };
 
         function stop() {
             return Promise.try(() => {

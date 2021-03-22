@@ -568,7 +568,6 @@ define([
          */
         function deleteCell() {
             busEventManager.removeAll();
-            controlPanel.stop();
             fileTypePanel.stop();
             const cellIndex = Jupyter.notebook.find_cell_index(cell);
             Jupyter.notebook.delete_cell(cellIndex);

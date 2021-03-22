@@ -31,10 +31,6 @@ define(['common/html', 'common/cellComponents/actionButtons'], (html, ActionButt
             actionButtons: options.action.actions,
         });
 
-        function start() {}
-
-        function stop() {}
-
         function setActionState(newState) {
             actionButton.setState(newState);
         }
@@ -81,8 +77,6 @@ define(['common/html', 'common/cellComponents/actionButtons'], (html, ActionButt
         }
 
         return {
-            start: start,
-            stop: stop,
             buildLayout: buildLayout,
             setActionState: setActionState,
             setExecMessage: setExecMessage,

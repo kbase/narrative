@@ -2,47 +2,51 @@ define([
     'uuid',
     'narrativeConfig',
     'util/icon',
-    'common/utils',
-    'common/runtime',
     'common/busEventManager',
-    'common/ui',
     'common/events',
+    'common/html',
+    'common/jobs',
     'common/props',
+    'common/runtime',
     'common/spec',
+    'common/ui',
+    'common/utils',
     'base/js/namespace',
-    'kb_common/html',
     'kb_service/client/workspace',
-    './cellTabs',
-    './cellControlPanel',
     './fileTypePanel',
     './tabs/configure',
+    'common/cellComponents/cellControlPanel',
+    'common/cellComponents/cellTabs',
+    'common/cellComponents/fsmBar',
     'common/cellComponents/tabs/infoTab',
     'common/cellComponents/tabs/jobStatus/jobStatusTab',
-    './bulkImportCellStates',
     'common/cellComponents/tabs/results/resultsTab',
+    './bulkImportCellStates',
     './testAppObj',
 ], (
     Uuid,
     Config,
     Icon,
-    Utils,
-    Runtime,
     BusEventManager,
-    UI,
     Events,
-    Props,
-    Spec,
-    Jupyter,
     html,
+    Jobs,
+    Props,
+    Runtime,
+    Spec,
+    UI,
+    Utils,
+    Jupyter,
     Workspace,
-    CellTabs,
-    CellControlPanel,
     FileTypePanel,
     ConfigureWidget,
+    CellControlPanel,
+    CellTabs,
+    FSMBar,
     InfoTabWidget,
     JobStatusTabWidget,
-    States,
     ResultsWidget,
+    States,
     TestAppObj
 ) => {
     'use strict';
@@ -389,6 +393,15 @@ define([
         }
 
         /**
+         * Update the execMessage panel with details of the active job
+         */
+        function updateJobState() {
+            // TODO: this will need to be updated once the backend is in place
+            const jobState = testDataModel.getItem('exec.jobState');
+            // controlPanel.setExecMessage(Jobs.createCombinedJobState(jobState));
+        }
+
+        /**
          * Initializes the DOM node (kbaseNode) for rendering.
          */
         function setupDomNode() {
@@ -452,6 +465,13 @@ define([
             cellTabs.setState(state.tab);
             controlPanel.setActionState(state.action);
             fileTypePanel.updateState(state.fileType);
+            updateJobState();
+            // TODO: add in the FSM state
+            FSMBar.showFsmBar({
+                ui: ui,
+                state: {},
+                job: testDataModel.getItem('exec.jobState'),
+            });
         }
 
         /**
@@ -548,7 +568,6 @@ define([
          */
         function deleteCell() {
             busEventManager.removeAll();
-            controlPanel.stop();
             fileTypePanel.stop();
             const cellIndex = Jupyter.notebook.find_cell_index(cell);
             Jupyter.notebook.delete_cell(cellIndex);

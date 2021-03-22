@@ -34,7 +34,7 @@ define(['bluebird', 'common/html', 'common/ui', 'common/events'], (Promise, html
          *    selected: string (or null) - id of tab to activate. If null, no tab is activated
          *    tabs: {
          *      tabId: {
-         *        enable: boolean - if true, tab is clickable, otherwise should be disabled
+         *        enabled: boolean - if true, tab is clickable, otherwise should be disabled
          *        visible: boolean - if true, tab is visible
          *      }
          *    }
@@ -43,13 +43,15 @@ define(['bluebird', 'common/html', 'common/ui', 'common/events'], (Promise, html
          */
         function setState(newState) {
             state = newState;
-            for (const tabId of Object.keys(state.tabs)) {
-                const tabState = state.tabs[tabId];
-                if (tabState) {
-                    tabState.enabled ? ui.enableButton(tabId) : ui.disableButton(tabId);
-                    tabState.visible ? ui.showButton(tabId) : ui.hideButton(tabId);
+            if (state.tabs) {
+                for (const tabId of Object.keys(state.tabs)) {
+                    const tabState = state.tabs[tabId];
+                    if (tabState) {
+                        tabState.enabled ? ui.enableButton(tabId) : ui.disableButton(tabId);
+                        tabState.visible ? ui.showButton(tabId) : ui.hideButton(tabId);
+                    }
+                    ui.deactivateButton(tabId);
                 }
-                ui.deactivateButton(tabId);
             }
             if (state.selected) {
                 ui.activateButton(state.selected);
@@ -72,22 +74,22 @@ define(['bluebird', 'common/html', 'common/ui', 'common/events'], (Promise, html
 
         function buildTabButtons(events) {
             const buttons = Object.keys(controlBarTabs.tabs)
+                .filter((key) => {
+                    // ensure that the tab data is an object with key 'label'
+                    return (
+                        controlBarTabs.tabs[key] &&
+                        typeof controlBarTabs.tabs[key] === 'object' &&
+                        controlBarTabs.tabs[key].label
+                    );
+                })
                 .map((key) => {
                     const tab = controlBarTabs.tabs[key];
                     let icon;
-                    if (!tab) {
-                        console.warn('Tab not defined: ' + key);
-                        return;
-                    }
-                    if (tab.icon) {
-                        if (typeof tab.icon === 'string') {
-                            icon = {
-                                name: tab.icon,
-                                size: 2,
-                            };
-                        } else {
-                            icon = { size: 2 };
-                        }
+                    if (tab.icon && typeof tab.icon === 'string') {
+                        icon = {
+                            size: 2,
+                            name: tab.icon,
+                        };
                     }
                     return ui.buildButton({
                         label: tab.label,
@@ -105,10 +107,8 @@ define(['bluebird', 'common/html', 'common/ui', 'common/events'], (Promise, html
                         },
                         icon: icon,
                     });
-                })
-                .filter((x) => {
-                    return x ? true : false;
                 });
+
             bus.on('control-panel-tab', (message) => {
                 const tab = message.data.tab;
                 tabToggleAction(tab);
@@ -163,5 +163,6 @@ define(['bluebird', 'common/html', 'common/ui', 'common/events'], (Promise, html
 
     return {
         make: CellTabs,
+        cssClassName: cssCellType,
     };
 });

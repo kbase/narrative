@@ -30,7 +30,7 @@ define([
     './tabs/status/logTab',
     'common/errorDisplay',
     'common/cellComponents/tabs/infoTab',
-    'util/developerMode',
+    'common/cellComponents/fsmBar',
     'css!google-code-prettify/prettify.css',
     'css!font-awesome.css',
 ], (
@@ -65,7 +65,7 @@ define([
     logTabWidget,
     errorTabWidget,
     infoTabWidget,
-    devMode
+    FSMBar
 ) => {
     'use strict';
 
@@ -75,9 +75,7 @@ define([
         a = t('a'),
         p = t('p'),
         blockquote = t('blockquote'),
-        appStates = AppStates,
-        { toBoolean } = utils,
-        developerMode = devMode.mode;
+        { toBoolean } = utils;
 
     function factory(config) {
         const { workspaceInfo } = config,
@@ -176,18 +174,18 @@ define([
         function loadParamsWidget(arg) {
             return pRequire(['./appParamsWidget']).spread((Widget) => {
                 // TODO: widget should make own bus.
-                const bus = runtime
+                const widgetBus = runtime
                         .bus()
                         .makeChannelBus({ description: 'Parent comm bus for input widget' }),
                     widget = Widget.make({
-                        bus: bus,
+                        bus: widgetBus,
                         workspaceInfo: workspaceInfo,
                         initialParams: model.getItem('params'),
                     });
 
-                bus.on('sync-params', (message) => {
+                widgetBus.on('sync-params', (message) => {
                     message.parameters.forEach((paramId) => {
-                        bus.send(
+                        widgetBus.send(
                             {
                                 parameter: paramId,
                                 value: model.getItem(['params', message.parameter]),
@@ -202,9 +200,9 @@ define([
                     });
                 });
 
-                bus.on('parameter-sync', (message) => {
+                widgetBus.on('parameter-sync', (message) => {
                     const value = model.getItem(['params', message.parameter]);
-                    bus.send(
+                    widgetBus.send(
                         {
                             value: value,
                         },
@@ -218,25 +216,11 @@ define([
                     );
                 });
 
-                bus.on('set-param-state', (message) => {
+                widgetBus.on('set-param-state', (message) => {
                     model.setItem('paramState', message.id, message.state);
                 });
 
-                bus.on('toggle-batch-mode', () => {
-                    toggleBatchMode();
-                });
-
-                bus.respond({
-                    key: {
-                        type: 'get-batch-mode',
-                    },
-                    handle: function () {
-                        const canDoBatch = Config.get('features').batchAppMode;
-                        return canDoBatch && (model.getItem('user-settings.batchMode') || false);
-                    },
-                });
-
-                bus.respond({
+                widgetBus.respond({
                     key: {
                         type: 'get-param-state',
                     },
@@ -247,7 +231,7 @@ define([
                     },
                 });
 
-                bus.respond({
+                widgetBus.respond({
                     key: {
                         type: 'get-parameter',
                     },
@@ -258,7 +242,17 @@ define([
                     },
                 });
 
-                bus.on('parameter-changed', (message) => {
+                widgetBus.respond({
+                    key: {
+                        type: 'get-batch-mode',
+                    },
+                    handle: function () {
+                        const canDoBatch = Config.get('features').batchAppMode;
+                        return canDoBatch && (model.getItem('user-settings.batchMode') || false);
+                    },
+                });
+
+                widgetBus.on('parameter-changed', (message) => {
                     // TODO: should never get these in the following states....
 
                     const { state } = fsm.getCurrentState();
@@ -273,6 +267,10 @@ define([
                     }
                 });
 
+                widgetBus.on('toggle-batch-mode', () => {
+                    toggleBatchMode();
+                });
+
                 return widget
                     .start({
                         node: arg.node,
@@ -281,7 +279,7 @@ define([
                     })
                     .then(() => {
                         return {
-                            bus: bus,
+                            bus: widgetBus,
                             instance: widget,
                         };
                     });
@@ -291,18 +289,18 @@ define([
         function loadViewParamsWidget(arg) {
             return pRequire(['./appParamsViewWidget']).spread((Widget) => {
                 // TODO: widget should make own bus.
-                const bus = runtime
+                const widgetBus = runtime
                         .bus()
                         .makeChannelBus({ description: 'Parent comm bus for input widget' }),
                     widget = Widget.make({
-                        bus: bus,
+                        bus: widgetBus,
                         workspaceInfo: workspaceInfo,
                         initialParams: model.getItem('params'),
                     });
 
-                bus.on('sync-params', (message) => {
+                widgetBus.on('sync-params', (message) => {
                     message.parameters.forEach((paramId) => {
-                        bus.send(
+                        widgetBus.send(
                             {
                                 parameter: paramId,
                                 value: model.getItem(['params', message.parameter]),
@@ -317,9 +315,9 @@ define([
                     });
                 });
 
-                bus.on('parameter-sync', (message) => {
+                widgetBus.on('parameter-sync', (message) => {
                     const value = model.getItem(['params', message.parameter]);
-                    bus.send(
+                    widgetBus.send(
                         {
                             value: value,
                         },
@@ -333,11 +331,11 @@ define([
                     );
                 });
 
-                bus.on('set-param-state', (message) => {
+                widgetBus.on('set-param-state', (message) => {
                     model.setItem('paramState', message.id, message.state);
                 });
 
-                bus.respond({
+                widgetBus.respond({
                     key: {
                         type: 'get-param-state',
                     },
@@ -348,7 +346,7 @@ define([
                     },
                 });
 
-                bus.respond({
+                widgetBus.respond({
                     key: {
                         type: 'get-parameter',
                     },
@@ -359,7 +357,7 @@ define([
                     },
                 });
 
-                bus.respond({
+                widgetBus.respond({
                     key: {
                         type: 'get-batch-mode',
                     },
@@ -369,7 +367,7 @@ define([
                     },
                 });
 
-                bus.on('parameter-changed', (message) => {
+                widgetBus.on('parameter-changed', (message) => {
                     // TODO: should never get these in the following states....
 
                     const { state } = fsm.getCurrentState();
@@ -391,83 +389,27 @@ define([
                     })
                     .then(() => {
                         return {
-                            bus: bus,
+                            bus: widgetBus,
                             instance: widget,
                         };
                     });
             });
         }
 
-        function batchConfigureWidget() {
-            function factory() {
-                let container, widget;
-
-                function start(arg) {
-                    container = arg.node;
-                    return loadBatchParamsWidget({
-                        node: container,
-                    }).then((result) => {
-                        widget = result;
-                    });
-                }
-
-                function stop() {
-                    return Promise.try(() => {
-                        if (widget) {
-                            return widget.instance.stop();
-                        }
-                    });
-                }
-
-                return {
-                    start: start,
-                    stop: stop,
-                };
-            }
-        }
-
-        function viewBatchConfigureWidget() {
-            function factory() {
-                let container, widget;
-
-                function start(arg) {
-                    container = arg.node;
-                    return loadViewBatchParamsWidget({
-                        node: container,
-                    }).then((result) => {
-                        widget = result;
-                    });
-                }
-
-                function stop() {
-                    return Promise.try(() => {
-                        if (widget) {
-                            return widget.instance.stop();
-                        }
-                    });
-                }
-
-                return {
-                    start: start,
-                    stop: stop,
-                };
-            }
-        }
-
         function configureWidget() {
-            function factory() {
-                let container, widget;
+            function widgetFactory() {
+                let widgetContainer, widget;
 
-                function start(arg) {
-                    container = arg.node;
+                function widgetStart(arg) {
+                    widgetContainer = arg.node;
                     return loadParamsWidget({
-                        node: container,
+                        node: widgetContainer,
                     }).then((result) => {
                         widget = result;
                     });
                 }
 
-                function stop() {
+                function widgetStop() {
                     return Promise.try(() => {
                         if (widget) {
                             return widget.instance.stop();
@@ -476,32 +418,32 @@ define([
                 }
 
                 return {
-                    start: start,
-                    stop: stop,
+                    start: widgetStart,
+                    stop: widgetStop,
                 };
             }
 
             return {
-                make: function (config) {
-                    return factory(config);
+                make: function () {
+                    return widgetFactory();
                 },
             };
         }
 
         function viewConfigureWidget() {
-            function factory() {
-                let container, widget;
+            function widgetFactory() {
+                let widgetContainer, widget;
 
-                function start(arg) {
-                    container = arg.node;
+                function widgetStart(arg) {
+                    widgetContainer = arg.node;
                     return loadViewParamsWidget({
-                        node: container,
+                        node: widgetContainer,
                     }).then((result) => {
                         widget = result;
                     });
                 }
 
-                function stop() {
+                function widgetStop() {
                     return Promise.try(() => {
                         if (widget) {
                             return widget.instance.stop();
@@ -510,14 +452,14 @@ define([
                 }
 
                 return {
-                    start: start,
-                    stop: stop,
+                    start: widgetStart,
+                    stop: widgetStop,
                 };
             }
 
             return {
-                make: function (config) {
-                    return factory(config);
+                make: function () {
+                    return widgetFactory();
                 },
             };
         }
@@ -543,8 +485,8 @@ define([
 
                     ui.activateButton(controlBarTabs.selectedTab.id);
 
-                    const node = document.createElement('div');
-                    ui.getElement('run-control-panel.tab-pane.widget').appendChild(node);
+                    const tabPaneNode = document.createElement('div');
+                    ui.getElement('run-control-panel.tab-pane.widget').appendChild(tabPaneNode);
                     return controlBarTabs.selectedTab.widget.start({
                         node: node,
                         jobId: selectedJobId,
@@ -705,19 +647,11 @@ define([
                     label: 'View Configure',
                     widget: viewConfigureWidget(),
                 },
-                batchConfigure: {
-                    label: 'Configure Batch',
-                    widget: batchConfigureWidget(),
-                },
-                viewBatchConfigure: {
-                    label: 'View Batch Configure',
-                    widget: viewBatchConfigureWidget(),
-                },
                 info: {
                     label: 'Info',
                     widget: infoTabWidget,
                 },
-                logs: {
+                jobStatus: {
                     label: 'Job Status',
                     widget: logTabWidget,
                 },
@@ -817,54 +751,6 @@ define([
             return;
         }
 
-        // view the FSM state in the UI for debugging purposes
-        function showFsmBar() {
-            if (!developerMode) {
-                return;
-            }
-            const currentState = fsm.getCurrentState(),
-                existingJob = model.getItem('exec.jobState');
-
-            let content = Object.keys(currentState.state)
-                .map((key) => {
-                    return span([
-                        span(
-                            {
-                                class: 'kb-fsm__key',
-                            },
-                            `${key}:`
-                        ),
-                        span(
-                            {
-                                class: 'kb-fsm__value',
-                            },
-                            currentState.state[key]
-                        ),
-                    ]);
-                })
-                .join('  ');
-
-            if (existingJob && existingJob.job_id) {
-                content =
-                    span([
-                        span(
-                            {
-                                class: 'kb-fsm__key',
-                            },
-                            'job ID:'
-                        ),
-                        span(
-                            {
-                                class: 'kb-fsm__value',
-                            },
-                            existingJob.job_id
-                        ),
-                    ]) + content;
-            }
-            ui.getElement('fsm-display').classList.remove('hidden');
-            ui.setContent('fsm-display', content);
-        }
-
         function doActionButton(data) {
             switch (data.action) {
                 case 'runApp':
@@ -884,6 +770,7 @@ define([
             }
         }
 
+        // bulkImportCell / cellTabs / buildTabButtons
         function buildRunControlPanelDisplayButtons(events) {
             const buttons = Object.keys(controlBarTabs.tabs)
                 .map((key) => {
@@ -900,7 +787,7 @@ define([
                                 size: 2,
                             };
                         } else {
-                            icon.size = 2;
+                            icon = { size: 2 };
                         }
                     }
                     return ui.buildButton({
@@ -1074,7 +961,7 @@ define([
             }
         }
 
-        function buildPython(cell, cellId, app, params) {
+        function buildPython(_cell, cellId, app, params) {
             const runId = new Uuid(4).format(),
                 fixedApp = fixApp(app);
             let code;
@@ -1084,11 +971,11 @@ define([
                 code = PythonInterop.buildAppRunner(cellId, runId, fixedApp, params);
             }
             // TODO: do something with the runId
-            cell.set_text(code);
+            _cell.set_text(code);
         }
 
-        function resetPython(cell) {
-            cell.set_text('');
+        function resetPython(_cell) {
+            _cell.set_text('');
         }
 
         function initializeFSM() {
@@ -1099,7 +986,7 @@ define([
                 currentState = { mode: 'new' };
             }
             fsm = Fsm.make({
-                states: appStates,
+                states: AppStates,
                 initialState: {
                     mode: 'new',
                 },
@@ -1238,8 +1125,9 @@ define([
          * Render the UI according to the FSM
          */
         function renderUI() {
-            showFsmBar();
             const state = fsm.getCurrentState();
+            FSMBar.showFsmBar({ ui: ui, state: state, job: model.getItem('exec.jobState') });
+
             if (!viewOnly && model.getItem('outdated')) {
                 const outdatedBtn = ui.getElement('outdated');
                 outdatedBtn.setAttribute(
@@ -1269,9 +1157,9 @@ define([
             let tabSelected = false;
             Object.keys(state.ui.tabs).forEach((tabId) => {
                 const tab = state.ui.tabs[tabId];
-                let tabConfig;
+                let tabState;
                 if (tab instanceof Array) {
-                    tabConfig = tab.filter((mode) => {
+                    tabState = tab.filter((mode) => {
                         if (mode.selector.viewOnly && viewOnly) {
                             return true;
                         }
@@ -1280,25 +1168,18 @@ define([
                         }
                     })[0].settings;
                 } else {
-                    tabConfig = tab;
+                    tabState = tab;
                 }
-                if (tabConfig.enabled) {
-                    ui.enableButton(tabId);
-                } else {
-                    ui.disableButton(tabId);
-                }
+                tabState.enabled ? ui.enableButton(tabId) : ui.disableButton(tabId);
+
                 // TODO honor user-selected tab.
                 // Unless the tab is not enabled in this state, in which case
                 // we do switch to the one called for by the state.
-                if (tabConfig.selected && !userSelectedTab) {
+                if (tabState.selected && !userSelectedTab) {
                     tabSelected = true;
                     selectTab(tabId);
                 }
-                if (tabConfig.hidden) {
-                    ui.hideButton(tabId);
-                } else {
-                    ui.showButton(tabId);
-                }
+                tabState.hidden ? ui.hideButton(tabId) : ui.showButton(tabId);
             });
             // If no new tabs selected (even re-selecting an existing open tab)
             // close the open tab.

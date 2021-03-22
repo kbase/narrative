@@ -1,8 +1,4 @@
-define(['common/html', 'common/cellComponents/actionButtons', 'common/jobs'], (
-    html,
-    ActionButton,
-    Jobs
-) => {
+define(['common/html', 'common/cellComponents/actionButtons'], (html, ActionButton) => {
     'use strict';
 
     const div = html.tag('div');
@@ -35,20 +31,15 @@ define(['common/html', 'common/cellComponents/actionButtons', 'common/jobs'], (
             actionButtons: options.action.actions,
         });
 
-        function start() {}
-
-        function stop() {}
-
         function setActionState(newState) {
             actionButton.setState(newState);
         }
 
-        /**
-         * Update the cell status line to take into account the new job state
-         * @param {object} jobState
-         */
-        function updateJobState(jobState) {
-            ui.setContent('run-control-panel.execMessage', Jobs.createCombinedJobState(jobState));
+        function setExecMessage(message) {
+            if (message === null || message === undefined) {
+                message = '';
+            }
+            ui.setContent('run-control-panel.execMessage', message);
         }
 
         function buildLayout(events) {
@@ -86,11 +77,9 @@ define(['common/html', 'common/cellComponents/actionButtons', 'common/jobs'], (
         }
 
         return {
-            start: start,
-            stop: stop,
             buildLayout: buildLayout,
             setActionState: setActionState,
-            updateJobState: updateJobState,
+            setExecMessage: setExecMessage,
         };
     }
 

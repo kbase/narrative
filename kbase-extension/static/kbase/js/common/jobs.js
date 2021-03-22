@@ -27,6 +27,70 @@ define(['common/html', 'common/format', 'common/ui', 'common/errorDisplay'], (
             'does_not_exist',
         ];
 
+    const jobStrings = {
+        does_not_exist: {
+            action: 'retry',
+            nice: 'does not exist',
+            status: 'not found',
+            statusBatch: 'not found',
+        },
+
+        queued: {
+            action: 'cancel',
+            nice: 'queued',
+            status: 'queued',
+            statusBatch: 'queued',
+        },
+
+        running: {
+            action: 'cancel',
+            nice: 'running',
+            status: 'running',
+            statusBatch: 'running',
+        },
+
+        completed: {
+            action: 'go to results',
+            nice: 'success',
+            status: 'success',
+            statusBatch: 'successes',
+        },
+
+        error: {
+            action: 'retry',
+            nice: 'error',
+            status: 'failed',
+            statusBatch: 'failed',
+        },
+
+        terminated: {
+            action: 'retry',
+            nice: 'cancellation',
+            status: 'cancelled',
+            statusBatch: 'cancelled',
+        },
+    };
+    jobStrings.created = jobStrings.queued;
+    jobStrings.estimating = jobStrings.queued;
+
+    function getJobString(jobState, stringType) {
+        if (!jobState || !stringType) {
+            throw new Error('Please supply a job state object and a string type');
+        }
+
+        const validStringTypes = ['action', 'status', 'statusBatch', 'nice'];
+        if (!validStringTypes.includes(stringType)) {
+            throw new Error(`${stringType} is not a valid string type`);
+        }
+
+        const status =
+            jobState.status && isValidJobStatus(jobState.status)
+                ? jobState.status
+                : 'does_not_exist';
+
+        return jobStrings[status][stringType];
+    }
+
     /**
      * A jobState object is deemed valid if
      * 1. It's an object (not an array or atomic type)
@@ -105,51 +169,25 @@ define(['common/html', 'common/format', 'common/ui', 'common/errorDisplay'], (
      */
 
     function jobAction(jobState) {
-        const jobStatus = jobState.status || 'does_not_exist';
-        const cancel = 'Cancel',
-            // statuses not listed here are 'error', 'terminated', and 'does_not_exist'
-            // the action for all those should be 'Retry'
-            statusToAction = {
-                completed: 'Go to results',
-                created: cancel,
-                estimating: cancel,
-                queued: cancel,
-                running: cancel,
-            };
-        return statusToAction[jobStatus] || 'Retry';
+        return getJobString(jobState, 'action');
     }
 
     /**
      * Convert a job state into a short string to present in the UI
      *
      * @param {object} jobState
+     * @param {boolean} includeError  // whether or not to include error info
      * @returns {string} label
      */
 
-    function jobLabel(jobState) {
-        const jobStatus = jobState.status || 'does_not_exist';
-        // covers 'does_not_exist' or invalid job states
-        let label = 'Job not found';
-        switch (jobStatus) {
-            case 'created':
-            case 'estimating':
-            case 'queued':
-                label = 'Queued';
-                break;
-            case 'running':
-                label = 'Running';
-                break;
-            case 'completed':
-                label = 'Success';
-                break;
-            case 'error':
-                label = 'Failed: ' + ErrorDisplay.normaliseErrorObject({ jobState: jobState }).type;
-                break;
-            case 'terminated':
-                label = 'Cancelled';
-                break;
+    function jobLabel(jobState, includeError = false) {
+        const jobString = getJobString(jobState, 'status');
+        if (includeError && jobState.status && jobState.status === 'error') {
+            return (
+                `${jobString}: ` + ErrorDisplay.normaliseErrorObject({ jobState: jobState }).type
+            );
         }
-        return label;
+        return jobString;
     }
 
     /**
@@ -266,8 +304,7 @@ define(['common/html', 'common/format', 'common/ui', 'common/errorDisplay'], (
             }
 
             jobLines.push(
-                'Finished with ' +
-                    niceState(jobState.status) +
+                _finishString(jobState.status) +
                     ' at ' +
                     span(
                         {
@@ -298,6 +335,10 @@ define(['common/html', 'common/format', 'common/ui', 'common/errorDisplay'], (
 
         // the job is in the queue
         return [queueTime(jobState)];
+    }
+
+    function _finishString(status) {
+        return `Finished with ${niceState(status)}`;
     }
 
     function runTime(jobState) {
@@ -363,17 +404,114 @@ define(['common/html', 'common/format', 'common/ui', 'common/errorDisplay'], (
         return queueString;
     }
 
+    const batch = 'batch job';
+
+    /**
+     * create a summary string for a set of jobs
+     *
+     * @param {object} jobLabelFreq - an object with keys job labels and values their frequencies
+     * @returns {string} - a string summarising the state of the batch job
+     */
+
+    function _createBatchSummaryState(jobLabelFreq) {
+        // if at least one job is queued or running, the batch job is in progress
+        if (jobLabelFreq.running || jobLabelFreq.queued) {
+            return `${batch} in progress`;
+        }
+
+        if (Object.keys(jobLabelFreq).length === 1) {
+            const status = Object.keys(jobLabelFreq)[0];
+            if (status === 'does_not_exist') {
+                return `${batch} finished with error`;
+            }
+            return `${batch} ${_finishString(status).toLowerCase()}`;
+        }
+        return `${batch} finished`;
+    }
+
+    /**
+     * Given a parent jobState object, summarise the status of the child jobs
+     * @param {object} jobState
+     * @returns {string} summary string
+     */
+
+    function createCombinedJobState(jobState) {
+        if (!jobState) {
+            return '';
+        }
+
+        // if there are no child jobs
+        // the parent job was cancelled
+        if (jobState.status === 'terminated') {
+            return `${batch} cancelled`;
+        }
+
+        if (jobState.status === 'does_not_exist') {
+            return `${batch} not found`;
+        }
+
+        if (!jobState.child_jobs || !jobState.child_jobs.length) {
+            return `${batch} not found`;
+        }
+
+        const statuses = {};
+        jobState.child_jobs.forEach((job) => {
+            let status = job.status;
+            // reduce down the queued states
+            if (status === 'estimating' || status === 'created') {
+                status = 'queued';
+            }
+            statuses[status] ? statuses[status]++ : (statuses[status] = 1);
+        });
+
+        const textStatusSummary = _createBatchSummaryState(statuses);
+        const orderedStatuses = [
+            'queued',
+            'running',
+            'completed',
+            'error',
+            'terminated',
+            'does_not_exist',
+        ];
+        return (
+            `${textStatusSummary}: ` +
+            orderedStatuses
+                .filter((state) => {
+                    return statuses[state];
+                })
+                .map((state) => {
+                    const jobString = getJobString(
+                        { status: state },
+                        statuses[state] === 1 ? 'status' : 'statusBatch'
+                    );
+
+                    return (
+                        `${statuses[state]} ` +
+                        span(
+                            {
+                                class: `${cssBaseClass}__summary--${state}`,
+                            },
+                            jobString
+                        )
+                    );
+                })
+                .join(', ')
+        );
+    }
+
     return {
-        createJobStatusLines: createJobStatusLines,
-        isValidJobStatus: isValidJobStatus,
-        isValidJobStateObject: isValidJobStateObject,
-        isValidJobInfoObject: isValidJobInfoObject,
-        jobAction: jobAction,
-        jobLabel: jobLabel,
-        jobNotFound: jobNotFound,
-        jobStatusUnknown: jobStatusUnknown,
-        niceState: niceState,
-        updateJobModel: updateJobModel,
-        validJobStates: validJobStates,
+        createCombinedJobState,
+        createJobStatusLines,
+        isValidJobStatus,
+        isValidJobStateObject,
+        isValidJobInfoObject,
+        jobAction,
+        jobLabel,
+        jobNotFound,
+        jobStatusUnknown,
+        jobStrings,
+        niceState,
+        updateJobModel,
+        validJobStates,
     };
 });

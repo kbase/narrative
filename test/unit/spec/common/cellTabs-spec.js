@@ -21,7 +21,7 @@ define(['common/cellComponents/cellTabs', 'common/runtime'], (CellTabs, Runtime)
         },
     };
     const toggleAction = (tab) => {
-        console.warn(`performing action on tab ${tab}`)
+        console.warn(`performing action on tab ${tab}`);
     };
 
     describe('The CellTabs module', () => {

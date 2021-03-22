@@ -398,7 +398,7 @@ define([
         function updateJobState() {
             // TODO: this will need to be updated once the backend is in place
             const jobState = testDataModel.getItem('exec.jobState');
-            // controlPanel.setExecMessage(Jobs.createCombinedJobState(jobState));
+            controlPanel.setExecMessage(Jobs.createCombinedJobState(jobState));
         }
 
         /**

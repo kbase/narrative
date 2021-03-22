@@ -109,11 +109,15 @@ define(['common/errorDisplay', 'common/props'], (ErrorDisplay, Props) => {
                 {
                     desc: 'classic KBase RPC error',
                     in: validInput,
-                    out: {
+                    outObject: {
                         type: 'Oh no',
                         message: 'Disaster',
-                        detail: null,
-                        advice: defaultAdvice,
+                        stacktrace: 'calamity\ndisaster\ndespair',
+                    },
+                    outDisplay: {
+                        type: 'Oh no',
+                        message: 'Disaster',
+                        advice: [defaultAdvice],
                         stacktrace: 'calamity\ndisaster\ndespair',
                     },
                 },
@@ -131,12 +135,16 @@ define(['common/errorDisplay', 'common/props'], (ErrorDisplay, Props) => {
                             },
                         },
                     }),
-                    out: {
+                    outObject: {
                         type: 'Something awful',
                         message: 'Error code: 007',
                         detail: 'This error occurred during execution of the app job.',
-                        advice: defaultAdvice,
-                        stacktrace: null,
+                    },
+                    outDisplay: {
+                        type: 'Something awful',
+                        message: 'Error code: 007',
+                        advice: [defaultAdvice],
+                        detail: 'This error occurred during execution of the app job.',
                     },
                 },
                 {
@@ -152,12 +160,16 @@ define(['common/errorDisplay', 'common/props'], (ErrorDisplay, Props) => {
                             },
                         },
                     }),
-                    out: {
+                    outObject: {
                         type: 'Error code 666',
                         message: 'A series of unfortunate events',
                         detail: 'This error occurred during execution of the app job.',
-                        advice: defaultAdvice,
-                        stacktrace: null,
+                    },
+                    outDisplay: {
+                        type: 'Error code 666',
+                        message: 'A series of unfortunate events',
+                        advice: [defaultAdvice],
+                        detail: 'This error occurred during execution of the app job.',
                     },
                 },
                 {
@@ -173,12 +185,20 @@ define(['common/errorDisplay', 'common/props'], (ErrorDisplay, Props) => {
                             },
                         },
                     }),
-                    out: {
-                        type: 'unknown',
-                        message: 'Unknown error: check console for error with errorDisplayId ',
-                        detail: null,
-                        advice: defaultAdvice,
-                        stacktrace: null,
+                    outObject: {
+                        type: 'Unknown error',
+                        message: 'error in unknown format',
+                        errorDump: { this: 'that', location: 'job execution' },
+                    },
+                    outDisplay: {
+                        type: 'Unknown error',
+                        message: 'error in unknown format',
+                        advice: [defaultAdvice],
+                        errorDump: JSON.stringify(
+                            { this: 'that', location: 'job execution' },
+                            null,
+                            1
+                        ),
                     },
                 },
                 {
@@ -196,9 +216,8 @@ define(['common/errorDisplay', 'common/props'], (ErrorDisplay, Props) => {
                     out: {
                         type: 'Terrible internal error',
                         message: 'Oh no!',
-                        advice: 'then this', // just part of the advice
+                        advice: ['do this', 'then this', 'then that'],
                         detail: 'we have no stacktrace',
-                        stacktrace: null,
                     },
                 },
                 {
@@ -208,12 +227,16 @@ define(['common/errorDisplay', 'common/props'], (ErrorDisplay, Props) => {
                             this: 'that',
                         },
                     }),
-                    out: {
-                        type: 'unknown',
-                        message: 'Unknown error: check console for error with errorDisplayId ',
-                        advice: defaultAdvice,
-                        detail: null,
-                        stacktrace: null,
+                    outObject: {
+                        type: 'Unknown error',
+                        message: 'error in unknown format',
+                        errorDump: { this: 'that' },
+                    },
+                    outDisplay: {
+                        type: 'Unknown error',
+                        message: 'error in unknown format',
+                        advice: [defaultAdvice],
+                        errorDump: JSON.stringify({ this: 'that' }, null, 1),
                     },
                 },
             ];
@@ -224,6 +247,7 @@ define(['common/errorDisplay', 'common/props'], (ErrorDisplay, Props) => {
             advice: 'advice',
             detail: 'detail_text',
             stacktrace: 'stacktrace_code',
+            errorDump: 'error_dump_code',
         };
         cssBaseClass = ErrorDisplay.cssBaseClass;
 
@@ -233,7 +257,23 @@ define(['common/errorDisplay', 'common/props'], (ErrorDisplay, Props) => {
                 model: test.in,
             });
 
+            it(`should normalise an error of type ${test.desc}`, () => {
+                const rawObject = test.in.getRawObject();
+                const output = ErrorDisplay.normaliseErrorObject(rawObject);
+                const expected = test.outObject || test.out;
+                Object.keys(dataToClass)
+                    .sort()
+                    .forEach((datum) => {
+                        if (expected[datum]) {
+                            expect(expected[datum]).toEqual(output[datum]);
+                        } else {
+                            expect(output[datum]).not.toBeDefined();
+                        }
+                    });
+            });
+
             it(`should present an error of type ${test.desc}`, async () => {
+                const expected = test.outDisplay || test.out;
                 await errorDisplayInstance.start({ node: node });
                 Object.keys(dataToClass)
                     .sort()
@@ -241,9 +281,18 @@ define(['common/errorDisplay', 'common/props'], (ErrorDisplay, Props) => {
                         const matchingElements = node.getElementsByClassName(
                             `${cssBaseClass}__${dataToClass[datum]}`
                         );
-                        if (test.out[datum]) {
+                        if (expected[datum]) {
                             const content = matchingElements[0];
-                            expect(content.innerHTML).toContain(test.out[datum]);
+                            if (
+                                Object.prototype.toString.call(expected[datum]).slice(8, -1) ===
+                                'Array'
+                            ) {
+                                expected[datum].forEach((item) => {
+                                    expect(content.innerHTML).toContain(item);
+                                });
+                            } else {
+                                expect(content.innerHTML).toContain(expected[datum]);
+                            }
                         } else {
                             expect(matchingElements.length).toBe(0);
                         }

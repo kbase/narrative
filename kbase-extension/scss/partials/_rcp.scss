@@ -1,0 +1,52 @@
+// run-control-panel
+
+$rcp-height: 50px;
+
+.kb-rcp {
+
+  &__layout_div {
+    border-top: 1px solid silver;
+    height: $rcp-height;
+    position: relative;
+    display: flex;
+    flex-direction: row;
+  }
+
+  &__toolbar {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: $rcp-height;
+    line-height: $rcp-height;
+  }
+
+  &__btn-toolbar {
+    display: inline-block;
+    line-height: $rcp-height;
+    padding-right: 1rem;
+    vertical-align: bottom;
+  }
+
+
+  &-status {
+    &__container {
+      width: 450px;
+      overflow: hidden;
+      font-size: 14px;
+      line-height: $rcp-height;
+      display: inline-block;
+      margin-top: 0;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+    &__fsm_display {
+      display: inline-block;
+      font: 12px/1 $typeface-page-text;
+      position: absolute;
+      top: 0;
+      margin-top: -30px;
+      padding: 6px 10px;
+      background: use-color('white');
+    }
+  }
+}

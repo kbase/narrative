@@ -22,20 +22,20 @@ define([
         let container, ui, jobId, jobState;
         const widgets = {};
 
-        function _createStatusLabel(jobStatus) {
+        function _createStatusLabel(jobStateObject) {
             return (
                 span({
-                    class: `fa fa-circle ${cssBaseClass}__icon--${jobStatus}`,
+                    class: `fa fa-circle ${cssBaseClass}__icon--${jobStateObject.status}`,
                 }) +
                 ' ' +
-                Jobs.jobLabel(jobStatus)
+                Jobs.jobLabel(jobStateObject)
             );
         }
 
-        function _createActionButton(jobStatus) {
+        function _createActionButton(jobStateObject) {
             return div(
                 {
-                    class: `${cssBaseClass}__cell_action--${jobStatus}`,
+                    class: `${cssBaseClass}__cell_action--${jobStateObject.status}`,
                     role: 'button',
                     // TODO: these actions need to be added
                     id: events.addEvent({
@@ -45,7 +45,7 @@ define([
                         },
                     }),
                 },
-                [Jobs.jobAction(jobStatus)]
+                [Jobs.jobAction(jobStateObject)]
             );
         }
 
@@ -97,8 +97,8 @@ define([
         // update the status and action columns
         function _updateRowStatus(jobStateObject) {
             jobState = jobStateObject;
-            ui.setContent('job-state', _createStatusLabel(jobState.status));
-            ui.setContent('job-action', _createActionButton(jobState.status));
+            ui.setContent('job-state', _createStatusLabel(jobState));
+            ui.setContent('job-action', _createActionButton(jobState));
         }
 
         function selectRow(e) {

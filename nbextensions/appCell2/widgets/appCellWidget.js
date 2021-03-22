@@ -75,7 +75,6 @@ define([
         a = t('a'),
         p = t('p'),
         blockquote = t('blockquote'),
-        appStates = AppStates,
         { toBoolean } = utils;
 
     function factory(config) {
@@ -221,20 +220,6 @@ define([
                     model.setItem('paramState', message.id, message.state);
                 });
 
-                widgetBus.on('toggle-batch-mode', () => {
-                    toggleBatchMode();
-                });
-
-                widgetBus.respond({
-                    key: {
-                        type: 'get-batch-mode',
-                    },
-                    handle: function () {
-                        const canDoBatch = Config.get('features').batchAppMode;
-                        return canDoBatch && (model.getItem('user-settings.batchMode') || false);
-                    },
-                });
-
                 widgetBus.respond({
                     key: {
                         type: 'get-param-state',
@@ -257,6 +242,16 @@ define([
                     },
                 });
 
+                widgetBus.respond({
+                    key: {
+                        type: 'get-batch-mode',
+                    },
+                    handle: function () {
+                        const canDoBatch = Config.get('features').batchAppMode;
+                        return canDoBatch && (model.getItem('user-settings.batchMode') || false);
+                    },
+                });
+
                 widgetBus.on('parameter-changed', (message) => {
                     // TODO: should never get these in the following states....
 
@@ -270,6 +265,10 @@ define([
                             'parameter-changed event detected when not in editing mode - ignored'
                         );
                     }
+                });
+
+                widgetBus.on('toggle-batch-mode', () => {
+                    toggleBatchMode();
                 });
 
                 return widget
@@ -987,7 +986,7 @@ define([
                 currentState = { mode: 'new' };
             }
             fsm = Fsm.make({
-                states: appStates,
+                states: AppStates,
                 initialState: {
                     mode: 'new',
                 },

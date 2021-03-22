@@ -40,6 +40,9 @@ define(['common/html', 'common/cellComponents/actionButtons'], (html, ActionButt
         }
 
         function setExecMessage(message) {
+            if (message === null || message === undefined) {
+                message = '';
+            }
             ui.setContent('run-control-panel.execMessage', message);
         }
 

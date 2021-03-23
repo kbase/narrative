@@ -607,13 +607,13 @@ define([
         }
 
         /**
-         * This builds the action button control panel.
+         * This builds the cell control panel, which includes the action button.
          * It gets stored in the internal controlPanel variable.
          * This returns the DOM layout that the controlPanel creates.
          * @param {Events} events - the events manager that should be used for laying out
          * the button
          */
-        function buildActionButton(events) {
+        function buildControlPanel(events) {
             controlPanel = CellControlPanel.make({
                 bus: cellBus,
                 ui: ui,
@@ -703,8 +703,7 @@ define([
                                 dataElement: 'body',
                             },
                             [
-                                buildActionButton(events),
-
+                                buildControlPanel(events),
                                 div(
                                     {
                                         class: `${cssCellType}__tab_pane`,

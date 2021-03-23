@@ -1,11 +1,9 @@
 // run-control-panel
-
 $rcp-height: 50px;
 
 .kb-rcp {
-
   &__layout_div {
-    border-top: 1px solid silver;
+    border-top: 1px solid use-color('silver');
     height: $rcp-height;
     position: relative;
     display: flex;
@@ -13,9 +11,7 @@ $rcp-height: 50px;
   }
 
   &__toolbar {
-    position: absolute;
-    right: 0;
-    top: 0;
+    flex: none;
     height: $rcp-height;
     line-height: $rcp-height;
   }
@@ -23,20 +19,32 @@ $rcp-height: 50px;
   &__btn-toolbar {
     display: inline-block;
     line-height: $rcp-height;
-    padding-right: 1rem;
+    padding-right: 0.5rem;
     vertical-align: bottom;
   }
 
+  /* .kb-rcp__action-button */
+  &__action-button {
+    float: left;
+    margin: 6px;
+    width: 8rem;
+
+    /* .kb-rcp__action-button-container */
+    &-container {
+      flex: none;
+      overflow: hidden;
+      height: 50px;
+      line-height: 50px;
+    }
+  }
 
   &-status {
     &__container {
-      width: 450px;
+      flex: 1 1 auto;
       overflow: hidden;
       font-size: 14px;
       line-height: $rcp-height;
-      display: inline-block;
-      margin-top: 0;
-      margin-right: 10px;
+      margin: 0 1rem;
       vertical-align: middle;
     }
     &__fsm_display {
@@ -48,5 +56,21 @@ $rcp-height: 50px;
       padding: 6px 10px;
       background: use-color('white');
     }
+  }
+
+  /* .kb-rcp__tab-button */
+  &__tab-button {
+    float: left;
+    margin-left: 0.5rem;
+  }
+}
+/* .kb-rcp__tab-button--outdated */
+a.kb-rcp__tab-button--outdated {
+  float: left;
+  margin-left: 0.5rem;
+  padding: 6px 0 0;
+  color: use-color('warning');
+  &:hover, &:active {
+    color: use-color('warning-dark');
   }
 }

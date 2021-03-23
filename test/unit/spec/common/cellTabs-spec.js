@@ -101,7 +101,7 @@ define(['common/cellComponents/cellTabs', 'common/runtime'], (CellTabs, Runtime)
                 'kb-app-cell-btn': true,
                 hidden: true,
             };
-            defaultClasses[`${CellTabs.cssClassName}-tabs__button`] = true;
+            defaultClasses[`${CellTabs.cssClassName}__tab-button`] = true;
 
             beforeEach(async function () {
                 await this.cellTabsInstance.start({ node: container });

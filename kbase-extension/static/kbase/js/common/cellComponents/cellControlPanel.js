@@ -1,7 +1,8 @@
 define(['common/html', 'common/cellComponents/actionButtons'], (html, ActionButton) => {
     'use strict';
 
-    const div = html.tag('div');
+    const div = html.tag('div'),
+        cssBaseClass = 'kb-rcp';
 
     /**
      * options -
@@ -43,35 +44,27 @@ define(['common/html', 'common/cellComponents/actionButtons'], (html, ActionButt
         }
 
         function buildLayout(events) {
-            const cssBaseClass = 'kb-rcp';
             return div(
                 {
-                    class: cssBaseClass,
+                    class: `${cssBaseClass}__layout_div`,
                     dataElement: 'run-control-panel',
                 },
                 [
-                    div(
-                        {
-                            class: `${cssBaseClass}__layout_div`,
-                        },
-                        [
-                            // action button widget
-                            actionButton.buildLayout(events),
-                            // status stuff
-                            div({
-                                class: `${cssBaseClass}-status__fsm_display hidden`,
-                                dataElement: 'fsm-display',
-                            }),
-                            div({
-                                class: `${cssBaseClass}-status__container`,
-                                dataElement: 'execMessage',
-                            }),
-                            div({
-                                class: `${cssBaseClass}__toolbar`,
-                                dataElement: 'toolbar',
-                            }),
-                        ]
-                    ),
+                    // action button widget
+                    actionButton.buildLayout(events),
+                    // status stuff
+                    div({
+                        class: `${cssBaseClass}-status__fsm_display hidden`,
+                        dataElement: 'fsm-display',
+                    }),
+                    div({
+                        class: `${cssBaseClass}-status__container`,
+                        dataElement: 'execMessage',
+                    }),
+                    div({
+                        class: `${cssBaseClass}__toolbar`,
+                        dataElement: 'toolbar',
+                    }),
                 ]
             );
         }

@@ -19,17 +19,14 @@ define(['common/runtime', 'common/events', 'common/ui', 'kb_common/html', 'base/
         li = t('li');
 
     function factory(config) {
-        let runtime = Runtime.make(),
+        const runtime = Runtime.make(),
             bus = runtime.bus().makeChannelBus({ description: 'Output Widget Bus' }),
             cellId = config.cellId,
-            root,
-            container,
-            ui,
             model = {
                 currentJobState: null,
                 outputs: null,
-            },
-            api;
+            };
+        let root, container, ui;
 
         function findCellForId(id) {
             const matchingCells = Jupyter.notebook.get_cells().filter((cell) => {
@@ -49,9 +46,8 @@ define(['common/runtime', 'common/events', 'common/ui', 'kb_common/html', 'base/
         }
 
         function doRemoveOutputCell(index) {
-            let output = model.outputs[index],
-                currentOutput,
-                content;
+            const output = model.outputs[index];
+            let currentOutput, content;
 
             if (model.currentJobState && output.jobId === model.currentJobState.job_id) {
                 currentOutput = true;
@@ -93,9 +89,9 @@ define(['common/runtime', 'common/events', 'common/ui', 'kb_common/html', 'base/
                         return;
                     }
                     // remove the output cell
-                    let output = model.outputs[index],
-                        outputCell = findCellForId(output.cellId),
-                        cellIndex;
+                    const modelOutput = model.outputs[index],
+                        outputCell = findCellForId(modelOutput.cellId);
+                    let cellIndex;
 
                     if (outputCell) {
                         cellIndex = Jupyter.notebook.find_cell_index(outputCell);
@@ -122,8 +118,8 @@ define(['common/runtime', 'common/events', 'common/ui', 'kb_common/html', 'base/
         }
 
         function render() {
-            let events = Events.make(),
-                content;
+            const events = Events.make();
+            let content;
 
             if (!model.outputs || model.outputs.length === 0) {
                 content = 'No output yet!';
@@ -139,17 +135,17 @@ define(['common/runtime', 'common/events', 'common/ui', 'kb_common/html', 'base/
                         return 0;
                     })
                     .map((output, index) => {
-                        let rowStyle = {
-                                border: '1px silver solid',
-                                padding: '3px',
-                            },
-                            message = '';
+                        const rowStyle = {
+                            border: '1px solid silver',
+                            padding: '3px',
+                        };
+                        let message = '';
                         // console.log('JOB MATCH?', output.jobId, model.currentJobState);
                         if (
                             model.currentJobState &&
                             output.jobId === model.currentJobState.job_id
                         ) {
-                            rowStyle.border = '2px blue solid';
+                            rowStyle.border = '2px solid blue';
                             message = 'This is the most recent output for this app.';
                         }
                         return div({ class: 'row', style: rowStyle }, [
@@ -218,9 +214,9 @@ define(['common/runtime', 'common/events', 'common/ui', 'kb_common/html', 'base/
                     render();
                 }
 
-                bus.on('update', (message) => {
-                    model.currentJobState = message.jobState;
-                    importModel(message.output);
+                bus.on('update', (_message) => {
+                    model.currentJobState = _message.jobState;
+                    importModel(_message.output);
                     render();
                 });
             });
@@ -245,7 +241,7 @@ define(['common/runtime', 'common/events', 'common/ui', 'kb_common/html', 'base/
             return bus;
         }
 
-        api = Object.freeze({
+        const api = Object.freeze({
             start: start,
             bus: getBus,
         });

@@ -85,11 +85,11 @@ define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'kb_common/h
     function renderRunStats() {
         const labelStyle = {
                 textAlign: 'right',
-                border: '1px transparent solid',
+                border: '1px solid transparent',
                 padding: '4px',
             },
             dataStyle = {
-                border: '1px silver solid',
+                border: '1px solid silver',
                 padding: '4px',
                 display: 'inline-block',
                 minWidth: '20px',
@@ -140,9 +140,8 @@ define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'kb_common/h
     }
 
     function factory(config) {
-        let container,
-            ui,
-            listeners = [],
+        let container, ui;
+        const listeners = [],
             model = config.model,
             runtime = Runtime.make();
         function start(arg) {

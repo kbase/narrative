@@ -197,7 +197,7 @@ define([
                                 return item.id === id;
                             }),
                             disabled = isSelected;
-                        return div({ class: 'row', style: { border: '1px #CCC solid' } }, [
+                        return div({ class: 'row', style: { border: '1px solid #CCC' } }, [
                             div(
                                 {
                                     class: 'col-md-2',
@@ -336,7 +336,7 @@ define([
                             {
                                 class: 'row',
                                 style: {
-                                    border: '1px #CCC solid',
+                                    border: '1px solid #CCC',
                                     borderCollapse: 'collapse',
                                     boxSizing: 'border-box',
                                 },
@@ -648,7 +648,7 @@ define([
                             fontStyle: 'italic',
                             whiteSpace: 'normal',
                             padding: '3px',
-                            border: '1px silver solid',
+                            border: '1px solid silver',
                         },
                     },
                     'Items will be available after selecting a value for ' +
@@ -690,7 +690,7 @@ define([
                                     { class: 'col-md-12' },
                                     div({
                                         style: {
-                                            border: '1px silver solid',
+                                            border: '1px solid silver',
                                         },
                                         dataElement: 'available-items',
                                     })
@@ -704,7 +704,7 @@ define([
                     classes: ['kb-panel-light'],
                     body: div({
                         style: {
-                            border: '1px silver solid',
+                            border: '1px solid silver',
                         },
                         dataElement: 'selected-items',
                     }),

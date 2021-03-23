@@ -31,7 +31,7 @@ define([
 
         function showErrorMessage(message) {
             widgetParentNode.innerHTML =
-                '<div style="margin: 1em; padding: 1em; border: 2px red solid;"><h1>Error in ' +
+                '<div style="margin: 1em; padding: 1em; border: 2px solid red;"><h1>Error in ' +
                 widgetTitle +
                 '</h1><p>' +
                 message +

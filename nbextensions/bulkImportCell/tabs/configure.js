@@ -14,11 +14,11 @@ define([
             spec: app spec
     */
     function ConfigureWidget(options) {
-        const model = options.model,
-            spec = options.spec,
-            fileType = options.fileType,
+        const model = options.model,        // the data model, inputs, params, etc.
+            spec = options.spec,            // the Spec object
+            fileType = options.fileType,    // which which filetype we're configuring here
             runtime = Runtime.make(),
-            cellBus = options.bus;
+            cellBus = options.bus;          // the bus to communicate with the main widget
 
         let container = null;
 
@@ -60,6 +60,11 @@ define([
             // This is the key in the model that maps to the list of params for the current app.
             const paramKey = `${fileType}`;
             const paramBus = buildMessageBus(paramKey, 'Parent comm bus for parameters widget');
+            paramBus.on('parameter-changed', (message) => {
+                // TODO: should never get these in the following states....
+                console.log('GOT PARAMETER CHANGED MESSAGE - ' + JSON.stringify(message));
+                updateModelParameterValue(paramKey, 'param', message);
+            });
 
             const widget = ParamsWidget.make({
                 bus: paramBus,
@@ -85,17 +90,30 @@ define([
             // This is the key in the model that maps to the list of params for the current app.
             const paramKey = `${fileType}`;
             const paramBus = buildMessageBus(paramKey, 'Parent comm bus for filePath widget');
+            paramBus.on('parameter-changed', (message) => {
+                // TODO: should never get these in the following states....
+                console.log('GOT PARAMETER CHANGED MESSAGE - ' + JSON.stringify(message));
+                updateModelParameterValue(paramKey, 'filePath', message);
+            });
 
+            /* Here, we need to
+             * 1. Get the list of file path params.
+             * 2. Get the initial parameters (whatever's serialized in the model right now)
+             * 3. Pass those along to the filepathwidget
+             */
+            // this is an array of parameter ids from the current spec.
+            const filePathParams = spec.getFilePathParams();
             const widget = FilePathWidget.make({
                 bus: paramBus,
                 workspaceId: runtime.workspaceId(),
                 initialParams: model.getItem(['params', paramKey]),
+                spec: spec,
             });
 
             return widget
                 .start({
                     node: node,
-                    appSpec: model.getItem('app.spec'),
+                    // appSpec: model.getItem('app.spec'),
                     parameters: spec.getSpec().parameters,
                 })
                 .then(() => {
@@ -170,26 +188,33 @@ define([
                     },
                 });
 
-                //TODO: disabling for now until we figure out what to do about state
-                bus.on('parameter-changed', (message) => {
-                    // TODO: should never get these in the following states....
-                    console.log('GOT PARAMETER CHANGED MESSAGE - ' + JSON.stringify(message));
-                    updateModelParameterValue(paramKey, message.parameter, message.newValue);
-
-                    // const state = fsm.getCurrentState().state,
-                    //     isError = Boolean(message.isError);
-                    // if (state.mode === 'editing') {
-                    //     model.setItem(['params', message.parameter], message.newValue);
-                    //     evaluateAppState(isError);
-                    // } else {
-                    //     console.warn('parameter-changed event detected when not in editing mode - ignored');
-                    // }
-                });
             return bus;
         }
 
-        function updateModelParameterValue(paramKey, param, newValue) {
-            model.setItem(['params', paramKey, param], newValue);
+        /**
+         * This evaluates the state of the app configuration. If it's ready to go, then we can build the Python
+         * code and prep the app for launch. If not, then we shouldn't, and, in fact, should clear the Python code
+         * if there's any there.
+         * @param {boolean} isError - should be truthy if there's currently a known error in the app param formulation
+         */
+        function evaluateAppConfig(isError) {
+            /* 2 parts.
+             * 1 - eval the set of parameters using something in the spec module.
+             * 2 - eval the array of file inputs and outputs.
+             * If both are up to snuff, we're good.
+             */
+
+        }
+
+        /**
+         *
+         * @param {string} paramKey - a string with the parameter key
+         * @param {string} paramType - should be either 'param' or 'filePath'
+         * @param {object} message -
+         */
+        function updateModelParameterValue(paramKey, paramType, message) {
+            model.setItem(['params', paramKey, paramType, message.parameter], message.newValue);
+            const appState = evaluateAppConfig(message.isError);
         };
 
         function stop() {

@@ -8,7 +8,8 @@ define([
     'common/cellComponents/fieldTableCellWidget',
     'widgets/appWidgets2/paramResolver',
     'common/runtime',
-], (Promise, $, html, UI, Events, Props, FieldWidget, ParamResolver, Runtime) => {
+    'common/spec',
+], (Promise, $, html, UI, Events, Props, FieldWidget, ParamResolver, Runtime, Spec) => {
     'use strict';
 
     const tag = html.tag,
@@ -419,7 +420,7 @@ define([
         function renderFilePathRow(filePathRow) {
             const appSpec = model.getItem('appSpec');
             const params = model.getItem('parameters');
-            const filePathParams = makeFilePathsLayout(findPathParams(params));
+            const filePathParams = makeFilePathsLayout(config.spec.getFilePathParams().map((id) => params.specs[id])); //findPathParams(params));
 
             if (!filePathParams.layout.length) {
                 return Promise.resolve(

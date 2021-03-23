@@ -267,10 +267,14 @@ define([
              * generate the parameter ids, and make a structure like:
              * {
              *   fileType1: {
-             *      param1: '' or default from spec,
-             *      param2: '' or default from spec,
-             *      ...etc.
-             *   },
+             *      params: {
+             *          param1: '' or default from spec,
+             *          param2: '' or default from spec,
+             *          ...etc.
+             *      },
+             *      filePaths: [{
+             *
+             *      }],
              *   fileType2: {...}
              * }
              *

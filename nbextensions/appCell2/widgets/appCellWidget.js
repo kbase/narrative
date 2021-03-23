@@ -273,6 +273,8 @@ define([
                     }
                 });
 
+                console.log('STARTING APP CELL PARAMS WIDGET');
+                console.log(model.getItem('app.spec'));
                 return widget
                     .start({
                         node: arg.node,

@@ -6,13 +6,25 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
     }
 
     const jobsModuleExports = [
+        'createCombinedJobState',
         'createJobStatusLines',
+        'isValidJobStatus',
+        'isValidJobStateObject',
+        'isValidJobInfoObject',
         'jobAction',
         'jobLabel',
+        'jobNotFound',
+        'jobStatusUnknown',
+        'jobStrings',
         'niceState',
+        'updateJobModel',
         'validJobStates',
-        'isValidJobStateObject',
     ];
+
+    const jobsByStatus = {};
+    JobsData.allJobs.forEach((job) => {
+        jobsByStatus[job.status] = job;
+    });
 
     describe('Test Jobs module', () => {
         it('Should be loaded with the right functions', () => {
@@ -97,15 +109,15 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
 
     describe('jobLabel', () => {
         const labelToState = [
-            ['Mary Poppins', 'Job not found'],
-            [null, 'Job not found'],
-            [undefined, 'Job not found'],
-            ['does_not_exist', 'Job not found'],
-            ['estimating', 'Queued'],
-            ['queued', 'Queued'],
-            ['error', 'Failed: Unknown error'], // no error object present
-            ['terminated', 'Cancelled'],
-            ['running', 'Running'],
+            ['Mary Poppins', 'not found'],
+            [null, 'not found'],
+            [undefined, 'not found'],
+            ['does_not_exist', 'not found'],
+            ['estimating', 'queued'],
+            ['queued', 'queued'],
+            ['error', 'failed'],
+            ['terminated', 'cancelled'],
+            ['running', 'running'],
         ];
         labelToState.forEach((entry) => {
             it(`should create an abbreviated label when given the job state ${entry[0]}`, () => {
@@ -130,11 +142,16 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
     describe('jobLabel', () => {
         badStates.forEach((item) => {
             it(`creates an appropriate label with the input ${JSON.stringify(item)}`, () => {
-                expect(Jobs.jobLabel({ status: item })).toEqual('Job not found');
+                expect(Jobs.jobLabel({ status: item })).toEqual('not found');
             });
         });
         JobsData.allJobs.forEach((state) => {
             it(`creates an appropriate label with input in state ${state.status}`, () => {
+                // include extra error info
+                expect(Jobs.jobLabel(state, true)).toEqual(
+                    state.meta.jobLabelIncludeError || state.meta.jobLabel
+                );
+                // just the basic label
                 expect(Jobs.jobLabel(state)).toEqual(state.meta.jobLabel);
             });
         });
@@ -158,6 +175,142 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
                 const span = div.querySelector('span');
                 expect(span).toHaveClass(state.meta.niceState.class);
                 expect(span.textContent).toContain(state.meta.niceState.label);
+            });
+        });
+    });
+
+    describe('createCombinedJobState', () => {
+        it('creates a string for a cancelled job', () => {
+            const expected = Jobs.createCombinedJobState({
+                job_id: 'a job cancelled before its time',
+                status: 'terminated',
+                created: 1607109147000,
+                queued: 1607109147274,
+                running: 1607109162603,
+                updated: 1607109627760,
+                batch_size: JobsData.allJobs.length,
+                child_jobs: JobsData.allJobs,
+            });
+            expect(expected).toBe('batch job cancelled');
+        });
+
+        it('creates a string for a non-existent parent batch job', () => {
+            const expected = Jobs.createCombinedJobState({
+                job_id: 'a parent job that does not exist',
+                status: 'does_not_exist',
+                created: 1607109147000,
+                batch_size: JobsData.allJobs.length,
+                child_jobs: JobsData.allJobs,
+            });
+            expect(expected).toBe('batch job not found');
+        });
+
+        it('creates a string for a parent with no children', () => {
+            const expectedNoJobs = Jobs.createCombinedJobState({
+                job_id: 'child jobs do not exist',
+                status: 'created',
+                created: 1607109147000,
+            });
+            expect(expectedNoJobs).toBe('batch job not found');
+
+            const expectedEmptyJobs = Jobs.createCombinedJobState({
+                job_id: 'child jobs do not exist',
+                status: 'created',
+                created: 1607109147000,
+                batch_size: 0,
+                child_jobs: [],
+            });
+            expect(expectedEmptyJobs).toBe('batch job not found');
+        });
+
+        //
+        const tests = [
+            {
+                desc: 'all jobs queued',
+                child_jobs: [jobsByStatus.created, jobsByStatus.estimating, jobsByStatus.queued],
+                expected: 'batch job in progress: 3 queued',
+            },
+            {
+                desc: 'queued and running jobs',
+                child_jobs: [jobsByStatus.estimating, jobsByStatus.running],
+                expected: 'batch job in progress: 1 queued, 1 running',
+            },
+            {
+                desc: 'all running',
+                child_jobs: [jobsByStatus.running],
+                expected: 'batch job in progress: 1 running',
+            },
+            {
+                desc: 'all jobs',
+                child_jobs: JobsData.allJobs,
+                expected:
+                    'batch job in progress: 3 queued, 1 running, 1 success, 1 failed, 2 cancelled, 1 not found',
+            },
+            {
+                desc: 'in progress and finished',
+                child_jobs: [jobsByStatus.estimating, jobsByStatus.running, jobsByStatus.completed],
+                expected: 'batch job in progress: 1 queued, 1 running, 1 success',
+            },
+            {
+                desc: 'all completed',
+                child_jobs: [
+                    jobsByStatus.completed,
+                    jobsByStatus.completed,
+                    jobsByStatus.completed,
+                ],
+                expected: 'batch job finished with success: 3 successes',
+            },
+            {
+                desc: 'all failed',
+                child_jobs: [jobsByStatus.error, jobsByStatus.error],
+                expected: 'batch job finished with error: 2 failed',
+            },
+            {
+                desc: 'all terminated',
+                child_jobs: [
+                    jobsByStatus.terminated,
+                    jobsByStatus.terminated,
+                    jobsByStatus.terminated,
+                ],
+                expected: 'batch job finished with cancellation: 3 cancelled',
+            },
+            {
+                desc: 'mix of finish states',
+                child_jobs: [
+                    jobsByStatus.terminated,
+                    jobsByStatus.error,
+                    jobsByStatus.completed,
+                    jobsByStatus.error,
+                    jobsByStatus.error,
+                ],
+                expected: 'batch job finished: 1 success, 3 failed, 1 cancelled',
+            },
+            {
+                desc: 'in progress, finished, not found',
+                child_jobs: [
+                    jobsByStatus.estimating,
+                    jobsByStatus.running,
+                    jobsByStatus.completed,
+                    jobsByStatus.does_not_exist,
+                ],
+                expected: 'batch job in progress: 1 queued, 1 running, 1 success, 1 not found',
+            },
+            {
+                desc: 'child jobs do not exist',
+                child_jobs: [jobsByStatus.does_not_exist, jobsByStatus.does_not_exist],
+                expected: 'batch job finished with error: 2 not found',
+            },
+        ];
+
+        tests.forEach((test) => {
+            it(`summarises jobs: ${test.desc}`, () => {
+                const div = document.createElement('div');
+                div.innerHTML = Jobs.createCombinedJobState({
+                    status: 'created',
+                    job_id: test.desc,
+                    child_jobs: test.child_jobs,
+                });
+                expect(div.textContent).toBe(test.expected);
             });
         });
     });

@@ -11,11 +11,12 @@ define([
 
     function factory(config = {}) {
         const busArgs = config.bus || {};
+        let clock, theBus;
 
         function createRuntime() {
-            const theBus = Bus.make(busArgs);
+            theBus = Bus.make(busArgs);
 
-            const clock = Clock.make({
+            clock = Clock.make({
                 bus: theBus,
                 resolution: 1000,
             });
@@ -32,6 +33,12 @@ define([
             };
         }
 
+        function destroy() {
+            clock.stop();
+            $(document).off('dataUpdated.Narrative');
+            theBus = null;
+            window.kbaseRuntime = null;
+        }
         /*
          * The runtime hooks into a window
          */
@@ -101,6 +108,7 @@ define([
             getEnv: getEnv,
             workspaceId: workspaceId,
             userId: userId,
+            destroy: destroy,
         };
     }
 

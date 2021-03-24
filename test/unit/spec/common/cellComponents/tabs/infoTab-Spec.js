@@ -44,13 +44,17 @@ define(['common/cellComponents/tabs/infoTab'], (InfoTab) => {
         };
         const appSpec = model.getItem('app.spec');
         const infoTabInstance = InfoTab.make({ model });
-        let node, infoTabPromise, infoTab;
+        let container, infoTabPromise, infoTab;
 
         beforeEach(async () => {
-            node = document.createElement('div');
-            infoTabPromise = infoTabInstance.start({ node });
+            container = document.createElement('div');
+            infoTabPromise = infoTabInstance.start({ node: container });
             infoTab = await infoTabPromise;
             return infoTab; // to use infoTab for linter
+        });
+
+        afterEach(() => {
+            container.remove();
         });
 
         it('has a factory which can be invoked', () => {

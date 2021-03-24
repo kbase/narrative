@@ -1,6 +1,6 @@
 define(['common/runtime', 'widgets/appWidgets2/input/textInput'], (Runtime, TextInput) => {
     'use strict';
-    let bus, testConfig, node;
+    let bus, testConfig, container;
     const required = false,
         defaultValue = 'some test text';
 
@@ -25,7 +25,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/textInput'], (Runtime, Text
     describe('Text Input tests', () => {
         beforeEach(() => {
             const runtime = Runtime.make();
-            node = document.createElement('div');
+            container = document.createElement('div');
             bus = runtime.bus().makeChannelBus({
                 description: 'text input testing',
             });
@@ -35,6 +35,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/textInput'], (Runtime, Text
         afterEach(() => {
             bus.stop();
             window.kbaseRuntime = null;
+            container.remove();
         });
 
         it('should be defined', () => {
@@ -53,16 +54,16 @@ define(['common/runtime', 'widgets/appWidgets2/input/textInput'], (Runtime, Text
             const widget = TextInput.make(testConfig);
 
             widget
-                .start({ node: node })
+                .start({ node: container })
                 .then(() => {
                     // verify it's there.
-                    const inputElem = node.querySelector('input[data-element="input"]');
+                    const inputElem = container.querySelector('input[data-element="input"]');
                     expect(inputElem).toBeDefined();
                     return widget.stop();
                 })
                 .then(() => {
                     // verify it's gone.
-                    expect(node.childElementCount).toBe(0);
+                    expect(container.childElementCount).toBe(0);
                     done();
                 });
         });
@@ -75,7 +76,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/textInput'], (Runtime, Text
                 done();
             });
             const widget = TextInput.make(testConfig);
-            widget.start({ node: node }).then(() => {
+            widget.start({ node: container }).then(() => {
                 bus.emit('update', { value: 'some text' });
             });
         });
@@ -86,7 +87,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/textInput'], (Runtime, Text
                 done();
             });
             const widget = TextInput.make(testConfig);
-            widget.start({ node: node }).then(() => {
+            widget.start({ node: container }).then(() => {
                 bus.emit('reset-to-defaults');
             });
         });
@@ -98,8 +99,8 @@ define(['common/runtime', 'widgets/appWidgets2/input/textInput'], (Runtime, Text
                 expect(message.newValue).toEqual(inputText);
                 done();
             });
-            widget.start({ node: node }).then(() => {
-                const inputElem = node.querySelector('input[data-element="input"]');
+            widget.start({ node: container }).then(() => {
+                const inputElem = container.querySelector('input[data-element="input"]');
                 inputElem.value = inputText;
                 inputElem.dispatchEvent(new Event('change'));
             });
@@ -113,8 +114,8 @@ define(['common/runtime', 'widgets/appWidgets2/input/textInput'], (Runtime, Text
                 expect(message.errorMessage).toBeUndefined();
                 done();
             });
-            widget.start({ node: node }).then(() => {
-                const inputElem = node.querySelector('input[data-element="input"]');
+            widget.start({ node: container }).then(() => {
+                const inputElem = container.querySelector('input[data-element="input"]');
                 inputElem.value = inputText;
                 inputElem.dispatchEvent(new Event('change'));
             });
@@ -128,8 +129,8 @@ define(['common/runtime', 'widgets/appWidgets2/input/textInput'], (Runtime, Text
                 expect(message.errorMessage).toBeUndefined();
                 done();
             });
-            widget.start({ node: node }).then(() => {
-                const inputElem = node.querySelector('input[data-element="input"]');
+            widget.start({ node: container }).then(() => {
+                const inputElem = container.querySelector('input[data-element="input"]');
                 inputElem.value = inputText;
                 inputElem.dispatchEvent(new Event('keyup'));
             });
@@ -144,8 +145,8 @@ define(['common/runtime', 'widgets/appWidgets2/input/textInput'], (Runtime, Text
                 // ...detect something?
                 done();
             });
-            widget.start({ node: node }).then(() => {
-                const inputElem = node.querySelector('input[data-element="input"]');
+            widget.start({ node: container }).then(() => {
+                const inputElem = container.querySelector('input[data-element="input"]');
                 inputElem.value = inputText;
                 inputElem.dispatchEvent(new Event('change'));
             });
@@ -161,8 +162,8 @@ define(['common/runtime', 'widgets/appWidgets2/input/textInput'], (Runtime, Text
                 // ...detect something?
                 done();
             });
-            widget.start({ node: node }).then(() => {
-                const inputElem = node.querySelector('input[data-element="input"]');
+            widget.start({ node: container }).then(() => {
+                const inputElem = container.querySelector('input[data-element="input"]');
                 inputElem.value = inputText;
                 inputElem.dispatchEvent(new Event('change'));
             });

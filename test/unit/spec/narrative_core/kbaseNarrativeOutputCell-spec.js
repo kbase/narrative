@@ -22,8 +22,7 @@ define([
             },
             testData = { foo: 'bar', baz: [1, 2, 3] },
             cellId = 'a-cell-id';
-        let $target = $('<div>'),
-            myWidget = null;
+        let $container, $target, myWidget;
 
         const validateUpas = function (source, comparison) {
             Object.keys(comparison).forEach((upaKey) => {
@@ -48,7 +47,8 @@ define([
 
             Config.config.workspaceId = 10;
             $target = $('<div>');
-            $('body').append($('<div id="notebook-container">').append($target));
+            $container = $('<div id="notebook-container">').append($target);
+            $('body').append($container);
             myWidget = new Widget($target, {
                 widget: testWidget,
                 data: testData,
@@ -70,7 +70,7 @@ define([
             Mocks.clearAuthToken();
             Jupyter.narrative = null;
             jasmine.Ajax.uninstall();
-            $('#notebook-container').remove();
+            $container.remove();
         });
 
         it('Should load properly with a dummy UPA', () => {

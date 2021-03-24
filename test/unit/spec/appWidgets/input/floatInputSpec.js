@@ -5,7 +5,8 @@ define(['widgets/appWidgets2/input/floatInput', 'common/runtime'], (FloatInput, 
     describe('Test float data input widget', () => {
         let testConfig = {},
             runtime,
-            bus;
+            bus,
+            container;
 
         beforeEach(() => {
             runtime = Runtime.make();
@@ -29,9 +30,11 @@ define(['widgets/appWidgets2/input/floatInput', 'common/runtime'], (FloatInput, 
                 },
                 channelName: bus.channelName,
             };
+            container = document.createElement('div');
         });
 
         afterEach(() => {
+            container.remove();
             bus.stop();
             window.kbaseRuntime = null;
         });
@@ -50,18 +53,17 @@ define(['widgets/appWidgets2/input/floatInput', 'common/runtime'], (FloatInput, 
 
         it('should start and stop properly without initial value', (done) => {
             const widget = FloatInput.make(testConfig);
-            const node = document.createElement('div');
             widget
-                .start({ node: node })
+                .start({ node: container })
                 .then(() => {
-                    expect(node.childElementCount).toBeGreaterThan(0);
-                    const input = node.querySelector('input[data-type="float"]');
+                    expect(container.childElementCount).toBeGreaterThan(0);
+                    const input = container.querySelector('input[data-type="float"]');
                     expect(input).toBeDefined();
                     expect(input.getAttribute('value')).toBeNull();
                     return widget.stop();
                 })
                 .then(() => {
-                    expect(node.childElementCount).toBe(0);
+                    expect(container.childElementCount).toBe(0);
                     done();
                 });
         });
@@ -69,18 +71,17 @@ define(['widgets/appWidgets2/input/floatInput', 'common/runtime'], (FloatInput, 
         it('should start and stop properly with initial value', (done) => {
             testConfig.initialValue = 10.0;
             const widget = FloatInput.make(testConfig);
-            const node = document.createElement('div');
             widget
-                .start({ node: node })
+                .start({ node: container })
                 .then(() => {
-                    expect(node.childElementCount).toBeGreaterThan(0);
-                    const input = node.querySelector('input[data-type="float"]');
+                    expect(container.childElementCount).toBeGreaterThan(0);
+                    const input = container.querySelector('input[data-type="float"]');
                     expect(input).toBeDefined();
                     expect(input.getAttribute('value')).toBe(String(testConfig.initialValue));
                     return widget.stop();
                 })
                 .then(() => {
-                    expect(node.childElementCount).toBe(0);
+                    expect(container.childElementCount).toBe(0);
                     done();
                 });
         });
@@ -91,9 +92,8 @@ define(['widgets/appWidgets2/input/floatInput', 'common/runtime'], (FloatInput, 
                 done();
             });
             const widget = FloatInput.make(testConfig);
-            const node = document.createElement('div');
-            widget.start({ node: node }).then(() => {
-                const input = node.querySelector('input[data-type="float"]');
+            widget.start({ node: container }).then(() => {
+                const input = container.querySelector('input[data-type="float"]');
                 input.setAttribute('value', 1.2);
                 input.dispatchEvent(new Event('change'));
             });
@@ -101,13 +101,12 @@ define(['widgets/appWidgets2/input/floatInput', 'common/runtime'], (FloatInput, 
 
         xit('should update model properly with keyup/touch event', (done) => {
             const widget = FloatInput.make(testConfig);
-            const node = document.createElement('div');
             bus.on('validation', (message) => {
                 expect(message.isValid).toBeTruthy();
                 done();
             });
-            widget.start({ node: node }).then(() => {
-                const input = node.querySelector('input[data-type="float"]');
+            widget.start({ node: container }).then(() => {
+                const input = container.querySelector('input[data-type="float"]');
                 input.setAttribute('value', 1.23);
                 input.dispatchEvent(new Event('keyup'));
             });
@@ -115,14 +114,13 @@ define(['widgets/appWidgets2/input/floatInput', 'common/runtime'], (FloatInput, 
 
         it('should catch invalid string input', (done) => {
             const widget = FloatInput.make(testConfig);
-            const node = document.createElement('div');
             bus.on('validation', (msg) => {
                 expect(msg.isValid).toBeFalsy();
                 expect(msg.diagnosis).toBe('invalid');
                 done();
             });
-            widget.start({ node: node }).then(() => {
-                const input = node.querySelector('input[data-type="float"]');
+            widget.start({ node: container }).then(() => {
+                const input = container.querySelector('input[data-type="float"]');
                 input.setAttribute('value', 'abracadabra');
                 input.dispatchEvent(new Event('change'));
             });
@@ -131,16 +129,15 @@ define(['widgets/appWidgets2/input/floatInput', 'common/runtime'], (FloatInput, 
         it('should show message when configured, valid input', (done) => {
             testConfig.showOwnMessages = true;
             const widget = FloatInput.make(testConfig);
-            const node = document.createElement('div');
             bus.on('changed', (value) => {
                 expect(value).toEqual({ newValue: 123.456 });
                 // No error message
-                const errorMsg = node.querySelector('[data-element="message"]');
+                const errorMsg = container.querySelector('[data-element="message"]');
                 expect(errorMsg.innerHTML).toBe('');
                 done();
             });
-            widget.start({ node: node }).then(() => {
-                const input = node.querySelector('input[data-type="float"]');
+            widget.start({ node: container }).then(() => {
+                const input = container.querySelector('input[data-type="float"]');
                 input.setAttribute('value', 123.456);
                 input.dispatchEvent(new Event('change'));
             });
@@ -149,12 +146,10 @@ define(['widgets/appWidgets2/input/floatInput', 'common/runtime'], (FloatInput, 
         it('should show message when configured, invalid input', (done) => {
             testConfig.showOwnMessages = true;
             const widget = FloatInput.make(testConfig);
-            const node = document.createElement('div');
-
             bus.on('changed', (value) => {
                 expect(value).toEqual({ newValue: 12345.6 });
                 // check for an error message in the node
-                const errorMsg = node.querySelector('[data-element="message"]');
+                const errorMsg = container.querySelector('[data-element="message"]');
                 expect(errorMsg.innerHTML).toContain('ERROR');
             });
 
@@ -164,8 +159,8 @@ define(['widgets/appWidgets2/input/floatInput', 'common/runtime'], (FloatInput, 
                 done();
             });
 
-            widget.start({ node: node }).then(() => {
-                const input = node.querySelector('input[data-type="float"]');
+            widget.start({ node: container }).then(() => {
+                const input = container.querySelector('input[data-type="float"]');
                 // this value is out of the allowed range
                 input.setAttribute('value', 12345.6);
                 input.dispatchEvent(new Event('change'));
@@ -177,8 +172,7 @@ define(['widgets/appWidgets2/input/floatInput', 'common/runtime'], (FloatInput, 
         // interface, this test is disabled.
         xit('should respond to update command', () => {
             const widget = FloatInput.make(testConfig);
-            const node = document.createElement('div');
-            widget.start({ node: node }).then(() => {
+            widget.start({ node: container }).then(() => {
                 bus.emit('update', { value: '12345.6' });
             });
         });

@@ -1,6 +1,6 @@
 define(['common/runtime', 'widgets/appWidgets2/input/selectInput'], (Runtime, SelectInput) => {
     'use strict';
-    let bus, testConfig, runtime, node;
+    let bus, testConfig, runtime, container;
     const required = false,
         defaultValue = 'apple';
 
@@ -40,7 +40,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/selectInput'], (Runtime, Se
     describe('Select Input tests', () => {
         beforeEach(() => {
             runtime = Runtime.make();
-            node = document.createElement('div');
+            container = document.createElement('div');
             bus = runtime.bus().makeChannelBus({
                 description: 'select input testing',
             });
@@ -50,6 +50,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/selectInput'], (Runtime, Se
         afterEach(() => {
             bus.stop();
             window.kbaseRuntime = null;
+            container.remove();
         });
 
         it('should be defined', () => {
@@ -68,16 +69,16 @@ define(['common/runtime', 'widgets/appWidgets2/input/selectInput'], (Runtime, Se
             const widget = SelectInput.make(testConfig);
 
             widget
-                .start({ node: node })
+                .start({ node: container })
                 .then(() => {
                     // verify it's there.
-                    const inputElem = node.querySelector('select[data-element="input"]');
+                    const inputElem = container.querySelector('select[data-element="input"]');
                     expect(inputElem).toBeDefined();
                     return widget.stop();
                 })
                 .then(() => {
                     // verify it's gone.
-                    expect(node.childElementCount).toBe(0);
+                    expect(container.childElementCount).toBe(0);
                     done();
                 });
         });
@@ -91,7 +92,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/selectInput'], (Runtime, Se
                 done();
             });
             const widget = SelectInput.make(testConfig);
-            widget.start({ node: node }).then(() => {
+            widget.start({ node: container }).then(() => {
                 bus.emit('update', { value: 'banana' });
             });
         });
@@ -102,7 +103,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/selectInput'], (Runtime, Se
                 done();
             });
             const widget = SelectInput.make(testConfig);
-            widget.start({ node: node }).then(() => {
+            widget.start({ node: container }).then(() => {
                 bus.emit('reset-to-defaults');
             });
         });
@@ -113,8 +114,8 @@ define(['common/runtime', 'widgets/appWidgets2/input/selectInput'], (Runtime, Se
                 expect(message.newValue).toEqual('banana');
                 done();
             });
-            widget.start({ node: node }).then(() => {
-                const inputElem = node.querySelector('select[data-element="input"]');
+            widget.start({ node: container }).then(() => {
+                const inputElem = container.querySelector('select[data-element="input"]');
                 inputElem.selectedIndex = 2;
                 inputElem.dispatchEvent(new Event('change'));
             });
@@ -127,8 +128,8 @@ define(['common/runtime', 'widgets/appWidgets2/input/selectInput'], (Runtime, Se
                 expect(message.errorMessage).toBeUndefined();
                 done();
             });
-            widget.start({ node: node }).then(() => {
-                const inputElem = node.querySelector('select[data-element="input"]');
+            widget.start({ node: container }).then(() => {
+                const inputElem = container.querySelector('select[data-element="input"]');
                 inputElem.selectedIndex = 1;
                 inputElem.dispatchEvent(new Event('change'));
             });
@@ -142,8 +143,8 @@ define(['common/runtime', 'widgets/appWidgets2/input/selectInput'], (Runtime, Se
                 // ...detect something?
                 done();
             });
-            widget.start({ node: node }).then(() => {
-                const inputElem = node.querySelector('select[data-element="input"]');
+            widget.start({ node: container }).then(() => {
+                const inputElem = container.querySelector('select[data-element="input"]');
                 inputElem.value = 'banana';
                 inputElem.dispatchEvent(new Event('change'));
             });
@@ -170,8 +171,8 @@ define(['common/runtime', 'widgets/appWidgets2/input/selectInput'], (Runtime, Se
                     done();
                 }
             });
-            widget.start({ node: node }).then(() => {
-                const inputElem = node.querySelector('select[data-element="input"]');
+            widget.start({ node: container }).then(() => {
+                const inputElem = container.querySelector('select[data-element="input"]');
                 inputElem.selectedIndex = -1;
                 inputElem.dispatchEvent(new Event('change'));
             });

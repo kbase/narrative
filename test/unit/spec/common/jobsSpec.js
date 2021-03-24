@@ -66,21 +66,27 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
     });
 
     describe('createJobStatusLines', () => {
-        const div = document.createElement('div');
+        let container;
+        beforeAll(() => {
+            container = document.createElement('div');
+        });
+        afterAll(() => {
+            container.remove();
+        });
         const args = [false, true];
         JobsData.allJobs.forEach((state) => {
             it(`should create an appropriate status string for ${state.job_id}`, () => {
                 const statusLines = Jobs.createJobStatusLines(state);
-                div.innerHTML = arrayToHTML(statusLines);
-                expect(div.textContent).toContain(state.meta.createJobStatusLines.line);
+                container.innerHTML = arrayToHTML(statusLines);
+                expect(container.textContent).toContain(state.meta.createJobStatusLines.line);
             });
         });
         JobsData.allJobs.forEach((state) => {
             it(`should create an appropriate array in history mode for ${state.job_id}`, () => {
                 const statusLines = Jobs.createJobStatusLines(state, true);
-                div.innerHTML = arrayToHTML(statusLines);
+                container.innerHTML = arrayToHTML(statusLines);
                 state.meta.createJobStatusLines.history.forEach((historyLine) => {
-                    expect(div.textContent).toContain(historyLine);
+                    expect(container.textContent).toContain(historyLine);
                 });
             });
         });
@@ -91,8 +97,8 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
             // history is shown
             args.forEach((arg) => {
                 const statusLines = Jobs.createJobStatusLines(state, arg);
-                div.innerHTML = arrayToHTML(statusLines);
-                expect(div.textContent).toContain(JobsData.jobStrings.not_found);
+                container.innerHTML = arrayToHTML(statusLines);
+                expect(container.textContent).toContain(JobsData.jobStrings.not_found);
             });
         });
 
@@ -100,8 +106,8 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
             JobsData.invalidJobs.forEach((state) => {
                 args.forEach((arg) => {
                     const statusLines = Jobs.createJobStatusLines(state, arg);
-                    div.innerHTML = arrayToHTML(statusLines);
-                    expect(div.textContent).toContain(JobsData.jobStrings.unknown);
+                    container.innerHTML = arrayToHTML(statusLines);
+                    expect(container.textContent).toContain(JobsData.jobStrings.unknown);
                 });
             });
         });
@@ -158,12 +164,17 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
     });
 
     describe('niceState', () => {
-        const div = document.createElement('div');
-
+        let container;
+        beforeAll(() => {
+            container = document.createElement('div');
+        });
+        afterAll(() => {
+            container.remove();
+        });
         badStates.forEach((item) => {
             it(`should generate a nice state for the input ${item}`, () => {
-                div.innerHTML = Jobs.niceState(item);
-                const span = div.querySelector('span');
+                container.innerHTML = Jobs.niceState(item);
+                const span = container.querySelector('span');
                 expect(span).toHaveClass('kb-job-status__summary');
                 expect(span.textContent).toContain('invalid');
             });
@@ -171,8 +182,8 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
 
         JobsData.allJobs.forEach((state) => {
             it(`should generate a nice state for ${state.status}`, () => {
-                div.innerHTML = Jobs.niceState(state.status);
-                const span = div.querySelector('span');
+                container.innerHTML = Jobs.niceState(state.status);
+                const span = container.querySelector('span');
                 expect(span).toHaveClass(state.meta.niceState.class);
                 expect(span.textContent).toContain(state.meta.niceState.label);
             });

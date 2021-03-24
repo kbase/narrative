@@ -1,6 +1,6 @@
 define(['common/runtime', 'widgets/appWidgets2/input/textareaInput'], (Runtime, TextareaInput) => {
     'use strict';
-    let bus, testConfig, node;
+    let bus, testConfig, container;
     const required = false,
         defaultValue = 'some test text',
         numRows = 3;
@@ -29,7 +29,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/textareaInput'], (Runtime, 
     describe('Textarea Input tests', () => {
         beforeEach(() => {
             const runtime = Runtime.make();
-            node = document.createElement('div');
+            container = document.createElement('div');
             bus = runtime.bus().makeChannelBus({
                 description: 'textarea testing',
             });
@@ -39,6 +39,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/textareaInput'], (Runtime, 
         afterEach(() => {
             bus.stop();
             window.kbaseRuntime = null;
+            container.remove();
         });
 
         it('should be defined', () => {
@@ -59,17 +60,17 @@ define(['common/runtime', 'widgets/appWidgets2/input/textareaInput'], (Runtime, 
             expect(widget.start).toBeDefined();
 
             widget
-                .start({ node: node })
+                .start({ node: container })
                 .then(() => {
                     // verify it's there.
-                    const textarea = node.querySelector('textarea');
+                    const textarea = container.querySelector('textarea');
                     expect(textarea).toBeDefined();
                     expect(textarea.getAttribute('rows')).toBe(String(numRows));
                     return widget.stop();
                 })
                 .then(() => {
                     // verify it's gone.
-                    expect(node.childElementCount).toBe(0);
+                    expect(container.childElementCount).toBe(0);
                     done();
                 });
         });
@@ -82,7 +83,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/textareaInput'], (Runtime, 
                 done();
             });
             const widget = TextareaInput.make(testConfig);
-            widget.start({ node: node }).then(() => {
+            widget.start({ node: container }).then(() => {
                 bus.emit('update', { value: 'some text' });
             });
         });
@@ -93,7 +94,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/textareaInput'], (Runtime, 
                 done();
             });
             const widget = TextareaInput.make(testConfig);
-            widget.start({ node: node }).then(() => {
+            widget.start({ node: container }).then(() => {
                 bus.emit('reset-to-defaults');
             });
         });
@@ -105,8 +106,8 @@ define(['common/runtime', 'widgets/appWidgets2/input/textareaInput'], (Runtime, 
                 expect(message.newValue).toEqual(inputText);
                 widget.stop().then(done);
             });
-            widget.start({ node: node }).then(() => {
-                const inputElem = node.querySelector('textarea');
+            widget.start({ node: container }).then(() => {
+                const inputElem = container.querySelector('textarea');
                 inputElem.value = inputText;
                 inputElem.dispatchEvent(new Event('change'));
             });
@@ -120,8 +121,8 @@ define(['common/runtime', 'widgets/appWidgets2/input/textareaInput'], (Runtime, 
                 expect(message.errorMessage).toBeUndefined();
                 done();
             });
-            widget.start({ node: node }).then(() => {
-                const inputElem = node.querySelector('textarea');
+            widget.start({ node: container }).then(() => {
+                const inputElem = container.querySelector('textarea');
                 inputElem.value = inputText;
                 inputElem.dispatchEvent(new Event('change'));
             });
@@ -138,8 +139,8 @@ define(['common/runtime', 'widgets/appWidgets2/input/textareaInput'], (Runtime, 
                 // ...detect something?
                 // done();
             });
-            widget.start({ node: node }).then(() => {
-                const inputElem = node.querySelector('textarea');
+            widget.start({ node: container }).then(() => {
+                const inputElem = container.querySelector('textarea');
                 inputElem.value = inputText;
                 inputElem.dispatchEvent(new Event('keyup'));
             });
@@ -154,8 +155,8 @@ define(['common/runtime', 'widgets/appWidgets2/input/textareaInput'], (Runtime, 
                 // ...detect something?
                 done();
             });
-            widget.start({ node: node }).then(() => {
-                const inputElem = node.querySelector('textarea');
+            widget.start({ node: container }).then(() => {
+                const inputElem = container.querySelector('textarea');
                 inputElem.value = inputText;
                 inputElem.dispatchEvent(new Event('change'));
             });
@@ -171,8 +172,8 @@ define(['common/runtime', 'widgets/appWidgets2/input/textareaInput'], (Runtime, 
                 // ...detect something?
                 done();
             });
-            widget.start({ node: node }).then(() => {
-                const inputElem = node.querySelector('textarea');
+            widget.start({ node: container }).then(() => {
+                const inputElem = container.querySelector('textarea');
                 inputElem.value = inputText;
                 inputElem.dispatchEvent(new Event('change'));
             });

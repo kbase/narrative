@@ -19,6 +19,7 @@ define([
     });
 
     describe('The Parameter instance', () => {
+        let container;
         beforeAll(() => {
             window.kbaseRuntime = null;
             Jupyter.narrative = {
@@ -33,10 +34,9 @@ define([
         beforeEach(async function () {
             const bus = Runtime.make().bus();
 
-            this.parent = document.createElement('div');
+            container = document.createElement('div');
             this.node = document.createElement('div');
-            document.getElementsByTagName('body')[0].appendChild(this.parent);
-            this.parent.appendChild(this.node);
+            container.appendChild(this.node);
 
             const model = Props.make({
                 data: TestAppObject,
@@ -69,7 +69,7 @@ define([
                 await this.paramsWidgetInstance.stop();
             }
             window.kbaseRuntime = null;
-            this.parent.remove();
+            container.remove();
         });
 
         it('should render the correct parameters', function () {

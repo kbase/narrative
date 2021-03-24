@@ -31,6 +31,7 @@ define([
             paramsBus = config.bus,
             workspaceId = config.workspaceId,
             initialParams = config.initialParams,
+            paramIds = config.paramIds,
             model = Props.make(),
             paramResolver = ParamResolver.make(),
             widgets = [],
@@ -350,32 +351,32 @@ define([
             };
         }
 
-        function findPathParams(params) {
-            return params.layout
-                .filter((id) => {
-                    const original = params.specs[id].original;
+        // function findPathParams(params) {
+        //     return params.layout
+        //         .filter((id) => {
+        //             const original = params.specs[id].original;
 
-                    let isFilePathParam = false;
+        //             let isFilePathParam = false;
 
-                    if (original) {
-                        //looking for file inputs via the dynamic_dropdown data source
-                        if (original.dynamic_dropdown_options) {
-                            isFilePathParam =
-                                original.dynamic_dropdown_options.data_source === 'ftp_staging';
-                        }
+        //             if (original) {
+        //                 //looking for file inputs via the dynamic_dropdown data source
+        //                 if (original.dynamic_dropdown_options) {
+        //                     isFilePathParam =
+        //                         original.dynamic_dropdown_options.data_source === 'ftp_staging';
+        //                 }
 
-                        //looking for output fields - these should go in file paths
-                        else if (original.text_options && original.text_options.is_output_name) {
-                            isFilePathParam = true;
-                        }
-                    }
+        //                 //looking for output fields - these should go in file paths
+        //                 else if (original.text_options && original.text_options.is_output_name) {
+        //                     isFilePathParam = true;
+        //                 }
+        //             }
 
-                    return isFilePathParam;
-                })
-                .map((id) => {
-                    return params.specs[id];
-                });
-        }
+        //             return isFilePathParam;
+        //         })
+        //         .map((id) => {
+        //             return params.specs[id];
+        //         });
+        // }
 
         function createFilePathWidget(appSpec, filePathParams, parameterId) {
             const spec = filePathParams.paramMap[parameterId];
@@ -419,9 +420,10 @@ define([
 
         function renderFilePathRow(filePathRow) {
             const appSpec = model.getItem('appSpec');
-            const params = model.getItem('parameters');
-            const filePathParams = makeFilePathsLayout(config.spec.getFilePathParams().map((id) => params.specs[id])); //findPathParams(params));
+            // const params = model.getItem('parameterValues')[0];
+            const filePathParams = makeFilePathsLayout(model.getItem('parameterSpecs'));
 
+            // const filePathParams = model.getItem('parameterSpecs');
             if (!filePathParams.layout.length) {
                 return Promise.resolve(
                     ui.getElement(`${cssClassType}s-area`).classList.add('hidden')
@@ -483,8 +485,19 @@ define([
             });
             doAttach();
 
+            console.log(arg.parameters);
+            model.setItem('parameterIds', paramIds);
             model.setItem('appSpec', arg.appSpec);
-            model.setItem('parameters', arg.parameters);
+            // should be a list of file path structures. test?
+            const parameterSpecs = [];
+            arg.parameters.layout.forEach((id) => {
+                if (paramIds.includes(id)) {
+                    parameterSpecs.push(arg.parameters.specs[id]);
+                }
+            });
+            model.setItem('parameterSpecs', parameterSpecs);
+            model.setItem('parameterValues', arg.parameters);
+            // model.setItem('parameterSet')
 
             paramsBus.on('parameter-changed', (message) => {
                 widgets.forEach((widget) => {

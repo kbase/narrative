@@ -88,26 +88,24 @@ define([
 
         function buildFilePathWidget(node) {
             // This is the key in the model that maps to the list of params for the current app.
-            const paramKey = `${fileType}`;
-            const paramBus = buildMessageBus(paramKey, 'Parent comm bus for filePath widget');
+            const paramBus = buildMessageBus(fileType, 'Parent comm bus for filePath widget');
             paramBus.on('parameter-changed', (message) => {
                 // TODO: should never get these in the following states....
                 console.log('GOT PARAMETER CHANGED MESSAGE - ' + JSON.stringify(message));
-                updateModelParameterValue(paramKey, 'filePath', message);
+                updateModelParameterValue(fileType, 'filePath', message);
             });
 
             /* Here, we need to
              * 1. Get the list of file path params.
-             * 2. Get the initial parameters (whatever's serialized in the model right now)
+             * 2. Get the initial parameters (this will be an array that's serialized in the model right now)
              * 3. Pass those along to the filepathwidget
              */
             // this is an array of parameter ids from the current spec.
-            const filePathParams = spec.getFilePathParams();
             const widget = FilePathWidget.make({
                 bus: paramBus,
                 workspaceId: runtime.workspaceId(),
-                initialParams: model.getItem(['params', paramKey]),
-                spec: spec,
+                paramIds: model.getItem(['app', 'fileParamIds', fileType]),
+                initialParams: model.getItem(['params', fileType, 'filePaths']),
             });
 
             return widget

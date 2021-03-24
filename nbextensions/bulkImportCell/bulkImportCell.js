@@ -246,16 +246,43 @@ define([
                 },
             }),
             state = getInitialState(),
-            specs = {},
-            rawSpecs = model.getItem('app.specs');
+            // These are the processed Spec object with proper layout order, etc.
+            specs = {};
+        console.log(model.getItem(['app', 'fileParamIds']));
 
-        Object.keys(rawSpecs).forEach((appId) => {
+        for (const [appId, appSpec] of Object.entries(model.getItem('app.specs'))) {
             specs[appId] = Spec.make({
-                appSpec: rawSpecs[appId],
+                appSpec: appSpec,
             });
-        });
+        }
 
         setupCell();
+
+        /**
+         *
+         * @param {*} appSpec
+         * @returns
+         */
+        function filterFileParameters(appSpec) {
+            const paramIds = appSpec.parameters.map((param) => param.id);
+            const fileParams = appSpec.parameters.filter((param) => {
+                // if we're including output, and this is an output object, always pass the filter.
+                if (param.text_options &&
+                    param.text_options.is_output_name) {
+                    return true;
+                }
+
+                const isFilePathParam = param.dynamic_dropdown_options &&
+                    param.dynamic_dropdown_options.data_source === 'ftp_staging';
+
+                return isFilePathParam;
+            });
+            const fileParamIds = fileParams.map((param) => param.id);
+            const fileParamIdSet = new Set(fileParamIds);
+            const nonFileParamIds = paramIds.filter((id) => !fileParamIdSet.has(id));
+            return [fileParamIds, nonFileParamIds];
+        }
+
 
         /**
          * Does the initial pass on newly created cells to initialize its metadata and get it
@@ -283,12 +310,31 @@ define([
              * }
              *
              */
-            const initialParams = {};
+            const initialParams = {},
+                fileParamIds = {},
+                otherParamIds = {};
+            /* initialize the parameters set.
+             * Get the app spec and split the set of parameters into filePaths and params
+             * each input file (typesToFiles[fileType].files) gets its own
+             */
             Object.keys(typesToFiles).forEach((fileType) => {
                 const spec = appSpecs[typesToFiles[fileType].appId];
-                initialParams[fileType] = {};
+                initialParams[fileType] = {
+                    filePaths: [],
+                    params: {}
+                };
+                [fileParamIds[fileType], otherParamIds[fileType]] = filterFileParameters(spec);
+                initialParams[fileType].filePaths = typesToFiles[fileType].files.map(
+                    (inputFile) => {
+                        return fileParamIds[fileType].reduce((fileParams, paramId) => {
+                            fileParams[paramId] = inputFile;
+                            return fileParams;
+                        }, {});
+                    });
                 spec.parameters.forEach((param) => {
-                    initialParams[fileType][param.id] = param.default_values[0];
+                    if (otherParamIds[fileType].includes(param.id)) {
+                        initialParams[fileType].params[param.id] = param.default_values[0];
+                    }
                 });
             });
             const meta = {
@@ -308,6 +354,8 @@ define([
                         inputs: typesToFiles,
                         params: initialParams,
                         app: {
+                            fileParamIds: fileParamIds,
+                            otherParamIds: otherParamIds,
                             specs: appSpecs,
                             tag: 'release',
                         },

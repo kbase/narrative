@@ -72,37 +72,10 @@ define([
             return Promise.props(validationMap);
         }
 
-        /**
-         * Returns an array of ids of file path params
-         */
-        function getFilePathParams() {
-            return spec.parameters.layout.filter((id) => {
-                const original = spec.parameters.specs[id].original;
-
-                let isFilePathParam = false;
-
-                if (original) {
-                    //looking for file inputs via the dynamic_dropdown data source
-                    if (original.dynamic_dropdown_options) {
-                        isFilePathParam =
-                            original.dynamic_dropdown_options.data_source === 'ftp_staging';
-                    }
-
-                    //looking for output fields - these should go in file paths
-                    else if (original.text_options && original.text_options.is_output_name) {
-                        isFilePathParam = true;
-                    }
-                }
-
-                return isFilePathParam;
-            });
-        }
-
         return Object.freeze({
             getSpec,
             makeDefaultedModel,
             validateModel,
-            getFilePathParams,
         });
     }
 

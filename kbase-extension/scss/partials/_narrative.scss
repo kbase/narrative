@@ -300,7 +300,7 @@
 .kb-staging-table-body__import-dropdown.kb-staging-table-body__import-type-selected,
 .select2-container--focus .kb-staging-table-body__import-dropdown,
 .select2-container--open .kb-staging-table-body__import-dropdown {
-  border: 1px solid rgb(196 196 196);
+  border: 1px solid use-color('silver');
 }
 
 /* Before user makes a selection arrow is red
@@ -1142,7 +1142,7 @@ p#site-title { /* FIXME */
 h3.pane-title {
   position: relative;
   padding: 3px 5px;
-  border: 1px solid rgb(194 194 194);
+  border: 1px solid use-color('silver');
   margin: 0;
   background-color: rgb(224 224 224);
   font-size: 16px;
@@ -2117,7 +2117,7 @@ td {
 }
 
 .unselected .kb-func-timestamp {
-  color: rgb(192 192 192);
+  color: use-color('silver');
 }
 
 .kb-func-panel {
@@ -3188,7 +3188,7 @@ button.kb-data-obj {
 }
 
 .unselected .prompt .method-icon {
-  color: rgb(192 192 192);
+  color: use-color('silver');
 }
 
 .method-icon {
@@ -3196,7 +3196,7 @@ button.kb-data-obj {
 }
 
 .unselected .prompt .app-icon {
-  color: rgb(192 192 192);
+  color: use-color('silver');
 }
 
 .app-icon {
@@ -3422,7 +3422,7 @@ button.kb-data-obj {
   width: 140px;
   height: 42px;
   box-sizing: border-box;
-  border: 1px solid rgb(196 196 196);
+  border: 1px solid use-color('silver');
   margin: 0 6px;
   background: rgb(255 255 255);
   border-radius: 6px;

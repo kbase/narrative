@@ -22,7 +22,8 @@ define(['common/html'], (html) => {
          */
 
         const t = html.tag,
-            div = t('div');
+            div = t('div'),
+            cssBaseClass = 'kb-rcp';
 
         const actionButtons = config.actionButtons,
             ui = config.ui,
@@ -32,16 +33,16 @@ define(['common/html'], (html) => {
         function buildLayout(events) {
             return div(
                 {
-                    class: 'kb-btn-action__container',
+                    class: `${cssBaseClass}__action-button-container`,
                 },
-                [buildActionButtons(events)]
+                buildActionButtons(events)
             );
         }
 
         function buildActionButtons(events) {
             const buttonList = Object.keys(actionButtons.availableButtons).map((key) => {
                 const button = actionButtons.availableButtons[key],
-                    classes = ['kb-btn-action__button'].concat(button.classes);
+                    classes = [`${cssBaseClass}__action-button`].concat(button.classes);
                 let icon;
                 if (button.icon) {
                     icon = {
@@ -70,12 +71,7 @@ define(['common/html'], (html) => {
                 runAction(action);
             });
 
-            return div(
-                {
-                    class: 'kb-btn-action__list btn-group',
-                },
-                buttonList
-            );
+            return buttonList;
         }
 
         function setState(newState) {

@@ -65,10 +65,8 @@ define([
 
         function renderError(jobState, errorNode) {
             function convertJobError(errorInfo) {
-                let errorId = new Uuid(4).format(),
-                    errorType,
-                    errorMessage,
-                    errorDetail;
+                const errorId = new Uuid(4).format();
+                let errorType, errorMessage, errorDetail;
                 if (errorInfo.error) {
                     // Classic KBase rpc error message
                     errorType = errorInfo.name;
@@ -113,7 +111,7 @@ define([
                     div({
                         dataElement: 'detail',
                         style: {
-                            border: '0px silver solid',
+                            border: '0',
                             padding: '4px',
                             wordBreak: 'break-word',
                         },
@@ -128,7 +126,7 @@ define([
             errorUi.updateFromViewModel(viewModel);
         }
 
-        function startBatch(jobState) {
+        function startBatch() {
             // gonna have to listen to job state somewhere. maybe here?
             // and have a control for stopping the listener
             return Promise.try(() => {
@@ -143,9 +141,9 @@ define([
                 });
 
                 function startResults(arg) {
-                    let jobId = arg.jobId,
-                        selectedJobId = jobId ? jobId : model.getItem('exec.jobState.job_id'),
-                        jobState;
+                    const jobId = arg.jobId,
+                        selectedJobId = jobId ? jobId : model.getItem('exec.jobState.job_id');
+                    let jobState;
 
                     if (Number.isInteger(arg.jobIndex)) {
                         jobState = model.getItem('exec.jobState.child_jobs')[arg.jobIndex];

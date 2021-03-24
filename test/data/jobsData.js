@@ -19,9 +19,9 @@ define(['common/format'], (format) => {
         queueHistoryNoRun: 'Queued for ' + format.niceDuration(t.finished - t.created),
         runHistory: 'Ran for ' + format.niceDuration(t.finished - t.running),
         action: {
-            results: 'Go to results',
-            cancel: 'Cancel',
-            retry: 'Retry',
+            results: 'go to results',
+            cancel: 'cancel',
+            retry: 'retry',
         },
     };
 
@@ -44,7 +44,7 @@ define(['common/format'], (format) => {
                     history: [jobStrings.queued],
                 },
                 jobAction: jobStrings.action.cancel,
-                jobLabel: 'Queued',
+                jobLabel: 'queued',
                 niceState: {
                     class: 'kb-job-status__summary',
                     label: 'created',
@@ -62,7 +62,7 @@ define(['common/format'], (format) => {
                     history: [jobStrings.queued],
                 },
                 jobAction: jobStrings.action.cancel,
-                jobLabel: 'Queued',
+                jobLabel: 'queued',
                 niceState: {
                     class: 'kb-job-status__summary',
                     label: 'estimating',
@@ -81,7 +81,7 @@ define(['common/format'], (format) => {
                     history: [jobStrings.queued],
                 },
                 jobAction: jobStrings.action.cancel,
-                jobLabel: 'Queued',
+                jobLabel: 'queued',
                 niceState: {
                     class: 'kb-job-status__summary',
                     label: 'queued',
@@ -101,7 +101,7 @@ define(['common/format'], (format) => {
                     history: [jobStrings.queueHistoryNoRun, jobStrings.termination],
                 },
                 jobAction: jobStrings.action.retry,
-                jobLabel: 'Cancelled',
+                jobLabel: 'cancelled',
                 niceState: {
                     class: 'kb-job-status__summary--terminated',
                     label: 'cancellation',
@@ -121,7 +121,7 @@ define(['common/format'], (format) => {
                     history: [jobStrings.queueHistory, jobStrings.running],
                 },
                 jobAction: jobStrings.action.cancel,
-                jobLabel: 'Running',
+                jobLabel: 'running',
                 niceState: {
                     class: 'kb-job-status__summary',
                     label: 'running',
@@ -146,7 +146,7 @@ define(['common/format'], (format) => {
                     ],
                 },
                 jobAction: jobStrings.action.retry,
-                jobLabel: 'Cancelled',
+                jobLabel: 'cancelled',
                 niceState: {
                     class: 'kb-job-status__summary--terminated',
                     label: 'cancellation',
@@ -174,7 +174,8 @@ define(['common/format'], (format) => {
                     history: [jobStrings.queueHistory, jobStrings.runHistory, jobStrings.error],
                 },
                 jobAction: jobStrings.action.retry,
-                jobLabel: 'Failed',
+                jobLabelIncludeError: 'failed: Server error',
+                jobLabel: 'failed',
                 niceState: {
                     class: 'kb-job-status__summary--error',
                     label: 'error',
@@ -196,7 +197,7 @@ define(['common/format'], (format) => {
                     history: [jobStrings.queueHistory, jobStrings.runHistory, jobStrings.success],
                 },
                 jobAction: jobStrings.action.results,
-                jobLabel: 'Success',
+                jobLabel: 'success',
                 niceState: {
                     class: 'kb-job-status__summary--completed',
                     label: 'success',
@@ -224,7 +225,7 @@ define(['common/format'], (format) => {
                 history: [jobStrings.not_found],
             },
             jobAction: jobStrings.action.retry,
-            jobLabel: 'Job not found',
+            jobLabel: 'not found',
             niceState: {
                 class: 'kb-job-status__summary--does_not_exist',
                 label: 'does not exist',

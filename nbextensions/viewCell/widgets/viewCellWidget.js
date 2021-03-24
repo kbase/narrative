@@ -349,7 +349,7 @@ define([
                                     style: {
                                         padding: '4px',
                                         fontWeight: 'noramal',
-                                        border: '1px silver solid',
+                                        border: '1px solid silver',
                                         backgroundColor: 'gray',
                                         color: 'white',
                                     },

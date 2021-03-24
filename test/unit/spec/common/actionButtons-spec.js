@@ -6,7 +6,7 @@ define([
     'common/events',
 ], (ActionButton, $, Runtime, UI, Events) => {
     'use strict';
-    let mockActionButton, ui, container;
+    let actionButtonInstance, ui, container;
     const runAction = () => {},
         events = Events.make(),
         actionButtons = {
@@ -39,7 +39,7 @@ define([
                 bus: bus,
             });
 
-            mockActionButton = ActionButton.make({
+            actionButtonInstance = ActionButton.make({
                 ui: ui,
                 actionButtons: actionButtons,
                 bus: bus,
@@ -49,9 +49,10 @@ define([
         });
 
         afterEach(() => {
-            mockActionButton = null;
+            actionButtonInstance = null;
             window.kbaseRuntime = null;
             ui = null;
+            container.remove();
         });
 
         it('Should load', () => {
@@ -63,20 +64,15 @@ define([
         });
 
         it('Has expected functions when made', () => {
-            expect(mockActionButton.buildLayout).toBeDefined();
-            expect(mockActionButton.setState).toBeDefined();
+            expect(actionButtonInstance.buildLayout).toBeDefined();
+            expect(actionButtonInstance.setState).toBeDefined();
         });
 
         it('has a method buildLayout which returns buttons', () => {
-            const mockButtons = mockActionButton.buildLayout(events);
+            const mockButtons = actionButtonInstance.buildLayout(events);
 
-            const $buttonContainer = $(mockButtons).find(
-                '.kb-bulk-import-action-button__container'
-            );
+            const $buttonContainer = $(mockButtons).find('.kb-rcp__action-button-container');
             expect($buttonContainer).toBeDefined();
-
-            const $buttonList = $(mockButtons).find('.kb-bulk-import-action-button__list');
-            expect($buttonList).toBeDefined();
 
             const $runButton = $(mockButtons).find('.-run');
             expect($runButton).toBeDefined();
@@ -88,9 +84,9 @@ define([
         });
 
         it('has a method setState which changes the button state', () => {
-            const layout = mockActionButton.buildLayout(events);
+            const layout = actionButtonInstance.buildLayout(events);
             container.innerHTML = layout;
-            mockActionButton.setState({
+            actionButtonInstance.setState({
                 name: 'cancel',
                 disabled: true,
             });

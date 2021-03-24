@@ -324,7 +324,7 @@ define([
                                         // TRY Throwing up
                                         // or not: throw new Error('Error making input field widget: ' + ex.message);
                                         const errorDisplay = div(
-                                            { style: { border: '1px red solid' } },
+                                            { style: { border: '1px solid red' } },
                                             [ex.message]
                                         );
                                         places.fields.appendChild(ui.createNode(errorDisplay));

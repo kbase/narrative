@@ -24,11 +24,12 @@ define([
         tr = t('tr'),
         th = t('th'),
         td = t('td'),
-        i = t('i');
+        i = t('i'),
+        cssClassName = 'kb-ui';
 
     // "static" methods
     function na() {
-        return span({ style: { fontStyle: 'italic', color: 'orange' } }, 'NA');
+        return span({ class: `${cssClassName}__text--na` }, 'NA');
     }
 
     function htmlEncode(str) {
@@ -168,7 +169,6 @@ define([
 
         if (args.hidden) {
             classes.push('hidden');
-            // style.display = 'none';
         }
         if (!args.collapsed) {
             collapseClasses.push('in');
@@ -211,9 +211,34 @@ define([
         );
     }
 
-    function buildIcon(arg) {
-        const klasses = ['fa'],
-            style = { verticalAlign: 'middle' };
+    /**
+     * Build a Font Awesome icon!
+     *
+     * @param {object} arg with keys
+     * Required keys:
+     * name: {string}   // will be appended to 'fa-' to create the icon name
+     *
+     * Optional keys:
+     * rotate: {number}|{string}    // generates class 'fa-rotate-<number|string>'
+     * flip: {string}               // generates class 'fa-flip-<string>'
+     * size: {string}               // generates class 'fa-<string>'
+     *   or  {number}               // generates class 'fa-<number>x'
+     * classes: {array{string}}     // more classes to add
+     * style: {object}              // any style params
+     * color: {string}              // icon colour
+     *
+     * @returns {string} HTML to generate the icon
+     *                      if no icon name is supplied, the string will be ''
+     */
+    function buildIcon(arg = {}) {
+        if (!arg.name) {
+            console.error('Cannot create icon: no name supplied');
+            return '';
+        }
+
+        const klasses = ['fa', `${cssClassName}__icon`],
+            style = {};
+
         klasses.push('fa-' + arg.name);
         if (arg.rotate) {
             klasses.push('fa-rotate-' + String(arg.rotate));
@@ -766,17 +791,38 @@ define([
             );
         }
 
+        /**
+         * Build a button
+         *
+         * @param {object} arg with keys
+         * Required keys:
+         * name: {string}               // generates attribute data-button="<string>"
+         * title|tip|label: {string}    // button title attribute
+         *
+         * Optional keys:
+         * classes: {array{string}}     // more button classes to add
+         * event: {object}              // event data; see addButtonClickEvent for format
+         * events: {object}             // common/events.js object
+         * features: {array{string}}    // generate attributes of the form
+         *                                 data-feature-{string} = true
+         * hidden: {boolean}            // if the button should be hidden
+         * icon: {object}               // creates an icon; see buildIcon for object format
+         * label: {string}              // button title attribute and button text
+         * style: {object}              // any style params
+         * tip: {string}                // button title attribute
+         * title: {string}              // button title attribute
+         * type: {string}               // bootstrap button class, appended to 'btn-';
+         *                              // defaults to 'default', i.e. 'btn-default'
+         *
+         * @returns {string} HTML to generate the button
+         */
         function buildButton(arg) {
             const klass = arg.type || 'default',
-                { events } = arg,
-                title = arg.title || arg.tip || arg.label;
+                { events } = arg;
             let buttonClasses = ['btn', 'btn-' + klass],
                 icon;
 
             if (arg.icon) {
-                if (!arg.icon.classes) {
-                    arg.icon.classes = [];
-                }
                 icon = buildIcon(arg.icon);
             }
 
@@ -787,18 +833,22 @@ define([
             if (arg.classes) {
                 buttonClasses = buttonClasses.concat(arg.classes);
             }
-            if (!arg.event) {
-                arg.event = {};
-            }
 
             const attribs = {
                 type: 'button',
                 class: buttonClasses.join(' '),
-                title: title,
+                title: arg.title || arg.tip || arg.label,
                 dataButton: arg.name,
-                id: addButtonClickEvent(events, arg.event.type || arg.name, arg.event.data),
                 style: arg.style,
             };
+
+            if (events && arg.event) {
+                attribs.id = addButtonClickEvent(
+                    events,
+                    arg.event.type || arg.name,
+                    arg.event.data
+                );
+            }
 
             if (arg.features) {
                 arg.features.forEach((feature) => {
@@ -808,7 +858,7 @@ define([
 
             return button(
                 attribs,
-                [icon, span({ style: { verticalAlign: 'middle' } }, arg.label)].join('&nbsp;')
+                [icon, span({ class: `${cssClassName}__button_label` }, arg.label)].join('&nbsp;')
             );
         }
 
@@ -819,6 +869,7 @@ define([
             _button.removeAttribute('disabled');
         }
 
+        // note that disabling the button also shows it
         function disableButton(name) {
             const _button = getButton(name);
             _button.classList.remove('hidden');
@@ -1035,10 +1086,6 @@ define([
             if (updates.color) {
                 tabTab.style.color = updates.color;
             }
-
-            // switch to tab
-            // if (updates.select) {
-            // }
         }
 
         function buildTabs(arg) {
@@ -1469,5 +1516,6 @@ define([
         showDialog: showDialog,
         showErrorDialog: showErrorDialog,
         showInfoDialog: showInfoDialog,
+        cssClassName: cssClassName,
     };
 });

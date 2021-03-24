@@ -18,7 +18,7 @@ define([], () => {
                         enabled: false,
                         hidden: true,
                     },
-                    logs: {
+                    jobStatus: {
                         enabled: false,
                     },
                     results: {
@@ -116,7 +116,7 @@ define([], () => {
                             },
                         },
                     ],
-                    logs: {
+                    jobStatus: {
                         enabled: false,
                     },
                     results: {
@@ -219,7 +219,7 @@ define([], () => {
                             },
                         },
                     ],
-                    logs: {
+                    jobStatus: {
                         enabled: false,
                     },
                     results: {
@@ -362,7 +362,7 @@ define([], () => {
                         enabled: false,
                         hidden: true,
                     },
-                    logs: {
+                    jobStatus: {
                         enabled: false,
                     },
                     results: {
@@ -469,7 +469,7 @@ define([], () => {
                         enabled: false,
                         hidden: true,
                     },
-                    logs: {
+                    jobStatus: {
                         enabled: false,
                     },
                     results: {
@@ -576,7 +576,7 @@ define([], () => {
                         enabled: true,
                         selected: false,
                     },
-                    logs: {
+                    jobStatus: {
                         enabled: false,
                         selected: false,
                     },
@@ -679,7 +679,7 @@ define([], () => {
                     viewConfigure: {
                         enabled: true,
                     },
-                    logs: {
+                    jobStatus: {
                         enabled: false,
                     },
                     results: {
@@ -790,7 +790,7 @@ define([], () => {
                     viewConfigure: {
                         enabled: true,
                     },
-                    logs: {
+                    jobStatus: {
                         enabled: true,
                     },
                     results: {
@@ -907,7 +907,7 @@ define([], () => {
                     viewConfigure: {
                         enabled: true,
                     },
-                    logs: {
+                    jobStatus: {
                         enabled: true,
                     },
                     results: {
@@ -1010,7 +1010,7 @@ define([], () => {
                     viewConfigure: {
                         enabled: true,
                     },
-                    logs: {
+                    jobStatus: {
                         enabled: true,
                     },
                     results: {
@@ -1108,7 +1108,7 @@ define([], () => {
                     viewConfigure: {
                         enabled: true,
                     },
-                    logs: {
+                    jobStatus: {
                         enabled: true,
                     },
                     results: {
@@ -1202,7 +1202,7 @@ define([], () => {
                     viewConfigure: {
                         enabled: true,
                     },
-                    logs: {
+                    jobStatus: {
                         enabled: true,
                         selected: true,
                     },
@@ -1280,7 +1280,7 @@ define([], () => {
                     viewConfigure: {
                         enabled: true,
                     },
-                    logs: {
+                    jobStatus: {
                         enabled: true,
                     },
                     results: {
@@ -1363,7 +1363,7 @@ define([], () => {
                     viewConfigure: {
                         enabled: true,
                     },
-                    logs: {
+                    jobStatus: {
                         enabled: false,
                     },
                     results: {
@@ -1423,7 +1423,7 @@ define([], () => {
                     viewConfigure: {
                         enabled: true,
                     },
-                    logs: {
+                    jobStatus: {
                         enabled: false,
                     },
                     results: {
@@ -1506,7 +1506,7 @@ define([], () => {
                     viewConfigure: {
                         enabled: true,
                     },
-                    logs: {
+                    jobStatus: {
                         enabled: true,
                     },
                     results: {
@@ -1589,7 +1589,7 @@ define([], () => {
                     viewConfigure: {
                         enabled: true,
                     },
-                    logs: {
+                    jobStatus: {
                         enabled: false,
                     },
                     results: {
@@ -1648,7 +1648,7 @@ define([], () => {
                     viewConfigure: {
                         enabled: false,
                     },
-                    logs: {
+                    jobStatus: {
                         enabled: false,
                     },
                     results: {

@@ -766,7 +766,11 @@ define([
             const div = html.tag('div'),
                 strong = html.tag('strong'),
                 br = html.tag('br', { close: false });
-            const errorDiv = div({ class: 'alert alert-danger' }, [strong('Error:'), br(), errString]);
+            const errorDiv = div({ class: 'alert alert-danger' }, [
+                strong('Error:'),
+                br(),
+                errString,
+            ]);
             this.$elem.empty().append(errorDiv);
         },
         /**

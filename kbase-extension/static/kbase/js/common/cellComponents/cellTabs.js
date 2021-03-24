@@ -4,7 +4,7 @@ define(['bluebird', 'common/html', 'common/ui', 'common/events'], (Promise, html
     const div = html.tag('div'),
         span = html.tag('span'),
         a = html.tag('a'),
-        cssCellType = 'kb-bulk-import';
+        cssBaseClass = 'kb-rcp';
 
     /**
      * This is the factory function for the CellTabs component.
@@ -62,7 +62,7 @@ define(['bluebird', 'common/html', 'common/ui', 'common/events'], (Promise, html
             const events = Events.make(),
                 content = div(
                     {
-                        class: 'kb-rcp__btn-toolbar btn-toolbar',
+                        class: `${cssBaseClass}__btn-toolbar btn-toolbar`,
                     },
                     [buildTabButtons(events)]
                 );
@@ -98,7 +98,7 @@ define(['bluebird', 'common/html', 'common/ui', 'common/events'], (Promise, html
                         type: tab.type || 'primary',
                         hidden: true,
                         features: tab.features,
-                        classes: [`${cssCellType}-tabs__button kb-app-cell-btn`],
+                        classes: [`${cssBaseClass}__tab-button kb-app-cell-btn`],
                         event: {
                             type: 'control-panel-tab',
                             data: {
@@ -118,7 +118,7 @@ define(['bluebird', 'common/html', 'common/ui', 'common/events'], (Promise, html
                 {
                     tabindex: '0',
                     type: 'button',
-                    class: `${cssCellType}-tabs__button--outdated btn hidden`,
+                    class: `${cssBaseClass}__tab-button--outdated btn hidden`,
                     dataContainer: 'body',
                     container: 'body',
                     dataToggle: 'popover',
@@ -163,6 +163,6 @@ define(['bluebird', 'common/html', 'common/ui', 'common/events'], (Promise, html
 
     return {
         make: CellTabs,
-        cssClassName: cssCellType,
+        cssBaseClass: cssBaseClass,
     };
 });

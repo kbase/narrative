@@ -431,7 +431,7 @@ define([
                         //                     });
                         //             } catch (ex) {
                         //                 console.error('Error making input field widget', ex);
-                        //                 var errorDisplay = div({ style: { border: '1px red solid' } }, [
+                        //                 var errorDisplay = div({ style: { border: '1px solid red' } }, [
                         //                     ex.message
                         //                 ]);
                         //                 document.getElementById(inputParams.view[parameterId].id).innerHTML = errorDisplay;
@@ -464,7 +464,7 @@ define([
                                         } catch (ex) {
                                             console.error('Error making input field widget', ex);
                                             const errorDisplay = div(
-                                                { style: { border: '1px red solid' } },
+                                                { style: { border: '1px solid red' } },
                                                 [ex.message]
                                             );
                                             document.getElementById(

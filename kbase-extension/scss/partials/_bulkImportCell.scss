@@ -2,12 +2,11 @@
   bulk import cell
 */
 
-$component-border: rgb(196, 196, 196);
+$component-border: use-color('silver');
 $filetype-icon-color: rgb(3, 81, 125);
 $filetype-highlight-color: use-color('white');
 $filetype-hover-color: use-color('base-lighter');
 $panel-separator-color: rgb(33, 150, 243);
-$button-outdated: rgb(247, 155, 34);
 
 .kb-bulk-import {
   &__base-node {
@@ -119,12 +118,6 @@ $button-outdated: rgb(247, 155, 34);
       margin-left: 6px;
       font-style: italic;
     }
-  }
-
-  /* kb-bulk-import-tabs__button--outdated */
-  &-tabs__button--outdated {
-    padding: 6px 0 0;
-    color: $button-outdated;
   }
 }
 

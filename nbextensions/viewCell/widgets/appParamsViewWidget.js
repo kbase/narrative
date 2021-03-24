@@ -506,7 +506,7 @@ define([
                                     } catch (ex) {
                                         console.error('Error making input field widget', ex);
                                         const errorDisplay = div(
-                                            { style: { border: '1px red solid' } },
+                                            { style: { border: '1px solid red' } },
                                             [ex.message]
                                         );
                                         document.getElementById(
@@ -545,7 +545,7 @@ define([
                                     } catch (ex) {
                                         console.error('Error making input field widget', ex);
                                         const errorDisplay = div(
-                                            { style: { border: '1px red solid' } },
+                                            { style: { border: '1px solid red' } },
                                             [ex.message]
                                         );
                                         document.getElementById(
@@ -585,7 +585,7 @@ define([
                                     } catch (ex) {
                                         console.error('Error making input field widget', ex);
                                         const errorDisplay = div(
-                                            { style: { border: '1px red solid' } },
+                                            { style: { border: '1px solid red' } },
                                             [ex.message]
                                         );
                                         document.getElementById(

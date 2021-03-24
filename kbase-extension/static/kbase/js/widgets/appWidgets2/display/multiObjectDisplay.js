@@ -81,7 +81,7 @@ define([
                         container.innerHTML = results
                             .map((result) => {
                                 return div(
-                                    { style: { border: '1px silver solid', padding: '2px' } },
+                                    { style: { border: '1px solid silver', padding: '2px' } },
                                     result
                                 );
                             })

@@ -127,7 +127,7 @@ define([
                             fontStyle: 'italic',
                             whiteSpace: 'normal',
                             padding: '3px',
-                            border: '1px silver solid',
+                            border: '1px solid silver',
                         },
                     },
                     'Items will be available after selecting a value for ' +
@@ -141,7 +141,7 @@ define([
             selectOptions = buildOptions();
 
             // CONTROL
-            return div({ style: { border: '1px silver solid' } }, [
+            return div({ style: { border: '1px solid silver' } }, [
                 div({ style: { fontStyle: 'italic' }, dataElement: 'count' }, buildCount()),
                 select(
                     {

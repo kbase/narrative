@@ -31,11 +31,11 @@ define(['kb_common/html'], (html) => {
                     div({ class: 'col-md-2' }),
                     div({ class: 'col-md-10' }, spec.hint()),
                 ]),
-                div({ class: 'row', style: { borderBottom: '1px silver solid' } }, [
+                div({ class: 'row', style: { borderBottom: '1px solid silver' } }, [
                     div({ class: 'col-md-2' }),
                     div({ class: 'col-md-10' }, spec.description()),
                 ]),
-                div({ class: 'row', style: { borderBottom: '1px silver solid' } }, [
+                div({ class: 'row', style: { borderBottom: '1px solid silver' } }, [
                     div({ class: 'col-md-2' }),
                     div({ class: 'col-md-10' }, spec.info()),
                 ]),

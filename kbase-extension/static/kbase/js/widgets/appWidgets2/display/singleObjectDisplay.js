@@ -99,7 +99,7 @@ define([
                     container.innerHTML = div(
                         {
                             style: {
-                                border: '1px red solid',
+                                border: '1px solid red',
                                 padding: '4px',
                             },
                         },

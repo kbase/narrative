@@ -75,7 +75,8 @@ define([
         a = t('a'),
         p = t('p'),
         blockquote = t('blockquote'),
-        { toBoolean } = utils;
+        { toBoolean } = utils,
+        cssCellType = 'kb-app-cell';
 
     function factory(config) {
         const { workspaceInfo } = config,
@@ -486,7 +487,7 @@ define([
                     ui.activateButton(controlBarTabs.selectedTab.id);
 
                     const tabPaneNode = document.createElement('div');
-                    ui.getElement('run-control-panel.tab-pane.widget').appendChild(tabPaneNode);
+                    ui.getElement('body.widget.tab-pane.widget').appendChild(tabPaneNode);
                     return controlBarTabs.selectedTab.widget.start({
                         node: node,
                         jobId: selectedJobId,
@@ -505,7 +506,7 @@ define([
             ui.activateButton(controlBarTabs.selectedTab.id);
 
             const node = document.createElement('div');
-            ui.getElement('run-control-panel.tab-pane.widget').appendChild(node);
+            ui.getElement('body.widget.tab-pane.widget').appendChild(node);
 
             return controlBarTabs.selectedTab.widget.start({
                 node: node,
@@ -525,7 +526,7 @@ define([
                 })
                 .finally(() => {
                     config;
-                    const widgetNode = ui.getElement('run-control-panel.tab-pane.widget');
+                    const widgetNode = ui.getElement('body.widget.tab-pane.widget');
                     if (widgetNode.firstChild) {
                         widgetNode.removeChild(widgetNode.firstChild);
                     }
@@ -554,7 +555,7 @@ define([
 
         function hidePane() {
             return Promise.try(() => {
-                const paneNode = ui.getElement('run-control-panel.tab-pane');
+                const paneNode = ui.getElement('body.widget.tab-pane');
                 if (paneNode) {
                     paneNode.classList.add('hidden');
                 }
@@ -563,7 +564,7 @@ define([
 
         function showPane() {
             return Promise.try(() => {
-                const paneNode = ui.getElement('run-control-panel.tab-pane');
+                const paneNode = ui.getElement('body.widget.tab-pane');
                 if (paneNode) {
                     paneNode.classList.remove('hidden');
                 }
@@ -772,23 +773,24 @@ define([
 
         // bulkImportCell / cellTabs / buildTabButtons
         function buildRunControlPanelDisplayButtons(events) {
+            const cssBaseClass = 'kb-rcp';
             const buttons = Object.keys(controlBarTabs.tabs)
+                .filter((key) => {
+                    // ensure that the tab data is an object with key 'label'
+                    return (
+                        controlBarTabs.tabs[key] &&
+                        typeof controlBarTabs.tabs[key] === 'object' &&
+                        controlBarTabs.tabs[key].label
+                    );
+                })
                 .map((key) => {
                     const tab = controlBarTabs.tabs[key];
                     let icon;
-                    if (!tab) {
-                        console.warn('Tab not defined: ' + key);
-                        return;
-                    }
-                    if (tab.icon) {
-                        if (typeof tab.icon === 'string') {
-                            icon = {
-                                name: tab.icon,
-                                size: 2,
-                            };
-                        } else {
-                            icon = { size: 2 };
-                        }
+                    if (tab.icon && typeof tab.icon === 'string') {
+                        icon = {
+                            size: 2,
+                            name: tab.icon,
+                        };
                     }
                     return ui.buildButton({
                         label: tab.label,
@@ -797,7 +799,7 @@ define([
                         type: tab.type || 'primary',
                         hidden: true,
                         features: tab.features,
-                        classes: ['kb-app-cell-btn'],
+                        classes: [`${cssBaseClass}__tab-button kb-app-cell-btn`],
                         event: {
                             type: 'control-panel-tab',
                             data: {
@@ -806,9 +808,6 @@ define([
                         },
                         icon: icon,
                     });
-                })
-                .filter((x) => {
-                    return x ? true : false;
                 });
             bus.on('control-panel-tab', (message) => {
                 const { tab } = message.data;
@@ -819,7 +818,7 @@ define([
                 {
                     tabindex: '0',
                     type: 'button',
-                    class: 'btn hidden kb-button__toolbar_icon--outdated',
+                    class: `${cssBaseClass}__tab-button--outdated btn hidden`,
                     dataContainer: 'body',
                     container: 'body',
                     dataToggle: 'popover',
@@ -879,12 +878,6 @@ define([
                             ),
                         ]
                     ),
-                    div(
-                        {
-                            dataElement: 'tab-pane',
-                        },
-                        [div({ dataElement: 'widget' })]
-                    ),
                 ]
             );
         }
@@ -893,31 +886,42 @@ define([
             const events = Events.make(),
                 content = div(
                     {
-                        class: 'kbase-extension kb-app-cell kb-app-cell__container',
+                        class: `kbase-extension ${cssCellType} ${cssCellType}__container`,
                     },
                     [
                         div(
                             {
-                                class: 'kb-app-cell__prompt prompt',
+                                class: `${cssCellType}__prompt prompt`,
                                 dataElement: 'prompt',
                             },
-                            [div({ dataElement: 'status' })]
+                            [
+                                div({
+                                    class: `${cssCellType}__prompt_status`,
+                                    dataElement: 'status',
+                                }),
+                            ]
                         ),
                         div(
                             {
-                                class: 'kb-app-cell__body body',
+                                class: `${cssCellType}__body body`,
                                 dataElement: 'body',
                             },
                             [
                                 div(
                                     {
-                                        class: 'kb-app-cell__widget_container',
+                                        class: `${cssCellType}__widget_container`,
                                         dataElement: 'widget',
                                     },
                                     [
                                         div({ class: 'container-fluid' }, [
                                             buildRunControlPanel(events),
                                         ]),
+                                        div(
+                                            {
+                                                dataElement: 'tab-pane',
+                                            },
+                                            [div({ dataElement: 'widget' })]
+                                        ),
                                     ]
                                 ),
                             ]

@@ -647,7 +647,7 @@ define([
 
             const content = div(
                 {
-                    style: { border: '1px red solid' },
+                    style: { border: '1px solid red' },
                 },
                 [
                     div({ style: { color: 'red' } }, 'Error'),

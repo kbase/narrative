@@ -302,7 +302,7 @@ define([
             const layout = div(
                 {
                     style: {
-                        'border-left': '5px silver solid',
+                        'border-left': '5px solid silver',
                         padding: '2px',
                         margin: '6px',
                     },

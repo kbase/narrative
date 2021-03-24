@@ -32,8 +32,8 @@ define(['common/cellComponents/cellTabs', 'common/runtime'], (CellTabs, Runtime)
         it('Should return a make function', () => {
             expect(CellTabs.make).toEqual(jasmine.any(Function));
         });
-        it('should have a cssClassName', () => {
-            expect(CellTabs.cssClassName).toBeDefined();
+        it('should have a cssBaseClass', () => {
+            expect(CellTabs.cssBaseClass).toBeDefined();
         });
     });
 
@@ -49,7 +49,7 @@ define(['common/cellComponents/cellTabs', 'common/runtime'], (CellTabs, Runtime)
     /**
      * Check whether an element possesses or lacks certain classes
      * @param {DOM} el - DOM element
-     * @param {object} classes in the form className: (true|false), where
+     * @param {object} classes in the form BaseClass: (true|false), where
      *                          true means the class should be present
      *                          false means the class should NOT be present
      */
@@ -101,7 +101,7 @@ define(['common/cellComponents/cellTabs', 'common/runtime'], (CellTabs, Runtime)
                 'kb-app-cell-btn': true,
                 hidden: true,
             };
-            defaultClasses[`${CellTabs.cssClassName}-tabs__button`] = true;
+            defaultClasses[`${CellTabs.cssBaseClass}__tab-button`] = true;
 
             beforeEach(async function () {
                 await this.cellTabsInstance.start({ node: container });

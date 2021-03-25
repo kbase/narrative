@@ -1,6 +1,6 @@
 define(['common/runtime', 'widgets/appWidgets2/input/textInput'], (Runtime, TextInput) => {
     'use strict';
-    let bus, testConfig, container;
+    let testConfig;
     const required = false,
         defaultValue = 'some test text';
 
@@ -21,8 +21,17 @@ define(['common/runtime', 'widgets/appWidgets2/input/textInput'], (Runtime, Text
         };
     }
 
+    function startWidgetAndSetTextField(widget, container, inputText) {
+        widget.start({ node: container }).then(() => {
+            const inputElem = container.querySelector('input[data-element="input"]');
+            inputElem.value = inputText;
+            inputElem.dispatchEvent(new Event('change'));
+        });
+    }
+
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
-    describe('Text Input tests', () => {
+    describe('The Text Input widget', () => {
+        let bus, widget, container;
         beforeEach(() => {
             const runtime = Runtime.make();
             container = document.createElement('div');
@@ -30,6 +39,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/textInput'], (Runtime, Text
                 description: 'text input testing',
             });
             testConfig = buildTestConfig(required, defaultValue, bus);
+            widget = TextInput.make(testConfig);
         });
 
         afterEach(() => {
@@ -43,7 +53,6 @@ define(['common/runtime', 'widgets/appWidgets2/input/textInput'], (Runtime, Text
         });
 
         it('should be instantiable', () => {
-            const widget = TextInput.make(testConfig);
             expect(widget).toEqual(jasmine.any(Object));
             ['start', 'stop'].forEach((fn) => {
                 expect(widget[fn]).toEqual(jasmine.any(Function));
@@ -51,8 +60,6 @@ define(['common/runtime', 'widgets/appWidgets2/input/textInput'], (Runtime, Text
         });
 
         it('Should start and stop a widget', (done) => {
-            const widget = TextInput.make(testConfig);
-
             widget
                 .start({ node: container })
                 .then(() => {
@@ -75,7 +82,6 @@ define(['common/runtime', 'widgets/appWidgets2/input/textInput'], (Runtime, Text
                 expect(message.isValid).toBeTruthy();
                 done();
             });
-            const widget = TextInput.make(testConfig);
             widget.start({ node: container }).then(() => {
                 bus.emit('update', { value: 'some text' });
             });
@@ -86,43 +92,31 @@ define(['common/runtime', 'widgets/appWidgets2/input/textInput'], (Runtime, Text
                 expect(message.isValid).toBeTruthy();
                 done();
             });
-            const widget = TextInput.make(testConfig);
             widget.start({ node: container }).then(() => {
                 bus.emit('reset-to-defaults');
             });
         });
 
         it('Should respond to input change events with "changed"', (done) => {
-            const widget = TextInput.make(testConfig);
             const inputText = 'here is some text';
             bus.on('changed', (message) => {
                 expect(message.newValue).toEqual(inputText);
                 done();
             });
-            widget.start({ node: container }).then(() => {
-                const inputElem = container.querySelector('input[data-element="input"]');
-                inputElem.value = inputText;
-                inputElem.dispatchEvent(new Event('change'));
-            });
+            startWidgetAndSetTextField(widget, container, inputText);
         });
 
         it('Should respond to input change events with "validation"', (done) => {
-            const widget = TextInput.make(testConfig);
             const inputText = 'here is some text';
             bus.on('validation', (message) => {
                 expect(message.isValid).toBeTruthy();
                 expect(message.errorMessage).toBeUndefined();
                 done();
             });
-            widget.start({ node: container }).then(() => {
-                const inputElem = container.querySelector('input[data-element="input"]');
-                inputElem.value = inputText;
-                inputElem.dispatchEvent(new Event('change'));
-            });
+            startWidgetAndSetTextField(widget, container, inputText);
         });
 
         xit('Should respond to keyup change events with "validation"', (done) => {
-            const widget = TextInput.make(testConfig);
             const inputText = 'here is some text';
             bus.on('validation', (message) => {
                 expect(message.isValid).toBeTruthy();
@@ -138,23 +132,19 @@ define(['common/runtime', 'widgets/appWidgets2/input/textInput'], (Runtime, Text
 
         it('Should show message when configured', (done) => {
             testConfig.showOwnMessages = true;
-            const widget = TextInput.make(testConfig);
+            widget = TextInput.make(testConfig);
             const inputText = 'some text';
             bus.on('validation', (message) => {
                 expect(message.isValid).toBeTruthy();
                 // ...detect something?
                 done();
             });
-            widget.start({ node: container }).then(() => {
-                const inputElem = container.querySelector('input[data-element="input"]');
-                inputElem.value = inputText;
-                inputElem.dispatchEvent(new Event('change'));
-            });
+            startWidgetAndSetTextField(widget, container, inputText);
         });
 
         it('Should return a diagnosis of required-missing if so', (done) => {
             testConfig = buildTestConfig(true, '', bus);
-            const widget = TextInput.make(testConfig);
+            widget = TextInput.make(testConfig);
             const inputText = null;
             bus.on('validation', (message) => {
                 expect(message.isValid).toBeFalsy();
@@ -162,11 +152,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/textInput'], (Runtime, Text
                 // ...detect something?
                 done();
             });
-            widget.start({ node: container }).then(() => {
-                const inputElem = container.querySelector('input[data-element="input"]');
-                inputElem.value = inputText;
-                inputElem.dispatchEvent(new Event('change'));
-            });
+            startWidgetAndSetTextField(widget, container, inputText);
         });
     });
 });

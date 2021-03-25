@@ -9,14 +9,14 @@ define(['jquery', 'narrativeLogin', 'narrativeConfig', 'narrativeMocks'], (
     const FAKE_TOKEN = 'some_fake_token';
 
     describe('Test the narrativeLogin module', () => {
-        let $node;
+        let $container;
         beforeEach(() => {
             // remove any jquery events that get bound to document,
             // including login and logout listeners
             $(document).off();
             Mocks.setAuthToken(FAKE_TOKEN);
             jasmine.Ajax.install();
-            $node = $('<div>');
+            $container = $('<div>');
         });
 
         afterEach(() => {
@@ -25,7 +25,7 @@ define(['jquery', 'narrativeLogin', 'narrativeConfig', 'narrativeMocks'], (
             $(document).off();
             jasmine.Ajax.uninstall();
             Mocks.clearAuthToken();
-            $node.remove();
+            $container.remove();
         });
 
         it('Should instantiate and have expected functions', () => {
@@ -69,14 +69,14 @@ define(['jquery', 'narrativeLogin', 'narrativeConfig', 'narrativeMocks'], (
                 url: Config.url('user_profile'),
                 response: [{}],
             });
-            return Login.init($node, true) // true here means there's no kernel
+            return Login.init($container, true) // true here means there's no kernel
                 .finally(() => {
                     const request = jasmine.Ajax.requests.mostRecent();
                     expect(request.requestHeaders.Authorization).toEqual(FAKE_TOKEN);
                     // test that the user menu was created by checking for the username and id
                     // embedded in the node
-                    expect($node.text()).toContain(fakeName);
-                    expect($node.text()).toContain(fakeUser);
+                    expect($container.text()).toContain(fakeName);
+                    expect($container.text()).toContain(fakeUser);
                     Login.clearTokenCheckTimers();
                     Login.destroy();
                 });
@@ -85,7 +85,7 @@ define(['jquery', 'narrativeLogin', 'narrativeConfig', 'narrativeMocks'], (
         it('Should throw an error when instantiating with a bad token', () => {
             Mocks.mockAuthRequest('token', { error: {} }, 401);
             Mocks.mockAuthRequest('me', { error: {} }, 401);
-            return Login.init($node, true) // true here means there's no kernel
+            return Login.init($container, true) // true here means there's no kernel
                 .then(() => {
                     const request = jasmine.Ajax.requests.mostRecent();
                     expect(request.requestHeaders.Authorization).toEqual(FAKE_TOKEN);

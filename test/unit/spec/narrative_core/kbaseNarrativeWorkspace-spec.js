@@ -3,9 +3,10 @@ define([
     'jquery',
     'base/js/namespace',
     'narrativeMocks',
+    'testUtil',
     'common/runtime',
     'json!/test/data/NarrativeTest.test_simple_inputs.spec.json',
-], (KBaseNarrativeWorkspace, $, Jupyter, Mocks, Runtime, AppSpec) => {
+], (KBaseNarrativeWorkspace, $, Jupyter, Mocks, TestUtil, Runtime, AppSpec) => {
     'use strict';
     describe('Test the kbaseNarrativeWorkspace widget', () => {
         let $node, $container;
@@ -181,22 +182,27 @@ define([
             widget.deleteCell(0);
         });
 
-        // this test occasionally fails due to the modal not being present
-        it('should delete KBase extension cells by direct call by dialog', (done) => {
+        it('should delete KBase extension cells by direct call by dialog', async () => {
             Jupyter.notebook = Mocks.buildMockNotebook({
                 readOnly: false,
-                deleteCallback: () => {
-                    expect(Jupyter.notebook.delete_cell).toHaveBeenCalled();
-                    done();
-                },
             });
-            spyOn(Jupyter.notebook, 'delete_cell').and.callThrough();
             Jupyter.notebook.insert_cell_above('code', 0);
             const widget = new KBaseNarrativeWorkspace($node);
             widget.deleteCell(0);
-            // that makes a popup happen. find and click the element.
-            document.querySelector('[data-element="modal"] [data-element="yes"]').click();
-            // that click should trigger deleteCallback, and this is done. Yay!
+
+            // 'deleteCell' triggers an 'Are you sure?' popup. Wait for the 'Yes' button to appear
+            const yesButton = '[data-element="modal"] [data-element="yes"]';
+            await TestUtil.waitForElement(document.body, yesButton);
+
+            // spy on the notebook's `delete_cell` function, which is triggered by clicking the 'Yes' button
+            return new Promise((resolve) => {
+                spyOn(Jupyter.notebook, 'delete_cell').and.callFake(() => {
+                    expect(Jupyter.notebook.delete_cell).toHaveBeenCalled();
+                    resolve();
+                });
+                // this click should trigger delete callback, and this is done. Yay!
+                document.querySelector(yesButton).click();
+            });
         });
 
         it('should delete cells by event', (done) => {

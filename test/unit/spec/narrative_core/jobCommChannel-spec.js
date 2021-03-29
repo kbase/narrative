@@ -1,7 +1,8 @@
-define(['jobCommChannel', 'base/js/namespace', 'common/runtime'], (
+define(['jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUtil'], (
     JobCommChannel,
     Jupyter,
-    Runtime
+    Runtime,
+    TestUtil
 ) => {
     'use strict';
 
@@ -105,28 +106,70 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime'], (
         });
 
         const busMsgCases = [
-            ['ping-comm-channel', { pingId: 'ping!' }],
-            ['request-job-cancellation', { jobId: 'someJob' }],
-            ['request-job-status', { jobId: 'someJob', parentJobId: 'someParent' }],
-            ['request-job-update', { jobId: 'someJob', parentJobId: 'someParent' }],
-            ['request-job-completion', { jobId: 'someJob' }],
-            ['request-job-log', { jobId: 'someJob', options: {} }],
-            ['request-latest-job-log', { jobId: 'someJob', options: {} }],
-            ['request-job-info', { jobId: 'someJob', parentJobId: 'someParent' }],
+            { channel: 'ping-comm-channel', message: { pingId: 'ping!' }, type: 'ping' },
+            {
+                channel: 'request-job-cancellation',
+                message: { jobId: 'someJob' },
+                type: 'cancel_job',
+            },
+            {
+                channel: 'request-job-status',
+                message: { jobId: 'someJob', parentJobId: 'someParent' },
+                type: 'job_status',
+            },
+            {
+                channel: 'request-job-update',
+                message: { jobId: 'someJob', parentJobId: 'someParent' },
+                type: 'start_job_update',
+            },
+            {
+                channel: 'request-job-completion',
+                message: { jobId: 'someJob' },
+                type: 'stop_job_update',
+            },
+            {
+                channel: 'request-job-log',
+                message: { jobId: 'someJob', options: {} },
+                type: 'job_logs',
+            },
+            {
+                channel: 'request-latest-job-log',
+                message: { jobId: 'someJob', options: {} },
+                type: 'job_logs_latest',
+            },
+            {
+                channel: 'request-job-info',
+                message: { jobId: 'someJob', parentJobId: 'someParent' },
+                type: 'job_info',
+            },
         ];
         busMsgCases.forEach((testCase) => {
-            it('Should handle ' + testCase[0] + ' bus message', () => {
+            it('Should handle ' + testCase.channel + ' bus message', () => {
                 const comm = new JobCommChannel();
                 return comm
                     .initCommChannel()
                     .then(() => {
                         expect(comm.comm).not.toBeNull();
-                        spyOn(comm.comm, 'send');
-                        testBus.emit(testCase[0], testCase[1]);
-                        return new Promise((resolve) => setTimeout(resolve, 4000));
+                        return new Promise((resolve) => {
+                            // resolve the promise when we see comm.comm.send(...)
+                            spyOn(comm.comm, 'send').and.callFake((...args) => {
+                                resolve(args);
+                            });
+                            testBus.emit(testCase.channel, testCase.message);
+                        });
                     })
-                    .then(() => {
+                    .then((args) => {
                         expect(comm.comm.send).toHaveBeenCalled();
+                        expect(args[0].target_name).toEqual('KBaseJobs');
+                        expect(args[0].request_type).toEqual(testCase.type);
+                        // expect the message values to exist in the comm channel message
+                        // the `options` object gets merged into the message if it is not empty
+                        // since all the examples have an empty options object, we can ignore it
+                        Object.keys(testCase.message)
+                            .filter((key) => key !== 'options')
+                            .forEach((key) => {
+                                expect(Object.values(args[0])).toContain(testCase.message[key]);
+                            });
                     });
             });
         });
@@ -388,6 +431,7 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime'], (
 
         ['job_init_err', 'job_init_lookup_err'].forEach((errType) => {
             it(`Should handle ${errType}`, () => {
+                const modalQuerySelector = '.modal #kb-job-err-trace';
                 const msg = makeCommMsg(errType, {
                         service: 'job service',
                         error: 'An error happened!',
@@ -399,26 +443,21 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime'], (
                     .initCommChannel()
                     .then(() => {
                         comm.handleCommMessages(msg);
-                        return new Promise((resolve) => {
-                            setTimeout(() => resolve(), 500);
-                        });
+                        return TestUtil.waitForElement(document.body, modalQuerySelector);
                     })
                     .then(() => {
-                        expect(document.querySelector('.modal #kb-job-err-trace')).not.toBeNull();
+                        expect(document.querySelector(modalQuerySelector)).not.toBeNull();
                         // click the 'OK' button
                         document
                             .querySelector('.modal a.btn.btn-default.kb-job-err-dialog__button')
                             .click();
                         // expect it to be gone
-                        return new Promise((resolve) => {
-                            setTimeout(() => resolve(), 500);
+                        return TestUtil.waitForElementState(document.body, () => {
+                            return document.querySelectorAll('.modal').length === 0;
                         });
                     })
                     .then(() => {
-                        expect(document.querySelector('.modal #kb-job-err-trace')).toBeNull();
-                    })
-                    .finally(() => {
-                        document.body.innerHTML = '';
+                        expect(document.querySelector(modalQuerySelector)).toBeNull();
                     });
             });
         });

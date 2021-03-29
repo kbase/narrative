@@ -4,7 +4,7 @@ define('testUtil', ['bluebird', 'json!/test/testConfig.json'], (Promise, TestCon
     let token = null,
         userId = null;
 
-    function factory() {
+    function make() {
         return initialize();
     }
 
@@ -52,11 +52,58 @@ define('testUtil', ['bluebird', 'json!/test/testConfig.json'], (Promise, TestCon
         return Promise.delay(timeMs);
     }
 
+    /**
+     * Wait for an element to appear in the DOM underneath `documentElement`
+     * @param {DOM element} documentElement to watch for the appearance of the element
+     * @param {string} selector to identify the element being watched for
+     * @returns {DOM element} the element
+     */
+    function waitForElement(documentElement, selector) {
+        return new Promise((resolve) => {
+            const element = document.querySelector(selector);
+            if (element) {
+                resolve(element);
+            }
+
+            const observer = new MutationObserver(() => {
+                const el = document.querySelector(selector);
+                if (el) {
+                    observer.disconnect();
+                    resolve(el);
+                }
+            });
+            observer.observe(documentElement, { attributes: true, childList: true, subtree: true });
+        });
+    }
+
+    /**
+     * Wait for a certain DOM state
+     * @param {DOM element} documentElement to watch for changes
+     * @param {function} elementStateFunction function returning true when the state occurs
+     * @returns -
+     */
+    function waitForElementState(documentElement, elementStateFunction) {
+        return new Promise((resolve) => {
+            if (elementStateFunction()) {
+                resolve();
+            }
+            const observer = new MutationObserver(() => {
+                if (elementStateFunction()) {
+                    observer.disconnect();
+                    resolve();
+                }
+            });
+            observer.observe(documentElement, { attributes: true, childList: true, subtree: true });
+        });
+    }
+
     return {
-        make: factory,
-        getAuthToken: getAuthToken,
-        pendingIfNoToken: pendingIfNoToken,
-        getUserId: getUserId,
-        wait: wait,
+        make,
+        getAuthToken,
+        pendingIfNoToken,
+        getUserId,
+        wait,
+        waitForElement,
+        waitForElementState,
     };
 });

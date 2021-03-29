@@ -38,7 +38,7 @@ define([
         const required = false,
             defaultValue = 'apple',
             fakeServiceUrl = 'https://ci.kbase.us/services/fake_taxonomy_service';
-        let bus, testConfig, container;
+        let bus, testConfig, container, widget;
 
         beforeEach(() => {
             const runtime = Runtime.make();
@@ -48,7 +48,6 @@ define([
                 userId: 'test_user',
             };
 
-            container = document.createElement('div');
             bus = runtime.bus().makeChannelBus({
                 description: 'select input testing',
             });
@@ -102,113 +101,108 @@ define([
                 responseText: JSON.stringify(taxonSearchInfo),
                 response: JSON.stringify(taxonSearchInfo),
             });
+            container = document.createElement('div');
+            widget = TaxonomyRefInput.make(testConfig);
         });
 
-        afterEach(() => {
-            jasmine.Ajax.uninstall();
+        afterEach(async () => {
+            if (widget) {
+                await widget.stop();
+            }
+            container.remove();
             bus.stop();
             window.kbaseRuntime = null;
             Jupyter.narrative = null;
-            container.remove();
+            jasmine.Ajax.uninstall();
         });
 
         it('Should be instantiable', () => {
-            const widget = TaxonomyRefInput.make(testConfig);
             expect(widget).toEqual(jasmine.any(Object));
             ['start', 'stop'].forEach((fn) => {
                 expect(widget[fn]).toBeDefined();
                 expect(widget[fn]).toEqual(jasmine.any(Function));
             });
+            widget = null;
         });
 
-        it('Should start and stop', (done) => {
-            const widget = TaxonomyRefInput.make(testConfig);
-            widget
-                .start({ node: container })
-                .then(() => {
-                    expect(container.childElementCount).toBeGreaterThan(0);
-                    const input = container.querySelector('select[data-element="input"]');
-                    expect(input).toBeDefined();
-                    expect(input.getAttribute('value')).toBeNull();
-                    return widget.stop();
-                })
-                .then(() => {
-                    expect(container.childElementCount).toBe(0);
-                    done();
-                })
-                .catch((err) => {
-                    fail(err);
-                });
-        });
-
-        // this resets the model value but does not change the UI
-        // or emit a message via the bus
-        // ==> cannot easily be tested
-        xit('Should set model value by bus', (done) => {
-            const widget = TaxonomyRefInput.make(testConfig);
-            bus.on('validation', (msg) => {
-                expect(msg.errorMessage).toBeNull();
-                expect(msg.diagnosis).toBe('valid');
-                done();
+        describe('the started widget', () => {
+            beforeEach(async () => {
+                await widget.start({ node: container });
             });
 
-            widget.start({ node: container }).then(() => {
-                bus.emit('update', { value: 'foo' });
-            });
-        });
+            it('Should start and stop', async () => {
+                expect(container.childElementCount).toBeGreaterThan(0);
+                const input = container.querySelector('select[data-element="input"]');
+                expect(input).toBeDefined();
+                expect(input.getAttribute('value')).toBeNull();
 
-        // this resets the model value but does not change the UI
-        // or emit a message via the bus
-        // ==> cannot easily be tested
-        xit('Should reset model value by bus', (done) => {
-            const widget = TaxonomyRefInput.make(testConfig);
-            bus.on('validation', (msg) => {
-                expect(msg.errorMessage).toBeNull();
-                expect(msg.diagnosis).toBe('valid');
-                done();
+                await widget.stop();
+                expect(container.childElementCount).toBe(0);
+                widget = null;
             });
 
-            widget.start({ node: container }).then(() => {
-                bus.emit('reset-to-defaults');
-            });
-        });
-
-        // FIXME: it is unclear what the effect of these changes should be
-        // More precise tests should be implemented
-        it('Should respond to changed select2 option', (done) => {
-            const widget = TaxonomyRefInput.make(testConfig);
-            const nodeStructures = [];
-            widget
-                .start({ node: container })
-                .then(() => {
-                    nodeStructures.push(container.innerHTML);
-                    const $select = $(container).find('select');
-                    const $search =
-                        $select.data('select2').dropdown.$search ||
-                        $select.data('select2').selection.$search;
-
-                    $search.val('stuff');
-                    $search.trigger('input');
-
-                    $select.trigger({
-                        type: 'select2: select',
-                        params: {
-                            data: {},
-                        },
-                    });
-                })
-                .then(() => {
-                    nodeStructures.push(container.innerHTML);
-                    expect(nodeStructures[0]).not.toEqual(nodeStructures[1]);
-                    const $select = $(container).find('select');
-                    $select.val('stuff').trigger('change');
-                    return TestUtil.wait(1000);
-                })
-                .then(() => {
-                    nodeStructures.push(container.innerHTML);
-                    expect(nodeStructures[0]).not.toEqual(nodeStructures[2]);
+            // this resets the model value but does not change the UI
+            // or emit a message via the bus
+            // ==> cannot easily be tested
+            xit('Should set model value by bus', (done) => {
+                bus.on('validation', (msg) => {
+                    expect(msg.errorMessage).toBeNull();
+                    expect(msg.diagnosis).toBe('valid');
                     done();
                 });
+
+                widget.start({ node: container }).then(() => {
+                    bus.emit('update', { value: 'foo' });
+                });
+            });
+
+            // this resets the model value but does not change the UI
+            // or emit a message via the bus
+            // ==> cannot easily be tested
+            xit('Should reset model value by bus', (done) => {
+                bus.on('validation', (msg) => {
+                    expect(msg.errorMessage).toBeNull();
+                    expect(msg.diagnosis).toBe('valid');
+                    done();
+                });
+
+                widget.start({ node: container }).then(() => {
+                    bus.emit('reset-to-defaults');
+                });
+            });
+
+            it('Should respond to changed select2 option', async () => {
+                const initialNodeStructure = container.innerHTML;
+                const $select = $(container).find('select');
+                const $search =
+                    $select.data('select2').dropdown.$search ||
+                    $select.data('select2').selection.$search;
+
+                $search.val('stuff').trigger('input');
+
+                // runs doTaxonomySearch
+                $select.trigger({
+                    type: 'select2:select',
+                    params: {
+                        data: {},
+                    },
+                });
+
+                await TestUtil.wait(1000);
+                // the DOM structure of the select2 element has changed
+                expect(initialNodeStructure).not.toEqual(container.innerHTML);
+                // "A Hit" should be present as a search result
+                expect($select.data('select2').$results[0].textContent).toContain('A Hit');
+
+                let validationMessage;
+                bus.on('validation', (msg) => {
+                    validationMessage = msg;
+                });
+                // set the model value, which triggers a validation message
+                $select.val('stuff').trigger('change');
+                await TestUtil.wait(1000);
+                expect(validationMessage).toEqual({ errorMessage: null, diagnosis: 'valid' });
+            });
         });
     });
 });

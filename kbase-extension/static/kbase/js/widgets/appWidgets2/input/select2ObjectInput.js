@@ -1,7 +1,7 @@
 define([
     'bluebird',
     'jquery',
-    'kb_common/html',
+    'common/html',
     'kb_common/utils',
     'common/data',
     'common/events',
@@ -21,10 +21,10 @@ define([
     const t = html.tag,
         button = t('button'),
         div = t('div'),
-        bold = t('b'),
         span = t('span'),
         select = t('select'),
-        option = t('option');
+        option = t('option'),
+        cssBaseClass = 'kb-select2-object-input';
 
     function factory(config) {
         const spec = config.parameterSpec,
@@ -254,21 +254,61 @@ define([
          */
         function formatObjectDisplay(object) {
             if (!object.id) {
-                return $('<div style="display:block; height:20px">').append(object.text);
+                return $(
+                    div(
+                        {
+                            class: `${cssBaseClass}__item`,
+                        },
+                        object.text
+                    )
+                );
             }
             const objectInfo = model.availableValues[object.id];
             return $(
                 div([
-                    span({ style: 'word-wrap: break-word' }, [bold(objectInfo.name)]),
-                    ' (v' + objectInfo.version + ')<br>',
-                    div({ style: 'margin-left: 7px' }, [
-                        '<i>' + objectInfo.typeName + '</i><br>',
-                        'Narrative id: ' + objectInfo.wsid + '<br>',
-                        'updated ' +
-                            TimeFormat.getTimeStampStr(objectInfo.save_date) +
-                            ' by ' +
-                            objectInfo.saved_by,
-                    ]),
+                    span(
+                        {
+                            class: `${cssBaseClass}__object`,
+                        },
+                        [
+                            span(
+                                {
+                                    class: `${cssBaseClass}__object_name`,
+                                },
+                                objectInfo.name
+                            ),
+                            ` (v${objectInfo.version})`,
+                        ]
+                    ),
+
+                    div(
+                        {
+                            class: `${cssBaseClass}__object_details`,
+                        },
+                        [
+                            span(
+                                {
+                                    class: `${cssBaseClass}__object_type`,
+                                },
+                                objectInfo.typeName
+                            ),
+                            span(
+                                {
+                                    class: `${cssBaseClass}__object_narrative`,
+                                },
+                                `Narrative ${objectInfo.wsid}`
+                            ),
+                            span(
+                                {
+                                    class: `${cssBaseClass}__object_updated`,
+                                },
+                                'updated ' +
+                                    TimeFormat.getTimeStampStr(objectInfo.save_date) +
+                                    ' by ' +
+                                    objectInfo.saved_by
+                            ),
+                        ]
+                    ),
                 ])
             );
         }
@@ -431,7 +471,10 @@ define([
         function stop() {
             return Promise.try(() => {
                 if (container) {
-                    parent.removeChild(container);
+                    $(ui.getElement('input-container.input')).off('change');
+                    $(ui.getElement('input-container.input')).off('advanced-shown.kbase');
+                    $(ui.getElement('input-container.input')).select2('destroy');
+                    container.remove();
                 }
                 bus.stop();
             });

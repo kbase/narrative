@@ -17,9 +17,12 @@ define([
     'common/ui',
     'common/events',
     'common/fsm',
+    'common/jobs',
     'common/html',
+    'common/runClock',
+    'common/errorDisplay',
     'util/developerMode',
-], (Promise, Runtime, Props, UI, Events, Fsm, html, devMode) => {
+], (Promise, Runtime, Props, UI, Events, Fsm, Jobs, html, RunClock, ErrorDisplay, devMode) => {
     'use strict';
 
     const t = html.tag,
@@ -212,6 +215,9 @@ define([
                     mode: 'completed',
                 },
                 {
+                    mode: 'terminated',
+                },
+                {
                     mode: 'error',
                 },
             ],
@@ -370,11 +376,6 @@ define([
                     ],
                 },
             },
-            next: [
-                {
-                    mode: 'job-not-found',
-                },
-            ],
         },
     ];
 
@@ -413,14 +414,17 @@ define([
             }),
             bus = Runtime.make().bus(),
             listenersByType = {},
-            // { showHistory } = config,
+            { showHistory } = config,
             logPollInterval = config.logPollInterval || 5000,
             developerMode = config.devMode || devMode.mode;
 
         let container,
             jobId,
+            lastJobState = {},
+            lastMode,
             ui,
             fsm,
+            runClock,
             looping = false,
             stopped = false,
             listeningForJob = false, // if true, this means we're listening for job updates
@@ -548,7 +552,6 @@ define([
          * There's something minor that I'm missing, I think, about how the scrolling gets
          * managed.
          * @param {ScrollEvent} e
-         * /
         function handlePanelScrolling(e) {
             const panel = getLogPanel();
             // if scroll is at the bottom, and there are more lines,
@@ -571,7 +574,7 @@ define([
                 }
             }
         }
-         */
+        */
 
         /**
          * toggle the viewer class to switch between standard and expanded versions
@@ -687,58 +690,106 @@ define([
          */
         function renderLayout() {
             const uniqueID = html.genId(),
-                events = Events.make(),
-                content = div(
+                events = Events.make();
+            let content = div(
+                {
+                    dataElement: 'kb-log',
+                    class: `${cssBaseClass}__container`,
+                },
+                [
+                    div(
+                        {
+                            class: `${cssBaseClass}__status_container`,
+                        },
+                        [
+                            div({
+                                class: `${cssBaseClass}__status_line`,
+                                dataElement: 'status-line',
+                            }),
+                        ]
+                    ),
+                    div(
+                        {
+                            class: `${cssBaseClass}__logs_container`,
+                            dataElement: 'log-container',
+                        },
+                        [
+                            div(
+                                {
+                                    class: `${cssBaseClass}__logs_title collapsed`,
+                                    role: 'button',
+                                    dataToggle: 'collapse',
+                                    dataTarget: '#' + uniqueID,
+                                    ariaExpanded: 'false',
+                                    ariaControls: uniqueID,
+                                },
+                                [span({}, ['Logs'])]
+                            ),
+                            div(
+                                {
+                                    class: `${cssBaseClass}__logs_content_panel collapse`,
+                                    id: uniqueID,
+                                },
+                                [
+                                    renderControls(events),
+                                    div({
+                                        dataElement: 'log-panel',
+                                        class: logContentClass,
+                                    }),
+                                ]
+                            ),
+                        ]
+                    ),
+                ]
+            );
+
+            if (developerMode) {
+                const devDiv = div(
                     {
-                        dataElement: 'kb-log',
-                        class: `${cssBaseClass}__container`,
+                        dataElement: 'dev',
+                        class: `${cssBaseClass}__dev_container`,
                     },
                     [
                         div(
                             {
-                                class: `${cssBaseClass}__status_container`,
+                                class: `${cssBaseClass}__dev_container--jobId`,
                             },
                             [
-                                div({
-                                    class: `${cssBaseClass}__status_line`,
-                                    dataElement: 'status-line',
-                                }),
+                                'Job ID: ' +
+                                    span(
+                                        {
+                                            dataElement: 'job-id',
+                                        },
+                                        jobId
+                                    ),
                             ]
                         ),
                         div(
                             {
-                                class: `${cssBaseClass}__logs_container`,
-                                dataElement: 'log-container',
+                                class: `${cssBaseClass}__dev_container--jobState`,
                             },
                             [
-                                div(
-                                    {
-                                        class: `${cssBaseClass}__logs_title collapsed`,
-                                        role: 'button',
-                                        dataToggle: 'collapse',
-                                        dataTarget: '#' + uniqueID,
-                                        ariaExpanded: 'false',
-                                        ariaControls: uniqueID,
-                                    },
-                                    [span({}, ['Logs'])]
-                                ),
-                                div(
-                                    {
-                                        class: `${cssBaseClass}__logs_content_panel collapse`,
-                                        id: uniqueID,
-                                    },
-                                    [
-                                        renderControls(events),
-                                        div({
-                                            dataElement: 'log-panel',
-                                            class: logContentClass,
-                                        }),
-                                    ]
-                                ),
+                                'Job state: ' +
+                                    span({
+                                        dataElement: 'job-state',
+                                    }),
+                            ]
+                        ),
+                        div(
+                            {
+                                class: `${cssBaseClass}__dev_container--fsmState`,
+                            },
+                            [
+                                'Widget state: ' +
+                                    span({
+                                        dataElement: 'widget-state',
+                                    }),
                             ]
                         ),
                     ]
                 );
+                content = div([devDiv, content]);
+            }
 
             return {
                 content: content,
@@ -802,11 +853,119 @@ define([
             }
         }
 
+        /**
+         * debugging function to display the current widget state
+         */
+        function renderWidgetState() {
+            if (developerMode) {
+                ui.setContent(
+                    'dev.widget-state',
+                    JSON.stringify(
+                        {
+                            fsm: fsm.getCurrentState().state,
+                            looping: looping,
+                            awaitingLog: awaitingLog,
+                            listeningForJob: listeningForJob,
+                        },
+                        null,
+                        1
+                    )
+                );
+            }
+        }
+
+        function renderJobStatusLines(jobState) {
+            const lines = Jobs.createJobStatusLines(jobState, showHistory);
+
+            return lines.map((line) =>
+                div(
+                    {
+                        class: `${cssBaseClass}__job_status_detail`,
+                    },
+                    line
+                )
+            );
+        }
+
+        function renderJobState(jobState) {
+            const isError = jobState.status === 'error';
+
+            ui.setContent(
+                'kb-log.status-line',
+                [
+                    div(
+                        {
+                            class: `${cssBaseClass}_state_abbrev`,
+                        },
+                        renderJobStatusLines(jobState)
+                    ),
+                    div({
+                        class: `${cssBaseClass}__error_container`,
+                        dataElement: 'error-container',
+                    }),
+                ].join('\n')
+            );
+
+            if (developerMode) {
+                ui.setContent('dev.job-state', JSON.stringify(jobState, null, 1));
+                renderWidgetState();
+            }
+
+            if (jobState.status === 'running') {
+                runClock = RunClock.make({
+                    prefix: ', ',
+                    suffix: ' ago',
+                });
+                runClock
+                    .start({
+                        node: ui.getElement('kb-log.status-line.clock'),
+                        startTime: jobState.running,
+                    })
+                    .catch((err) => {
+                        console.warn(`Clock problem: ${err.message}`);
+                        ui.setContent('kb-log.status-line.clock', '');
+                    });
+                return;
+            }
+
+            if (isError) {
+                const errorModel = Props.make({
+                    data: {
+                        exec: {
+                            jobState: jobState,
+                        },
+                    },
+                });
+                const errorContent = ErrorDisplay.make({
+                    model: errorModel,
+                });
+                errorContent.start({
+                    node: ui.getElement('kb-log.status-line.error-container'),
+                });
+            }
+
+            if (runClock) {
+                runClock.stop();
+            }
+        }
+
         function handleJobStatusUpdate(message) {
-            // if the job is finished, we don't want to reflect
-            // this in the ui, and disable play/stop controls.
-            const jobStatus = message.jobState.status,
+            // do nothing if the jobState object is not valid
+            if (!Jobs.isValidJobStateObject(message.jobState)) {
+                return;
+            }
+
+            const jobStatus =
+                    message.jobState && message.jobState.status ? message.jobState.status : null,
                 { mode } = fsm.getCurrentState().state;
+
+            // nothing has changed since last time.
+            if (jobStatus === lastJobState.status && mode === lastMode) {
+                return;
+            }
+
+            lastJobState = message.jobState;
+            lastMode = mode;
             let newState;
 
             switch (mode) {
@@ -816,6 +975,7 @@ define([
                         case 'estimating':
                         case 'queued':
                             startJobStatusUpdates();
+                            doOnQueued();
                             newState = {
                                 mode: 'queued',
                                 auto: true,
@@ -852,6 +1012,7 @@ define([
                             // no change
                             break;
                         case 'running':
+                            doExitQueued();
                             newState = {
                                 mode: jobStatus,
                                 auto: true,
@@ -909,6 +1070,7 @@ define([
                     throw new Error(`Unknown job status ${jobStatus}`);
             }
             if (newState) {
+                renderJobState(lastJobState);
                 fsm.newState(newState);
             }
         }
@@ -960,6 +1122,10 @@ define([
             if (looping) {
                 scheduleLogRequest();
             }
+            // no longer listening for job => remove any existing event listeners
+            if (!listeningForJob) {
+                stopEventListeners();
+            }
         }
 
         function startEventListeners() {
@@ -986,9 +1152,13 @@ define([
                 key: {
                     type: 'job-log-deleted',
                 },
-                handle: function () {
+                handle: function (message) {
                     stopLogAutoFetch();
                     renderLog();
+                    awaitingLog = false;
+                    console.error(
+                        `Error retrieving log for ${jobId}: ${JSON.stringify(message, null, 1)}`
+                    );
                 },
             });
 
@@ -1013,21 +1183,41 @@ define([
             });
         }
 
-        function stopEventListeners() {
-            bus.removeListeners(Object.values(listenersByType));
+        /**
+         * Stop the specified listener(s) or all listeners
+         *
+         * If no arguments are supplied, all listeners will be removed
+         *
+         * @param {array{string}} listeners
+         */
+        function stopEventListeners(listeners = []) {
+            if (!listeners.length) {
+                listeners = Object.keys(listenersByType);
+            }
+            bus.removeListeners(listeners.map((l) => listenersByType[l]));
         }
 
         // LIFECYCLE API
         function renderFSM() {
             const state = fsm.getCurrentState();
-
+            renderWidgetState();
             // Button state
             if (state.ui.buttons) {
+                // the log controls section may have been removed
+                // so use try/catch to suppress any errors
                 state.ui.buttons.enabled.forEach((_button) => {
-                    ui.enableButton(_button);
+                    try {
+                        ui.enableButton(_button);
+                    } catch (err) {
+                        // eslint-disable-next-line no-empty
+                    }
                 });
                 state.ui.buttons.disabled.forEach((_button) => {
-                    ui.disableButton(_button);
+                    try {
+                        ui.disableButton(_button);
+                    } catch (err) {
+                        // eslint-disable-next-line no-empty
+                    }
                 });
             }
         }
@@ -1045,7 +1235,10 @@ define([
         }
 
         function doJobNotFound() {
-            ui.setContent('log-panel', div([p(['No job found; logs cannot be displayed'])]));
+            // clear the log container
+            ui.setContent('log-container', '');
+            renderJobState({ job_state: 'does_not_exist' });
+            stopJobStatusUpdates();
         }
 
         function initializeFSM() {
@@ -1065,19 +1258,11 @@ define([
             });
             fsm.bus.on('exit-running', () => {
                 stopLogAutoFetch();
-            });
-            fsm.bus.on('on-terminated', () => {
-                requestLatestJobLog();
                 stopJobStatusUpdates();
-            });
-            fsm.bus.on('on-queued', () => {
-                doOnQueued();
-            });
-            fsm.bus.on('exit-queued', () => {
-                doExitQueued();
             });
             fsm.bus.on('on-job-not-found', () => {
                 doJobNotFound();
+                stopJobStatusUpdates();
             });
         }
 
@@ -1089,8 +1274,12 @@ define([
         }
 
         function stopJobStatusUpdates() {
-            if (listeningForJob) {
-                listeningForJob = false;
+            listeningForJob = false;
+
+            if (awaitingLog) {
+                stopEventListeners(['job-status']);
+            } else {
+                stopEventListeners();
             }
         }
 
@@ -1122,10 +1311,19 @@ define([
                 renderFSM();
                 startEventListeners();
 
+                // if an initial job state object has been supplied, render it
+                if (arg.jobState) {
+                    lastJobState = arg.jobState;
+                }
+
+                renderJobState(lastJobState || { job_id: jobId });
+
                 bus.emit('request-job-status', {
                     jobId: jobId,
                 });
                 listeningForJob = true;
+            }).catch((err) => {
+                throw err;
             });
         }
 

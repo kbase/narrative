@@ -252,10 +252,12 @@ define([
          *
          * @param {object} jobState  -- jobState object, containing jobID, status, etc.
          * @param {int}    jobIndex
+         * @returns {Promise} started job row instance
          */
 
         function createJobStateListRowWidget(jobState, jobIndex) {
             widgetsById[jobState.job_id] = JobStateListRow.make();
+            // this returns a promise
             return widgetsById[jobState.job_id].start({
                 node: createTableRow(tableBody, jobIndex),
                 jobState: jobState,
@@ -264,6 +266,13 @@ define([
             });
         }
 
+        /**
+         *
+         * @param {object} args  -- with keys
+         *      node:     DOM node to attach to
+         *      jobState: job state object
+         *      includeParentJob: boolean; whether or not to add a parent job row
+         */
         function start(args) {
             const requiredArgs = ['node', 'jobState'];
             if (!requiredArgs.every((arg) => arg in args && args[arg])) {

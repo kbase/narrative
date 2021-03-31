@@ -1,6 +1,10 @@
 /**
+ *
  * Usage:
- * let viewer = JobLogViewer.make();
+ * const viewer = JobLogViewer.make({
+ *      showHistory: true,
+ *      logPollInterval: 250,
+ * });
  * viewer.start({
  *     jobId: <some job id>,
  *     node: <a DOM node>
@@ -14,7 +18,8 @@ define([
     'common/events',
     'common/fsm',
     'common/html',
-], (Promise, Runtime, Props, UI, Events, Fsm, html) => {
+    'util/developerMode',
+], (Promise, Runtime, Props, UI, Events, Fsm, html, devMode) => {
     'use strict';
 
     const t = html.tag,
@@ -22,7 +27,6 @@ define([
         button = t('button'),
         span = t('span'),
         p = t('p'),
-        numLines = 100,
         cssBaseClass = 'kb-log',
         logContentStandardClass = `${cssBaseClass}__content`,
         logContentExpandedClass = `${logContentStandardClass}--expanded`;
@@ -50,17 +54,17 @@ define([
                     auto: true,
                 },
                 {
-                    mode: 'active',
+                    mode: 'running',
                     auto: true,
                 },
                 {
-                    mode: 'complete',
+                    mode: 'completed',
                 },
                 {
                     mode: 'error',
                 },
                 {
-                    mode: 'canceled',
+                    mode: 'terminated',
                 },
                 {
                     mode: 'job-not-found',
@@ -83,18 +87,18 @@ define([
             },
             next: [
                 {
-                    mode: 'active',
+                    mode: 'running',
                     auto: false,
                 },
                 {
-                    mode: 'active',
+                    mode: 'running',
                     auto: true,
                 },
                 {
-                    mode: 'complete',
+                    mode: 'completed',
                 },
                 {
-                    mode: 'canceled',
+                    mode: 'terminated',
                 },
                 {
                     mode: 'error',
@@ -126,11 +130,11 @@ define([
         },
         {
             state: {
-                mode: 'active',
+                mode: 'running',
                 auto: true,
             },
             meta: {
-                description: 'The Job is currently active, receiving log updates automatically',
+                description: 'The job is currently running, receiving log updates automatically',
             },
             ui: {
                 buttons: {
@@ -140,18 +144,18 @@ define([
             },
             next: [
                 {
-                    mode: 'active',
+                    mode: 'running',
                     auto: false,
                 },
                 {
-                    mode: 'active',
+                    mode: 'running',
                     auto: true,
                 },
                 {
-                    mode: 'complete',
+                    mode: 'completed',
                 },
                 {
-                    mode: 'canceled',
+                    mode: 'terminated',
                 },
                 {
                     mode: 'error',
@@ -161,21 +165,21 @@ define([
                 enter: {
                     messages: [
                         {
-                            emit: 'on-active',
+                            emit: 'on-running',
                         },
                     ],
                 },
                 resume: {
                     messages: [
                         {
-                            emit: 'on-active',
+                            emit: 'on-running',
                         },
                     ],
                 },
                 exit: {
                     messages: [
                         {
-                            emit: 'exit-active',
+                            emit: 'exit-running',
                         },
                     ],
                 },
@@ -183,11 +187,11 @@ define([
         },
         {
             state: {
-                mode: 'active',
+                mode: 'running',
                 auto: false,
             },
             meta: {
-                description: 'The job is currently active, no automatic updates',
+                description: 'The job is currently running, no automatic updates',
             },
             ui: {
                 buttons: {
@@ -197,15 +201,15 @@ define([
             },
             next: [
                 {
-                    mode: 'active',
+                    mode: 'running',
                     auto: true,
                 },
                 {
-                    mode: 'active',
+                    mode: 'running',
                     auto: false,
                 },
                 {
-                    mode: 'complete',
+                    mode: 'completed',
                 },
                 {
                     mode: 'error',
@@ -215,21 +219,21 @@ define([
                 enter: {
                     messages: [
                         {
-                            emit: 'on-active-noauto',
+                            emit: 'on-running-noauto',
                         },
                     ],
                 },
                 resume: {
                     messages: [
                         {
-                            emit: 'on-active-noauto',
+                            emit: 'on-running-noauto',
                         },
                     ],
                 },
                 exit: {
                     messages: [
                         {
-                            emit: 'exit-active-noauto',
+                            emit: 'exit-running-noauto',
                         },
                     ],
                 },
@@ -237,7 +241,7 @@ define([
         },
         {
             state: {
-                mode: 'complete',
+                mode: 'completed',
             },
             ui: {
                 buttons: {
@@ -249,21 +253,21 @@ define([
                 enter: {
                     messages: [
                         {
-                            emit: 'on-complete',
+                            emit: 'on-completed',
                         },
                     ],
                 },
                 resume: {
                     messages: [
                         {
-                            emit: 'on-complete',
+                            emit: 'on-completed',
                         },
                     ],
                 },
                 exit: {
                     messages: [
                         {
-                            emit: 'exit-complete',
+                            emit: 'exit-completed',
                         },
                     ],
                 },
@@ -271,7 +275,7 @@ define([
         },
         {
             state: {
-                mode: 'canceled',
+                mode: 'terminated',
             },
             ui: {
                 buttons: {
@@ -283,21 +287,21 @@ define([
                 enter: {
                     messages: [
                         {
-                            emit: 'on-canceled',
+                            emit: 'on-terminated',
                         },
                     ],
                 },
                 resume: {
                     messages: [
                         {
-                            emit: 'on-canceled',
+                            emit: 'on-terminated',
                         },
                     ],
                 },
                 exit: {
                     messages: [
                         {
-                            emit: 'exit-canceled',
+                            emit: 'exit-terminated',
                         },
                     ],
                 },
@@ -378,9 +382,14 @@ define([
      * The entrypoint to this widget. This creates the job log viewer and initializes it.
      * Starting it is left as a lifecycle method for the caller.
      *
+     * config options:
+     *  showHistory   {boolean} - whether job status lines should include history
+     *                            (queue and run times)
+     *  logPollInterval {int}   - time in ms for how frequently to check for new logs
+     *  developerMode {boolean} - whether or not to enable developer mode, which
+     *                            prints out extra debugging information
      */
-    function factory() {
-        // MAIN
+    function factory(config = {}) {
         /* The data model for this widget contains all lines currently being shown, along with the indices for
          * the first and last lines known.
          * It also tracks the total lines currently available for the app, if returned.
@@ -402,9 +411,11 @@ define([
                     totalLines: null,
                 },
             }),
-            runtime = Runtime.make(),
-            loopFrequency = 5000,
-            listeners = [];
+            bus = Runtime.make().bus(),
+            listenersByType = {},
+            // { showHistory } = config,
+            logPollInterval = config.logPollInterval || 5000,
+            developerMode = config.devMode || devMode.mode;
 
         let container,
             jobId,
@@ -417,18 +428,21 @@ define([
             requestLoop = null, // the timeout object
             scrollToEndOnNext = false;
 
-        // VIEW ACTIONS
+        function getLogPanel() {
+            return ui.getElement('log-panel');
+        }
 
-        function scheduleNextRequest() {
+        // VIEW ACTIONS
+        function scheduleLogRequest() {
             if (!looping) {
                 return;
             }
             requestLoop = window.setTimeout(() => {
                 requestLatestJobLog();
-            }, loopFrequency);
+            }, logPollInterval);
         }
 
-        function stopAutoFetch() {
+        function stopLogAutoFetch() {
             looping = false;
             if (ui) {
                 ui.hideElement('spinner');
@@ -438,14 +452,14 @@ define([
         /**
          * Starts the autofetch loop. After the first request, this starts a timeout that calls it again.
          */
-        function startAutoFetch() {
+        function startLogAutoFetch() {
             if (looping || stopped) {
                 return;
             }
             const { state } = fsm.getCurrentState();
-            if (state.mode === 'active' && state.auto) {
+            if (state.mode === 'running' && state.auto) {
                 looping = true;
-                fsm.newState({ mode: 'active', auto: true });
+                fsm.newState({ mode: 'running', auto: true });
                 // stop the current timer if we have one.
                 if (requestLoop) {
                     clearTimeout(requestLoop);
@@ -462,7 +476,7 @@ define([
                 auto: true,
             });
             stopped = false;
-            startAutoFetch();
+            startLogAutoFetch();
         }
 
         /**
@@ -473,20 +487,23 @@ define([
                 auto: false,
             });
             stopped = true;
-            stopAutoFetch();
+            stopLogAutoFetch();
             if (requestLoop) {
                 clearTimeout(requestLoop);
             }
         }
 
         /**
-         * Requests numLines (set in the factory method) log lines starting from the given firstLine.
+         * Requests log lines starting from the index supplied.
+         * Executed when the job is in states 'complete', 'terminated' or 'error'
+         * or if log auto fetch has been turned off
+         *
          * @param {int} firstLine
          */
         function requestJobLog(firstLine) {
             ui.showElement('spinner');
             awaitingLog = true;
-            runtime.bus().emit('request-job-log', {
+            bus.emit('request-job-log', {
                 jobId: jobId,
                 options: {
                     first_line: firstLine,
@@ -494,14 +511,15 @@ define([
             });
         }
 
+        /**
+         * Request all log lines
+         * Executed whilst the job is running
+         */
         function requestLatestJobLog() {
-            // only while job is running
-            // load numLines at a time
-            // otherwise load entire log
             scrollToEndOnNext = true;
             awaitingLog = true;
             ui.showElement('spinner');
-            runtime.bus().emit('request-latest-job-log', {
+            bus.emit('request-latest-job-log', {
                 jobId: jobId,
                 options: {},
             });
@@ -525,6 +543,37 @@ define([
         }
 
         /**
+         * This is a step toward having scrollahead/scrollbehind. It doesn't work right, and we
+         * have to move on, but I'm leaving this in here for now.
+         * There's something minor that I'm missing, I think, about how the scrolling gets
+         * managed.
+         * @param {ScrollEvent} e
+         * /
+        function handlePanelScrolling(e) {
+            const panel = getLogPanel();
+            // if scroll is at the bottom, and there are more lines,
+            // get the next chunk.
+            if (panel.scrollTop === panel.scrollHeight - panel.offsetHeight) {
+                const curLast = model.getItem('lastLine');
+                if (curLast < model.getItem('totalLines')) {
+                    requestJobLog(curLast);
+                }
+            }
+            // if it's at the top, and we're not at line 0, get
+            // the previous chunk.
+            else if (panel.scrollTop === 0) {
+                const curFirst = model.getItem('firstLine');
+                if (curFirst > 0) {
+                    const reqLine = Math.max(0, curFirst - numLines);
+                    if (reqLine < curFirst) {
+                        requestJobLog(reqLine);
+                    }
+                }
+            }
+        }
+         */
+
+        /**
          * toggle the viewer class to switch between standard and expanded versions
          */
         function toggleViewerSize() {
@@ -541,7 +590,6 @@ define([
             logContentClassList.remove(inactiveClass);
         }
 
-        // VIEW
         /**
          * builds contents of panel-heading div
          * @param {??} events
@@ -626,139 +674,132 @@ define([
                     div(
                         {
                             dataElement: 'spinner',
-                            class: 'pull-right hidden',
+                            class: `pull-right hidden ${cssBaseClass}__spinner`,
                         },
-                        [span({ class: 'fa fa-spinner fa-pulse fa-ex fa-fw' })]
+                        [span({ class: 'fa fa-spinner fa-pulse fa-ex fa-fw' }), 'Fetching logs...']
                     ),
                 ]
             );
         }
 
         /**
-         * This is a step toward having scrollahead/scrollbehind. It doesn't work right, and we
-         * have to move on, but I'm leaving this in here for now.
-         * There's something minor that I'm missing, I think, about how the scrolling gets
-         * managed.
-         * @param {ScrollEvent} e
-         */
-        function handlePanelScrolling(e) {
-            const panel = getLogPanel();
-            // if scroll is at the bottom, and there are more lines,
-            // get the next chunk.
-            if (panel.scrollTop === panel.scrollHeight - panel.offsetHeight) {
-                const curLast = model.getItem('lastLine');
-                if (curLast < model.getItem('totalLines')) {
-                    requestJobLog(curLast);
-                }
-            }
-            // if it's at the top, and we're not at line 0, get
-            // the previous chunk.
-            else if (panel.scrollTop === 0) {
-                const curFirst = model.getItem('firstLine');
-                if (curFirst > 0) {
-                    const reqLine = Math.max(0, curFirst - numLines);
-                    if (reqLine < curFirst) {
-                        requestJobLog(reqLine);
-                    }
-                }
-            }
-        }
-
-        /**
          * builds contents of panel-body class
          */
         function renderLayout() {
-            const events = Events.make(),
+            const uniqueID = html.genId(),
+                events = Events.make(),
                 content = div(
                     {
                         dataElement: 'kb-log',
                         class: `${cssBaseClass}__container`,
                     },
                     [
-                        renderControls(events),
-                        div({
-                            dataElement: 'log-panel',
-                            class: logContentClass,
-                        }),
+                        div(
+                            {
+                                class: `${cssBaseClass}__status_container`,
+                            },
+                            [
+                                div({
+                                    class: `${cssBaseClass}__status_line`,
+                                    dataElement: 'status-line',
+                                }),
+                            ]
+                        ),
+                        div(
+                            {
+                                class: `${cssBaseClass}__logs_container`,
+                                dataElement: 'log-container',
+                            },
+                            [
+                                div(
+                                    {
+                                        class: `${cssBaseClass}__logs_title collapsed`,
+                                        role: 'button',
+                                        dataToggle: 'collapse',
+                                        dataTarget: '#' + uniqueID,
+                                        ariaExpanded: 'false',
+                                        ariaControls: uniqueID,
+                                    },
+                                    [span({}, ['Logs'])]
+                                ),
+                                div(
+                                    {
+                                        class: `${cssBaseClass}__logs_content_panel collapse`,
+                                        id: uniqueID,
+                                    },
+                                    [
+                                        renderControls(events),
+                                        div({
+                                            dataElement: 'log-panel',
+                                            class: logContentClass,
+                                        }),
+                                    ]
+                                ),
+                            ]
+                        ),
                     ]
                 );
 
             return {
                 content: content,
                 events: events,
+                uniqueID: uniqueID,
             };
         }
 
         /**
-         * build and return div that displays
-         * individual job log line
-         * <div class="kblog-line">
-         *     <div class="kblog-num-wrapper">
-         *        <div class="kblog-line-num">###</span>
-         *        <div class="kblog-text">foobarbaz</span>
-         *     </div>
+         * render the HTML structure that displays
+         * an individual job log line
+         * <div class="${cssBaseClass}__line_container">
+         *    <div class="${cssBaseClass}__line_number">###</div>
+         *    <div class="${cssBaseClass}__line_text">foobarbaz</div>
          * </div>
          * @param {object} line
          */
-        function buildLine(line) {
-            // a single line in the log panel
-            const kblogLine = document.createElement('div');
-            kblogLine.classList.add(`${cssBaseClass}__line_container`);
-
-            // wrapper to allow flex styling
-            const wrapperDiv = document.createElement('div');
-            wrapperDiv.classList.add(`${cssBaseClass}__flex_wrapper`);
-
-            // line number
-            const numDiv = document.createElement('div');
-            numDiv.classList.add(`${cssBaseClass}__line_number`);
-            const lineNumber = document.createTextNode(line.lineNumber || '');
-            numDiv.appendChild(lineNumber);
-
-            // the log line text
-            const textDiv = document.createElement('div');
-            textDiv.classList.add(`${cssBaseClass}__line_text`);
-            const lineText = document.createTextNode(line.text);
-            textDiv.appendChild(lineText);
-
-            if (line.isError) {
-                kblogLine.classList.add(`${cssBaseClass}__line_container--error`);
-                numDiv.classList.add(`${cssBaseClass}__line_number--error`);
-                textDiv.classList.add(`${cssBaseClass}__line_text--error`);
-            }
-
-            // append line number and text
-            wrapperDiv.appendChild(numDiv);
-            wrapperDiv.appendChild(textDiv);
-            // append wrapper to line div
-            kblogLine.appendChild(wrapperDiv);
-
-            return kblogLine;
-        }
-
-        function getLogPanel() {
-            return ui.getElement('log-panel');
+        function renderLogLine(line) {
+            const errorSuffix = line.isError ? '--error' : '';
+            return div(
+                {
+                    class: `${cssBaseClass}__line_container${errorSuffix}`,
+                },
+                [
+                    div(
+                        {
+                            class: `${cssBaseClass}__line_number${errorSuffix}`,
+                        },
+                        line.lineNumber
+                    ),
+                    div(
+                        {
+                            class: `${cssBaseClass}__line_text${errorSuffix}`,
+                        },
+                        line.text
+                    ),
+                ]
+            );
         }
 
         /**
-         * onUpdate callback function (under model)
+         * Render the log
+         *
+         * This replaces the log wholesale with the content of model.getItem('lines')
+         * rather than keeping track of which lines have and haven't been rendered.
          */
-        function render() {
+        function renderLog() {
             const lines = model.getItem('lines');
-
-            if (lines && lines.length > 0) {
-                const panel = getLogPanel();
-                panel.innerHTML = '';
-                lines.forEach((line) => panel.appendChild(buildLine(line)));
-
-                // if we're autoscrolling, scroll to the bottom
-                if (fsm.getCurrentState().state.auto || scrollToEndOnNext) {
-                    panel.scrollTo(0, panel.lastChild.offsetTop);
-                    scrollToEndOnNext = false;
-                }
+            if (!lines || lines.length === 0) {
+                ui.setContent('log-panel', 'No log entries to show.');
                 return;
             }
-            ui.setContent('log-panel', 'No log entries to show.');
+
+            const panel = getLogPanel();
+            panel.innerHTML = lines.map((line) => renderLogLine(line)).join('\n');
+
+            // if we're autoscrolling, scroll to the bottom
+            if (fsm.getCurrentState().state.auto || scrollToEndOnNext) {
+                panel.scrollTo(0, panel.lastChild.offsetTop);
+                scrollToEndOnNext = false;
+            }
         }
 
         function handleJobStatusUpdate(message) {
@@ -774,45 +815,33 @@ define([
                         case 'created':
                         case 'estimating':
                         case 'queued':
-                            startJobUpdates();
+                            startJobStatusUpdates();
                             newState = {
                                 mode: 'queued',
                                 auto: true,
                             };
                             break;
                         case 'running':
-                            startJobUpdates();
-                            startAutoFetch();
+                            startJobStatusUpdates();
+                            startLogAutoFetch();
                             newState = {
-                                mode: 'active',
+                                mode: jobStatus,
                                 auto: true,
                             };
                             break;
                         case 'completed':
-                            requestJobLog(0);
-                            stopJobUpdates();
-                            newState = {
-                                mode: 'complete',
-                            };
-                            break;
                         case 'error':
-                            requestJobLog(0);
-                            stopJobUpdates();
-                            newState = {
-                                mode: 'error',
-                            };
-                            break;
                         case 'terminated':
                             requestJobLog(0);
-                            stopJobUpdates();
+                            stopJobStatusUpdates();
                             newState = {
-                                mode: 'canceled',
+                                mode: jobStatus,
                             };
                             break;
                         default:
-                            stopJobUpdates();
+                            stopJobStatusUpdates();
                             console.error('Unknown job status', jobStatus, message);
-                            throw new Error('Unknown job status ' + jobStatus);
+                            throw new Error(`Unknown job status ${jobStatus}`);
                     }
                     break;
                 case 'queued':
@@ -824,82 +853,67 @@ define([
                             break;
                         case 'running':
                             newState = {
-                                mode: 'active',
+                                mode: jobStatus,
                                 auto: true,
                             };
                             break;
-                        // may happen that the job state jumps over in-progress...
                         case 'completed':
-                            newState = {
-                                mode: 'complete',
-                            };
-                            break;
                         case 'error':
-                            newState = {
-                                mode: 'error',
-                            };
-                            break;
                         case 'terminated':
                             newState = {
-                                mode: 'canceled',
+                                mode: jobStatus,
                             };
+                            requestJobLog(0);
+                            stopJobStatusUpdates();
                             break;
                         default:
-                            console.error('Unknown log status', jobStatus, message);
-                            throw new Error('Unknown log status ' + jobStatus);
+                            stopJobStatusUpdates();
+                            console.error('Unknown job status', jobStatus, message);
+                            throw new Error(`Unknown job status ${jobStatus}`);
                     }
                     break;
-                case 'active':
+                case 'running':
                     switch (jobStatus) {
+                        case 'created':
+                        case 'estimating':
                         case 'queued':
                             // this should not occur!
                             break;
                         case 'running':
-                            startAutoFetch();
+                            startLogAutoFetch();
                             break;
                         case 'completed':
-                            newState = {
-                                mode: 'complete',
-                            };
-                            break;
                         case 'error':
-                            newState = {
-                                mode: 'error',
-                            };
-                            break;
                         case 'terminated':
+                            // the FSM turns off log fetch and status updates
                             newState = {
-                                mode: 'canceled',
+                                mode: jobStatus,
                             };
                             break;
                         default:
-                            console.error('Unknown log status', jobStatus, message);
-                            throw new Error('Unknown log status ' + jobStatus);
+                            console.error('Unknown job status', jobStatus, message);
+                            throw new Error(`Unknown job status ${jobStatus}`);
                     }
                     break;
-                case 'canceled':
-                    if (jobStatus === 'terminated') {
-                        return;
-                    }
-                    console.error('Unexpected log status ' + jobStatus + ' for "canceled" state');
-                    throw new Error('Unexpected log status ' + jobStatus + ' for "canceled" state');
-                case 'complete':
-                    // N.b. if the jobStatus is not 'completed',
-                    // some sort of error has occurred
-                    return;
+                case 'terminated':
+                case 'completed':
                 case 'error':
-                    // N.b. if the jobStatus is not 'error' or 'suspend',
-                    // some sort of error has occurred
+                    stopJobStatusUpdates();
+                    // jobStatus should be 'completed' for mode 'completed',
+                    // 'error' for mode 'error'
+                    // 'terminated' for mode 'terminated'
+                    // if not, some sort of error has occurred
                     return;
                 default:
-                    throw new Error('Mode ' + mode + ' not yet implemented');
+                    console.error('Unknown job status', jobStatus, message);
+                    throw new Error(`Unknown job status ${jobStatus}`);
             }
             if (newState) {
                 fsm.newState(newState);
             }
         }
 
-        function handleJobDoesNotExistUpdate(message) {
+        function handleJobDoesNotExistUpdate() {
             fsm.newState({ mode: 'job-not-found' });
         }
 
@@ -907,6 +921,7 @@ define([
             if (!awaitingLog) {
                 return;
             }
+
             ui.hideElement('spinner');
             /* message has structure:
              * {
@@ -940,15 +955,15 @@ define([
                 model.setItem('firstLine', message.logs.first + 1);
                 model.setItem('lastLine', message.logs.first + viewLines.length);
                 model.setItem('totalLines', message.logs.max_lines);
-                render();
+                renderLog();
             }
             if (looping) {
-                scheduleNextRequest();
+                scheduleLogRequest();
             }
         }
 
         function startEventListeners() {
-            let ev = runtime.bus().listen({
+            listenersByType['job-logs'] = bus.listen({
                 channel: {
                     jobId: jobId,
                 },
@@ -957,7 +972,6 @@ define([
                 },
                 handle: handleJobLogs,
             });
-            listeners.push(ev);
 
             // An error may encountered during the job fetch on the back end. It is
             // reported as a job-comm-error, but translated by the jobs panel as a job-log-deleted
@@ -965,7 +979,7 @@ define([
             // original error, and let the widget sort it out? Or perhaps on the back end
             // have the error emitted as a specific message. It is otherwise a little difficult
             // to trace this.
-            ev = runtime.bus().listen({
+            listenersByType['job-log-deleted'] = bus.listen({
                 channel: {
                     jobId: jobId,
                 },
@@ -973,13 +987,12 @@ define([
                     type: 'job-log-deleted',
                 },
                 handle: function () {
-                    stopAutoFetch();
-                    render();
+                    stopLogAutoFetch();
+                    renderLog();
                 },
             });
-            listeners.push(ev);
 
-            ev = runtime.bus().listen({
+            listenersByType['job-status'] = bus.listen({
                 channel: {
                     jobId: jobId,
                 },
@@ -988,9 +1001,8 @@ define([
                 },
                 handle: handleJobStatusUpdate,
             });
-            listeners.push(ev);
 
-            ev = runtime.bus().listen({
+            listenersByType['job-does-not-exist'] = bus.listen({
                 channel: {
                     jobId: jobId,
                 },
@@ -999,11 +1011,10 @@ define([
                 },
                 handle: handleJobDoesNotExistUpdate,
             });
-            listeners.push(ev);
         }
 
         function stopEventListeners() {
-            runtime.bus().removeListeners(listeners);
+            bus.removeListeners(Object.values(listenersByType));
         }
 
         // LIFECYCLE API
@@ -1019,37 +1030,25 @@ define([
                     ui.disableButton(_button);
                 });
             }
-
-            // Element state
-            if (state.ui.elements) {
-                state.ui.elements.show.forEach((element) => {
-                    ui.showElement(element);
-                });
-                state.ui.elements.hide.forEach((element) => {
-                    ui.hideElement(element);
-                });
-            }
         }
 
-        function doOnQueued(message) {
-            const noLogYet = {
-                lineNumber: '',
-                text: 'Job is queued, logs will be available when the job is running.',
-            };
-            const line = buildLine(noLogYet);
-            getLogPanel().appendChild(line);
+        function doOnQueued() {
+            ui.setContent(
+                'log-panel',
+                p(['Job is queued; logs will be available when the job is running.'])
+            );
         }
 
-        function doExitQueued(message) {
-            ui.setContent('kb-log.panel', '');
+        function doExitQueued() {
+            // clear the content of the job panel to make way for logs
+            ui.setContent('log-panel', '');
         }
 
-        function doJobNotFound(message) {
-            ui.setContent('kb-log.panel', div([p(['No job found; logs cannot be displayed'])]));
+        function doJobNotFound() {
+            ui.setContent('log-panel', div([p(['No job found; logs cannot be displayed'])]));
         }
 
         function initializeFSM() {
-            // events emitted by the fsm.
             fsm = Fsm.make({
                 states: appStates,
                 initialState: {
@@ -1060,38 +1059,36 @@ define([
                 },
             });
             fsm.start();
-            fsm.bus.on('on-active', () => {
-                startAutoFetch();
+            // events emitted by the fsm.
+            fsm.bus.on('on-running', () => {
+                startLogAutoFetch();
             });
-            fsm.bus.on('exit-active', () => {
-                stopAutoFetch();
+            fsm.bus.on('exit-running', () => {
+                stopLogAutoFetch();
             });
-            fsm.bus.on('on-canceled', () => {
+            fsm.bus.on('on-terminated', () => {
                 requestLatestJobLog();
-                stopJobUpdates();
+                stopJobStatusUpdates();
             });
-            fsm.bus.on('exit-canceled', () => {
-                //  nothing to do?
+            fsm.bus.on('on-queued', () => {
+                doOnQueued();
             });
-            fsm.bus.on('on-queued', (message) => {
-                doOnQueued(message);
+            fsm.bus.on('exit-queued', () => {
+                doExitQueued();
             });
-            fsm.bus.on('exit-queued', (message) => {
-                doExitQueued(message);
-            });
-            fsm.bus.on('on-job-not-found', (message) => {
-                doJobNotFound(message);
+            fsm.bus.on('on-job-not-found', () => {
+                doJobNotFound();
             });
         }
 
-        function startJobUpdates() {
-            runtime.bus().emit('request-job-update', {
+        function startJobStatusUpdates() {
+            bus.emit('request-job-update', {
                 jobId: jobId,
             });
             listeningForJob = true;
         }
 
-        function stopJobUpdates() {
+        function stopJobStatusUpdates() {
             if (listeningForJob) {
                 listeningForJob = false;
             }
@@ -1107,9 +1104,8 @@ define([
          */
         function start(arg) {
             return Promise.try(() => {
-                detach(); // if we're alive, remove ourselves before restarting
-                const hostNode = arg.node;
-                if (!hostNode) {
+                container = arg.node;
+                if (!container) {
                     throw new Error('Requires a node to start');
                 }
                 jobId = arg.jobId;
@@ -1117,18 +1113,16 @@ define([
                     throw new Error('Requires a job id to start');
                 }
 
-                container = hostNode.appendChild(document.createElement('div'));
+                detach(); // if we're alive, remove ourselves before restarting
                 ui = UI.make({ node: container });
-
                 const layout = renderLayout();
                 container.innerHTML = layout.content;
                 layout.events.attachEvents(container);
-
                 initializeFSM();
                 renderFSM();
                 startEventListeners();
 
-                runtime.bus().emit('request-job-status', {
+                bus.emit('request-job-status', {
                     jobId: jobId,
                 });
                 listeningForJob = true;
@@ -1137,8 +1131,8 @@ define([
 
         function stop() {
             stopEventListeners();
-            stopJobUpdates();
-            stopAutoFetch();
+            stopJobStatusUpdates();
+            stopLogAutoFetch();
             if (requestLoop) {
                 clearTimeout(requestLoop);
             }
@@ -1151,7 +1145,7 @@ define([
         function detach() {
             stop();
             if (container) {
-                container.remove();
+                container.innerHTML = '';
             }
         }
 
@@ -1164,8 +1158,9 @@ define([
     }
 
     return {
-        make: function () {
-            return factory();
+        make: function (config) {
+            return factory(config);
         },
+        cssBaseClass: cssBaseClass,
     };
 });

@@ -36,9 +36,7 @@ define([
                         BulkImportCell.make({ cell });
                     } catch (error) {
                         // If we have an error here, there is a serious problem setting up the cell and it is not usable.
-                        // What to do? The safest thing to do is inform the user, and then strip out the cell, leaving
-                        // in it's place a markdown cell with the error info.
-                        // For now, just pop up an error dialog;
+                        // Inform the user via an error dialog.
 
                         Error.reportCellError(
                             'Error starting bulk import cell',

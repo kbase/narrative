@@ -71,7 +71,7 @@ define(['common/monoBus'], (Bus) => {
             const bus = Bus.make();
             bus.respond({
                 key: { type: 'test' },
-                handle: function (message) {
+                handle: function () {
                     return { reply: 'this is my reply' };
                 },
             });
@@ -184,7 +184,7 @@ define(['common/monoBus'], (Bus) => {
 
             myBus.bus().listen({
                 channel: 'my-new-channel',
-                test: function (message) {
+                test: function () {
                     return true;
                 },
                 handle: function (message) {
@@ -224,7 +224,6 @@ define(['common/monoBus'], (Bus) => {
         it('Channel bus Request/response', (done) => {
             const bus = Bus.make(),
                 bus1 = bus.makeChannelBus(),
-                bus2 = bus.makeChannelBus(),
                 data = {
                     key1: 'value1',
                 };
@@ -278,7 +277,7 @@ define(['common/monoBus'], (Bus) => {
                 key: {
                     type: 'get-value',
                 },
-                handle: function (message) {
+                handle: function () {
                     return bus1.request(
                         {
                             propertyName: 'key1',
@@ -353,8 +352,8 @@ define(['common/monoBus'], (Bus) => {
         }, 5000);
 
         it('Send and receive a keyed, persistent message over a channel, send first, then update', (done) => {
-            let bus = Bus.make(),
-                times = 0;
+            const bus = Bus.make();
+            let times = 0;
             bus.set(
                 {
                     name: 'Winnie',
@@ -390,8 +389,8 @@ define(['common/monoBus'], (Bus) => {
         }, 5000);
 
         it('Create a working test based message route, then remove the listener, should fail.', (done) => {
-            var bus = Bus.make(),
-                count = 0,
+            let count = 0;
+            const bus = Bus.make(),
                 listener = bus.listen({
                     test: function (message) {
                         return message.what === 'test';
@@ -430,15 +429,15 @@ define(['common/monoBus'], (Bus) => {
         });
     });
 
-    it('A connection should destroy all listenrs upon stop', (done) => {
+    it('A connection should destroy all listeners upon stop', (done) => {
         const bus = Bus.make(),
             connection = bus.connect();
 
-        connection.channel('test').on('test', (message) => {
+        connection.channel('test').on('test', () => {
             // do nothing...
         });
 
-        connection.channel('test').on('my-message', (message) => {
+        connection.channel('test').on('my-message', () => {
             // expect(message.msg).toEqual('greetings');
             expect(connection.stats().listeners.active).toEqual(2);
             connection.stop();
@@ -477,8 +476,8 @@ define(['common/monoBus'], (Bus) => {
             .when('my-message')
             .then((message) => {
                 expect(message.msg).toEqual('greetings');
-                connection.channel('test').on('my-message', (message) => {
-                    expect(message.msg).toEqual('goodbye');
+                connection.channel('test').on('my-message', (_message) => {
+                    expect(_message.msg).toEqual('goodbye');
                     connection.stop();
                     done();
                 });
@@ -492,7 +491,7 @@ define(['common/monoBus'], (Bus) => {
         });
     });
 
-    it('Set a persistent message and get it syncronously', (done) => {
+    it('Set a persistent message and get it synchronously', (done) => {
         const bus = Bus.make(),
             connection = bus.connect();
 
@@ -507,7 +506,7 @@ define(['common/monoBus'], (Bus) => {
         connection.stop();
     });
 
-    it('Set a persistent message and get it syncronously, failed', (done) => {
+    it('Set a persistent message and get it synchronously, failed', (done) => {
         const bus = Bus.make(),
             connection = bus.connect();
 
@@ -522,7 +521,7 @@ define(['common/monoBus'], (Bus) => {
         connection.stop();
     });
 
-    it('Set a persistent message and get it syncronously, set after get, should get default value', (done) => {
+    it('Set a persistent message and get it synchronously, set after get, should get default value', (done) => {
         const bus = Bus.make(),
             connection = bus.connect();
 
@@ -544,15 +543,6 @@ define(['common/monoBus'], (Bus) => {
         const started = new Date().getTime();
 
         // var test2Called = 0;
-
-        const test2 = connection.channel('test').plisten({
-            key: {
-                type: 'my-message',
-            },
-            handle: function (message) {
-                done.fail();
-            },
-        });
 
         // var test3 = connection.channel('test').plisten({
         //     key: {

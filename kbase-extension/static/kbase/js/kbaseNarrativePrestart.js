@@ -129,7 +129,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'common/runtime', 
          * for the function.
          */
         window.KBError = function (where, what) {
-            return KBFail(false, where, what);
+            return window.KBFail(false, where, what);
         };
 
         /**
@@ -141,7 +141,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'common/runtime', 
          * @param what  (string) What happened
          */
         window.KBFatal = function (where, what) {
-            const res = KBFail(true, where, what);
+            window.KBFail(true, where, what);
 
             const version = Config.get('version') || 'unknown';
             const hash = Config.get('git_commit_hash') || 'unknown';
@@ -153,7 +153,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'common/runtime', 
                     full_version = version + ' (hash=' + hash + ')';
                 }
             }
-            var $fatal = $(
+            const $fatal = $(
                 '<div tabindex=-1 role="dialog" aria-labelledby="kb-fatal-error" aria-hidden="true">'
             )
                 .addClass('modal fade')
@@ -321,9 +321,9 @@ define(['kbwidget', 'bootstrap', 'jquery', 'narrativeConfig', 'common/runtime', 
                 Jupyter.keyboard_manager.actions.register(
                     {
                         handler: function (env, event) {
-                            let index = env.notebook.get_selected_index(),
+                            let cm = env.notebook.get_selected_cell().code_mirror;
+                            const index = env.notebook.get_selected_index(),
                                 cell = env.notebook.get_cell(index),
-                                cm = env.notebook.get_selected_cell().code_mirror,
                                 cur = cm.getCursor();
                             if (cell && cell.at_top() && index !== 0 && cur.ch === 0) {
                                 if (event) {

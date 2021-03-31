@@ -22,11 +22,9 @@ define(['jquery', 'util/bootstrapDialog'], ($, Dialog) => {
     describe('Test the BootstrapDialog module', () => {
         let simpleDialog;
         afterEach(() => {
-            try {
+            if (simpleDialog) {
                 simpleDialog.destroy();
-                // eslint-disable-next-line no-empty
-            } catch (err) {}
-            simpleDialog = null;
+            }
         });
 
         it('Should create a new dialog object', () => {
@@ -34,10 +32,13 @@ define(['jquery', 'util/bootstrapDialog'], ($, Dialog) => {
             expect(simpleDialog).toEqual(jasmine.any(Object));
         });
 
-        it('Should show on command', () => {
+        it('Should show on command', (done) => {
             simpleDialog = createSimpleDialog();
+            simpleDialog.$modal.on('shown.bs.modal', () => {
+                expect(simpleDialog.$modal.is(':visible')).toBeTruthy();
+                done();
+            });
             simpleDialog.show();
-            expect($($.find('.fade.in')).is(':visible')).toBeTruthy();
         });
 
         it('Should hide on command', (done) => {
@@ -46,8 +47,11 @@ define(['jquery', 'util/bootstrapDialog'], ($, Dialog) => {
                 expect(simpleDialog.$modal.is(':visible')).toBeFalsy();
                 done();
             });
+            simpleDialog.$modal.on('shown.bs.modal', () => {
+                expect(simpleDialog.$modal.is(':visible')).toBeTruthy();
+                simpleDialog.hide();
+            });
             simpleDialog.show();
-            simpleDialog.hide();
         });
 
         it('Should get a title string back', () => {
@@ -98,10 +102,11 @@ define(['jquery', 'util/bootstrapDialog'], ($, Dialog) => {
             simpleDialog = new Dialog({
                 title: 'Test for command on enter keypress',
                 body: $('<div>'),
-                buttons: [$('<button>').append('Clickable button').click(btnFn)],
+                buttons: [
+                    $('<button data-dismiss="modal">').append('Clickable button').click(btnFn),
+                ],
                 enterToTrigger: true,
             });
-            simpleDialog.show();
             expect(wasTriggered).toBe(false);
             const e = $.Event('keypress');
             e.which = 13;
@@ -133,8 +138,10 @@ define(['jquery', 'util/bootstrapDialog'], ($, Dialog) => {
         it('Should destroy the modal on command', () => {
             simpleDialog = createSimpleDialog();
             const ret = simpleDialog.destroy();
-            expect(ret).toBe(null);
-            expect(simpleDialog.getElement()).toBe(null);
+            expect(ret).toBeNull();
+            expect(simpleDialog.getElement()).toBeNull();
+            expect(document.querySelectorAll('.modal-backdrop').length).toBe(0);
+            expect(document.body).not.toHaveClass('modal-open');
         });
     });
 });

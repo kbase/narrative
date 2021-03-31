@@ -1,8 +1,9 @@
-define(['jquery', 'narrativeLogin', 'narrativeConfig', 'narrativeMocks'], (
+define(['jquery', 'narrativeLogin', 'narrativeConfig', 'narrativeMocks', 'util/bootstrapDialog'], (
     $,
     Login,
     Config,
-    Mocks
+    Mocks,
+    BootstrapDialog
 ) => {
     'use strict';
 
@@ -13,19 +14,20 @@ define(['jquery', 'narrativeLogin', 'narrativeConfig', 'narrativeMocks'], (
         beforeEach(() => {
             // remove any jquery events that get bound to document,
             // including login and logout listeners
-            $(document).off();
+            Login.destroy();
             Mocks.setAuthToken(FAKE_TOKEN);
             jasmine.Ajax.install();
             $container = $('<div>');
         });
 
         afterEach(() => {
+            $container.remove();
             // remove any jquery events that get bound to document,
             // including login and logout listeners
-            $(document).off();
+            Login.clearTokenCheckTimers();
+            Login.destroy();
             jasmine.Ajax.uninstall();
             Mocks.clearAuthToken();
-            $container.remove();
         });
 
         it('Should instantiate and have expected functions', () => {
@@ -77,20 +79,20 @@ define(['jquery', 'narrativeLogin', 'narrativeConfig', 'narrativeMocks'], (
                     // embedded in the node
                     expect($container.text()).toContain(fakeName);
                     expect($container.text()).toContain(fakeUser);
-                    Login.clearTokenCheckTimers();
-                    Login.destroy();
                 });
         });
 
+        // produces a modal
         it('Should throw an error when instantiating with a bad token', () => {
             Mocks.mockAuthRequest('token', { error: {} }, 401);
             Mocks.mockAuthRequest('me', { error: {} }, 401);
+            // prevent the dialog from actually showing up by spying on the function
+            spyOn(BootstrapDialog.prototype, 'show');
             return Login.init($container, true) // true here means there's no kernel
                 .then(() => {
                     const request = jasmine.Ajax.requests.mostRecent();
                     expect(request.requestHeaders.Authorization).toEqual(FAKE_TOKEN);
-                    Login.clearTokenCheckTimers();
-                    Login.destroy();
+                    expect(BootstrapDialog.prototype.show).toHaveBeenCalled();
                 });
         });
     });

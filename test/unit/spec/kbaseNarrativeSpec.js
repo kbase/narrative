@@ -133,12 +133,14 @@ define([
             $([Jupyter.events]).trigger('kernel_connected.Kernel');
         });
 
-        // creates a dialog that hangs around in the UI
         it('init should fail as expected when the job connection fails', (done) => {
+            // spy on KBFatal and prevent an error dialog from being created
+            spyOn(window, 'KBFatal');
             Jupyter.notebook.kernel.comm_info = () => {
                 throw new Error('an error happened');
             };
             const jobsReadyCallback = (err) => {
+                expect(window.KBFatal).toHaveBeenCalled();
                 // returns an object in the form {error: ErrorObject}
                 expect(err).toBeDefined();
                 expect(err.error).toEqual(jasmine.any(Error));

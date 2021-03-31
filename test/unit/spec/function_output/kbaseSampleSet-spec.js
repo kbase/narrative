@@ -105,7 +105,7 @@ define(['jquery', 'kbaseSampleSetView', 'base/js/namespace', 'narrativeConfig'],
                     ],
                 }),
             });
-            const w = new Widget($div, { upas: { id: 'fake' } });
+            new Widget($div, { upas: { id: 'fake' } });
             setTimeout(() => {
                 ['Description', 'KBase Object Name', 'This is a test sample set.'].forEach(
                     (str) => {

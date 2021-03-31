@@ -8,15 +8,16 @@ define([
 ], (KBaseNarrativeWorkspace, $, Jupyter, Mocks, Runtime, AppSpec) => {
     'use strict';
     describe('Test the kbaseNarrativeWorkspace widget', () => {
-        let $node;
+        let $node, $container;
         beforeAll(() => {
             $(document).off();
         });
 
         beforeEach(() => {
             jasmine.Ajax.install();
-            $node = $('div');
-            $('body').append($node);
+            $node = $(document.createElement('div'));
+            $container = $(document.createElement('div')).append($node);
+            $('body').append($container);
             Jupyter.notebook = Mocks.buildMockNotebook({
                 readOnly: false,
             });
@@ -41,7 +42,7 @@ define([
 
         afterEach(() => {
             jasmine.Ajax.uninstall();
-            $node.detach();
+            $container.remove();
             $(document).off();
         });
 
@@ -80,8 +81,10 @@ define([
         });
 
         it('buildAppCodeCell should fail without a spec', () => {
+            spyOn(window, 'alert');
             const widget = new KBaseNarrativeWorkspace($node);
             expect(widget.buildAppCodeCell()).toBeUndefined();
+            expect(window.alert).toHaveBeenCalled();
         });
 
         it('buildViewerCell should work by direct call', () => {
@@ -136,7 +139,7 @@ define([
                 rebuild_all: () => {},
             };
             // included in the main templates, mocked here
-            $('body').append('<button id="kb-view-mode">');
+            $container.append('<button id="kb-view-mode">');
             const widget = new KBaseNarrativeWorkspace($node);
             expect(widget.narrativeIsReadOnly).toBeFalsy();
             expect(widget.uiMode).toEqual('edit');
@@ -178,6 +181,7 @@ define([
             widget.deleteCell(0);
         });
 
+        // this test occasionally fails due to the modal not being present
         it('should delete KBase extension cells by direct call by dialog', (done) => {
             Jupyter.notebook = Mocks.buildMockNotebook({
                 readOnly: false,

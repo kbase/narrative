@@ -23,9 +23,10 @@ define(['jquery', 'bluebird', 'widgets/dynamicTable'], ($, Promise, DynamicTable
         ];
 
     describe('The DynamicTable widget', () => {
+        let container;
         beforeEach(function () {
-            this.div = document.createElement('div');
-            this.dt = new DynamicTable($(this.div), {
+            container = document.createElement('div');
+            this.dt = new DynamicTable($(container), {
                 headers: headers,
                 // args to updateFunction: pageNum, query, sortColId, sortColDir
                 updateFunction: function () {
@@ -37,10 +38,13 @@ define(['jquery', 'bluebird', 'widgets/dynamicTable'], ($, Promise, DynamicTable
                 },
             });
         });
+        afterEach(() => {
+            container.remove();
+        });
 
         it('Should instantiate with essentially empty data', () => {
-            const $container = $('<div>');
-            const dt = new DynamicTable($container, {
+            container = document.createElement('div');
+            const dt = new DynamicTable($(container), {
                 updateFunction: () => {
                     return Promise.resolve({
                         start: 0,
@@ -50,13 +54,13 @@ define(['jquery', 'bluebird', 'widgets/dynamicTable'], ($, Promise, DynamicTable
                 },
             });
             expect(dt).toEqual(jasmine.any(Object));
-            const table = $container[0].querySelector('table');
+            const table = container.querySelector('table');
             expect(table.id).toBe('dynamic_table');
         });
 
         it('should have headers set correctly', function () {
             expect(this.dt).toEqual(jasmine.any(Object));
-            const table = this.div.querySelector('table');
+            const table = container.querySelector('table');
             expect(table.id).toBe('dynamic_table');
             const thElements = table.querySelectorAll('thead th');
             expect(thElements.length).toBe(headers.length);

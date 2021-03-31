@@ -2,6 +2,14 @@ define(['widgets/appWidgets2/input/undefinedInput'], (UndefinedInput) => {
     'use strict';
 
     describe('Undefined Input Widget test', () => {
+        let container;
+
+        beforeEach(() => {
+            container = document.createElement('div');
+        });
+        afterEach(() => {
+            container.remove();
+        });
         it('Should be loaded', () => {
             expect(UndefinedInput).not.toBeNull();
         });
@@ -14,9 +22,8 @@ define(['widgets/appWidgets2/input/undefinedInput'], (UndefinedInput) => {
 
         it('Should attach to a DOM node', () => {
             const widget = UndefinedInput.make({});
-            const node = document.createElement('div');
-            widget.attach(node);
-            expect(node.innerHTML).toContain('Undefined widget');
+            widget.attach(container);
+            expect(container.innerHTML).toContain('Undefined widget');
         });
     });
 });

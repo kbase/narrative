@@ -19,6 +19,7 @@ define([
     });
 
     describe('The file path widget instance', () => {
+        let container;
         beforeAll(() => {
             window.kbaseRuntime = null;
             Jupyter.narrative = {
@@ -32,10 +33,9 @@ define([
 
         beforeEach(function () {
             const bus = Runtime.make().bus();
-            this.parent = document.createElement('div');
+            container = document.createElement('div');
             this.node = document.createElement('div');
-            document.getElementsByTagName('body')[0].appendChild(this.parent);
-            this.parent.appendChild(this.node);
+            container.appendChild(this.node);
 
             this.spec = Spec.make({
                 appSpec: TestSpec,
@@ -54,8 +54,8 @@ define([
             });
         });
 
-        afterEach(function () {
-            this.parent.remove();
+        afterEach(() => {
+            container.remove();
             window.kbaseRuntime = null;
         });
 

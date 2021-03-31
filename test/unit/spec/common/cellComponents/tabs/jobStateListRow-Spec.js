@@ -174,16 +174,23 @@ define([
 
     JobsData.validJobs.forEach((job) => {
         describe(`the job state list initial row structure and content for "${job.job_id}"`, () => {
+            let container;
             beforeEach(async function () {
+                container = document.createElement('tr');
+                this.row = container;
                 this.job = job;
-                this.row = document.createElement('tr');
                 this.jobStateListRowInstance = createInstance();
                 await this.jobStateListRowInstance.start({
-                    node: this.row,
+                    node: container,
                     jobState: this.job,
                     name: 'testObject',
                 });
             });
+
+            afterEach(() => {
+                container.remove();
+            });
+
             itHasRowStructure();
         });
     });

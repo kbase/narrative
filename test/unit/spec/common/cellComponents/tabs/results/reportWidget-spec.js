@@ -44,6 +44,7 @@ define([
     }
 
     describe('Test the app/bulk import cell report widget', () => {
+        let container;
         beforeAll(() => {
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',
@@ -56,38 +57,37 @@ define([
 
         beforeEach(function () {
             jasmine.Ajax.install();
-            this.node = document.createElement('div');
-            document.body.appendChild(this.node);
+            container = document.createElement('div');
             this.widget = ReportWidget.make();
         });
 
-        afterEach(function () {
-            this.node.remove();
+        afterEach(() => {
+            container.remove();
             jasmine.Ajax.uninstall();
         });
 
         it('should start and render with data', async function () {
             await this.widget.start({
-                node: this.node,
+                node: container,
                 objectData: ResultsData.objectData,
             });
             // we should have a div with two <a> elements, each with the
             // name of an object
-            expect(this.node.querySelectorAll('a').length).toBe(2);
-            expect(this.node.innerHTML).toContain('Reports');
+            expect(container.querySelectorAll('a').length).toBe(2);
+            expect(container.innerHTML).toContain('Reports');
             ResultsData.objectData.forEach((obj) => {
-                expect(this.node.innerHTML).toContain(obj.name);
+                expect(container.innerHTML).toContain(obj.name);
             });
         });
 
         it('should clear itself after stopping', async function () {
             await this.widget.start({
-                node: this.node,
+                node: container,
                 objectData: ResultsData.objectData,
             });
-            expect(this.node.innerHTML).toContain('Reports');
+            expect(container.innerHTML).toContain('Reports');
             await this.widget.stop();
-            expect(this.node.innerHTML).toBe('');
+            expect(container.innerHTML).toBe('');
         });
 
         it('should expand and create a kbaseReportView widget on toggle', async function () {
@@ -96,13 +96,13 @@ define([
             const singleDataObject = ResultsData.objectData[0];
 
             await this.widget.start({
-                node: this.node,
+                node: container,
                 objectData: [singleDataObject],
             });
             // there should be only one
-            expect(this.node.querySelectorAll('a.kb-report__toggle').length).toBe(1);
+            expect(container.querySelectorAll('a.kb-report__toggle').length).toBe(1);
             // get a handle on it
-            const toggleNode = this.node.querySelector('a.kb-report__toggle');
+            const toggleNode = container.querySelector('a.kb-report__toggle');
             // expect it to be collapsed and not to have any siblings
             expect(toggleNode).toHaveClass('collapsed');
             expect(toggleNode.nextSibling).toBeNull();
@@ -122,10 +122,10 @@ define([
             const singleDataObject = ResultsData.objectData[0];
 
             await this.widget.start({
-                node: this.node,
+                node: container,
                 objectData: [singleDataObject],
             });
-            const toggleNode = this.node.querySelector('a.kb-report__toggle');
+            const toggleNode = container.querySelector('a.kb-report__toggle');
             // expect it to be collapsed and not to have any siblings
             expect(toggleNode).toHaveClass('collapsed');
             expect(toggleNode.nextSibling).toBeNull();

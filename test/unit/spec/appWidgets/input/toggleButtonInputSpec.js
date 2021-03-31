@@ -3,7 +3,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/toggleButtonInput'], (
     ToggleButtonInput
 ) => {
     'use strict';
-    let bus, testConfig, runtime, node;
+    let bus, testConfig, runtime, container;
     const required = false,
         defaultValue = true;
 
@@ -32,7 +32,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/toggleButtonInput'], (
     xdescribe('ToggleButtonInput tests', () => {
         beforeEach(() => {
             runtime = Runtime.make();
-            node = document.createElement('div');
+            container = document.createElement('div');
             bus = runtime.bus().makeChannelBus({
                 description: 'toggle button testing',
             });
@@ -41,6 +41,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/toggleButtonInput'], (
         afterEach(() => {
             bus.stop();
             window.kbaseRuntime = null;
+            container.remove();
         });
 
         it('should be defined', () => {
@@ -55,10 +56,10 @@ define(['common/runtime', 'widgets/appWidgets2/input/toggleButtonInput'], (
             // fires 'sync' after starting, then we can tell it to 'update',
             // which does the rendering. THEN we can examine that it's rendered right.
             bus.on('sync', () => {
-                expect(node.querySelector('[data-element="main-panel"]')).toBeDefined();
+                expect(container.querySelector('[data-element="main-panel"]')).toBeDefined();
                 bus.emit('update', { value: true });
                 setTimeout(() => {
-                    const inputElem = node.querySelector('input[type="checkbox"]');
+                    const inputElem = container.querySelector('input[type="checkbox"]');
                     expect(inputElem).toBeDefined();
                     expect(inputElem.getAttribute('checked')).not.toBeNull();
                     done();
@@ -66,7 +67,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/toggleButtonInput'], (
             });
 
             widget.start().then(() => {
-                bus.emit('run', { node: node });
+                bus.emit('run', { node: container });
             });
         });
 
@@ -76,7 +77,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/toggleButtonInput'], (
             const widget = ToggleButtonInput.make(testConfig);
 
             bus.on('validation', () => {
-                const inputElem = node.querySelector('input[type="checkbox"]');
+                const inputElem = container.querySelector('input[type="checkbox"]');
                 expect(inputElem.getAttribute('checked')).not.toBeNull();
                 done();
             });
@@ -85,7 +86,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/toggleButtonInput'], (
                 bus.emit('update', { value: defaultValue }); // no change, just verify it's there.
             });
             widget.start().then(() => {
-                bus.emit('run', { node: node });
+                bus.emit('run', { node: container });
             });
         });
 
@@ -93,7 +94,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/toggleButtonInput'], (
             const widget = ToggleButtonInput.make(testConfig);
             let validationCount = 0;
             bus.on('validation', () => {
-                const inputElem = node.querySelector('input[type="checkbox"]');
+                const inputElem = container.querySelector('input[type="checkbox"]');
                 if (inputElem) {
                     if (validationCount < 1) {
                         expect(inputElem.getAttribute('checked')).toBeNull();
@@ -109,7 +110,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/toggleButtonInput'], (
                 bus.emit('update', { value: false });
             });
             widget.start().then(() => {
-                bus.emit('run', { node: node });
+                bus.emit('run', { node: container });
             });
         });
 
@@ -120,7 +121,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/toggleButtonInput'], (
                 bus.emit('update', { value: defaultValue });
             });
             bus.on('validation', () => {
-                const inputElem = node.querySelector('input[type="checkbox"]');
+                const inputElem = container.querySelector('input[type="checkbox"]');
                 if (inputElem) {
                     expect(inputElem.getAttribute('checked')).not.toBeNull();
                     inputElem.dispatchEvent(new Event('change'));
@@ -132,7 +133,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/toggleButtonInput'], (
             });
 
             widget.start().then(() => {
-                bus.emit('run', { node: node });
+                bus.emit('run', { node: container });
             });
         });
 
@@ -142,7 +143,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/toggleButtonInput'], (
             bus.on('validation', (message) => {
                 expect(message.errorMessage).toBeUndefined();
                 expect(message.diagnosis).toBe('valid');
-                const inputElem = node.querySelector('input[type="checkbox"]');
+                const inputElem = container.querySelector('input[type="checkbox"]');
                 if (inputElem) {
                     expect(inputElem.getAttribute('checked')).not.toBeNull();
                     inputElem.dispatchEvent(new Event('change'));
@@ -159,7 +160,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/toggleButtonInput'], (
             });
 
             widget.start().then(() => {
-                bus.emit('run', { node: node });
+                bus.emit('run', { node: container });
             });
         });
     });

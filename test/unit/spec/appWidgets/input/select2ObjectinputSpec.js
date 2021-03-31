@@ -96,13 +96,13 @@ define([
 
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('Select 2 Object Input tests', () => {
-        let bus, testConfig;
+        let bus, testConfig, container;
         const required = false,
             defaultValue = 'apple',
             fakeServiceUrl = 'https://ci.kbase.us/services/fake_taxonomy_service';
 
-        beforeEach(function () {
-            this.node = document.createElement('div');
+        beforeEach(() => {
+            container = document.createElement('div');
             runtime = Runtime.make();
             Mocks.setAuthToken(AUTH_TOKEN);
             Jupyter.narrative = {
@@ -171,6 +171,7 @@ define([
             bus.stop();
             window.kbaseRuntime = null;
             Jupyter.narrative = null;
+            container.remove();
         });
 
         it('Should exist', () => {
@@ -189,17 +190,17 @@ define([
         describe('the started widget', () => {
             beforeEach(async function () {
                 this.widget = Select2ObjectInput.make(testConfig);
-                await this.widget.start({ node: this.node });
+                await this.widget.start({ node: container });
             });
 
             it('Should start and stop', async function () {
-                expect(this.node.childElementCount).toBeGreaterThan(0);
-                const input = this.node.querySelector('select[data-element="input"]');
+                expect(container.childElementCount).toBeGreaterThan(0);
+                const input = container.querySelector('select[data-element="input"]');
                 expect(input).toBeDefined();
                 expect(input.getAttribute('value')).toBeNull();
 
                 await this.widget.stop();
-                expect(this.node.childElementCount).toBe(0);
+                expect(container.childElementCount).toBe(0);
             });
 
             // this resets the model value but does not change the UI
@@ -227,14 +228,14 @@ define([
 
         // FIXME: it is unclear what the effect of these changes should be
         // More precise tests should be implemented
-        it('Should respond to changed select2 option', function (done) {
+        it('Should respond to changed select2 option', (done) => {
             const widget = Select2ObjectInput.make(testConfig);
             const nodeStructures = [];
             widget
-                .start({ node: this.node })
+                .start({ node: container })
                 .then(() => {
-                    nodeStructures.push(this.node.innerHTML);
-                    const $select = $(this.node).find('select');
+                    nodeStructures.push(container.innerHTML);
+                    const $select = $(container).find('select');
                     const $search =
                         $select.data('select2').dropdown.$search ||
                         $select.data('select2').selection.$search;
@@ -251,14 +252,14 @@ define([
                     return TestUtil.wait(1000);
                 })
                 .then(() => {
-                    nodeStructures.push(this.node.innerHTML);
+                    nodeStructures.push(container.innerHTML);
                     expect(nodeStructures[0]).not.toEqual(nodeStructures[1]);
-                    const $select = $(this.node).find('select');
+                    const $select = $(container).find('select');
                     $select.val('stuff').trigger('change');
                     return TestUtil.wait(1000);
                 })
                 .then(() => {
-                    nodeStructures.push(this.node.innerHTML);
+                    nodeStructures.push(container.innerHTML);
                     expect(nodeStructures[0]).not.toEqual(nodeStructures[2]);
                     done();
                 });

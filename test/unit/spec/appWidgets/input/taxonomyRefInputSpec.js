@@ -38,9 +38,9 @@ define([
         const required = false,
             defaultValue = 'apple',
             fakeServiceUrl = 'https://ci.kbase.us/services/fake_taxonomy_service';
-        let bus, testConfig;
+        let bus, testConfig, container;
 
-        beforeEach(function () {
+        beforeEach(() => {
             const runtime = Runtime.make();
             Mocks.setAuthToken(AUTH_TOKEN);
             Jupyter.narrative = {
@@ -48,7 +48,7 @@ define([
                 userId: 'test_user',
             };
 
-            this.node = document.createElement('div');
+            container = document.createElement('div');
             bus = runtime.bus().makeChannelBus({
                 description: 'select input testing',
             });
@@ -109,6 +109,7 @@ define([
             bus.stop();
             window.kbaseRuntime = null;
             Jupyter.narrative = null;
+            container.remove();
         });
 
         it('Should be instantiable', () => {
@@ -120,19 +121,19 @@ define([
             });
         });
 
-        it('Should start and stop', function (done) {
+        it('Should start and stop', (done) => {
             const widget = TaxonomyRefInput.make(testConfig);
             widget
-                .start({ node: this.node })
+                .start({ node: container })
                 .then(() => {
-                    expect(this.node.childElementCount).toBeGreaterThan(0);
-                    const input = this.node.querySelector('select[data-element="input"]');
+                    expect(container.childElementCount).toBeGreaterThan(0);
+                    const input = container.querySelector('select[data-element="input"]');
                     expect(input).toBeDefined();
                     expect(input.getAttribute('value')).toBeNull();
                     return widget.stop();
                 })
                 .then(() => {
-                    expect(this.node.childElementCount).toBe(0);
+                    expect(container.childElementCount).toBe(0);
                     done();
                 })
                 .catch((err) => {
@@ -143,7 +144,7 @@ define([
         // this resets the model value but does not change the UI
         // or emit a message via the bus
         // ==> cannot easily be tested
-        xit('Should set model value by bus', function (done) {
+        xit('Should set model value by bus', (done) => {
             const widget = TaxonomyRefInput.make(testConfig);
             bus.on('validation', (msg) => {
                 expect(msg.errorMessage).toBeNull();
@@ -151,7 +152,7 @@ define([
                 done();
             });
 
-            widget.start({ node: this.node }).then(() => {
+            widget.start({ node: container }).then(() => {
                 bus.emit('update', { value: 'foo' });
             });
         });
@@ -159,7 +160,7 @@ define([
         // this resets the model value but does not change the UI
         // or emit a message via the bus
         // ==> cannot easily be tested
-        xit('Should reset model value by bus', function (done) {
+        xit('Should reset model value by bus', (done) => {
             const widget = TaxonomyRefInput.make(testConfig);
             bus.on('validation', (msg) => {
                 expect(msg.errorMessage).toBeNull();
@@ -167,21 +168,21 @@ define([
                 done();
             });
 
-            widget.start({ node: this.node }).then(() => {
+            widget.start({ node: container }).then(() => {
                 bus.emit('reset-to-defaults');
             });
         });
 
         // FIXME: it is unclear what the effect of these changes should be
         // More precise tests should be implemented
-        it('Should respond to changed select2 option', function (done) {
+        it('Should respond to changed select2 option', (done) => {
             const widget = TaxonomyRefInput.make(testConfig);
             const nodeStructures = [];
             widget
-                .start({ node: this.node })
+                .start({ node: container })
                 .then(() => {
-                    nodeStructures.push(this.node.innerHTML);
-                    const $select = $(this.node).find('select');
+                    nodeStructures.push(container.innerHTML);
+                    const $select = $(container).find('select');
                     const $search =
                         $select.data('select2').dropdown.$search ||
                         $select.data('select2').selection.$search;
@@ -197,14 +198,14 @@ define([
                     });
                 })
                 .then(() => {
-                    nodeStructures.push(this.node.innerHTML);
+                    nodeStructures.push(container.innerHTML);
                     expect(nodeStructures[0]).not.toEqual(nodeStructures[1]);
-                    const $select = $(this.node).find('select');
+                    const $select = $(container).find('select');
                     $select.val('stuff').trigger('change');
                     return TestUtil.wait(1000);
                 })
                 .then(() => {
-                    nodeStructures.push(this.node.innerHTML);
+                    nodeStructures.push(container.innerHTML);
                     expect(nodeStructures[0]).not.toEqual(nodeStructures[2]);
                     done();
                 });

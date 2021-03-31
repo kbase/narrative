@@ -209,15 +209,17 @@ define(['common/runtime', 'base/js/namespace', 'narrativeConfig'], (Runtime, Jup
     });
 
     describe('bus creation', () => {
+        let runtime;
         beforeAll(() => {
             window.kbaseRuntime = null;
         });
         afterEach(() => {
+            runtime.destroy();
             window.kbaseRuntime = null;
         });
 
         it('should pass on arguments to the bus, strict mode', () => {
-            const runtime = Runtime.make({ bus: { strict: true } });
+            runtime = Runtime.make({ bus: { strict: true } });
             try {
                 // in strict mode, a channel without a description will throw an error
                 runtime.bus().makeChannel({});
@@ -229,7 +231,7 @@ define(['common/runtime', 'base/js/namespace', 'narrativeConfig'], (Runtime, Jup
         });
 
         it('should pass on arguments to the bus, verbose', () => {
-            const runtime = Runtime.make({ bus: { verbose: true } });
+            runtime = Runtime.make({ bus: { verbose: true } });
 
             // in verbose mode, a channel without a description will emit a warning
             spyOn(console, 'warn').and.callThrough();

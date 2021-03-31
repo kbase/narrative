@@ -32,6 +32,7 @@ define([
     ];
 
     describe('test the bulk import cell results tab', () => {
+        let container;
         beforeAll(() => {
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',
@@ -44,16 +45,15 @@ define([
                 get_objects2: () => Promise.resolve({ data: [] }),
                 get_object_info_new: () => Promise.resolve([]),
             };
-            this.node = document.createElement('div');
+            container = document.createElement('div');
             this.model = Props.make({
                 data: TestAppObject,
                 onUpdate: () => {},
             });
-            document.body.appendChild(this.node);
         });
 
-        afterEach(function () {
-            this.node.remove();
+        afterEach(() => {
+            container.remove();
         });
 
         afterAll(() => {
@@ -67,12 +67,12 @@ define([
             });
             return resultsTabInstance
                 .start({
-                    node: this.node,
+                    node: container,
                 })
                 .then(() => {
                     // just make sure it renders the "Objects" and "Report" headers
-                    expect(this.node.innerHTML).toContain('Objects');
-                    expect(this.node.innerHTML).toContain('Report');
+                    expect(container.innerHTML).toContain('Objects');
+                    expect(container.innerHTML).toContain('Report');
                 });
         });
 
@@ -83,13 +83,13 @@ define([
             });
             return resultsTabInstance
                 .start({
-                    node: this.node,
+                    node: container,
                 })
                 .then(() => {
                     return resultsTabInstance.stop();
                 })
                 .then(() => {
-                    expect(this.node.innerHTML).toEqual('');
+                    expect(container.innerHTML).toEqual('');
                 });
         });
 
@@ -107,16 +107,16 @@ define([
             });
             return resultsTabInstance
                 .start({
-                    node: this.node,
+                    node: container,
                 })
                 .then(() => {
                     // don't go into detail here - that's for the other unit tests,
                     // just verify that we're rendering data.
-                    const objNode = this.node.querySelector('div.kb-created-objects');
+                    const objNode = container.querySelector('div.kb-created-objects');
                     expect(objNode).toBeDefined();
                     expect(objNode.innerHTML).toContain('Test_contigs');
 
-                    const reportNode = this.node.querySelector('div.kb-reports-view');
+                    const reportNode = container.querySelector('div.kb-reports-view');
                     expect(reportNode).toBeDefined();
                     expect(reportNode.innerHTML).toContain('Test_contigs');
                 });

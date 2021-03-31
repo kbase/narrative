@@ -19,6 +19,7 @@ define([
     });
 
     describe('The Field Table Cell Widget instance', () => {
+        let container;
         const parameterSpec = {
             data: {
                 constraints: {
@@ -85,10 +86,9 @@ define([
         });
 
         beforeEach(async function () {
-            this.parent = document.createElement('div');
+            container = document.createElement('div');
             this.node = document.createElement('div');
-            document.getElementsByTagName('body')[0].appendChild(this.parent);
-            this.parent.appendChild(this.node);
+            container.appendChild(this.node);
 
             const model = Props.make({
                 data: TestAppObject,
@@ -126,7 +126,7 @@ define([
                     );
                 });
             }
-            this.parent.remove();
+            container.remove();
             window.kbaseRuntime = null;
         });
 

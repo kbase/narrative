@@ -1,6 +1,6 @@
 define(['common/runtime', 'widgets/appWidgets2/input/textareaInput'], (Runtime, TextareaInput) => {
     'use strict';
-    let bus, testConfig, node;
+    let testConfig;
     const required = false,
         defaultValue = 'some test text',
         numRows = 3;
@@ -21,24 +21,35 @@ define(['common/runtime', 'widgets/appWidgets2/input/textareaInput'], (Runtime, 
                     nRows: numRows,
                 },
             },
-            channelName: bus.channelName,
+            channelName: _bus.channelName,
         };
+    }
+
+    function startWidgetAndSetTextarea(widget, container, inputText) {
+        widget.start({ node: container }).then(() => {
+            const inputElem = container.querySelector('textarea');
+            inputElem.value = inputText;
+            inputElem.dispatchEvent(new Event('change'));
+        });
     }
 
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('Textarea Input tests', () => {
+        let widget, bus, container;
         beforeEach(() => {
             const runtime = Runtime.make();
-            node = document.createElement('div');
+            container = document.createElement('div');
             bus = runtime.bus().makeChannelBus({
                 description: 'textarea testing',
             });
             testConfig = buildTestConfig(required, defaultValue, bus);
+            widget = TextareaInput.make(testConfig);
         });
 
         afterEach(() => {
             bus.stop();
             window.kbaseRuntime = null;
+            container.remove();
         });
 
         it('should be defined', () => {
@@ -46,7 +57,6 @@ define(['common/runtime', 'widgets/appWidgets2/input/textareaInput'], (Runtime, 
         });
 
         it('should be instantiable', () => {
-            const widget = TextareaInput.make(testConfig);
             expect(widget).toEqual(jasmine.any(Object));
             ['start', 'stop'].forEach((fn) => {
                 expect(widget[fn]).toEqual(jasmine.any(Function));
@@ -54,22 +64,21 @@ define(['common/runtime', 'widgets/appWidgets2/input/textareaInput'], (Runtime, 
         });
 
         it('Should start and stop a widget', (done) => {
-            const widget = TextareaInput.make(testConfig);
             expect(widget).toBeDefined();
             expect(widget.start).toBeDefined();
 
             widget
-                .start({ node: node })
+                .start({ node: container })
                 .then(() => {
                     // verify it's there.
-                    const textarea = node.querySelector('textarea');
+                    const textarea = container.querySelector('textarea');
                     expect(textarea).toBeDefined();
                     expect(textarea.getAttribute('rows')).toBe(String(numRows));
                     return widget.stop();
                 })
                 .then(() => {
                     // verify it's gone.
-                    expect(node.childElementCount).toBe(0);
+                    expect(container.childElementCount).toBe(0);
                     done();
                 });
         });
@@ -81,8 +90,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/textareaInput'], (Runtime, 
                 expect(message.isValid).toBeTruthy();
                 done();
             });
-            const widget = TextareaInput.make(testConfig);
-            widget.start({ node: node }).then(() => {
+            widget.start({ node: container }).then(() => {
                 bus.emit('update', { value: 'some text' });
             });
         });
@@ -92,43 +100,31 @@ define(['common/runtime', 'widgets/appWidgets2/input/textareaInput'], (Runtime, 
                 expect(message.isValid).toBeTruthy();
                 done();
             });
-            const widget = TextareaInput.make(testConfig);
-            widget.start({ node: node }).then(() => {
+            widget.start({ node: container }).then(() => {
                 bus.emit('reset-to-defaults');
             });
         });
 
         it('Should respond to input change events with "changed"', (done) => {
-            const widget = TextareaInput.make(testConfig);
             const inputText = 'here is some text';
             bus.on('changed', (message) => {
                 expect(message.newValue).toEqual(inputText);
                 widget.stop().then(done);
             });
-            widget.start({ node: node }).then(() => {
-                const inputElem = node.querySelector('textarea');
-                inputElem.value = inputText;
-                inputElem.dispatchEvent(new Event('change'));
-            });
+            startWidgetAndSetTextarea(widget, container, inputText);
         });
 
         it('Should respond to input change events with "validation"', (done) => {
-            const widget = TextareaInput.make(testConfig);
             const inputText = 'here is some text';
             bus.on('validation', (message) => {
                 expect(message.isValid).toBeTruthy();
                 expect(message.errorMessage).toBeUndefined();
                 done();
             });
-            widget.start({ node: node }).then(() => {
-                const inputElem = node.querySelector('textarea');
-                inputElem.value = inputText;
-                inputElem.dispatchEvent(new Event('change'));
-            });
+            startWidgetAndSetTextarea(widget, container, inputText);
         });
 
         xit('Should respond to keyup change events with "changed"', () => {
-            const widget = TextareaInput.make(testConfig);
             const inputText = 'here is some text';
             // event does not have e.target defined, so running this test emits
             // Uncaught TypeError: Cannot read property 'dispatchEvent' of null thrown
@@ -138,8 +134,8 @@ define(['common/runtime', 'widgets/appWidgets2/input/textareaInput'], (Runtime, 
                 // ...detect something?
                 // done();
             });
-            widget.start({ node: node }).then(() => {
-                const inputElem = node.querySelector('textarea');
+            widget.start({ node: container }).then(() => {
+                const inputElem = container.querySelector('textarea');
                 inputElem.value = inputText;
                 inputElem.dispatchEvent(new Event('keyup'));
             });
@@ -147,23 +143,19 @@ define(['common/runtime', 'widgets/appWidgets2/input/textareaInput'], (Runtime, 
 
         it('Should show message when configured', (done) => {
             testConfig.showOwnMessages = true;
-            const widget = TextareaInput.make(testConfig);
+            widget = TextareaInput.make(testConfig);
             const inputText = 'some text';
             bus.on('changed', (message) => {
                 expect(message.newValue).toBe(inputText);
                 // ...detect something?
                 done();
             });
-            widget.start({ node: node }).then(() => {
-                const inputElem = node.querySelector('textarea');
-                inputElem.value = inputText;
-                inputElem.dispatchEvent(new Event('change'));
-            });
+            startWidgetAndSetTextarea(widget, container, inputText);
         });
 
         it('Should return a diagnosis of required-missing if so', (done) => {
             testConfig = buildTestConfig(true, '', bus);
-            const widget = TextareaInput.make(testConfig);
+            widget = TextareaInput.make(testConfig);
             const inputText = null;
             bus.on('validation', (message) => {
                 expect(message.isValid).toBeFalsy();
@@ -171,11 +163,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/textareaInput'], (Runtime, 
                 // ...detect something?
                 done();
             });
-            widget.start({ node: node }).then(() => {
-                const inputElem = node.querySelector('textarea');
-                inputElem.value = inputText;
-                inputElem.dispatchEvent(new Event('change'));
-            });
+            startWidgetAndSetTextarea(widget, container, inputText);
         });
     });
 });

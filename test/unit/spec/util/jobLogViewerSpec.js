@@ -24,9 +24,7 @@ define([
     }
 
     function createLogViewer(context, showHistory = false, logPollInterval = null) {
-        // if (!context.node) {
         context.node = document.createElement('div');
-        // }
         context.runtimeBus = Runtime.make().bus();
         const args = { showHistory: showHistory, devMode: true };
         if (logPollInterval) {
@@ -703,7 +701,6 @@ define([
                         ).toBe('No log entries to show.');
                         const widgetState = getWidgetState(this.node);
                         expect(widgetState.looping).toBe(false);
-                        // expect(widgetState.awaitingLog).toBe(false);
                         expect(widgetState.listeningForJob).toBe(false);
                     });
                 });

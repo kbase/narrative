@@ -265,11 +265,6 @@ define([
             });
             bus.on('sync', () => {
                 bus.emit('update', { value: inputStr });
-                // TestUtil.wait(500)
-                //     .then(() => {
-                //         let inputElem = container.querySelector('input[data-element="input"]');
-                //         inputElem.dispatchEvent(new Event('change'));
-                //     });
             });
             widget.start().then(() => {
                 bus.emit('run', { node: container });
@@ -334,11 +329,6 @@ define([
             });
             bus.on('sync', () => {
                 bus.emit('update', { value: inputStr });
-                // TestUtil.wait(500)
-                //     .then(() => {
-                //         let inputElem = container.querySelector('input[data-element="input"]');
-                //         inputElem.dispatchEvent(new Event('change'));
-                //     });
             });
             widget.start().then(() => {
                 bus.emit('run', { node: container });

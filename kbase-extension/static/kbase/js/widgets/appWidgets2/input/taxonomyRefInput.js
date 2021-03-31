@@ -1,7 +1,7 @@
 define([
     'bluebird',
     'jquery',
-    'kb_common/html',
+    'common/html',
     'kb_common/utils',
     'kb_service/client/workspace',
     'kb_service/utils',
@@ -37,7 +37,8 @@ define([
     const t = html.tag,
         div = t('div'),
         select = t('select'),
-        option = t('option');
+        option = t('option'),
+        cssBaseClass = 'kb-select2-taxonomy-ref';
 
     function factory(config) {
         const spec = config.parameterSpec,
@@ -50,16 +51,13 @@ define([
         let parent, container, ui;
 
         function makeInputControl() {
-            let selectOptions;
-            const selectElem = select(
+            return select(
                 {
                     class: 'form-control',
                     dataElement: 'input',
                 },
-                [option({ value: '' }, '')].concat(selectOptions)
+                [option({ value: '' }, '')]
             );
-
-            return selectElem;
         }
 
         // CONTROL
@@ -130,27 +128,12 @@ define([
         }
 
         function doTemplateResult(item) {
-            if (!item.id) {
-                return $(
-                    div(
-                        {
-                            style: {
-                                display: 'block',
-                                height: '20px',
-                            },
-                        },
-                        item.label || ''
-                    )
-                );
-            }
             return $(
                 div(
                     {
-                        style: {
-                            display: 'block',
-                        },
+                        class: `${cssBaseClass}__item`,
                     },
-                    item.label
+                    item.label || ''
                 )
             );
         }
@@ -159,9 +142,7 @@ define([
             return $(
                 div(
                     {
-                        style: {
-                            display: 'block',
-                        },
+                        class: `${cssBaseClass}__item`,
                     },
                     item.label
                 )
@@ -261,9 +242,6 @@ define([
                             getTaxonomyItem(currentValue).then((taxon) => {
                                 callback(taxon);
                             });
-                        },
-                        formatMoreResults: function () {
-                            return 'more???';
                         },
                         language: {
                             loadingMore: function () {
@@ -373,7 +351,9 @@ define([
         function stop() {
             return Promise.try(() => {
                 if (container) {
-                    parent.removeChild(container);
+                    $(ui.getElement('input-container.input')).off('change');
+                    $(ui.getElement('input-container.input')).select2('destroy');
+                    container.remove();
                 }
                 bus.stop();
             });

@@ -30,7 +30,7 @@
         "grunt-stylelint": "^0.15.0",
         "husky": "^5.1.1",
         "jasmine-ajax": "4.0.0",
-        "jasmine-core": "^3.6.0",
+        "jasmine-core": "^3.7.1",
         "jasmine-jquery": "2.1.1",
         "karma": "^6.1.1",
         "karma-brief-reporter": "^0.2.1",
@@ -98,6 +98,7 @@
         "test_chrome": "karma start test/unit/karma.local.conf.js --browsers=Chrome --single-run=false",
         "test_firefox": "karma start test/unit/karma.local.conf.js --browsers=Firefox --single-run=false",
         "test": "karma start test/unit/karma.conf.js",
+        "test_local": "karma start test/unit/karma.local.conf.js",
         "uglify": "terser kbase-extension/static/kbase-narrative.js -c --source-map --output kbase-extension/static/kbase-narrative-min.js",
         "update_browserslist": "npx browserslist@latest --update-db",
         "watch_css": "grunt watch"

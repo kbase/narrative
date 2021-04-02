@@ -1,12 +1,11 @@
 define([
-    'bluebird',
     'google-code-prettify/prettify',
     'kb_common/html',
     'common/events',
     'common/runtime',
     'widgets/appWidgets2/errorControl',
     'css!google-code-prettify/prettify.css',
-], (Promise, PR, html, Events, Runtime, ErrorControlFactory) => {
+], (PR, html, Events, Runtime, ErrorControlFactory) => {
     'use strict';
 
     const t = html.tag,
@@ -45,7 +44,7 @@ define([
             }).make();
         }
 
-        function render(events) {
+        function render() {
             const ids = {
                 fieldPanel: html.genId(),
                 inputControl: html.genId(),
@@ -63,15 +62,15 @@ define([
                             class: `${cssBaseClass}__cell_label`,
                             title: spec.ui.label || spec.ui.id,
                             for: ids.inputControl,
-                            id: events.addEvent({
-                                type: 'click',
-                                handler: function () {
-                                    // FIXME: places.infoPanel is not set anywhere!
-                                    places.infoPanel
-                                        .querySelector('[data-element="big-tip"]')
-                                        .classList.toggle('hidden');
-                                },
-                            }),
+                            // id: events.addEvent({
+                            //     type: 'click',
+                            //     handler: function () {
+                            //         // FIXME: places.infoPanel is not set anywhere!
+                            //         places.infoPanel
+                            //             .querySelector('[data-element="big-tip"]')
+                            //             .classList.toggle('hidden');
+                            //     },
+                            // }),
                         },
                         [spec.ui.label || spec.ui.id]
                     ),

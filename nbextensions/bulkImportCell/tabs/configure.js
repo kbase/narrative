@@ -62,7 +62,6 @@ define([
             const paramBus = buildMessageBus(paramKey, 'Parent comm bus for parameters widget');
             paramBus.on('parameter-changed', (message) => {
                 // TODO: should never get these in the following states....
-                console.log('GOT PARAMETER CHANGED MESSAGE - ' + JSON.stringify(message));
                 updateModelParameterValue(paramKey, 'param', message);
             });
 
@@ -94,6 +93,13 @@ define([
                 console.log('GOT PARAMETER CHANGED MESSAGE - ' + JSON.stringify(message));
                 updateModelParameterValue(fileType, 'filePath', message);
             });
+            paramBus.on('sync-data-model', (message) => {
+                console.log('syncing file path data model');
+                console.log(message);
+                if (message.values) {
+                    model.setItem(['params', fileType, 'filePaths'], message.values);
+                }
+            });
 
             /* Here, we need to
              * 1. Get the list of file path params.
@@ -111,7 +117,7 @@ define([
             return widget
                 .start({
                     node: node,
-                    // appSpec: model.getItem('app.spec'),
+                    appSpec: model.getItem('app.spec'),
                     parameters: spec.getSpec().parameters,
                 })
                 .then(() => {

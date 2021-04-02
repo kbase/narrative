@@ -8,8 +8,7 @@ define([
     'common/cellComponents/fieldTableCellWidget',
     'widgets/appWidgets2/paramResolver',
     'common/runtime',
-    'common/spec',
-], (Promise, $, html, UI, Events, Props, FieldWidget, ParamResolver, Runtime, Spec) => {
+], (Promise, $, html, UI, Events, Props, FieldWidget, ParamResolver, Runtime) => {
     'use strict';
 
     const tag = html.tag,
@@ -24,17 +23,63 @@ define([
         cssBaseClass = 'kb-file-path',
         cssClassType = 'parameter';
 
+    /**
+     *
+     * @param {object} config keys:
+     *  - paramIds: Array of strings, parameter ids
+     *  - bus - the main bus that's used for communicating up to the controlling widget
+     *  - workspaceId - the id of the workspace we should use for searching for objects
+     *  - initialParams - Array of objects. Each item represents a row of parameter values.
+     *    So each item has an object with parameter id -> value
+     * @returns
+     */
     function factory(config) {
+        /**
+         * data model -
+         * just a dict object with row ids (all unique) to their data and row index
+         * also maintain a separate array for row order, with row ids in order
+         * add row =
+         *  - new row of widgets
+         *  - new id = new dict with id -> data, id -> row number
+         *  - O(1)
+         * delete row =
+         *  - remove row of widgets
+         *  - remove id -> data
+         *  - remove dataValues element (splice)
+         *  - renumber rows
+         *  - O(n) (because of renumbering)
+         * get data =
+         *  - O(1)
+         */
+
         const runtime = Runtime.make(),
             // paramsBus is used to communicate from this parameter container to the parent that
             // created and owns it
             paramsBus = config.bus,
             workspaceId = config.workspaceId,
             initialParams = config.initialParams,
-            paramIds = config.paramIds,
+            paramIds = config.paramIds,     // these aren't in the right order, get the right order in start()
             model = Props.make(),
+            /**
+             * dataModel structure:
+             * rowOrder: array of unique ids
+             * data: {
+             *   rowId: {
+             *      index: int, index in rowOrder,
+             *      widgets: array of widgets in layout order
+             *   }
+             * }
+             * dataValues: Array of data values
+             */
+            dataModel = {
+                rowIdToIndex: {},
+                rowOrder: [],
+                dataValues: [],
+                widgets: {}
+            },
+
             paramResolver = ParamResolver.make(),
-            widgets = [],
+            // widgets = [],
             events = Events.make(),
             // this bus comes from
             bus = runtime.bus().makeChannelBus({
@@ -42,7 +87,7 @@ define([
             });
         let container, ui;
 
-        function makeFieldWidget(inputWidget, appSpec, parameterSpec, value, closeParameters) {
+        function makeFieldWidget(rowId, inputWidget, appSpec, parameterSpec, value) {
             const fieldWidget = FieldWidget.make({
                 inputControlFactory: inputWidget,
                 showHint: true,
@@ -53,57 +98,66 @@ define([
                 workspaceId: workspaceId,
                 referenceType: 'name',
                 paramsChannelName: paramsBus.channelName,
-                closeParameters: closeParameters,
             });
+
+            /**
+             * We only expect file input and object output parameters here. These are either the
+             * dynamic dropdown widget (for file lookups) or the newObjectInput widget for the
+             * object outputs. Bus messages that get listened to here reflect that - specialized
+             * messages like "sync-params" are only used by a few inputs, none of which are
+             * expected here.
+             */
 
             // Forward all changed parameters to the controller. That is our main job!
             fieldWidget.bus.on('changed', (message) => {
-                paramsBus.send(
-                    {
-                        parameter: parameterSpec.id,
-                        newValue: message.newValue,
-                        isError: message.isError,
-                    },
-                    {
-                        key: {
-                            type: 'parameter-changed',
-                            parameter: parameterSpec.id,
-                        },
-                    }
-                );
+                const rowIndex = dataModel.rowIdToIndex[rowId];
+                // console.log('got CHANGED message');
+                // console.log(message);
+                // console.log(`updating model for ${rowIndex} ${parameterSpec.id} to ${message.newValue}`)
+                dataModel.dataValues[rowIndex][parameterSpec.id] = message.newValue;
+                // paramsBus.send(
+                //     {
+                //         parameter: parameterSpec.id,
+                //         newValue: message.newValue,
+                //         isError: message.isError,
+                //     },
+                //     {
+                //         key: {
+                //             type: 'parameter-changed',
+                //             parameter: parameterSpec.id,
+                //         },
+                //     }
+                // );
 
                 paramsBus.emit('parameter-changed', {
                     parameter: parameterSpec.id,
                     newValue: message.newValue,
                     isError: message.isError,
+                    rowId: rowId,
+                    rowIndex: dataModel.rowOrder.indexOf(rowId)
                 });
+                console.log(dataModel);
             });
 
-            fieldWidget.bus.on('touched', () => {
-                paramsBus.emit('parameter-touched', {
-                    parameter: parameterSpec.id,
-                });
-            });
-
-            // An input widget may ask for the current model value at any time.
+            // The 'sync' message is a request for the current model value from the
+            // input widget.
             fieldWidget.bus.on('sync', () => {
-                paramsBus.emit('parameter-sync', {
-                    parameter: parameterSpec.id,
-                });
-            });
-
-            fieldWidget.bus.on('sync-params', (message) => {
-                paramsBus.emit('sync-params', {
-                    parameters: message.parameters,
-                    replyToChannel: fieldWidget.bus.channelName,
-                });
-            });
-
-            fieldWidget.bus.on('set-param-state', (message) => {
-                paramsBus.emit('set-param-state', {
-                    id: parameterSpec.id,
-                    state: message.state,
-                });
+                // paramsBus.emit('parameter-sync', {
+                //     parameter: parameterSpec.id,
+                // });
+                const rowIndex = dataModel.rowIdToIndex[rowId];
+                const value = dataModel.dataValues[rowIndex][parameterSpec.id];
+                fieldWidget.bus.send(
+                    {
+                        value: value,
+                    },
+                    {
+                        // This points the update back to a listener on this key
+                        key: {
+                            type: 'update',
+                        },
+                    }
+                );
             });
 
             fieldWidget.bus.respond({
@@ -122,26 +176,6 @@ define([
                 },
             });
 
-            /*
-             * Or in fact any parameter value at any time...
-             */
-            fieldWidget.bus.on('get-parameter-value', (message) => {
-                paramsBus
-                    .request(
-                        {
-                            parameter: message.parameter,
-                        },
-                        {
-                            key: 'get-parameter-value',
-                        }
-                    )
-                    .then((response) => {
-                        bus.emit('parameter-value', {
-                            parameter: response.parameter,
-                        });
-                    });
-            });
-
             fieldWidget.bus.respond({
                 key: {
                     type: 'get-parameter',
@@ -158,6 +192,11 @@ define([
                 },
             });
 
+            /**
+             * This is used by the newObjectInput widget to determine whether there's
+             * any duplicated parameters. Since we, effectively, have a sequence of the same
+             * input ids here, this gets tricky.
+             */
             fieldWidget.bus.respond({
                 key: {
                     type: 'get-parameters',
@@ -197,51 +236,73 @@ define([
             });
 
             // Just pass the update along to the input widget.
-            paramsBus.listen({
-                key: {
-                    type: 'update',
-                    parameter: parameterSpec.id,
-                },
-                handle: function (message) {
-                    fieldWidget.bus.emit('update', {
-                        value: message.value,
-                    });
-                },
-            });
+            // paramsBus.listen({
+            //     key: {
+            //         type: 'update',
+            //         parameter: parameterSpec.id,
+            //     },
+            //     handle: function (message) {
+            //         fieldWidget.bus.emit('update', {
+            //             value: message.value,
+            //         });
+            //     },
+            // });
 
             return fieldWidget;
         }
 
         function updateRowNumbers(filePathRows) {
             filePathRows.forEach((filePathRow, index) => {
-                $(filePathRow)
-                    .find(`.${cssBaseClass}__file_number`)
-                    .text(index + 1);
+                filePathRow.querySelector(`.${cssBaseClass}__file_number`)
+                    .textContent = index + 1;
             });
         }
 
-        function addRow(e) {
-            $(e.target)
-                .prev('table')
+        /**
+         * Responsibilities
+         *  - make row id
+         *  - make initial table row layout
+         *  - set up row parameters
+         *  - make the row
+         * @param {*} params
+         */
+        function addRow(params) {
+            if (!params) {
+                // initialize params
+                params = Object.assign({}, model.getItem('defaultParams'));
+            }
+            const tableElem = ui.getElement(`${cssClassType}-fields`);
+            const rowId = html.genId();
+            dataModel.rowOrder.push(rowId);
+            dataModel.rowIdToIndex[rowId] = dataModel.rowOrder.length - 1;
+            dataModel.dataValues.push(params);
+            $(tableElem)
                 .append(
                     tr({
                         class: `${cssBaseClass}__table_row`,
                         dataElement: `${cssClassType}-fields-row`,
+                        dataRowId: rowId
                     })
                 );
 
             const filePathRows = ui.getElements(`${cssClassType}-fields-row`);
-
-            filePathRows.forEach((filePathRow) => {
-                // Only render row if it does not have the file path widgets as children (aka an empty row)
-                if (filePathRow.childElementCount === 0) {
-                    renderFilePathRow(filePathRow);
-                }
-            });
-
-            updateRowNumbers(filePathRows);
+            return makeFilePathRow(filePathRows[filePathRows.length-1], rowId, params)
+                .then(() => {
+                    updateRowNumbers(filePathRows);
+                    syncDataModel();
+                });
         }
 
+        function syncDataModel() {
+            paramsBus.emit('sync-data-model', {
+                values: dataModel.dataValues
+            });
+        }
+
+        /**
+         * Renders the layout structure without any parameter rows.
+         * @returns {string} layout HTML content
+         */
         function renderLayout() {
             let formContent = [];
 
@@ -255,12 +316,6 @@ define([
                                 class: `${cssBaseClass}__table`,
                                 dataElement: `${cssClassType}-fields`,
                             },
-                            [
-                                tr({
-                                    class: `${cssBaseClass}__table_row`,
-                                    dataElement: `${cssClassType}-fields-row`,
-                                }),
-                            ]
                         ),
                         button(
                             {
@@ -268,8 +323,8 @@ define([
                                 type: 'button',
                                 id: events.addEvent({
                                     type: 'click',
-                                    handler: function (e) {
-                                        addRow(e);
+                                    handler: function () {
+                                        addRow();
                                     },
                                 }),
                             },
@@ -318,6 +373,15 @@ define([
         //     });
         // }
 
+        /**
+         *
+         * @param {object} params
+         * @returns {object}
+         *  - content: string, the html layout
+         *  - layout: array, the parameter ids in the right order
+         *  - view: object where keys = parameter ids, objects = {id: random generated div id where they should get rendered}
+         *  - paramMap: same as params, but a mapping from paramId to the param spec
+         */
         function makeFilePathsLayout(params) {
             const view = {},
                 paramMap = {};
@@ -345,54 +409,37 @@ define([
             return {
                 content: layout,
                 layout: orderedParams,
-                params: params,
                 view: view,
                 paramMap: paramMap,
             };
         }
 
-        // function findPathParams(params) {
-        //     return params.layout
-        //         .filter((id) => {
-        //             const original = params.specs[id].original;
-
-        //             let isFilePathParam = false;
-
-        //             if (original) {
-        //                 //looking for file inputs via the dynamic_dropdown data source
-        //                 if (original.dynamic_dropdown_options) {
-        //                     isFilePathParam =
-        //                         original.dynamic_dropdown_options.data_source === 'ftp_staging';
-        //                 }
-
-        //                 //looking for output fields - these should go in file paths
-        //                 else if (original.text_options && original.text_options.is_output_name) {
-        //                     isFilePathParam = true;
-        //                 }
-        //             }
-
-        //             return isFilePathParam;
-        //         })
-        //         .map((id) => {
-        //             return params.specs[id];
-        //         });
-        // }
-
-        function createFilePathWidget(appSpec, filePathParams, parameterId) {
+        /**
+         *
+         * @param {object} appSpec
+         * @param {object} filePathParams
+         * @param {string} parameterId
+         * @param {any} parameterValue
+         * @returns the created and started widget
+         */
+        function createFilePathWidget(rowId, appSpec, filePathParams, parameterId, parameterValue) {
             const spec = filePathParams.paramMap[parameterId];
             return paramResolver
                 .loadInputControl(spec)
                 .then((inputWidget) => {
                     const widget = makeFieldWidget(
+                        rowId,
                         inputWidget,
                         appSpec,
                         spec,
-                        initialParams[spec.id]
+                        parameterValue
                     );
 
-                    widgets.push(widget);
+                    // widgets.push(widget);
                     return widget.start({
                         node: container.querySelector('#' + filePathParams.view[spec.id].id),
+                    }).then(() => {
+                        return widget;
                     });
                 })
                 .catch((ex) => {
@@ -412,18 +459,37 @@ define([
                 });
         }
 
-        function deleteRow(e) {
-            $(e.target).closest('tr').remove();
-            const filePathRows = ui.getElements(`${cssClassType}-fields-row`);
-            updateRowNumbers(filePathRows);
+        function deleteRow(e, rowId) {
+            return Promise.all(dataModel.widgets[rowId].map((widget) => {
+                return widget.stop();
+            }))
+                .then(() => {
+                    delete dataModel.widgets[rowId];
+                    const rowIdx = dataModel.rowIdToIndex[rowId];
+                    dataModel.dataValues.splice(rowIdx, 1);
+                    dataModel.rowOrder.splice(rowIdx, 1);
+                    delete dataModel.rowIdToIndex[rowId];
+                    // redo the ordering, this is the only O(N) part
+                    dataModel.rowOrder.forEach((rowId, idx) => {
+                        dataModel.rowIdToIndex[rowId] = idx;
+                    });
+                    const filePathRows = ui.getElements(`${cssClassType}-fields-row`);
+                    $(e.target).closest('tr').remove();
+                    updateRowNumbers(filePathRows);
+                    syncDataModel();
+                });
         }
 
-        function renderFilePathRow(filePathRow) {
+        /**
+         *
+         * @param {DOM Element} filePathRow - the container element for a file path row
+         * @param {object} params - key value pair for paramId -> paramValue
+         * @returns
+         */
+        function makeFilePathRow(filePathRow, rowId, params) {
             const appSpec = model.getItem('appSpec');
-            // const params = model.getItem('parameterValues')[0];
             const filePathParams = makeFilePathsLayout(model.getItem('parameterSpecs'));
 
-            // const filePathParams = model.getItem('parameterSpecs');
             if (!filePathParams.layout.length) {
                 return Promise.resolve(
                     ui.getElement(`${cssClassType}s-area`).classList.add('hidden')
@@ -455,7 +521,7 @@ define([
                             id: events.addEvent({
                                 type: 'click',
                                 handler: function (e) {
-                                    deleteRow(e);
+                                    deleteRow(e, rowId);
                                 },
                             }),
                         },
@@ -470,13 +536,26 @@ define([
 
             return Promise.all(
                 filePathParams.layout.map(async (parameterId) => {
-                    await createFilePathWidget(appSpec, filePathParams, parameterId);
+                    return await createFilePathWidget(rowId, appSpec, filePathParams, parameterId, params[parameterId]);
                 })
-            ).then(() => {
+            ).then((widgets) => {
+                dataModel.widgets[rowId] = widgets;
+                console.log(dataModel);
                 events.attachEvents(container);
             });
         }
 
+        /**
+         * Build the layout structure.
+         * Populate with initial parameter rows
+         * Keep parameter rows as data model
+         * Update as changed, and propagate entire parameter list up to parent bus
+         * @param {*} arg - has keys
+         *  node - the containing DOM node
+         *  appSpec - the appSpec for the app having its parameters portrayed here
+         *  parameters - the parameter set with the layout order
+         * @returns
+         */
         function start(arg) {
             container = arg.node;
             ui = UI.make({
@@ -485,41 +564,38 @@ define([
             });
             doAttach();
 
-            console.log(arg.parameters);
             model.setItem('parameterIds', paramIds);
             model.setItem('appSpec', arg.appSpec);
-            // should be a list of file path structures. test?
+            // get the parameter specs in the right order.
             const parameterSpecs = [];
+            const defaultParams = {};
             arg.parameters.layout.forEach((id) => {
                 if (paramIds.includes(id)) {
-                    parameterSpecs.push(arg.parameters.specs[id]);
+                    const paramSpec = arg.parameters.specs[id];
+                    parameterSpecs.push(paramSpec);
+                    defaultParams[id] = paramSpec.data.defaultValue
                 }
             });
             model.setItem('parameterSpecs', parameterSpecs);
-            model.setItem('parameterValues', arg.parameters);
-            // model.setItem('parameterSet')
+            model.setItem('defaultParams', defaultParams);
 
-            paramsBus.on('parameter-changed', (message) => {
-                widgets.forEach((widget) => {
-                    widget.bus.send(message, {
-                        key: {
-                            type: 'parameter-changed',
-                            parameter: message.parameter,
-                        },
-                    });
-                });
-            });
-
-            const filePathRows = ui.getElements(`${cssClassType}-fields-row`);
+            // paramsBus.on('parameter-changed', (message) => {
+            //     widgets.forEach((widget) => {
+            //         widget.bus.send(message, {
+            //             key: {
+            //                 type: 'parameter-changed',
+            //                 parameter: message.parameter,
+            //             },
+            //         });
+            //     });
+            // });
+            model.setItem('parameterValues', initialParams);
 
             return Promise.all(
-                filePathRows.map((filePathRow) => {
-                    renderFilePathRow(filePathRow);
+                initialParams.map((paramRow) => {
+                    addRow(paramRow);
                 })
             )
-                .then(() => {
-                    updateRowNumbers(filePathRows);
-                })
                 .catch((error) => {
                     throw new Error(`Unable to start filePathWidget: ${error}`);
                 });

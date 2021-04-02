@@ -21,6 +21,13 @@ define([
         label: 'File Header',
     };
     describe('test the file type panel', () => {
+        let container;
+        beforeEach(() => {
+            container = document.createElement('div');
+        });
+        afterEach(() => {
+            container.remove();
+        });
         it('should load and start properly with the right available functions', () => {
             const panel = FileTypePanel.make({
                 bus: Runtime.make().bus(),
@@ -31,16 +38,15 @@ define([
             expect(panel.start).toBeDefined();
             expect(panel.stop).toBeDefined();
             expect(panel.updateState).toBeDefined();
-            const node = document.createElement('div');
             return panel
                 .start({
-                    node: node,
+                    node: container,
                     state: {},
                 })
                 .then(() => {
-                    expect(node.innerHTML).toContain(header.label);
+                    expect(container.innerHTML).toContain(header.label);
                     for (const cat of Object.keys(fileTypes)) {
-                        expect(node.innerHTML).toContain(fileTypes[cat].label);
+                        expect(container.innerHTML).toContain(fileTypes[cat].label);
                     }
                 });
         });
@@ -52,17 +58,16 @@ define([
                 header: header,
                 toggleAction: () => {},
             });
-            const node = document.createElement('div');
             return panel
                 .start({
-                    node: node,
+                    node: container,
                     state: {}, // start with no state, nothing selected, nothing completed
                 })
                 .then(() => {
                     const beforeNode = {},
                         beforeIcon = {};
                     for (const cat of Object.keys(fileTypes)) {
-                        const elem = node.querySelector(`[data-element="${cat}"]`);
+                        const elem = container.querySelector(`[data-element="${cat}"]`);
                         beforeNode[cat] = elem.outerHTML;
                         beforeIcon[cat] = elem.querySelector('[data-element="icon"]').outerHTML;
                     }
@@ -70,7 +75,7 @@ define([
                         selected: 'file1',
                     });
                     for (const cat of Object.keys(fileTypes)) {
-                        const elem = node.querySelector(`[data-element="${cat}"]`);
+                        const elem = container.querySelector(`[data-element="${cat}"]`);
                         if (cat === 'file1') {
                             // try to black-box test, so we can just know that it should be
                             // different. (really I shouldn't even use the selector, but
@@ -86,7 +91,7 @@ define([
                         },
                     });
                     for (const cat of Object.keys(fileTypes)) {
-                        const iconElem = node.querySelector(
+                        const iconElem = container.querySelector(
                             `[data-element="${cat}"] [data-element="icon"]`
                         );
                         if (cat === 'file2') {
@@ -106,18 +111,17 @@ define([
                 header: header,
                 toggleAction: clickSpy,
             });
-            const node = document.createElement('div');
             return panel
                 .start({
-                    node: node,
+                    node: container,
                     state: {
                         selected: 'file1',
                     },
                 })
                 .then(() => {
-                    node.querySelector('[data-element="file1"]').click();
+                    container.querySelector('[data-element="file1"]').click();
                     expect(clickSpy).not.toHaveBeenCalled();
-                    node.querySelector('[data-element="file2"]').click();
+                    container.querySelector('[data-element="file2"]').click();
                     expect(clickSpy).toHaveBeenCalled();
                 });
         });
@@ -129,10 +133,9 @@ define([
                 header: header,
                 toggleAction: () => {},
             });
-            const node = document.createElement('div');
             return panel
                 .start({
-                    node: node,
+                    node: container,
                     state: {},
                 })
                 .then(() => {

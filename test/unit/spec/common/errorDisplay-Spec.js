@@ -41,11 +41,16 @@ define(['common/errorDisplay', 'common/props'], (ErrorDisplay, Props) => {
     });
 
     describe('An errorDisplay instance', () => {
-        let errorDisplayInstance;
+        let errorDisplayInstance, container;
         beforeEach(() => {
+            container = document.createElement('div');
             errorDisplayInstance = ErrorDisplay.make({
                 model: validInput,
             });
+        });
+
+        afterEach(() => {
+            container.remove();
         });
 
         it('has a make function that returns an object', () => {
@@ -60,27 +65,34 @@ define(['common/errorDisplay', 'common/props'], (ErrorDisplay, Props) => {
         });
 
         it('should start and render an error', async () => {
-            const node = document.createElement('div');
             cssBaseClass = ErrorDisplay.cssBaseClass;
 
-            await errorDisplayInstance.start({ node: node });
-            expect(node.classList).toContain(`${cssBaseClass}__container`);
-            expect(node.innerHTML).toContain('Error stacktrace');
+            await errorDisplayInstance.start({ node: container });
+            expect(container.classList).toContain(`${cssBaseClass}__container`);
+            expect(container.innerHTML).toContain('Error stacktrace');
         });
 
         it('should clean up after itself', async () => {
-            const node = document.createElement('div');
             cssBaseClass = ErrorDisplay.cssBaseClass;
 
-            await errorDisplayInstance.start({ node: node });
-            expect(node.classList).toContain(`${cssBaseClass}__container`);
+            await errorDisplayInstance.start({ node: container });
+            expect(container.classList).toContain(`${cssBaseClass}__container`);
             await errorDisplayInstance.stop();
-            expect(node.innerHTML).toBe('');
+            expect(container.innerHTML).toBe('');
         });
     });
 
     describe('The ErrorDisplay module should render different errors', () => {
         const invalidArgs = [null, undefined, {}, { this: 'that' }, Props.make({})];
+        let container;
+        beforeEach(() => {
+            container = document.createElement('div');
+        });
+
+        afterEach(() => {
+            container.remove();
+        });
+
         invalidArgs.forEach((input) => {
             it(`should throw an error with invalid input ${JSON.stringify(input)}`, () => {
                 // it is unclear why, but the standard `toThrow` or `toThrowError`
@@ -97,7 +109,7 @@ define(['common/errorDisplay', 'common/props'], (ErrorDisplay, Props) => {
             xit(`should pass a toThrow(Error, /regex/) test with invalid input ${JSON.stringify(
                 input
             )}`, () => {
-                expect(ErrorDisplay.make(input)).toThrow(
+                expect(() => ErrorDisplay.make(input)).toThrow(
                     Error,
                     /Invalid input for the ErrorDisplay module/
                 );
@@ -252,7 +264,6 @@ define(['common/errorDisplay', 'common/props'], (ErrorDisplay, Props) => {
         cssBaseClass = ErrorDisplay.cssBaseClass;
 
         testErrors.forEach((test) => {
-            const node = document.createElement('div');
             const errorDisplayInstance = ErrorDisplay.make({
                 model: test.in,
             });
@@ -274,11 +285,11 @@ define(['common/errorDisplay', 'common/props'], (ErrorDisplay, Props) => {
 
             it(`should present an error of type ${test.desc}`, async () => {
                 const expected = test.outDisplay || test.out;
-                await errorDisplayInstance.start({ node: node });
+                await errorDisplayInstance.start({ node: container });
                 Object.keys(dataToClass)
                     .sort()
                     .forEach((datum) => {
-                        const matchingElements = node.getElementsByClassName(
+                        const matchingElements = container.getElementsByClassName(
                             `${cssBaseClass}__${dataToClass[datum]}`
                         );
                         if (expected[datum]) {

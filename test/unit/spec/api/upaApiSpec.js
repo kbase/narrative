@@ -157,7 +157,6 @@ define(['api/upa', 'narrativeConfig'], (UpaApi, Config) => {
         });
 
         it('Should fail if the workspace id cannot be found.', () => {
-            history.pushState(null, null, '/narrative/');
             Config.config.workspaceId = undefined;
             try {
                 upaApi.deserialize('[1]/2/3');

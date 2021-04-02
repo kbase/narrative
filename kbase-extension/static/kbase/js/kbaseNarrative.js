@@ -333,17 +333,17 @@ define([
      * after there's a visible DOM element for it to render in.
      */
     Narrative.prototype.initSharePanel = function () {
-        let sharePanel = $(
+        const sharePanel = $(
                 '<div style="text-align:center"><br><br><img src="' +
                     Config.get('loading_gif') +
                     '"></div>'
             ),
-            shareWidget = null,
             shareDialog = new BootstrapDialog({
                 title: 'Change Share Settings',
                 body: sharePanel,
                 closeButton: true,
             });
+        let shareWidget = null;
         shareDialog.getElement().one('shown.bs.modal', () => {
             shareWidget = new KBaseNarrativeSharePanel(sharePanel.empty(), {
                 ws_name_or_id: this.getWorkspaceName(),
@@ -713,8 +713,8 @@ define([
             open: function () {
                 const that = $(this);
                 // Upon ENTER, click the OK button.
-                that.find('input[type="text"]').keydown((event) => {
-                    if (event.which === Keyboard.keycodes.enter) {
+                that.find('input[type="text"]').keydown((_event) => {
+                    if (_event.which === Keyboard.keycodes.enter) {
                         that.find('.btn-primary').first().click();
                     }
                 });
@@ -936,11 +936,9 @@ define([
             }).show();
             return;
         }
-        let cell = Jupyter.notebook.get_selected_cell(),
-            nearIdx = 0;
-        if (cell) {
-            nearIdx = Jupyter.notebook.find_cell_index(cell);
-        }
+        const cell = Jupyter.notebook.get_selected_cell(),
+            nearIdx = cell ? Jupyter.notebook.find_cell_index(cell) : 0;
+
         let objInfo = {};
         // If a string, expect a ref, and fetch the info.
         if (typeof obj === 'string') {
@@ -1003,7 +1001,7 @@ define([
                 const newWidget = new KBaseNarrativeMethodCell(
                     $('#' + $(newCell.get_text())[0].id)
                 );
-                var updateStateAndRun = function () {
+                const updateStateAndRun = function () {
                     if (newWidget.$inputWidget) {
                         // if the $inputWidget is not null, we are good to go, so set the parameters
                         newWidget.loadState(parameters);

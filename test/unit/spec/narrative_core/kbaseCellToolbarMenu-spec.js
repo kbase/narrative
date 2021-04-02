@@ -50,7 +50,7 @@ define(['jquery', 'kbaseCellToolbarMenu', 'base/js/namespace'], ($, Widget, Jupy
         };
 
         // This test might better be served through Snapshot Testing
-        // This test might want to check to see if each buttton has the correct fa-* class
+        // This test might want to check to see if each button has the correct fa-* class
         it('Should render the correct app cell buttons in the correct order', () => {
             const testToolBar = mockToolbarDataTestNodes('success', '', 'maximized');
             const expectedButtonOrder = [

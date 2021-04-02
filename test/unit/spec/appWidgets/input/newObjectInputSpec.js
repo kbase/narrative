@@ -66,7 +66,7 @@ define([
 
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('New Object Input tests', () => {
-        let bus, testConfig, runtime, node;
+        let bus, testConfig, runtime, container;
         beforeEach(() => {
             runtime = Runtime.make();
             Mocks.setAuthToken(AUTH_TOKEN);
@@ -75,7 +75,7 @@ define([
                 userId: 'test_user',
             };
 
-            node = document.createElement('div');
+            container = document.createElement('div');
             bus = runtime.bus().makeChannelBus({
                 description: 'select input testing - ' + Math.random().toString(36).substring(2),
             });
@@ -103,6 +103,7 @@ define([
             bus.stop();
             window.kbaseRuntime = null;
             Jupyter.narrative = null;
+            container.remove();
         });
 
         it('should be defined', () => {
@@ -119,12 +120,12 @@ define([
             const widget = NewObjectInput.make(testConfig);
 
             bus.on('sync', () => {
-                const inputElem = node.querySelector('input');
+                const inputElem = container.querySelector('input');
                 expect(inputElem).toBeDefined();
                 done();
             });
             widget.start().then(() => {
-                bus.emit('run', { node: node });
+                bus.emit('run', { node: container });
             });
         });
 
@@ -146,7 +147,7 @@ define([
 
             bus.on('validation', (message) => {
                 expect(message.isValid).toBeTruthy();
-                const inputElem = node.querySelector('input[data-element="input"]');
+                const inputElem = container.querySelector('input[data-element="input"]');
                 if (inputElem) {
                     expect(inputElem.value).toBe('foo');
                     done();
@@ -158,7 +159,7 @@ define([
             });
             const widget = NewObjectInput.make(testConfig);
             widget.start().then(() => {
-                bus.emit('run', { node: node });
+                bus.emit('run', { node: container });
             });
         });
 
@@ -179,7 +180,7 @@ define([
             });
 
             bus.on('validation', () => {
-                const inputElem = node.querySelector('input[data-element="input"]');
+                const inputElem = container.querySelector('input[data-element="input"]');
                 if (inputElem) {
                     if (validationCount < 1) {
                         expect(inputElem.value).toBe('foobarbaz');
@@ -197,7 +198,7 @@ define([
 
             const widget = NewObjectInput.make(testConfig);
             widget.start().then(() => {
-                bus.emit('run', { node: node });
+                bus.emit('run', { node: container });
             });
         });
 
@@ -218,7 +219,7 @@ define([
             });
 
             bus.on('validation', () => {
-                const inputElem = node.querySelector('input[data-element="input"]');
+                const inputElem = container.querySelector('input[data-element="input"]');
                 if (inputElem) {
                     if (validationCount < 1) {
                         expect(inputElem.value).toBe('foobarbaz');
@@ -236,7 +237,7 @@ define([
             });
             const widget = NewObjectInput.make(testConfig);
             widget.start().then(() => {
-                bus.emit('run', { node: node });
+                bus.emit('run', { node: container });
             });
         });
 
@@ -264,14 +265,9 @@ define([
             });
             bus.on('sync', () => {
                 bus.emit('update', { value: inputStr });
-                // TestUtil.wait(500)
-                //     .then(() => {
-                //         let inputElem = node.querySelector('input[data-element="input"]');
-                //         inputElem.dispatchEvent(new Event('change'));
-                //     });
             });
             widget.start().then(() => {
-                bus.emit('run', { node: node });
+                bus.emit('run', { node: container });
             });
         });
 
@@ -292,7 +288,7 @@ define([
             });
 
             bus.on('validation', () => {
-                const inputElem = node.querySelector('input[data-element="input"]');
+                const inputElem = container.querySelector('input[data-element="input"]');
                 if (inputElem) {
                     inputElem.dispatchEvent(new Event('change'));
                 }
@@ -305,7 +301,7 @@ define([
                 done();
             });
             widget.start().then(() => {
-                bus.emit('run', { node: node });
+                bus.emit('run', { node: container });
             });
         });
 
@@ -333,14 +329,9 @@ define([
             });
             bus.on('sync', () => {
                 bus.emit('update', { value: inputStr });
-                // TestUtil.wait(500)
-                //     .then(() => {
-                //         let inputElem = node.querySelector('input[data-element="input"]');
-                //         inputElem.dispatchEvent(new Event('change'));
-                //     });
             });
             widget.start().then(() => {
-                bus.emit('run', { node: node });
+                bus.emit('run', { node: container });
             });
         });
     });

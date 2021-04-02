@@ -114,6 +114,7 @@ define(['kbaseReportView', 'base/js/namespace', 'jquery', 'narrativeMocks', 'nar
     }
 
     describe('The kbaseReportView widget', () => {
+        let container;
         beforeAll(() => {
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',
@@ -126,18 +127,18 @@ define(['kbaseReportView', 'base/js/namespace', 'jquery', 'narrativeMocks', 'nar
 
         beforeEach(function () {
             jasmine.Ajax.install();
-            this.$node = $('<div>');
+            container = document.createElement('div');
+            this.$node = $(container);
             Mocks.mockJsonRpc1Call({
                 url: Config.url('service_wizard'),
                 body: /ServiceWizard.get_service_status/,
                 response: { url: FAKE_SERV_URL },
             });
-            $(document.body).append(this.$node);
         });
 
-        afterEach(function () {
+        afterEach(() => {
             jasmine.Ajax.uninstall();
-            this.$node.remove();
+            container.remove();
         });
 
         it('should be defined', () => {

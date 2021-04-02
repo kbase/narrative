@@ -1,9 +1,11 @@
-define(['jquery', 'userMenu', 'narrativeConfig', 'narrativeMocks'], (
-    $,
-    UserMenu,
-    Config,
-    Mocks
-) => {
+define([
+    'jquery',
+    'userMenu',
+    'narrativeConfig',
+    'narrativeMocks',
+    'util/bootstrapDialog',
+    'testUtil',
+], ($, UserMenu, Config, Mocks, BootstrapDialog, TestUtil) => {
     'use strict';
 
     const TEST_TOKEN = 'fake_token',
@@ -65,29 +67,86 @@ define(['jquery', 'userMenu', 'narrativeConfig', 'narrativeMocks'], (
             });
         });
 
-        it('Should trigger a logout popup when clicking the logout button', () => {
-            const $elem = $('<div>');
-            const userMenu = makeTestUserMenu($elem);
-            return userMenu.start().then(() => {
-                expect(
-                    document.querySelector('.modal [data-element="signout-warning-body"]')
-                ).toBeNull();
-                jasmine.clock().install();
-                // click the signout button
-                $elem.find('#signout-button').click();
-                jasmine.clock().tick(2000);
-                // expect to see the modal appear now
-                expect(
-                    document.querySelector('.modal [data-element="signout-warning-body"]')
-                ).not.toBeNull();
-                // click the cancel button (it has the default button style)
-                document.querySelector('a[data-element="cancel-signout"]').click();
-                jasmine.clock().tick(2000);
-                // expect the modal to go away
-                expect(
-                    document.querySelector('.modal [data-element="signout-warning-body"]')
-                ).toBeNull();
-                jasmine.clock().uninstall();
+        // logout popups
+        const logoutTests = [
+            {
+                desc: 'simulate cancelling signout',
+                button: 'a[data-element="cancel-signout"]',
+                // there should be no 'logout.kbase' event
+                finalTest: (callArgs) => {
+                    return callArgs.every((args) => {
+                        return typeof args[0] !== 'string' || args[0] !== 'logout.kbase';
+                    });
+                },
+            },
+            {
+                desc: 'simulate signout',
+                button: 'a[data-element="signout"]',
+                // the 'logout.kbase' event should have been triggered
+                finalTest: (callArgs) => {
+                    return callArgs.some((args) => {
+                        return (
+                            typeof args[0] === 'string' &&
+                            args[0] === 'logout.kbase' &&
+                            args[1] === true
+                        );
+                    });
+                },
+            },
+        ];
+
+        logoutTests.forEach((test) => {
+            it(`should ${test.desc} when clicking logout and then the modal button`, () => {
+                const $elem = $('<div>');
+                const userMenu = makeTestUserMenu($elem);
+                const modalQuerySelector = '.modal [data-element="signout-warning-body"]';
+
+                spyOn(BootstrapDialog.prototype, 'show').and.callThrough();
+                spyOn(BootstrapDialog.prototype, 'hide').and.callThrough();
+                spyOn(BootstrapDialog.prototype, 'destroy').and.callThrough();
+                spyOn($.fn, 'trigger').and.callThrough();
+
+                return userMenu
+                    .start()
+                    .then(() => {
+                        expect(document.querySelector(modalQuerySelector)).toBeNull();
+
+                        // click the signout button
+                        $elem.find('#signout-button').click();
+                        expect(BootstrapDialog.prototype.show).toHaveBeenCalled();
+                        expect(BootstrapDialog.prototype.hide).not.toHaveBeenCalled();
+                        expect(BootstrapDialog.prototype.destroy).not.toHaveBeenCalled();
+                        return TestUtil.waitForElement(document.body, modalQuerySelector);
+                    })
+                    .then(() => {
+                        // expect to see the modal appear now
+                        expect(document.querySelector(modalQuerySelector)).not.toBeNull();
+
+                        // click the appropriate button for this test
+                        document.querySelector(test.button).click();
+                        expect(BootstrapDialog.prototype.hide).toHaveBeenCalled();
+
+                        // .modal should have style display: none
+                        return TestUtil.waitForElementState(document.body, () => {
+                            return document.querySelector('.modal').style.display === 'none';
+                        });
+                    })
+                    .then(() => {
+                        // wait for the modal to be removed
+                        return TestUtil.waitForElementState(document.body, () => {
+                            return document.querySelectorAll('.modal').length === 0;
+                        });
+                    })
+                    .then(() => {
+                        expect(BootstrapDialog.prototype.destroy).toHaveBeenCalled();
+                        // expect the modal to go away
+                        expect(document.querySelector(modalQuerySelector)).toBeNull();
+
+                        // get all the args from every call to $.fn.trigger
+                        const callArgs = $.fn.trigger.calls.allArgs();
+                        // check through the args to ensure that the test condition was matched
+                        expect(test.finalTest(callArgs)).toBeTrue();
+                    });
             });
         });
     });

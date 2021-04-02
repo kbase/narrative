@@ -9,6 +9,7 @@ define([
     'use strict';
 
     describe('test the bulk import cell configure tab', () => {
+        let bus, container;
         beforeAll(() => {
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',
@@ -20,15 +21,20 @@ define([
             };
         });
 
+        beforeEach(() => {
+            bus = Runtime.make().bus();
+            container = document.createElement('div');
+        });
+
+        afterEach(() => {
+            container.remove();
+        });
+
         afterAll(() => {
             Jupyter.narrative = null;
         });
 
         it('should start and render itself', () => {
-            const bus = Runtime.make().bus();
-            const node = document.createElement('div');
-            document.getElementsByTagName('body')[0].appendChild(node);
-
             const model = Props.make({
                 data: TestAppObject,
                 onUpdate: () => {},
@@ -40,19 +46,16 @@ define([
             const configure = ConfigureTab.make({ bus, model, spec, fileType: 'fastq_reads' });
             return configure
                 .start({
-                    node: node,
+                    node: container,
                 })
                 .then(() => {
                     // just make sure it renders the "File Paths" and "Parameters" headers
-                    expect(node.innerHTML).toContain('Parameters');
-                    expect(node.innerHTML).toContain('File Paths');
+                    expect(container.innerHTML).toContain('Parameters');
+                    expect(container.innerHTML).toContain('File Paths');
                 });
         });
 
         it('should stop itself and empty the node it was in', () => {
-            const bus = Runtime.make().bus();
-            const node = document.createElement('div');
-            document.getElementsByTagName('body')[0].appendChild(node);
             const model = Props.make({
                 data: TestAppObject,
                 onUpdate: () => {},
@@ -64,15 +67,15 @@ define([
             const configure = ConfigureTab.make({ bus, model, spec, fileType: 'fastq_reads' });
             return configure
                 .start({
-                    node: node,
+                    node: container,
                 })
                 .then(() => {
                     // just make sure it renders the "File Paths" and "Parameters" headers
-                    expect(node.innerHTML).toContain('Parameters');
+                    expect(container.innerHTML).toContain('Parameters');
                     return configure.stop();
                 })
                 .then(() => {
-                    expect(node.innerHTML).toEqual('');
+                    expect(container.innerHTML).toEqual('');
                 });
         });
     });

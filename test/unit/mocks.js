@@ -52,7 +52,6 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
         };
 
         $cellContainer.append($toolbar).append(mockCell.input).append(mockCell.output);
-        $('body').append($cellContainer);
         return mockCell;
     }
 

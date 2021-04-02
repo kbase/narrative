@@ -11,6 +11,7 @@ define([
         stagingUrl = Config.url('staging_api_url') + '/upload';
 
     describe('Test the fileUploadWidget', () => {
+        let container;
         beforeEach(function () {
             jasmine.Ajax.install();
             Jupyter.narrative = {
@@ -25,8 +26,8 @@ define([
                 },
                 showDataOverlay: () => {},
             };
-            this.node = document.createElement('div');
-            this.fuWidget = new FileUploadWidget($(this.node), {
+            container = document.createElement('div');
+            this.fuWidget = new FileUploadWidget($(container), {
                 path: '/',
                 userInfo: {
                     user: fakeUser,
@@ -54,6 +55,7 @@ define([
         afterEach(() => {
             jasmine.Ajax.requests.reset();
             jasmine.Ajax.uninstall();
+            container.remove();
         });
 
         it('Should be able to set and retrieve the path', () => {
@@ -184,8 +186,6 @@ define([
         });
 
         it('Should contain a cancel warning button', function (done) {
-            document.body.appendChild(this.node);
-
             this.fuWidget.dropzone.on('sending', () => {
                 const $cancelButton = this.fuWidget.$elem.find('.cancel');
                 expect($cancelButton).toBeDefined();

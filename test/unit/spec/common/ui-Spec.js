@@ -150,27 +150,27 @@ define(['common/ui'], (UI) => {
 
     describe('the loading function', () => {
         const requiredClasses = ['fa', 'fa-spinner', 'fa-pulse', 'fa-fw'];
-        let div;
+        let container;
 
         beforeEach(() => {
-            div = document.createElement('div');
-        });
-        afterEach(() => {
-            div.remove();
+            container = document.createElement('div');
         });
 
+        afterEach(() => {
+            container.remove();
+        });
         it('should produce a spinning FontAwesome icon without any args', () => {
-            div.innerHTML = UI.loading();
-            expect(div.getElementsByTagName('span').length).toEqual(1);
-            expect(div.getElementsByTagName('span')[0].childNodes.length).toEqual(1);
-            expect(div.getElementsByTagName('i').length).toEqual(1);
-            const spinner = div.getElementsByTagName('i')[0];
+            container.innerHTML = UI.loading();
+            expect(container.getElementsByTagName('span').length).toEqual(1);
+            expect(container.getElementsByTagName('span')[0].childNodes.length).toEqual(1);
+            expect(container.getElementsByTagName('i').length).toEqual(1);
+            const spinner = container.getElementsByTagName('i')[0];
             requiredClasses.forEach((cl) => {
                 expect(spinner).toHaveClass(cl);
             });
             // there should be no text content
             expect(spinner.textContent).not.toMatch(/\S/);
-            expect(div.getElementsByTagName('span')[0].textContent).not.toMatch(/\S/);
+            expect(container.getElementsByTagName('span')[0].textContent).not.toMatch(/\S/);
         });
 
         it('should produce a different spinning icon with args', () => {
@@ -185,10 +185,10 @@ define(['common/ui'], (UI) => {
                     class: iconClass,
                 }),
                 allClasses = requiredClasses.concat([`fa-${iconSize}`, iconClass]);
-            div.innerHTML = iconStr;
+            container.innerHTML = iconStr;
             expect(iconStr).toMatch(/style.*?color.*?deepskyblue/);
-            expect(div.textContent).toContain(`${iconMessage}...`);
-            const spinner = div.getElementsByTagName('i')[0];
+            expect(container.textContent).toContain(`${iconMessage}...`);
+            const spinner = container.getElementsByTagName('i')[0];
             allClasses.forEach((cl) => {
                 expect(spinner).toHaveClass(cl);
             });

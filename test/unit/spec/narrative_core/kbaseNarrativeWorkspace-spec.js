@@ -3,20 +3,22 @@ define([
     'jquery',
     'base/js/namespace',
     'narrativeMocks',
+    'testUtil',
     'common/runtime',
     'json!/test/data/NarrativeTest.test_simple_inputs.spec.json',
-], (KBaseNarrativeWorkspace, $, Jupyter, Mocks, Runtime, AppSpec) => {
+], (KBaseNarrativeWorkspace, $, Jupyter, Mocks, TestUtil, Runtime, AppSpec) => {
     'use strict';
     describe('Test the kbaseNarrativeWorkspace widget', () => {
-        let $node;
+        let $node, $container;
         beforeAll(() => {
             $(document).off();
         });
 
         beforeEach(() => {
             jasmine.Ajax.install();
-            $node = $('div');
-            $('body').append($node);
+            $node = $(document.createElement('div'));
+            $container = $(document.createElement('div')).append($node);
+            $('body').append($container);
             Jupyter.notebook = Mocks.buildMockNotebook({
                 readOnly: false,
             });
@@ -41,7 +43,7 @@ define([
 
         afterEach(() => {
             jasmine.Ajax.uninstall();
-            $node.detach();
+            $container.remove();
             $(document).off();
         });
 
@@ -80,8 +82,10 @@ define([
         });
 
         it('buildAppCodeCell should fail without a spec', () => {
+            spyOn(window, 'alert');
             const widget = new KBaseNarrativeWorkspace($node);
             expect(widget.buildAppCodeCell()).toBeUndefined();
+            expect(window.alert).toHaveBeenCalled();
         });
 
         it('buildViewerCell should work by direct call', () => {
@@ -136,7 +140,7 @@ define([
                 rebuild_all: () => {},
             };
             // included in the main templates, mocked here
-            $('body').append('<button id="kb-view-mode">');
+            $container.append('<button id="kb-view-mode">');
             const widget = new KBaseNarrativeWorkspace($node);
             expect(widget.narrativeIsReadOnly).toBeFalsy();
             expect(widget.uiMode).toEqual('edit');
@@ -178,21 +182,27 @@ define([
             widget.deleteCell(0);
         });
 
-        it('should delete KBase extension cells by direct call by dialog', (done) => {
+        it('should delete KBase extension cells by direct call by dialog', async () => {
             Jupyter.notebook = Mocks.buildMockNotebook({
                 readOnly: false,
-                deleteCallback: () => {
-                    expect(Jupyter.notebook.delete_cell).toHaveBeenCalled();
-                    done();
-                },
             });
-            spyOn(Jupyter.notebook, 'delete_cell').and.callThrough();
             Jupyter.notebook.insert_cell_above('code', 0);
             const widget = new KBaseNarrativeWorkspace($node);
             widget.deleteCell(0);
-            // that makes a popup happen. find and click the element.
-            document.querySelector('[data-element="modal"] [data-element="yes"]').click();
-            // that click should trigger deleteCallback, and this is done. Yay!
+
+            // 'deleteCell' triggers an 'Are you sure?' popup. Wait for the 'Yes' button to appear
+            const yesButton = '[data-element="modal"] [data-element="yes"]';
+            await TestUtil.waitForElement(document.body, yesButton);
+
+            // spy on the notebook's `delete_cell` function, which is triggered by clicking the 'Yes' button
+            return new Promise((resolve) => {
+                spyOn(Jupyter.notebook, 'delete_cell').and.callFake(() => {
+                    expect(Jupyter.notebook.delete_cell).toHaveBeenCalled();
+                    resolve();
+                });
+                // this click should trigger delete callback, and this is done. Yay!
+                document.querySelector(yesButton).click();
+            });
         });
 
         it('should delete cells by event', (done) => {

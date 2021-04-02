@@ -5,7 +5,8 @@ define(['widgets/appWidgets2/input/intInput', 'common/runtime'], (IntInput, Runt
     describe('Test int data input widget', () => {
         let testConfig = {},
             runtime,
-            bus;
+            bus,
+            container;
 
         beforeEach(() => {
             runtime = Runtime.make();
@@ -30,11 +31,13 @@ define(['widgets/appWidgets2/input/intInput', 'common/runtime'], (IntInput, Runt
                 },
                 channelName: bus.channelName,
             };
+            container = document.createElement('div');
         });
 
         afterEach(() => {
             bus.stop();
             window.kbaseRuntime = null;
+            container.remove();
         });
 
         it('should be defined', () => {
@@ -51,18 +54,17 @@ define(['widgets/appWidgets2/input/intInput', 'common/runtime'], (IntInput, Runt
 
         it('should start and stop properly without initial value', (done) => {
             const widget = IntInput.make(testConfig);
-            const node = document.createElement('div');
             widget
-                .start({ node: node })
+                .start({ node: container })
                 .then(() => {
-                    expect(node.childElementCount).toBeGreaterThan(0);
-                    const input = node.querySelector('input[data-type="int"]');
+                    expect(container.childElementCount).toBeGreaterThan(0);
+                    const input = container.querySelector('input[data-type="int"]');
                     expect(input).toBeDefined();
                     expect(input.getAttribute('value')).toBeNull();
                     return widget.stop();
                 })
                 .then(() => {
-                    expect(node.childElementCount).toBe(0);
+                    expect(container.childElementCount).toBe(0);
                     done();
                 });
         });
@@ -70,18 +72,17 @@ define(['widgets/appWidgets2/input/intInput', 'common/runtime'], (IntInput, Runt
         it('should start and stop properly with initial value', (done) => {
             testConfig.initialValue = 10;
             const widget = IntInput.make(testConfig);
-            const node = document.createElement('div');
             widget
-                .start({ node: node })
+                .start({ node: container })
                 .then(() => {
-                    expect(node.childElementCount).toBeGreaterThan(0);
-                    const input = node.querySelector('input[data-type="int"]');
+                    expect(container.childElementCount).toBeGreaterThan(0);
+                    const input = container.querySelector('input[data-type="int"]');
                     expect(input).toBeDefined();
                     expect(input.getAttribute('value')).toBe(String(testConfig.initialValue));
                     return widget.stop();
                 })
                 .then(() => {
-                    expect(node.childElementCount).toBe(0);
+                    expect(container.childElementCount).toBe(0);
                     done();
                 });
         });
@@ -92,9 +93,8 @@ define(['widgets/appWidgets2/input/intInput', 'common/runtime'], (IntInput, Runt
                 done();
             });
             const widget = IntInput.make(testConfig);
-            const node = document.createElement('div');
-            widget.start({ node: node }).then(() => {
-                const input = node.querySelector('input[data-type="int"]');
+            widget.start({ node: container }).then(() => {
+                const input = container.querySelector('input[data-type="int"]');
                 input.setAttribute('value', 1);
                 input.dispatchEvent(new Event('change'));
             });
@@ -102,13 +102,12 @@ define(['widgets/appWidgets2/input/intInput', 'common/runtime'], (IntInput, Runt
 
         xit('should update model properly with keyup/touch event', (done) => {
             const widget = IntInput.make(testConfig);
-            const node = document.createElement('div');
             bus.on('validation', (message) => {
                 expect(message.isValid).toBeFalsy();
                 done();
             });
-            widget.start({ node: node }).then(() => {
-                const input = node.querySelector('input[data-type="int"]');
+            widget.start({ node: container }).then(() => {
+                const input = container.querySelector('input[data-type="int"]');
                 input.value = 'foo';
                 input.setAttribute('value', 'foo');
                 input.dispatchEvent(new KeyboardEvent('keyup', { key: 3 }));
@@ -117,14 +116,13 @@ define(['widgets/appWidgets2/input/intInput', 'common/runtime'], (IntInput, Runt
 
         it('should catch invalid string input', (done) => {
             const widget = IntInput.make(testConfig);
-            const node = document.createElement('div');
             bus.on('validation', (msg) => {
                 expect(msg.isValid).toBeFalsy();
                 expect(msg.diagnosis).toBe('invalid');
                 done();
             });
-            widget.start({ node: node }).then(() => {
-                const input = node.querySelector('input[data-type="int"]');
+            widget.start({ node: container }).then(() => {
+                const input = container.querySelector('input[data-type="int"]');
                 input.setAttribute('value', 'abracadabra');
                 input.dispatchEvent(new Event('change'));
             });
@@ -132,14 +130,13 @@ define(['widgets/appWidgets2/input/intInput', 'common/runtime'], (IntInput, Runt
 
         it('should catch invalid float input', (done) => {
             const widget = IntInput.make(testConfig);
-            const node = document.createElement('div');
             bus.on('validation', (msg) => {
                 expect(msg.isValid).toBeFalsy();
                 expect(msg.diagnosis).toBe('invalid');
                 done();
             });
-            widget.start({ node: node }).then(() => {
-                const input = node.querySelector('input[data-type="int"]');
+            widget.start({ node: container }).then(() => {
+                const input = container.querySelector('input[data-type="int"]');
                 input.setAttribute('value', 12345.6);
                 input.dispatchEvent(new Event('change'));
             });
@@ -148,16 +145,15 @@ define(['widgets/appWidgets2/input/intInput', 'common/runtime'], (IntInput, Runt
         it('should show message when configured, valid input', (done) => {
             testConfig.showOwnMessages = true;
             const widget = IntInput.make(testConfig);
-            const node = document.createElement('div');
             bus.on('changed', (value) => {
                 expect(value).toEqual({ newValue: 5 });
                 // message node will be empty
-                const errorMsg = node.querySelector('[data-element="message"]');
+                const errorMsg = container.querySelector('[data-element="message"]');
                 expect(errorMsg.innerHTML).toBe('');
                 done();
             });
-            widget.start({ node: node }).then(() => {
-                const input = node.querySelector('input[data-type="int"]');
+            widget.start({ node: container }).then(() => {
+                const input = container.querySelector('input[data-type="int"]');
                 input.setAttribute('value', 5);
                 input.dispatchEvent(new Event('change'));
             });
@@ -166,11 +162,10 @@ define(['widgets/appWidgets2/input/intInput', 'common/runtime'], (IntInput, Runt
         it('should show message when configured, invalid input', (done) => {
             testConfig.showOwnMessages = true;
             const widget = IntInput.make(testConfig);
-            const node = document.createElement('div');
             bus.on('changed', (value) => {
                 expect(value).toEqual({ newValue: 123456 });
                 // check for an error message in the node
-                const errorMsg = node.querySelector('[data-element="message"]');
+                const errorMsg = container.querySelector('[data-element="message"]');
                 expect(errorMsg.innerHTML).toContain('ERROR');
             });
             bus.on('validation', (msg) => {
@@ -178,8 +173,8 @@ define(['widgets/appWidgets2/input/intInput', 'common/runtime'], (IntInput, Runt
                 expect(msg.diagnosis).toBe('invalid');
                 done();
             });
-            widget.start({ node: node }).then(() => {
-                const input = node.querySelector('input[data-type="int"]');
+            widget.start({ node: container }).then(() => {
+                const input = container.querySelector('input[data-type="int"]');
                 // this value is out of the allowed range
                 input.setAttribute('value', 123456);
                 input.dispatchEvent(new Event('change'));
@@ -191,8 +186,7 @@ define(['widgets/appWidgets2/input/intInput', 'common/runtime'], (IntInput, Runt
         // => extremely hard to test
         xit('should respond to update command', () => {
             const widget = IntInput.make(testConfig);
-            const node = document.createElement('div');
-            widget.start({ node: node }).then(() => {
+            widget.start({ node: container }).then(() => {
                 bus.emit('update', { value: 12345 });
             });
         });
@@ -202,8 +196,7 @@ define(['widgets/appWidgets2/input/intInput', 'common/runtime'], (IntInput, Runt
         // => extremely hard to test
         xit('should respond to reset command', () => {
             const widget = IntInput.make(testConfig);
-            const node = document.createElement('div');
-            widget.start({ node: node }).then(() => {
+            widget.start({ node: container }).then(() => {
                 bus.emit('reset-to-defaults');
             });
         });

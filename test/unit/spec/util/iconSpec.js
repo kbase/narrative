@@ -146,6 +146,9 @@ define(['util/icon', 'narrativeConfig', 'jquery'], (Icon, narrativeConfig, $) =>
                 container = document.createElement('div');
                 $jqueryContainer = $('<div>');
             });
+            afterEach(() => {
+                container.remove();
+            });
 
             it('can build an icon with args: ' + test.args.join(', '), () => {
                 container.innerHTML = Icon.makeDataIcon(...test.args);
@@ -224,6 +227,9 @@ define(['util/icon', 'narrativeConfig', 'jquery'], (Icon, narrativeConfig, $) =>
 
             beforeEach(() => {
                 container = document.createElement('div');
+            });
+            afterEach(() => {
+                container.remove();
             });
 
             describe(`The Icon method ${methodName}`, () => {

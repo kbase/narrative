@@ -24,11 +24,16 @@ define([
     });
 
     describe('The job status tab instance', () => {
+        let container;
         beforeEach(function () {
-            this.node = document.createElement('div');
+            container = document.createElement('div');
             this.jobStatusTabInstance = JobStatusTab.make({
                 model: model,
             });
+        });
+
+        afterEach(() => {
+            container.remove();
         });
 
         it('has a make function that returns an object', function () {
@@ -44,14 +49,14 @@ define([
         });
 
         it('should start the job status tab widget', async function () {
-            expect(this.node.classList.length).toBe(0);
+            expect(container.classList.length).toBe(0);
             spyOn(JobStateList, 'make').and.callThrough();
-            await this.jobStatusTabInstance.start({ node: this.node });
+            await this.jobStatusTabInstance.start({ node: container });
 
-            expect(this.node).toHaveClass(jobTabContainerClass);
-            expect(this.node.childNodes.length).toBe(1);
+            expect(container).toHaveClass(jobTabContainerClass);
+            expect(container.childNodes.length).toBe(1);
 
-            const [firstChild] = this.node.childNodes;
+            const [firstChild] = container.childNodes;
             expect(firstChild).toHaveClass('kb-job__container');
             expect(firstChild.getAttribute('data-element')).toEqual('kb-job-list-wrapper');
 
@@ -59,15 +64,15 @@ define([
         });
 
         it('should stop when requested to', async function () {
-            expect(this.node.classList.length).toBe(0);
+            expect(container.classList.length).toBe(0);
             spyOn(JobStateList, 'make').and.callThrough();
 
-            await this.jobStatusTabInstance.start({ node: this.node });
-            expect(this.node).toHaveClass(jobTabContainerClass);
+            await this.jobStatusTabInstance.start({ node: container });
+            expect(container).toHaveClass(jobTabContainerClass);
             expect(JobStateList.make).toHaveBeenCalled();
 
             await this.jobStatusTabInstance.stop();
-            expect(this.node.innerHTML).toBe('');
+            expect(container.innerHTML).toBe('');
         });
     });
 });

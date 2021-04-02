@@ -16,7 +16,7 @@ define([
         TEST_USER = 'some_user';
 
     describe('Test the kbaseNarrative module', () => {
-        const loginDiv = $('<div>');
+        let container;
         let narr;
 
         beforeAll(() => {
@@ -99,7 +99,8 @@ define([
 
             // The NarrativeLogin.init call invokes both of the above token/user profile calls.
             // It's called before the creation of the Narrative object. So that needs to happen here.
-            await NarrativeLogin.init(loginDiv);
+            container = document.createElement('div');
+            await NarrativeLogin.init($(container));
             narr = new Narrative();
         });
 
@@ -114,6 +115,7 @@ define([
             NarrativeLogin.destroy();
             Mocks.clearAuthToken();
             // clear all jquery event listeners set up by either NarrativeLogin or anything else
+            container.remove();
             $(document).off();
             $([Jupyter.events]).off();
         });
@@ -132,11 +134,17 @@ define([
         });
 
         it('init should fail as expected when the job connection fails', (done) => {
+            // spy on KBFatal and prevent an error dialog from being created
+            spyOn(window, 'KBFatal');
             Jupyter.notebook.kernel.comm_info = () => {
                 throw new Error('an error happened');
             };
             const jobsReadyCallback = (err) => {
+                expect(window.KBFatal).toHaveBeenCalled();
+                // returns an object in the form {error: ErrorObject}
                 expect(err).toBeDefined();
+                expect(err.error).toEqual(jasmine.any(Error));
+                expect(err.error.toString()).toEqual('Error: an error happened');
                 done();
             };
             narr.init(jobsReadyCallback);

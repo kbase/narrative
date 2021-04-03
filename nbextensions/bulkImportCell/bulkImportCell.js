@@ -267,12 +267,12 @@ define([
             const paramIds = appSpec.parameters.map((param) => param.id);
             const fileParams = appSpec.parameters.filter((param) => {
                 // if we're including output, and this is an output object, always pass the filter.
-                if (param.text_options &&
-                    param.text_options.is_output_name) {
+                if (param.text_options && param.text_options.is_output_name) {
                     return true;
                 }
 
-                const isFilePathParam = param.dynamic_dropdown_options &&
+                const isFilePathParam =
+                    param.dynamic_dropdown_options &&
                     param.dynamic_dropdown_options.data_source === 'ftp_staging';
 
                 return isFilePathParam;
@@ -282,7 +282,6 @@ define([
             const nonFileParamIds = paramIds.filter((id) => !fileParamIdSet.has(id));
             return [fileParamIds, nonFileParamIds];
         }
-
 
         /**
          * Does the initial pass on newly created cells to initialize its metadata and get it
@@ -321,7 +320,7 @@ define([
                 const spec = appSpecs[typesToFiles[fileType].appId];
                 initialParams[fileType] = {
                     filePaths: [],
-                    params: {}
+                    params: {},
                 };
                 [fileParamIds[fileType], otherParamIds[fileType]] = filterFileParameters(spec);
                 initialParams[fileType].filePaths = typesToFiles[fileType].files.map(
@@ -330,7 +329,8 @@ define([
                             fileParams[paramId] = inputFile;
                             return fileParams;
                         }, {});
-                    });
+                    }
+                );
                 spec.parameters.forEach((param) => {
                     if (otherParamIds[fileType].includes(param.id)) {
                         initialParams[fileType].params[param.id] = param.default_values[0];

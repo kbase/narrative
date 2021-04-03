@@ -37,12 +37,16 @@ define(['util/jobLogViewer', 'common/runtime'], (JobLogViewer, Runtime) => {
 
         it('Should fail to start without a node', async () => {
             const jobLogViewerInstance = JobLogViewer.make();
-            await expectAsync(jobLogViewerInstance.start({jobId: 'fakeJob'})).toBeRejectedWithError(/Requires a node to start/);
+            await expectAsync(
+                jobLogViewerInstance.start({ jobId: 'fakeJob' })
+            ).toBeRejectedWithError(/Requires a node to start/);
         });
 
         it('Should fail to start without a jobId', async () => {
             const jobLogViewerInstance = JobLogViewer.make();
-            await expectAsync(jobLogViewerInstance.start({node: hostNode})).toBeRejectedWithError(/Requires a job id to start/);
+            await expectAsync(jobLogViewerInstance.start({ node: hostNode })).toBeRejectedWithError(
+                /Requires a job id to start/
+            );
         });
 
         it('Should start as expected with inputs, and be stoppable and detachable', async () => {

@@ -44,7 +44,11 @@ define([
             });
 
             const spec = Spec.make({
-                appSpec: model.getItem(['app', 'specs', 'kb_uploadmethods/import_fastq_sra_as_reads_from_staging']),
+                appSpec: model.getItem([
+                    'app',
+                    'specs',
+                    'kb_uploadmethods/import_fastq_sra_as_reads_from_staging',
+                ]),
             });
 
             this.parameters = spec.getSpec().parameters;

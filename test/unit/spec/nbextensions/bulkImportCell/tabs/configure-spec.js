@@ -35,7 +35,11 @@ define([
                 onUpdate: () => {},
             });
             const spec = Spec.make({
-                appSpec: model.getItem(['app', 'specs', 'kb_uploadmethods/import_fastq_sra_as_reads_from_staging']),
+                appSpec: model.getItem([
+                    'app',
+                    'specs',
+                    'kb_uploadmethods/import_fastq_sra_as_reads_from_staging',
+                ]),
             });
 
             const configure = ConfigureTab.make({ bus, model, spec, fileType: 'fastq_reads' });
@@ -56,7 +60,11 @@ define([
                 onUpdate: () => {},
             });
             const spec = Spec.make({
-                appSpec: model.getItem(['app', 'specs', 'kb_uploadmethods/import_fastq_sra_as_reads_from_staging']),
+                appSpec: model.getItem([
+                    'app',
+                    'specs',
+                    'kb_uploadmethods/import_fastq_sra_as_reads_from_staging',
+                ]),
             });
 
             const configure = ConfigureTab.make({ bus, model, spec, fileType: 'fastq_reads' });

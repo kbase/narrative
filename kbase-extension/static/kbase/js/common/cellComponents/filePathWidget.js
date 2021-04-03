@@ -34,54 +34,85 @@ define([
      * @returns
      */
     function factory(config) {
-        /**
-         * data model -
-         * just a dict object with row ids (all unique) to their data and row index
-         * also maintain a separate array for row order, with row ids in order
-         * add row =
-         *  - new row of widgets
-         *  - new id = new dict with id -> data, id -> row number
-         *  - O(1)
-         * delete row =
-         *  - remove row of widgets
-         *  - remove id -> data
-         *  - remove dataValues element (splice)
-         *  - renumber rows
-         *  - O(n) (because of renumbering)
-         * get data =
-         *  - O(1)
-         */
-
-        console.log('MAKING FPW WITH CONFIG');
-        console.log(JSON.stringify(config, 4));
         const runtime = Runtime.make(),
             // paramsBus is used to communicate from this parameter container to the parent that
             // created and owns it
             paramsBus = config.bus,
             workspaceId = config.workspaceId,
             initialParams = config.initialParams,
-            paramIds = config.paramIds,     // these aren't in the right order, get the right order in start()
+            paramIds = config.paramIds, // these aren't in the right order, get the right order in start()
             model = Props.make(),
             /**
+             * Internal data model
+             * The data model / view model is a structure that maintains the overall internal
+             * state of this widget. It holds:
+             *  - all input widgets in the cell
+             *  - all values, kept in an order that's useful for the cell
+             *  - all row information, in a way that's (generally) easily accessible and easy to
+             *    update.
+             *  - each row gets its own immutible unique id, which is used for widget communication and
+             *    management
+             *  - row order, since we can delete from anywhere, can shift and wobble, so that's not helpful.
+             *    instead, we map from rowId -> row order, and update that on insertions and deletions.
+             * In general, we need to support 3 actions.
+             * 1. add row
+             *  - rows get added to the end, new id, new object for data. O(1)
+             * 2. update data
+             *  - when a field widget updates its data, we get a message with row id, parameter id, and new
+             *    value. Mapping from row id -> row order makes this O(1)
+             * 3. push data to main widget (configure tab)
+             *  - we maintain data in the right order with the right set of values, so this is O(1)
+             * 4. delete row
+             *  - rows can get deleted from anywhere, which breaks all the ordering. We need to run a loop
+             *    to figure out the new order after the one that was deleted, which makes this O(n)
+             */
+
+            /**
              * dataModel structure:
-             * rowOrder: array of unique ids
-             * data: {
-             *   rowId: {
-             *      index: int, index in rowOrder,
-             *      widgets: array of widgets in layout order
+             * This is a simple object with a few keys:
+             * rowOrder: array of unique ids, this is the row ids in the order they should appear on
+             *   screen, thus the order the data should be stored in
+             * rowIdToIndex: mapping from unique rowId to the index in rowOrder. Mainly used on row
+             *   updates
+             * dataValues: an array of key-value-pairs, parameter id -> parameter value
+             * widgets: mapping from rowId to the array of widget objects in that row, so we can stop
+             *   and remove them all.
+             *
+             * example:
+             * {
+             *   rowOrder: ['rowA', 'rowB'],
+             *   rowIdToIndex: {
+             *      rowA: 0,
+             *      rowB: 1
+             *   },
+             *   dataValues: [{
+             *      param1: 'value1',
+             *      param2: 'value2
+             *   }, {
+             *      param1: 'value3',
+             *      param2: 'value4'
+             *   }],
+             *   widgets: {
+             *      rowA: [Object[], Object[]],
+             *      rowB: [Object[], Object[]]
              *   }
              * }
-             * dataValues: Array of data values
+             *
+             * Why do something this complex? We might have 100+ rows, and sifting through to update
+             * all of them each time some random widget updates can take a while. And this is a
+             * cleaner way of keeping a logical mapping between rows and widgets and data. We could
+             * skip the rowIdToIndex Map, but that would mean searching out the row from the id
+             * each time - widgets don't know what row they're in, they only know the data they hold,
+             * and rewriting the fieldTableCellWidget wrapper to be row-aware seems like more work
+             * than is worth it.
              */
             dataModel = {
                 rowIdToIndex: {},
                 rowOrder: [],
                 dataValues: [],
-                widgets: {}
+                widgets: {},
             },
-
             paramResolver = ParamResolver.make(),
-            // widgets = [],
             events = Events.make(),
             // this bus comes from
             bus = runtime.bus().makeChannelBus({
@@ -110,43 +141,24 @@ define([
              * expected here.
              */
 
-            // Forward all changed parameters to the controller. That is our main job!
+            // When the field widget gets its value changed (or communicates that it's changed),
+            // put that in the filePathWidget's data model, then push all the values up the main
+            // params bus.
             fieldWidget.bus.on('changed', (message) => {
                 const rowIndex = dataModel.rowIdToIndex[rowId];
-                // console.log('got CHANGED message');
-                // console.log(message);
-                // console.log(`updating model for ${rowIndex} ${parameterSpec.id} to ${message.newValue}`)
                 dataModel.dataValues[rowIndex][parameterSpec.id] = message.newValue;
-                // paramsBus.send(
-                //     {
-                //         parameter: parameterSpec.id,
-                //         newValue: message.newValue,
-                //         isError: message.isError,
-                //     },
-                //     {
-                //         key: {
-                //             type: 'parameter-changed',
-                //             parameter: parameterSpec.id,
-                //         },
-                //     }
-                // );
-
                 paramsBus.emit('parameter-changed', {
                     parameter: parameterSpec.id,
                     newValue: message.newValue,
                     isError: message.isError,
                     rowId: rowId,
-                    rowIndex: dataModel.rowOrder.indexOf(rowId)
+                    rowIndex: dataModel.rowOrder.indexOf(rowId),
                 });
-                console.log(dataModel);
             });
 
             // The 'sync' message is a request for the current model value from the
             // input widget.
             fieldWidget.bus.on('sync', () => {
-                // paramsBus.emit('parameter-sync', {
-                //     parameter: parameterSpec.id,
-                // });
                 const rowIndex = dataModel.rowIdToIndex[rowId];
                 const value = dataModel.dataValues[rowIndex][parameterSpec.id];
                 fieldWidget.bus.send(
@@ -198,6 +210,9 @@ define([
              * This is used by the newObjectInput widget to determine whether there's
              * any duplicated parameters. Since we, effectively, have a sequence of the same
              * input ids here, this gets tricky.
+             * TODO: deal with trickiness and make this return any values that might be
+             * duplicate. Note, might have to twiddle appWidgets2/input/newObjectInput.js
+             * around line 125. It expects a key-value-pair set of parameters.
              */
             fieldWidget.bus.respond({
                 key: {
@@ -237,28 +252,12 @@ define([
                 },
             });
 
-            // Just pass the update along to the input widget.
-            // paramsBus.listen({
-            //     key: {
-            //         type: 'update',
-            //         parameter: parameterSpec.id,
-            //     },
-            //     handle: function (message) {
-            //         fieldWidget.bus.emit('update', {
-            //             value: message.value,
-            //         });
-            //     },
-            // });
-
             return fieldWidget;
         }
 
         function updateRowNumbers(filePathRows) {
             filePathRows.forEach((filePathRow, index) => {
-                console.log(`RE INDEXING FILE PATH ROW ${index}`);
-                console.log(filePathRow);
-                filePathRow.querySelector(`.${cssBaseClass}__file_number`)
-                    .textContent = index + 1;
+                filePathRow.querySelector(`.${cssBaseClass}__file_number`).textContent = index + 1;
             });
         }
 
@@ -275,32 +274,31 @@ define([
                 // initialize params
                 params = Object.assign({}, model.getItem('defaultParams'));
             }
-            console.log('ADDING ROW FOR PARAMS ' + JSON.stringify(params));
             const tableElem = ui.getElement(`${cssClassType}-fields`);
             const rowId = html.genId();
             dataModel.rowOrder.push(rowId);
             dataModel.rowIdToIndex[rowId] = dataModel.rowOrder.length - 1;
             dataModel.dataValues.push(params);
-            $(tableElem)
-                .append(
-                    tr({
-                        class: `${cssBaseClass}__table_row`,
-                        dataElement: `${cssClassType}-fields-row`,
-                        dataRowId: rowId
-                    })
-                );
+            $(tableElem).append(
+                tr({
+                    class: `${cssBaseClass}__table_row`,
+                    dataElement: `${cssClassType}-fields-row`,
+                    dataRowId: rowId,
+                })
+            );
 
             const filePathRows = ui.getElements(`${cssClassType}-fields-row`);
-            return makeFilePathRow(filePathRows[filePathRows.length-1], rowId, params)
-                .then(() => {
+            return makeFilePathRow(filePathRows[filePathRows.length - 1], rowId, params).then(
+                () => {
                     updateRowNumbers(filePathRows);
                     syncDataModel();
-                });
+                }
+            );
         }
 
         function syncDataModel() {
             paramsBus.emit('sync-data-model', {
-                values: dataModel.dataValues
+                values: dataModel.dataValues,
             });
         }
 
@@ -316,12 +314,10 @@ define([
                     title: span(['File Paths']),
                     name: `${cssClassType}s-area`,
                     body: [
-                        table(
-                            {
-                                class: `${cssBaseClass}__table`,
-                                dataElement: `${cssClassType}-fields`,
-                            },
-                        ),
+                        table({
+                            class: `${cssBaseClass}__table`,
+                            dataElement: `${cssClassType}-fields`,
+                        }),
                         button(
                             {
                                 class: `${cssBaseClass}__button--add_row btn btn__text`,
@@ -363,20 +359,26 @@ define([
         }
 
         // EVENTS
-        // function attachEvents() {
-        //     bus.on('reset-to-defaults', function () {
-        //         widgets.forEach(function (widget) {
-        //             widget.bus.emit('reset-to-defaults');
-        //         });
-        //     });
+        function attachEvents() {
+            bus.on('reset-to-defaults', () => {
+                Object.values(dataModel.widgets).forEach((widgetRow) => {
+                    widgetRow.forEach((widget) => {
+                        widget.bus.emit('reset-to-defaults');
+                    });
+                });
+            });
 
-        //     runtime.bus().on('workspace-changed', function () {
-        //         // tell each input widget about this amazing event!
-        //         widgets.forEach(function (widget) {
-        //             widget.bus.emit('workspace-changed');
-        //         });
-        //     });
-        // }
+            runtime.bus().on('workspace-changed', () => {
+                // if the workspace magically changes, pass that along to
+                // each registered widget.
+
+                Object.values(dataModel.widgets).forEach((widgetRow) => {
+                    widgetRow.forEach((widget) => {
+                        widget.bus.emit('workspace-changed');
+                    });
+                });
+            });
+        }
 
         /**
          *
@@ -441,11 +443,13 @@ define([
                     );
 
                     // widgets.push(widget);
-                    return widget.start({
-                        node: container.querySelector('#' + filePathParams.view[spec.id].id),
-                    }).then(() => {
-                        return widget;
-                    });
+                    return widget
+                        .start({
+                            node: container.querySelector('#' + filePathParams.view[spec.id].id),
+                        })
+                        .then(() => {
+                            return widget;
+                        });
                 })
                 .catch((ex) => {
                     console.error(`Error making input field widget: ${ex}`);
@@ -465,24 +469,25 @@ define([
         }
 
         function deleteRow(e, rowId) {
-            return Promise.all(dataModel.widgets[rowId].map((widget) => {
-                return widget.stop();
-            }))
-                .then(() => {
-                    delete dataModel.widgets[rowId];
-                    const rowIdx = dataModel.rowIdToIndex[rowId];
-                    dataModel.dataValues.splice(rowIdx, 1);
-                    dataModel.rowOrder.splice(rowIdx, 1);
-                    delete dataModel.rowIdToIndex[rowId];
-                    // redo the ordering, this is the only O(N) part
-                    dataModel.rowOrder.forEach((rowId, idx) => {
-                        dataModel.rowIdToIndex[rowId] = idx;
-                    });
-                    const filePathRows = ui.getElements(`${cssClassType}-fields-row`);
-                    $(e.target).closest('tr').remove();
-                    updateRowNumbers(filePathRows);
-                    syncDataModel();
+            return Promise.all(
+                dataModel.widgets[rowId].map((widget) => {
+                    return widget.stop();
+                })
+            ).then(() => {
+                delete dataModel.widgets[rowId];
+                const rowIdx = dataModel.rowIdToIndex[rowId];
+                dataModel.dataValues.splice(rowIdx, 1);
+                dataModel.rowOrder.splice(rowIdx, 1);
+                delete dataModel.rowIdToIndex[rowId];
+                // redo the ordering, this is the only O(N) part
+                dataModel.rowOrder.forEach((rowId, idx) => {
+                    dataModel.rowIdToIndex[rowId] = idx;
                 });
+                const filePathRows = ui.getElements(`${cssClassType}-fields-row`);
+                $(e.target).closest('tr').remove();
+                updateRowNumbers(filePathRows);
+                syncDataModel();
+            });
         }
 
         /**
@@ -541,11 +546,16 @@ define([
 
             return Promise.all(
                 filePathParams.layout.map(async (parameterId) => {
-                    return await createFilePathWidget(rowId, appSpec, filePathParams, parameterId, params[parameterId]);
+                    return await createFilePathWidget(
+                        rowId,
+                        appSpec,
+                        filePathParams,
+                        parameterId,
+                        params[parameterId]
+                    );
                 })
             ).then((widgets) => {
                 dataModel.widgets[rowId] = widgets;
-                console.log(dataModel);
                 events.attachEvents(container);
             });
         }
@@ -568,9 +578,7 @@ define([
                 bus: bus,
             });
             doAttach();
-            console.log('starting FPW with arg ');
-            console.log(JSON.stringify(arg));
-
+            attachEvents();
             model.setItem('parameterIds', paramIds);
             model.setItem('appSpec', arg.appSpec);
             model.setItem('parameterValues', initialParams);
@@ -581,25 +589,30 @@ define([
                 if (paramIds.includes(id)) {
                     const paramSpec = arg.parameters.specs[id];
                     parameterSpecs.push(paramSpec);
-                    defaultParams[id] = paramSpec.data.defaultValue
+                    defaultParams[id] = paramSpec.data.defaultValue;
                 }
             });
             model.setItem('parameterSpecs', parameterSpecs);
             model.setItem('defaultParams', defaultParams);
-
             return Promise.all(
                 initialParams.map((paramRow) => {
                     addRow(paramRow);
                 })
-            )
-                .catch((error) => {
-                    throw new Error(`Unable to start filePathWidget: ${error}`);
-                });
+            ).catch((error) => {
+                throw new Error(`Unable to start filePathWidget: ${error}`);
+            });
         }
 
         function stop() {
-            return Promise.try(() => {
-                // really unhook things here.
+            // note this is an array of arrays of promises.
+            const widgetStopProms = Object.values(dataModel.widgets).map((widgetRow) => {
+                return widgetRow.map((widget) => {
+                    return widget.stop();
+                });
+            });
+
+            // ...so we need to flatten it first
+            return Promise.all([].concat(...widgetStopProms)).then(() => {
                 if (container) {
                     container.innerHTML = '';
                 }

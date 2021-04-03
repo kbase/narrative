@@ -2,12 +2,12 @@
  * Provides app spec functionality.
  */
 
-define([
-    'bluebird',
-    'common/lang',
-    'common/sdk',
-    'widgets/appWidgets2/validators/resolver',
-], (Promise, lang, sdk, validationResolver) => {
+define(['bluebird', 'common/lang', 'common/sdk', 'widgets/appWidgets2/validators/resolver'], (
+    Promise,
+    lang,
+    sdk,
+    validationResolver
+) => {
     'use strict';
 
     function factory(config) {
@@ -52,8 +52,7 @@ define([
                 }
                 if (appType === 'bulkImport') {
                     model.params[id] = modelValue;
-                }
-                else {
+                } else {
                     model[id] = modelValue;
                 }
             });

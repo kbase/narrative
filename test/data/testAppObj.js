@@ -5,10 +5,23 @@ define(['./jobsData'], (JobsData) => {
     return {
         app: {
             fileParamIds: {
-                fastq_reads: ['fastq_fwd_staging_file_name', 'fastq_rev_staging_file_name', 'sra_staging_file_name', 'name'],
+                fastq_reads: [
+                    'fastq_fwd_staging_file_name',
+                    'fastq_rev_staging_file_name',
+                    'sra_staging_file_name',
+                    'name',
+                ],
             },
             otherParamIds: {
-                fastq_reads: ['import_type', 'sequencing_tech', 'single_genome', 'interleaved', 'read_orientation_outward', 'insert_size_std_dev', 'insert_size_mean']
+                fastq_reads: [
+                    'import_type',
+                    'sequencing_tech',
+                    'single_genome',
+                    'interleaved',
+                    'read_orientation_outward',
+                    'insert_size_std_dev',
+                    'insert_size_mean',
+                ],
             },
             specs: {
                 'kb_uploadmethods/import_fastq_sra_as_reads_from_staging': {
@@ -98,8 +111,10 @@ define(['./jobsData'], (JobsData) => {
                         ver: '1.0.43',
                         authors: ['tgu2'],
                         contact: 'https://kbase.us/contact-us/',
-                        subtitle: 'Import a FASTQ/SRA file into your Narrative as a Reads data object',
-                        tooltip: 'Import a FASTQ/SRA file into your Narrative as a Reads data object',
+                        subtitle:
+                            'Import a FASTQ/SRA file into your Narrative as a Reads data object',
+                        tooltip:
+                            'Import a FASTQ/SRA file into your Narrative as a Reads data object',
                         description:
                             '<p> Import a FASTQ/SRA file into your Narrative as a Reads data object\nPlease see the <a href="https://kbase.us/data-upload-download-guide/">Data Upload/Download Guide</a> for more information. </p>',
                         technical_description: 'none',
@@ -134,8 +149,10 @@ define(['./jobsData'], (JobsData) => {
                         name: 'Import FASTQ/SRA File as Reads from Staging Area',
                         namespace: 'kb_uploadmethods',
                         output_types: ['KBaseFile.PairedEndLibrary', 'KBaseFile.SingleEndLibrary'],
-                        subtitle: 'Import a FASTQ/SRA file into your Narrative as a Reads data object',
-                        tooltip: 'Import a FASTQ/SRA file into your Narrative as a Reads data object',
+                        subtitle:
+                            'Import a FASTQ/SRA file into your Narrative as a Reads data object',
+                        tooltip:
+                            'Import a FASTQ/SRA file into your Narrative as a Reads data object',
                         ver: '1.0.43',
                     },
                     job_id_output_field: 'docker',
@@ -463,16 +480,18 @@ define(['./jobsData'], (JobsData) => {
             byJob: {},
         },
         inputs: {
-            fastq_reads: ['file1.txt']
+            fastq_reads: ['file1.txt'],
         },
         params: {
             fastq_reads: {
-                filePaths: [{
-                    fastq_fwd_staging_file_name: '',
-                    fastq_rev_staging_file_name: '',
-                    name: 'KBase_object_details_22020-10-14T232042188.json_reads',
-                    sra_staging_file_name: 'KBase_object_details_22020-10-14T232042188.json',
-                }],
+                filePaths: [
+                    {
+                        fastq_fwd_staging_file_name: '',
+                        fastq_rev_staging_file_name: '',
+                        name: 'KBase_object_details_22020-10-14T232042188.json_reads',
+                        sra_staging_file_name: 'KBase_object_details_22020-10-14T232042188.json',
+                    },
+                ],
                 params: {
                     import_type: 'SRA',
                     insert_size_mean: null,

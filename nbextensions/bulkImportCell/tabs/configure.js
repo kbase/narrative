@@ -14,11 +14,11 @@ define([
             spec: app spec
     */
     function ConfigureWidget(options) {
-        const model = options.model,        // the data model, inputs, params, etc.
-            spec = options.spec,            // the Spec object
-            fileType = options.fileType,    // which which filetype we're configuring here
+        const model = options.model, // the data model, inputs, params, etc.
+            spec = options.spec, // the Spec object
+            fileType = options.fileType, // which which filetype we're configuring here
             runtime = Runtime.make(),
-            cellBus = options.bus,          // the bus to communicate with the main widget
+            cellBus = options.bus, // the bus to communicate with the main widget
             FILE_PATH_TYPE = 'filePaths',
             PARAM_TYPE = 'params';
         let container = null;
@@ -130,35 +130,16 @@ define([
         }
 
         function buildMessageBus(paramKey, description) {
-            const bus = runtime
-                .bus()
-                .makeChannelBus({ description: description });
+            const bus = runtime.bus().makeChannelBus({ description: description });
 
-                bus.on('sync-params', (message) => {
-                    message.parameters.forEach((paramId) => {
-                        bus.send(
-                            {
-                                parameter: paramId,
-                                value: model.getItem([paramKey, message.parameter]),
-                            },
-                            {
-                                key: {
-                                    type: 'update',
-                                    parameter: message.parameter,
-                                },
-                            }
-                        );
-                    });
-                });
-
-                bus.on('parameter-sync', (message) => {
-                    const value = model.getItem([paramKey, message.parameter]);
+            bus.on('sync-params', (message) => {
+                message.parameters.forEach((paramId) => {
                     bus.send(
                         {
-                            value: value,
+                            parameter: paramId,
+                            value: model.getItem([paramKey, message.parameter]),
                         },
                         {
-                            // This points the update back to a listener on this key
                             key: {
                                 type: 'update',
                                 parameter: message.parameter,
@@ -166,32 +147,49 @@ define([
                         }
                     );
                 });
+            });
 
-                bus.on('set-param-state', (message) => {
-                    model.setItem('paramState', message.id, message.state);
-                });
+            bus.on('parameter-sync', (message) => {
+                const value = model.getItem([paramKey, message.parameter]);
+                bus.send(
+                    {
+                        value: value,
+                    },
+                    {
+                        // This points the update back to a listener on this key
+                        key: {
+                            type: 'update',
+                            parameter: message.parameter,
+                        },
+                    }
+                );
+            });
 
-                bus.respond({
-                    key: {
-                        type: 'get-param-state',
-                    },
-                    handle: function (message) {
-                        return {
-                            state: model.getItem('paramState', message.id),
-                        };
-                    },
-                });
+            bus.on('set-param-state', (message) => {
+                model.setItem('paramState', message.id, message.state);
+            });
 
-                bus.respond({
-                    key: {
-                        type: 'get-parameter',
-                    },
-                    handle: function (message) {
-                        return {
-                            value: model.getItem([paramKey, message.parameterName]),
-                        };
-                    },
-                });
+            bus.respond({
+                key: {
+                    type: 'get-param-state',
+                },
+                handle: function (message) {
+                    return {
+                        state: model.getItem('paramState', message.id),
+                    };
+                },
+            });
+
+            bus.respond({
+                key: {
+                    type: 'get-parameter',
+                },
+                handle: function (message) {
+                    return {
+                        value: model.getItem([paramKey, message.parameterName]),
+                    };
+                },
+            });
 
             return bus;
         }
@@ -208,7 +206,6 @@ define([
              * 2 - eval the array of file inputs and outputs.
              * If both are up to snuff, we're good.
              */
-
         }
 
         /**
@@ -220,7 +217,7 @@ define([
         function updateModelParameterValue(paramKey, paramType, message) {
             model.setItem(['params', paramKey, paramType, message.parameter], message.newValue);
             const appState = evaluateAppConfig(message.isError);
-        };
+        }
 
         function stop() {
             return Promise.try(() => {

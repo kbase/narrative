@@ -47,10 +47,11 @@ define([
             this.filePathWidgetInstance = FilePathWidget.make({
                 bus: bus,
                 workspaceId: workspaceId,
-                initialParams: {
+                initialParams: [{
                     actual_input_object: 'foo',
                     actual_output_object: 'bar',
-                },
+                }],
+                paramIds: ['actual_input_object', 'actual_output_object'],
             });
         });
 

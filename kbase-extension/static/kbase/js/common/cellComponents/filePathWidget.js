@@ -52,6 +52,8 @@ define([
          *  - O(1)
          */
 
+        console.log('MAKING FPW WITH CONFIG');
+        console.log(JSON.stringify(config, 4));
         const runtime = Runtime.make(),
             // paramsBus is used to communicate from this parameter container to the parent that
             // created and owns it
@@ -253,6 +255,8 @@ define([
 
         function updateRowNumbers(filePathRows) {
             filePathRows.forEach((filePathRow, index) => {
+                console.log(`RE INDEXING FILE PATH ROW ${index}`);
+                console.log(filePathRow);
                 filePathRow.querySelector(`.${cssBaseClass}__file_number`)
                     .textContent = index + 1;
             });
@@ -271,6 +275,7 @@ define([
                 // initialize params
                 params = Object.assign({}, model.getItem('defaultParams'));
             }
+            console.log('ADDING ROW FOR PARAMS ' + JSON.stringify(params));
             const tableElem = ui.getElement(`${cssClassType}-fields`);
             const rowId = html.genId();
             dataModel.rowOrder.push(rowId);
@@ -563,9 +568,12 @@ define([
                 bus: bus,
             });
             doAttach();
+            console.log('starting FPW with arg ');
+            console.log(JSON.stringify(arg));
 
             model.setItem('parameterIds', paramIds);
             model.setItem('appSpec', arg.appSpec);
+            model.setItem('parameterValues', initialParams);
             // get the parameter specs in the right order.
             const parameterSpecs = [];
             const defaultParams = {};
@@ -578,18 +586,6 @@ define([
             });
             model.setItem('parameterSpecs', parameterSpecs);
             model.setItem('defaultParams', defaultParams);
-
-            // paramsBus.on('parameter-changed', (message) => {
-            //     widgets.forEach((widget) => {
-            //         widget.bus.send(message, {
-            //             key: {
-            //                 type: 'parameter-changed',
-            //                 parameter: message.parameter,
-            //             },
-            //         });
-            //     });
-            // });
-            model.setItem('parameterValues', initialParams);
 
             return Promise.all(
                 initialParams.map((paramRow) => {

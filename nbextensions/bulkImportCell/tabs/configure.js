@@ -18,8 +18,9 @@ define([
             spec = options.spec,            // the Spec object
             fileType = options.fileType,    // which which filetype we're configuring here
             runtime = Runtime.make(),
-            cellBus = options.bus;          // the bus to communicate with the main widget
-
+            cellBus = options.bus,          // the bus to communicate with the main widget
+            FILE_PATH_TYPE = 'filePaths',
+            PARAM_TYPE = 'params';
         let container = null;
 
         /**
@@ -62,13 +63,13 @@ define([
             const paramBus = buildMessageBus(paramKey, 'Parent comm bus for parameters widget');
             paramBus.on('parameter-changed', (message) => {
                 // TODO: should never get these in the following states....
-                updateModelParameterValue(paramKey, 'param', message);
+                updateModelParameterValue(paramKey, PARAM_TYPE, message);
             });
 
             const widget = ParamsWidget.make({
                 bus: paramBus,
                 workspaceId: runtime.workspaceId(),
-                initialParams: model.getItem(['params', paramKey]),
+                initialParams: model.getItem(['params', paramKey, PARAM_TYPE]),
             });
 
             return widget
@@ -91,13 +92,13 @@ define([
             paramBus.on('parameter-changed', (message) => {
                 // TODO: should never get these in the following states....
                 console.log('GOT PARAMETER CHANGED MESSAGE - ' + JSON.stringify(message));
-                updateModelParameterValue(fileType, 'filePath', message);
+                updateModelParameterValue(fileType, FILE_PATH_TYPE, message);
             });
             paramBus.on('sync-data-model', (message) => {
                 console.log('syncing file path data model');
                 console.log(message);
                 if (message.values) {
-                    model.setItem(['params', fileType, 'filePaths'], message.values);
+                    model.setItem(['params', fileType, FILE_PATH_TYPE], message.values);
                 }
             });
 
@@ -111,7 +112,7 @@ define([
                 bus: paramBus,
                 workspaceId: runtime.workspaceId(),
                 paramIds: model.getItem(['app', 'fileParamIds', fileType]),
-                initialParams: model.getItem(['params', fileType, 'filePaths']),
+                initialParams: model.getItem(['params', fileType, FILE_PATH_TYPE]),
             });
 
             return widget

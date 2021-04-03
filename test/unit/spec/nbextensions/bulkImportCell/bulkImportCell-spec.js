@@ -3,7 +3,7 @@ define([
     'base/js/namespace',
     'common/runtime',
     'narrativeMocks',
-    'json!/test/data/NarrativeTest.test_simple_inputs.spec.json',
+    'json!/test/data/NarrativeTest.test_input_params.spec.json',
 ], (BulkImportCell, Jupyter, Runtime, Mocks, TestAppSpec) => {
     'use strict';
     const fakeInputs = {
@@ -115,33 +115,35 @@ define([
             expect(Jupyter.notebook.delete_cell).toHaveBeenCalled();
         });
 
-        it('responds to a delete-cell bus message', (done) => {
+        it('responds to a delete-cell bus message', () => {
             const runtime = Runtime.make();
             const cell = Mocks.buildMockCell('code');
-            Jupyter.notebook = Mocks.buildMockNotebook({
-                deleteCallback: () => {
-                    expect(Jupyter.notebook.delete_cell).toHaveBeenCalled();
-                    done();
-                },
-            });
-            spyOn(Jupyter.notebook, 'delete_cell').and.callThrough();
-            BulkImportCell.make({
-                cell,
-                importData: fakeInputs,
-                specs: fakeSpecs,
-                initialize: true,
-            });
-            runtime.bus().send(
-                {},
-                {
-                    channel: {
-                        cell: cell.metadata.kbase.attributes.id,
+            return new Promise((resolve) => {
+                Jupyter.notebook = Mocks.buildMockNotebook({
+                    deleteCallback: () => {
+                        expect(Jupyter.notebook.delete_cell).toHaveBeenCalled();
+                        resolve();
                     },
-                    key: {
-                        type: 'delete-cell',
-                    },
-                }
-            );
+                });
+                spyOn(Jupyter.notebook, 'delete_cell').and.callThrough();
+                BulkImportCell.make({
+                    cell,
+                    importData: fakeInputs,
+                    specs: fakeSpecs,
+                    initialize: true,
+                });
+                runtime.bus().send(
+                    {},
+                    {
+                        channel: {
+                            cell: cell.metadata.kbase.attributes.id,
+                        },
+                        key: {
+                            type: 'delete-cell',
+                        },
+                    }
+                );
+            });
         });
 
         it('should toggle the active file type', () => {

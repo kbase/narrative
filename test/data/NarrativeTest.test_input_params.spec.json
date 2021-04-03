@@ -98,7 +98,10 @@
                 "regex_constraint": [],
                 "valid_ws_types": [
                     "KBaseGenomes.Genome"
-                ]
+                ],
+                "dynamic_dropdown_options": {
+                    "data_source": "ftp_staging"
+                }
             },
             "ui_class": "input",
             "ui_name": "Genome to be duplicated"

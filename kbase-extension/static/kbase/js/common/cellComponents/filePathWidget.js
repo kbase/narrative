@@ -65,9 +65,7 @@ define([
              * 4. delete row
              *  - rows can get deleted from anywhere, which breaks all the ordering. We need to run a loop
              *    to figure out the new order after the one that was deleted, which makes this O(n)
-             */
-
-            /**
+             *
              * dataModel structure:
              * This is a simple object with a few keys:
              * rowOrder: array of unique ids, this is the row ids in the order they should appear on
@@ -114,7 +112,6 @@ define([
             },
             paramResolver = ParamResolver.make(),
             events = Events.make(),
-            // this bus comes from
             bus = runtime.bus().makeChannelBus({
                 description: 'A file path widget',
             });
@@ -262,12 +259,13 @@ define([
         }
 
         /**
-         * Responsibilities
+         * Adds a new file path parameter row. Has the following responsibilities:
          *  - make row id
          *  - make initial table row layout
          *  - set up row parameters
          *  - make the row
-         * @param {*} params
+         * @param {object} params - key value pairs for the set of parameterIds -> values
+         *   to start this row with. If falsy, this uses the default parameters.
          */
         function addRow(params) {
             if (!params) {
@@ -422,11 +420,13 @@ define([
         }
 
         /**
-         *
-         * @param {object} appSpec
-         * @param {object} filePathParams
-         * @param {string} parameterId
-         * @param {any} parameterValue
+         * Creates a new single file path widget for the parameter id with some initial value.
+         * This returns a Promise that resolves into the new widget.
+         * @param {string} rowId - the unique row id where this widget will live
+         * @param {object} appSpec - the entire app spec to pass along to the widget
+         * @param {object} filePathParams - the object holding all file path param specs
+         * @param {string} parameterId - the parameter id from the app spec
+         * @param {any} parameterValue - the initial value of the parameter
          * @returns the created and started widget
          */
         function createFilePathWidget(rowId, appSpec, filePathParams, parameterId, parameterValue) {
@@ -442,7 +442,6 @@ define([
                         parameterValue
                     );
 
-                    // widgets.push(widget);
                     return widget
                         .start({
                             node: container.querySelector('#' + filePathParams.view[spec.id].id),
@@ -468,6 +467,16 @@ define([
                 });
         }
 
+        /**
+         * Deletes a parameter row. This does the following steps:
+         * 1. Stop all widgets (which should remove them and their events from the DOM).
+         * 2. Delete that row of data and widgets from the data model.
+         * 3. Renumber the existing rows in both the model and the DOM.
+         * 4. Fire off a sync-data-model message up to the controller.
+         * @param {Event} e - the click event on the delete button
+         * @param {string} rowId - the id of the row to delete
+         * @returns a promise that resolves when the steps are done.
+         */
         function deleteRow(e, rowId) {
             return Promise.all(
                 dataModel.widgets[rowId].map((widget) => {
@@ -491,10 +500,11 @@ define([
         }
 
         /**
-         *
+         * Makes a file path row of widgets and stores them in the data model.
          * @param {DOM Element} filePathRow - the container element for a file path row
+         * @param {string} rowId - the unique id to assign to the row.
          * @param {object} params - key value pair for paramId -> paramValue
-         * @returns
+         * @returns a Promise that resolves when all widgets are created and saved.
          */
         function makeFilePathRow(filePathRow, rowId, params) {
             const appSpec = model.getItem('appSpec');
@@ -565,11 +575,12 @@ define([
          * Populate with initial parameter rows
          * Keep parameter rows as data model
          * Update as changed, and propagate entire parameter list up to parent bus
-         * @param {*} arg - has keys
+         * @param {object} arg - has keys:
          *  node - the containing DOM node
          *  appSpec - the appSpec for the app having its parameters portrayed here
          *  parameters - the parameter set with the layout order
-         * @returns
+         * @returns a promise that resolves when all file path rows are created from
+         * the initial set of parameters
          */
         function start(arg) {
             container = arg.node;
@@ -604,14 +615,14 @@ define([
         }
 
         function stop() {
-            // note this is an array of arrays of promises.
+            // Stop all widgets. Note this is an array of arrays of promises.
             const widgetStopProms = Object.values(dataModel.widgets).map((widgetRow) => {
                 return widgetRow.map((widget) => {
                     return widget.stop();
                 });
             });
 
-            // ...so we need to flatten it first
+            // ...so we need to flatten it first to pass to Promise.all()
             return Promise.all([].concat(...widgetStopProms)).then(() => {
                 if (container) {
                     container.innerHTML = '';

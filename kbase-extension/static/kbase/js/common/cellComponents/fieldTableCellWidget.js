@@ -1,11 +1,10 @@
 define([
     'google-code-prettify/prettify',
     'kb_common/html',
-    'common/events',
     'common/runtime',
     'widgets/appWidgets2/errorControl',
     'css!google-code-prettify/prettify.css',
-], (PR, html, Events, Runtime, ErrorControlFactory) => {
+], (PR, html, Runtime, ErrorControlFactory) => {
     'use strict';
 
     const t = html.tag,
@@ -87,16 +86,9 @@ define([
             containerDiv.classList.add(`${cssBaseClass}__param_container`);
 
             container = parent.appendChild(containerDiv);
-            const events = Events.make({
-                node: container,
-            });
 
-            const rendered = render(events);
+            const rendered = render();
             container.innerHTML = rendered.content;
-            events.attachEvents();
-            // TODO: use the pattern in which the render returns an object,
-            // which includes events and other functions to be run after
-            // content is added to the dom.
             PR.prettyPrint(null, container);
 
             places = {

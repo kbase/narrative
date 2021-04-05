@@ -62,7 +62,6 @@ define([
             const paramKey = `${fileType}`;
             const paramBus = buildMessageBus(paramKey, 'Parent comm bus for parameters widget');
             paramBus.on('parameter-changed', (message) => {
-                // TODO: should never get these in the following states....
                 updateModelParameterValue(paramKey, PARAM_TYPE, message);
             });
 
@@ -90,13 +89,9 @@ define([
             // This is the key in the model that maps to the list of params for the current app.
             const paramBus = buildMessageBus(fileType, 'Parent comm bus for filePath widget');
             paramBus.on('parameter-changed', (message) => {
-                // TODO: should never get these in the following states....
-                console.log('GOT PARAMETER CHANGED MESSAGE - ' + JSON.stringify(message));
                 updateModelParameterValue(fileType, FILE_PATH_TYPE, message);
             });
             paramBus.on('sync-data-model', (message) => {
-                console.log('syncing file path data model');
-                console.log(message);
                 if (message.values) {
                     model.setItem(['params', fileType, FILE_PATH_TYPE], message.values);
                 }
@@ -129,8 +124,16 @@ define([
                 });
         }
 
+        /**
+         * This builds a new message bus with commands used for both the filePathWidget and the paramsWidget.
+         * Avoids some code duplication. It's up to the individual widget constructors to handle messages for
+         * changing data values and any other needed messages.
+         * @param {string} paramKey - the key used to look up parameters from the model. Should be the file type.
+         * @param {string} description - description used for the message bus
+         * @returns a message bus object
+         */
         function buildMessageBus(paramKey, description) {
-            const bus = runtime.bus().makeChannelBus({ description: description });
+            const bus = runtime.bus().makeChannelBus({ description });
 
             bus.on('sync-params', (message) => {
                 message.parameters.forEach((paramId) => {
@@ -195,6 +198,7 @@ define([
         }
 
         /**
+         * TODO
          * This evaluates the state of the app configuration. If it's ready to go, then we can build the Python
          * code and prep the app for launch. If not, then we shouldn't, and, in fact, should clear the Python code
          * if there's any there.
@@ -216,6 +220,8 @@ define([
          */
         function updateModelParameterValue(paramKey, paramType, message) {
             model.setItem(['params', paramKey, paramType, message.parameter], message.newValue);
+            // TODO - update the app config state based on changes, and send a message up the cellBus
+            // with that state.
             const appState = evaluateAppConfig(message.isError);
         }
 

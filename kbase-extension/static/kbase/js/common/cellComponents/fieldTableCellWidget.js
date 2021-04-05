@@ -62,15 +62,6 @@ define([
                             class: `${cssBaseClass}__cell_label`,
                             title: spec.ui.label || spec.ui.id,
                             for: ids.inputControl,
-                            // id: events.addEvent({
-                            //     type: 'click',
-                            //     handler: function () {
-                            //         // FIXME: places.infoPanel is not set anywhere!
-                            //         places.infoPanel
-                            //             .querySelector('[data-element="big-tip"]')
-                            //             .classList.toggle('hidden');
-                            //     },
-                            // }),
                         },
                         [spec.ui.label || spec.ui.id]
                     ),

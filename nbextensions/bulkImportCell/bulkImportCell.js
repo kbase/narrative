@@ -248,7 +248,6 @@ define([
             state = getInitialState(),
             // These are the processed Spec object with proper layout order, etc.
             specs = {};
-        console.log(model.getItem(['app', 'fileParamIds']));
 
         for (const [appId, appSpec] of Object.entries(model.getItem('app.specs'))) {
             specs[appId] = Spec.make({
@@ -259,27 +258,36 @@ define([
         setupCell();
 
         /**
-         *
-         * @param {*} appSpec
-         * @returns
+         * Filters the app spec's parameters into two separate arrays and return them
+         * as a single array of arrays.
+         * The first has the "file param" ids - these are the parameters that include
+         * file paths that come from the FTP file staging area (i.e. dynamic dropdown
+         * inputs that get their data from the "ftp_staging" source) and the final
+         * data object name that they should use.
+         * The second is all other params: those parameters that are meant to
+         * cover all input data files, i.e. source format.
+         * Note that this is intended to be used as part of the cell initialization. At
+         * that point, we haven't processed the app specs yet, so we don't know the
+         * proper order to lay these out in. Thus, consider the returned arrays unordered.
+         * @param {object} appSpec - a plain app spec (not processed by the Spec module)
+         * @returns an array with two elements. The first is an array of file parameter
+         *   ids, an the second is an array with all other parameter ids.
          */
         function filterFileParameters(appSpec) {
-            const paramIds = appSpec.parameters.map((param) => param.id);
             const fileParams = appSpec.parameters.filter((param) => {
-                // if we're including output, and this is an output object, always pass the filter.
                 if (param.text_options && param.text_options.is_output_name) {
                     return true;
                 }
-
                 const isFilePathParam =
                     param.dynamic_dropdown_options &&
                     param.dynamic_dropdown_options.data_source === 'ftp_staging';
 
                 return isFilePathParam;
             });
+            const allParamIds = appSpec.parameters.map((param) => param.id);
             const fileParamIds = fileParams.map((param) => param.id);
-            const fileParamIdSet = new Set(fileParamIds);
-            const nonFileParamIds = paramIds.filter((id) => !fileParamIdSet.has(id));
+            const fileParamIdSet = new Set(fileParamIds); // for the efficient has() function
+            const nonFileParamIds = allParamIds.filter((id) => !fileParamIdSet.has(id));
             return [fileParamIds, nonFileParamIds];
         }
 

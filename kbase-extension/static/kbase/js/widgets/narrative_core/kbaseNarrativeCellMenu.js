@@ -357,7 +357,9 @@ define([
                         .append(
                             $('<div class="col-sm-8">')
                                 .append(
-                                    $('<div class="buttons pull-left">').append(this.$collapseBtn)
+                                    $(
+                                        '<div class="kb-cell-toolbar__buttons-container buttons pull-left">'
+                                    ).append(this.$collapseBtn)
                                 )
                                 .append(
                                     $('<div class="title" style="display:inline-block">')

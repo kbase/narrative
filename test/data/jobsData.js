@@ -49,6 +49,7 @@ define(['common/format'], (format) => {
                     class: 'kb-job-status__summary',
                     label: 'created',
                 },
+                appCellFsm: { mode: 'processing', stage: 'queued' },
             },
         },
         {
@@ -67,6 +68,7 @@ define(['common/format'], (format) => {
                     class: 'kb-job-status__summary',
                     label: 'estimating',
                 },
+                appCellFsm: { mode: 'processing', stage: 'queued' },
             },
         },
         {
@@ -86,6 +88,7 @@ define(['common/format'], (format) => {
                     class: 'kb-job-status__summary',
                     label: 'queued',
                 },
+                appCellFsm: { mode: 'processing', stage: 'queued' },
             },
         },
         {
@@ -106,6 +109,7 @@ define(['common/format'], (format) => {
                     class: 'kb-job-status__summary--terminated',
                     label: 'cancellation',
                 },
+                appCellFsm: { mode: 'canceled' },
             },
         },
         {
@@ -126,6 +130,7 @@ define(['common/format'], (format) => {
                     class: 'kb-job-status__summary',
                     label: 'running',
                 },
+                appCellFsm: { mode: 'processing', stage: 'running' },
             },
         },
         {
@@ -151,6 +156,36 @@ define(['common/format'], (format) => {
                     class: 'kb-job-status__summary--terminated',
                     label: 'cancellation',
                 },
+                appCellFsm: { mode: 'canceled' },
+            },
+        },
+        {
+            job_id: 'job died whilst queueing',
+            status: 'error',
+            error: {
+                code: 666,
+                name: 'Queue error',
+                message: 'Job died in the queue',
+            },
+            error_code: 1,
+            errormsg: 'Job did not know how to queue!',
+            created: t.created,
+            queued: t.queued,
+            updated: 12345678910,
+            meta: {
+                createJobStatusLines: {
+                    line: jobStrings.error,
+                    history: [jobStrings.queueHistory, jobStrings.error],
+                },
+                jobAction: jobStrings.action.retry,
+                jobLabelIncludeError: 'failed: Queue error',
+                jobLabel: 'failed',
+                niceState: {
+                    class: 'kb-job-status__summary--error',
+                    label: 'error',
+                },
+                errorString: 'Queue error: Error code: 666',
+                appCellFsm: { mode: 'error', stage: 'queued' },
             },
         },
         {
@@ -181,6 +216,7 @@ define(['common/format'], (format) => {
                     label: 'error',
                 },
                 errorString: 'Server error: Error code: -32000',
+                appCellFsm: { mode: 'error', stage: 'running' },
             },
         },
         {
@@ -202,6 +238,7 @@ define(['common/format'], (format) => {
                     class: 'kb-job-status__summary--completed',
                     label: 'success',
                 },
+                appCellFsm: { mode: 'success' },
             },
             result: [
                 {

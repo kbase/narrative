@@ -44,11 +44,7 @@ module.exports = function (grunt) {
                         ]),
                     ],
                 },
-                src: [
-                    'kbase-extension/static/kbase/css/*_concat.css',
-                    'kbase-extension/static/kbase/css/appCell.css',
-                    'kbase-extension/static/kbase/css/editorCell.css',
-                ],
+                src: ['kbase-extension/static/kbase/css/all_concat.css'],
             },
         },
 

@@ -61,7 +61,6 @@
   &__table {
     @include tabular-text;
     padding: 0;
-    white-space: nowrap;
     width: 100%;
 
     /* .kb-job-status__table_body */
@@ -134,76 +133,8 @@
     &--object,
     &--status {
       @include table-cell;
-    }
-  }
 
-  &__icon {
-    margin: 4px;
-
-    /*
-      .kb-job-status__icon--completed
-    */
-    &--completed {
-      color: use-color('success-dark');
-    }
-
-    /*
-      .kb-job-status__icon--error,
-      .kb-job-status__icon--does_not_exist
-    */
-    &--error,
-    &--does_not_exist {
-      color: use-color('error');
-    }
-
-    /*
-      .kb-job-status__icon--terminated
-    */
-    &--terminated {
-      color: use-color('warning-dark');
-    }
-
-    /*
-      .kb-job-status__icon--queued,
-      .kb-job-status__icon--created,
-      .kb-job-status__icon--estimating,
-      .kb-job-status__icon--running
-    */
-    &--queued,
-    &--created,
-    &--estimating,
-    &--running {
-      color: use-color('info');
-    }
-  }
-
-  /* .kb-job-status__summary */
-  &__summary {
-    color: use-color('ink');
-    font-weight: 700;
-
-    /* .kb-job-status__summary--completed */
-    &--completed {
-      color: use-color('success-dark');
-      font-weight: 700;
-    }
-
-    /*
-      .kb-job-status__summary--error,
-      .kb-job-status__summary--does_not_exist
-    */
-    &--error,
-    &--does_not_exist {
-      color: use-color('error');
-      font-weight: 700;
-    }
-
-    /*
-      .kb-job-status__summary--terminated
-    */
-    &--terminated {
-      color: use-color('warning-dark');
-      font-weight: 700;
+      white-space: nowrap;
     }
   }
 
@@ -220,5 +151,34 @@
     background-color: use-color('info-lighter');
     border-bottom: 1px solid use-color('base-lightest');
     padding: 1rem;
+  }
+
+  /* .kb-job-status__summary */
+  &__summary {
+    color: use-color('ink');
+    font-weight: 700;
+  }
+
+  @each $key, $value in $job_status_colours {
+    /* .kb-job-status__icon--${status} */
+    &__icon--#{$key} {
+      color: use-color($key);
+      margin: 4px;
+    }
+
+    /* .kb-job-status__summary--${status} */
+    &__summary--#{$key} {
+      color: use-color($key);
+      font-weight: 700;
+    }
+
+    /* .kb-job-status__cell_summary--${status} */
+    &__cell_summary--#{$key} {
+      color: use-color($key);
+      font-weight: 700;
+      font-size: 16px;
+      text-transform: capitalize;
+      margin: 0 0.5rem;
+    }
   }
 }

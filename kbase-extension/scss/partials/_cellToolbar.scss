@@ -1,0 +1,132 @@
+$default-icon-size: 56px;
+
+.kb-cell-toolbar {
+  &__button {
+    border: 0;
+  }
+
+  /* .kb-cell-toolbar__container */
+  &__container {
+    align-items: start;
+    display: flex;
+    // flex-direction: row;
+    justify-content: space-between;
+    height: $default-icon-size;
+  }
+
+  /* .kb-cell-toolbar__app_icon */
+  &__app_icon {
+    width: $default-icon-size;
+    height: $default-icon-size;
+    padding: 0;
+    margin-right: 4px;
+    font-size: 14px;
+    line-height: $default-icon-size;
+    text-align: center;
+    flex: none;
+  }
+
+  /* .kb-cell-toolbar__title-container */
+  &__title-container {
+    flex: 1 1 10rem;
+    overflow: scroll;
+    text-overflow: ellipsis;
+  }
+
+  /* .kb-cell-toolbar__title */
+  &__title {
+    overflow: scroll;
+    text-overflow: ellipsis;
+    height: 20px;
+    min-width: 0;
+    margin-top: 8px;
+    color: use_color('primary-vivid');
+    font: normal 700 18px/20px $typeface-page-text;
+  }
+
+  /* .kb-cell-toolbar__subtitle */
+  &__subtitle {
+    overflow: scroll;
+    text-overflow: ellipsis;
+    height: 20px;
+    min-width: 0;
+    color: use_color('neutral');
+    font: normal 400 14px/20px $typeface-page-text;
+  }
+
+  /* .kb-cell-toolbar__buttons-container */
+  &__buttons-container {
+    flex: none;
+    min-width: 9.5rem;
+    white-space: nowrap;
+  }
+
+  /* .kb-cell-toolbar__icon */
+  &__icon {
+    /* .kb-cell-toolbar__icon--info */
+    &--info {
+      color: use_color('info-dark');
+    }
+
+    /* .kb-cell-toolbar__icon--minus */
+    &--minus {
+      color: use_color('accent-warm');
+    }
+
+    /* .kb-cell-toolbar__icon--notch-spin */
+    &--notch-spin {
+      color: use_color('primary');
+    }
+
+    /* .kb-cell-toolbar__icon--outdated */
+    &--outdated {
+      color: use_color('accent-warm');
+    }
+
+    /* .kb-cell-toolbar__icon--plus */
+    &--plus {
+      color: use_color('black');
+    }
+
+    /* .kb-cell-toolbar__icon--table,
+    .kb-cell-toolbar__icon--terminal */
+    &--table,
+    &--terminal {
+      color: use_color('black');
+    }
+
+    /* .kb-cell-toolbar__icon--times,
+    .kb-cell-toolbar__icon--triangle */
+    &--times,
+    &--triangle {
+      color: use_color('red');
+    }
+  }
+
+  /* .kb-cell-toolbar__dropdown_item */
+  &__dropdown_item {
+    border: 0;
+    text-align: left;
+    width: 100%;
+
+    /* .kb-cell-toolbar__dropdown_item_icon */
+    &_icon {
+      display: inline-block;
+      margin-right: 4px;
+      width: 25px;
+    }
+  }
+}
+
+// modifications for unselected cells
+.cell.unselected {
+  .kb-cell-toolbar {
+    &__title-container {
+      opacity: 0.5;
+    }
+
+    &__buttons-container {
+      opacity: 0.2;
+    }
+  }
+}

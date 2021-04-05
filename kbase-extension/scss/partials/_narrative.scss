@@ -1553,7 +1553,7 @@ div#notebook_panel { /* FIXME Jupyter css */
 
   .kb-title {
     padding: 10px 5px;
-    color: rgb(46 97 141);
+    color: use_color('primary-vivid');
     font: normal 700 19px $typeface-page-text;
     text-transform: uppercase;
   }
@@ -1922,37 +1922,6 @@ div#notebook_panel { /* FIXME Jupyter css */
   font-style: italic;
 }
 
-.kb-cell-toolbar {
-  .buttons {
-    color: rgb(206 206 206) !important;
-    font-weight: 700;
-  }
-
-  .btn {
-    border: 0;
-  }
-
-  .icon {
-    display: inline-block;
-    overflow: hidden;
-    padding: 0;
-    margin-right: 4px;
-    font-size: 14px;
-    vertical-align: top;
-  }
-
-  .title {
-    color: rgb(46 97 141);
-    font: normal 700 18px $typeface-page-text;
-  }
-
-  .info-link,
-  .subtitle {
-    color: rgb(102 102 102);
-    font: normal 400 14px $typeface-page-text;
-  }
-}
-
 .kb-toolbar-open {
   border-bottom: 1px solid rgb(204 204 204);
   border-radius: 0;
@@ -1984,7 +1953,7 @@ div#notebook_panel { /* FIXME Jupyter css */
   h1 {
     display: inline;
     margin: 3px 13px 3px 3px;
-    color: rgb(46 97 141);
+    color: use_color('primary-vivid');
     font: normal 400 16px/1 $typeface-page-text;
     opacity: inherit;
   }
@@ -2085,7 +2054,7 @@ td {
 }
 
 .kb-out-desc {
-  color: rgb(46 97 141);
+  color: use_color('primary-vivid');
 }
 
 .kb-err-desc,
@@ -2399,7 +2368,7 @@ control with padding, and then scooting the icon back into its column.
 }
 
 .kb-app-panel-description {
-  color: rgb(46 97 141);
+  color: use_color('primary-vivid');
   font: normal 400 16px/1 $typeface-page-text;
 }
 
@@ -3012,7 +2981,7 @@ button.kb-data-obj {
 
 .kb-data-list-name {
   margin: 2px;
-  color: rgb(46 97 141);
+  color: use_color('primary-vivid');
   cursor: pointer;
   font: normal 700 15px $typeface-page-text;
 

@@ -126,8 +126,10 @@ define(['./jobsData'], (JobsData) => {
                         ver: '1.0.43',
                         authors: ['tgu2'],
                         contact: 'https://kbase.us/contact-us/',
-                        subtitle: 'Import a FASTQ/SRA file into your Narrative as a Reads data object',
-                        tooltip: 'Import a FASTQ/SRA file into your Narrative as a Reads data object',
+                        subtitle:
+                            'Import a FASTQ/SRA file into your Narrative as a Reads data object',
+                        tooltip:
+                            'Import a FASTQ/SRA file into your Narrative as a Reads data object',
                         description:
                             '<p> Import a FASTQ/SRA file into your Narrative as a Reads data object\nPlease see the <a href="https://kbase.us/data-upload-download-guide/">Data Upload/Download Guide</a> for more information. </p>',
                         technical_description: 'none',
@@ -162,8 +164,10 @@ define(['./jobsData'], (JobsData) => {
                         name: 'Import FASTQ/SRA File as Reads from Staging Area',
                         namespace: 'kb_uploadmethods',
                         output_types: ['KBaseFile.PairedEndLibrary', 'KBaseFile.SingleEndLibrary'],
-                        subtitle: 'Import a FASTQ/SRA file into your Narrative as a Reads data object',
-                        tooltip: 'Import a FASTQ/SRA file into your Narrative as a Reads data object',
+                        subtitle:
+                            'Import a FASTQ/SRA file into your Narrative as a Reads data object',
+                        tooltip:
+                            'Import a FASTQ/SRA file into your Narrative as a Reads data object',
                         ver: '1.0.43',
                     },
                     job_id_output_field: 'docker',
@@ -410,7 +414,7 @@ define(['./jobsData'], (JobsData) => {
                         input: 'null',
                         output: 'no-display',
                     },
-                }
+                },
             },
             tag: 'release',
             version: '1.0.43',

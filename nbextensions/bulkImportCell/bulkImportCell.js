@@ -320,9 +320,11 @@ define([
             const initialParams = {},
                 fileParamIds = {},
                 otherParamIds = {};
-            /* initialize the parameters set.
-             * Get the app spec and split the set of parameters into filePaths and params
-             * each input file (typesToFiles[fileType].files) gets its own
+            /* Initialize the parameters set.
+             * Get the app spec and split the set of parameters into filePaths and params.
+             * Each input file (typesToFiles[fileType].files) gets its own set of filePath
+             * parameters.
+             * TODO: figure a good way to initialize these with one file use per param file row.
              */
             Object.keys(typesToFiles).forEach((fileType) => {
                 const spec = appSpecs[typesToFiles[fileType].appId];

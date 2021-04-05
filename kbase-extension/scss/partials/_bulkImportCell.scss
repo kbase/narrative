@@ -112,6 +112,14 @@ $panel-separator-color: rgb(33, 150, 243);
     }
   }
 
+  &__tab_pane .kb-bulk-import__filetype_panel {
+    display: none;
+  }
+
+  &__tab_pane[data-active-tab="configure"] .kb-bulk-import__filetype_panel {
+    display: block;
+  }
+
   /* kb-bulk-import-configure */
   &-configure {
     &__advanced_hidden_message {

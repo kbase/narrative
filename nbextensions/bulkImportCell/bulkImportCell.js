@@ -507,6 +507,7 @@ define([
                 if (widgetNode.firstChild) {
                     widgetNode.removeChild(widgetNode.firstChild);
                 }
+                ui.getElement('body.tab-pane').setAttribute('data-active-tab', '')
             }
         }
 
@@ -532,6 +533,8 @@ define([
                 jobId: undefined,
                 workspaceClient: workspaceClient,
             });
+
+            ui.getElement('body.tab-pane').setAttribute('data-active-tab', tab)
 
             return tabWidget.start({
                 node: ui.getElement('body.tab-pane.widget'),

@@ -54,7 +54,7 @@ define([
              *    management
              *  - row order, since we can delete from anywhere, can shift and wobble, so that's not helpful.
              *    instead, we map from rowId -> row order, and update that on insertions and deletions.
-             * In general, we need to support 3 actions.
+             * In general, we need to support 4 actions.
              * 1. add row
              *  - rows get added to the end, new id, new object for data. O(1)
              * 2. update data

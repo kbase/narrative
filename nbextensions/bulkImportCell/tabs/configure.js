@@ -58,17 +58,16 @@ define([
             we make the bulk import work with multiple data types
         */
         function buildParamsWidget(node) {
-            // This is the key in the model that maps to the list of params for the current app.
-            const paramKey = `${fileType}`;
-            const paramBus = buildMessageBus(paramKey, 'Parent comm bus for parameters widget');
+            const paramBus = buildMessageBus(fileType, 'Parent comm bus for parameters widget');
             paramBus.on('parameter-changed', (message) => {
-                updateModelParameterValue(paramKey, PARAM_TYPE, message);
+                updateModelParameterValue(fileType, PARAM_TYPE, message);
             });
 
             const widget = ParamsWidget.make({
                 bus: paramBus,
                 workspaceId: runtime.workspaceId(),
-                initialParams: model.getItem(['params', paramKey, PARAM_TYPE]),
+                paramIds: model.getItem(['app', 'otherParamIds', fileType]),
+                initialParams: model.getItem(['params', fileType, PARAM_TYPE]),
             });
 
             return widget

@@ -890,6 +890,10 @@ define([
         function renderJobState(jobState) {
             const isError = jobState.status === 'error';
 
+            if (runClock) {
+                runClock.stop();
+            }
+
             ui.setContent(
                 'kb-log.status-line',
                 [
@@ -922,7 +926,7 @@ define([
                         startTime: jobState.running,
                     })
                     .catch((err) => {
-                        console.warn(`Clock problem: ${err.message}`);
+                        console.warn('Clock problem:', err);
                         ui.setContent('kb-log.status-line.clock', '');
                     });
                 return;
@@ -942,10 +946,6 @@ define([
                 errorContent.start({
                     node: ui.getElement('kb-log.status-line.error-container'),
                 });
-            }
-
-            if (runClock) {
-                runClock.stop();
             }
         }
 
@@ -1184,9 +1184,10 @@ define([
         }
 
         /**
-         * Stop the specified listener(s) or all listeners
+         * Stop the specified listener(s) or all listeners. Listeners are specified as an array
+         * of strings, which should be keys in the `listenersByType` object.
          *
-         * If no arguments are supplied, all listeners will be removed
+         * If no arguments are supplied, all listeners will be removed.
          *
          * @param {array{string}} listeners
          */
@@ -1264,7 +1265,6 @@ define([
             });
             fsm.bus.on('on-job-not-found', () => {
                 doJobNotFound();
-                stopJobStatusUpdates();
             });
         }
 
@@ -1338,6 +1338,9 @@ define([
             }
             if (fsm) {
                 fsm.stop();
+            }
+            if (runClock) {
+                runClock.stop();
             }
             stopped = false;
         }

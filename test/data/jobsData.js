@@ -171,11 +171,12 @@ define(['common/format'], (format) => {
             errormsg: 'Job did not know how to queue!',
             created: t.created,
             queued: t.queued,
+            finished: t.finished,
             updated: 12345678910,
             meta: {
                 createJobStatusLines: {
                     line: jobStrings.error,
-                    history: [jobStrings.queueHistory, jobStrings.error],
+                    history: [jobStrings.queueHistoryNoRun, jobStrings.error],
                 },
                 jobAction: jobStrings.action.retry,
                 jobLabelIncludeError: 'failed: Queue error',

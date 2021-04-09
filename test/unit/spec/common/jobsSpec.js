@@ -22,6 +22,7 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
     ];
 
     const jobsByStatus = {};
+    // N.b. only one job of each status is saved here
     JobsData.allJobs.forEach((job) => {
         jobsByStatus[job.status] = job;
     });
@@ -296,7 +297,7 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
                 desc: 'all jobs',
                 child_jobs: JobsData.allJobs,
                 expected:
-                    'batch job in progress: 3 queued, 1 running, 1 success, 1 failed, 2 cancelled, 1 not found',
+                    'batch job in progress: 3 queued, 1 running, 1 success, 2 failed, 2 cancelled, 1 not found',
             },
             {
                 desc: 'in progress and finished',

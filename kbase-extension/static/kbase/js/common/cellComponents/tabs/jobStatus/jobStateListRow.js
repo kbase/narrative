@@ -28,7 +28,7 @@ define([
                     class: `fa fa-circle ${cssBaseClass}__icon--${jobStateObject.status}`,
                 }) +
                 ' ' +
-                Jobs.jobLabel(jobStateObject)
+                Jobs.jobLabel(jobStateObject, true)
             );
         }
 

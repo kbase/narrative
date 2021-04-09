@@ -11,6 +11,7 @@ define([
     const cssBaseClass = JobLogViewer.cssBaseClass;
 
     const jobsByStatus = {};
+    // N.b. this only saves one job of each type
     JobsData.allJobs.forEach((job) => {
         jobsByStatus[job.status] = job;
     });

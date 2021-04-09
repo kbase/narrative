@@ -8,6 +8,8 @@
 
   display: flex;
   flex-direction: row;
+  overflow: scroll;
+
 
   &:first-child {
     padding-top: 1rem;
@@ -19,8 +21,6 @@
 }
 
 %line_number {
-  display: flex;
-  flex-shrink: 0;
   text-align: right;
   user-select: none;
   white-space: nowrap;
@@ -31,9 +31,7 @@
   display: flex;
   flex: 1;
   margin-left: 1rem;
-  overflow-wrap: break-word;
   white-space: normal;
-  word-wrap: break-word;
 }
 
 .kb-log {
@@ -58,7 +56,7 @@
   &__content--expanded {
     @include zero-box;
 
-    overflow-y: scroll;
+    overflow: scroll;
     transition: height 0.5s;
   }
 

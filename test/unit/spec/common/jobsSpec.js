@@ -22,6 +22,7 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
     ];
 
     const jobsByStatus = {};
+    // N.b. only one job of each status is saved here
     JobsData.allJobs.forEach((job) => {
         jobsByStatus[job.status] = job;
     });
@@ -190,6 +191,47 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
         });
     });
 
+    describe('createJobStatusFromFsm', () => {
+        let container;
+        beforeAll(() => {
+            container = document.createElement('div');
+        });
+        afterAll(() => {
+            container.remove();
+        });
+
+        const tests = [
+            { mode: 'error', stage: '', text: 'error', cssClass: 'error' },
+            { mode: 'internal-error', stage: '', text: 'error', cssClass: 'error' },
+            { mode: 'canceling', stage: '', text: 'canceled', cssClass: 'terminated' },
+            { mode: 'canceled', stage: '', text: 'canceled', cssClass: 'terminated' },
+            { mode: 'processing', stage: 'running', text: 'running', cssClass: 'running' },
+            { mode: 'processing', stage: 'queued', text: 'queued', cssClass: 'queued' },
+            { mode: 'success', stage: '', text: 'success', cssClass: 'completed' },
+            // invalid input
+            { mode: 'processing', stage: 'unknown', noResult: true },
+            { mode: '', stage: 'running', noResult: true },
+        ];
+
+        tests.forEach((test) => {
+            if (test.noResult) {
+                it(`should not produce a status span with input mode "${test.mode}" and stage "${test.stage}"`, () => {
+                    expect(Jobs.createJobStatusFromFsm(test.mode, test.stage)).toBe('');
+                });
+            } else {
+                it(`should output "${test.text}" with input mode "${test.mode}" and stage "${test.stage}"`, () => {
+                    container.innerHTML = Jobs.createJobStatusFromFsm(test.mode, test.stage);
+                    expect(
+                        container.querySelector('[data-element="job-status"]').classList
+                    ).toContain(`kb-job-status__cell_summary--${test.cssClass}`);
+                    expect(container.querySelector('[data-element="job-status"]').textContent).toBe(
+                        test.text
+                    );
+                });
+            }
+        });
+    });
+
     describe('createCombinedJobState', () => {
         it('creates a string for a cancelled job', () => {
             const expected = Jobs.createCombinedJobState({
@@ -255,7 +297,7 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
                 desc: 'all jobs',
                 child_jobs: JobsData.allJobs,
                 expected:
-                    'batch job in progress: 3 queued, 1 running, 1 success, 1 failed, 2 cancelled, 1 not found',
+                    'batch job in progress: 3 queued, 1 running, 1 success, 2 failed, 2 cancelled, 1 not found',
             },
             {
                 desc: 'in progress and finished',

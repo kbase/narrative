@@ -43,19 +43,11 @@ $kbase-palette: (
   // graphite grey
   // Hex: #9D9389 HSL: 30, 9%, 58%
   "grey": rgb(157, 147, 137),
-);
-
-// colours
-$palette: (
 
   "white": rgb(255, 255, 255),
-
   "black": rgb(0, 0, 0),
-
   "ink": rgb(23, 20, 18),
-
   "neutral": rgb(106, 97, 88),
-
   "silver": rgb(192, 192, 192),
 
   "base-lightest": rgb(242, 239, 235),
@@ -125,6 +117,20 @@ $palette: (
   "icon-generic": rgb(192, 192, 192),
   "icon-type": rgb(0, 0, 0),
 );
+
+// Job status colours
+$job_status_colours: (
+  "created": map-get($kbase-palette, 'info'),
+  "estimating": map-get($kbase-palette, 'info'),
+  "queued": map-get($kbase-palette, 'info'),
+  "running": map-get($kbase-palette, 'info'),
+  "completed": map-get($kbase-palette, 'success-dark'),
+  "terminated": map-get($kbase-palette, 'warning-dark'),
+  "error": map-get($kbase-palette, 'error'),
+  "does_not_exist": map-get($kbase-palette, 'error'),
+);
+
+$palette: map-merge($kbase-palette, $job_status_colours);
 
 // use a colour from the palettes above
 @function use_color($key) {

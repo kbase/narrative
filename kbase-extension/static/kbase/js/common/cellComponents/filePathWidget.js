@@ -539,7 +539,7 @@ define([
                             class: 'fa fa-trash-o fa-lg',
                         }),
                     ]
-                )
+                ),
             ].join('');
 
             return Promise.all(

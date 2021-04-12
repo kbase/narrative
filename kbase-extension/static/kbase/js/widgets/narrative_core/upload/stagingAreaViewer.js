@@ -40,6 +40,8 @@ define([
     UUID
 ) => {
     'use strict';
+    const cssClassName = 'kb-staging-table';
+
     return new KBWidget({
         name: 'StagingAreaViewer',
 
@@ -342,7 +344,7 @@ define([
                             const fileId = new UUID(4).format();
                             //render checkboxes disabled until the user selects a type
                             return (
-                                '<input class="kb-staging-table-body__checkbox-input"' +
+                                `<input class="${cssClassName}-body__checkbox-input"` +
                                 'type="checkbox" role="checkbox" disabled=true ' +
                                 'aria-checked="false" tabindex="0"' +
                                 'aria-label="Select to import file checkbox: disabled until at least one data type is selected"' +
@@ -361,25 +363,25 @@ define([
                             if (type === 'display') {
                                 const isFolder = data === 'true' ? true : false;
                                 const icon = isFolder ? 'folder' : 'file-o';
-                                let disp = '<span><i class="fa fa-' + icon + '"></i></span>';
+                                const disp = '<span class="fa fa-' + icon + '"></span>';
                                 if (isFolder) {
-                                    disp =
+                                    return (
                                         '<button data-name="' +
                                         full[0] +
-                                        '" class="btn btn-xs btn-default">' +
+                                        `" class="${cssClassName}-body__button--${icon}">` +
                                         disp +
-                                        '</button>';
-                                } else {
-                                    disp =
-                                        '<i class="fa fa-caret-right kb-pointer" data-caret="' +
-                                        full[0] +
-                                        '"></i> ' +
-                                        disp;
+                                        '</button>'
+                                    );
                                 }
-                                return disp;
-                            } else {
-                                return data;
+
+                                return (
+                                    '<span class="fa fa-caret-right kb-pointer" data-caret="' +
+                                    full[0] +
+                                    '"></span> ' +
+                                    disp
+                                );
                             }
+                            return data;
                         },
                     },
                     {
@@ -392,14 +394,14 @@ define([
                                     data.match(/\.(zip|tar\.gz|tgz|tar\.bz|tar\.bz2|tar|gz|bz2)$/)
                                 ) {
                                     decompressButton =
-                                        '<button class="btn btn-default btn-xs kb-staging-table-body__decompress" data-decompress="' +
+                                        `<button class="${cssClassName}-body__button--decompress" data-decompress="` +
                                         data +
-                                        '"><i class="fa fa-expand"></i></button>';
+                                        '"><span class="fa fa-expand"></span></button>';
                                 }
 
                                 if (full[1] === 'true') {
                                     data =
-                                        '<span class="kb-staging-table-body__folder" data-name="' +
+                                        `<span class="${cssClassName}-body__folder" data-name="` +
                                         data +
                                         '">' +
                                         data +
@@ -407,7 +409,7 @@ define([
                                 }
 
                                 return (
-                                    '<div class="kb-staging-table-body__name">' +
+                                    `<div class="${cssClassName}-body__name">` +
                                     decompressButton +
                                     data +
                                     '</div>'
@@ -422,9 +424,8 @@ define([
                         render: function (data, type) {
                             if (type === 'display') {
                                 return StringUtil.readableBytes(Number(data));
-                            } else {
-                                return Number(data);
                             }
+                            return Number(data);
                         },
                     },
                     {
@@ -433,9 +434,8 @@ define([
                         render: function (data, type) {
                             if (type === 'display') {
                                 return TimeFormat.getShortTimeStampStr(Number(data));
-                            } else {
-                                return data;
                             }
+                            return data;
                         },
                     },
                 ],
@@ -470,7 +470,7 @@ define([
                             if any are checked we leave import button enabled
                             */
                             const anyCheckedBoxes = $(
-                                'input.kb-staging-table-body__checkbox-input:checked'
+                                `input.${cssClassName}-body__checkbox-input:checked`
                             );
 
                             if (!anyCheckedBoxes.length) {
@@ -480,7 +480,7 @@ define([
                     }
 
                     $('td:eq(0)', row)
-                        .find('input.kb-staging-table-body__checkbox-input')
+                        .find(`input.${cssClassName}-body__checkbox-input`)
                         .off('click')
                         .on('click keyPress', (e) => {
                             changeImportButton(e);
@@ -495,7 +495,7 @@ define([
                         });
 
                     //First, we find the expansion caret in the first cell.
-                    const $caret = $('td:eq(1)', row).find('i[data-caret]');
+                    const $caret = $('td:eq(1)', row).find('[data-caret]');
 
                     $caret.off('click');
 
@@ -531,7 +531,7 @@ define([
                     });
 
                     $('td:eq(2)', row)
-                        .find('.kb-staging-table-body__name')
+                        .find(`.${cssClassName}-body__name`)
                         .tooltip({
                             title: rowFileName,
                             placement: 'top',
@@ -542,7 +542,7 @@ define([
                         });
 
                     $('td:eq(2)', row)
-                        .find('span.kb-staging-table-body__folder')
+                        .find(`span.${cssClassName}-body__folder`)
                         .off('click')
                         .on('click', (e) => {
                             $(e.currentTarget).off('click');
@@ -573,21 +573,21 @@ define([
                     const importDropdown = $('td:eq(5)', row).find('select');
 
                     /*
-                            when a user selects a data type from the import as dropdown
-                            enable the checkbox for that row (so user can import)
-                            make sure the "select all" checkbox is also enabled
+                        when a user selects a data type from the import as dropdown
+                        enable the checkbox for that row (so user can import)
+                        make sure the "select all" checkbox is also enabled
 
-                            accepts dataType: string (the identifier of what the data type is e.g. sra_reads)
-                        */
+                        accepts dataType: string (the identifier of what the data type is e.g. sra_reads)
+                    */
                     function enableCheckboxes(dataType) {
                         $('td:eq(5)', row)
                             .find('.select2-selection')
-                            .addClass('kb-staging-table-body__import-type-selected');
+                            .addClass(`${cssClassName}-body__import-type-selected`);
 
                         //make checkbox for that row enabled
                         //also set the data type so that we have the reference later when importing
                         $('td:eq(0)', row)
-                            .find('.kb-staging-table-body__checkbox-input')
+                            .find(`.${cssClassName}-body__checkbox-input`)
                             .prop('disabled', false)
                             .attr('aria-label', 'Select to import file checkbox')
                             .attr('data-type', dataType);
@@ -604,7 +604,7 @@ define([
                         //tell select2 which option to set
                         importDropdown
                             .select2({
-                                containerCssClass: 'kb-staging-table-body__import-dropdown',
+                                containerCssClass: `${cssClassName}-body__import-dropdown`,
                             })
                             .val(storedFileData.dataType)
                             .trigger('change');
@@ -618,8 +618,7 @@ define([
                         if (suggestedType) {
                             importDropdown
                                 .select2({
-                                    containerCssClass:
-                                        'kb-staging-table-body__import-dropdown kb-staging-table-body__import-type-selected',
+                                    containerCssClass: `${cssClassName}-body__import-dropdown ${cssClassName}-body__import-type-selected`,
                                     placeholder: 'make the empty option disappear',
                                 })
                                 .val(suggestedType.id)
@@ -631,7 +630,7 @@ define([
                         } else {
                             importDropdown.select2({
                                 placeholder: 'Select a type',
-                                containerCssClass: 'kb-staging-table-body__import-dropdown',
+                                containerCssClass: `${cssClassName}-body__import-dropdown`,
                             });
                         }
                     }
@@ -704,7 +703,7 @@ define([
                 //get all of the rows in the data table
                 const nodes = fullDataTable.fnGetNodes();
 
-                $('input.kb-staging-table-body__checkbox-input:enabled', nodes)
+                $(`input.${cssClassName}-body__checkbox-input:enabled`, nodes)
                     .prop('checked', selectAllChecked)
                     .attr('aria-checked', selectAllChecked);
 
@@ -725,7 +724,7 @@ define([
             }
 
             const $tabsDiv = $.jqElem('div').append(
-                '<i class="fa fa-spinner fa-spin"></i> Loading file info...please wait'
+                '<span class="fa fa-spinner fa-spin"></span> Loading file info...please wait'
             );
 
             let filePath = this.subpath;
@@ -749,13 +748,13 @@ define([
                     const $tabsContainer = $.jqElem('div');
                     const data = JSON.parse(dataString);
 
-                    const $upaField = $.jqElem('span').append('<i class="fa fa-spinner fa-spin">');
+                    const $upaField = $.jqElem('span').addClass('fa fa-spinner fa-spin');
 
                     const $upa = data.UPA
                         ? $.jqElem('li')
                               .append(
                                   $.jqElem('span')
-                                      .addClass('kb-data-staging-metadata-list')
+                                      .addClass('kb-data-staging__metadata-list')
                                       .append('Imported as')
                               )
                               .append($upaField)
@@ -782,8 +781,8 @@ define([
                             $upaField.empty();
                             $upaField.addClass('alert alert-danger');
                             $upaField.css({
-                                padding: '0px',
-                                margin: '0px',
+                                padding: 0,
+                                margin: 0,
                             });
                             $upaField.append(xhr.error.message);
                         });
@@ -805,7 +804,7 @@ define([
                                         $.jqElem('li')
                                             .append(
                                                 $.jqElem('span')
-                                                    .addClass('kb-data-staging-metadata-list')
+                                                    .addClass('kb-data-staging__metadata-list')
                                                     .append('Name')
                                             )
                                             .append(data.name)
@@ -814,7 +813,7 @@ define([
                                         $.jqElem('li')
                                             .append(
                                                 $.jqElem('span')
-                                                    .addClass('kb-data-staging-metadata-list')
+                                                    .addClass('kb-data-staging__metadata-list')
                                                     .append('Created')
                                             )
                                             .append(TimeFormat.reformatDate(new Date(data.mtime)))
@@ -823,7 +822,7 @@ define([
                                         $.jqElem('li')
                                             .append(
                                                 $.jqElem('span')
-                                                    .addClass('kb-data-staging-metadata-list')
+                                                    .addClass('kb-data-staging__metadata-list')
                                                     .append('Size')
                                             )
                                             .append(StringUtil.readableBytes(Number(data.size)))
@@ -832,7 +831,7 @@ define([
                                         $.jqElem('li')
                                             .append(
                                                 $.jqElem('span')
-                                                    .addClass('kb-data-staging-metadata-list')
+                                                    .addClass('kb-data-staging__metadata-list')
                                                     .append('Line Count')
                                             )
                                             .append(lineCount)
@@ -841,7 +840,7 @@ define([
                                         $.jqElem('li')
                                             .append(
                                                 $.jqElem('span')
-                                                    .addClass('kb-data-staging-metadata-list')
+                                                    .addClass('kb-data-staging__metadata-list')
                                                     .append('MD5')
                                             )
                                             .append(data.md5 || 'Not provided')
@@ -851,13 +850,13 @@ define([
                             {
                                 tab: 'First 1024 chars',
                                 content: $.jqElem('div')
-                                    .addClass('kb-data-staging-metadata-file-lines')
+                                    .addClass('kb-data-staging__metadata-file-lines')
                                     .append(data.head),
                             },
                             {
                                 tab: 'Last 1024 chars',
                                 content: $.jqElem('div')
-                                    .addClass('kb-data-staging-metadata-file-lines')
+                                    .addClass('kb-data-staging__metadata-file-lines')
                                     .append(data.tail),
                             },
                         ],
@@ -879,7 +878,7 @@ define([
                             $tabs.addTab({
                                 tab: 'JGI Metadata',
                                 content: $.jqElem('div')
-                                    .addClass('kb-data-staging-metadata-file-lines')
+                                    .addClass('kb-data-staging__metadata-file-lines')
                                     .append(metadataContents),
                             });
                         })
@@ -902,16 +901,16 @@ define([
             return (fileData.loaded = $.jqElem('tr')
                 .addClass('staging-area-file-metadata')
                 .append(
-                    $.jqElem('td').attr('colspan', 5).css('vertical-align', 'top').append($tabsDiv)
+                    $.jqElem('td').attr('colspan', 6).css('vertical-align', 'top').append($tabsDiv)
                 ));
         },
 
         renderImportButton: function () {
             const importButton = $('<button></button>')
-                .addClass('kb-staging-table-import__button btn btn-xs btn-primary')
+                .addClass(`${cssClassName}-import__button`)
                 .text('Import Selected');
 
-            this.$elem.find('div.kb-staging-table-import').append(importButton);
+            this.$elem.find(`div.${cssClassName}-import`).append(importButton);
 
             /*
                 By default import button is disabled until the user selects a data type
@@ -921,16 +920,15 @@ define([
 
         disableImportButton: function () {
             this.$elem
-                .find('button.kb-staging-table-import__button')
-                .addClass('kb-staging-table-import__button__disabled')
+                .find(`button.${cssClassName}-import__button`)
+                .attr('disabled', true)
                 .tooltip({
                     title: 'Select a file/s to continue.',
                     delay: {
                         show: Config.get('tooltip').showDelay,
                         hide: Config.get('tooltip').hideDelay,
                     },
-                    template:
-                        '<div class="kb-staging-table-import__tooltip tooltip" role="tooltip"><div class="tooltip-inner"></div></div>',
+                    template: `<div class="${cssClassName}-import__tooltip tooltip" role="tooltip"><div class="tooltip-inner"></div></div>`,
                 })
                 .off('click');
         },
@@ -939,8 +937,8 @@ define([
             const stagingAreaViewer = this;
 
             this.$elem
-                .find('button.kb-staging-table-import__button')
-                .removeClass('kb-staging-table-import__button__disabled')
+                .find(`button.${cssClassName}-import__button`)
+                .attr('disabled', false)
                 .tooltip('disable')
                 .off('click')
                 .on('click keyPress', () => {
@@ -976,7 +974,7 @@ define([
              */
             const bulkMapping = {};
             // get all of the selected checkbox file names and import type
-            $('input.kb-staging-table-body__checkbox-input:checked').each(function () {
+            $(`input.${cssClassName}-body__checkbox-input:checked`).each(function () {
                 const importType = $(this).attr('data-type');
                 const importFile = $(this).attr('data-file-name');
                 if (stagingAreaViewer.bulkImportTypes.includes(importType)) {

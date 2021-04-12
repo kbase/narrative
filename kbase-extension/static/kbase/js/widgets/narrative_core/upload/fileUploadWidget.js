@@ -85,7 +85,7 @@ define([
                     $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
 
                     // If there is a button already in the area, it has to be removed,
-                    // and appened to the new document when additional errored files are added.
+                    // and appended to the new document when additional errored files are added.
                     if ($dropzoneElem.find('#clear-all-btn').length) {
                         this.deleteClearAllButton();
                         $dropzoneElem.append(this.makeClearAllButton());
@@ -202,7 +202,7 @@ define([
         makeClearAllButton: function () {
             const $clearAllBtn = $('<button>')
                 .text('Clear All')
-                .addClass('btn__text dz-clear-all__button')
+                .addClass('dz-clear-all__button')
                 .attr('aria-label', 'clear all errored files from the dropzone')
                 .attr('id', 'clear-all-btn')
                 .click(() => {

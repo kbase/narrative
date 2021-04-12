@@ -46,9 +46,6 @@ define([
                     },
                 ]),
             });
-            // Can't figure out a way to map these mappings to the above files
-            const fastq_mapping = [{ id: 'fastq_reads', title: 'FastQ Reads' }];
-            const sra_mapping = [{ id: 'sra_reads', title: 'SRA Reads' }];
 
             const mappings = { mappings: [null, null, null] };
             jasmine.Ajax.stubRequest(/.*\/staging_service\/importer_mappings\/?/).andReturn({
@@ -254,7 +251,7 @@ define([
 
         it('should properly render the import as dropdown', async () => {
             await stagingViewer.render();
-            let placeholder = $targetNode.find('span.select2-selection__placeholder').html();
+            const placeholder = $targetNode.find('span.select2-selection__placeholder').html();
             expect(placeholder).toContain('Select a type');
 
             //The options that should be in the import as dropdown
@@ -282,7 +279,7 @@ define([
             await stagingViewer.render();
 
             //find the fake sra reads row specifically (via the download button, then chaining back up to the select dropdown above - since we don't have a unique ID for these select drodpowns it's the best mehtod for now)
-            let selectDropdown = $targetNode
+            const selectDropdown = $targetNode
                 .find('[data-download="fake_sra_reads.sra"]')
                 .siblings('select');
 
@@ -290,7 +287,7 @@ define([
             selectDropdown.val('sra_reads').trigger('change').trigger('select2:select');
 
             //check that the dropdown renders correctly
-            let select2 = $targetNode.find('[title="SRA Reads"]');
+            const select2 = $targetNode.find('[title="SRA Reads"]');
             expect(select2).toBeDefined();
             expect(select2.attr('title')).toContain('SRA Reads');
             expect(select2.html()).toContain('SRA Reads');
@@ -321,7 +318,7 @@ define([
             await stagingViewer.render();
 
             //find the fake sra reads one specifically
-            let selectDropdown = $targetNode
+            const selectDropdown = $targetNode
                 .find('[data-download="fake_sra_reads.sra"]')
                 .siblings('select');
 
@@ -351,14 +348,14 @@ define([
 
             //initial state should be disabled until the user selects a data type for at least one file
             expect(button.html()).toContain('Import Selected');
-            expect(button.hasClass('kb-staging-table-import__button__disabled')).toBeTrue();
+            expect(button.disabled).toBeTrue();
         });
 
         it('should enable the import button when a type is selected', async () => {
             await stagingViewer.render();
 
             //find the fake sra reads one specifically
-            let selectDropdown = $targetNode
+            const selectDropdown = $targetNode
                 .find('[data-download="fake_sra_reads.sra"]')
                 .siblings('select');
 
@@ -369,7 +366,7 @@ define([
 
             const button = $targetNode.find('button.kb-staging-table-import__button');
 
-            expect(button.hasClass('kb-staging-table-import__button__disabled')).toBeFalse();
+            expect(button.disabled).toBeFalse();
         });
     });
 

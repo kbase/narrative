@@ -356,7 +356,9 @@ define([
                         return Array.from(mut.addedNodes).some((domEl) => {
                             return (
                                 domEl.classList &&
-                                domEl.classList.contains(`${cssBaseClass}_state_abbrev`)
+                                domEl.classList.contains(
+                                    `${cssBaseClass}__job_status_detail_container`
+                                )
                             );
                         });
                     });

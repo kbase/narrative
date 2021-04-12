@@ -436,6 +436,10 @@ define([
             return ui.getElement('log-panel');
         }
 
+        function getLastLogLine() {
+            return ui.getElement('log-panel').firstChild.lastChild;
+        }
+
         // VIEW ACTIONS
         function scheduleLogRequest() {
             if (!looping) {
@@ -499,7 +503,7 @@ define([
 
         /**
          * Requests log lines starting from the index supplied.
-         * Executed when the job is in states 'complete', 'terminated' or 'error'
+         * Executed when the job is in states 'completed', 'terminated' or 'error'
          * or if log auto fetch has been turned off
          *
          * @param {int} firstLine
@@ -533,8 +537,12 @@ define([
          * Scroll to the top of the job log
          */
         function doFetchFirstLogChunk() {
-            doStopLogs();
-            requestJobLog(0);
+            // check the FSM state
+            // if the job is still queued or running, stop the current log fetch and get logs.
+            if (!Jobs.isTerminalStatus(fsm.getCurrentState().state.mode)) {
+                doStopLogs();
+                requestJobLog(0);
+            }
             getLogPanel().scrollTo(0, 0);
         }
 
@@ -542,8 +550,13 @@ define([
          * scroll to the bottom of the job log
          */
         function doFetchLastLogChunk() {
-            doStopLogs();
-            requestLatestJobLog();
+            // if the FSM is not in a terminal state, stop the log fetch
+            // and get the latest logs
+            if (!Jobs.isTerminalStatus(fsm.getCurrentState().state.mode)) {
+                doStopLogs();
+                requestLatestJobLog();
+            }
+            getLogPanel().scrollTo(0, getLastLogLine().offsetTop);
         }
 
         /**
@@ -809,24 +822,11 @@ define([
          */
         function renderLogLine(line) {
             const errorSuffix = line.isError ? '--error' : '';
-            return div(
+            return t('li')(
                 {
-                    class: `${cssBaseClass}__line_container${errorSuffix}`,
+                    class: `${cssBaseClass}__line_text${errorSuffix}`,
                 },
-                [
-                    div(
-                        {
-                            class: `${cssBaseClass}__line_number${errorSuffix}`,
-                        },
-                        line.lineNumber
-                    ),
-                    div(
-                        {
-                            class: `${cssBaseClass}__line_text${errorSuffix}`,
-                        },
-                        line.text
-                    ),
-                ]
+                line.text
             );
         }
 
@@ -844,11 +844,16 @@ define([
             }
 
             const panel = getLogPanel();
-            panel.innerHTML = lines.map((line) => renderLogLine(line)).join('\n');
+            panel.innerHTML = t('ol')(
+                {
+                    class: `${cssBaseClass}__log_line_container`,
+                },
+                lines.map((line) => renderLogLine(line)).join('\n')
+            );
 
             // if we're autoscrolling, scroll to the bottom
             if (fsm.getCurrentState().state.auto || scrollToEndOnNext) {
-                panel.scrollTo(0, panel.lastChild.offsetTop);
+                panel.scrollTo(0, getLastLogLine().offsetTop);
                 scrollToEndOnNext = false;
             }
         }
@@ -899,7 +904,7 @@ define([
                 [
                     div(
                         {
-                            class: `${cssBaseClass}_state_abbrev`,
+                            class: `${cssBaseClass}__job_status_detail_container`,
                         },
                         renderJobStatusLines(jobState)
                     ),

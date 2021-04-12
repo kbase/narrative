@@ -8,7 +8,6 @@ define([
     'use strict';
 
     const t = html.tag,
-        td = t('td'),
         div = t('div'),
         label = t('label'),
         cssBaseClass = 'kb-field-cell';
@@ -49,9 +48,9 @@ define([
                 inputControl: html.genId(),
             };
 
-            const content = td(
+            const content = div(
                 {
-                    class: `${cssBaseClass}__tableCell`,
+                    class: `${cssBaseClass}__rowCell`,
                     id: ids.fieldPanel,
                     dataElement: 'field-panel',
                 },

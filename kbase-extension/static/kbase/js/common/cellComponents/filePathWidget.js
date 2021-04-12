@@ -16,9 +16,11 @@ define([
         span = tag('span'),
         button = tag('button'),
         div = tag('div'),
-        table = tag('table'),
-        tr = tag('tr'),
-        td = tag('td'),
+        ol = tag('ol'),
+        li = tag('li'),
+        // table = tag('table'),
+        // tr = tag('tr'),
+        // td = tag('td'),
         icon = tag('icon'),
         cssBaseClass = 'kb-file-path',
         cssClassType = 'parameter';
@@ -252,12 +254,6 @@ define([
             return fieldWidget;
         }
 
-        function updateRowNumbers(filePathRows) {
-            filePathRows.forEach((filePathRow, index) => {
-                filePathRow.querySelector(`.${cssBaseClass}__file_number`).textContent = index + 1;
-            });
-        }
-
         /**
          * Adds a new file path parameter row. Has the following responsibilities:
          *  - make row id
@@ -278,8 +274,8 @@ define([
             dataModel.rowIdToIndex[rowId] = dataModel.rowOrder.length - 1;
             dataModel.dataValues.push(params);
             $(tableElem).append(
-                tr({
-                    class: `${cssBaseClass}__table_row`,
+                li({
+                    class: `${cssBaseClass}__list_item`,
                     dataElement: `${cssClassType}-fields-row`,
                     dataRowId: rowId,
                 })
@@ -288,7 +284,6 @@ define([
             const filePathRows = ui.getElements(`${cssClassType}-fields-row`);
             return makeFilePathRow(filePathRows[filePathRows.length - 1], rowId, params).then(
                 () => {
-                    updateRowNumbers(filePathRows);
                     syncDataModel();
                 }
             );
@@ -312,8 +307,8 @@ define([
                     title: span(['File Paths']),
                     name: `${cssClassType}s-area`,
                     body: [
-                        table({
-                            class: `${cssBaseClass}__table`,
+                        ol({
+                            class: `${cssBaseClass}__list`,
                             dataElement: `${cssClassType}-fields`,
                         }),
                         button(
@@ -404,7 +399,7 @@ define([
                     };
 
                     return tag('div')({
-                        class: `${cssBaseClass}__table_cell--file-path_id`,
+                        class: `${cssBaseClass}__row_cell--file-path_id`,
                         id: id,
                         dataParameter: parameterId,
                     });
@@ -492,9 +487,7 @@ define([
                 dataModel.rowOrder.forEach((rowId, idx) => {
                     dataModel.rowIdToIndex[rowId] = idx;
                 });
-                const filePathRows = ui.getElements(`${cssClassType}-fields-row`);
-                $(e.target).closest('tr').remove();
-                updateRowNumbers(filePathRows);
+                $(e.target).closest('li').remove();
                 syncDataModel();
             });
         }
@@ -517,10 +510,7 @@ define([
             }
 
             filePathRow.innerHTML = [
-                td({
-                    class: `${cssBaseClass}__file_number`,
-                }),
-                td(
+                div(
                     {
                         class: `${cssBaseClass}__params`,
                     },
@@ -533,25 +523,23 @@ define([
                         ),
                     ]
                 ),
-                td({}, [
-                    button(
-                        {
-                            class: `${cssBaseClass}__button--delete btn btn__text`,
-                            type: 'button',
-                            id: events.addEvent({
-                                type: 'click',
-                                handler: function (e) {
-                                    deleteRow(e, rowId);
-                                },
-                            }),
-                        },
-                        [
-                            icon({
-                                class: 'fa fa-trash-o fa-lg',
-                            }),
-                        ]
-                    ),
-                ]),
+                button(
+                    {
+                        class: `${cssBaseClass}__button--delete btn btn__text`,
+                        type: 'button',
+                        id: events.addEvent({
+                            type: 'click',
+                            handler: function (e) {
+                                deleteRow(e, rowId);
+                            },
+                        }),
+                    },
+                    [
+                        icon({
+                            class: 'fa fa-trash-o fa-lg',
+                        }),
+                    ]
+                )
             ].join('');
 
             return Promise.all(

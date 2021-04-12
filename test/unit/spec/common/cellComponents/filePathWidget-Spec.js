@@ -90,10 +90,8 @@ define([
                 const jasmineContext = this;
                 const contents = [
                     'File Paths',
-                    'kb-file-path__table',
-                    'kb-file-path__table_row',
-                    'kb-file-path__file_number',
-                    '1',
+                    'kb-file-path__list',
+                    'kb-file-path__list_row',
                     'actual_output_object',
                     'fa fa-trash-o fa-lg',
                     'Add Row',

@@ -18,9 +18,6 @@ define([
         div = tag('div'),
         ol = tag('ol'),
         li = tag('li'),
-        // table = tag('table'),
-        // tr = tag('tr'),
-        // td = tag('td'),
         icon = tag('icon'),
         cssBaseClass = 'kb-file-path',
         cssClassType = 'parameter';

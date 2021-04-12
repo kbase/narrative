@@ -156,10 +156,10 @@ define([
             // input widget.
             fieldWidget.bus.on('sync', () => {
                 const rowIndex = dataModel.rowIdToIndex[rowId];
-                const value = dataModel.dataValues[rowIndex][parameterSpec.id];
+                const newValue = dataModel.dataValues[rowIndex][parameterSpec.id];
                 fieldWidget.bus.send(
                     {
-                        value: value,
+                        value: newValue,
                     },
                     {
                         // This points the update back to a listener on this key

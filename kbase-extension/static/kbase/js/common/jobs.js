@@ -232,6 +232,51 @@ define(['common/html', 'common/format', 'common/ui', 'common/errorDisplay'], (
     }
 
     /**
+     * Use the FSM mode and stage data to generate the appropriate job status summary
+     * @param {string} mode
+     * @param {string} stage
+     * @returns {string} HTML string with a single word status
+     */
+
+    function createJobStatusFromFsm(mode, stage) {
+        let label, cssClass;
+        switch (mode) {
+            case 'success':
+                label = 'success';
+                cssClass = 'completed';
+                break;
+            case 'error':
+            case 'internal-error':
+                label = 'error';
+                cssClass = 'error';
+                break;
+            case 'canceled':
+            case 'canceling':
+                label = 'canceled';
+                cssClass = 'terminated';
+                break;
+            case 'processing':
+                if (stage === 'running' || stage === 'queued') {
+                    label = stage;
+                    cssClass = stage;
+                }
+                break;
+        }
+
+        if (!label || !cssClass) {
+            return '';
+        }
+
+        return span(
+            {
+                class: `${cssBaseClass}__cell_summary--${cssClass}`,
+                dataElement: 'job-status',
+            },
+            label
+        );
+    }
+
+    /**
      * Ensures that the child_jobs data is in the correct place in the jobState object
      *
      * It should be possible to remove this function after migrating to ee 2.5
@@ -501,6 +546,7 @@ define(['common/html', 'common/format', 'common/ui', 'common/errorDisplay'], (
 
     return {
         createCombinedJobState,
+        createJobStatusFromFsm,
         createJobStatusLines,
         isValidJobStatus,
         isValidJobStateObject,

@@ -6,6 +6,11 @@
 %line_container {
   @include fixed-width;
 
+  display: flex;
+  flex-direction: row;
+  overflow: scroll;
+
+
   &:first-child {
     padding-top: 1rem;
   }
@@ -16,7 +21,6 @@
 }
 
 %line_number {
-  flex-shrink: 0;
   text-align: right;
   user-select: none;
   white-space: nowrap;
@@ -24,11 +28,10 @@
 }
 
 %line_text {
+  display: flex;
   flex: 1;
   margin-left: 1rem;
-  overflow-wrap: break-word;
   white-space: normal;
-  word-wrap: break-word;
 }
 
 .kb-log {
@@ -53,7 +56,7 @@
   &__content--expanded {
     @include zero-box;
 
-    overflow-y: scroll;
+    overflow: scroll;
     transition: height 0.5s;
   }
 
@@ -70,7 +73,7 @@
   &__line_container {
     @extend %line_container;
 
-    background-color: use-color('base-lightest'); // rgb(245, 245, 245);
+    background-color: use-color('base-lightest');
 
     /* .kb-log__line_container--error */
     &--error {
@@ -79,13 +82,6 @@
       background-color: use-color('error-lightest');
     }
   }
-
-  /* .kb-log__flex_wrapper */
-  &__flex_wrapper {
-    display: flex;
-    flex-direction: row;
-  }
-
 
   /* .kb-log__line_number */
   &__line_number {

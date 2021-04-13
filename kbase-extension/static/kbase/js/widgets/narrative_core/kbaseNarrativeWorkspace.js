@@ -384,7 +384,7 @@ define([
                 '#kb-share-btn',
                 '#kb-save-btn', // action btns
                 '#kb-ipy-menu', // kernel menu
-                '.kb-cell-toolbar .buttons.pull-right', // Jupyter icons
+                '.kb-cell-toolbar__buttons-container', // Jupyter icons
                 '.kb-title .btn-toolbar .btn .fa-arrow-right', // data panel slideout
             ];
         },

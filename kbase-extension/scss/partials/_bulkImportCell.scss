@@ -8,6 +8,17 @@ $filetype-highlight-color: use-color('white');
 $filetype-hover-color: use-color('base-lighter');
 $panel-separator-color: rgb(33, 150, 243);
 
+%file_type_button {
+  display: flex;
+  width: 100%;
+  flex-direction: row;
+  background-color: inherit;
+  border: 0 solid $component-border;
+  border-top-width: 1px;
+  padding: 8px;
+  text-align: left;
+}
+
 .kb-bulk-import {
   &__base-node {
     // everything lives under this
@@ -74,22 +85,17 @@ $panel-separator-color: rgb(33, 150, 243);
       /* .kb-bulk-import__filetype_panel__filetype_button */
       &_button {
         @include base-text;
-
-        display: flex;
-        width: 100%;
-        flex-direction: row;
-        padding: 8px;
-        border: 0 0 1px 0 solid $component-border;
-        background-color: inherit;
-        text-align: left;
+        @extend %file_type_button;
 
         &:hover:not(&--selected) {
+          @extend %file_type_button;
           background-color: $filetype-hover-color;
           cursor: pointer;
         }
 
         /* .kb-bulk-import__filetype_panel__filetype_button--selected */
         &--selected {
+          @extend %file_type_button;
           background-color: $filetype-highlight-color;
           box-shadow: 0 3px 2px -2px use-color('base');
         }
@@ -110,6 +116,14 @@ $panel-separator-color: rgb(33, 150, 243);
         flex: 1;
       }
     }
+  }
+
+  &__tab_pane .kb-bulk-import__filetype_panel {
+    display: none;
+  }
+
+  &__tab_pane[data-active-tab="configure"] .kb-bulk-import__filetype_panel {
+    display: block;
   }
 
   /* kb-bulk-import-configure */

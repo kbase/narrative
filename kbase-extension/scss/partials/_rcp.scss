@@ -40,13 +40,13 @@ $rcp-height: 50px;
 
   &-status {
     &__container {
+      @include ellipsis-overflow;
       flex: 1 1 auto;
-      overflow: hidden;
       font-size: 14px;
       line-height: $rcp-height;
       margin: 0 1rem;
-      vertical-align: middle;
     }
+
     &__fsm_display {
       display: inline-block;
       font: 12px/1 $typeface-page-text;
@@ -70,7 +70,9 @@ a.kb-rcp__tab-button--outdated {
   margin-left: 0.5rem;
   padding: 6px 0 0;
   color: use-color('warning');
-  &:hover, &:active {
+
+  &:hover,
+  &:active {
     color: use-color('warning-dark');
   }
 }

@@ -56,7 +56,7 @@ define('testUtil', ['bluebird', 'json!/test/testConfig.json'], (Promise, TestCon
      * Wait for an element to appear in the DOM underneath `documentElement`
      * @param {DOM element} documentElement to watch for the appearance of the element
      * @param {string} selector to identify the element being watched for
-     * @returns {DOM element} the element
+     * @returns {Promise} that resolves to produce the element
      */
     function waitForElement(documentElement, selector) {
         return new Promise((resolve) => {
@@ -80,7 +80,7 @@ define('testUtil', ['bluebird', 'json!/test/testConfig.json'], (Promise, TestCon
      * Wait for a certain DOM state
      * @param {DOM element} documentElement to watch for changes
      * @param {function} elementStateFunction function returning true when the state occurs
-     * @returns -
+     * @returns {Promise} that resolves when the DOM state is seen
      */
     function waitForElementState(documentElement, elementStateFunction) {
         return new Promise((resolve) => {
@@ -97,6 +97,21 @@ define('testUtil', ['bluebird', 'json!/test/testConfig.json'], (Promise, TestCon
         });
     }
 
+    /**
+     * Wait for an element to change
+     * @param {DOM element} documentElement to watch for changes
+     * @returns {Promise} that resolves when the element changes
+     */
+    function waitForElementChange(documentElement) {
+        return new Promise((resolve) => {
+            const observer = new MutationObserver(() => {
+                observer.disconnect();
+                resolve();
+            });
+            observer.observe(documentElement, { attributes: true, childList: true, subtree: true });
+        });
+    }
+
     return {
         make,
         getAuthToken,
@@ -105,5 +120,6 @@ define('testUtil', ['bluebird', 'json!/test/testConfig.json'], (Promise, TestCon
         wait,
         waitForElement,
         waitForElementState,
+        waitForElementChange,
     };
 });

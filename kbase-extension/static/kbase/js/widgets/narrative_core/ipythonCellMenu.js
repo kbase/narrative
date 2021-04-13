@@ -1,19 +1,10 @@
 /**
  * KBase preset wrapper for its cell menu.
  */
-define([
-    'jquery',
-    'notebook/js/celltoolbar',
-    'base/js/namespace',
-    'kb_common/html',
-    // 'kbaseNarrativeCellMenu',
-    'kbaseCellToolbarMenu',
-], (
+define(['jquery', 'notebook/js/celltoolbar', 'common/html', 'kbaseCellToolbarMenu'], (
     $,
     celltoolbar,
-    Jupyter,
     html,
-    // KBaseNarrativeCellMenu,
     KBaseMenu
 ) => {
     'use strict';
@@ -40,18 +31,18 @@ define([
     }
 
     function status(toolbarDiv, cell) {
-        const status = getMeta(cell, 'attributes', 'status'),
-            content = span({ style: { fontWeight: 'bold' } }, status);
+        const _status = getMeta(cell, 'attributes', 'status'),
+            content = span({ style: { fontWeight: 'bold' } }, _status);
         toolbarDiv.append(span({ style: { padding: '4px' } }, content));
     }
 
     function jobStatus(toolbarDiv, cell) {
-        const jobStatus = getMeta(cell, 'attributes', 'jobStatus'),
-            content = span({ style: { fontWeight: 'bold' } }, jobStatus);
+        const _jobStatus = getMeta(cell, 'attributes', 'jobStatus'),
+            content = span({ style: { fontWeight: 'bold' } }, _jobStatus);
         $(toolbarDiv).append(span({ style: { padding: '4px' } }, content));
     }
 
-    const register = function (notebook) {
+    const register = function () {
         celltoolbar.CellToolbar.register_callback('kbase-status', status);
         celltoolbar.CellToolbar.register_callback('kbase-job-status', jobStatus);
         celltoolbar.CellToolbar.register_callback('kbase-menu', makeKBaseMenu);

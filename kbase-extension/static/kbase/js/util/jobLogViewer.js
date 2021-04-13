@@ -437,7 +437,7 @@ define([
         }
 
         function getLastLogLine() {
-            return ui.getElement('log-panel').firstChild.lastChild;
+            return ui.getElement('log-lines').lastChild;
         }
 
         // VIEW ACTIONS
@@ -814,10 +814,11 @@ define([
         /**
          * render the HTML structure that displays
          * an individual job log line
-         * <div class="${cssBaseClass}__line_container">
-         *    <div class="${cssBaseClass}__line_number">###</div>
-         *    <div class="${cssBaseClass}__line_text">foobarbaz</div>
-         * </div>
+         * <ol class="${cssBaseClass}__log_line_container">
+         *    <li class="${cssBaseClass}__line_text">starting job</div>
+         *    <li class="${cssBaseClass}__line_text">initialising variables</div>
+         *    ...
+         * </ol>
          * @param {object} line
          */
         function renderLogLine(line) {
@@ -847,6 +848,7 @@ define([
             panel.innerHTML = t('ol')(
                 {
                     class: `${cssBaseClass}__log_line_container`,
+                    dataElement: 'log-lines',
                 },
                 lines.map((line) => renderLogLine(line)).join('\n')
             );

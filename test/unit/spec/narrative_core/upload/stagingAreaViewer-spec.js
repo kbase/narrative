@@ -146,11 +146,12 @@ define([
             stagingViewer.tour.tour.end();
         });
 
-        // FIXME: test requires expectations
         it('Should update its view with a proper subpath', async () => {
             expect(stagingViewer.$elem[0].textContent).toBe('');
             await stagingViewer.updateView();
-            expect(stagingViewer.$elem[0].querySelector('.kb-data-staging__breadcrumbs').textContent).toContain(fakeUser)
+            expect(
+                stagingViewer.$elem[0].querySelector('.kb-data-staging__breadcrumbs').textContent
+            ).toContain(fakeUser);
         });
 
         it('Should show an error when a path does not exist', async () => {
@@ -349,7 +350,7 @@ define([
 
             //initial state should be disabled until the user selects a data type for at least one file
             const button = container.querySelector('.kb-staging-table-import__button');
-            expect(button.textContent).toContain('Import Selected')
+            expect(button.textContent).toContain('Import Selected');
             expect(button.disabled).toBeTrue();
         });
 

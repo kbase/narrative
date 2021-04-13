@@ -40,7 +40,8 @@ define([
     UUID
 ) => {
     'use strict';
-    const cssClassName = 'kb-staging-table';
+    const cssBaseClass = 'kb-staging-table',
+        fileMetadataCssBaseClass = `${cssBaseClass}-file-metadata`;
 
     return new KBWidget({
         name: 'StagingAreaViewer',
@@ -132,7 +133,7 @@ define([
                 })
                 .then((files) => {
                     const scrollTop = this.$elem.parent().scrollTop();
-                    $('.staging-area-file-metadata').detach();
+                    $(`.${fileMetadataCssBaseClass}`).detach();
                     this.$elem.empty();
                     this.renderFileHeader();
                     this.renderFiles(files);
@@ -344,7 +345,7 @@ define([
                             const fileId = new UUID(4).format();
                             //render checkboxes disabled until the user selects a type
                             return (
-                                `<input class="${cssClassName}-body__checkbox-input"` +
+                                `<input class="${cssBaseClass}-body__checkbox-input"` +
                                 'type="checkbox" role="checkbox" disabled=true ' +
                                 'aria-checked="false" tabindex="0"' +
                                 'aria-label="Select to import file checkbox: disabled until at least one data type is selected"' +
@@ -368,7 +369,7 @@ define([
                                     return (
                                         '<button data-name="' +
                                         full[0] +
-                                        `" class="${cssClassName}-body__button--${icon}">` +
+                                        `" class="${cssBaseClass}-body__button--${icon}">` +
                                         disp +
                                         '</button>'
                                     );
@@ -394,14 +395,14 @@ define([
                                     data.match(/\.(zip|tar\.gz|tgz|tar\.bz|tar\.bz2|tar|gz|bz2)$/)
                                 ) {
                                     decompressButton =
-                                        `<button class="${cssClassName}-body__button--decompress" data-decompress="` +
+                                        `<button class="${cssBaseClass}-body__button--decompress" data-decompress="` +
                                         data +
                                         '"><span class="fa fa-expand"></span></button>';
                                 }
 
                                 if (full[1] === 'true') {
                                     data =
-                                        `<span class="${cssClassName}-body__folder" data-name="` +
+                                        `<span class="${cssBaseClass}-body__folder" data-name="` +
                                         data +
                                         '">' +
                                         data +
@@ -409,7 +410,7 @@ define([
                                 }
 
                                 return (
-                                    `<div class="${cssClassName}-body__name">` +
+                                    `<div class="${cssBaseClass}-body__name">` +
                                     decompressButton +
                                     data +
                                     '</div>'
@@ -470,7 +471,7 @@ define([
                             if any are checked we leave import button enabled
                             */
                             const anyCheckedBoxes = $(
-                                `input.${cssClassName}-body__checkbox-input:checked`
+                                `input.${cssBaseClass}-body__checkbox-input:checked`
                             );
 
                             if (!anyCheckedBoxes.length) {
@@ -480,7 +481,7 @@ define([
                     }
 
                     $('td:eq(0)', row)
-                        .find(`input.${cssClassName}-body__checkbox-input`)
+                        .find(`input.${cssBaseClass}-body__checkbox-input`)
                         .off('click')
                         .on('click keyPress', (e) => {
                             changeImportButton(e);
@@ -531,7 +532,7 @@ define([
                     });
 
                     $('td:eq(2)', row)
-                        .find(`.${cssClassName}-body__name`)
+                        .find(`.${cssBaseClass}-body__name`)
                         .tooltip({
                             title: rowFileName,
                             placement: 'top',
@@ -542,7 +543,7 @@ define([
                         });
 
                     $('td:eq(2)', row)
-                        .find(`span.${cssClassName}-body__folder`)
+                        .find(`span.${cssBaseClass}-body__folder`)
                         .off('click')
                         .on('click', (e) => {
                             $(e.currentTarget).off('click');
@@ -582,12 +583,12 @@ define([
                     function enableCheckboxes(dataType) {
                         $('td:eq(5)', row)
                             .find('.select2-selection')
-                            .addClass(`${cssClassName}-body__import-type-selected`);
+                            .addClass(`${cssBaseClass}-body__import-type-selected`);
 
                         //make checkbox for that row enabled
                         //also set the data type so that we have the reference later when importing
                         $('td:eq(0)', row)
-                            .find(`.${cssClassName}-body__checkbox-input`)
+                            .find(`.${cssBaseClass}-body__checkbox-input`)
                             .prop('disabled', false)
                             .attr('aria-label', 'Select to import file checkbox')
                             .attr('data-type', dataType);
@@ -604,7 +605,7 @@ define([
                         //tell select2 which option to set
                         importDropdown
                             .select2({
-                                containerCssClass: `${cssClassName}-body__import-dropdown`,
+                                containerCssClass: `${cssBaseClass}-body__import-dropdown`,
                             })
                             .val(storedFileData.dataType)
                             .trigger('change');
@@ -618,7 +619,7 @@ define([
                         if (suggestedType) {
                             importDropdown
                                 .select2({
-                                    containerCssClass: `${cssClassName}-body__import-dropdown ${cssClassName}-body__import-type-selected`,
+                                    containerCssClass: `${cssBaseClass}-body__import-dropdown ${cssBaseClass}-body__import-type-selected`,
                                     placeholder: 'make the empty option disappear',
                                 })
                                 .val(suggestedType.id)
@@ -630,7 +631,7 @@ define([
                         } else {
                             importDropdown.select2({
                                 placeholder: 'Select a type',
-                                containerCssClass: `${cssClassName}-body__import-dropdown`,
+                                containerCssClass: `${cssBaseClass}-body__import-dropdown`,
                             });
                         }
                     }
@@ -703,7 +704,7 @@ define([
                 //get all of the rows in the data table
                 const nodes = fullDataTable.fnGetNodes();
 
-                $(`input.${cssClassName}-body__checkbox-input:enabled`, nodes)
+                $(`input.${cssBaseClass}-body__checkbox-input:enabled`, nodes)
                     .prop('checked', selectAllChecked)
                     .attr('aria-checked', selectAllChecked);
 
@@ -748,116 +749,92 @@ define([
                     const $tabsContainer = $.jqElem('div');
                     const data = JSON.parse(dataString);
 
-                    const $upaField = $.jqElem('span').addClass('fa fa-spinner fa-spin');
+                    const fileMetadata = {
+                        Name: data.name,
+                        Created: TimeFormat.reformatDate(new Date(data.mtime)),
+                        Size: StringUtil.readableBytes(Number(data.size)),
+                        MD5: data.md5 || 'Not provided',
+                    };
 
-                    const $upa = data.UPA
-                        ? $.jqElem('li')
-                              .append(
-                                  $.jqElem('span')
-                                      .addClass('kb-data-staging__metadata-list')
-                                      .append('Imported as')
-                              )
-                              .append($upaField)
-                        : '';
-
-                    self.workspaceClient
-                        .get_object_info_new({
-                            objects: [
-                                {
-                                    ref: data.UPA,
-                                },
-                            ],
-                        })
-                        .then((name) => {
-                            $upaField.empty();
-                            $upaField.append(
-                                $.jqElem('a')
-                                    .attr('href', '/#dataview/' + data.UPA)
-                                    .attr('target', '_blank')
-                                    .append(name[0][1])
-                            );
-                        })
-                        .catch((xhr) => {
-                            $upaField.empty();
-                            $upaField.addClass('alert alert-danger');
-                            $upaField.css({
-                                padding: 0,
-                                margin: 0,
-                            });
-                            $upaField.append(xhr.error.message);
-                        });
-
-                    let lineCount = parseInt(data.lineCount, 10);
-                    if (!Number.isNaN(lineCount)) {
-                        lineCount = lineCount.toLocaleString();
+                    const lineCount = parseInt(data.lineCount, 10);
+                    if (Number.isNaN(lineCount)) {
+                        fileMetadata['Line count'] = 'Not provided';
                     } else {
-                        lineCount = 'Not provided';
+                        fileMetadata['Line count'] = lineCount.toLocaleString();
                     }
+
+                    if (data.UPA) {
+                        const $upaField = $.jqElem('span').addClass('fa fa-spinner fa-spin');
+                        self.workspaceClient
+                            .get_object_info_new({
+                                objects: [
+                                    {
+                                        ref: data.UPA,
+                                    },
+                                ],
+                            })
+                            .then((name) => {
+                                $upaField.empty();
+                                $upaField.append(
+                                    $.jqElem('a')
+                                        .attr('href', '/#dataview/' + data.UPA)
+                                        .attr('target', '_blank')
+                                        .append(name[0][1])
+                                );
+                            })
+                            .catch((xhr) => {
+                                $upaField.empty();
+                                $upaField.addClass('alert alert-danger');
+                                $upaField.append(xhr.error.message);
+                            });
+                        fileMetadata['Imported as'] = $upaField;
+                    }
+
+                    const $fileDataDl = $.jqElem('dl').addClass(
+                        `${fileMetadataCssBaseClass}__def_list`
+                    );
+
+                    ['Name', 'Created', 'Size', 'Line count', 'MD5', 'Imported as'].forEach(
+                        (item) => {
+                            if (fileMetadata[item]) {
+                                $fileDataDl
+                                    .append(
+                                        $.jqElem('dt')
+                                            .addClass(`${fileMetadataCssBaseClass}__term`)
+                                            .append(item)
+                                    )
+                                    .append(
+                                        $.jqElem('dd')
+                                            .addClass(`${fileMetadataCssBaseClass}__def`)
+                                            .append(fileMetadata[item])
+                                    );
+                            }
+                        }
+                    );
+
+                    const notATextFile = data.head === 'not text file';
 
                     $tabs = new KBaseTabs($tabsContainer, {
                         tabs: [
                             {
                                 tab: 'Info',
-                                content: $.jqElem('ul')
-                                    .css('list-style', 'none')
-                                    .append(
-                                        $.jqElem('li')
-                                            .append(
-                                                $.jqElem('span')
-                                                    .addClass('kb-data-staging__metadata-list')
-                                                    .append('Name')
-                                            )
-                                            .append(data.name)
-                                    )
-                                    .append(
-                                        $.jqElem('li')
-                                            .append(
-                                                $.jqElem('span')
-                                                    .addClass('kb-data-staging__metadata-list')
-                                                    .append('Created')
-                                            )
-                                            .append(TimeFormat.reformatDate(new Date(data.mtime)))
-                                    )
-                                    .append(
-                                        $.jqElem('li')
-                                            .append(
-                                                $.jqElem('span')
-                                                    .addClass('kb-data-staging__metadata-list')
-                                                    .append('Size')
-                                            )
-                                            .append(StringUtil.readableBytes(Number(data.size)))
-                                    )
-                                    .append(
-                                        $.jqElem('li')
-                                            .append(
-                                                $.jqElem('span')
-                                                    .addClass('kb-data-staging__metadata-list')
-                                                    .append('Line Count')
-                                            )
-                                            .append(lineCount)
-                                    )
-                                    .append(
-                                        $.jqElem('li')
-                                            .append(
-                                                $.jqElem('span')
-                                                    .addClass('kb-data-staging__metadata-list')
-                                                    .append('MD5')
-                                            )
-                                            .append(data.md5 || 'Not provided')
-                                    )
-                                    .append($upa),
+                                content: $fileDataDl,
                             },
                             {
                                 tab: 'First 1024 chars',
-                                content: $.jqElem('div')
-                                    .addClass('kb-data-staging__metadata-file-lines')
-                                    .append(data.head),
+                                content: notATextFile
+                                    ? $.jqElem('div').append('Not a text file')
+                                    : $.jqElem('div')
+                                          .addClass(`${fileMetadataCssBaseClass}__file_lines`)
+                                          .append(data.head),
                             },
                             {
                                 tab: 'Last 1024 chars',
-                                content: $.jqElem('div')
-                                    .addClass('kb-data-staging__metadata-file-lines')
-                                    .append(data.tail),
+                                content: notATextFile
+                                    ? $.jqElem('div').append('Not a text file')
+                                    : $.jqElem('div')
+                                          .addClass(`${fileMetadataCssBaseClass}__file_lines`)
+                                          .append(data.tail),
                             },
                         ],
                     });
@@ -871,14 +848,14 @@ define([
                         })
                         .then((_dataString) => {
                             // XXX - while doing this, I ran into a NaN issue in the file, specifically on the key illumina_read_insert_size_avg_insert.
-                            //       So we nuke any NaN fields to make it valid again.
+                            //  So we nuke any NaN fields to make it valid again.
                             const metadataJSON = JSON.parse(_dataString.replace(/NaN/g, '""'));
                             const metadataContents = JSON.stringify(metadataJSON, null, 2);
 
                             $tabs.addTab({
                                 tab: 'JGI Metadata',
                                 content: $.jqElem('div')
-                                    .addClass('kb-data-staging__metadata-file-lines')
+                                    .addClass(`${fileMetadataCssBaseClass}__file_lines`)
                                     .append(metadataContents),
                             });
                         })
@@ -899,18 +876,16 @@ define([
                 });
 
             return (fileData.loaded = $.jqElem('tr')
-                .addClass('staging-area-file-metadata')
-                .append(
-                    $.jqElem('td').attr('colspan', 6).css('vertical-align', 'top').append($tabsDiv)
-                ));
+                .addClass(fileMetadataCssBaseClass)
+                .append($.jqElem('td').attr('colspan', 6).append($tabsDiv)));
         },
 
         renderImportButton: function () {
             const importButton = $('<button></button>')
-                .addClass(`${cssClassName}-import__button`)
+                .addClass(`${cssBaseClass}-import__button`)
                 .text('Import Selected');
 
-            this.$elem.find(`div.${cssClassName}-import`).append(importButton);
+            this.$elem.find(`div.${cssBaseClass}-import`).append(importButton);
 
             /*
                 By default import button is disabled until the user selects a data type
@@ -920,7 +895,7 @@ define([
 
         disableImportButton: function () {
             this.$elem
-                .find(`button.${cssClassName}-import__button`)
+                .find(`button.${cssBaseClass}-import__button`)
                 .attr('disabled', true)
                 .tooltip({
                     title: 'Select a file/s to continue.',
@@ -928,7 +903,7 @@ define([
                         show: Config.get('tooltip').showDelay,
                         hide: Config.get('tooltip').hideDelay,
                     },
-                    template: `<div class="${cssClassName}-import__tooltip tooltip" role="tooltip"><div class="tooltip-inner"></div></div>`,
+                    template: `<div class="${cssBaseClass}-import__tooltip tooltip" role="tooltip"><div class="tooltip-inner"></div></div>`,
                 })
                 .off('click');
         },
@@ -937,7 +912,7 @@ define([
             const stagingAreaViewer = this;
 
             this.$elem
-                .find(`button.${cssClassName}-import__button`)
+                .find(`button.${cssBaseClass}-import__button`)
                 .attr('disabled', false)
                 .tooltip('disable')
                 .off('click')
@@ -974,7 +949,7 @@ define([
              */
             const bulkMapping = {};
             // get all of the selected checkbox file names and import type
-            $(`input.${cssClassName}-body__checkbox-input:checked`).each(function () {
+            $(`input.${cssBaseClass}-body__checkbox-input:checked`).each(function () {
                 const importType = $(this).attr('data-type');
                 const importFile = $(this).attr('data-file-name');
                 if (stagingAreaViewer.bulkImportTypes.includes(importType)) {

@@ -219,7 +219,7 @@ define([
         it('Should fail to start without a jobId', async function () {
             const jobLogViewerInstance = JobLogViewer.make();
             await expectAsync(
-                jobLogViewerInstance.start({ node: this.hostNode })
+                jobLogViewerInstance.start({ node: this.node })
             ).toBeRejectedWithError(/Requires a job id to start/);
         });
 

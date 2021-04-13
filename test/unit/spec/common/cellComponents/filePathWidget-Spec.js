@@ -4,8 +4,9 @@ define([
     'jquery',
     'common/runtime',
     'common/spec',
+    'testUtil',
     'json!/test/data/NarrativeTest.test_input_params.spec.json',
-], (Jupyter, FilePathWidget, $, Runtime, Spec, TestSpec) => {
+], (Jupyter, FilePathWidget, $, Runtime, Spec, TestUtil, TestSpec) => {
     'use strict';
 
     describe('The file path widget module', () => {
@@ -73,7 +74,7 @@ define([
             });
         });
 
-        xdescribe('the started widget', () => {
+        describe('the started widget', () => {
             beforeEach(async function () {
                 await this.filePathWidgetInstance.start({
                     node: this.node,
@@ -91,7 +92,7 @@ define([
                 const contents = [
                     'File Paths',
                     'kb-file-path__list',
-                    'kb-file-path__list_row',
+                    'kb-file-path__list_item',
                     'actual_output_object',
                     'fa fa-trash-o fa-lg',
                     'Add Row',
@@ -103,24 +104,53 @@ define([
 
             it('should add a row when Add Row button is clicked', function () {
                 const $node = $(this.node);
-                const preClickNumberOfRows = $node.find('tr').length;
+                const preClickNumberOfRows = $node.find('li').length;
                 expect(preClickNumberOfRows).toEqual(1);
                 $node.find('.kb-file-path__button--add_row').click();
-                setTimeout(() => {
-                    const postClickNumberOfRows = $node.find('tr').length;
+
+                return TestUtil.waitForElementChange(
+                    this.node.querySelector('ol.kb-file-path__list')
+                ).then(() => {
+                    // the job log container should be empty
+                    const postClickNumberOfRows = $node.find('li').length;
                     expect(postClickNumberOfRows).toEqual(2);
-                }, 1000);
+                });
             });
 
-            it('should delete a row when trashcan button is clicked', function () {
+            // TODO: this doesn't want to work and trigger the deletion event. I'm not sure why.
+            xit('should delete a row when trashcan button is clicked', function () {
                 const $node = $(this.node);
-                const preClickNumberOfRows = $node.find('tr').length;
+                const preClickNumberOfRows = $node.find('li.kb-file-path__list_item').length;
                 expect(preClickNumberOfRows).toEqual(1);
-                $node.find('.kb-file-path__button--delete').click();
-                setTimeout(() => {
-                    const postClickNumberOfRows = $node.find('tr').length;
+                const listNode = this.node.querySelector('ol.kb-file-path__list');
+                const deleteBtn = listNode.querySelector('button.kb-file-path__button--delete');
+                deleteBtn.click();
+
+                // Set up an observer to look for deletion of the <li> for the
+                // row we deleted. This gets returned as a Promise after the simulated click.
+                const watchPromise = new Promise((resolve) => {
+                    const observer = new MutationObserver((mutationList) => {
+                        for (const mutationRecord of mutationList) {
+                            if (mutationRecord.removedNodes) {
+                                for (const removedNode of mutationRecord.removedNodes) {
+                                    if ('kb-file-path__list' in removedNode.classList) {
+                                        observer.disconnect();
+                                        resolve();
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    observer.observe(listNode, {childList: true});  // leaving out the options should observe on delete
+                })
+                .then(() => {
+                    // the job log container should be empty
+                    const postClickNumberOfRows = $node.find('li.kb-file-path__list_item').length;
                     expect(postClickNumberOfRows).toEqual(0);
-                }, 1000);
+                });
+
+                return Promise.resolve($node.find('button.kb-file-path__button--delete').click())
+                    .then(() => watchPromise);
             });
         });
     });

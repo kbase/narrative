@@ -265,6 +265,7 @@ define([
             dataModel.rowIdToIndex[rowId] = dataModel.rowOrder.length - 1;
             dataModel.rows[rowId] = {
                 values: params,
+                widgets: []
             };
             $(tableElem).append(
                 li({
@@ -421,10 +422,11 @@ define([
          */
         function createFilePathWidget(rowId, appSpec, filePathParams, parameterId, parameterValue) {
             const spec = filePathParams.paramMap[parameterId];
+            let widget;
             return paramResolver
                 .loadInputControl(spec)
                 .then((inputWidget) => {
-                    const widget = makeFieldWidget(
+                    widget = makeFieldWidget(
                         rowId,
                         inputWidget,
                         appSpec,
@@ -432,13 +434,12 @@ define([
                         parameterValue
                     );
 
-                    return widget
-                        .start({
-                            node: container.querySelector('#' + filePathParams.view[spec.id].id),
-                        })
-                        .then(() => {
-                            return widget;
-                        });
+                    return widget.start({
+                        node: container.querySelector('#' + filePathParams.view[spec.id].id),
+                    });
+                })
+                .then(() => {
+                    return widget;
                 })
                 .catch((ex) => {
                     console.error(`Error making input field widget: ${ex}`);

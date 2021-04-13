@@ -55,15 +55,15 @@ define([
              *    instead, we map from rowId -> row order, and update that on insertions and deletions.
              * In general, we need to support 4 actions.
              * 1. add row
-             *  - rows get added to the end, new id, new object for data. O(1)
+             *  - rows get added to the end, new id, new object for data.
              * 2. update data
              *  - when a field widget updates its data, we get a message with row id, parameter id, and new
-             *    value. Mapping from row id -> row order makes this O(1)
+             *    value.
              * 3. push data to main widget (configure tab)
-             *  - we maintain data in the right order with the right set of values, so this is O(1)
+             *  - we use the mapped row order to fetch the values in the right order, which is a quick loop
              * 4. delete row
              *  - rows can get deleted from anywhere, which breaks all the ordering. We need to run a loop
-             *    to figure out the new order after the one that was deleted, which makes this O(n)
+             *    to figure out the new order after the one that was deleted.
              *
              * dataModel structure:
              * This is a simple object with a few keys:
@@ -71,9 +71,9 @@ define([
              *   screen, thus the order the data should be stored in
              * rowIdToIndex: mapping from unique rowId to the index in rowOrder. Mainly used on row
              *   updates
-             * dataValues: an array of key-value-pairs, parameter id -> parameter value
-             * widgets: mapping from rowId to the array of widget objects in that row, so we can stop
-             *   and remove them all.
+             * rows: a map from the unique rowId to an object containing two keys:
+             *   - values: a set of key-value-pairs, parameter id -> parameter value
+             *   - widgets: an array of all widgets running on that row
              *
              * example:
              * {
@@ -82,32 +82,28 @@ define([
              *      rowA: 0,
              *      rowB: 1
              *   },
-             *   dataValues: [{
-             *      param1: 'value1',
-             *      param2: 'value2
-             *   }, {
-             *      param1: 'value3',
-             *      param2: 'value4'
-             *   }],
-             *   widgets: {
-             *      rowA: [Object[], Object[]],
-             *      rowB: [Object[], Object[]]
+             *   rows: {
+             *     rowA: {
+             *       widgets: [Object[], Object[]],
+             *       values: {
+             *         param1: 'value1',
+             *         param2: 'value2
+             *       }
+             *     },
+             *     rowB: {
+             *       widgets: [Object[], Object[]],
+             *       values: {
+             *         param1: 'value3',
+             *         param2: 'value4
+             *       }
+             *     }
              *   }
              * }
-             *
-             * Why do something this complex? We might have 100+ rows, and sifting through to update
-             * all of them each time some random widget updates can take a while. And this is a
-             * cleaner way of keeping a logical mapping between rows and widgets and data. We could
-             * skip the rowIdToIndex Map, but that would mean searching out the row from the id
-             * each time - widgets don't know what row they're in, they only know the data they hold,
-             * and rewriting the fieldTableCellWidget wrapper to be row-aware seems like more work
-             * than is worth it.
              */
             dataModel = {
-                rowIdToIndex: {},
                 rowOrder: [],
-                dataValues: [],
-                widgets: {},
+                rowIdToIndex: {},
+                rows: {},
             },
             paramResolver = ParamResolver.make(),
             events = Events.make(),
@@ -141,22 +137,20 @@ define([
             // put that in the filePathWidget's data model, then push all the values up the main
             // params bus.
             fieldWidget.bus.on('changed', (message) => {
-                const rowIndex = dataModel.rowIdToIndex[rowId];
-                dataModel.dataValues[rowIndex][parameterSpec.id] = message.newValue;
+                dataModel.rows[rowId].values[parameterSpec.id] = message.newValue;
                 paramsBus.emit('parameter-changed', {
                     parameter: parameterSpec.id,
                     newValue: message.newValue,
                     isError: message.isError,
                     rowId: rowId,
-                    rowIndex: dataModel.rowOrder.indexOf(rowId),
+                    rowIndex: dataModel.rowIdToIndex[rowId],
                 });
             });
 
             // The 'sync' message is a request for the current model value from the
             // input widget.
             fieldWidget.bus.on('sync', () => {
-                const rowIndex = dataModel.rowIdToIndex[rowId];
-                const newValue = dataModel.dataValues[rowIndex][parameterSpec.id];
+                const newValue = dataModel.rows[rowId].values[parameterSpec.id];
                 fieldWidget.bus.send(
                     {
                         value: newValue,
@@ -269,7 +263,9 @@ define([
             const rowId = html.genId();
             dataModel.rowOrder.push(rowId);
             dataModel.rowIdToIndex[rowId] = dataModel.rowOrder.length - 1;
-            dataModel.dataValues.push(params);
+            dataModel.rows[rowId] = {
+                values: params
+            };
             $(tableElem).append(
                 li({
                     class: `${cssBaseClass}__list_item`,
@@ -287,8 +283,10 @@ define([
         }
 
         function syncDataModel() {
+            // map structure of data into an array of parameter objects
+            const dataValues = dataModel.rowOrder.map(rowId => dataModel.rows[rowId].values);
             paramsBus.emit('sync-data-model', {
-                values: dataModel.dataValues,
+                values: dataValues,
             });
         }
 
@@ -351,8 +349,8 @@ define([
         // EVENTS
         function attachEvents() {
             bus.on('reset-to-defaults', () => {
-                Object.values(dataModel.widgets).forEach((widgetRow) => {
-                    widgetRow.forEach((widget) => {
+                Object.values(dataModel.rows).forEach((row) => {
+                    row.widgets.forEach((widget) => {
                         widget.bus.emit('reset-to-defaults');
                     });
                 });
@@ -362,8 +360,8 @@ define([
                 // if the workspace magically changes, pass that along to
                 // each registered widget.
 
-                Object.values(dataModel.widgets).forEach((widgetRow) => {
-                    widgetRow.forEach((widget) => {
+                Object.values(dataModel.rows).forEach((row) => {
+                    row.widgets.forEach((widget) => {
                         widget.bus.emit('workspace-changed');
                     });
                 });
@@ -471,16 +469,14 @@ define([
          */
         function deleteRow(e, rowId) {
             return Promise.all(
-                dataModel.widgets[rowId].map((widget) => {
-                    return widget.stop();
-                })
+                dataModel.rows[rowId].widgets.map(widget => widget.stop())
             ).then(() => {
-                delete dataModel.widgets[rowId];
+                delete dataModel.rows[rowId];
                 const rowIdx = dataModel.rowIdToIndex[rowId];
-                dataModel.dataValues.splice(rowIdx, 1);
+
                 dataModel.rowOrder.splice(rowIdx, 1);
                 delete dataModel.rowIdToIndex[rowId];
-                // redo the ordering, this is the only O(N) part
+                // redo the ordering
                 dataModel.rowOrder.forEach((rowId, idx) => {
                     dataModel.rowIdToIndex[rowId] = idx;
                 });
@@ -550,7 +546,8 @@ define([
                     );
                 })
             ).then((widgets) => {
-                dataModel.widgets[rowId] = widgets;
+                // dataModel.rows[rowId] was already created by addRow
+                dataModel.rows[rowId].widgets = widgets;
                 events.attachEvents(container);
             });
         }
@@ -601,8 +598,8 @@ define([
 
         function stop() {
             // Stop all widgets. Note this is an array of arrays of promises.
-            const widgetStopProms = Object.values(dataModel.widgets).map((widgetRow) => {
-                return widgetRow.map((widget) => {
+            const widgetStopProms = Object.values(dataModel.rows).map((row) => {
+                return row.widgets.map((widget) => {
                     return widget.stop();
                 });
             });

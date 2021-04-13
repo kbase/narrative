@@ -84,7 +84,6 @@ define([
             `${cssBaseClass}__table`,
             `${cssBaseClass}__table_head`,
             `${cssBaseClass}__table_head_row`,
-            `${cssBaseClass}__table_head_cell`,
             `${cssBaseClass}__table_body`,
             `${cssBaseClass}__row`,
         ];
@@ -92,6 +91,23 @@ define([
         classContents.forEach((item) => {
             it(`should have an element with class ${item}`, () => {
                 expect(container.querySelectorAll(`.${item}`).length).toBeGreaterThan(0);
+            });
+        });
+
+        const tableHeadCells = {
+            action: 'Action',
+            'log-view': 'Status details',
+            object: 'Object',
+            status: 'Status',
+        };
+        Object.keys(tableHeadCells).forEach((key) => {
+            it(`should generate appropriate table header cell for ${key}`, () => {
+                expect(
+                    container.querySelectorAll(`.${cssBaseClass}__table_head_cell--${key}`).length
+                ).toEqual(1);
+                expect(
+                    container.querySelector(`.${cssBaseClass}__table_head_cell--${key}`).textContent
+                ).toContain(tableHeadCells[key]);
             });
         });
 

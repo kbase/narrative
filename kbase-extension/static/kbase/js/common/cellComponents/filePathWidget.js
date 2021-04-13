@@ -309,7 +309,7 @@ define([
                         }),
                         button(
                             {
-                                class: `${cssBaseClass}__button--add_row btn btn__text`,
+                                class: `${cssBaseClass}__button--add_row`,
                                 type: 'button',
                                 id: events.addEvent({
                                     type: 'click',

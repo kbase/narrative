@@ -128,7 +128,7 @@ define([
                     },
                     id: events.addEvent({
                         type: 'click',
-                        handler: function () {
+                        handler: () => {
                             _cell.showInfo();
                         },
                     }),

@@ -38,6 +38,24 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
 
     const badStates = [undefined, null, 'Mary Poppins', 12345678];
 
+    describe('the isTerminalStatus function', () => {
+        it('should return true if the job status is terminal', () => {
+            ['completed', 'terminated', 'error', 'does_not_exist'].forEach((status) => {
+                expect(Jobs.isTerminalStatus(status)).toBeTrue();
+            });
+        });
+        it('should return false for jobs that are in progress', () => {
+            ['created', 'estimating', 'queued', 'running'].forEach((status) => {
+                expect(Jobs.isTerminalStatus(status)).toBeFalse();
+            });
+        });
+        it('should return false for invalid job statuses', () => {
+            badStates.forEach((status) => {
+                expect(Jobs.isTerminalStatus(status)).toBeFalse();
+            });
+        });
+    });
+
     describe('The isValidJobStateObject function', () => {
         it('Should know how to tell good job states', () => {
             JobsData.allJobs.forEach((elem) => {

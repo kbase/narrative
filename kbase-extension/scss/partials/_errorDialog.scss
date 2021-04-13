@@ -1,4 +1,4 @@
-/* Tabbed error dialog */
+// Tabbed error dialog
 .kb-error-dialog {
 
   &__body .tab-content {
@@ -15,16 +15,15 @@
   }
 
   &__stacktrace {
-    /* kb-error-dialog__stacktrace_container */
+    // kb-error-dialog__stacktrace_container
     &_container {
       @include code-block;
     }
 
-    /* kb-error-dialog__stacktrace_lines */
+    // kb-error-dialog__stacktrace_lines
     // &_lines {}
 
-    /* kb-error-dialog__stacktrace_single_line */
+    // kb-error-dialog__stacktrace_single_line
     // &_single_line {}
   }
 }
-

@@ -264,7 +264,7 @@ define([
             dataModel.rowOrder.push(rowId);
             dataModel.rowIdToIndex[rowId] = dataModel.rowOrder.length - 1;
             dataModel.rows[rowId] = {
-                values: params
+                values: params,
             };
             $(tableElem).append(
                 li({
@@ -284,7 +284,7 @@ define([
 
         function syncDataModel() {
             // map structure of data into an array of parameter objects
-            const dataValues = dataModel.rowOrder.map(rowId => dataModel.rows[rowId].values);
+            const dataValues = dataModel.rowOrder.map((rowId) => dataModel.rows[rowId].values);
             paramsBus.emit('sync-data-model', {
                 values: dataValues,
             });
@@ -468,21 +468,21 @@ define([
          * @returns a promise that resolves when the steps are done.
          */
         function deleteRow(e, rowId) {
-            return Promise.all(
-                dataModel.rows[rowId].widgets.map(widget => widget.stop())
-            ).then(() => {
-                delete dataModel.rows[rowId];
-                const rowIdx = dataModel.rowIdToIndex[rowId];
+            return Promise.all(dataModel.rows[rowId].widgets.map((widget) => widget.stop())).then(
+                () => {
+                    delete dataModel.rows[rowId];
+                    const rowIdx = dataModel.rowIdToIndex[rowId];
 
-                dataModel.rowOrder.splice(rowIdx, 1);
-                delete dataModel.rowIdToIndex[rowId];
-                // redo the ordering
-                dataModel.rowOrder.forEach((rowId, idx) => {
-                    dataModel.rowIdToIndex[rowId] = idx;
-                });
-                $(e.target).closest('li').remove();
-                syncDataModel();
-            });
+                    dataModel.rowOrder.splice(rowIdx, 1);
+                    delete dataModel.rowIdToIndex[rowId];
+                    // redo the ordering
+                    dataModel.rowOrder.forEach((rowId, idx) => {
+                        dataModel.rowIdToIndex[rowId] = idx;
+                    });
+                    $(e.target).closest('li').remove();
+                    syncDataModel();
+                }
+            );
         }
 
         /**

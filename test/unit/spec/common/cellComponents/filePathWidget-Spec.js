@@ -141,16 +141,16 @@ define([
                             }
                         }
                     });
-                    observer.observe(listNode, {childList: true});  // leaving out the options should observe on delete
-                })
-                .then(() => {
+                    observer.observe(listNode, { childList: true }); // leaving out the options should observe on delete
+                }).then(() => {
                     // the job log container should be empty
                     const postClickNumberOfRows = $node.find('li.kb-file-path__list_item').length;
                     expect(postClickNumberOfRows).toEqual(0);
                 });
 
-                return Promise.resolve($node.find('button.kb-file-path__button--delete').click())
-                    .then(() => watchPromise);
+                return Promise.resolve(
+                    $node.find('button.kb-file-path__button--delete').click()
+                ).then(() => watchPromise);
             });
         });
     });

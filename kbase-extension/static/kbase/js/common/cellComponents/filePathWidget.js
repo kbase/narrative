@@ -265,7 +265,7 @@ define([
             dataModel.rowIdToIndex[rowId] = dataModel.rowOrder.length - 1;
             dataModel.rows[rowId] = {
                 values: params,
-                widgets: []
+                widgets: [],
             };
             $(tableElem).append(
                 li({
@@ -426,13 +426,7 @@ define([
             return paramResolver
                 .loadInputControl(spec)
                 .then((inputWidget) => {
-                    widget = makeFieldWidget(
-                        rowId,
-                        inputWidget,
-                        appSpec,
-                        spec,
-                        parameterValue
-                    );
+                    widget = makeFieldWidget(rowId, inputWidget, appSpec, spec, parameterValue);
 
                     return widget.start({
                         node: container.querySelector('#' + filePathParams.view[spec.id].id),

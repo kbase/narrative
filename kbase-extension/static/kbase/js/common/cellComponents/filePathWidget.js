@@ -513,7 +513,7 @@ define([
                 ),
                 button(
                     {
-                        class: `${cssBaseClass}__button--delete btn btn__text`,
+                        class: `${cssBaseClass}__button--delete`,
                         type: 'button',
                         id: events.addEvent({
                             type: 'click',

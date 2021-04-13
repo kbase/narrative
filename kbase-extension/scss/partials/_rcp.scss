@@ -23,13 +23,13 @@ $rcp-height: 50px;
     vertical-align: bottom;
   }
 
-  /* .kb-rcp__action-button */
+  // .kb-rcp__action-button
   &__action-button {
     float: left;
     margin: 6px;
     width: 8rem;
 
-    /* .kb-rcp__action-button-container */
+    // .kb-rcp__action-button-container
     &-container {
       flex: none;
       overflow: hidden;
@@ -58,13 +58,13 @@ $rcp-height: 50px;
     }
   }
 
-  /* .kb-rcp__tab-button */
+  // .kb-rcp__tab-button
   &__tab-button {
     float: left;
     margin-left: 0.5rem;
   }
 }
-/* .kb-rcp__tab-button--outdated */
+// .kb-rcp__tab-button--outdated
 a.kb-rcp__tab-button--outdated {
   float: left;
   margin-left: 0.5rem;

@@ -19,23 +19,23 @@
 .access,
 .generic {
   &-error {
-    /* .access-error__container,
-    .generic-error__container */
+    // .access-error__container
+    // .generic-error__container
     &__container {
       margin: 2rem;
       text-align: center;
     }
 
-    /* .access-error__heading,
-    .generic-error__heading */
+    // .access-error__heading,
+    // .generic-error__heading
     &__heading {
       font-size: 200%;
       font-weight: 700;
       line-height: 1.5;
     }
 
-    /* .access-error__text,
-    .generic-error__text */
+    // .access-error__text,
+    // .generic-error__text
     &__text {
       font-size: 150%;
       line-height: 2;
@@ -44,18 +44,18 @@
 }
 
 .access-request {
-  /* .access-request-form__container */
+  // .access-request-form__container
   &-form__container {
     margin-top: 2rem;
   }
 
-  /* .access-request-progress__container */
+  // .access-request-progress__container
   &-progress__container {
     display: none;
     margin-top: 1rem;
   }
 
-  /* .access-request-result */
+  // .access-request-result
   &-result {
     font-size: 125%;
     margin-top: 2rem;

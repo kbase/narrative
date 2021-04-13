@@ -1,0 +1,33 @@
+.kb-data-staging {
+  &__breadcrumbs {
+    margin: 1rem 0 1.5rem;
+  }
+  // .kb-data-staging__breadcrumb .kb-pointer a
+  &__breadcrumb_link {
+    cursor: pointer;
+  }
+
+  // .kb-data-staging__container
+  &__container {
+    height: 604px;
+    padding: 10px;
+    overflow-y: auto;
+  }
+
+  // https://www.figma.com/file/T30UN3QhWhhV5SpXiqY1ij/KBase-component-library?node-id=1%3A4
+  // .kb-data-staging__button
+  &__button {
+    @extend %kbase-button;
+
+    @include button-variant(use_color('primary'), use_color('primary-lightest'), transparent);
+    position: relative;
+    top: -3px;
+    letter-spacing: 0.7px;
+    margin-left: 1rem;
+  }
+
+  // .kb-data-staging__title
+  &__title {
+    font: normal 700 24px/30px $typeface-page-text;
+  }
+}

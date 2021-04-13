@@ -34,11 +34,11 @@ define([
 
     function htmlEncode(str) {
         return str
-            .replace(/&/, '&amp;')
-            .replace(/'/, '&#039;')
-            .replace(/"/, '&quot;')
-            .replace(/</, '&lt;')
-            .replace(/>/, '&gt;');
+            .replace(/&/g, '&amp;')
+            .replace(/'/g, '&#039;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
     }
 
     /**

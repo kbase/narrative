@@ -153,20 +153,25 @@ define([
      */
 
     function testJobLogs(node, accumulatedLogLines) {
-        const panel = node.querySelector('[data-element="log-panel"]');
+        if (!accumulatedLogLines.length) {
+            // no log lines element
+            expect(node.querySelector('[data-element="log-lines"]')).toBeNull();
+            // no children of the log panel
+            expect(node.querySelector('[data-element="log-panel"]').children.length).toEqual(0);
+            return;
+        }
+        const logLinesList = node.querySelector('[data-element="log-lines"]');
         try {
-            expect(panel.children.length).toEqual(accumulatedLogLines.length);
-            if (accumulatedLogLines.length) {
-                Array.from(panel.children).forEach((line, ix) => {
-                    const expectedClass = accumulatedLogLines[ix].is_error
-                        ? `${cssBaseClass}__line_container--error`
-                        : `${cssBaseClass}__line_container`;
-                    expect(line).toHaveClass(expectedClass);
-                    expect(line.textContent).toContain(accumulatedLogLines[ix].line);
-                });
-            }
+            expect(logLinesList.children.length).toEqual(accumulatedLogLines.length);
+            Array.from(logLinesList.children).forEach((line, ix) => {
+                const expectedClass = accumulatedLogLines[ix].is_error
+                    ? `${cssBaseClass}__line_text--error`
+                    : `${cssBaseClass}__line_text`;
+                expect(line).toHaveClass(expectedClass);
+                expect(line.textContent).toContain(accumulatedLogLines[ix].line);
+            });
         } catch (error) {
-            console.error('testJobLogs failed: ', error, 'panel: ' + panel.outerHTML);
+            console.error('testJobLogs failed: ', error, 'logLinesList: ' + logLinesList.outerHTML);
             fail(error);
         }
     }
@@ -356,7 +361,9 @@ define([
                         return Array.from(mut.addedNodes).some((domEl) => {
                             return (
                                 domEl.classList &&
-                                domEl.classList.contains(`${cssBaseClass}_state_abbrev`)
+                                domEl.classList.contains(
+                                    `${cssBaseClass}__job_status_detail_container`
+                                )
                             );
                         });
                     });

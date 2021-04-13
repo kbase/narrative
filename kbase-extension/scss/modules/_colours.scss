@@ -57,6 +57,7 @@ $kbase-palette: (
   "base-dark": rgb(84, 76, 69),
   "base-darkest": rgb(62, 56, 50),
 
+  "primary-lightest": rgb(223, 238, 246),
   "primary-lighter": rgb(204, 229, 243),
   "primary-light": rgb(102, 177, 219),
   "primary": rgb(2, 109, 170),
@@ -64,6 +65,7 @@ $kbase-palette: (
   "primary-dark": rgb(2, 62, 96),
   "primary-darker": rgb(2, 41, 64),
 
+  "secondary-lightest": rgb(229, 244, 241),
   "secondary-lighter": rgb(204, 234, 231),
   "secondary-light": rgb(153, 213, 207),
   "secondary": rgb(0, 150, 136),
@@ -71,30 +73,35 @@ $kbase-palette: (
   "secondary-dark": rgb(17, 133, 119),
   "secondary-darkest": rgb(6, 86, 77),
 
+  "accent-cool-lightest": rgb(204, 234, 236),
   "accent-cool-lighter": rgb(170, 224, 228),
   "accent-cool-light": rgb(142, 214, 219),
   "accent-cool": rgb(71, 193, 201),
   "accent-cool-dark": rgb(39, 129, 135),
   "accent-cool-darker": rgb(10, 83, 88),
 
+  "accent-warm-lightest": rgb(253, 202, 146),
   "accent-warm-lighter": rgb(255, 176, 92),
   "accent-warm-light": rgb(255, 161, 62),
   "accent-warm": rgb(247, 142, 30),
   "accent-warm-dark": rgb(192, 87, 25),
   "accent-warm-darker": rgb(136, 52, 4),
 
+  "success-lightest": rgb(193, 228, 224),
   "success-lighter": rgb(153, 213, 207),
   "success-light": rgb(51, 171, 160),
   "success": rgb(17, 133, 119),
   "success-dark": rgb(10, 98, 88),
   "success-darker": rgb(0, 66, 59),
 
+  "info-lightest": rgb(240, 244, 251),
   "info-lighter": rgb(231, 239, 248),
   "info-light": rgb(211, 226, 242),
   "info": rgb(161, 185, 207),
   "info-dark": rgb(101, 121, 140),
   "info-darker": rgb(64, 79, 93),
 
+  "warning-lightest": rgb(255, 239, 172),
   "warning-lighter": rgb(255, 231, 118),
   "warning-light": rgb(253, 221, 73),
   "warning": rgb(255, 210, 0),
@@ -108,15 +115,20 @@ $kbase-palette: (
   "error-dark": rgb(182, 21, 28),
   "error-darker": rgb(124, 14, 18),
 
+  "disabled-lightest": rgb(247, 244, 242),
   "disabled-light": rgb(242, 239, 235),
   "disabled": rgb(222, 213, 203),
   "disabled-dark": rgb(157, 147, 137),
-
-  // specialised use cases
-  "icon-app": rgb(103, 58, 183),
-  "icon-generic": rgb(192, 192, 192),
-  "icon-type": rgb(0, 0, 0),
 );
+
+$icons: (
+  // specialised use cases
+  "icon-app": map-get($kbase-palette, 'purple'),
+  "icon-generic": map-get($kbase-palette, 'silver'),
+  "icon-type": map-get($kbase-palette, 'black'),
+);
+
+$kbase-palette: map-merge($kbase-palette, $icons);
 
 // Job status colours
 $job_status_colours: (
@@ -126,6 +138,7 @@ $job_status_colours: (
   "running": map-get($kbase-palette, 'info'),
   "completed": map-get($kbase-palette, 'success-dark'),
   "terminated": map-get($kbase-palette, 'warning-dark'),
+  // error already exists, but we need it in our job status list
   "error": map-get($kbase-palette, 'error'),
   "does_not_exist": map-get($kbase-palette, 'error'),
 );

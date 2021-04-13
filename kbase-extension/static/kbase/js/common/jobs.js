@@ -25,7 +25,9 @@ define(['common/html', 'common/format', 'common/ui', 'common/errorDisplay'], (
             'error',
             'terminated',
             'does_not_exist',
-        ];
+        ],
+        // job states where there will be no more updates
+        terminalStates = ['completed', 'error', 'terminated', 'does_not_exist'];
 
     const jobStrings = {
         does_not_exist: {
@@ -72,6 +74,10 @@ define(['common/html', 'common/format', 'common/ui', 'common/errorDisplay'], (
     };
     jobStrings.created = jobStrings.queued;
     jobStrings.estimating = jobStrings.queued;
+
+    function isTerminalStatus(status) {
+        return !!(status && terminalStates.includes(status));
+    }
 
     function getJobString(jobState, stringType) {
         if (!jobState || !stringType) {
@@ -548,6 +554,7 @@ define(['common/html', 'common/format', 'common/ui', 'common/errorDisplay'], (
         createCombinedJobState,
         createJobStatusFromFsm,
         createJobStatusLines,
+        isTerminalStatus,
         isValidJobStatus,
         isValidJobStateObject,
         isValidJobInfoObject,

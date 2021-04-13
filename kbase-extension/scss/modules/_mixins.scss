@@ -1,5 +1,5 @@
 // standard formatting for elements containing code
-@mixin code-block() {
+@mixin code-block {
   @include fixed-width;
 
   background-color: use-color('base-lightest');

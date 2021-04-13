@@ -216,38 +216,11 @@ define([
             ).toBeRejectedWithError(/Requires a node to start/);
         });
 
-        it('Should fail to start without a jobId', async () => {
+        it('Should fail to start without a jobId', async function () {
             const jobLogViewerInstance = JobLogViewer.make();
-            await expectAsync(jobLogViewerInstance.start({ node: hostNode })).toBeRejectedWithError(
+            await expectAsync(jobLogViewerInstance.start({ node: this.hostNode })).toBeRejectedWithError(
                 /Requires a job id to start/
             );
-        });
-
-        it('Should start as expected with inputs, and be stoppable and detachable', async () => {
-            const viewer = JobLogViewer.make();
-            const arg = {
-                node: hostNode,
-                jobId: 'someFakeJob',
-            };
-            await viewer.start(arg);
-            expect(hostNode.querySelector('div[data-element="kb-log"]')).toBeDefined();
-            viewer.detach();
-            expect(hostNode.innerHTML).toBe('');
-        });
-
-        it('Should send a bus messages requesting job status information at startup', async (done) => {
-            const viewer = JobLogViewer.make();
-            const jobId = 'testJob1';
-            const arg = {
-                node: hostNode,
-                jobId: jobId,
-            };
-            runtimeBus.on('request-job-status', (msg) => {
-                expect(msg).toEqual({ jobId: jobId });
-                viewer.detach();
-                done();
-            });
-            await viewer.start(arg);
         });
 
         it('Should start as expected with inputs, and be stoppable and detachable', async function () {

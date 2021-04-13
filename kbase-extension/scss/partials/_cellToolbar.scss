@@ -29,13 +29,11 @@ $default-icon-size: 56px;
   /* .kb-cell-toolbar__title-container */
   &__title-container {
     flex: 1 1 10rem;
-    overflow: scroll;
     text-overflow: ellipsis;
   }
 
   /* .kb-cell-toolbar__title */
   &__title {
-    overflow: scroll;
     text-overflow: ellipsis;
     height: 20px;
     min-width: 0;
@@ -46,7 +44,6 @@ $default-icon-size: 56px;
 
   /* .kb-cell-toolbar__subtitle */
   &__subtitle {
-    overflow: scroll;
     text-overflow: ellipsis;
     height: 20px;
     min-width: 0;

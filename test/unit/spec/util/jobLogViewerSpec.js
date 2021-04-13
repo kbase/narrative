@@ -218,9 +218,9 @@ define([
 
         it('Should fail to start without a jobId', async function () {
             const jobLogViewerInstance = JobLogViewer.make();
-            await expectAsync(jobLogViewerInstance.start({ node: this.hostNode })).toBeRejectedWithError(
-                /Requires a job id to start/
-            );
+            await expectAsync(
+                jobLogViewerInstance.start({ node: this.hostNode })
+            ).toBeRejectedWithError(/Requires a job id to start/);
         });
 
         it('Should start as expected with inputs, and be stoppable and detachable', async function () {

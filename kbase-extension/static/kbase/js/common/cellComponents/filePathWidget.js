@@ -471,7 +471,6 @@ define([
                     dataModel.rowOrder.forEach((rowId, idx) => {
                         dataModel.rowIdToIndex[rowId] = idx;
                     });
-                    // container.querySelectorAll('li.')
                     e.target.parentElement.remove();
                     syncDataModel();
                 }

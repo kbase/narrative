@@ -1264,12 +1264,6 @@ define([
             });
         }
 
-        function camelToHyphen(s) {
-            return s.replace(/[A-Z]/g, (m) => {
-                return '-' + m.toLowerCase();
-            });
-        }
-
         function updateFromViewModel(viewModel, path) {
             if (!path) {
                 path = [];
@@ -1302,7 +1296,7 @@ define([
                                     break;
                                 case 'style':
                                     Object.keys(attribValue).forEach((_key) => {
-                                        node.style[camelToHyphen(_key)] = attribValue[_key];
+                                        node.style[html.camelToKebab(_key)] = attribValue[_key];
                                     });
                             }
                         });

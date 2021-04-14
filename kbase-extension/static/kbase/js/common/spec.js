@@ -2,14 +2,12 @@
  * Provides app spec functionality.
  */
 
-define([
-    'require',
-    'bluebird',
-    'common/lang',
-    'common/sdk',
-    'common/specValidation',
-    'widgets/appWidgets2/validators/resolver',
-], (require, Promise, lang, sdk, Validation, validationResolver) => {
+define(['bluebird', 'common/lang', 'common/sdk', 'widgets/appWidgets2/validators/resolver'], (
+    Promise,
+    lang,
+    sdk,
+    validationResolver
+) => {
     'use strict';
 
     function factory(config) {
@@ -27,31 +25,18 @@ define([
             return spec;
         }
 
-        /*
-         * Make a "shell" model based on the spec. Recursively build an object
-         * with properties as defined by the spec.
-         * Effectively this means that only the top level is represented, since
+        /**
+         * Makes a 'model' object (not a view model yet, really, because it's just data) from the
+         * given spec.
+         * It does this by:
+         *  The top level spec is treated as a struct.
+         *  The default value for each paraemter is simply set as the value for the given parameter
+         *    on a model object.
+         *  If appType = "bulkImport", this is further separated into "filePaths" and "params"
+         *    sub-objects.
+         * @param {string} appType
          */
-        function makeEmptyModel() {
-            const model = {};
-            spec.parameters.layout.forEach((id) => {
-                model[id] =
-                    spec.parameters.specs[id].data.defaultValue ||
-                    spec.parameters.specs[id].data.nullValue;
-            });
-            return model;
-        }
-
-        /*
-        Makes a model (not a view model quite yet, really, because just data)
-        from the given spec.
-        It does this by:
-        The top level spec is treated as a struct.
-        The default value for each paramater is simply set as the value for the given parameter
-        on a model object.
-        One exception is that if a parameter is a
-        */
-        function makeDefaultedModel() {
+        function makeDefaultedModel(appType) {
             const model = {};
             spec.parameters.layout.forEach((id) => {
                 const paramSpec = spec.parameters.specs[id];
@@ -65,25 +50,13 @@ define([
                 } else {
                     modelValue = lang.copy(paramSpec.data.defaultValue);
                 }
-                model[id] = modelValue;
+                if (appType === 'bulkImport') {
+                    model.params[id] = modelValue;
+                } else {
+                    model[id] = modelValue;
+                }
             });
             return model;
-        }
-
-        const typeToValidatorModule = {
-            string: 'text',
-            int: 'int',
-            float: 'float',
-            sequence: 'sequence',
-            struct: 'struct',
-        };
-
-        function getValidatorModule(fieldSpec) {
-            const moduleName = typeToValidatorModule[fieldSpec.data.type];
-            if (!moduleName) {
-                throw new Error('No validator for type: ' + fieldSpec.data.type);
-            }
-            return moduleName;
         }
 
         function validateModel(model) {
@@ -99,10 +72,9 @@ define([
         }
 
         return Object.freeze({
-            getSpec: getSpec,
-            makeEmptyModel: makeEmptyModel,
-            makeDefaultedModel: makeDefaultedModel,
-            validateModel: validateModel,
+            getSpec,
+            makeDefaultedModel,
+            validateModel,
         });
     }
 

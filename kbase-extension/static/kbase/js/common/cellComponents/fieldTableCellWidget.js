@@ -1,16 +1,13 @@
 define([
-    'bluebird',
     'google-code-prettify/prettify',
     'kb_common/html',
-    'common/events',
     'common/runtime',
     'widgets/appWidgets2/errorControl',
     'css!google-code-prettify/prettify.css',
-], (Promise, PR, html, Events, Runtime, ErrorControlFactory) => {
+], (PR, html, Runtime, ErrorControlFactory) => {
     'use strict';
 
     const t = html.tag,
-        td = t('td'),
         div = t('div'),
         label = t('label'),
         cssBaseClass = 'kb-field-cell';
@@ -45,15 +42,15 @@ define([
             }).make();
         }
 
-        function render(events) {
+        function render() {
             const ids = {
                 fieldPanel: html.genId(),
                 inputControl: html.genId(),
             };
 
-            const content = td(
+            const content = div(
                 {
-                    class: `${cssBaseClass}__tableCell`,
+                    class: `${cssBaseClass}__rowCell`,
                     id: ids.fieldPanel,
                     dataElement: 'field-panel',
                 },
@@ -63,15 +60,6 @@ define([
                             class: `${cssBaseClass}__cell_label`,
                             title: spec.ui.label || spec.ui.id,
                             for: ids.inputControl,
-                            id: events.addEvent({
-                                type: 'click',
-                                handler: function () {
-                                    // FIXME: places.infoPanel is not set anywhere!
-                                    places.infoPanel
-                                        .querySelector('[data-element="big-tip"]')
-                                        .classList.toggle('hidden');
-                                },
-                            }),
                         },
                         [spec.ui.label || spec.ui.id]
                     ),
@@ -97,16 +85,9 @@ define([
             containerDiv.classList.add(`${cssBaseClass}__param_container`);
 
             container = parent.appendChild(containerDiv);
-            const events = Events.make({
-                node: container,
-            });
 
-            const rendered = render(events);
+            const rendered = render();
             container.innerHTML = rendered.content;
-            events.attachEvents();
-            // TODO: use the pattern in which the render returns an object,
-            // which includes events and other functions to be run after
-            // content is added to the dom.
             PR.prettyPrint(null, container);
 
             places = {

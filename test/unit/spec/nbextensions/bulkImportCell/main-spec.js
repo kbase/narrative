@@ -4,7 +4,7 @@ define([
     '../../../../../../narrative/nbextensions/bulkImportCell/bulkImportCell',
     'base/js/namespace',
     'narrativeMocks',
-    'json!/test/data/NarrativeTest.test_simple_inputs.spec.json',
+    'json!/test/data/NarrativeTest.test_input_params.spec.json',
 ], ($, Main, BulkImportCell, Jupyter, Mocks, TestAppSpec) => {
     'use strict';
 

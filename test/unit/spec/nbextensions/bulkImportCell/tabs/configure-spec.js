@@ -14,11 +14,6 @@ define([
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',
             };
-
-            const params = TestAppObject.params;
-            TestAppObject.params = {
-                fastq_reads: params,
-            };
         });
 
         beforeEach(() => {
@@ -40,7 +35,11 @@ define([
                 onUpdate: () => {},
             });
             const spec = Spec.make({
-                appSpec: model.getItem('app.spec'),
+                appSpec: model.getItem([
+                    'app',
+                    'specs',
+                    'kb_uploadmethods/import_fastq_sra_as_reads_from_staging',
+                ]),
             });
 
             const configure = ConfigureTab.make({ bus, model, spec, fileType: 'fastq_reads' });
@@ -61,7 +60,11 @@ define([
                 onUpdate: () => {},
             });
             const spec = Spec.make({
-                appSpec: model.getItem('app.spec'),
+                appSpec: model.getItem([
+                    'app',
+                    'specs',
+                    'kb_uploadmethods/import_fastq_sra_as_reads_from_staging',
+                ]),
             });
 
             const configure = ConfigureTab.make({ bus, model, spec, fileType: 'fastq_reads' });

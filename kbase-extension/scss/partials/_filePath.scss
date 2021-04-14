@@ -1,12 +1,27 @@
 .kb-file-path {
-  // .kb-file-path__table
-  &__table {
+  // .kb-file-path__list
+  &__list {
     width: 100%;
+    list-style-type: none;
+    list-style-position: outside;
+    counter-reset: fpw-item;
+    padding: 0;
   }
 
-  // .kb-file-path__table_row
-  &__table_row {
+  // .kb-file-path__list_item
+  &__list_item {
+    display: flex;
+    align-items: center;
     font: normal 400 14px/18px $typeface-page-text;
+  }
+
+  &__list_item::before {
+    content: counter(fpw-item) " ";
+    counter-increment: fpw-item;
+    font-weight: 700;
+    vertical-align: middle;
+    padding-right: 0.5rem;
+    padding-top: 20px;
   }
 
   // .kb-file-path__param_container
@@ -22,7 +37,7 @@
   }
 
   // .kb-file-path__table_cell--file-path_id
-  &__table_cell--file-path_id {
+  &__row_cell--file-path_id {
     flex: 1;
     min-width: 30rem;
     padding: 4px;
@@ -48,11 +63,6 @@
 
   &__button_icon--add_row {
     margin-right: 0.5rem;
-  }
-
-  &__file_number {
-    padding: 20px 10px 0 0;
-    font-weight: 700;
   }
 
   &__params {

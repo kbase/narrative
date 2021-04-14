@@ -1,12 +1,10 @@
 define([
     'bluebird',
-    'common/ui',
-    'common/html',
     'common/events',
     'common/runtime',
     'common/cellComponents/paramsWidget',
     'common/cellComponents/filePathWidget',
-], (Promise, UI, html, Events, Runtime, ParamsWidget, FilePathWidget) => {
+], (Promise, Events, Runtime, ParamsWidget, FilePathWidget) => {
     'use strict';
 
     /*
@@ -16,11 +14,13 @@ define([
             spec: app spec
     */
     function ConfigureWidget(options) {
-        const model = options.model,
-            spec = options.spec,
-            fileType = options.fileType,
-            runtime = Runtime.make();
-
+        const model = options.model, // the data model, inputs, params, etc.
+            spec = options.spec, // the Spec object
+            fileType = options.fileType, // which which filetype we're configuring here
+            runtime = Runtime.make(),
+            cellBus = options.bus, // the bus to communicate with the main widget
+            FILE_PATH_TYPE = 'filePaths',
+            PARAM_TYPE = 'params';
         let container = null;
 
         /**
@@ -58,90 +58,18 @@ define([
             we make the bulk import work with multiple data types
         */
         function buildParamsWidget(node) {
-            const paramBus = runtime
-                .bus()
-                .makeChannelBus({ description: 'Parent comm bus for input widget' });
             // This is the key in the model that maps to the list of params for the current app.
-            const paramKey = `params.${fileType}`;
+            const paramKey = `${fileType}`;
+            const paramBus = buildMessageBus(paramKey, 'Parent comm bus for parameters widget');
+            paramBus.on('parameter-changed', (message) => {
+                updateModelParameterValue(paramKey, PARAM_TYPE, message);
+            });
 
             const widget = ParamsWidget.make({
                 bus: paramBus,
                 workspaceId: runtime.workspaceId(),
-                initialParams: model.getItem(paramKey),
+                initialParams: model.getItem(['params', paramKey, PARAM_TYPE]),
             });
-
-            paramBus.on('sync-params', (message) => {
-                message.parameters.forEach((paramId) => {
-                    paramBus.send(
-                        {
-                            parameter: paramId,
-                            value: model.getItem([paramKey, message.parameter]),
-                        },
-                        {
-                            key: {
-                                type: 'update',
-                                parameter: message.parameter,
-                            },
-                        }
-                    );
-                });
-            });
-
-            paramBus.on('parameter-sync', (message) => {
-                const value = model.getItem([paramKey, message.parameter]);
-                paramBus.send(
-                    {
-                        value: value,
-                    },
-                    {
-                        // This points the update back to a listener on this key
-                        key: {
-                            type: 'update',
-                            parameter: message.parameter,
-                        },
-                    }
-                );
-            });
-
-            paramBus.on('set-param-state', (message) => {
-                model.setItem('paramState', message.id, message.state);
-            });
-
-            paramBus.respond({
-                key: {
-                    type: 'get-param-state',
-                },
-                handle: function (message) {
-                    return {
-                        state: model.getItem('paramState', message.id),
-                    };
-                },
-            });
-
-            paramBus.respond({
-                key: {
-                    type: 'get-parameter',
-                },
-                handle: function (message) {
-                    return {
-                        value: model.getItem([paramKey, message.parameterName]),
-                    };
-                },
-            });
-
-            //TODO: disabling for now until we figure out what to do about state
-            // paramBus.on('parameter-changed', function(message) {
-            //     // TODO: should never get these in the following states....
-
-            //     let state = fsm.getCurrentState().state;
-            //     let isError = Boolean(message.isError);
-            //     if (state.mode === 'editing') {
-            //         model.setItem(['params', message.parameter], message.newValue);
-            //         evaluateAppState(isError);
-            //     } else {
-            //         console.warn('parameter-changed event detected when not in editing mode - ignored');
-            //     }
-            // });
 
             return widget
                 .start({
@@ -158,21 +86,58 @@ define([
         }
 
         function buildFilePathWidget(node) {
-            const paramBus = runtime
-                .bus()
-                .makeChannelBus({ description: 'Parent comm bus for input widget' });
             // This is the key in the model that maps to the list of params for the current app.
-            const paramKey = `params.${fileType}`;
+            const paramBus = buildMessageBus(fileType, 'Parent comm bus for filePath widget');
+            paramBus.on('parameter-changed', (message) => {
+                updateModelParameterValue(fileType, FILE_PATH_TYPE, message);
+            });
+            paramBus.on('sync-data-model', (message) => {
+                if (message.values) {
+                    model.setItem(['params', fileType, FILE_PATH_TYPE], message.values);
+                }
+            });
 
+            /* Here, we need to
+             * 1. Get the list of file path params.
+             * 2. Get the initial parameters (this will be an array that's serialized in the model right now)
+             * 3. Pass those along to the filepathwidget
+             */
+            // this is an array of parameter ids from the current spec.
             const widget = FilePathWidget.make({
                 bus: paramBus,
                 workspaceId: runtime.workspaceId(),
-                initialParams: model.getItem(paramKey),
+                paramIds: model.getItem(['app', 'fileParamIds', fileType]),
+                initialParams: model.getItem(['params', fileType, FILE_PATH_TYPE]),
             });
 
-            paramBus.on('sync-params', (message) => {
+            return widget
+                .start({
+                    node: node,
+                    appSpec: model.getItem('app.spec'),
+                    parameters: spec.getSpec().parameters,
+                })
+                .then(() => {
+                    return {
+                        bus: paramBus,
+                        instance: widget,
+                    };
+                });
+        }
+
+        /**
+         * This builds a new message bus with commands used for both the filePathWidget and the paramsWidget.
+         * Avoids some code duplication. It's up to the individual widget constructors to handle messages for
+         * changing data values and any other needed messages.
+         * @param {string} paramKey - the key used to look up parameters from the model. Should be the file type.
+         * @param {string} description - description used for the message bus
+         * @returns a message bus object
+         */
+        function buildMessageBus(paramKey, description) {
+            const bus = runtime.bus().makeChannelBus({ description });
+
+            bus.on('sync-params', (message) => {
                 message.parameters.forEach((paramId) => {
-                    paramBus.send(
+                    bus.send(
                         {
                             parameter: paramId,
                             value: model.getItem([paramKey, message.parameter]),
@@ -187,9 +152,9 @@ define([
                 });
             });
 
-            paramBus.on('parameter-sync', (message) => {
+            bus.on('parameter-sync', (message) => {
                 const value = model.getItem([paramKey, message.parameter]);
-                paramBus.send(
+                bus.send(
                     {
                         value: value,
                     },
@@ -203,11 +168,11 @@ define([
                 );
             });
 
-            paramBus.on('set-param-state', (message) => {
+            bus.on('set-param-state', (message) => {
                 model.setItem('paramState', message.id, message.state);
             });
 
-            paramBus.respond({
+            bus.respond({
                 key: {
                     type: 'get-param-state',
                 },
@@ -218,7 +183,7 @@ define([
                 },
             });
 
-            paramBus.respond({
+            bus.respond({
                 key: {
                     type: 'get-parameter',
                 },
@@ -229,32 +194,35 @@ define([
                 },
             });
 
-            //TODO: disabling for now until we figure out what to do about state
-            // paramBus.on('parameter-changed', function(message) {
-            //     // TODO: should never get these in the following states....
+            return bus;
+        }
 
-            //     let state = fsm.getCurrentState().state;
-            //     let isError = Boolean(message.isError);
-            //     if (state.mode === 'editing') {
-            //         model.setItem(['params', message.parameter], message.newValue);
-            //         evaluateAppState(isError);
-            //     } else {
-            //         console.warn('parameter-changed event detected when not in editing mode - ignored');
-            //     }
-            // });
+        /**
+         * TODO
+         * This evaluates the state of the app configuration. If it's ready to go, then we can build the Python
+         * code and prep the app for launch. If not, then we shouldn't, and, in fact, should clear the Python code
+         * if there's any there.
+         * @param {boolean} isError - should be truthy if there's currently a known error in the app param formulation
+         */
+        function evaluateAppConfig(isError) {
+            /* 2 parts.
+             * 1 - eval the set of parameters using something in the spec module.
+             * 2 - eval the array of file inputs and outputs.
+             * If both are up to snuff, we're good.
+             */
+        }
 
-            return widget
-                .start({
-                    node: node,
-                    appSpec: model.getItem('app.spec'),
-                    parameters: spec.getSpec().parameters,
-                })
-                .then(() => {
-                    return {
-                        bus: paramBus,
-                        instance: widget,
-                    };
-                });
+        /**
+         *
+         * @param {string} paramKey - a string with the parameter key
+         * @param {string} paramType - should be either 'param' or 'filePath'
+         * @param {object} message -
+         */
+        function updateModelParameterValue(paramKey, paramType, message) {
+            model.setItem(['params', paramKey, paramType, message.parameter], message.newValue);
+            // TODO - update the app config state based on changes, and send a message up the cellBus
+            // with that state.
+            const appState = evaluateAppConfig(message.isError);
         }
 
         function stop() {

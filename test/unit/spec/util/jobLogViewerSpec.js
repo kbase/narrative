@@ -214,26 +214,18 @@ define([
             });
         });
 
-        it('Should fail to start without a node', async function () {
-            try {
-                await this.jobLogViewerInstance.start({
-                    jobId: 'fakejob',
-                });
-                fail('this should not have completed successfully');
-            } catch (error) {
-                expect(error).toMatch(/Requires a node to start/);
-            }
+        it('Should fail to start without a node', async () => {
+            const jobLogViewerInstance = JobLogViewer.make();
+            await expectAsync(
+                jobLogViewerInstance.start({ jobId: 'fakeJob' })
+            ).toBeRejectedWithError(/Requires a node to start/);
         });
 
         it('Should fail to start without a jobId', async function () {
-            try {
-                await this.jobLogViewerInstance.start({
-                    node: this.node,
-                });
-                fail('this should not have completed successfully');
-            } catch (error) {
-                expect(error).toMatch(/Requires a job id to start/);
-            }
+            const jobLogViewerInstance = JobLogViewer.make();
+            await expectAsync(
+                jobLogViewerInstance.start({ node: this.node })
+            ).toBeRejectedWithError(/Requires a job id to start/);
         });
 
         it('Should start as expected with inputs, and be stoppable and detachable', async function () {

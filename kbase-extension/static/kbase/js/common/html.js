@@ -42,9 +42,7 @@ define(['uuid'], (Uuid) => {
                         case 'number':
                             return String(rawValue);
                         case 'boolean':
-                            return false;
                         case 'undefined':
-                            return false;
                         case 'object':
                             return false;
                     }
@@ -130,7 +128,6 @@ define(['uuid'], (Uuid) => {
             case 'number':
                 return String(children);
             case 'boolean':
-                return '';
             case 'undefined':
                 return '';
             case 'object':
@@ -140,11 +137,8 @@ define(['uuid'], (Uuid) => {
                             return renderContent(item);
                         })
                         .join('');
-                } else if (children === null) {
-                    return '';
-                } else {
-                    return '';
                 }
+                return '';
         }
     }
 

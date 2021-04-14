@@ -1,7 +1,7 @@
 define(['./jobsData'], (JobsData) => {
     'use strict';
 
-    const jobData = JobsData.allJobs;
+    const jobData = JobsData.validJobs;
     return {
         app: {
             gitCommitHash: '25e7a896377f5ec50bd15a27ade9f279cb16cd0b',

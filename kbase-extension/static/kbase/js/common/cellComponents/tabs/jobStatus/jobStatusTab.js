@@ -31,7 +31,7 @@ define(['bluebird', 'common/html', './jobStateList'], (Promise, html, JobStateLi
                 container.innerHTML = renderLayout();
 
                 // rows are widgets to enable live updates
-                widgets.stateList = JobStateList.make();
+                widgets.stateList = JobStateList.make(config);
                 return Promise.all([
                     widgets.stateList.start({
                         node: container.querySelector(`[data-element="${dataElementName}"]`),

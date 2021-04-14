@@ -32,6 +32,9 @@ define('testUtil', ['bluebird', 'json!/test/testConfig.json'], (Promise, TestCon
                 'Missing an auth token. Please enter one (or null to skip those tests) in test/unit/testConfig.json'
             );
         }
+        if (TestConfig.token === null) {
+            return new Promise.resolve(null);
+        }
         userId = TestConfig.token.user;
         const tokenFile = TestConfig.token.file;
         return new Promise((resolve) => {

@@ -66,15 +66,15 @@ define([
         // RENDERING
 
         /*
-      The field widget is a generic wrapper around the input. It serves the following purposes:
-      - intercepts messages in order to display status.
-      appSpec - specifies the whole app
-      parameterSpec - just the segment of the appSpec that specifies this individual parameter
-      value - the initial value of this field
-      closeParameters - a list of "close" parameters, which might be context-dependent. E.g. for an output
-          field, this would be the list of all parameters meant to be output objects, so their names can
-          be cross-validated for uniqueness (optional)
-      */
+        The field widget is a generic wrapper around the input. It serves the following purposes:
+        - intercepts messages in order to display status.
+        appSpec - specifies the whole app
+        parameterSpec - just the segment of the appSpec that specifies this individual parameter
+        value - the initial value of this field
+        closeParameters - a list of "close" parameters, which might be context-dependent. E.g. for an output
+            field, this would be the list of all parameters meant to be output objects, so their names can
+            be cross-validated for uniqueness (optional)
+        */
 
         function makeFieldWidget(inputWidget, appSpec, parameterSpec, value, closeParameters) {
             const fieldWidget = FieldWidget.make({

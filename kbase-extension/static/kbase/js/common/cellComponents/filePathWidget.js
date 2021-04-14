@@ -1,6 +1,5 @@
 define([
     'bluebird',
-    'jquery',
     'common/html',
     'common/ui',
     'common/events',
@@ -8,7 +7,7 @@ define([
     'common/cellComponents/fieldTableCellWidget',
     'widgets/appWidgets2/paramResolver',
     'common/runtime',
-], (Promise, $, html, UI, Events, Props, FieldWidget, ParamResolver, Runtime) => {
+], (Promise, html, UI, Events, Props, FieldWidget, ParamResolver, Runtime) => {
     'use strict';
 
     const tag = html.tag,
@@ -259,7 +258,7 @@ define([
                 // initialize params
                 params = Object.assign({}, model.getItem('defaultParams'));
             }
-            const tableElem = ui.getElement(`${cssClassType}-fields`);
+            const filePathRows = ui.getElement(`${cssClassType}-fields`);
             const rowId = html.genId();
             dataModel.rowOrder.push(rowId);
             dataModel.rowIdToIndex[rowId] = dataModel.rowOrder.length - 1;
@@ -267,20 +266,18 @@ define([
                 values: params,
                 widgets: [],
             };
-            $(tableElem).append(
+
+            const newRowNode = ui.createNode(
                 li({
                     class: `${cssBaseClass}__list_item`,
                     dataElement: `${cssClassType}-fields-row`,
                     dataRowId: rowId,
                 })
             );
-
-            const filePathRows = ui.getElements(`${cssClassType}-fields-row`);
-            return makeFilePathRow(filePathRows[filePathRows.length - 1], rowId, params).then(
-                () => {
-                    syncDataModel();
-                }
-            );
+            filePathRows.appendChild(newRowNode);
+            return makeFilePathRow(newRowNode, rowId, params).then(() => {
+                syncDataModel();
+            });
         }
 
         function syncDataModel() {
@@ -474,7 +471,8 @@ define([
                     dataModel.rowOrder.forEach((rowId, idx) => {
                         dataModel.rowIdToIndex[rowId] = idx;
                     });
-                    $(e.target).closest('li').remove();
+                    // container.querySelectorAll('li.')
+                    e.target.parentElement.remove();
                     syncDataModel();
                 }
             );
@@ -490,6 +488,7 @@ define([
         function makeFilePathRow(filePathRow, rowId, params) {
             const appSpec = model.getItem('appSpec');
             const filePathParams = makeFilePathsLayout(model.getItem('parameterSpecs'));
+            const rowEvents = Events.make();
 
             if (!filePathParams.layout.length) {
                 return Promise.resolve(
@@ -515,7 +514,7 @@ define([
                     {
                         class: `${cssBaseClass}__button--delete`,
                         type: 'button',
-                        id: events.addEvent({
+                        id: rowEvents.addEvent({
                             type: 'click',
                             handler: function (e) {
                                 deleteRow(e, rowId);
@@ -543,7 +542,7 @@ define([
             ).then((widgets) => {
                 // dataModel.rows[rowId] was already created by addRow
                 dataModel.rows[rowId].widgets = widgets;
-                events.attachEvents(container);
+                rowEvents.attachEvents(filePathRow);
             });
         }
 
@@ -584,7 +583,7 @@ define([
             model.setItem('defaultParams', defaultParams);
             return Promise.all(
                 initialParams.map((paramRow) => {
-                    addRow(paramRow);
+                    return addRow(paramRow);
                 })
             ).catch((error) => {
                 throw new Error(`Unable to start filePathWidget: ${error}`);

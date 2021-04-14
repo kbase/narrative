@@ -36,6 +36,7 @@ define([
             const bus = Runtime.make().bus();
             container = document.createElement('div');
             this.node = document.createElement('div');
+            document.body.appendChild(container);
             container.appendChild(this.node);
 
             this.spec = Spec.make({
@@ -106,7 +107,7 @@ define([
                 const $node = $(this.node);
                 const preClickNumberOfRows = $node.find('li').length;
                 expect(preClickNumberOfRows).toEqual(1);
-                $node.find('.kb-file-path__button--add_row').click();
+                this.node.querySelector('.kb-file-path__button--add_row').click();
 
                 return TestUtil.waitForElementChange(
                     this.node.querySelector('ol.kb-file-path__list')
@@ -117,14 +118,12 @@ define([
                 });
             });
 
-            // TODO: this doesn't want to work and trigger the deletion event. I'm not sure why.
-            xit('should delete a row when trashcan button is clicked', function () {
+            it('should delete a row when trashcan button is clicked', function () {
                 const $node = $(this.node);
                 const preClickNumberOfRows = $node.find('li.kb-file-path__list_item').length;
                 expect(preClickNumberOfRows).toEqual(1);
                 const listNode = this.node.querySelector('ol.kb-file-path__list');
                 const deleteBtn = listNode.querySelector('button.kb-file-path__button--delete');
-                deleteBtn.click();
 
                 // Set up an observer to look for deletion of the <li> for the
                 // row we deleted. This gets returned as a Promise after the simulated click.
@@ -133,7 +132,7 @@ define([
                         for (const mutationRecord of mutationList) {
                             if (mutationRecord.removedNodes) {
                                 for (const removedNode of mutationRecord.removedNodes) {
-                                    if ('kb-file-path__list' in removedNode.classList) {
+                                    if (removedNode.classList.contains('kb-file-path__list_item')) {
                                         observer.disconnect();
                                         resolve();
                                     }
@@ -148,9 +147,7 @@ define([
                     expect(postClickNumberOfRows).toEqual(0);
                 });
 
-                return Promise.resolve(
-                    $node.find('button.kb-file-path__button--delete').click()
-                ).then(() => watchPromise);
+                return Promise.resolve(deleteBtn.click()).then(() => watchPromise);
             });
         });
     });

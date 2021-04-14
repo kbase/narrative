@@ -463,6 +463,73 @@ define([
             controlPanel.setExecMessage(Jobs.createCombinedJobState(jobState));
         }
 
+        /* JOB MANAGEMENT */
+
+        /**
+         * Cancel a single job from the batch
+         *
+         * @param {string} jobId
+         */
+        function cancelJob(jobId) {
+            // TODO: implement
+            alert(`Cancel job ${jobId}`);
+            // runtime.bus().emit('request-job-cancellation', {
+            //     jobId: jobId,
+            // });
+        }
+
+        /**
+         * Cancel all jobs with the specified status
+         *
+         * @param {string} status
+         */
+        function cancelJobsByStatus(status) {
+            const validStates = ['created', 'estimating', 'queued', 'running'];
+            if (!validStates.includes(status)) {
+                throw new Error(`${status} is not a valid job state`);
+            }
+            // TODO: implement
+            alert(`Cancel jobs with status ${status}`);
+        }
+
+        /**
+         * Retry a single job from the batch
+         *
+         * @param {string} jobId
+         */
+        function retryJob(jobId) {
+            // TODO: implement
+            alert(`Retry job ${jobId}`);
+        }
+
+        /**
+         * Retry all jobs that ended with the specified status
+         *
+         * @param {string} status
+         */
+        function retryJobsByStatus(status) {
+            const validStates = ['error', 'terminated'];
+            if (!validStates.includes(status)) {
+                throw new Error(`${status} is not a valid job state`);
+            }
+            // TODO: implement
+            alert(`Retry jobs with status ${status}`);
+        }
+
+        const jobManager = {
+            cancelJob,
+            cancelJobsByStatus,
+            retryJob,
+            retryJobsByStatus,
+        };
+
+        // add in an alias to switch to the results panel for the job status table
+        jobManager.viewJobResults = () => {
+            toggleTab('results');
+        };
+
+        /* END JOB MANAGEMENT */
+
         /**
          * Initializes the DOM node (kbaseNode) for rendering.
          */
@@ -589,11 +656,12 @@ define([
             tabWidget = tabSet.tabs[tab].widget.make({
                 bus: cellBus,
                 cell,
+                jobManager,
                 model: tabModel,
                 spec: specs[typesToFiles[state.fileType.selected].appId],
                 fileType,
                 jobId: undefined,
-                workspaceClient: workspaceClient,
+                workspaceClient,
             });
 
             ui.getElement('body.tab-pane').setAttribute('data-active-tab', tab);

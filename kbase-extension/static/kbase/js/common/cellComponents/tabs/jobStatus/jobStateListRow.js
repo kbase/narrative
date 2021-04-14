@@ -20,7 +20,7 @@ define([
         events = Events.make();
 
     function factory() {
-        let container, ui, jobId, jobState;
+        let container, ui, jobId, jobState, clickAction;
         const widgets = {};
 
         function _updateStatusLabel(jobStateObject) {
@@ -80,9 +80,7 @@ define([
                         {
                             id: events.addEvent({
                                 type: 'click',
-                                handler: () => {
-                                    console.log('click!');
-                                },
+                                handler: clickAction,
                             }),
                             role: 'button',
                             dataTarget: jobId,
@@ -121,17 +119,18 @@ define([
             _updateActionButton(jobState);
         }
 
-        function selectRow(e) {
+        function showHideChildRow(e) {
             const $currentRow = $(e.target).closest('tr');
-            const $allRows = $(`.${cssBaseClass}__row`);
-            $allRows.removeClass(`${cssBaseClass}__row--selected`);
-            $currentRow.toggleClass(`${cssBaseClass}__row--selected`);
-        }
-
-        async function showHideChildRow(e) {
-            const $currentRow = $(e.target).closest('tr');
-            const $dtTable = $(e.target).closest('table').DataTable();
+            const $table = $(e.target).closest('table');
+            const $dtTable = $table.DataTable();
             const dtRow = $dtTable.row($currentRow);
+
+            // remove the existing row selection
+            $table
+                .find(`.${cssBaseClass}__row--selected`)
+                .removeClass(`${cssBaseClass}__row--selected`);
+            // select the current row
+            $currentRow.addClass(`${cssBaseClass}__row--selected`);
 
             if (dtRow.child.isShown()) {
                 // This row is already open - close it
@@ -141,7 +140,7 @@ define([
                     widgets.log.stop();
                 }
                 dtRow.child.remove();
-                return;
+                return Promise.resolve();
             }
 
             // create the child row contents, add to the child row, and show it
@@ -149,17 +148,23 @@ define([
                 class: `${cssBaseClass}__log_container`,
                 dataElement: 'job-log-container',
             });
-            dtRow.child(false);
             dtRow.child(str).show();
 
             // add the log widget to the next `tr` element
             widgets.log = JobLogViewer.make({ showHistory: true });
-            await widgets.log.start({
-                node: $currentRow.next().find('[data-element="job-log-container"]')[0],
-                jobId: jobId,
-                jobState: jobState,
-            });
-            $currentRow.addClass('vertical_collapse--open');
+            return Promise.try(() => {
+                widgets.log.start({
+                    node: $currentRow.next().find('[data-element="job-log-container"]')[0],
+                    jobId: jobId,
+                    jobState: jobState,
+                });
+            })
+                .then(() => {
+                    $currentRow.addClass('vertical_collapse--open');
+                })
+                .catch((err) => {
+                    console.error(err);
+                });
         }
 
         /**
@@ -168,10 +173,11 @@ define([
          *      jobState:  a job state object for the job to be represented
          *      name: the value of the input parameter(s) for the job
          *      node: the node to insert the row into (will presumably be a `tr` element)
+         *      clickAction: the function to perform when the job action button is clicked
          */
         function start(args) {
             return Promise.try(() => {
-                const requiredArgs = ['jobState', 'name', 'node'];
+                const requiredArgs = ['jobState', 'name', 'node', 'clickAction'];
                 if (
                     Object.prototype.toString.call(args) !== '[object Object]' ||
                     !requiredArgs.every((arg) => arg in args && args[arg])
@@ -189,14 +195,20 @@ define([
                 }
                 jobId = args.jobState.job_id;
 
+                if (typeof args.clickAction !== 'function') {
+                    throw new Error('invalid click action supplied');
+                }
+                clickAction = args.clickAction;
+
                 container = args.node;
                 ui = UI.make({ node: container });
                 container.innerHTML = buildRow(args.name);
-                container.onclick = (e) => {
-                    selectRow(e);
-                    showHideChildRow(e);
-                };
                 _updateRowStatus(args.jobState);
+
+                container.onclick = async (e) => {
+                    await showHideChildRow(e);
+                };
+                events.attachEvents(container);
             }).catch((err) => {
                 throw new Error(`Unable to start Job State List Row widget: ${err}`);
             });

@@ -1,7 +1,7 @@
 define(['./jobsData'], (JobsData) => {
     'use strict';
 
-    const jobData = JobsData.allJobs;
+    const jobData = JobsData.validJobs;
     return {
         app: {
             fileParamIds: {

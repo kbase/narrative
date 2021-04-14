@@ -1,11 +1,16 @@
 define([
     'common/cellComponents/tabs/jobStatus/jobStateListRow',
     'common/props',
+    'common/html',
     '/test/data/testAppObj',
     '/test/data/jobsData',
-], (JobStateListRow, Props, TestAppObject, JobsData) => {
+    'testUtil',
+    'jquery',
+    'jquery-dataTables',
+], (JobStateListRow, Props, html, TestAppObject, JobsData, TestUtil, $) => {
     'use strict';
 
+    const t = html.tag;
     const model = Props.make({
         data: TestAppObject,
     });
@@ -29,9 +34,10 @@ define([
         context.jobStateListRowInstance = createInstance();
 
         await context.jobStateListRowInstance.start({
-            node: context.row,
+            clickAction: () => {},
             jobState: context.job,
             name: 'testObject',
+            node: context.row,
         });
     }
 
@@ -146,6 +152,12 @@ define([
                 node: undefined,
                 jobState: { this: 'that' },
             },
+            {
+                name: null,
+                node: undefined,
+                jobState: getRandomJob(JobsData.validJobs),
+                clickAction: 1234,
+            },
         ];
         invalidArgs.forEach((args) => {
             it('will throw an error with invalid args ' + JSON.stringify(args), async function () {
@@ -160,6 +172,7 @@ define([
             it('will throw an error with an invalid job', async function () {
                 await expectAsync(
                     this.jobStateListRowInstance.start({
+                        clickAction: () => {},
                         jobState: invalidJob,
                         name: 'whatever',
                         node: 'wherever',
@@ -181,9 +194,10 @@ define([
                 this.job = job;
                 this.jobStateListRowInstance = createInstance();
                 await this.jobStateListRowInstance.start({
-                    node: container,
+                    clickAction: () => {},
                     jobState: this.job,
                     name: 'testObject',
+                    node: container,
                 });
             });
 
@@ -330,6 +344,176 @@ define([
                 }
             });
             itHasRowStructure();
+        });
+    });
+
+    describe('the job action button', () => {
+        beforeEach(async function () {
+            const completedJob = JobsData.validJobs.filter((job) => {
+                return job.status === 'completed';
+            })[0];
+
+            this.jobId = 'job action button test';
+            this.job = Object.assign({}, completedJob, { job_id: 'job action button test' });
+            this.row = document.createElement('tr');
+            this.jobStateListRowInstance = createInstance();
+
+            await this.jobStateListRowInstance.start({
+                clickAction: (e) => {
+                    e.stopPropagation();
+                    this.clickResult = 'Click detected!';
+                },
+                jobState: this.job,
+                name: 'testObject',
+                node: this.row,
+            });
+        });
+        it('should trigger the click action when clicked', function () {
+            expect(this.clickResult).toBeUndefined();
+            this.row.querySelector('button').click();
+            expect(this.clickResult).toEqual('Click detected!');
+        });
+    });
+
+    function createMutationObserver(documentElement, elementStateFunction, doThisFirst) {
+        return new Promise((resolve) => {
+            if (elementStateFunction()) {
+                resolve();
+            }
+            const observer = new MutationObserver(() => {
+                if (elementStateFunction()) {
+                    observer.disconnect();
+                    resolve();
+                }
+            });
+            observer.observe(documentElement, { attributes: true, childList: true, subtree: true });
+            doThisFirst();
+        });
+    }
+
+    describe('row selection', () => {
+        let container;
+
+        beforeEach(() => {
+            container = document.createElement('div');
+            container.innerHTML = t('table')({}, [
+                t('thead')(
+                    {},
+                    t('tr')(
+                        {},
+                        ['object', 'status', 'action', 'log'].map((thing) => {
+                            return t('th')(
+                                {
+                                    class: 'whatever',
+                                },
+                                thing
+                            );
+                        })
+                    )
+                ),
+                t('tbody')({}, [
+                    JobsData.validJobs.map((job) => {
+                        return t('tr')({
+                            class: `${cssBaseClass}__row`,
+                            dataElementJobId: job.job_id,
+                        });
+                    }),
+                ]),
+            ]);
+            const widgetsByStatus = {};
+            return Promise.all(
+                Array.from(container.querySelectorAll(`.${cssBaseClass}__row`)).map((tr, ix) => {
+                    const job = JobsData.validJobs[ix];
+                    widgetsByStatus[job.status] = JobStateListRow.make();
+                    return widgetsByStatus[job.status].start({
+                        node: tr,
+                        jobState: job,
+                        name: job.status,
+                        clickAction: () => {},
+                    });
+                })
+            ).then(() => {
+                // convert to a datatable
+                $(container.querySelector('table')).dataTable({ order: [2, 'asc'] });
+            });
+        });
+
+        afterEach(() => {
+            container.remove();
+        });
+
+        it('has no rows selected initially', () => {
+            expect(container.querySelectorAll(`.${cssBaseClass}__row`).length).toEqual(
+                JobsData.validJobs.length
+            );
+            expect(container.querySelectorAll(`.${cssBaseClass}__row--selected`).length).toEqual(0);
+        });
+
+        it('can show and hide child rows', async () => {
+            const rows = container.querySelectorAll(`.${cssBaseClass}__row`);
+
+            let $currentRow = $(rows[2]);
+            await createMutationObserver(
+                container.querySelector('tbody'),
+                () => {
+                    return container.querySelectorAll('.vertical_collapse--open').length === 1;
+                },
+                () => {
+                    $currentRow.click();
+                }
+            );
+
+            // after clicking, there should be one extra row
+            expect(container.querySelectorAll('tbody tr').length).toEqual(rows.length + 1);
+
+            // the current row should be selected and have the class 'vertical_collapse--open'
+            expect($currentRow[0]).toHaveClass('vertical_collapse--open');
+            expect($currentRow[0]).toHaveClass(`${cssBaseClass}__row--selected`);
+
+            // check for the job log viewer in the row underneath the row that was clicked
+            let $nextRow = $currentRow.next();
+            expect($nextRow[0]).not.toHaveClass(`${cssBaseClass}__row`);
+            expect($nextRow.find('.kb-log__logs_title')[0].textContent).toContain('Logs');
+
+            // click on another row
+            $currentRow = $(rows[5]);
+            await createMutationObserver(
+                container.querySelector('tbody'),
+                () => {
+                    return container.querySelectorAll('.vertical_collapse--open').length === 2;
+                },
+                () => {
+                    $currentRow.click();
+                }
+            );
+            expect(container.querySelectorAll('tbody tr').length).toEqual(rows.length + 2);
+
+            // the current row should be selected and have the class 'vertical_collapse--open'
+            expect($currentRow[0]).toHaveClass('vertical_collapse--open');
+            expect($currentRow[0]).toHaveClass(`${cssBaseClass}__row--selected`);
+
+            // the next row is a log viewer row
+            $nextRow = $currentRow.next();
+            expect($nextRow[0]).not.toHaveClass(`${cssBaseClass}__row`);
+            expect($nextRow.find('.kb-log__logs_title')[0].textContent).toContain('Logs');
+
+            // click again to remove the row
+            await createMutationObserver(
+                container.querySelector('tbody'),
+                () => {
+                    return container.querySelectorAll('.vertical_collapse--open').length === 1;
+                },
+                () => {
+                    $currentRow.click();
+                }
+            );
+            expect(container.querySelectorAll('tbody tr').length).toEqual(rows.length + 1);
+
+            // the current row is still selected but does not have the class 'vertical_collapse--open'
+            expect($currentRow[0]).not.toHaveClass('vertical_collapse--open');
+            expect($currentRow[0]).toHaveClass(`${cssBaseClass}__row--selected`);
+            // the log viewer row has been removed, so the next row is a standard table row
+            expect($currentRow.next()[0]).toHaveClass(`${cssBaseClass}__row`);
         });
     });
 });

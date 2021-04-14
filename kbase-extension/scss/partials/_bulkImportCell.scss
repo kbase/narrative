@@ -8,6 +8,17 @@ $filetype-highlight-color: use-color('white');
 $filetype-hover-color: use-color('base-lighter');
 $panel-separator-color: rgb(33, 150, 243);
 
+%file_type_button {
+  display: flex;
+  width: 100%;
+  flex-direction: row;
+  background-color: inherit;
+  border: 0 solid $component-border;
+  border-top-width: 1px;
+  padding: 8px;
+  text-align: left;
+}
+
 .kb-bulk-import {
   &__base-node {
     // everything lives under this
@@ -18,18 +29,18 @@ $panel-separator-color: rgb(33, 150, 243);
     align-items: stretch;
   }
 
-  /* kb-bulk-import__prompt */
+  // kb-bulk-import__prompt
   &__prompt {
     display: flex;
     flex-direction: column;
     align-items: stretch;
   }
 
-  /* kb-bulk-import__prompt_status */
+  // kb-bulk-import__prompt_status
   &__prompt_status {
   }
 
-  /* kb-bulk-import__body */
+  // kb-bulk-import__body
   &__body {
     display: flex;
     width: 100%;
@@ -38,7 +49,7 @@ $panel-separator-color: rgb(33, 150, 243);
     align-items: stretch;
   }
 
-  /* kb-bulk-import__tab_pane */
+  // kb-bulk-import__tab_pane
   &__tab_pane {
     border-top: 2px solid $panel-separator-color;
     display: flex;
@@ -47,14 +58,14 @@ $panel-separator-color: rgb(33, 150, 243);
     align-items: stretch;
   }
 
-  /* kb-bulk-import__tab_pane_widget */
+  // kb-bulk-import__tab_pane_widget
   &__tab_pane_widget {
     flex: 1;
     padding: 4px;
     margin: 15px;
   }
 
-  /* kb-bulk-import__filetype_panel */
+  // kb-bulk-import__filetype_panel
   &__filetype_panel {
     background-color: use-color('base-lightest');
     width: 24rem;
@@ -71,25 +82,20 @@ $panel-separator-color: rgb(33, 150, 243);
     }
 
     &__filetype {
-      /* .kb-bulk-import__filetype_panel__filetype_button */
+      // .kb-bulk-import__filetype_panel__filetype_button
       &_button {
         @include base-text;
-
-        display: flex;
-        width: 100%;
-        flex-direction: row;
-        padding: 8px;
-        border: 0 0 1px 0 solid $component-border;
-        background-color: inherit;
-        text-align: left;
+        @extend %file_type_button;
 
         &:hover:not(&--selected) {
+          @extend %file_type_button;
           background-color: $filetype-hover-color;
           cursor: pointer;
         }
 
-        /* .kb-bulk-import__filetype_panel__filetype_button--selected */
+        // .kb-bulk-import__filetype_panel__filetype_button--selected
         &--selected {
+          @extend %file_type_button;
           background-color: $filetype-highlight-color;
           box-shadow: 0 3px 2px -2px use-color('base');
         }
@@ -99,20 +105,28 @@ $panel-separator-color: rgb(33, 150, 243);
         }
       }
 
-      /* .kb-bulk-import__filetype_panel__filetype_icon */
+      // .kb-bulk-import__filetype_panel__filetype_icon
       &_icon {
         padding: 2px 8px 0;
         color: $filetype-icon-color;
       }
 
-      /* .kb-bulk-import__filetype_panel__filetype_label */
+      // .kb-bulk-import__filetype_panel__filetype_label
       &_label {
         flex: 1;
       }
     }
   }
 
-  /* kb-bulk-import-configure */
+  &__tab_pane .kb-bulk-import__filetype_panel {
+    display: none;
+  }
+
+  &__tab_pane[data-active-tab="configure"] .kb-bulk-import__filetype_panel {
+    display: block;
+  }
+
+  // kb-bulk-import-configure
   &-configure {
     &__advanced_hidden_message {
       margin-left: 6px;
@@ -121,14 +135,16 @@ $panel-separator-color: rgb(33, 150, 243);
   }
 }
 
-.kb-app-params__advanced-message--parameters {
-  margin-left: 6px;
-}
+.kb-app-params {
+  &__advanced-message--parameters {
+    margin-left: 6px;
+  }
 
-.kb-app-params__fields--parameters {
-  /* kb-app-params__fields--parameters__hidden_field */
-  &__hidden_field {
-    display: none;
+  &__fields--parameters {
+    // kb-app-params__fields--parameters__hidden_field
+    &__hidden_field {
+      display: none;
+    }
   }
 }
 
@@ -148,58 +164,5 @@ $panel-separator-color: rgb(33, 150, 243);
   &__cell_label {
     padding-top: 8px;
     margin-bottom: 0;
-  }
-}
-
-.kb-file-path {
-  /* .kb-file-path-table-row */
-
-
-  &__table {
-    width: 100%;
-  }
-
-  &__table_row {
-    font: normal 400 14px/18px $typeface-page-text;
-  }
-
-  /* .kb-file-path__param_container */
-  &__param_container {
-    flex: 1;
-    display: flex;
-    flex-wrap: wrap;
-
-   .input-group .select2-container {
-      display: table;
-      table-layout: fixed;
-    }
-  }
-
-  &__table_cell--file-path_id {
-    min-width: 30rem;
-    flex: 1;
-    padding: 4px;
-  }
-
-  &__button--delete {
-    margin-top: 20px;
-  }
-
-  &__button--add_row {
-    margin-left: 10px;
-    margin-bottom: 5px;
-  }
-
-  &__button_icon--add_row {
-    margin: 5px;
-  }
-
-  &__file_number {
-    padding: 20px 10px 0 0;
-    font-weight: 700;
-  }
-
-  &__params {
-    width: 95%;
   }
 }

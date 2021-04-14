@@ -1,4 +1,4 @@
-/* large icons */
+// large icons
 $icon-size-default: 56px;
 $icon-padding: 3px;
 $icon-size-image: $icon-size-default - 2*$icon-padding;
@@ -6,12 +6,12 @@ $top-shift: 6px;
 $left-shift: 8px;
 $outline-offset: 1px;
 
-// see also .kb-cell-toolbar .icon
+// see also .kb-cell-toolbar__app_icon
 
 .kb-icon {
-  /* kb-icon__container */
+  // kb-icon__container
   &__container {
-    /* kb-icon__container--image */
+    // kb-icon__container--image
     &--image {
       display: block;
     }
@@ -39,25 +39,22 @@ $outline-offset: 1px;
   }
 
   &__icon_background {
-    /*  .kb-icon__icon_background--app,
-        .kb-icon__icon_background--app-toolbar
-    */
+    //  .kb-icon__icon_background--app,
+    //  .kb-icon__icon_background--app-toolbar
     &--app,
     &--app-toolbar {
       color: use_color('icon-app');
     }
 
-    /*  .kb-icon__icon_background--generic,
-        .kb-icon__icon_background--generic-toolbar
-    */
+    //  .kb-icon__icon_background--generic,
+    //  .kb-icon__icon_background--generic-toolbar
     &--generic,
     &--generic-toolbar {
       color: use_color('icon-generic');
     }
 
-    /*  .kb-icon__icon_background--type,
-        .kb-icon__icon_background--type-toolbar
-    */
+    //  .kb-icon__icon_background--type,
+    //  .kb-icon__icon_background--type-toolbar
     &--type,
     &--type-toolbar {
       color: use_color('icon-type');
@@ -72,7 +69,7 @@ $outline-offset: 1px;
     }
   }
 
-  /* For shifting over logos that are stacked on top of each other */
+  // For shifting over logos that are stacked on top of each other
   &__outline--l1 {
     margin-top: $outline-offset;
     margin-left: $outline-offset;

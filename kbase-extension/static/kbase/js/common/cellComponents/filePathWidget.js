@@ -1,6 +1,5 @@
 define([
     'bluebird',
-    'jquery',
     'common/html',
     'common/ui',
     'common/events',
@@ -8,7 +7,7 @@ define([
     'common/cellComponents/fieldTableCellWidget',
     'widgets/appWidgets2/paramResolver',
     'common/runtime',
-], (Promise, $, html, UI, Events, Props, FieldWidget, ParamResolver, Runtime) => {
+], (Promise, html, UI, Events, Props, FieldWidget, ParamResolver, Runtime) => {
     'use strict';
 
     const tag = html.tag,
@@ -16,9 +15,8 @@ define([
         span = tag('span'),
         button = tag('button'),
         div = tag('div'),
-        table = tag('table'),
-        tr = tag('tr'),
-        td = tag('td'),
+        ol = tag('ol'),
+        li = tag('li'),
         icon = tag('icon'),
         cssBaseClass = 'kb-file-path',
         cssClassType = 'parameter';
@@ -54,17 +52,17 @@ define([
              *    management
              *  - row order, since we can delete from anywhere, can shift and wobble, so that's not helpful.
              *    instead, we map from rowId -> row order, and update that on insertions and deletions.
-             * In general, we need to support 3 actions.
+             * In general, we need to support 4 actions.
              * 1. add row
-             *  - rows get added to the end, new id, new object for data. O(1)
+             *  - rows get added to the end, new id, new object for data.
              * 2. update data
              *  - when a field widget updates its data, we get a message with row id, parameter id, and new
-             *    value. Mapping from row id -> row order makes this O(1)
+             *    value.
              * 3. push data to main widget (configure tab)
-             *  - we maintain data in the right order with the right set of values, so this is O(1)
+             *  - we use the mapped row order to fetch the values in the right order, which is a quick loop
              * 4. delete row
              *  - rows can get deleted from anywhere, which breaks all the ordering. We need to run a loop
-             *    to figure out the new order after the one that was deleted, which makes this O(n)
+             *    to figure out the new order after the one that was deleted.
              *
              * dataModel structure:
              * This is a simple object with a few keys:
@@ -72,9 +70,9 @@ define([
              *   screen, thus the order the data should be stored in
              * rowIdToIndex: mapping from unique rowId to the index in rowOrder. Mainly used on row
              *   updates
-             * dataValues: an array of key-value-pairs, parameter id -> parameter value
-             * widgets: mapping from rowId to the array of widget objects in that row, so we can stop
-             *   and remove them all.
+             * rows: a map from the unique rowId to an object containing two keys:
+             *   - values: a set of key-value-pairs, parameter id -> parameter value
+             *   - widgets: an array of all widgets running on that row
              *
              * example:
              * {
@@ -83,32 +81,28 @@ define([
              *      rowA: 0,
              *      rowB: 1
              *   },
-             *   dataValues: [{
-             *      param1: 'value1',
-             *      param2: 'value2
-             *   }, {
-             *      param1: 'value3',
-             *      param2: 'value4'
-             *   }],
-             *   widgets: {
-             *      rowA: [Object[], Object[]],
-             *      rowB: [Object[], Object[]]
+             *   rows: {
+             *     rowA: {
+             *       widgets: [Object[], Object[]],
+             *       values: {
+             *         param1: 'value1',
+             *         param2: 'value2
+             *       }
+             *     },
+             *     rowB: {
+             *       widgets: [Object[], Object[]],
+             *       values: {
+             *         param1: 'value3',
+             *         param2: 'value4
+             *       }
+             *     }
              *   }
              * }
-             *
-             * Why do something this complex? We might have 100+ rows, and sifting through to update
-             * all of them each time some random widget updates can take a while. And this is a
-             * cleaner way of keeping a logical mapping between rows and widgets and data. We could
-             * skip the rowIdToIndex Map, but that would mean searching out the row from the id
-             * each time - widgets don't know what row they're in, they only know the data they hold,
-             * and rewriting the fieldTableCellWidget wrapper to be row-aware seems like more work
-             * than is worth it.
              */
             dataModel = {
-                rowIdToIndex: {},
                 rowOrder: [],
-                dataValues: [],
-                widgets: {},
+                rowIdToIndex: {},
+                rows: {},
             },
             paramResolver = ParamResolver.make(),
             events = Events.make(),
@@ -142,25 +136,23 @@ define([
             // put that in the filePathWidget's data model, then push all the values up the main
             // params bus.
             fieldWidget.bus.on('changed', (message) => {
-                const rowIndex = dataModel.rowIdToIndex[rowId];
-                dataModel.dataValues[rowIndex][parameterSpec.id] = message.newValue;
+                dataModel.rows[rowId].values[parameterSpec.id] = message.newValue;
                 paramsBus.emit('parameter-changed', {
                     parameter: parameterSpec.id,
                     newValue: message.newValue,
                     isError: message.isError,
                     rowId: rowId,
-                    rowIndex: dataModel.rowOrder.indexOf(rowId),
+                    rowIndex: dataModel.rowIdToIndex[rowId],
                 });
             });
 
             // The 'sync' message is a request for the current model value from the
             // input widget.
             fieldWidget.bus.on('sync', () => {
-                const rowIndex = dataModel.rowIdToIndex[rowId];
-                const value = dataModel.dataValues[rowIndex][parameterSpec.id];
+                const newValue = dataModel.rows[rowId].values[parameterSpec.id];
                 fieldWidget.bus.send(
                     {
-                        value: value,
+                        value: newValue,
                     },
                     {
                         // This points the update back to a listener on this key
@@ -252,12 +244,6 @@ define([
             return fieldWidget;
         }
 
-        function updateRowNumbers(filePathRows) {
-            filePathRows.forEach((filePathRow, index) => {
-                filePathRow.querySelector(`.${cssBaseClass}__file_number`).textContent = index + 1;
-            });
-        }
-
         /**
          * Adds a new file path parameter row. Has the following responsibilities:
          *  - make row id
@@ -272,31 +258,33 @@ define([
                 // initialize params
                 params = Object.assign({}, model.getItem('defaultParams'));
             }
-            const tableElem = ui.getElement(`${cssClassType}-fields`);
+            const filePathRows = ui.getElement(`${cssClassType}-fields`);
             const rowId = html.genId();
             dataModel.rowOrder.push(rowId);
             dataModel.rowIdToIndex[rowId] = dataModel.rowOrder.length - 1;
-            dataModel.dataValues.push(params);
-            $(tableElem).append(
-                tr({
-                    class: `${cssBaseClass}__table_row`,
+            dataModel.rows[rowId] = {
+                values: params,
+                widgets: [],
+            };
+
+            const newRowNode = ui.createNode(
+                li({
+                    class: `${cssBaseClass}__list_item`,
                     dataElement: `${cssClassType}-fields-row`,
                     dataRowId: rowId,
                 })
             );
-
-            const filePathRows = ui.getElements(`${cssClassType}-fields-row`);
-            return makeFilePathRow(filePathRows[filePathRows.length - 1], rowId, params).then(
-                () => {
-                    updateRowNumbers(filePathRows);
-                    syncDataModel();
-                }
-            );
+            filePathRows.appendChild(newRowNode);
+            return makeFilePathRow(newRowNode, rowId, params).then(() => {
+                syncDataModel();
+            });
         }
 
         function syncDataModel() {
+            // map structure of data into an array of parameter objects
+            const dataValues = dataModel.rowOrder.map((rowId) => dataModel.rows[rowId].values);
             paramsBus.emit('sync-data-model', {
-                values: dataModel.dataValues,
+                values: dataValues,
             });
         }
 
@@ -312,13 +300,13 @@ define([
                     title: span(['File Paths']),
                     name: `${cssClassType}s-area`,
                     body: [
-                        table({
-                            class: `${cssBaseClass}__table`,
+                        ol({
+                            class: `${cssBaseClass}__list`,
                             dataElement: `${cssClassType}-fields`,
                         }),
                         button(
                             {
-                                class: `${cssBaseClass}__button--add_row btn btn__text`,
+                                class: `${cssBaseClass}__button--add_row`,
                                 type: 'button',
                                 id: events.addEvent({
                                     type: 'click',
@@ -359,8 +347,8 @@ define([
         // EVENTS
         function attachEvents() {
             bus.on('reset-to-defaults', () => {
-                Object.values(dataModel.widgets).forEach((widgetRow) => {
-                    widgetRow.forEach((widget) => {
+                Object.values(dataModel.rows).forEach((row) => {
+                    row.widgets.forEach((widget) => {
                         widget.bus.emit('reset-to-defaults');
                     });
                 });
@@ -370,8 +358,8 @@ define([
                 // if the workspace magically changes, pass that along to
                 // each registered widget.
 
-                Object.values(dataModel.widgets).forEach((widgetRow) => {
-                    widgetRow.forEach((widget) => {
+                Object.values(dataModel.rows).forEach((row) => {
+                    row.widgets.forEach((widget) => {
                         widget.bus.emit('workspace-changed');
                     });
                 });
@@ -404,7 +392,7 @@ define([
                     };
 
                     return tag('div')({
-                        class: `${cssBaseClass}__table_cell--file-path_id`,
+                        class: `${cssBaseClass}__row_cell--file-path_id`,
                         id: id,
                         dataParameter: parameterId,
                     });
@@ -431,24 +419,18 @@ define([
          */
         function createFilePathWidget(rowId, appSpec, filePathParams, parameterId, parameterValue) {
             const spec = filePathParams.paramMap[parameterId];
+            let widget;
             return paramResolver
                 .loadInputControl(spec)
                 .then((inputWidget) => {
-                    const widget = makeFieldWidget(
-                        rowId,
-                        inputWidget,
-                        appSpec,
-                        spec,
-                        parameterValue
-                    );
+                    widget = makeFieldWidget(rowId, inputWidget, appSpec, spec, parameterValue);
 
-                    return widget
-                        .start({
-                            node: container.querySelector('#' + filePathParams.view[spec.id].id),
-                        })
-                        .then(() => {
-                            return widget;
-                        });
+                    return widget.start({
+                        node: container.querySelector('#' + filePathParams.view[spec.id].id),
+                    });
+                })
+                .then(() => {
+                    return widget;
                 })
                 .catch((ex) => {
                     console.error(`Error making input field widget: ${ex}`);
@@ -478,25 +460,21 @@ define([
          * @returns a promise that resolves when the steps are done.
          */
         function deleteRow(e, rowId) {
-            return Promise.all(
-                dataModel.widgets[rowId].map((widget) => {
-                    return widget.stop();
-                })
-            ).then(() => {
-                delete dataModel.widgets[rowId];
-                const rowIdx = dataModel.rowIdToIndex[rowId];
-                dataModel.dataValues.splice(rowIdx, 1);
-                dataModel.rowOrder.splice(rowIdx, 1);
-                delete dataModel.rowIdToIndex[rowId];
-                // redo the ordering, this is the only O(N) part
-                dataModel.rowOrder.forEach((rowId, idx) => {
-                    dataModel.rowIdToIndex[rowId] = idx;
-                });
-                const filePathRows = ui.getElements(`${cssClassType}-fields-row`);
-                $(e.target).closest('tr').remove();
-                updateRowNumbers(filePathRows);
-                syncDataModel();
-            });
+            return Promise.all(dataModel.rows[rowId].widgets.map((widget) => widget.stop())).then(
+                () => {
+                    delete dataModel.rows[rowId];
+                    const rowIdx = dataModel.rowIdToIndex[rowId];
+
+                    dataModel.rowOrder.splice(rowIdx, 1);
+                    delete dataModel.rowIdToIndex[rowId];
+                    // redo the ordering
+                    dataModel.rowOrder.forEach((rowId, idx) => {
+                        dataModel.rowIdToIndex[rowId] = idx;
+                    });
+                    e.target.parentElement.remove();
+                    syncDataModel();
+                }
+            );
         }
 
         /**
@@ -509,6 +487,7 @@ define([
         function makeFilePathRow(filePathRow, rowId, params) {
             const appSpec = model.getItem('appSpec');
             const filePathParams = makeFilePathsLayout(model.getItem('parameterSpecs'));
+            const rowEvents = Events.make();
 
             if (!filePathParams.layout.length) {
                 return Promise.resolve(
@@ -517,10 +496,7 @@ define([
             }
 
             filePathRow.innerHTML = [
-                td({
-                    class: `${cssBaseClass}__file_number`,
-                }),
-                td(
+                div(
                     {
                         class: `${cssBaseClass}__params`,
                     },
@@ -533,25 +509,23 @@ define([
                         ),
                     ]
                 ),
-                td({}, [
-                    button(
-                        {
-                            class: `${cssBaseClass}__button--delete btn btn__text`,
-                            type: 'button',
-                            id: events.addEvent({
-                                type: 'click',
-                                handler: function (e) {
-                                    deleteRow(e, rowId);
-                                },
-                            }),
-                        },
-                        [
-                            icon({
-                                class: 'fa fa-trash-o fa-lg',
-                            }),
-                        ]
-                    ),
-                ]),
+                button(
+                    {
+                        class: `${cssBaseClass}__button--delete`,
+                        type: 'button',
+                        id: rowEvents.addEvent({
+                            type: 'click',
+                            handler: function (e) {
+                                deleteRow(e, rowId);
+                            },
+                        }),
+                    },
+                    [
+                        icon({
+                            class: 'fa fa-trash-o fa-lg',
+                        }),
+                    ]
+                ),
             ].join('');
 
             return Promise.all(
@@ -565,8 +539,9 @@ define([
                     );
                 })
             ).then((widgets) => {
-                dataModel.widgets[rowId] = widgets;
-                events.attachEvents(container);
+                // dataModel.rows[rowId] was already created by addRow
+                dataModel.rows[rowId].widgets = widgets;
+                rowEvents.attachEvents(filePathRow);
             });
         }
 
@@ -607,7 +582,7 @@ define([
             model.setItem('defaultParams', defaultParams);
             return Promise.all(
                 initialParams.map((paramRow) => {
-                    addRow(paramRow);
+                    return addRow(paramRow);
                 })
             ).catch((error) => {
                 throw new Error(`Unable to start filePathWidget: ${error}`);
@@ -616,8 +591,8 @@ define([
 
         function stop() {
             // Stop all widgets. Note this is an array of arrays of promises.
-            const widgetStopProms = Object.values(dataModel.widgets).map((widgetRow) => {
-                return widgetRow.map((widget) => {
+            const widgetStopProms = Object.values(dataModel.rows).map((row) => {
+                return row.widgets.map((widget) => {
                     return widget.stop();
                 });
             });

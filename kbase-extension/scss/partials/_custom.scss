@@ -258,8 +258,6 @@ div {
   }
 }
 
-/* narrative cell icons */
-
 .cell {
   &.selected {
     .prompt {
@@ -281,14 +279,6 @@ div {
       .error-icon {
         color: rgb(255 0 0);
       }
-
-      &.input_prompt {
-        color: rgb(48 63 159);
-      }
-
-      &.output_prompt {
-        color: rgb(216 67 21);
-      }
     }
 
     .btn-default {
@@ -305,14 +295,9 @@ div {
       color: rgb(204 204 204);
     }
 
-    .kb-cell-toolbar {
-      .title-container {
-        opacity: 0.5;
-      }
-
-      .buttons-container {
-        opacity: 0.2;
-      }
+    .app-icon,
+    .method-icon {
+      color: use_color('silver');
     }
   }
 }
@@ -330,13 +315,10 @@ div {
   }
 }
 
-/*
-  For some reason Jupyter removes the bottom margin. This causes problems with
-   bootstrap, since bootstrap removes the top margin!
-*/
-
+// For some reason Jupyter removes the bottom margin. This causes problems with
+// bootstrap, since bootstrap removes the top margin!
 p {
-  margin-bottom: 9px;
+  margin-bottom: 1rem;
 }
 
 .prompt {
@@ -349,23 +331,17 @@ p {
  * This hunk of CSS should remove it until we can better work it in to our design.
  */
 
-div.code_cell {
-  &:hover {
-    .run_this_cell,
-    div.input_prompt.run_this_cell {
-      visibility: hidden !important;
-    }
-  }
+div.run_this_cell {
+  display: none;
+  width: 0;
+}
 
+div.code_cell {
   div.input_prompt {
     min-width: 0;
   }
 }
 
-.run_this_cell {
-  width: 0 !important;
-  padding: 0 !important;
-}
 
 .panel-title {
   @include font-h4;

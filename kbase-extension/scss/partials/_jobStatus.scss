@@ -1,0 +1,199 @@
+.kb-job-status {
+  box-shadow: none;
+
+  &__dropdown {
+    &_header {
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    // .kb-job-status__dropdown-menu
+    &-menu {
+      @include body-text;
+      line-height: 2.5;
+      padding: 0;
+
+      // .kb-job-status__dropdown-menu-item
+      &-item {
+        // .kb-job-status__dropdown-menu-item-link
+        &-link {
+          &--retry,
+          &--cancel {
+            @include body-text;
+            background: use_color('white');
+            border: 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+            line-height: 2.5;
+            text-align: left;
+            width: 100%;
+          }
+
+          &--retry {
+            color: use_color('primary');
+
+            &:hover,
+            &:active {
+              background: use_color('primary');
+              color: use_color('white');
+            }
+          }
+
+          &--cancel {
+            color: use_color('error-dark');
+
+            &:hover,
+            &:active {
+              background: use_color('error');
+              color: use_color('white');
+            }
+          }
+        }
+      }
+    }
+  }
+
+  &__table {
+    @include tabular-text;
+    padding: 0;
+    width: 100%;
+    table-layout: fixed;
+
+    // .kb-job-status__table_body
+    &_body {
+      border-bottom: 2px solid use-color('base-light');
+      border-top: 2px solid use-color('base-light');
+    }
+
+    &_head {
+      // .kb-job-status__table_head_row
+      &_row {
+        font-weight: 700;
+
+        .sorting::after,
+        .sorting_asc::after,
+        .sorting_desc::after {
+          left: 5px !important;
+          bottom: 0 !important;
+          position: relative !important;
+          display: inline-block !important;
+        }
+      }
+
+      // .kb-job-status__table_head_cell
+      &_cell {
+        &--action,
+        &--log-view,
+        &--object,
+        &--status {
+          @include table-cell;
+        }
+
+        &--log-view {
+          width: 12rem;
+        }
+        &--action {
+          width: 14rem;
+        }
+      }
+    }
+
+    // .kb-job-status__table_footer
+    &_footer {
+      @include body-text;
+    }
+  }
+
+  &__row {
+    border-bottom: 1px solid use-color('base-lightest');
+
+    &:hover {
+      background: use-color('disabled-light');
+    }
+
+    .kb-job-status__cell_action {
+      &--retry,
+      &--go-to-results {
+        @extend %kbase-button;
+
+        @include button-variant(use_color('primary'), use-color('primary-lightest'), transparent);
+      }
+
+      &--cancel {
+        @extend %kbase-button;
+
+        @include button-variant(use_color('error'), use_color('error-lightest'), transparent);
+      }
+    }
+
+    // .kb-job-status__row--selected
+    &--selected {
+      background: use-color('base-lightest');
+
+      &:hover {
+        background: use-color('primary-lighter');
+      }
+    }
+  }
+
+  &__cell {
+    &--status {
+      text-transform: capitalize;
+    }
+    // .kb-job-status__table_cell--action,
+    // .kb-job-status__table_cell--log-view,
+    // .kb-job-status__table_cell--object,
+    // .kb-job-status__table_cell--status
+    &--action,
+    &--log-view,
+    &--object,
+    &--status {
+      @include table-cell;
+
+      white-space: nowrap;
+    }
+  }
+
+  // .kb-job-status__param_list
+  &__param_list {
+    @include body-text;
+    list-style-type: none;
+    margin: 1rem 0;
+    padding: 0;
+  }
+
+  // .kb-job-status__log_container
+  &__log_container {
+    background-color: use-color('info-lighter');
+    border-bottom: 1px solid use-color('base-lightest');
+    padding: 1rem;
+  }
+
+  // .kb-job-status__summary
+  &__summary {
+    color: use-color('ink');
+    font-weight: 700;
+  }
+
+  @each $key, $value in $job_status_colours {
+    // .kb-job-status__icon--${status}
+    &__icon--#{$key} {
+      color: use-color($key);
+      margin: 4px;
+    }
+
+    // .kb-job-status__summary--${status}
+    &__summary--#{$key} {
+      color: use-color($key);
+      font-weight: 700;
+    }
+
+    // .kb-job-status__cell_summary--${status}
+    &__cell_summary--#{$key} {
+      color: use-color($key);
+      font-weight: 700;
+      font-size: 16px;
+      text-transform: capitalize;
+      margin: 0 0.5rem;
+    }
+  }
+}

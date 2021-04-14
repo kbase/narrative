@@ -532,7 +532,6 @@ define([
             $cellNode.find('.inner_cell > div:nth-child(2)').addClass('hidden');
             $cellNode.find('.inner_cell > div:nth-child(3)').addClass('hidden');
             utils.setCellMeta(this, 'kbase.cellState.showTitle', true);
-            utils.setCellMeta(this, 'kbase.cellState.message', '', true);
         };
 
         p.maximize = function () {
@@ -540,14 +539,6 @@ define([
             $cellNode.find('.inner_cell > div:nth-child(2)').removeClass('hidden');
             $cellNode.find('.inner_cell > div:nth-child(3)').removeClass('hidden');
             utils.setCellMeta(this, 'kbase.cellState.showTitle', false);
-
-            // this is a little distracting to see in all markdown cells at all times.
-            // it might make more sense in some kind of help settings? or as a tooltip?
-            // but there's also already a placeholder in shiny new markdown cells, making this
-            // redundant. This text has been moved there.
-            // if (NarrativeRuntime.canEdit()) {
-            //     utils.setCellMeta(this, 'kbase.cellState.message', 'Double click content to edit; click out of the edit area to preview', true);
-            // }
         };
 
         // We need this method because the layout of each type of cell and

@@ -1,78 +1,64 @@
-.kb-job-log__container {
-  background-color: use-color('info-lighter');
-  padding: 1rem;
-}
+$counter-name: code-list-counter;
 
 %line_container {
   @include fixed-width;
-
-  &:first-child {
-    padding-top: 1rem;
-  }
-
-  &:last-child {
-    padding-bottom: 1rem;
-  }
-}
-
-%line_number {
-  flex-shrink: 0;
-  text-align: right;
-  user-select: none;
-  white-space: nowrap;
-  width: 4rem;
+  counter-reset: $counter-name;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 %line_text {
-  flex: 1;
-  margin-left: 1rem;
-  overflow-wrap: break-word;
+  @include fixed-width;
   white-space: normal;
-  word-wrap: break-word;
+  counter-increment: $counter-name;
+  position: relative;
+  padding-left: 5rem;
 }
 
 .kb-log {
-  /* .kb-log__container */
+  // .kb-log__container
   &__container {
     @include body-text;
   }
 
-  &_state_abbrev {
+  &__job_status_detail_container {
     div:first-of-type {
       font-weight: 700;
     }
   }
 
-  /* .kb-log__controls */
+  // .kb-log__controls
   &__controls {
-    display: flex;
     margin: 1rem 0;
   }
 
+  // .kb-log__content,
+  // .kb-log__content--expanded
   &__content,
   &__content--expanded {
     @include zero-box;
 
-    overflow-y: scroll;
+    background-color: use-color('base-lightest');
+    overflow: scroll;
     transition: height 0.5s;
   }
 
+  // .kb-log__content
   &__content {
     max-height: 200px;
 
+    // .kb-log__content--expanded
     &--expanded {
       max-height: 600px;
     }
   }
 
-  /* .kb-log__line_container */
-
-  &__line_container {
+  // .kb-log__log_line_container
+  &__log_line_container {
     @extend %line_container;
 
-    background-color: use-color('base-lightest'); // rgb(245, 245, 245);
-
-    /* .kb-log__line_container--error */
+    // .kb-log__log_line_container--error
     &--error {
       @extend %line_container;
 
@@ -80,51 +66,43 @@
     }
   }
 
-  /* .kb-log__flex_wrapper */
-  &__flex_wrapper {
-    display: flex;
-    flex-direction: row;
-  }
-
-
-  /* .kb-log__line_number */
-  &__line_number {
-    @extend %line_number;
-
-    color: use-color('grey');
-
-    &--error {
-      @extend %line_number;
-
-      color: use-color('error-darker');
-      font-weight: 700;
-    }
-  }
-
-
-  /* .kb-log__line_text */
-  &__line_text {
+  // .kb-log__line_text
+  // .kb-log__line_text--error
+  &__line_text,
+  &__line_text--error {
     @extend %line_text;
 
+    &::before {
+      content: counter($counter-name);
+      left: 1rem;
+      position: absolute;
+    }
+  }
+
+  // .kb-log__line_text
+  &__line_text {
+    background-color: use-color('base-lightest');
     color: use-color('ink');
 
+    // .kb-log__line_text--error
     &--error {
-      @extend %line_text;
-
+      background-color: use-color('error-lightest');
       color: use-color('error-darker');
     }
   }
 
+  // .kb-log__logs_title
   &__logs_title {
     @include font-h4;
 
     margin-top: 1rem;
   }
 
+  // .kb-log__spinner
   &__spinner {
     @include base-text;
     @include zero-box;
 
-    padding: 5px 10px;
+    padding: 0.5rem 1rem;
   }
 }

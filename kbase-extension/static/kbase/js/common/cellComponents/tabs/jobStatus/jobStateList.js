@@ -1,12 +1,13 @@
 define([
     'jquery',
     'bluebird',
-    'common/runtime',
+    'common/events',
     'common/html',
     'common/jobs',
+    'common/runtime',
     './jobStateListRow',
     'jquery-dataTables',
-], ($, Promise, Runtime, html, Jobs, JobStateListRow) => {
+], ($, Promise, Events, html, Jobs, Runtime, JobStateListRow) => {
     'use strict';
 
     const t = html.tag,
@@ -23,7 +24,7 @@ define([
         dataTablePageLength = 50,
         cssBaseClass = 'kb-job-status';
 
-    function createActionsDropdown() {
+    function createActionsDropdown(events) {
         // each button has an action, either 'cancel' or 'retry',
         // and a target, which refers to the status of the jobs
         // that the action will be performed upon.
@@ -63,6 +64,7 @@ define([
                         dataToggle: 'dropdown',
                         ariaHaspopup: true,
                         ariaExpanded: false,
+                        ariaLabel: 'Job options',
                         class: `btn btn-default ${cssBaseClass}__dropdown_header`,
                     },
                     [
@@ -86,7 +88,14 @@ define([
                                 {
                                     class: `${cssBaseClass}__dropdown-menu-item-link--${actionObj.action}`,
                                     type: 'button',
+                                    title: actionObj.label,
                                     // TODO: add action listener and implementation here
+                                    id: events.addEvent({
+                                        type: 'click',
+                                        handler: () => {
+                                            console.log('CLICK!');
+                                        },
+                                    }),
                                     dataAction: actionObj.action,
                                     dataTarget: actionObj.target,
                                 },
@@ -117,27 +126,27 @@ define([
                             [
                                 th(
                                     {
-                                        class: `${cssBaseClass}__table_head_cell col-sm-5`,
+                                        class: `${cssBaseClass}__table_head_cell--object`,
                                     },
-                                    ['Object']
+                                    'Object'
                                 ),
                                 th(
                                     {
-                                        class: `${cssBaseClass}__table_head_cell col-sm-2`,
+                                        class: `${cssBaseClass}__table_head_cell--status`,
                                     },
-                                    ['Status']
+                                    'Status'
                                 ),
                                 th(
                                     {
-                                        class: `${cssBaseClass}__table_head_cell col-sm-3`,
+                                        class: `${cssBaseClass}__table_head_cell--action`,
                                     },
-                                    createActionsDropdown()
+                                    'Action'
                                 ),
                                 th(
                                     {
-                                        class: `${cssBaseClass}__table_head_cell col-sm-2`,
+                                        class: `${cssBaseClass}__table_head_cell--log-view`,
                                     },
-                                    ''
+                                    'Status details'
                                 ),
                             ]
                         ),
@@ -187,36 +196,32 @@ define([
     function factory() {
         const widgetsById = {},
             bus = Runtime.make().bus(),
-            listeners = [];
+            listeners = {};
 
         let $container, tableBody;
 
         function startParamsListener(jobId) {
-            listeners.push(
-                bus.listen({
-                    channel: {
-                        jobId: jobId,
-                    },
-                    key: {
-                        type: 'job-info',
-                    },
-                    handle: handleJobInfoUpdate,
-                })
-            );
+            listeners[`params__${jobId}`] = bus.listen({
+                channel: {
+                    jobId: jobId,
+                },
+                key: {
+                    type: 'job-info',
+                },
+                handle: handleJobInfoUpdate,
+            });
         }
 
         function startJobListener(jobId) {
-            listeners.push(
-                bus.listen({
-                    channel: {
-                        jobId: jobId,
-                    },
-                    key: {
-                        type: 'job-status',
-                    },
-                    handle: handleJobStatusUpdate,
-                })
-            );
+            listeners[`status__${jobId}`] = bus.listen({
+                channel: {
+                    jobId: jobId,
+                },
+                key: {
+                    type: 'job-status',
+                },
+                handle: handleJobStatusUpdate,
+            });
         }
 
         /**
@@ -226,6 +231,7 @@ define([
         function handleJobInfoUpdate(message) {
             if (message.jobId && message.jobInfo && widgetsById[message.jobId]) {
                 widgetsById[message.jobId].updateParams(message.jobInfo);
+                bus.removeListener(listeners[`params__${message.jobId}`]);
             }
         }
 
@@ -252,10 +258,12 @@ define([
          *
          * @param {object} jobState  -- jobState object, containing jobID, status, etc.
          * @param {int}    jobIndex
+         * @returns {Promise} started job row instance
          */
 
         function createJobStateListRowWidget(jobState, jobIndex) {
             widgetsById[jobState.job_id] = JobStateListRow.make();
+            // this returns a promise
             return widgetsById[jobState.job_id].start({
                 node: createTableRow(tableBody, jobIndex),
                 jobState: jobState,
@@ -264,13 +272,23 @@ define([
             });
         }
 
+        /**
+         *
+         * @param {object} args  -- with keys
+         *      node:     DOM node to attach to
+         *      jobState: job state object
+         *      includeParentJob: boolean; whether or not to add a parent job row
+         */
         function start(args) {
             const requiredArgs = ['node', 'jobState'];
             if (!requiredArgs.every((arg) => arg in args && args[arg])) {
                 throw new Error('start argument must have these keys: ' + requiredArgs.join(', '));
             }
+            const events = Events.make({ node: args.node });
             $container = $(args.node);
-            $container.append($(createTable()));
+            const actionDropdown = createActionsDropdown(events);
+
+            $container.append($(actionDropdown + '\n' + createTable()));
             [tableBody] = $container.find('tbody');
             const jobState = Jobs.updateJobModel(args.jobState);
 
@@ -280,6 +298,8 @@ define([
                 })
             ).then(() => {
                 renderTable($container, jobState.child_jobs.length);
+
+                events.attachEvents();
 
                 // TODO: depending on which strategy we use for updating the job status
                 // table, we can remove either the parent listener or that for the
@@ -292,8 +312,6 @@ define([
                     startParamsListener(childJob.job_id);
                     bus.emit('request-job-info', {
                         jobId: childJob.job_id,
-                        // TODO: check whether this param is required in ee2.5
-                        // parentJobId: jobState.job_id,
                     });
                 });
             });
@@ -301,7 +319,7 @@ define([
 
         function stop() {
             return Promise.try(() => {
-                bus.removeListeners(listeners);
+                bus.removeListeners(Object.keys(listeners));
             });
         }
 

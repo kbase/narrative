@@ -1,477 +1,3 @@
-.btn__text {
-  height: 34px;
-  box-sizing: border-box;
-  border: 1px solid rgb(255 255 255);
-  background: rgb(255 255 255);
-  border-radius: 4px;
-  color: rgb(67 121 177);
-  font: normal 700 14px/18px $typeface-page-text;
-  outline: none;
-  text-align: center;
-  text-transform: uppercase;
-
-  &:hover {
-    border: 1px solid rgb(236 242 247);
-    background-color: rgb(236 242 247);
-    color: rgb(54 97 142);
-    cursor: pointer;
-  }
-
-  &:focus {
-    border: 1px solid rgb(227 235 243);
-    background-color: rgb(227 235 243);
-    color: rgb(54 97 142);
-  }
-
-  &:active {
-    border: 1px solid rgb(217 228 239);
-    background-color: rgb(217 228 239);
-    color: rgb(54 97 142);
-  }
-
-  &:disabled {
-    border: 1px solid rgb(250 250 250);
-    background-color: rgb(250 250 250);
-    color: rgb(146 146 146);
-  }
-}
-
-.dz-clear-all__button {
-  margin: 6px;
-}
-
-.dz-file {
-  width: 100%;
-  padding: 5px 0;
-  border: 1px solid rgb(238 238 238);
-  margin: 2px 0;
-  font: 16px $typeface-page-text;
-}
-
-.dz-file__progress__bar {
-  margin-bottom: inherit;
-  margin-left: 5px;
-}
-
-.dz-file__upload-progress {
-  display: inline;
-}
-
-.dz-file__row {
-  display: flex;
-  align-items: center;
-}
-
-.dz-file__name {
-  line-height: 20px;
-  white-space: nowrap;
-}
-
-.dz-file__msg,
-.dz-file__name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.dz-file__msg {
-  font-size: 14px;
-}
-
-.dz-file__msg__success {
-  display: none;
-  color: rgb(75 175 79);
-}
-
-.dz-file__status {
-  display: none;
-  align-items: center;
-  font-weight: 700;
-}
-
-.dz-file__status__icon {
-  margin: 0 4px 0 8px;
-}
-
-.dz-file__status__success {
-  color: rgb(75 175 79);
-}
-
-.dz-file__status__error {
-  color: rgb(223 0 2);
-}
-
-/* BEGIN staging data table modifiers */
-
-.kb-staging-table {
-  table-layout: fixed;
-}
-
-.kb-staging-table .kb-staging-table-body td {
-  vertical-align: middle;
-}
-
-/* Overriding default datatables sort icons so they come before the header title rather than after */
-
-.kb-staging-table-header {
-  .sorting::before,
-  .sorting_asc::before,
-  .sorting_desc::before {
-    position: relative;
-    top: 1px;
-    right: 4px;
-    display: inline-block;
-    content: '\e150';
-    font-family: $typeface-glyphicons;
-    opacity: 0.2;
-  }
-
-  .sorting_asc::before {
-    content: '\e155';
-  }
-
-  .sorting_desc::before {
-    content: '\e156';
-  }
-
-  /* .kb-staging-table-header__checkbox */
-  &__checkbox {
-    width: 2%;
-  }
-
-  /* .kb-staging-table-header__file */
-  &__file {
-    width: 4%;
-
-    /* Special positioning for folder sort icon as there is no title */
-    &.sorting::before,
-    &.sorting_asc::before,
-    &.sorting_desc::before {
-      left: 9px;
-    }
-  }
-
-  /* .kb-staging-table-header__name */
-  &__name {
-    width: 26%;
-  }
-
-  /* .kb-staging-table-header__age, .kb-staging-table-header__size */
-  &__age,
-  &__size {
-    width: 8%;
-  }
-
-  /* .kb-staging-table-header__import */
-  &__import {
-    width: 22%;
-  }
-}
-
-.kb-staging-table .kb-staging-table-header {
-  .sorting::after,
-  .sorting_asc::after,
-  .sorting_desc::after {
-    display: none;
-  }
-
-  .kb-staging-table-header__checkbox {
-    width: 15px;
-    padding-right: 5px;
-  }
-
-  .kb-staging-table-header__file {
-    width: 41px;
-    padding-right: 0;
-  }
-
-  .kb-staging-table-header__name {
-    width: 238px;
-  }
-
-  .kb-staging-table-header__age,
-  .kb-staging-table-header__size {
-    width: 56px;
-  }
-
-  .kb-staging-table-header__import {
-    width: 197px;
-  }
-}
-
-/* Special positioning for folder sort icon as there is no title */
-.kb-staging-table-header .kb-staging-table-header__file {
-  &.sorting::before,
-  &.sorting_asc::before,
-  &.sorting_desc::before {
-    left: 9px;
-  }
-}
-
-.kb-staging-table-body__expander {
-  text-align: center;
-}
-
-.kb-staging-table-body__decompress {
-  border: 1px solid rgb(204 204 204);
-  border-radius: 1px;
-}
-
-.kb-staging-table-body__name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.kb-staging-table-body__folder:hover {
-  cursor: pointer;
-  text-decoration: underline;
-}
-
-/* style for Import As dropdown container */
-
-/* set the width here
-  otherwise it will get overriden by datatables when changing the sort order
-  it gets set directly on the element via inline css so we have to use important to override
-*/
-
-.kb-staging-table-body {
-  .select2 {
-    width: 160px !important;
-    margin: 4px 0;
-  }
-
-  /* style for Import As dropdown container text */
-  .kb-staging-table-body__import-dropdown {
-    height: 38px;
-    box-sizing: border-box;
-    border: 1px solid rgb(223 0 2);
-    background: rgb(255 255 255);
-    border-radius: 4px;
-
-    /* When user clicks into the dropdown or chooses a selection box change border color */
-
-    /* style for Import As dropdown container text */
-    .select2-selection__rendered {
-      position: absolute;
-      top: 30.95%;
-      right: 5.41%;
-      bottom: 30.95%;
-      left: 8.87%;
-      display: flex;
-      align-items: center;
-      color: rgb(0 0 0);
-      font-size: 14px;
-      line-height: 16px;
-    }
-
-    .select2-selection__placeholder {
-      color: rgb(223 0 2);
-    }
-
-    /* style for Import As dropdown container arrow */
-    .select2-selection__arrow {
-      position: absolute;
-      top: 30.95%;
-      right: 5.44%;
-      bottom: 30.95%;
-      left: 87.76%;
-      height: 16px;
-
-      b {
-        border-color: rgb(223 0 2) transparent transparent;
-      }
-    }
-
-    &.kb-staging-table-body__import-type-selected .select2-selection__arrow b,
-    &:focus .select2-selection__arrow b {
-      border-color: rgb(136 136 136) transparent transparent;
-    }
-  }
-
-  /* Import as dropdown placeholder text is red
-    Change placeholder color when user clicks in */
-  .select2-container--focus .select2-selection__placeholder,
-  .select2-container--open .select2-selection__placeholder {
-    color: rgb(0 0 0);
-  }
-}
-
-/* When user clicks into the dropdown or chooses a selection box change border color */
-.kb-staging-table-body__import-dropdown.kb-staging-table-body__import-type-selected,
-.select2-container--focus .kb-staging-table-body__import-dropdown,
-.select2-container--open .kb-staging-table-body__import-dropdown {
-  border: 1px solid use-color('silver');
-}
-
-/* Before user makes a selection arrow is red
-   after user makes a selection, or when in focus, arrow is grey */
-.kb-staging-table-body__download {
-  margin-left: 5px;
-  font-size: 9px;
-}
-
-.kb-staging-table-body__delete {
-  background: none;
-  box-shadow: none;
-  color: rgb(67 121 177);
-  font-size: 16px;
-  line-height: 18.4px;
-}
-
-.kb-staging-table-body__import .kb-staging-table-body__delete {
-  &:active,
-  &:hover {
-    background: none;
-    color: rgb(40 96 144);
-  }
-}
-
-.kb-staging-table-notice {
-  height: 32px;
-  padding: 8px;
-  background-color: rgb(238 238 238);
-  font: normal 700 16px/20px $typeface-page-text;
-  text-align: center;
-}
-
-.kb-staging-table-import__button {
-  position: absolute;
-  right: 10px;
-  bottom: -50px;
-  width: 160px;
-  height: 42px;
-  border-radius: 4px;
-  font: normal 700 14px/16px $typeface-page-text;
-
-  &.kb-staging-table-import__button__disabled {
-    background-color: rgb(142 175 208);
-    cursor: not-allowed;
-
-    &:active {
-      background-color: rgb(142 175 208);
-    }
-
-    &:focus {
-      outline: none;
-    }
-  }
-}
-
-.kb-staging-table-import__tooltip.tooltip {
-  background: rgb(255 255 255);
-  border-radius: 4px;
-  box-shadow: 2px 4px 6px rgb(0 0 0 / 0.15);
-
-  .tooltip-inner {
-    display: flex;
-    width: 135px;
-    height: 56px;
-    align-items: center;
-    background: rgb(255 255 255);
-    color: rgb(0 0 0);
-    font: normal 400 12px/16px $typeface-page-text;
-  }
-}
-
-/*
-    END staging data table modifiers
-*/
-
-.kb-data-breadcrumb .kb-pointer a {
-  cursor: pointer;
-}
-
-.kb-data-staging__container {
-  height: 604px;
-  padding: 10px;
-  overflow-y: auto;
-}
-
-.kb-data-staging-metadata-list {
-  display: inline-block;
-  width: 115px;
-  font: normal 700 90% $typeface-page-text;
-}
-
-.kb-data-staging-metadata-file-lines {
-  overflow: scroll;
-  max-height: 200px;
-  background-color: rgb(221 221 221);
-  font: 90% $typeface-fixed-width;
-  white-space: pre;
-}
-
-/* https://www.figma.com/file/T30UN3QhWhhV5SpXiqY1ij/KBase-component-library?node-id=1%3A4 */
-
-.kb-data-staging-button {
-  position: relative;
-  top: -3px;
-  height: 35px;
-  padding: 8px;
-  border: 0;
-  margin: 8px;
-  background: none;
-  border-radius: 4px;
-  color: rgb(67 121 177);
-  cursor: pointer;
-  font: normal 700 14px/18px $typeface-page-text;
-  letter-spacing: 0.7px;
-  text-align: center;
-  text-transform: uppercase;
-
-  &:hover {
-    background: rgb(67 121 177 / 0.1);
-  }
-
-  &:focus {
-    background: rgb(67 121 177 / 0.15);
-  }
-
-  &:active {
-    background: rgb(67 121 177 / 0.2);
-  }
-
-  &:disabled {
-    background: rgb(0 0 0 / 0.02);
-    color: rgb(146 146 146);
-  }
-}
-
-.kb-data-stagingarea {
-  font: normal 700 24px/30px $typeface-page-text;
-}
-
-.kb-data-staging-spacer {
-  margin-top: 10px;
-}
-
-.kb-dropzone {
-  max-height: 150px;
-  border: 2px dashed rgb(33 150 243) !important;
-  margin-bottom: 5px;
-  overflow-y: auto;
-
-  &-progress__header {
-    display: none;
-    border-bottom: 1px solid rgb(238 238 238);
-    margin-bottom: 5px;
-  }
-
-  .dz-message {
-    margin: 2em 4.5em;
-    color: rgb(0 0 0);
-    font: normal 400 24px/28px $typeface-page-text;
-    mix-blend-mode: normal;
-    text-align: center;
-  }
-
-  /* .kb-dropzone__message--upload */
-  &__message--upload {
-    font-family: $typeface-page-text;
-    font-weight: 700;
-  }
-}
-
 .kb-ga-seq {
   max-width: 300px;
   max-height: 100px;
@@ -1553,7 +1079,7 @@ div#notebook_panel { /* FIXME Jupyter css */
 
   .kb-title {
     padding: 10px 5px;
-    color: rgb(46 97 141);
+    color: use_color('primary-vivid');
     font: normal 700 19px $typeface-page-text;
     text-transform: uppercase;
   }
@@ -1922,37 +1448,6 @@ div#notebook_panel { /* FIXME Jupyter css */
   font-style: italic;
 }
 
-.kb-cell-toolbar {
-  .buttons {
-    color: rgb(206 206 206) !important;
-    font-weight: 700;
-  }
-
-  .btn {
-    border: 0;
-  }
-
-  .icon {
-    display: inline-block;
-    overflow: hidden;
-    padding: 0;
-    margin-right: 4px;
-    font-size: 14px;
-    vertical-align: top;
-  }
-
-  .title {
-    color: rgb(46 97 141);
-    font: normal 700 18px $typeface-page-text;
-  }
-
-  .info-link,
-  .subtitle {
-    color: rgb(102 102 102);
-    font: normal 400 14px $typeface-page-text;
-  }
-}
-
 .kb-toolbar-open {
   border-bottom: 1px solid rgb(204 204 204);
   border-radius: 0;
@@ -1984,7 +1479,7 @@ div#notebook_panel { /* FIXME Jupyter css */
   h1 {
     display: inline;
     margin: 3px 13px 3px 3px;
-    color: rgb(46 97 141);
+    color: use_color('primary-vivid');
     font: normal 400 16px/1 $typeface-page-text;
     opacity: inherit;
   }
@@ -2085,7 +1580,7 @@ td {
 }
 
 .kb-out-desc {
-  color: rgb(46 97 141);
+  color: use_color('primary-vivid');
 }
 
 .kb-err-desc,
@@ -2399,7 +1894,7 @@ control with padding, and then scooting the icon back into its column.
 }
 
 .kb-app-panel-description {
-  color: rgb(46 97 141);
+  color: use_color('primary-vivid');
   font: normal 400 16px/1 $typeface-page-text;
 }
 
@@ -3012,7 +2507,7 @@ button.kb-data-obj {
 
 .kb-data-list-name {
   margin: 2px;
-  color: rgb(46 97 141);
+  color: use_color('primary-vivid');
   cursor: pointer;
   font: normal 700 15px $typeface-page-text;
 
@@ -3185,22 +2680,6 @@ button.kb-data-obj {
   margin: 0.1em;
   text-align: center;
   vertical-align: middle;
-}
-
-.unselected .prompt .method-icon {
-  color: use-color('silver');
-}
-
-.method-icon {
-  color: rgb(103 58 183);
-}
-
-.unselected .prompt .app-icon {
-  color: use-color('silver');
-}
-
-.app-icon {
-  color: rgb(0 150 136);
 }
 
 /* when the entire app card is a link, use this style */
@@ -3410,8 +2889,7 @@ button.kb-data-obj {
 }
 
 .ftp-file-header {
-  margin-top: 8px;
-  margin-bottom: 5px;
+  margin: 1rem 0;
 }
 
 .globus-link:hover {
@@ -3575,57 +3053,6 @@ button.kb-data-obj {
 
 .navbar-right div.label-warning {
   font: normal 700 16px $typeface-page-text;
-}
-
-/* Show this over the whole narrative UI until the
-   workspace becomes active.
-
-   This animation was taken from:
-   http://cssdeck.com/labs/load
-
-   It was created by José Barcelon-Godfrey
-   http://cssdeck.com/user/Jmbarcelonco
-
-   -Dan Gunter, Feb 10, 2015
-*/
-
-.kb-loading-blocker__container {
-  position: absolute;
-  z-index: 9999;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgb(255 255 255);
-}
-
-.kb-loading-blocker__header {
-  font-size: 24px;
-  font-weight: 700;
-  text-align: center;
-}
-
-.kb-loading-blocker__text {
-  width: 40%;
-  margin-left: 30%;
-  font-size: 16px;
-  line-height: 1.5;
-  text-align: left;
-}
-
-.kb-loading-blocker__text--warning {
-  position: absolute;
-  display: none;
-  width: 40%;
-  margin-left: 30%;
-  font-size: 16px;
-  line-height: 1.5;
-  text-align: left;
-}
-
-.kb-loading-blocker__image_container {
-  padding-top: 10%;
-  text-align: center;
 }
 
 /* Override the default max-width of the narrative box */

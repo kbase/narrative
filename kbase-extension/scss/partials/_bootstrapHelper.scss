@@ -14,7 +14,7 @@
 
 .modal {
   .modal-title {
-    color: rgb(46 97 141);
+    color: use_color('primary-vivid');
     font: normal 700 130% $typeface-page-text;
   }
 

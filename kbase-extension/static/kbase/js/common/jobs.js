@@ -25,7 +25,9 @@ define(['common/html', 'common/format', 'common/ui', 'common/errorDisplay'], (
             'error',
             'terminated',
             'does_not_exist',
-        ];
+        ],
+        // job states where there will be no more updates
+        terminalStates = ['completed', 'error', 'terminated', 'does_not_exist'];
 
     const jobStrings = {
         does_not_exist: {
@@ -72,6 +74,10 @@ define(['common/html', 'common/format', 'common/ui', 'common/errorDisplay'], (
     };
     jobStrings.created = jobStrings.queued;
     jobStrings.estimating = jobStrings.queued;
+
+    function isTerminalStatus(status) {
+        return !!(status && terminalStates.includes(status));
+    }
 
     function getJobString(jobState, stringType) {
         if (!jobState || !stringType) {
@@ -226,6 +232,51 @@ define(['common/html', 'common/format', 'common/ui', 'common/errorDisplay'], (
         return span(
             {
                 class: `${cssBaseClass}__summary${cssClass}`,
+            },
+            label
+        );
+    }
+
+    /**
+     * Use the FSM mode and stage data to generate the appropriate job status summary
+     * @param {string} mode
+     * @param {string} stage
+     * @returns {string} HTML string with a single word status
+     */
+
+    function createJobStatusFromFsm(mode, stage) {
+        let label, cssClass;
+        switch (mode) {
+            case 'success':
+                label = 'success';
+                cssClass = 'completed';
+                break;
+            case 'error':
+            case 'internal-error':
+                label = 'error';
+                cssClass = 'error';
+                break;
+            case 'canceled':
+            case 'canceling':
+                label = 'canceled';
+                cssClass = 'terminated';
+                break;
+            case 'processing':
+                if (stage === 'running' || stage === 'queued') {
+                    label = stage;
+                    cssClass = stage;
+                }
+                break;
+        }
+
+        if (!label || !cssClass) {
+            return '';
+        }
+
+        return span(
+            {
+                class: `${cssBaseClass}__cell_summary--${cssClass}`,
+                dataElement: 'job-status',
             },
             label
         );
@@ -501,7 +552,9 @@ define(['common/html', 'common/format', 'common/ui', 'common/errorDisplay'], (
 
     return {
         createCombinedJobState,
+        createJobStatusFromFsm,
         createJobStatusLines,
+        isTerminalStatus,
         isValidJobStatus,
         isValidJobStateObject,
         isValidJobInfoObject,

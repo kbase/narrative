@@ -1,7 +1,7 @@
 define([
     'bluebird',
     'common/ui',
-    'kb_common/html',
+    'common/html',
     'common/events',
     'jquery',
     'common/jobs',
@@ -13,6 +13,7 @@ define([
         div = t('div'),
         td = t('td'),
         span = t('span'),
+        button = t('button'),
         ul = t('ul'),
         li = t('li'),
         cssBaseClass = 'kb-job-status',
@@ -22,31 +23,33 @@ define([
         let container, ui, jobId, jobState;
         const widgets = {};
 
-        function _createStatusLabel(jobStateObject) {
-            return (
-                span({
-                    class: `fa fa-circle ${cssBaseClass}__icon--${jobStateObject.status}`,
-                }) +
-                ' ' +
-                Jobs.jobLabel(jobStateObject)
+        function _updateStatusLabel(jobStateObject) {
+            const statusLabel = Jobs.jobLabel(jobStateObject, true);
+            ui.setContent(
+                'job-state',
+                div(
+                    {
+                        dataToggle: 'tooltip',
+                        dataPlacement: 'bottom',
+                        title: statusLabel,
+                    },
+                    [
+                        span({
+                            class: `fa fa-circle ${cssBaseClass}__icon--${jobStateObject.status}`,
+                        }),
+                        statusLabel,
+                    ]
+                )
             );
         }
 
-        function _createActionButton(jobStateObject) {
-            return div(
-                {
-                    class: `${cssBaseClass}__cell_action--${jobStateObject.status}`,
-                    role: 'button',
-                    // TODO: these actions need to be added
-                    id: events.addEvent({
-                        type: 'click',
-                        handler: function () {
-                            // handle action button clicks
-                        },
-                    }),
-                },
-                [Jobs.jobAction(jobStateObject)]
-            );
+        function _updateActionButton(jobStateObject) {
+            const jobAction = Jobs.jobAction(jobStateObject);
+            const jsActionString = jobAction.replace(/ /g, '-');
+            const actionNode = container.querySelector('[data-element="job-action"] button');
+            actionNode.textContent = jobAction;
+            actionNode.setAttribute('data-action', jsActionString);
+            actionNode.classList = [`${cssBaseClass}__cell_action--${jsActionString}`];
         }
 
         function buildRow(_name) {
@@ -73,7 +76,19 @@ define([
                         class: `${cssBaseClass}__cell--action`,
                         dataElement: 'job-action',
                     },
-                    []
+                    button(
+                        {
+                            id: events.addEvent({
+                                type: 'click',
+                                handler: () => {
+                                    console.log('click!');
+                                },
+                            }),
+                            role: 'button',
+                            dataTarget: jobId,
+                        },
+                        ''
+                    )
                 ) +
                 // job status details
                 td(
@@ -96,9 +111,14 @@ define([
 
         // update the status and action columns
         function _updateRowStatus(jobStateObject) {
+            if (jobState && jobState.status && jobStateObject.status === jobState.status) {
+                // status has not changed: no updates required
+                jobState = jobStateObject;
+                return;
+            }
             jobState = jobStateObject;
-            ui.setContent('job-state', _createStatusLabel(jobState));
-            ui.setContent('job-action', _createActionButton(jobState));
+            _updateStatusLabel(jobState);
+            _updateActionButton(jobState);
         }
 
         function selectRow(e) {
@@ -176,7 +196,6 @@ define([
                     selectRow(e);
                     showHideChildRow(e);
                 };
-
                 _updateRowStatus(args.jobState);
             }).catch((err) => {
                 throw new Error(`Unable to start Job State List Row widget: ${err}`);

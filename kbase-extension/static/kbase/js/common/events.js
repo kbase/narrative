@@ -1,4 +1,4 @@
-define(['jquery', 'kb_common/html'], ($, html) => {
+define(['jquery', 'common/html'], ($, html) => {
     'use strict';
 
     function factory(args) {

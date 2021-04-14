@@ -23,13 +23,13 @@ $rcp-height: 50px;
     vertical-align: bottom;
   }
 
-  /* .kb-rcp__action-button */
+  // .kb-rcp__action-button
   &__action-button {
     float: left;
     margin: 6px;
     width: 8rem;
 
-    /* .kb-rcp__action-button-container */
+    // .kb-rcp__action-button-container
     &-container {
       flex: none;
       overflow: hidden;
@@ -40,13 +40,13 @@ $rcp-height: 50px;
 
   &-status {
     &__container {
+      @include ellipsis-overflow;
       flex: 1 1 auto;
-      overflow: hidden;
       font-size: 14px;
       line-height: $rcp-height;
       margin: 0 1rem;
-      vertical-align: middle;
     }
+
     &__fsm_display {
       display: inline-block;
       font: 12px/1 $typeface-page-text;
@@ -58,19 +58,21 @@ $rcp-height: 50px;
     }
   }
 
-  /* .kb-rcp__tab-button */
+  // .kb-rcp__tab-button
   &__tab-button {
     float: left;
     margin-left: 0.5rem;
   }
 }
-/* .kb-rcp__tab-button--outdated */
+// .kb-rcp__tab-button--outdated
 a.kb-rcp__tab-button--outdated {
   float: left;
   margin-left: 0.5rem;
   padding: 6px 0 0;
   color: use-color('warning');
-  &:hover, &:active {
+
+  &:hover,
+  &:active {
     color: use-color('warning-dark');
   }
 }

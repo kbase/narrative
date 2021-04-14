@@ -369,6 +369,7 @@ define(['api/auth', 'narrativeConfig', 'uuid'], (Auth, Config, Uuid) => {
             expect(authClient.getCookie('kbase_session')).toBeNull();
         });
 
+        // FIXME: this fails on successive test runs
         it('Should properly handle backup cookie in non-prod environment', () => {
             const env = Config.get('environment');
             const backupCookieName = 'kbase_session_backup';

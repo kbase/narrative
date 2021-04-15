@@ -51,14 +51,17 @@ define([
                 ]),
             });
 
+            const paramIds = model.getItem(['app', 'otherParamIds', 'fastq_reads']);
+
             this.parameters = spec.getSpec().parameters;
             const workspaceId = 54745;
             const initialParams = model.getItem('params');
 
             this.paramsWidgetInstance = ParamsWidget.make({
-                bus: bus,
-                workspaceId: workspaceId,
-                initialParams: initialParams,
+                bus,
+                workspaceId,
+                initialParams,
+                paramIds,
             });
 
             await this.paramsWidgetInstance.start({

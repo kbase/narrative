@@ -21,6 +21,7 @@ define([
         const runtime = Runtime.make(),
             bus = config.bus,
             workspaceId = config.workspaceId,
+            paramIds = config.paramIds,
             initialParams = config.initialParams,
             model = Props.make(),
             paramResolver = ParamResolver.make(),
@@ -65,15 +66,15 @@ define([
         // RENDERING
 
         /*
-      The field widget is a generic wrapper around the input. It serves the following purposes:
-      - intercepts messages in order to display status.
-      appSpec - specifies the whole app
-      parameterSpec - just the segment of the appSpec that specifies this individual parameter
-      value - the initial value of this field
-      closeParameters - a list of "close" parameters, which might be context-dependent. E.g. for an output
-          field, this would be the list of all parameters meant to be output objects, so their names can
-          be cross-validated for uniqueness (optional)
-      */
+        The field widget is a generic wrapper around the input. It serves the following purposes:
+        - intercepts messages in order to display status.
+        appSpec - specifies the whole app
+        parameterSpec - just the segment of the appSpec that specifies this individual parameter
+        value - the initial value of this field
+        closeParameters - a list of "close" parameters, which might be context-dependent. E.g. for an output
+            field, this would be the list of all parameters meant to be output objects, so their names can
+            be cross-validated for uniqueness (optional)
+        */
 
         function makeFieldWidget(inputWidget, appSpec, parameterSpec, value, closeParameters) {
             const fieldWidget = FieldWidget.make({
@@ -153,24 +154,6 @@ define([
                         }
                     );
                 },
-            });
-
-            /*
-             * Or in fact any parameter value at any time...
-             */
-            fieldWidget.bus.on('get-parameter-value', (message) => {
-                bus.request(
-                    {
-                        parameter: message.parameter,
-                    },
-                    {
-                        key: 'get-parameter-value',
-                    }
-                ).then((response) => {
-                    bus.emit('parameter-value', {
-                        parameter: response.parameter,
-                    });
-                });
             });
 
             fieldWidget.bus.respond({
@@ -440,49 +423,14 @@ define([
                 });
         }
 
-        /*
-            Filter out any inputs which may not be parameters (e.g. file inputs, output fields), map these to the parameter ID so we can use it to create the expected layout
-        */
-        function filterParameters(params) {
-            return params.layout
-                .filter((id) => {
-                    const original = params.specs[id].original;
-
-                    let isParameter = false;
-
-                    if (original) {
-                        //looking for file inputs via the dynamic_dropdown data source
-                        if (original.dynamic_dropdown_options) {
-                            isParameter =
-                                original.dynamic_dropdown_options.data_source !== 'ftp_staging';
-                        }
-
-                        // looking for output fields - these should go in file paths
-                        else if (original.text_options && original.text_options.is_output_name) {
-                            isParameter = false;
-                        }
-
-                        //all other cases should be a param element
-                        else {
-                            isParameter = true;
-                        }
-                    }
-
-                    return isParameter;
-                })
-                .map((id) => {
-                    return params.specs[id];
-                });
-        }
-
         // LIFECYCLE API
         function renderParameters() {
             // First get the app specs, which is stashed in the model,
             // with the parameters returned.
             // Separate out the params into the primary groups.
             const appSpec = model.getItem('appSpec');
-            const params = model.getItem('parameters');
-            const filteredParams = makeParamsLayout(filterParameters(params));
+            const params = model.getItem('parameterSpecs');
+            const filteredParams = makeParamsLayout(params);
 
             //if there aren't any parameters we can just hide the whole area
             if (!filteredParams.layout.length) {
@@ -500,12 +448,29 @@ define([
             });
         }
 
+        /**
+         *
+         * @param {object} arg - should have keys:
+         *  - appSpec - the app spec to be passed along to the individual widgets
+         *  - parameters - an object with parameter specs and their proper layout order
+         * @returns
+         */
         function start(arg) {
-            // send parent the ready message
             doAttach(arg.node);
 
+            // get the parameter specs in the right order.
+            const parameterSpecs = [];
+            arg.parameters.layout.forEach((id) => {
+                if (paramIds.includes(id)) {
+                    const paramSpec = arg.parameters.specs[id];
+                    parameterSpecs.push(paramSpec);
+                }
+            });
+
+            // keep the appSpec
             model.setItem('appSpec', arg.appSpec);
-            model.setItem('parameters', arg.parameters);
+            // keep an ordered list of used parameter specs
+            model.setItem('parameterSpecs', parameterSpecs);
 
             bus.on('parameter-changed', (message) => {
                 // Also, tell each of our inputs that a param has changed.

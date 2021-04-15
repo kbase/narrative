@@ -95,7 +95,7 @@ define([
                 description: 'A cell channel',
             }),
             bus = runtime.bus().makeChannelBus({
-                description: 'A app cell widget',
+                description: 'An app cell widget',
             }),
             busEventManager = BusEventManager.make({
                 bus: runtime.bus(),
@@ -157,15 +157,14 @@ define([
             controlBarTabs = {},
             selectedJobId,
             readOnly = false,
-            viewOnly = false,
-            kernelReady = null;
+            viewOnly = false;
 
         // NEW - TABS
 
         function pRequire(module) {
             return new Promise((resolve, reject) => {
-                require(module, function () {
-                    resolve(arguments);
+                require(module, (...args) => {
+                    resolve(args);
                 }, (err) => {
                     reject(err);
                 });
@@ -525,7 +524,6 @@ define([
                     console.error('ERROR stopping', err);
                 })
                 .finally(() => {
-                    config;
                     const widgetNode = ui.getElement('body.widget.tab-pane.widget');
                     if (widgetNode.firstChild) {
                         widgetNode.removeChild(widgetNode.firstChild);
@@ -1129,8 +1127,17 @@ define([
          * Render the UI according to the FSM
          */
         function renderUI() {
+            if (!ui) {
+                throw new Error(
+                    'Cannot render UI without defining a node for the widget. Have you run `widget.attach()`?'
+                );
+            }
             const state = fsm.getCurrentState();
-            FSMBar.showFsmBar({ ui: ui, state: state, job: model.getItem('exec.jobState') });
+            try {
+                FSMBar.showFsmBar({ ui: ui, state: state, job: model.getItem('exec.jobState') });
+            } catch (error) {
+                console.warn('Could not display FSM state:', error);
+            }
 
             if (!viewOnly && model.getItem('outdated')) {
                 const outdatedBtn = ui.getElement('outdated');
@@ -1207,10 +1214,6 @@ define([
 
         function toggleViewOnlyMode(newViewOnly) {
             viewOnly = newViewOnly;
-        }
-
-        function toggleKernelState(newState) {
-            kernelReady = newState;
         }
 
         let saveTimer = null;
@@ -1375,7 +1378,7 @@ define([
             const newFsmState = (function () {
                 switch (jobState.status) {
                     case 'created':
-                        return { mode: 'processing', stage: 'queued' };
+                    case 'estimating':
                     case 'queued':
                         return { mode: 'processing', stage: 'queued' };
                     case 'running':
@@ -1488,7 +1491,7 @@ define([
                 $(container).find('[data-toggle="popover"]').popover();
                 return null;
             }).catch((error) => {
-                throw new Error('Unable to attach app cell: ' + error);
+                throw new Error('Unable to attach app cell widget: ' + error);
             });
         }
 
@@ -1936,8 +1939,7 @@ define([
                     );
 
                     busEventManager.add(
-                        runtime.bus().on('kernel-state-changed', (msg) => {
-                            toggleKernelState(msg.isReady);
+                        runtime.bus().on('kernel-state-changed', () => {
                             renderUI();
                         })
                     );
@@ -2175,11 +2177,11 @@ define([
                      * Should also pause rendering until we get it?
                      * Or render some intermediate state?
                      */
-                    const curState = model.getItem('exec.jobState');
-                    if (curState && !Jobs.isValidJobStateObject(curState)) {
+                    const jobState = model.getItem('exec.jobState');
+                    if (jobState && !Jobs.isValidJobStateObject(jobState)) {
                         // use the 'created' key to see if it's an updated jobState
-                        startListeningForJobMessages(curState.job_id);
-                        requestJobStatus(curState.job_id);
+                        startListeningForJobMessages(jobState.job_id);
+                        requestJobStatus(jobState.job_id);
                     } else {
                         renderUI();
                     }
@@ -2218,12 +2220,12 @@ define([
         }
 
         return {
-            init: init,
-            attach: attach,
-            start: start,
-            stop: stop,
-            detach: detach,
-            run: run,
+            init,
+            attach,
+            start,
+            stop,
+            detach,
+            run,
         };
     }
 

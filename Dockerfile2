@@ -15,6 +15,8 @@ COPY --from=kbase/narrative:tmp /kb/deployment/services/kbase-ui/ /usr/share/ngi
 
 # Replace index file with redirect to www.kbase.us
 
+RUN cat /usr/share/nginx/html/narrative_version && echo
+
 RUN echo >/usr/share/nginx/html/index.html '<html>\
   <head><meta http-equiv="refresh" content="0; url=http://www.kbase.us/"> \
   <script type="text/javascript">window.location.href = "http://www.kbase.us"</script> \

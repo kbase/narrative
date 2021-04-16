@@ -162,8 +162,8 @@ define([
         }
 
         let kbaseNode = null, // the DOM element used as the container for everything in this cell
-            cellBus = null,   // the parent cell bus that gets external messages
-            controllerBus = null,  // the main bus for this cell and its children
+            cellBus = null, // the parent cell bus that gets external messages
+            controllerBus = null, // the main bus for this cell and its children
             ui = null,
             tabWidget = null; // the widget currently in view
         const workspaceClient = getWorkspaceClient(),
@@ -375,7 +375,7 @@ define([
                         state: {
                             state: 'editingIncomplete',
                             selectedTab: 'configure',
-                            params: initialParamStates
+                            params: initialParamStates,
                         },
                     },
                 },
@@ -479,7 +479,8 @@ define([
                     break;
                 }
             }
-            if (cellReady) {}
+            if (cellReady) {
+            }
         }
 
         /**
@@ -645,31 +646,29 @@ define([
                 tab = null;
             }
             state.tab.selected = tab;
-            return stopWidget()
-                .then(() => {
-                    if (tab !== null) {
-                        if (!fileType) {
-                            fileType = state.fileType.selected;
-                        }
-                        runTab(tab, fileType);
+            return stopWidget().then(() => {
+                if (tab !== null) {
+                    if (!fileType) {
+                        fileType = state.fileType.selected;
                     }
-                    model.setItem('state.selectedTab', tab);
-                    cellTabs.setState(state.tab);
-                });
+                    runTab(tab, fileType);
+                }
+                model.setItem('state.selectedTab', tab);
+                cellTabs.setState(state.tab);
+            });
         }
 
         function stopWidget() {
             if (tabWidget === null) {
                 return Promise.resolve();
             }
-            return tabWidget.stop()
-                .then(() => {
-                    const widgetNode = ui.getElement('widget');
-                    if (widgetNode.firstChild) {
-                        widgetNode.removeChild(widgetNode.firstChild);
-                    }
-                    ui.getElement('body.tab-pane').setAttribute('data-active-tab', '');
-                });
+            return tabWidget.stop().then(() => {
+                const widgetNode = ui.getElement('widget');
+                if (widgetNode.firstChild) {
+                    widgetNode.removeChild(widgetNode.firstChild);
+                }
+                ui.getElement('body.tab-pane').setAttribute('data-active-tab', '');
+            });
         }
 
         /**

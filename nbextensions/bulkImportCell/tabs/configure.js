@@ -220,19 +220,21 @@ define([
 
             const filePathValidations = filePathValues.map((filePathRow) => {
                 return spec.validateParams(filePathIds, filePathRow);
-            })
-            return Promise.all([spec.validateParams(otherParamIds, paramValues), ...filePathValidations])
-                .then((results) => {
-                    let isValid = true;
-                    results.forEach((result) => {
-                        Object.values(result).forEach((param) => {
-                            if (!param.isValid) {
-                                isValid = false;
-                            }
-                        })
-                    })
-                    return isValid ? 'complete' : 'incomplete';
+            });
+            return Promise.all([
+                spec.validateParams(otherParamIds, paramValues),
+                ...filePathValidations,
+            ]).then((results) => {
+                let isValid = true;
+                results.forEach((result) => {
+                    Object.values(result).forEach((param) => {
+                        if (!param.isValid) {
+                            isValid = false;
+                        }
+                    });
                 });
+                return isValid ? 'complete' : 'incomplete';
+            });
         }
 
         /**
@@ -248,9 +250,10 @@ define([
          */
         function updateModelParameterValue(fileType, paramType, message) {
             if (paramType === FILE_PATH_TYPE) {
-                model.getItem(['params', fileType, FILE_PATH_TYPE])[message.rowIndex][message.parameter] = message.newValue;
-            }
-            else {
+                model.getItem(['params', fileType, FILE_PATH_TYPE])[message.rowIndex][
+                    message.parameter
+                ] = message.newValue;
+            } else {
                 model.setItem(['params', fileType, paramType, message.parameter], message.newValue);
             }
 
@@ -260,15 +263,15 @@ define([
                     return 'error';
                 }
                 return evaluateAppConfig(fileType);
-            })
-                .then((state) => {
-                    const currentState = model.getItem(['state', 'params', fileType]);
-                    if (currentState !== state) {
-                        cellBus.emit('update-param-state', {
-                            fileType, state
-                        });
-                    }
-                });
+            }).then((state) => {
+                const currentState = model.getItem(['state', 'params', fileType]);
+                if (currentState !== state) {
+                    cellBus.emit('update-param-state', {
+                        fileType,
+                        state,
+                    });
+                }
+            });
         }
 
         function stop() {
@@ -279,10 +282,9 @@ define([
             if (paramsWidget) {
                 widgetStopPromises.push(paramsWidget.stop());
             }
-            return Promise.all(widgetStopPromises)
-                .then(() => {
-                    container.innerHTML = '';
-                });
+            return Promise.all(widgetStopPromises).then(() => {
+                container.innerHTML = '';
+            });
         }
 
         return {

@@ -5,11 +5,7 @@ define(['./jobsData'], (JobsData) => {
     return {
         app: {
             fileParamIds: {
-                fastq_reads: [
-                    'fastq_fwd_staging_file_name',
-                    'fastq_rev_staging_file_name',
-                    'name',
-                ],
+                fastq_reads: ['fastq_fwd_staging_file_name', 'fastq_rev_staging_file_name', 'name'],
             },
             otherParamIds: {
                 fastq_reads: [

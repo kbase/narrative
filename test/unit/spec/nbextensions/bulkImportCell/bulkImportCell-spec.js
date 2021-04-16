@@ -55,8 +55,8 @@ define([
                 state: 'editingIncomplete',
                 selectedTab: 'configure',
                 params: {
-                    dataType: 'incomplete'
-                }
+                    dataType: 'incomplete',
+                },
             });
         });
 

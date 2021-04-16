@@ -38,6 +38,9 @@ define(['bluebird', 'common/lang', 'common/sdk', 'widgets/appWidgets2/validators
          */
         function makeDefaultedModel(appType) {
             const model = {};
+            if (appType === 'bulkImport') {
+                model['params'] = {};
+            }
             spec.parameters.layout.forEach((id) => {
                 const paramSpec = spec.parameters.specs[id];
                 let modelValue;

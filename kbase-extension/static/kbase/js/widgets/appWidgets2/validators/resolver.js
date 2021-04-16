@@ -15,22 +15,13 @@ define(['require', 'bluebird'], (require, Promise) => {
         dynamicDropdown: 'dynamicDropdown',
     };
 
-    function getValidatorModule(fieldSpec) {
-        const moduleName = typeToValidatorModule[fieldSpec.data.type];
-        if (!moduleName) {
-            throw new Error('No validator for type: ' + fieldSpec.data.type);
-        }
-        return moduleName;
-    }
-
     function validate(fieldValue, fieldSpec) {
         return new Promise((resolve, reject) => {
-            try {
-                var validatorModule = getValidatorModule(fieldSpec);
-            } catch (ex) {
-                reject(ex);
+            const fieldType = fieldSpec.data.type;
+            if (!(fieldType in typeToValidatorModule)) {
+                reject(new Error(`No validator for type: ${fieldType}`));
             }
-            require(['./' + validatorModule], (validator) => {
+            require(['./' + typeToValidatorModule[fieldType]], (validator) => {
                 resolve(validator.validate(fieldValue, fieldSpec));
             }, (err) => {
                 reject(err);
@@ -39,6 +30,6 @@ define(['require', 'bluebird'], (require, Promise) => {
     }
 
     return {
-        validate: validate,
+        validate,
     };
 });

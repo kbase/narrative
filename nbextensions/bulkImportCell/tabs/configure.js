@@ -12,6 +12,7 @@ define([
             bus: message bus
             model: cell metadata
             spec: app spec
+            fileType: the fileType we're looking at
     */
     function ConfigureWidget(options) {
         const model = options.model, // the data model, inputs, params, etc.
@@ -21,7 +22,9 @@ define([
             cellBus = options.bus, // the bus to communicate with the main widget
             FILE_PATH_TYPE = 'filePaths',
             PARAM_TYPE = 'params';
-        let container = null;
+        let container = null,
+            filePathWidget,
+            paramsWidget;
 
         /**
          * args includes:
@@ -40,12 +43,14 @@ define([
                 const paramNode = document.createElement('div');
                 container.appendChild(paramNode);
 
-                buildFilePathWidget(filePathNode).then(() => {
+                buildFilePathWidget(filePathNode).then((instance) => {
                     events.attachEvents(container);
+                    filePathWidget = instance.widget;
                 });
 
-                buildParamsWidget(paramNode).then(() => {
+                buildParamsWidget(paramNode).then((instance) => {
                     events.attachEvents(container);
+                    paramsWidget = instance.widget;
                 });
             });
         }
@@ -127,11 +132,11 @@ define([
          * This builds a new message bus with commands used for both the filePathWidget and the paramsWidget.
          * Avoids some code duplication. It's up to the individual widget constructors to handle messages for
          * changing data values and any other needed messages.
-         * @param {string} paramKey - the key used to look up parameters from the model. Should be the file type.
+         * @param {string} fileType - which file type app should we be setting parameters for.
          * @param {string} description - description used for the message bus
          * @returns a message bus object
          */
-        function buildMessageBus(paramKey, description) {
+        function buildMessageBus(fileType, description) {
             const bus = runtime.bus().makeChannelBus({ description });
 
             bus.on('sync-params', (message) => {
@@ -139,7 +144,7 @@ define([
                     bus.send(
                         {
                             parameter: paramId,
-                            value: model.getItem([paramKey, message.parameter]),
+                            value: model.getItem([fileType, message.parameter]),
                         },
                         {
                             key: {
@@ -152,7 +157,7 @@ define([
             });
 
             bus.on('parameter-sync', (message) => {
-                const value = model.getItem([paramKey, message.parameter]);
+                const value = model.getItem([fileType, message.parameter]);
                 bus.send(
                     {
                         value: value,
@@ -188,7 +193,7 @@ define([
                 },
                 handle: function (message) {
                     return {
-                        value: model.getItem([paramKey, message.parameterName]),
+                        value: model.getItem([fileType, message.parameterName]),
                     };
                 },
             });
@@ -197,37 +202,87 @@ define([
         }
 
         /**
-         * TODO
-         * This evaluates the state of the app configuration. If it's ready to go, then we can build the Python
-         * code and prep the app for launch. If not, then we shouldn't, and, in fact, should clear the Python code
-         * if there's any there.
-         * @param {boolean} isError - should be truthy if there's currently a known error in the app param formulation
+         * This evaluates the state of the app configuration. If it's ready to go, then we can
+         * build the Python code and prep the app for launch. If not, then we shouldn't, and,
+         * in fact, should clear the Python code if there's any there.
+         * @param {boolean} fileType - the file type to evaluate app params for
          */
-        function evaluateAppConfig(isError) {
+        function evaluateAppConfig(fileType) {
             /* 2 parts.
              * 1 - eval the set of parameters using something in the spec module.
              * 2 - eval the array of file inputs and outputs.
              * If both are up to snuff, we're good.
              */
+            const otherParamIds = model.getItem(['app', 'otherParamIds', fileType]),
+                paramValues = model.getItem(['params', fileType, PARAM_TYPE]),
+                filePathIds = model.getItem(['app', 'fileParamIds', fileType]),
+                filePathValues = model.getItem(['params', fileType, FILE_PATH_TYPE]);
+
+            const filePathValidations = filePathValues.map((filePathRow) => {
+                return spec.validateParams(filePathIds, filePathRow);
+            })
+            return Promise.all([spec.validateParams(otherParamIds, paramValues), ...filePathValidations])
+                .then((results) => {
+                    let isValid = true;
+                    results.forEach((result) => {
+                        Object.values(result).forEach((param) => {
+                            if (!param.isValid) {
+                                isValid = false;
+                            }
+                        })
+                    })
+                    return isValid ? 'complete' : 'incomplete';
+                });
         }
 
         /**
+         * Updates the stored parameter value, for the given fileType and parameter type based on
+         * the bus message passed by the input widget.
          *
-         * @param {string} paramKey - a string with the parameter key
+         * This is followed by evaluating the state of the set of inputs for this file type and
+         * passing a message to the controller if there's a change.
+         * @param {string} fileType - the current filetype this tab is investigating
          * @param {string} paramType - should be either 'param' or 'filePath'
-         * @param {object} message -
+         * @param {object} message - the bus message returned from the widget with a changed
+         *  parameter value
          */
-        function updateModelParameterValue(paramKey, paramType, message) {
-            model.setItem(['params', paramKey, paramType, message.parameter], message.newValue);
-            // TODO - update the app config state based on changes, and send a message up the cellBus
-            // with that state.
-            const appState = evaluateAppConfig(message.isError);
+        function updateModelParameterValue(fileType, paramType, message) {
+            if (paramType === FILE_PATH_TYPE) {
+                model.getItem(['params', fileType, FILE_PATH_TYPE])[message.rowIndex][message.parameter] = message.newValue;
+            }
+            else {
+                model.setItem(['params', fileType, paramType, message.parameter], message.newValue);
+            }
+
+            // evaluate the parameter state for the current file type
+            return Promise.try(() => {
+                if (message.isError) {
+                    return 'error';
+                }
+                return evaluateAppConfig(fileType);
+            })
+                .then((state) => {
+                    const currentState = model.getItem(['state', 'params', fileType]);
+                    if (currentState !== state) {
+                        cellBus.emit('update-param-state', {
+                            fileType, state
+                        });
+                    }
+                });
         }
 
         function stop() {
-            return Promise.try(() => {
-                container.innerHTML = '';
-            });
+            const widgetStopPromises = [];
+            if (filePathWidget) {
+                widgetStopPromises.push(filePathWidget.stop());
+            }
+            if (paramsWidget) {
+                widgetStopPromises.push(paramsWidget.stop());
+            }
+            return Promise.all(widgetStopPromises)
+                .then(() => {
+                    container.innerHTML = '';
+                });
         }
 
         return {

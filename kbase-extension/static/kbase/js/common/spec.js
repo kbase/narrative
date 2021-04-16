@@ -71,10 +71,31 @@ define(['bluebird', 'common/lang', 'common/sdk', 'widgets/appWidgets2/validators
             return Promise.props(validationMap);
         }
 
+        /**
+         * A trimmed version of validateModel that's specific for a few params.
+         * Given an array of parameter ids and an object with key-value-pairs from
+         * paramId -> value, validate the set. Only the given parameter ids are validated.
+         * Any others are ignored.
+         *
+         * This returns a Promise that resolves into the a key-value-pair of parameter id ->
+         * validation response.
+         * @param {array} paramIds - the array of parameter ids to validate
+         * @param {object} values - a key-value-pair structure of values to validate. Keys should
+         *   be parameter ids.
+         */
+        function validateParams(paramIds, values) {
+            const validationMap = {};
+            paramIds.forEach((id) => {
+                validationMap[id] = validationResolver.validate(values[id], spec.parameters.specs[id]);
+            });
+            return Promise.props(validationMap);
+        }
+
         return Object.freeze({
             getSpec,
             makeDefaultedModel,
             validateModel,
+            validateParams,
         });
     }
 

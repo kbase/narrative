@@ -59,16 +59,17 @@ define(['bluebird', 'common/lang', 'common/sdk', 'widgets/appWidgets2/validators
             return model;
         }
 
+        /**
+         * Validates the model (object that maps from parameter id to current value) against
+         * this spec. This returns a Promise that resolves into a map from parameter ids to
+         * validations.
+         * @param {object} model the object containing the data model to validate
+         * should have key-value-pairs for each parameter id.
+         * @returns Promise that resolves into a mapping from parameter id -> validation
+         * structure
+         */
         function validateModel(model) {
-            // TODO: spec at the top level should be a struct...
-            // return;
-            const validationMap = {};
-            spec.parameters.layout.forEach((id) => {
-                const fieldValue = model[id];
-                const fieldSpec = spec.parameters.specs[id];
-                validationMap[id] = validationResolver.validate(fieldValue, fieldSpec);
-            });
-            return Promise.props(validationMap);
+            return validateParams(spec.parameters.layout, model);
         }
 
         /**

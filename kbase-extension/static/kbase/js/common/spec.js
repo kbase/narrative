@@ -67,7 +67,7 @@ define(['bluebird', 'common/lang', 'common/sdk', 'widgets/appWidgets2/validators
          * this spec. This returns a Promise that resolves into a map from parameter ids to
          * validations.
          * @param {object} model the object containing the data model to validate
-         * should have key-value-pairs for each parameter id.
+         * should have key-value pairs for each parameter id.
          * @returns Promise that resolves into a mapping from parameter id -> validation
          * structure
          */
@@ -77,14 +77,14 @@ define(['bluebird', 'common/lang', 'common/sdk', 'widgets/appWidgets2/validators
 
         /**
          * A trimmed version of validateModel that's specific for a few params.
-         * Given an array of parameter ids and an object with key-value-pairs from
+         * Given an array of parameter ids and an object with key-value pairs from
          * paramId -> value, validate the set. Only the given parameter ids are validated.
          * Any others are ignored.
          *
-         * This returns a Promise that resolves into the a key-value-pair of parameter id ->
+         * This returns a Promise that resolves into key-value pairs of parameter id ->
          * validation response.
          * @param {array} paramIds - the array of parameter ids to validate
-         * @param {object} values - a key-value-pair structure of values to validate. Keys should
+         * @param {object} values - a key-value pair structure of values to validate. Keys should
          *   be parameter ids.
          */
         function validateParams(paramIds, values) {

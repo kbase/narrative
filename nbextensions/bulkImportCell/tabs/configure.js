@@ -225,13 +225,8 @@ define([
                 spec.validateParams(otherParamIds, paramValues),
                 ...filePathValidations,
             ]).then((results) => {
-                let isValid = true;
-                results.forEach((result) => {
-                    Object.values(result).forEach((param) => {
-                        if (!param.isValid) {
-                            isValid = false;
-                        }
-                    });
+                const isValid = results.every((result) => {
+                    return Object.values(result).every((param) => param.isValid);
                 });
                 return isValid ? 'complete' : 'incomplete';
             });

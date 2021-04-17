@@ -45,6 +45,7 @@ define(['common/format', 'common/utils'], (format, utils) => {
 
     function factory(config) {
         const model = config.model;
+        let containerNode;
 
         function start(arg) {
             let appSpec = model.getItem('app.spec'); // for plain app cell
@@ -144,14 +145,17 @@ define(['common/format', 'common/utils'], (format, utils) => {
             ];
 
             // Populate info tab
-            arg.node.appendChild(description);
+            containerNode = arg.node;
+            containerNode.appendChild(description);
             const infoList = document.createElement('ul');
             appendChildren(infoList, listItems);
-            arg.node.appendChild(infoList);
-            return Promise.resolve(arg.node);
+            containerNode.appendChild(infoList);
+
+            return Promise.resolve(containerNode);
         }
 
         function stop() {
+            containerNode.innerHTML = '';
             return Promise.resolve();
         }
 

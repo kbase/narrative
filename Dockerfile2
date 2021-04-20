@@ -8,14 +8,15 @@ ARG BUILD_DATE
 ARG VCS_REF
 ARG BRANCH=develop
 ARG NARRATIVE_VERSION
+ARG NARRATIVE_GIT_HASH
 
 EXPOSE 80
 
-COPY --from=kbase/narrative:tmp /kb/deployment/services/kbase-ui/ /usr/share/nginx/html
+RUN echo >/usr/share/nginx/html/narrative_version '{"version":"'${NARRATIVE_VERSION_NUM}'","git_hash":"'${NARRATIVE_GIT_HASH}'"}' && \
+    cat /usr/share/nginx/html/narrative_version && echo
 
 # Replace index file with redirect to www.kbase.us
 
-RUN cat /usr/share/nginx/html/narrative_version && echo
 
 RUN echo >/usr/share/nginx/html/index.html '<html>\
   <head><meta http-equiv="refresh" content="0; url=http://www.kbase.us/"> \

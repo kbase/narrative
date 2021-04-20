@@ -162,7 +162,8 @@ define([
         }
 
         let kbaseNode = null, // the DOM element used as the container for everything in this cell
-            cellBus = null,
+            cellBus = null, // the parent cell bus that gets external messages
+            controllerBus = null, // the main bus for this cell and its children
             ui = null,
             tabWidget = null; // the widget currently in view
         const workspaceClient = getWorkspaceClient(),
@@ -319,7 +320,8 @@ define([
              */
             const initialParams = {},
                 fileParamIds = {},
-                otherParamIds = {};
+                otherParamIds = {},
+                initialParamStates = {};
             /* Initialize the parameters set.
              * Get the app spec and split the set of parameters into filePaths and params.
              * Each input file (typesToFiles[fileType].files) gets its own set of filePath
@@ -332,6 +334,7 @@ define([
                     filePaths: [],
                     params: {},
                 };
+                initialParamStates[fileType] = 'incomplete';
                 [fileParamIds[fileType], otherParamIds[fileType]] = filterFileParameters(spec);
                 initialParams[fileType].filePaths = typesToFiles[fileType].files.map(
                     (inputFile) => {
@@ -372,6 +375,7 @@ define([
                         state: {
                             state: 'editingIncomplete',
                             selectedTab: 'configure',
+                            params: initialParamStates,
                         },
                     },
                 },
@@ -452,6 +456,31 @@ define([
                 description: 'parent bus for BulkImportCell',
             });
             busEventManager.add(cellBus.on('delete-cell', () => deleteCell()));
+            controllerBus = runtime.bus().makeChannelBus({
+                description: 'An app cell widget',
+            });
+            controllerBus.on('update-param-state', (message) => {
+                updateParameterState(message.fileType, message.state);
+            });
+        }
+
+        /**
+         * Update the internal readiness state for the app cell parameters. When all fileTypes have
+         * a "complete" state, then they are all completely filled out and ready to run.
+         * @param {string} fileType - which filetype's app state to update
+         * @param {string} state - what the new ready state should be - one of complete, incomplete, error
+         */
+        function updateParameterState(fileType, state) {
+            model.setItem(['state', 'param', fileType], state);
+            let cellReady = true;
+            for (const state of Object.values(model.getItem('state.param'))) {
+                if (state !== 'complete') {
+                    cellReady = false;
+                    break;
+                }
+            }
+            if (cellReady) {
+            }
         }
 
         /**
@@ -617,27 +646,29 @@ define([
                 tab = null;
             }
             state.tab.selected = tab;
-            stopWidget();
-
-            if (tab !== null) {
-                if (!fileType) {
-                    fileType = state.fileType.selected;
+            return stopWidget().then(() => {
+                if (tab !== null) {
+                    if (!fileType) {
+                        fileType = state.fileType.selected;
+                    }
+                    runTab(tab, fileType);
                 }
-                runTab(tab, fileType);
-            }
-            model.setItem('state.selectedTab', tab);
-            cellTabs.setState(state.tab);
+                model.setItem('state.selectedTab', tab);
+                cellTabs.setState(state.tab);
+            });
         }
 
         function stopWidget() {
-            if (tabWidget !== null) {
-                tabWidget.stop();
+            if (tabWidget === null) {
+                return Promise.resolve();
+            }
+            return tabWidget.stop().then(() => {
                 const widgetNode = ui.getElement('widget');
                 if (widgetNode.firstChild) {
                     widgetNode.removeChild(widgetNode.firstChild);
                 }
                 ui.getElement('body.tab-pane').setAttribute('data-active-tab', '');
-            }
+            });
         }
 
         /**
@@ -654,7 +685,7 @@ define([
                 tabModel = testDataModel;
             }
             tabWidget = tabSet.tabs[tab].widget.make({
-                bus: cellBus,
+                bus: controllerBus,
                 cell,
                 jobManager,
                 model: tabModel,

@@ -72,9 +72,14 @@ define(['common/cellComponents/tabs/infoTab'], (InfoTab) => {
             expect(infoTabPromise instanceof Promise).toBeTrue();
         });
 
-        it('has a method "stop" which returns a Promise', () => {
+        it('has a method "stop" which returns a Promise and clears its container', () => {
+            // just expect it to have something real.
+            expect(container.innerHTML).toContain('View Full Documentation');
             const result = infoTabInstance.stop();
             expect(result instanceof Promise).toBeTrue();
+            return result.then(() => {
+                expect(container.innerHTML).toEqual('');
+            });
         });
 
         it('returns the defined description', () => {

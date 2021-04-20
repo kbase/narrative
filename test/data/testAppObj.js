@@ -5,12 +5,7 @@ define(['./jobsData'], (JobsData) => {
     return {
         app: {
             fileParamIds: {
-                fastq_reads: [
-                    'fastq_fwd_staging_file_name',
-                    'fastq_rev_staging_file_name',
-                    'sra_staging_file_name',
-                    'name',
-                ],
+                fastq_reads: ['fastq_fwd_staging_file_name', 'fastq_rev_staging_file_name', 'name'],
             },
             otherParamIds: {
                 fastq_reads: [
@@ -489,7 +484,6 @@ define(['./jobsData'], (JobsData) => {
                         fastq_fwd_staging_file_name: '',
                         fastq_rev_staging_file_name: '',
                         name: 'KBase_object_details_22020-10-14T232042188.json_reads',
-                        sra_staging_file_name: 'KBase_object_details_22020-10-14T232042188.json',
                     },
                 ],
                 params: {

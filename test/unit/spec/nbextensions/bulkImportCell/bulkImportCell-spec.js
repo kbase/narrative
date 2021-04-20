@@ -54,6 +54,9 @@ define([
             expect(cell.metadata.kbase.bulkImportCell.state).toEqual({
                 state: 'editingIncomplete',
                 selectedTab: 'configure',
+                params: {
+                    dataType: 'incomplete',
+                },
             });
         });
 

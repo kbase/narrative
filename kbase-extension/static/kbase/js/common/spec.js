@@ -38,6 +38,9 @@ define(['bluebird', 'common/lang', 'common/sdk', 'widgets/appWidgets2/validators
          */
         function makeDefaultedModel(appType) {
             const model = {};
+            if (appType === 'bulkImport') {
+                model['params'] = {};
+            }
             spec.parameters.layout.forEach((id) => {
                 const paramSpec = spec.parameters.specs[id];
                 let modelValue;
@@ -59,14 +62,38 @@ define(['bluebird', 'common/lang', 'common/sdk', 'widgets/appWidgets2/validators
             return model;
         }
 
+        /**
+         * Validates the model (object that maps from parameter id to current value) against
+         * this spec. This returns a Promise that resolves into a map from parameter ids to
+         * validations.
+         * @param {object} model the object containing the data model to validate
+         * should have key-value pairs for each parameter id.
+         * @returns Promise that resolves into a mapping from parameter id -> validation
+         * structure
+         */
         function validateModel(model) {
-            // TODO: spec at the top level should be a struct...
-            // return;
+            return validateParams(spec.parameters.layout, model);
+        }
+
+        /**
+         * A trimmed version of validateModel that's specific for a few params.
+         * Given an array of parameter ids and an object with key-value pairs from
+         * paramId -> value, validate the set. Only the given parameter ids are validated.
+         * Any others are ignored.
+         *
+         * This returns a Promise that resolves into key-value pairs of parameter id ->
+         * validation response.
+         * @param {array} paramIds - the array of parameter ids to validate
+         * @param {object} values - a key-value pair structure of values to validate. Keys should
+         *   be parameter ids.
+         */
+        function validateParams(paramIds, values) {
             const validationMap = {};
-            spec.parameters.layout.forEach((id) => {
-                const fieldValue = model[id];
-                const fieldSpec = spec.parameters.specs[id];
-                validationMap[id] = validationResolver.validate(fieldValue, fieldSpec);
+            paramIds.forEach((id) => {
+                validationMap[id] = validationResolver.validate(
+                    values[id],
+                    spec.parameters.specs[id]
+                );
             });
             return Promise.props(validationMap);
         }
@@ -75,6 +102,7 @@ define(['bluebird', 'common/lang', 'common/sdk', 'widgets/appWidgets2/validators
             getSpec,
             makeDefaultedModel,
             validateModel,
+            validateParams,
         });
     }
 

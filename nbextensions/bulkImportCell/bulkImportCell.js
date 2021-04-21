@@ -11,6 +11,7 @@ define([
     'common/spec',
     'common/ui',
     'common/utils',
+    'common/pythonInterop',
     'base/js/namespace',
     'kb_service/client/workspace',
     './fileTypePanel',
@@ -36,6 +37,7 @@ define([
     Spec,
     UI,
     Utils,
+    PythonInterop,
     Jupyter,
     Workspace,
     FileTypePanel,
@@ -485,8 +487,30 @@ define([
                 }
             }
             if (cellReady) {
-                console.log('cell ready!');
+                buildPythonCode();
             }
+            else {
+                clearPythonCode();
+            }
+        }
+
+        function buildPythonCode() {
+            const runId = new Uuid(4).format(),
+                cellId = Utils.getMeta(cell, 'attributes', 'id'),
+                fixedApp = fixApp(app);
+            const code = PythonInterop.buildBulkImportAppRunner(cellId, runId, );
+
+            // if (model.getItem('user-settings.batchMode') && Config.get('features').batchAppMode) {
+            //     code = PythonInterop.buildBatchAppRunner(cellId, runId, fixedApp, [params]);
+            // } else {
+            //     code = PythonInterop.buildAppRunner(cellId, runId, fixedApp, params);
+            // }
+            // TODO: do something with the runId
+            cell.set_text(code);
+        }
+
+        function clearPythonCode() {
+            cell.set_text('');
         }
 
         /**

@@ -146,6 +146,16 @@ define([
                 });
             });
 
+            fieldWidget.bus.on('validation', (message) => {
+                // only propagate if invalid. value changes come through
+                // the 'changed' message
+                if (!message.isValid) {
+                    paramsBus.emit('invalid-param-value', {
+                        parameter: parameterSpec.id,
+                    });
+                }
+            });
+
             // The 'sync' message is a request for the current model value from the
             // input widget.
             fieldWidget.bus.on('sync', () => {

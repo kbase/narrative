@@ -68,10 +68,6 @@ define([
                 updateModelParameterValue(fileType, PARAM_TYPE, message);
             });
 
-            paramBus.on('invalid-param-value', () => {
-                updateAppConfigState(true);
-            });
-
             const widget = ParamsWidget.make({
                 bus: paramBus,
                 workspaceId: runtime.workspaceId(),
@@ -99,6 +95,7 @@ define([
             paramBus.on('parameter-changed', (message) => {
                 updateModelParameterValue(fileType, FILE_PATH_TYPE, message);
             });
+
             paramBus.on('sync-data-model', (message) => {
                 if (message.values) {
                     model.setItem(['params', fileType, FILE_PATH_TYPE], message.values);
@@ -142,6 +139,10 @@ define([
          */
         function buildMessageBus(fileType, description) {
             const bus = runtime.bus().makeChannelBus({ description });
+
+            bus.on('invalid-param-value', () => {
+                updateAppConfigState(true);
+            });
 
             bus.on('sync-params', (message) => {
                 message.parameters.forEach((paramId) => {

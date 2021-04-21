@@ -29,5 +29,4 @@ docker build -t ghcr.io/"$MY_ORG"/"$MY_APP2":"pr-""$PR" \
                 --build-arg NARRATIVE_GIT_HASH=$NARRATIVE_GIT_HASH \
                 -f Dockerfile2 \
                 .
-docker rmi kbase/narrative:tmp
 docker push ghcr.io/"$MY_ORG"/"$MY_APP2":"pr-""$PR"

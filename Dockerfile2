@@ -12,7 +12,7 @@ ARG NARRATIVE_GIT_HASH
 
 EXPOSE 80
 
-RUN echo >/usr/share/nginx/html/narrative_version '{"version":"'${NARRATIVE_VERSION_NUM}'","git_hash":"'${NARRATIVE_GIT_HASH}'"}' && \
+RUN echo >/usr/share/nginx/html/narrative_version '{"version":"'${NARRATIVE_VERSION}'","git_hash":"'${NARRATIVE_GIT_HASH}'"}' && \
     cat /usr/share/nginx/html/narrative_version && echo
 
 # Replace index file with redirect to www.kbase.us

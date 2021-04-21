@@ -36,11 +36,11 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 -   DATAUP-301 - fixed a problem where the staging area rendered twice in a row on page load.
 
 ### Version 4.3.0
-
--   SCT-2664 - Show the app cell status when in a collapsed state.
--   Added an "Info" tab to all app cells with app information.
--   Updated links to new KBase home page and docs site.
--   Fixed an uploader issue where uploads taking longer than 30 seconds would fail.
+- SCT-2664 - Show the app cell status when in a collapsed state.
+- Added an "Info" tab to all app cells with app information.
+- Updated links to new KBase home page and docs site.
+- Fixed an uploader issue where uploads taking longer than 30 seconds would fail.
+- (Trigger release via labels)
 
 ### Version 4.2.1
 

@@ -6,24 +6,21 @@
  * @public
  */
 
-/*global define*/
-/*jslint white: true*/
-define(
-    [
-        'kbwidget',
-        'jquery',
-        'narrativeConfig',
-        'bluebird',
-        'kbaseModelEditor',
-        'kbaseNarrativeMethodInput',
-        'kbaseNarrativeInput',
-        'kbaseNarrativeParameterTextInput',
-        'base/js/namespace',
-        'kb_service/client/workspace',
-        
-        'kbase-client-api',        
-        'bootstrap'
-    ], function (
+define([
+    'kbwidget',
+    'jquery',
+    'narrativeConfig',
+    'bluebird',
+    'kbaseModelEditor',
+    'kbaseNarrativeMethodInput',
+    'kbaseNarrativeInput',
+    'kbaseNarrativeParameterTextInput',
+    'base/js/namespace',
+    'kb_service/client/workspace',
+
+    'kbase-client-api',
+    'bootstrap',
+], (
     KBWidget,
     $,
     Config,
@@ -34,7 +31,7 @@ define(
     KBaseNarrativeParameterTextInput,
     Jupyter,
     Workspace
-    ) {
+) => {
     'use strict';
     return KBWidget({
         name: 'kbaseEditModel',
@@ -52,7 +49,7 @@ define(
         },
         render: function (options) {
             this.wsClient = new Workspace(Config.url('workspace'), {
-                token: this.authToken()
+                token: this.authToken(),
             });
 
             this.container = $('<div>');
@@ -60,8 +57,7 @@ define(
             this.$modelChooserPanel = $('<div>');
             this.$modelDisplayPanel = $('<div>');
 
-            this.container.append(this.$modelChooserPanel)
-                .append(this.$modelDisplayPanel);
+            this.container.append(this.$modelChooserPanel).append(this.$modelDisplayPanel);
             this.$elem.append(this.container);
 
             // For now, spit up the method spec to console.log so you can read it.
@@ -70,20 +66,22 @@ define(
 
             // Creates the media chooser widget, which is just a 'text' input
             // This was originally designed to deal with the parameter spec object.
-            this.modelChooserWidget = new KBaseNarrativeParameterTextInput(this.$modelChooserPanel, {
-                loadingImage: Config.get('loading_gif'),
-                parsedParameterSpec: this.options.appSpec.parameters[0],
-                isInSidePanel: false
-            }
+            this.modelChooserWidget = new KBaseNarrativeParameterTextInput(
+                this.$modelChooserPanel,
+                {
+                    loadingImage: Config.get('loading_gif'),
+                    parsedParameterSpec: this.options.appSpec.parameters[0],
+                    isInSidePanel: false,
+                }
             );
 
             // Simple listener that just plops the input value in this panel.
             // Listener gets triggered whenever anything in the chooser widget
             // changes.
-            this.modelChooserWidget.addInputListener(function () {
+            this.modelChooserWidget.addInputListener(() => {
                 this.modelName = this.modelChooserWidget.getParameterValue();
                 this.updateDisplayPanel(this.modelName);
-            }.bind(this));
+            });
         },
         /**
          * adds model widget (and a horizontal line above it)
@@ -93,15 +91,15 @@ define(
 
             if (modelName) {
                 this.$modelDisplayPanel = $('<div>');
-                var modelWidget = $('<div>');
+                const modelWidget = $('<div>');
 
-                var self = this;
+                const self = this;
                 new KBaseModelEditor(modelWidget, {
                     ws: Jupyter.narrative.getWorkspaceName(),
                     obj: modelName,
                     onSave: function () {
                         self.trigger('updateData.Narrative');
-                    }
+                    },
                 });
 
                 this.$modelDisplayPanel.append('<hr>');
@@ -125,7 +123,7 @@ define(
          * data objects here.
          */
         getState: function () {
-            return {'model': this.modelName};
+            return { model: this.modelName };
         },
         /**
          * Should do something with the state that gets returned.
@@ -137,15 +135,11 @@ define(
         /**
          * Should disable a single parameter editing (used when input is part of an app)
          */
-        disableParameterEditing: function (paramId) {
-
-        },
+        disableParameterEditing: function (paramId) {},
         /**
          * Enables a single parameter editing (used when input is part of an app)
          */
-        enableParameterEditing: function (paramId) {
-
-        },
+        enableParameterEditing: function (paramId) {},
         /**
          * Sets a single parameter value (only one in this widget, right?).
          * paramId is from the method spec.
@@ -167,8 +161,8 @@ define(
             return [
                 {
                     id: this.options.method.parameters[0].id,
-                    value: this.modelChooserWidget.getParameterValue()
-                }
+                    value: this.modelChooserWidget.getParameterValue(),
+                },
             ];
         },
         /*
@@ -179,11 +173,11 @@ define(
          * red (see kbaseNarrativeMethodInput for default styles).
          */
         isValid: function () {
-            var isValidRet = {isValid: true, errormssgs: []};
-            var paramStatus = this.modelChooserWidget.isValid();
+            const isValidRet = { isValid: true, errormssgs: [] };
+            const paramStatus = this.modelChooserWidget.isValid();
             if (!paramStatus.isValid()) {
                 isValidRet.isValid = false;
-                for (var i = 0; i < paramStatus.errormssgs.length; i++) {
+                for (let i = 0; i < paramStatus.errormssgs.length; i++) {
                     isValidRet.errormssgs.push(paramStatus.errormssgs[i]);
                 }
             }
@@ -194,8 +188,6 @@ define(
          * and getAllParameterValues/getParameterValue which could be invoked many times before running
          * (e.g. when widget is rendered).
          */
-        prepareDataBeforeRun: function () {
-
-        },
+        prepareDataBeforeRun: function () {},
     });
 });

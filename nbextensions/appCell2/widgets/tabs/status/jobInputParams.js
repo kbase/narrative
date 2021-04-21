@@ -1,19 +1,13 @@
-define([
-    'bluebird',
-    'common/runtime',
-    'common/ui',
-    'common/format',
-    'kb_common/html'
-], function(
+define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'kb_common/html'], (
     Promise,
     Runtime,
     UI,
     format,
     html
-) {
+) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         p = t('p'),
         span = t('span'),
@@ -23,16 +17,12 @@ define([
         th = t('th');
 
     function renderTable() {
-        return table({class: 'table'}, [
-            tr([
-                th('Input'),
-                th('Value')
-            ])
-        ]);
+        return table({ class: 'table' }, [tr([th('Input'), th('Value')])]);
     }
 
     function factory() {
-        var container, ui,
+        let container,
+            ui,
             params,
             paramsListener = null,
             jobId,
@@ -42,19 +32,20 @@ define([
         function updateRowStatus(ui, params, container) {
             if (isParentJob) {
                 if (params && params.batch_params && params.batch_params.length) {
-                    container.innerHTML = 'This batch job has ' + params.batch_params.length + ' child jobs. Please click one of those on the left for details';
-                }
-                else {
+                    container.innerHTML =
+                        'This batch job has ' +
+                        params.batch_params.length +
+                        ' child jobs. Please click one of those on the left for details';
+                } else {
                     container.innerHTML = 'Please click one of the child jobs for details.';
                 }
             }
             if (!params) {
                 return;
-            }
-            else {
+            } else {
                 Object.keys(params).forEach((key) => {
-                    var selector = '[data-element-job-id="' + key + '"]';
-                    var row = container.querySelector(selector);
+                    const selector = '[data-element-job-id="' + key + '"]';
+                    let row = container.querySelector(selector);
                     if (row === null) {
                         row = document.createElement('tr');
                         row.setAttribute('data-element-job-id', key);
@@ -68,20 +59,21 @@ define([
         function startParamsListener() {
             paramsListener = runtime.bus().listen({
                 channel: {
-                    jobId: jobId
+                    jobId: jobId,
                 },
                 key: {
-                    type: 'job-info'
+                    type: 'job-info',
                 },
                 handle: (message) => {
                     updateRowStatus(ui, message.jobInfo.job_params[0], container);
-                }
+                },
             });
         }
 
         function start(arg) {
-            return Promise.try(function() {
-                if (container) {    // delete existing stuff.
+            return Promise.try(() => {
+                if (container) {
+                    // delete existing stuff.
                     detach();
                 }
                 container = arg.node;
@@ -94,7 +86,7 @@ define([
                 startParamsListener();
                 runtime.bus().emit('request-job-info', {
                     jobId: jobId,
-                    parentJobId: arg.parentJobId
+                    parentJobId: arg.parentJobId,
                 });
                 params = arg.params;
                 updateRowStatus(ui, params, container);
@@ -116,14 +108,13 @@ define([
         return {
             start: start,
             stop: stop,
-            detach: detach
+            detach: detach,
         };
     }
 
     return {
-        make: function() {
+        make: function () {
             return factory();
-        }
+        },
     };
-
 });

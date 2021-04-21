@@ -1,41 +1,32 @@
-/*global define */
-/*jslint white:true,browser:true*/
 define([
     'jquery',
     'base/js/namespace',
     'narrativeConfig',
     'common/props',
     'common/clock',
-    './monoBus'
-], function (
-    $,
-    Jupyter,
-    Config,
-    Props,
-    Clock,
-    Bus
-) {
+    './monoBus',
+], ($, Jupyter, Config, Props, Clock, Bus) => {
     'use strict';
-    var narrativeConfig = Props.make({ data: Config.getConfig() });
+    const narrativeConfig = Props.make({ data: Config.getConfig() });
 
     function factory(config) {
         function createRuntime() {
-            var bus = Bus.make();
+            const bus = Bus.make();
 
-            var clock = Clock.make({
+            const clock = Clock.make({
                 bus: bus,
-                resolution: 1000
+                resolution: 1000,
             });
             clock.start();
 
-            $(document).on('dataUpdated.Narrative', function () {
+            $(document).on('dataUpdated.Narrative', () => {
                 bus.emit('workspace-changed');
             });
 
             return {
                 created: new Date(),
                 bus: bus,
-                env: Props.make({})
+                env: Props.make({}),
             };
         }
 
@@ -52,7 +43,6 @@ define([
             return window.kbaseRuntime.bus;
         }
 
-
         // These are still module scope
 
         function authToken() {
@@ -68,7 +58,7 @@ define([
         }
 
         function getUserSetting(settingKey, defaultValue) {
-            var settings = Jupyter.notebook.metadata.kbase.userSettings,
+            let settings = Jupyter.notebook.metadata.kbase.userSettings,
                 setting;
             if (!settings) {
                 return defaultValue;
@@ -79,8 +69,6 @@ define([
             }
             return setting;
         }
-
-
 
         function setEnv(key, value) {
             window.kbaseRuntime.env.setItem(key, value);
@@ -111,13 +99,13 @@ define([
             setEnv: setEnv,
             getEnv: getEnv,
             workspaceId: workspaceId,
-            userId: userId
+            userId: userId,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

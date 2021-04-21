@@ -8,141 +8,151 @@
         var panel =  new kbasePanel(this.$elem, {title: 'Model Details',
                                            rightLabel: 'Super Workspace,
                                            subText: 'kb|g.super.genome '});
-*/define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery'
-	], function(
-		KBWidget,
-		bootstrap,
-		$
-	) {
+*/ define([
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+], (KBWidget, bootstrap, $) => {
+    return KBWidget({
+        name: 'kbasePanel',
+        version: '1.0.0',
+        options: {},
+        init: function (options) {
+            this._super(options);
+            const self = this;
+            const title = options.title ? options.title : 'Default Panel Heading';
+            const subText = options.subText;
+            const right_label = options.rightLabel;
+            const body = options.body;
+            const fav = options.fav;
 
+            const id = options.id ? options.id : options.subText;
+            const ws = options.ws ? options.ws : options.rightLabel;
+            const type = options.type;
+            const widget = options.widget;
 
-return KBWidget({
-    name: "kbasePanel",
-    version: "1.0.0",
-    options: {
-    },
-    init: function(options) {
-        this._super(options);
-        var self = this;
-        var title = options.title ? options.title : "Default Panel Heading";
-        var subText = options.subText;
-        var right_label = options.rightLabel;
-        var body = options.body;
-        var fav = options.fav;
+            const drag = options.drag;
 
-        var id = options.id ? options.id : options.subText;
-        var ws = options.ws ? options.ws : options.rightLabel;
-        var type = options.type;
-        var widget = options.widget;
+            const container = $(
+                '<div class="panel panel-default">' +
+                    '<div class="panel-heading">' +
+                    '<span class="panel-title"></span>' +
+                    '<a class="pull-right btn-rm-panel text-muted hide"><span class="fa fa-times"></span></a>' +
+                    '<a class="pull-right btn-min-panel text-muted hide"><span class="fa fa-minus"></span></a> ' +
+                    '<a class="btn-favorite pull-right" data-ws="' +
+                    ws +
+                    '" data-id="' +
+                    id +
+                    '" data-type="' +
+                    type +
+                    '">' +
+                    '</a>' +
+                    '<br>' +
+                    '<div class="panel-subtitle pull-left"></div>' +
+                    '</div>' +
+                    '<div class="panel-body"></div>' +
+                    '</div>'
+            );
 
-        var drag = options.drag;
+            const panel_header = container.find('.panel-heading');
+            const panel_title = container.find('.panel-title');
+            const panel_subtitle = container.find('.panel-subtitle');
+            const panel_body = container.find('.panel-body');
+            const fav_btn = container.find('.btn-favorite');
+            const rm_panel_btn = container.find('.btn-rm-panel');
+            const min_panel_btn = container.find('.btn-min-panel');
 
-        var container = $('<div class="panel panel-default">'+
-                                '<div class="panel-heading">'+
-                                    '<span class="panel-title"></span>'+
-                                    '<a class="pull-right btn-rm-panel text-muted hide"><span class="fa fa-times"></span></a>'+
-                                    '<a class="pull-right btn-min-panel text-muted hide"><span class="fa fa-minus"></span></a> '+
-                                    '<a class="btn-favorite pull-right" data-ws="'+ws+'" data-id="'+id+'" data-type="'+type+'">'+
-                                    '</a>'+
-                                    '<br>'+
-                                    '<div class="panel-subtitle pull-left"></div>'+
-                                '</div>'+
-                                '<div class="panel-body"></div>'+
-                           '</div>');
+            this.header = function (data) {
+                if (data) panel_header.html(data);
+                return panel_header;
+            };
 
-        var panel_header = container.find('.panel-heading');
-        var panel_title = container.find('.panel-title');
-        var panel_subtitle = container.find('.panel-subtitle');
-        var panel_body = container.find('.panel-body');
-        var fav_btn = container.find('.btn-favorite');
-        var rm_panel_btn = container.find('.btn-rm-panel');
-        var min_panel_btn = container.find('.btn-min-panel');
+            this.title = function (data) {
+                if (data) panel_title.html(data);
+                return panel_title;
+            };
 
-        this.header = function(data) {
-            if (data) panel_header.html(data);
-            return panel_header;
-        }
+            this.subText = function (data) {
+                if (data) panel_subtitle.html(data);
+                return panel_subtitle;
+            };
 
-        this.title = function(data) {
-            if (data) panel_title.html(data);
-            return panel_title;
-        }
+            this.body = function (data) {
+                if (data) panel_body.html(data);
+                this.rmLoading();
+                return panel_body;
+            };
 
-        this.subText = function(data) {
-            if (data) panel_subtitle.html(data)
-            return panel_subtitle;
-        }
+            this.loading = function () {
+                panel_body.html(
+                    '<p class="muted ajax-loader"> \
+                <img src="assets/img/ajax-loader.gif"> loading...</p>'
+                );
+            };
 
-        this.body = function(data) {
-            if (data) panel_body.html(data);
-            this.rmLoading();
-            return panel_body;
-        }
+            // deprecated?  I think this method could be handy
+            this.rmLoading = function () {
+                panel_body.find('.ajax-loader').remove();
+            };
 
-        this.loading = function() {
-            panel_body.html('<p class="muted ajax-loader"> \
-                <img src="assets/img/ajax-loader.gif"> loading...</p>');
-        }
+            this.toggleFavorite = function () {
+                const starred = fav_btn.find('span').hasClass('fa-star');
+                console.log('starred', starred);
+                fav_btn.find('span').toggleClass('fa-star-o');
+                fav_btn.find('span').toggleClass('fa-star');
+            };
 
-        // deprecated?  I think this method could be handy
-        this.rmLoading = function() {
-            panel_body.find('.ajax-loader').remove();
-        }
+            if (title) this.title(title);
+            if (body) this.body(body);
+            if (subText) panel_subtitle.append(subText);
+            if (right_label) {
+                panel_header.append(
+                    '<span class="label label-primary pull-right">' + right_label + '</span><br>'
+                );
+            }
 
-        this.toggleFavorite = function() {
-            var starred = fav_btn.find('span').hasClass('fa-star')
-            console.log('starred', starred)
-            fav_btn.find('span').toggleClass('fa-star-o');
-            fav_btn.find('span').toggleClass('fa-star');
-        }
+            // change header cursor on only this widget
+            panel_header.css('cursor', 'move');
 
-        if (title) this.title(title);
-        if (body) this.body(body);
-        if (subText) panel_subtitle.append(subText);
-        if (right_label) {
-            panel_header.append('<span class="label label-primary pull-right">'
-                                    +right_label+'</span><br>');
-        }
+            // event for removing panel
+            rm_panel_btn.click(() => {
+                container.slideUp(400, function () {
+                    $(this).remove();
+                });
+            });
 
-        // change header cursor on only this widget
-        panel_header.css('cursor', 'move')
+            // event for minimizing panel
+            min_panel_btn.click(() => {
+                console.log('clicked');
+                panel_body.slideToggle(400);
+            });
 
-        // event for removing panel
-        rm_panel_btn.click(function() {
-            container.slideUp(400, function(){
-                $(this).remove();
-            })
-        });
+            // event for hover on panel header
+            panel_header.hover(function () {
+                $(this).find('.fa').parent().toggleClass('hide');
+            });
 
-        // event for minimizing panel
-        min_panel_btn.click(function() {
-            console.log('clicked')
-            panel_body.slideToggle(400);
-        });
+            rm_panel_btn.tooltip({
+                title: 'Remove panel',
+                placement: 'bottom',
+                delay: { show: 700 },
+            });
+            min_panel_btn.tooltip({
+                title: 'Minimize panel',
+                placement: 'bottom',
+                delay: { show: 700 },
+            });
 
-        // event for hover on panel header
-        panel_header.hover(function() {
-            $(this).find('.fa').parent().toggleClass('hide');
-        })
+            // This is just a function for debugging purposes
+            function resetQueue() {
+                const p = kb.ujs.remove_state('favorites', 'queue');
+            }
 
+            //resetQueue();  //****THIS WILL DELETE the User's Favorites ****
 
-        rm_panel_btn.tooltip({title: 'Remove panel', placement: 'bottom', delay: {show: 700}});
-        min_panel_btn.tooltip({title: 'Minimize panel', placement: 'bottom', delay: {show: 700}});
+            self.$elem.append(container);
 
-        // This is just a function for debugging purposes
-        function resetQueue() {
-            var p = kb.ujs.remove_state('favorites', 'queue');
-        }
-
-        //resetQueue();  //****THIS WILL DELETE the User's Favorites ****
-
-        self.$elem.append(container);
-
-        return this;
-    }  //end init
-})
+            return this;
+        }, //end init
+    });
 });

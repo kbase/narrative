@@ -1,62 +1,82 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach, spyOn*/
-/*jslint white: true*/
-
-define ([
+define([
     'jquery',
-    'widgets/loadingWidget'
-], function(
-    $,
-    LoadingWidget
-) {
+    'widgets/loadingWidget',
+    'text!/kbase_templates/loading.html',
+    'css!/narrative/static/kbase/css/kbaseNarrative.css',
+], ($, LoadingWidget, LoadingTemplate) => {
     'use strict';
 
-    describe('Test the LoadingWidget module', function() {
-        var dummyNode, dummyNode2, widget;
+    const templateHtml = LoadingTemplate.replace(
+        '{{ static_url("kbase/images/kbase_animated_logo.gif") }}',
+        '/narrative/static/kbase/images/kbase_animated_logo.gif'
+    );
+    describe('Test the LoadingWidget module', () => {
+        beforeAll(() => {
+            document.body.innerHTML = '';
+        });
 
         beforeEach(function () {
-            dummyNode = document.createElement('div');
-            dummyNode2 = document.createElement('div');
-            dummyNode.querySelector = jasmine.createSpy('HTML Element').and.returnValue(dummyNode2);
-            dummyNode2.querySelector = jasmine.createSpy('HTML Element').and.returnValue(dummyNode2);
-            widget = new LoadingWidget({node: dummyNode});
+            this.node = document.createElement('div');
+            document.body.appendChild(this.node);
+            this.node.innerHTML = templateHtml;
         });
 
         afterEach(function () {
-            widget.remove();
+            this.node.remove();
+            this.node = null;
+            document.body.innerHTML = '';
         });
 
-        it('Should instantiate with a null node', function() {
-            var widget = new LoadingWidget({node: null});
-            expect(widget).not.toBeNull();
+        it('Should instantiate with a null node', () => {
+            const noNodeWidget = new LoadingWidget({ node: null });
+            expect(noNodeWidget).not.toBeNull();
+            expect(noNodeWidget).toBeInstanceOf(LoadingWidget);
+            noNodeWidget.clearTimeout();
         });
 
         it('Should be able to update its progress', function () {
+            const widget = new LoadingWidget({ node: this.node });
             widget.updateProgress('data', true);
+            // hidden checkmark that gets added once an element starts loading
+            expect(
+                this.node.querySelector('[data-element="data"] .kb-progress-stage').innerHTML
+            ).toContain('class="fa fa-check"');
+            // total progress indicator updated
+            expect(this.node.querySelector('.progress-bar').style.width).toBe('20%');
+            widget.clearTimeout();
         });
 
         it('Should be able to remove its container node', function () {
-            spyOn(LoadingWidget.prototype, 'remove');
-            widget = new LoadingWidget({ node: dummyNode });
-            ['data', 'narrative', 'jobs', 'apps', 'kernel'].forEach(function(name) {
+            spyOn(LoadingWidget.prototype, 'remove').and.callThrough();
+            const widget = new LoadingWidget({ node: this.node });
+            ['data', 'narrative', 'jobs', 'apps', 'kernel'].forEach((name) => {
                 widget.updateProgress(name, true);
             });
             expect(widget.remove).toHaveBeenCalled();
         });
 
         it('Should not show the loading warning when first starting', function () {
-            expect($($(dummyNode).find('.loading-warning')[0]).is(':visible')).toBeFalsy();
+            const widget = new LoadingWidget({ node: this.node });
+            const $warning = $(this.node).find('.loading-warning');
+            expect($warning.length).toBe(1);
+            expect($warning.is(':visible')).toBeFalsy();
+            widget.clearTimeout();
         });
 
         it('Should show the loading warning after a timeout', function (done) {
-            spyOn(LoadingWidget.prototype, 'showTimeoutWarning');
-            widget = new LoadingWidget({node: dummyNode, timeout: 1});
-            setTimeout(function () {
+            const widget = new LoadingWidget({ node: this.node, timeout: 1 });
+            spyOn(widget, 'showTimeoutWarning').and.callThrough();
+            const $warningNode = $(this.node).find('.loading-warning');
+            expect($warningNode.length).toBe(1);
+            spyOn($warningNode.__proto__, 'fadeIn').and.callThrough();
+            expect(widget.timeoutShown).toBeFalse();
+            setTimeout(() => {
                 expect(widget.showTimeoutWarning).toHaveBeenCalled();
+                expect(widget.timeoutShown).toBeTrue();
+                expect($warningNode.fadeIn).toHaveBeenCalledWith('fast');
+                widget.remove();
                 done();
-            }, 100);
+            }, 500);
         });
     });
 });

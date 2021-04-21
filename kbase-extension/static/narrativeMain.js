@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white: true*/
 /**
  * A little wrapper script for making sure that Narrative code
  * is injected at the right time before loading the Notebook running
@@ -24,30 +22,22 @@
  * @class narrativeMain
  * @static
  */
-require([
-    './narrative_paths'
-], function () {
+require(['./narrative_paths'], () => {
     'use strict';
-    require([
-        'jquery',
-        'narrativeConfig',
-        'narrativeLogin',
-        'css!font-awesome'
-    ], function ($,
+    require(['jquery', 'narrativeConfig', 'narrativeLogin', 'css!font-awesome'], (
+        $,
         Config,
         Login
-    ) {
+    ) => {
         console.log('Loading KBase Narrative setup routine.');
 
-        Config.updateConfig()
-            .then(function () {
-                require(['kbaseNarrative'], function () {
-                    Login.init($('#signin-button'))
-                        .then(function() {
-                            console.log('Starting Jupyter main');
-                            require(['notebook/js/main']);
-                        });
+        Config.updateConfig().then(() => {
+            require(['kbaseNarrative'], () => {
+                Login.init($('#signin-button')).then(() => {
+                    console.log('Starting Jupyter main');
+                    require(['notebook/js/main']);
                 });
             });
+        });
     });
 });

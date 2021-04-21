@@ -1,14 +1,4 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-define([
-    'jquery',
-    'kbwidget',
-    'base/js/namespace'
-], function (
-    $,
-    KBWidget,
-    Jupyter
-    ) {
+define(['jquery', 'kbwidget', 'base/js/namespace'], ($, KBWidget, Jupyter) => {
     'use strict';
     return KBWidget({
         name: 'kbaseAppOutputCell',
@@ -20,7 +10,7 @@ define([
             type: 'error',
             title: 'Output',
             time: '',
-            showMenu: true
+            showMenu: true,
         },
         OUTPUT_ERROR_WIDGET: 'kbaseNarrativeError',
         init: function (options) {
@@ -28,7 +18,7 @@ define([
 
             this.data = this.options.data;
             this.options.type = this.options.type.toLowerCase();
-            if (this.options.widget.toLowerCase() === "null") {
+            if (this.options.widget.toLowerCase() === 'null') {
                 this.options.widget = 'kbaseDefaultNarrativeOutput';
             }
 
@@ -44,87 +34,97 @@ define([
             this.renderAppOutputCell();
         },
         renderAppOutputCell: function () {
-            var $label = $('<span>').addClass('label label-info').append('Output');
+            const $label = $('<span>').addClass('label label-info').append('Output');
             this.renderCell('kb-cell-output', 'panel-default', 'kb-out-desc', $label, 'app output');
-            var $cell = this.$elem.closest('.cell');
-            $cell.trigger('set-icon.cell', ['<i class="fa fa-2x fa-file-o method-output-icon"></i>']);
+            const $cell = this.$elem.closest('.cell');
+            $cell.trigger('set-icon.cell', [
+                '<i class="fa fa-2x fa-file-o method-output-icon"></i>',
+            ]);
         },
         renderErrorOutputCell: function () {
             require(['kbaseNarrativeError'], $.proxy(function () {
-                if (!this.options.title)
-                    this.options.title = 'Narrative Error';
-                var $label = $('<span>').addClass('label label-danger').append('Error');
+                if (!this.options.title) this.options.title = 'Narrative Error';
+                const $label = $('<span>').addClass('label label-danger').append('Error');
                 this.renderCell('kb-cell-error', 'panel-danger', 'kb-err-desc', $label);
-                var $cell = this.$elem.closest('.cell');
-                $cell.trigger('set-icon.cell', ['<i class="fa fa-2x fa-exclamation-triangle error-icon"></i>']);
+                const $cell = this.$elem.closest('.cell');
+                $cell.trigger('set-icon.cell', [
+                    '<i class="fa fa-2x fa-exclamation-triangle error-icon"></i>',
+                ]);
                 $cell.addClass('kb-error');
             }, this));
         },
         renderCell: function (baseClass, panelClass, headerClass, $label, titleSuffix) {
             // set up the widget line
-            var widget = this.options.widget;
-            var methodName = this.options.title ? this.options.title : 'Unknown method';
-            var title = methodName;
+            const widget = this.options.widget;
+            const methodName = this.options.title ? this.options.title : 'Unknown method';
+            let title = methodName;
             if (titleSuffix) {
                 title += ' (' + titleSuffix + ')';
             }
 
-            this.$elem
-                .closest('.cell')
-                .trigger('set-title', [title]);
+            this.$elem.closest('.cell').trigger('set-title', [title]);
 
-            var widgetData = this.options.data;
-            if (widget === 'kbaseDefaultNarrativeOutput')
-                widgetData = {data: this.options.data};
+            let widgetData = this.options.data;
+            if (widget === 'kbaseDefaultNarrativeOutput') widgetData = { data: this.options.data };
 
-            this.$timestamp = $('<span>')
-                .addClass('pull-right kb-func-timestamp');
+            this.$timestamp = $('<span>').addClass('pull-right kb-func-timestamp');
 
             if (this.options.time) {
-                this.$timestamp.append($('<span>')
-                    .append(this.readableTimestamp(this.options.time)));
-                this.$elem.closest('.cell').find('.button_container').trigger('set-timestamp.toolbar', this.options.time);
+                this.$timestamp.append(
+                    $('<span>').append(this.readableTimestamp(this.options.time))
+                );
+                this.$elem
+                    .closest('.cell')
+                    .find('.button_container')
+                    .trigger('set-timestamp.toolbar', this.options.time);
             }
 
-            var $headerLabel = $('<span>')
-                .addClass('label label-info')
-                .append('Output');
+            const $headerLabel = $('<span>').addClass('label label-info').append('Output');
 
-            var $headerInfo = $('<span>')
+            const $headerInfo = $('<span>')
                 .addClass(headerClass)
                 .append($('<b>').append(methodName))
                 .append(this.$timestamp);
 
-            var $body = $('<div class="kb-cell-output-content">');
+            const $body = $('<div class="kb-cell-output-content">');
 
             try {
-                require([widget],
-                    function (W) {
-                        // If we successfully Require the widget code, render it:
-                        this.$outWidget = new W($body, widgetData);
-                        // this.$outWidget = $body.find('.panel-body > div')[widget](widgetData);
-                        this.$elem.append($body);
-                    }.bind(this),
-                    function (err) {
-                        // If we fail, render the error widget and log the error.
-                        KBError("Output::" + this.options.title, "failed to render app output widget: '" + widget);
-                        this.options.title = 'App Error';
-                        this.options.data = {
-                            error: {
-                                msg: 'An error occurred while showing your output:',
-                                method_name: 'kbaseNarrativeOutputCell.renderCell',
-                                type: 'Output',
-                                severity: '',
-                                traceback: 'Failed while trying to show a "' + widget + '"\n' +
-                                    'With inputs ' + JSON.stringify(widgetData) + '\n\n' +
-                                    err.message
-                            }
-                        };
-                        this.options.widget = this.OUTPUT_ERROR_WIDGET;
-                        this.renderErrorOutputCell();
-                    }.bind(this));
+                require([widget], (W) => {
+                    // If we successfully Require the widget code, render it:
+                    this.$outWidget = new W($body, widgetData);
+                    // this.$outWidget = $body.find('.panel-body > div')[widget](widgetData);
+                    this.$elem.append($body);
+                }, (err) => {
+                    // If we fail, render the error widget and log the error.
+                    KBError(
+                        'Output::' + this.options.title,
+                        "failed to render app output widget: '" + widget
+                    );
+                    this.options.title = 'App Error';
+                    this.options.data = {
+                        error: {
+                            msg: 'An error occurred while showing your output:',
+                            method_name: 'kbaseNarrativeOutputCell.renderCell',
+                            type: 'Output',
+                            severity: '',
+                            traceback:
+                                'Failed while trying to show a "' +
+                                widget +
+                                '"\n' +
+                                'With inputs ' +
+                                JSON.stringify(widgetData) +
+                                '\n\n' +
+                                err.message,
+                        },
+                    };
+                    this.options.widget = this.OUTPUT_ERROR_WIDGET;
+                    this.renderErrorOutputCell();
+                });
             } catch (err) {
-                KBError("Output::" + this.options.title, "failed to render app output widget: '" + widget);
+                KBError(
+                    'Output::' + this.options.title,
+                    "failed to render app output widget: '" + widget
+                );
                 this.options.title = 'App Error';
                 this.options.data = {
                     error: {
@@ -132,10 +132,15 @@ define([
                         method_name: 'kbaseNarrativeOutputCell.renderCell',
                         type: 'Output',
                         severity: '',
-                        traceback: 'Failed while trying to show a "' + widget + '"\n' +
-                            'With inputs ' + JSON.stringify(widgetData) + '\n\n' +
-                            err.message
-                    }
+                        traceback:
+                            'Failed while trying to show a "' +
+                            widget +
+                            '"\n' +
+                            'With inputs ' +
+                            JSON.stringify(widgetData) +
+                            '\n\n' +
+                            err.message,
+                    },
                 };
                 this.options.widget = this.OUTPUT_ERROR_WIDGET;
                 this.renderErrorOutputCell();
@@ -150,10 +155,9 @@ define([
                 //                  err.message
                 // }});
             }
-
         },
         getState: function () {
-            var state = null;
+            let state = null;
             if (this.$outWidget && this.$outWidget.getState) {
                 state = this.$outWidget.getState();
             }
@@ -186,21 +190,20 @@ define([
          * @return {string} a human readable timestamp
          */
         readableTimestamp: function (timestamp) {
-            var format = function (x) {
-                if (x < 10)
-                    x = '0' + x;
+            const format = function (x) {
+                if (x < 10) x = '0' + x;
                 return x;
             };
 
-            var d = new Date(timestamp);
-            var hours = format(d.getHours());
-            var minutes = format(d.getMinutes());
-            var seconds = format(d.getSeconds());
-            var month = d.getMonth() + 1;
-            var day = format(d.getDate());
-            var year = d.getFullYear();
+            const d = new Date(timestamp);
+            const hours = format(d.getHours());
+            const minutes = format(d.getMinutes());
+            const seconds = format(d.getSeconds());
+            const month = d.getMonth() + 1;
+            const day = format(d.getDate());
+            const year = d.getFullYear();
 
-            return hours + ":" + minutes + ":" + seconds + ", " + month + "/" + day + "/" + year;
-        }
+            return hours + ':' + minutes + ':' + seconds + ', ' + month + '/' + day + '/' + year;
+        },
     });
 });

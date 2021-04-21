@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'jquery',
@@ -17,8 +15,8 @@ define([
 
     'select2',
     'bootstrap',
-    'css!font-awesome'
-], function (
+    'css!font-awesome',
+], (
     Promise,
     $,
     html,
@@ -31,17 +29,18 @@ define([
     UI,
     Data,
     TimeFormat,
-    GenericClient) {
+    GenericClient
+) => {
     'use strict';
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         select = t('select'),
         option = t('option');
 
     function factory(config) {
-        var spec = config.parameterSpec,
+        let spec = config.parameterSpec,
             parent,
             container,
             runtime = Runtime.make(),
@@ -49,16 +48,19 @@ define([
             channel = bus.channel(config.channelName),
             ui,
             model = {
-                value: undefined
+                value: undefined,
             },
             eventListeners = [];
 
         function makeInputControl() {
-            var selectOptions;
-            var selectElem = select({
-                class: 'form-control',
-                dataElement: 'input'
-            }, [option({ value: '' }, '')].concat(selectOptions));
+            let selectOptions;
+            const selectElem = select(
+                {
+                    class: 'form-control',
+                    dataElement: 'input',
+                },
+                [option({ value: '' }, '')].concat(selectOptions)
+            );
 
             return selectElem;
         }
@@ -66,19 +68,19 @@ define([
         // CONTROL
 
         function getControlValue() {
-            var control = ui.getElement('input-container.input');
+            const control = ui.getElement('input-container.input');
             return $(control).val();
         }
 
         function setControlValue(value) {
-            var stringValue;
+            let stringValue;
             if (value === null) {
                 stringValue = '';
             } else {
                 stringValue = value;
             }
 
-            var control = ui.getElement('input-container.input');
+            const control = ui.getElement('input-container.input');
 
             $(control).val(value).trigger('change.select2');
         }
@@ -105,8 +107,8 @@ define([
         // VALIDATION
 
         function validate() {
-            return Promise.try(function () {
-                var value = getControlValue();
+            return Promise.try(() => {
+                const value = getControlValue();
 
                 return {
                     isValid: true,
@@ -114,7 +116,7 @@ define([
                     diagnosis: 'valid',
                     errorMessage: null,
                     value: value,
-                    parsedValue: value
+                    parsedValue: value,
                 };
             });
         }
@@ -122,37 +124,52 @@ define([
         function doTemplateResult(item) {
             // console.log('template', item);
             if (!item.id) {
-                return $(div({
-                    style: {
-                        display: 'block',
-                        height: '20px'
-                    }
-                }, item.label || ''));
+                return $(
+                    div(
+                        {
+                            style: {
+                                display: 'block',
+                                height: '20px',
+                            },
+                        },
+                        item.label || ''
+                    )
+                );
             }
-            return $(div({
-                style: {
-                    display: 'block'
-                }
-            }, item.label));
+            return $(
+                div(
+                    {
+                        style: {
+                            display: 'block',
+                        },
+                    },
+                    item.label
+                )
+            );
         }
 
         function doTemplateSelection(item) {
-            return $(div({
-                style: {
-                    display: 'block'
-                }
-            }, item.label));
+            return $(
+                div(
+                    {
+                        style: {
+                            display: 'block',
+                        },
+                    },
+                    item.label
+                )
+            );
         }
 
-        var totalItems;
-        var currentPage;
-        var currentStartItem;
-        var pageSize = 10;
+        let totalItems;
+        let currentPage;
+        let currentStartItem;
+        const pageSize = 10;
 
         function doTaxonomySearch(data) {
-            var term = data.q;
-            var page = data.page;
-            var startItem;
+            const term = data.q;
+            const page = data.page;
+            let startItem;
             if (page) {
                 startItem = pageSize * (page - 1);
             } else {
@@ -162,57 +179,61 @@ define([
             // globals
             currentPage = page;
             currentStartItem = startItem;
-            var start = new Date().getTime();
+            const start = new Date().getTime();
 
-            var taxonClient = new GenericClient({
+            const taxonClient = new GenericClient({
                 url: runtime.config('services.service_wizard.url'),
                 module: 'taxonomy_service',
                 // version: 'dev',
-                token: Runtime.make().authToken()
+                token: Runtime.make().authToken(),
             });
-            return taxonClient.callFunc('search_taxonomy', [{
-                private: 0,
-                public: 1,
-                search: term,
-                limit: pageSize,
-                start: startItem
-            }])
-            .then(function (result) {
-                // var elapsed = new Date().getTime() - start;
-                // console.log('Loaded data ' + result[0].hits.length + ' items of ' + result[0].num_of_hits + ' in ' + elapsed + 'ms');
-                totalItems = result[0].num_of_hits;
-                return result[0];
-            });
+            return taxonClient
+                .callFunc('search_taxonomy', [
+                    {
+                        private: 0,
+                        public: 1,
+                        search: term,
+                        limit: pageSize,
+                        start: startItem,
+                    },
+                ])
+                .then((result) => {
+                    // var elapsed = new Date().getTime() - start;
+                    // console.log('Loaded data ' + result[0].hits.length + ' items of ' + result[0].num_of_hits + ' in ' + elapsed + 'ms');
+                    totalItems = result[0].num_of_hits;
+                    return result[0];
+                });
         }
 
         function getTaxonomyItem(taxonObject) {
             // console.log('get taxonomy', taxonObject);
-            var ref = taxonObject,
+            const ref = taxonObject,
                 taxonClient = new GenericClient({
                     url: runtime.config('services.service_wizard.url'),
                     module: 'TaxonAPI',
                     // version: 'dev',
-                    token: Runtime.make().authToken()
+                    token: Runtime.make().authToken(),
                 });
-            return taxonClient.callFunc('get_scientific_name', [ref])
-                .then(function (result) {
-                    if (result.length === 0) {
-                        throw new Error('Cannot find taxon: ' + ref);
-                    }
-                    if (result.length > 1) {
-                        throw new Error('Too many taxa found for ' + ref);
-                    }
-                    // simulate the result from the taxonomy service
-                    return [{
+            return taxonClient.callFunc('get_scientific_name', [ref]).then((result) => {
+                if (result.length === 0) {
+                    throw new Error('Cannot find taxon: ' + ref);
+                }
+                if (result.length > 1) {
+                    throw new Error('Too many taxa found for ' + ref);
+                }
+                // simulate the result from the taxonomy service
+                return [
+                    {
                         id: taxonObject,
-                        label: result[0]
-                    }];
-                });
+                        label: result[0],
+                    },
+                ];
+            });
         }
 
         function render() {
-            return Promise.try(function () {
-                var events = Events.make(),
+            return Promise.try(() => {
+                const events = Events.make(),
                     inputControl = makeInputControl(events),
                     content = div({ class: 'input-group', style: { width: '100%' } }, inputControl);
 
@@ -227,23 +248,22 @@ define([
                         return markup;
                     },
                     initSelection: function (element, callback) {
-                        var currentValue = model.value;
+                        const currentValue = model.value;
                         if (!currentValue) {
                             return;
                         }
-                        getTaxonomyItem(currentValue)
-                            .then(function (taxon) {
-                                // console.log('TAXON', taxon);
-                                callback(taxon);
-                            });
+                        getTaxonomyItem(currentValue).then((taxon) => {
+                            // console.log('TAXON', taxon);
+                            callback(taxon);
+                        });
                     },
                     formatMoreResults: function (page) {
-                        return "more???";
+                        return 'more???';
                     },
                     language: {
                         loadingMore: function (arg) {
                             return html.loading('Loading more scientific names');
-                        }
+                        },
                     },
                     ajax: {
                         service: 'myservice',
@@ -252,7 +272,7 @@ define([
                         data: function (params) {
                             return {
                                 q: params.term,
-                                page: params.page
+                                page: params.page,
                             };
                         },
                         processResults: function (data, params) {
@@ -261,32 +281,30 @@ define([
                             return {
                                 results: data.hits,
                                 pagination: {
-                                    more: (params.page * pageSize) < data.num_of_hits
-                                }
+                                    more: params.page * pageSize < data.num_of_hits,
+                                },
                             };
                         },
                         transport: function (options, success, failure) {
-
-                            var status = null;
+                            let status = null;
 
                             doTaxonomySearch(options.data)
-                                .then(function (results) {
+                                .then((results) => {
                                     success(results);
                                 })
-                                .catch(function (err) {
+                                .catch((err) => {
                                     status = 'error';
                                     failure();
                                 });
                             // console.log('transport got ', options);
 
                             return {
-                                status: status
+                                status: status,
                             };
-                        }
-                    }
+                        },
+                    },
                 });
                 events.attachEvents(container);
-
             });
         }
 
@@ -296,35 +314,35 @@ define([
          * For the objectInput, there is only ever one control.
          */
         function layout(events) {
-            var content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' })
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
         function autoValidate() {
-            return validate()
-                .then(function (result) {
-                    channel.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
+            return validate().then((result) => {
+                channel.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
 
         // LIFECYCLE API
         function start(arg) {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
-                var events = Events.make(),
+                const events = Events.make(),
                     theLayout = layout(events);
 
                 container.innerHTML = theLayout.content;
@@ -334,33 +352,31 @@ define([
                     model.value = config.initialValue;
                 }
 
-                render()
-                    .then(function () {
-
-                        channel.on('reset-to-defaults', function () {
-                            resetModelValue();
-                        });
-                        channel.on('update', function (message) {
-                            setModelValue(message.value);
-                        });
-                        // bus.channel().on('workspace-changed', function() {
-                        //     doWorkspaceChanged();
-                        // });
-                        // bus.emit('sync');
-
-                        setControlValue(getModelValue());
-                        autoValidate();
+                render().then(() => {
+                    channel.on('reset-to-defaults', () => {
+                        resetModelValue();
                     });
+                    channel.on('update', (message) => {
+                        setModelValue(message.value);
+                    });
+                    // bus.channel().on('workspace-changed', function() {
+                    //     doWorkspaceChanged();
+                    // });
+                    // bus.emit('sync');
+
+                    setControlValue(getModelValue());
+                    autoValidate();
+                });
             });
         }
 
         function stop() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 if (container) {
                     parent.removeChild(container);
                 }
                 bus.stop();
-                eventListeners.forEach(function (id) {
+                eventListeners.forEach((id) => {
                     runtime.bus().removeListener(id);
                 });
             });
@@ -368,16 +384,15 @@ define([
 
         // INIT
 
-
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

@@ -1,14 +1,8 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-define([
-    'kbaseSamplePropertyMatrixAbstract'
-], function(Widget) {
-    describe('Test the kbaseSamplePropertyMatrixAbstract widget', function() {
-        it('Should do things', function() {
-
+define(['kbaseSamplePropertyMatrixAbstract'], (Widget) => {
+    'use strict';
+    describe('The kbaseSamplePropertyMatrixAbstract widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
         });
     });
 });

@@ -1,14 +1,8 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-define([
-    'ContigBrowserPanel'
-], function(Widget) {
-    describe('Test the ContigBrowserPanel widget', function() {
-        it('Should do things', function() {
-
+define(['ContigBrowserPanel'], (Widget) => {
+    'use strict';
+    describe('The ContigBrowserPanel widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
         });
     });
 });

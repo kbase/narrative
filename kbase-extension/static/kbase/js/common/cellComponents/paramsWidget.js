@@ -113,6 +113,15 @@ define([
                 });
             });
 
+            fieldWidget.bus.on('validation', (message) => {
+                // only propagate if its invalid
+                if (!message.isValid) {
+                    bus.emit('invalid-param-value', {
+                        parameter: parameterSpec.id
+                    });
+                }
+            });
+
             fieldWidget.bus.on('touched', () => {
                 bus.emit('parameter-touched', {
                     parameter: parameterSpec.id,

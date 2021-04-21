@@ -68,6 +68,10 @@ define([
                 updateModelParameterValue(fileType, PARAM_TYPE, message);
             });
 
+            paramBus.on('invalid-param-value', () => {
+                updateAppConfigState(true);
+            });
+
             const widget = ParamsWidget.make({
                 bus: paramBus,
                 workspaceId: runtime.workspaceId(),
@@ -202,12 +206,37 @@ define([
         }
 
         /**
+         * Updates the configuration state for the currently loaded app. If the state has
+         * changed from what's in the current model, this emits a message up the cellBus.
+         * @param {boolean} isError
+         * @returns Promise that resolves when finished sending a message (if relevant).
+         */
+        function updateAppConfigState(isError) {
+            // evaluate the parameter state for the current file type
+            return Promise.try(() => {
+                if (isError) {
+                    return 'error';
+                }
+                return evaluateAppConfig();
+            }).then((state) => {
+                const currentState = model.getItem(['state', 'params', fileType]);
+                if (currentState !== state) {
+                    cellBus.emit('update-param-state', {
+                        fileType,
+                        state,
+                    });
+                }
+            });
+        }
+
+        /**
          * This evaluates the state of the app configuration. If it's ready to go, then we can
          * build the Python code and prep the app for launch. If not, then we shouldn't, and,
          * in fact, should clear the Python code if there's any there.
-         * @param {boolean} fileType - the file type to evaluate app params for
+         * @returns a Promise that resolves into either 'complete' or 'incomplete' strings,
+         * based on the config state.
          */
-        function evaluateAppConfig(fileType) {
+        function evaluateAppConfig() {
             /* 2 parts.
              * 1 - eval the set of parameters using something in the spec module.
              * 2 - eval the array of file inputs and outputs.
@@ -252,21 +281,7 @@ define([
                 model.setItem(['params', fileType, paramType, message.parameter], message.newValue);
             }
 
-            // evaluate the parameter state for the current file type
-            return Promise.try(() => {
-                if (message.isError) {
-                    return 'error';
-                }
-                return evaluateAppConfig(fileType);
-            }).then((state) => {
-                const currentState = model.getItem(['state', 'params', fileType]);
-                if (currentState !== state) {
-                    cellBus.emit('update-param-state', {
-                        fileType,
-                        state,
-                    });
-                }
-            });
+            return updateAppConfigState(message.isError);
         }
 
         function stop() {

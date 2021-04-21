@@ -117,7 +117,7 @@ define([
                 // only propagate if its invalid
                 if (!message.isValid) {
                     bus.emit('invalid-param-value', {
-                        parameter: parameterSpec.id
+                        parameter: parameterSpec.id,
                     });
                 }
             });

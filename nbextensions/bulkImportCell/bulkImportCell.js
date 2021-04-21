@@ -473,8 +473,8 @@ define([
         function updateParameterState(fileType, state) {
             model.setItem(['state', 'param', fileType], state);
             const newFileTypeState = {};
-            for (const [ fileId, state ] of Object.entries(model.getItem(['state', 'param']))) {
-                newFileTypeState[fileId] = state === 'complete'
+            for (const [fileId, state] of Object.entries(model.getItem(['state', 'param']))) {
+                newFileTypeState[fileId] = state === 'complete';
             }
             fileTypePanel.updateState({ completed: newFileTypeState });
             let cellReady = true;

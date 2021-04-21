@@ -494,18 +494,55 @@ define([
             }
         }
 
+        function fixApp(app) {
+            switch (app.tag) {
+                case 'release':
+                    return {
+                        id: app.id,
+                        tag: app.tag,
+                        version: app.version,
+                    };
+                case 'beta':
+                case 'dev':
+                    return {
+                        id: app.id,
+                        tag: app.tag,
+                        version: app.gitCommitHash,
+                    };
+                default:
+                    throw new Error('Invalid tag for app ' + app.id);
+            }
+        }
+
         function buildPythonCode() {
             const runId = new Uuid(4).format(),
                 cellId = Utils.getMeta(cell, 'attributes', 'id'),
-                fixedApp = fixApp(app);
-            const code = PythonInterop.buildBulkImportAppRunner(cellId, runId, );
+                appInfos = [],
+                inputs = model.getItem('inputs'),
+                params = model.getItem('params'),
+                appSpecs = model.getItem('app.specs');
+            /* appInfo should look like:
+             * [{
+             *   app_id: string,
+             *   version: string,
+             *   tag: string
+             *   params: [{ set of params for individual run }]
+             * }]
+             */
+            Object.keys(inputs).forEach((fileType) => {
+                const appSpecInfo = appSpecs[inputs[fileType].appId].full_info;
+                const appInfo = {
+                    app_id: appSpecInfo.id,
+                    tag: 'release',
+                    version: appSpecInfo.ver,
+                    params: params[fileType].filePaths.map((filePathParams) => {
+                        return Object.assign({}, filePathParams, params[fileType].params);
+                    })
+                };
+                appInfos.push(appInfo);
+            });
 
-            // if (model.getItem('user-settings.batchMode') && Config.get('features').batchAppMode) {
-            //     code = PythonInterop.buildBatchAppRunner(cellId, runId, fixedApp, [params]);
-            // } else {
-            //     code = PythonInterop.buildAppRunner(cellId, runId, fixedApp, params);
-            // }
-            // TODO: do something with the runId
+            const code = PythonInterop.buildBulkImportAppRunner(cellId, runId, appInfos);
             cell.set_text(code);
         }
 

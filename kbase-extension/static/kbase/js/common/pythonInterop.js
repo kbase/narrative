@@ -95,16 +95,15 @@ define([], () => {
     }
 
     function buildBatchAppRunner(cellId, runId, app, params) {
-        let paramSetName = 'batch_params',
+        const paramSetName = 'batch_params',
             pythonifiedParams = pythonifyValue(params, { autoIndent: true }),
-            positionalArgs = [pythonifyValue(app.id), paramSetName],
             namedArgs = objectToNamedArgs({
                 tag: app.tag,
                 version: app.version,
                 cell_id: cellId,
                 run_id: runId,
             });
-        positionalArgs = positionalArgs.concat(namedArgs);
+        const positionalArgs = [pythonifyValue(app.id), paramSetName].concat(namedArgs);
         return [
             paramSetName + ' = ' + pythonifiedParams,
             'from biokbase.narrative.jobs.appmanager import AppManager',
@@ -244,6 +243,17 @@ define([], () => {
         return pythonCode;
     }
 
+    function buildBulkImportAppRunner(cellId, runId, appInfo) {
+        const args = [pythonifyValue(appInfo), ...objectToNamedArgs({
+            cell_id: cellId,
+            run_id: runId
+        })];
+        return [
+            'from biokbase.narrative.jobs.appmanager import AppManager',
+            `AppManager().run_batch_apps(${buildNiceArgsList(args)})`
+        ].join('\n');
+    }
+
     return {
         objectToNamedArgs: objectToNamedArgs,
         pythonifyValue: pythonifyValue,
@@ -255,5 +265,6 @@ define([], () => {
         buildOutputRunner: buildOutputRunner,
         buildCustomWidgetRunner: buildCustomWidgetRunner,
         buildDataWidgetRunner: buildDataWidgetRunner,
+        buildBulkImportAppRunner
     };
 });

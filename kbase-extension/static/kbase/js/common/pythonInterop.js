@@ -244,13 +244,16 @@ define([], () => {
     }
 
     function buildBulkImportAppRunner(cellId, runId, appInfo) {
-        const args = [pythonifyValue(appInfo), ...objectToNamedArgs({
-            cell_id: cellId,
-            run_id: runId
-        })];
+        const args = [
+            pythonifyValue(appInfo),
+            ...objectToNamedArgs({
+                cell_id: cellId,
+                run_id: runId,
+            }),
+        ];
         return [
             'from biokbase.narrative.jobs.appmanager import AppManager',
-            `AppManager().run_batch_apps(${buildNiceArgsList(args)})`
+            `AppManager().run_batch_apps(${buildNiceArgsList(args)})`,
         ].join('\n');
     }
 
@@ -265,6 +268,6 @@ define([], () => {
         buildOutputRunner: buildOutputRunner,
         buildCustomWidgetRunner: buildCustomWidgetRunner,
         buildDataWidgetRunner: buildDataWidgetRunner,
-        buildBulkImportAppRunner
+        buildBulkImportAppRunner,
     };
 });

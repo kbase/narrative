@@ -488,8 +488,7 @@ define([
             }
             if (cellReady) {
                 buildPythonCode();
-            }
-            else {
+            } else {
                 clearPythonCode();
             }
         }
@@ -537,7 +536,7 @@ define([
                     version: appSpecInfo.ver,
                     params: params[fileType].filePaths.map((filePathParams) => {
                         return Object.assign({}, filePathParams, params[fileType].params);
-                    })
+                    }),
                 };
                 appInfos.push(appInfo);
             });

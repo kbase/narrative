@@ -470,15 +470,16 @@ define([
          * Update the internal readiness state for the app cell parameters. When all fileTypes have
          * a "complete" state, then they are all completely filled out and ready to run.
          * @param {string} fileType - which filetype's app state to update
-         * @param {string} state - what the new ready state should be - one of complete, incomplete, error
+         * @param {string} newState - what the new ready state should be - one of complete, incomplete, error
          */
-        function updateParameterState(fileType, state) {
-            model.setItem(['state', 'param', fileType], state);
+        function updateParameterState(fileType, newState) {
+            model.setItem(['state', 'param', fileType], newState);
             const newFileTypeState = {};
-            for (const [fileId, state] of Object.entries(model.getItem(['state', 'param']))) {
-                newFileTypeState[fileId] = state === 'complete';
+            for (const [fileId, fileState] of Object.entries(model.getItem(['state', 'param']))) {
+                newFileTypeState[fileId] = fileState === 'complete';
             }
-            fileTypePanel.updateState({ completed: newFileTypeState });
+
+            state.fileType.completed = newFileTypeState;
             let cellReady = true;
             for (const state of Object.values(model.getItem('state.param'))) {
                 if (state !== 'complete') {
@@ -486,30 +487,11 @@ define([
                     break;
                 }
             }
+            updateState();
             if (cellReady) {
                 buildPythonCode();
             } else {
                 clearPythonCode();
-            }
-        }
-
-        function fixApp(app) {
-            switch (app.tag) {
-                case 'release':
-                    return {
-                        id: app.id,
-                        tag: app.tag,
-                        version: app.version,
-                    };
-                case 'beta':
-                case 'dev':
-                    return {
-                        id: app.id,
-                        tag: app.tag,
-                        version: app.gitCommitHash,
-                    };
-                default:
-                    throw new Error('Invalid tag for app ' + app.id);
             }
         }
 

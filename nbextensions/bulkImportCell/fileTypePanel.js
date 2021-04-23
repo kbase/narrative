@@ -151,7 +151,9 @@ define(['bluebird', 'common/ui', 'common/html', 'common/events'], (Promise, UI, 
              * 3. put in the completion icon for each file type
              */
             Object.keys(fileTypes).forEach((key) => {
-                ui.getElement(key).classList.remove(selected);
+                if (state.selected in fileTypes) {
+                    ui.getElement(key).classList.remove(selected);
+                }
                 ui.getElement(`${key}.icon`).classList.remove(completeIcon, incompleteIcon);
                 const icon = state.completed[key] ? completeIcon : incompleteIcon;
                 ui.getElement(`${key}.icon`).classList.add(icon);

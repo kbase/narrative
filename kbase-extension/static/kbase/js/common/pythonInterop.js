@@ -271,11 +271,11 @@ define([], () => {
      * }, ...repeat the above]
      * Each app gets its own entry in the list, and each object in the params list
      * is an individual run of that app.
-     * @returns
+     * @returns string - the Python code to run
      */
     function buildBulkAppRunner(cellId, runId, appInfo) {
         const args = [
-            pythonifyValue(appInfo),
+            pythonifyValue(appInfo, {}, 1),
             ...objectToNamedArgs({
                 cell_id: cellId,
                 run_id: runId,

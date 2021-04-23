@@ -23,7 +23,7 @@ define(['common/pythonInterop'], (PythonInterop) => {
 
         it('build nice args list', () => {
             const args = ["foo", "bar", "baz=5"];
-            expect(PythonInterop.buildNiceArgsList(args)).toEqual('wat');
+            expect(PythonInterop.buildNiceArgsList(args)).toEqual('\n    foo,\n    bar,\n    baz=5\n');
         });
 
         it('Pythonify an undefined value fails properly', () => {

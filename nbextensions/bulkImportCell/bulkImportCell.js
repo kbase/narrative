@@ -55,12 +55,6 @@ define([
     const div = html.tag('div'),
         cssCellType = 'kb-bulk-import';
 
-    // TODO: remove once jobs are hooked up to cell
-    const testDataModel = Props.make({
-        data: TestAppObj,
-        onUpdate: () => {},
-    });
-
     function DefaultWidget() {
         function make() {
             function start() {
@@ -240,8 +234,17 @@ define([
         if (options.initialize) {
             initialize(options.specs);
         }
+
         const model = Props.make({
-                data: Utils.getMeta(cell, 'bulkImportCell'),
+                // TODO: Remove and replace with the commented-out line below
+                // once the backend is hooked up
+                data: Object.assign(
+                    {},
+                    Utils.getMeta(cell, 'bulkImportCell'),
+                    // execution data
+                    { exec: TestAppObj.exec }
+                ),
+                // data: Utils.getMeta(cell, 'bulkImportCell'),
                 onUpdate: function (props) {
                     Utils.setMeta(cell, 'bulkImportCell', props.getRawObject());
                 },
@@ -468,13 +471,13 @@ define([
          * Update the internal readiness state for the app cell parameters. When all fileTypes have
          * a "complete" state, then they are all completely filled out and ready to run.
          * @param {string} fileType - which filetype's app state to update
-         * @param {string} state - what the new ready state should be - one of complete, incomplete, error
+         * @param {string} newState - what the new ready state should be - one of complete, incomplete, error
          */
-        function updateParameterState(fileType, state) {
-            model.setItem(['state', 'param', fileType], state);
+        function updateParameterState(fileType, newState) {
+            model.setItem(['state', 'param', fileType], newState);
             let cellReady = true;
-            for (const state of Object.values(model.getItem('state.param'))) {
-                if (state !== 'complete') {
+            for (const _state of Object.values(model.getItem('state.param'))) {
+                if (_state !== 'complete') {
                     cellReady = false;
                     break;
                 }
@@ -484,12 +487,12 @@ define([
         }
 
         /**
-         * Update the execMessage panel with details of the active job
+         * Update the execMessage panel with details of the active jobs
          */
         function updateJobState() {
-            // TODO: this will need to be updated once the backend is in place
-            const jobState = testDataModel.getItem('exec.jobState');
-            controlPanel.setExecMessage(Jobs.createCombinedJobState(jobState));
+            controlPanel.setExecMessage(
+                Jobs.createCombinedJobState(model.getItem('exec.jobs.byStatus'))
+            );
         }
 
         /* JOB MANAGEMENT */
@@ -550,6 +553,7 @@ define([
             cancelJobsByStatus,
             retryJob,
             retryJobsByStatus,
+            updateJobState,
         };
 
         // add in an alias to switch to the results panel for the job status table
@@ -628,7 +632,7 @@ define([
             FSMBar.showFsmBar({
                 ui: ui,
                 state: {},
-                job: testDataModel.getItem('exec.jobState'),
+                indexedJobs: model.getItem('exec.jobs.byId'),
             });
         }
 
@@ -679,19 +683,14 @@ define([
          * @param {string} fileType
          */
         function runTab(tab, fileType) {
-            let tabModel = model;
-            // TODO: Remove once jobs and results are hooked up
-            if (tab === 'jobStatus' || tab === 'results') {
-                tabModel = testDataModel;
-            }
             tabWidget = tabSet.tabs[tab].widget.make({
                 bus: controllerBus,
                 cell,
-                jobManager,
-                model: tabModel,
-                spec: specs[typesToFiles[state.fileType.selected].appId],
                 fileType,
                 jobId: undefined,
+                jobManager,
+                model,
+                spec: specs[typesToFiles[state.fileType.selected].appId],
                 workspaceClient,
             });
 

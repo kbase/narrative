@@ -293,7 +293,9 @@ define([
             });
 
             JobsData.invalidJobs.forEach((state) => {
-                describe('should be determining the state with a dodgy job state', () => {
+                describe(`should be determining the state with dodgy state ${JSON.stringify(
+                    state
+                )}`, () => {
                     const jobId = 'dodgy_job_state_test';
                     beforeEach(async function () {
                         await this.jobLogViewerInstance.start({
@@ -345,10 +347,12 @@ define([
          * @returns {Promise} - resolves when there are job status line changes
          */
         function createStatusObserver(context, jobMessage) {
-            return new Promise((resolve) => {
-                const node = context.node.querySelector('[data-element="status-line"]');
-                const config = { childList: true };
-                const observer = new MutationObserver((mutations) => {
+            return TestUtil.waitFor({
+                documentElement: context.node.querySelector('[data-element="status-line"]'),
+                domStateFunction: (mutations) => {
+                    if (!mutations || !mutations.length) {
+                        return false;
+                    }
                     const result = mutations.some((mut) => {
                         return Array.from(mut.addedNodes).some((domEl) => {
                             return (
@@ -359,17 +363,14 @@ define([
                             );
                         });
                     });
-                    if (result) {
-                        observer.disconnect();
-                        resolve();
+                    return result ? true : false;
+                },
+                executeFirst: () => {
+                    if (jobMessage) {
+                        context.runtimeBus.send(...jobMessage);
                     }
-                });
-                observer.observe(node, config);
-
-                // send the job message
-                if (jobMessage) {
-                    context.runtimeBus.send(...jobMessage);
-                }
+                },
+                config: { childList: true },
             });
         }
 

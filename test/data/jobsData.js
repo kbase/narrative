@@ -39,6 +39,8 @@ define(['common/format'], (format) => {
             created: t.created,
             updated: t.created,
             meta: {
+                canCancel: true,
+                canRetry: false,
                 createJobStatusLines: {
                     line: jobStrings.queued,
                     history: [jobStrings.queued],
@@ -58,6 +60,8 @@ define(['common/format'], (format) => {
             created: t.created,
             updated: t.created,
             meta: {
+                canCancel: true,
+                canRetry: false,
                 createJobStatusLines: {
                     line: jobStrings.queued,
                     history: [jobStrings.queued],
@@ -78,6 +82,8 @@ define(['common/format'], (format) => {
             queued: t.queued,
             updated: 12345678910,
             meta: {
+                canCancel: true,
+                canRetry: false,
                 createJobStatusLines: {
                     line: jobStrings.queued,
                     history: [jobStrings.queued],
@@ -99,6 +105,8 @@ define(['common/format'], (format) => {
             queued: t.queued,
             updated: 12345678910,
             meta: {
+                canCancel: false,
+                canRetry: true,
                 createJobStatusLines: {
                     line: jobStrings.termination,
                     history: [jobStrings.queueHistoryNoRun, jobStrings.termination],
@@ -120,6 +128,8 @@ define(['common/format'], (format) => {
             running: t.running,
             updated: 12345678910,
             meta: {
+                canCancel: true,
+                canRetry: false,
                 createJobStatusLines: {
                     line: jobStrings.running,
                     history: [jobStrings.queueHistory, jobStrings.running],
@@ -142,6 +152,8 @@ define(['common/format'], (format) => {
             running: t.running,
             updated: 12345678910,
             meta: {
+                canCancel: false,
+                canRetry: true,
                 createJobStatusLines: {
                     line: jobStrings.termination,
                     history: [
@@ -174,6 +186,8 @@ define(['common/format'], (format) => {
             finished: t.finished,
             updated: 12345678910,
             meta: {
+                canCancel: false,
+                canRetry: true,
                 createJobStatusLines: {
                     line: jobStrings.error,
                     history: [jobStrings.queueHistoryNoRun, jobStrings.error],
@@ -205,6 +219,8 @@ define(['common/format'], (format) => {
             running: t.running,
             updated: 12345678910,
             meta: {
+                canCancel: false,
+                canRetry: true,
                 createJobStatusLines: {
                     line: jobStrings.error,
                     history: [jobStrings.queueHistory, jobStrings.runHistory, jobStrings.error],
@@ -229,6 +245,8 @@ define(['common/format'], (format) => {
             running: t.running,
             updated: 12345678910,
             meta: {
+                canCancel: false,
+                canRetry: false,
                 createJobStatusLines: {
                     line: jobStrings.success,
                     history: [jobStrings.queueHistory, jobStrings.runHistory, jobStrings.success],
@@ -258,11 +276,13 @@ define(['common/format'], (format) => {
         other: 'key',
         another: 'key',
         meta: {
+            canCancel: false,
+            canRetry: false,
             createJobStatusLines: {
                 line: jobStrings.not_found,
                 history: [jobStrings.not_found],
             },
-            jobAction: jobStrings.action.retry,
+            jobAction: null,
             jobLabel: 'not found',
             niceState: {
                 class: 'kb-job-status__summary--does_not_exist',
@@ -270,6 +290,8 @@ define(['common/format'], (format) => {
             },
         },
     };
+
+    const allJobs = [...validJobs, unknownJob];
 
     const invalidJobs = [
         1,
@@ -327,13 +349,28 @@ define(['common/format'], (format) => {
         { job_params: [{ this: 'that' }] },
     ];
 
+    const jobsByStatus = allJobs.reduce((acc, curr) => {
+        if (!acc[curr.status]) {
+            acc[curr.status] = [];
+        }
+        acc[curr.status].push(curr);
+        return acc;
+    }, {});
+
+    const jobsById = allJobs.reduce((acc, curr) => {
+        acc[curr.job_id] = curr;
+        return acc;
+    }, {});
+
     return {
-        validJobs: validJobs,
-        invalidJobs: invalidJobs,
-        unknownJob: unknownJob,
-        allJobs: [...validJobs, unknownJob],
-        jobStrings: jobStrings,
-        validInfo: validInfo,
-        invalidInfo: invalidInfo,
+        validJobs,
+        invalidJobs,
+        unknownJob,
+        allJobs,
+        jobsByStatus,
+        jobsById,
+        jobStrings,
+        validInfo,
+        invalidInfo,
     };
 });

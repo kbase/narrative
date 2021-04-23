@@ -70,7 +70,7 @@ define([
 
             // action
             const actionEl = row.querySelector(`.${cssBaseClass}__cell--action`);
-            expect(actionEl.textContent).toContain(input.meta.jobAction);
+            expect(actionEl.textContent).toEqual(input.meta.jobAction ? input.meta.jobAction : '');
 
             // status
             const statusEl = row.querySelector(`.${cssBaseClass}__cell--status`);
@@ -185,7 +185,7 @@ define([
         });
     });
 
-    JobsData.validJobs.forEach((job) => {
+    JobsData.allJobs.forEach((job) => {
         describe(`the job state list initial row structure and content for "${job.job_id}"`, () => {
             let container;
             beforeEach(async function () {
@@ -214,7 +214,7 @@ define([
             await startWithRandomJob(this, 'job update test');
         });
         itHasRowStructure();
-        JobsData.validJobs.forEach((state) => {
+        JobsData.allJobs.forEach((state) => {
             describe(`with a valid jobState object with status ${state.status}`, () => {
                 // wrap `updateState` in `beforeEach` to get the correct `this` context
                 beforeEach(function () {
@@ -250,7 +250,7 @@ define([
             await startWithRandomJob(this, 'invalid job update test');
         });
         itHasRowStructure();
-        JobsData.validJobs.forEach((state) => {
+        JobsData.allJobs.forEach((state) => {
             it('throws an error if the job ID does not match', function () {
                 this.input = state;
                 // toThrowError does not work here for unknown reasons
@@ -349,9 +349,7 @@ define([
 
     describe('the job action button', () => {
         beforeEach(async function () {
-            const completedJob = JobsData.validJobs.filter((job) => {
-                return job.status === 'completed';
-            })[0];
+            const completedJob = JobsData.jobsByStatus['completed'][0];
 
             this.jobId = 'job action button test';
             this.job = Object.assign({}, completedJob, { job_id: 'job action button test' });
@@ -374,22 +372,6 @@ define([
             expect(this.clickResult).toEqual('Click detected!');
         });
     });
-
-    function createMutationObserver(documentElement, elementStateFunction, doThisFirst) {
-        return new Promise((resolve) => {
-            if (elementStateFunction()) {
-                resolve();
-            }
-            const observer = new MutationObserver(() => {
-                if (elementStateFunction()) {
-                    observer.disconnect();
-                    resolve();
-                }
-            });
-            observer.observe(documentElement, { attributes: true, childList: true, subtree: true });
-            doThisFirst();
-        });
-    }
 
     describe('row selection', () => {
         let container;
@@ -453,7 +435,7 @@ define([
             const rows = container.querySelectorAll(`.${cssBaseClass}__row`);
 
             let $currentRow = $(rows[2]);
-            await createMutationObserver(
+            await TestUtil.waitForElementState(
                 container.querySelector('tbody'),
                 () => {
                     return container.querySelectorAll('.vertical_collapse--open').length === 1;
@@ -477,7 +459,7 @@ define([
 
             // click on another row
             $currentRow = $(rows[5]);
-            await createMutationObserver(
+            await TestUtil.waitForElementState(
                 container.querySelector('tbody'),
                 () => {
                     return container.querySelectorAll('.vertical_collapse--open').length === 2;
@@ -498,7 +480,7 @@ define([
             expect($nextRow.find('.kb-log__logs_title')[0].textContent).toContain('Logs');
 
             // click again to remove the row
-            await createMutationObserver(
+            await TestUtil.waitForElementState(
                 container.querySelector('tbody'),
                 () => {
                     return container.querySelectorAll('.vertical_collapse--open').length === 1;

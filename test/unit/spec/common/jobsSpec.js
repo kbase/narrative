@@ -6,12 +6,16 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
     }
 
     const jobsModuleExports = [
+        'canCancel',
+        'canRetry',
         'createCombinedJobState',
+        'createJobStatusFromFsm',
         'createJobStatusLines',
-        'isValidJobStatus',
+        'isTerminalStatus',
         'isValidJobStateObject',
         'isValidJobInfoObject',
         'jobAction',
+        'jobArrayToIndexedObject',
         'jobLabel',
         'jobNotFound',
         'jobStatusUnknown',
@@ -80,6 +84,16 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
         JobsData.invalidInfo.forEach((elem) => {
             it(`fails ${JSON.stringify(elem)}`, () => {
                 expect(Jobs.isValidJobInfoObject(elem)).toBeFalse();
+            });
+        });
+    });
+
+    ['canCancel', 'canRetry'].forEach((fn) => {
+        describe(`the ${fn} function`, () => {
+            JobsData.allJobs.forEach((jobState) => {
+                it(`should respond ${jobState.meta[fn]} for ${jobState.job_id}`, () => {
+                    expect(Jobs[fn](jobState)).toBe(jobState.meta[fn]);
+                });
             });
         });
     });
@@ -153,8 +167,8 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
 
     describe('jobAction', () => {
         badStates.forEach((item) => {
-            it(`should generate a retry action with the job state ${item}`, () => {
-                expect(Jobs.jobAction({ status: item })).toEqual(JobsData.jobStrings.action.retry);
+            it(`should generate no action with the job state ${item}`, () => {
+                expect(Jobs.jobAction({ status: item })).toEqual(null);
             });
         });
         JobsData.allJobs.forEach((state) => {
@@ -251,138 +265,117 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
     });
 
     describe('createCombinedJobState', () => {
-        it('creates a string for a cancelled job', () => {
-            const expected = Jobs.createCombinedJobState({
-                job_id: 'a job cancelled before its time',
-                status: 'terminated',
-                created: 1607109147000,
-                queued: 1607109147274,
-                running: 1607109162603,
-                updated: 1607109627760,
-                batch_size: JobsData.allJobs.length,
-                child_jobs: JobsData.allJobs,
-            });
-            expect(expected).toBe('batch job cancelled');
-        });
-
-        it('creates a string for a non-existent parent batch job', () => {
-            const expected = Jobs.createCombinedJobState({
-                job_id: 'a parent job that does not exist',
-                status: 'does_not_exist',
-                created: 1607109147000,
-                batch_size: JobsData.allJobs.length,
-                child_jobs: JobsData.allJobs,
-            });
-            expect(expected).toBe('batch job not found');
-        });
-
-        it('creates a string for a parent with no children', () => {
-            const expectedNoJobs = Jobs.createCombinedJobState({
-                job_id: 'child jobs do not exist',
-                status: 'created',
-                created: 1607109147000,
-            });
-            expect(expectedNoJobs).toBe('batch job not found');
-
-            const expectedEmptyJobs = Jobs.createCombinedJobState({
-                job_id: 'child jobs do not exist',
-                status: 'created',
-                created: 1607109147000,
-                batch_size: 0,
-                child_jobs: [],
-            });
-            expect(expectedEmptyJobs).toBe('batch job not found');
-        });
-
-        //
+        const batch = 'batch job';
         const tests = [
             {
                 desc: 'all jobs queued',
-                child_jobs: [jobsByStatus.created, jobsByStatus.estimating, jobsByStatus.queued],
-                expected: 'batch job in progress: 3 queued',
+                jobs: { created: { a: 1 }, estimating: { b: 1 }, queued: { c: 1 } },
+                expected: `${batch} in progress: 3 queued`,
             },
             {
                 desc: 'queued and running jobs',
-                child_jobs: [jobsByStatus.estimating, jobsByStatus.running],
-                expected: 'batch job in progress: 1 queued, 1 running',
+                jobs: { estimating: { a: 1 }, running: { a: 1 } },
+                expected: `${batch} in progress: 1 queued, 1 running`,
             },
             {
                 desc: 'all running',
-                child_jobs: [jobsByStatus.running],
-                expected: 'batch job in progress: 1 running',
+                jobs: { running: { a: 1 } },
+                expected: `${batch} in progress: 1 running`,
             },
             {
                 desc: 'all jobs',
-                child_jobs: JobsData.allJobs,
-                expected:
-                    'batch job in progress: 3 queued, 1 running, 1 success, 2 failed, 2 cancelled, 1 not found',
+                jobs: JobsData.jobsByStatus,
+                expected: `${batch} in progress: 3 queued, 1 running, 1 success, 2 failed, 2 cancelled, 1 not found`,
             },
             {
                 desc: 'in progress and finished',
-                child_jobs: [jobsByStatus.estimating, jobsByStatus.running, jobsByStatus.completed],
-                expected: 'batch job in progress: 1 queued, 1 running, 1 success',
+                jobs: { estimating: { a: 1 }, running: { b: 1 }, completed: { c: 1 } },
+                expected: `${batch} in progress: 1 queued, 1 running, 1 success`,
             },
             {
                 desc: 'all completed',
-                child_jobs: [
-                    jobsByStatus.completed,
-                    jobsByStatus.completed,
-                    jobsByStatus.completed,
-                ],
-                expected: 'batch job finished with success: 3 successes',
+                jobs: { completed: { a: 1, b: 1, c: 1 } },
+                expected: `${batch} finished with success: 3 successes`,
             },
             {
                 desc: 'all failed',
-                child_jobs: [jobsByStatus.error, jobsByStatus.error],
-                expected: 'batch job finished with error: 2 failed',
+                jobs: { error: { a: 1, b: 1 } },
+                expected: `${batch} finished with error: 2 failed`,
             },
             {
                 desc: 'all terminated',
-                child_jobs: [
-                    jobsByStatus.terminated,
-                    jobsByStatus.terminated,
-                    jobsByStatus.terminated,
-                ],
-                expected: 'batch job finished with cancellation: 3 cancelled',
+                jobs: { terminated: { a: 1, b: 1, c: 1 } },
+                expected: `${batch} finished with cancellation: 3 cancelled`,
             },
             {
                 desc: 'mix of finish states',
-                child_jobs: [
-                    jobsByStatus.terminated,
-                    jobsByStatus.error,
-                    jobsByStatus.completed,
-                    jobsByStatus.error,
-                    jobsByStatus.error,
-                ],
-                expected: 'batch job finished: 1 success, 3 failed, 1 cancelled',
+                jobs: { terminated: { a: 1 }, error: { a: 1, b: 1, c: 1 }, completed: { a: 1 } },
+                expected: `${batch} finished: 1 success, 3 failed, 1 cancelled`,
             },
             {
                 desc: 'in progress, finished, not found',
-                child_jobs: [
-                    jobsByStatus.estimating,
-                    jobsByStatus.running,
-                    jobsByStatus.completed,
-                    jobsByStatus.does_not_exist,
-                ],
-                expected: 'batch job in progress: 1 queued, 1 running, 1 success, 1 not found',
+                jobs: {
+                    estimating: { a: 1 },
+                    running: { b: 1 },
+                    completed: { c: 1 },
+                    does_not_exist: { d: 1 },
+                },
+                expected: `${batch} in progress: 1 queued, 1 running, 1 success, 1 not found`,
             },
             {
-                desc: 'child jobs do not exist',
-                child_jobs: [jobsByStatus.does_not_exist, jobsByStatus.does_not_exist],
-                expected: 'batch job finished with error: 2 not found',
+                desc: 'jobs do not exist',
+                jobs: { does_not_exist: { a: 1, b: 1 } },
+                expected: `${batch} finished with error: 2 not found`,
+            },
+            {
+                desc: 'no jobs',
+                jobs: {},
+                expected: '',
+            },
+            {
+                desc: 'nothing at all',
+                jobs: null,
+                expected: '',
             },
         ];
 
         tests.forEach((test) => {
             it(`summarises jobs: ${test.desc}`, () => {
                 const div = document.createElement('div');
-                div.innerHTML = Jobs.createCombinedJobState({
-                    status: 'created',
-                    job_id: test.desc,
-                    child_jobs: test.child_jobs,
-                });
+                div.innerHTML = Jobs.createCombinedJobState(test.jobs);
                 expect(div.textContent).toBe(test.expected);
+                if (test.expected.length) {
+                    expect(div.firstChild.title).toBe(test.expected);
+                } else {
+                    expect(div.childNodes.length).toBe(0);
+                }
             });
+        });
+    });
+
+    describe('jobArrayToIndexedObject', () => {
+        it('creates a model with jobs indexed by ID and by status', () => {
+            const model = Jobs.jobArrayToIndexedObject(JobsData.allJobs);
+            const idIndex = model.byId,
+                statusIndex = model.byStatus;
+
+            const jobStatuses = {};
+            expect(Object.keys(idIndex).sort()).toEqual(
+                JobsData.allJobs
+                    .map((jobState) => {
+                        jobStatuses[jobState.status] = 1;
+                        return jobState.job_id;
+                    })
+                    .sort()
+            );
+
+            expect(Object.keys(statusIndex).sort()).toEqual(Object.keys(jobStatuses).sort());
+        });
+
+        it('creates an empty model with an empty jobs array', () => {
+            const model = Jobs.jobArrayToIndexedObject([]);
+            expect(model.byId).toEqual({});
+            expect(model.byStatus).toEqual({});
         });
     });
 });

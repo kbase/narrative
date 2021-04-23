@@ -45,8 +45,12 @@ define([
 
         function _updateActionButton(jobStateObject) {
             const jobAction = Jobs.jobAction(jobStateObject);
-            const jsActionString = jobAction.replace(/ /g, '-');
             const actionNode = container.querySelector('[data-element="job-action"] button');
+            if (!jobAction) {
+                actionNode.remove();
+                return;
+            }
+            const jsActionString = jobAction.replace(/ /g, '-');
             actionNode.textContent = jobAction;
             actionNode.setAttribute('data-action', jsActionString);
             actionNode.classList = [`${cssBaseClass}__cell_action--${jsActionString}`];
@@ -203,12 +207,12 @@ define([
                 container = args.node;
                 ui = UI.make({ node: container });
                 container.innerHTML = buildRow(args.name);
-                _updateRowStatus(args.jobState);
-
                 container.onclick = async (e) => {
                     await showHideChildRow(e);
                 };
                 events.attachEvents(container);
+
+                _updateRowStatus(args.jobState);
             }).catch((err) => {
                 throw new Error(`Unable to start Job State List Row widget: ${err}`);
             });

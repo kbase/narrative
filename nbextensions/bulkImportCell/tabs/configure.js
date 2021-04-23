@@ -99,6 +99,7 @@ define([
             paramBus.on('sync-data-model', (message) => {
                 if (message.values) {
                     model.setItem(['params', fileType, FILE_PATH_TYPE], message.values);
+                    updateAppConfigState();
                 }
             });
 
@@ -248,6 +249,10 @@ define([
                 filePathIds = model.getItem(['app', 'fileParamIds', fileType]),
                 filePathValues = model.getItem(['params', fileType, FILE_PATH_TYPE]);
 
+            // must have at least one file row of file paths to be complete
+            if (filePathValues.length === 0) {
+                return Promise.resolve('incomplete');
+            }
             const filePathValidations = filePathValues.map((filePathRow) => {
                 return spec.validateParams(filePathIds, filePathRow);
             });

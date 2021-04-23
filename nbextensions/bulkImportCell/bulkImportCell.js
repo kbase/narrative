@@ -511,17 +511,19 @@ define([
         }
 
         /**
-         * Cancel all jobs with the specified status
+         * Cancel all jobs with the specified statuses
          *
-         * @param {string} status
+         * @param {array} statusList - array of statuses to cancel
          */
-        function cancelJobsByStatus(status) {
+        function cancelJobsByStatus(statusList) {
             const validStates = ['created', 'estimating', 'queued', 'running'];
-            if (!validStates.includes(status)) {
-                throw new Error(`${status} is not a valid job state`);
-            }
+            statusList.forEach((status) => {
+                if (!validStates.includes(status)) {
+                    throw new Error(`${status} is not a valid job state`);
+                }
+            });
             // TODO: implement
-            alert(`Cancel jobs with status ${status}`);
+            alert(`Cancel jobs with status ${statusList.join(', ')}`);
         }
 
         /**
@@ -535,17 +537,19 @@ define([
         }
 
         /**
-         * Retry all jobs that ended with the specified status
+         * Retry all jobs that ended with the specified status(es)
          *
-         * @param {string} status
+         * @param {array} statusList - array of statuses to retry
          */
-        function retryJobsByStatus(status) {
+        function retryJobsByStatus(statusList) {
             const validStates = ['error', 'terminated'];
-            if (!validStates.includes(status)) {
-                throw new Error(`${status} is not a valid job state`);
-            }
+            statusList.forEach((status) => {
+                if (!validStates.includes(status)) {
+                    throw new Error(`${status} is not a valid job state`);
+                }
+            });
             // TODO: implement
-            alert(`Retry jobs with status ${status}`);
+            alert(`Retry jobs with status ${statusList.join(', ')}`);
         }
 
         const jobManager = {

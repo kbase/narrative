@@ -487,7 +487,8 @@ define([
                     break;
                 }
             }
-            updateState();
+            const uiState = cellReady ? 'editingComplete' : 'editingIncomplete';
+            updateState(uiState);
             if (cellReady) {
                 buildPythonCode();
             } else {
@@ -666,8 +667,13 @@ define([
         /**
          * Passes the updated state to various widgets, and serialize it in
          * the cell metadata, where appropriate.
+         * @param {string} newUiState - change to a new UI state, if defined.
          */
-        function updateState() {
+        function updateState(newUiState) {
+            if (newUiState) {
+
+            }
+
             cellTabs.setState(state.tab);
             controlPanel.setActionState(state.action);
             fileTypePanel.updateState(state.fileType);

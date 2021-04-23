@@ -541,7 +541,7 @@ define([
                 appInfos.push(appInfo);
             });
 
-            const code = PythonInterop.buildBulkImportAppRunner(cellId, runId, appInfos);
+            const code = PythonInterop.buildBulkAppRunner(cellId, runId, appInfos);
             cell.set_text(code);
         }
 

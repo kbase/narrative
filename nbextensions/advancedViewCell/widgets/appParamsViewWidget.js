@@ -1,14 +1,12 @@
 define([
     'bluebird',
     'jquery',
-    // CDN
-    'kb_common/html',
-    // LOCAL
+    'common/html',
     'common/ui',
     'common/events',
     'common/props',
     // Wrapper for inputs
-    './inputWrapperWidget',
+    'common/cellComponents/inputWrapperWidget',
     'widgets/appWidgets2/fieldWidgetCompact',
     'widgets/appWidgets2/paramResolver',
 
@@ -26,8 +24,6 @@ define([
     FieldWidget,
     ParamResolver,
     Runtime
-
-    // Input widgets
 ) => {
     'use strict';
 
@@ -140,7 +136,7 @@ define([
                     key: {
                         type: 'get-param-state',
                     },
-                    handle: function (message) {
+                    handle: function () {
                         console.log('getting param state');
                         return parentBus.request(
                             { id: parameterSpec.id },
@@ -209,7 +205,6 @@ define([
 
         function renderAdvanced(area) {
             // area is either "input" or "parameter"
-
             const areaElement = area + '-area',
                 areaSelector = '[data-element="' + areaElement + '"]',
                 advancedInputs = container.querySelectorAll(
@@ -218,11 +213,8 @@ define([
 
             if (advancedInputs.length === 0) {
                 ui.setContent([areaElement, 'advanced-hidden-message'], '');
-                // ui.disableButton('toggle-advanced');
                 return;
             }
-
-            //            ui.enableButton('toggle-advanced');
 
             const removeClass = settings.showAdvanced
                     ? 'advanced-parameter-hidden'
@@ -240,24 +232,19 @@ define([
                     $(actualInput).trigger('advanced-shown.kbase');
                 }
             }
-            //
-            //            // How many advanaced?
-            //
-            //            // Also update the button
-            //            var button = container.querySelector('[data-button="toggle-advanced"]');
-            //            button.innerHTML = (settings.showAdvanced ? 'Hide Advanced' : 'Show Advanced (' + advancedInputs.length + ' hidden)');
 
             // Also update the count in the paramters.
             const events = Events.make({ node: container });
 
             let message;
+            let showAdvancedButton;
             if (settings.showAdvanced) {
                 if (advancedInputs.length > 1) {
                     message = String(advancedInputs.length) + ' advanced parameters showing';
                 } else {
                     message = String(advancedInputs.length) + ' advanced parameter showing';
                 }
-                var showAdvancedButton = ui.buildButton({
+                showAdvancedButton = ui.buildButton({
                     label: 'hide advanced',
                     type: 'link',
                     name: 'advanced-parameters-toggler',
@@ -277,7 +264,7 @@ define([
                 } else {
                     message = String(advancedInputs.length) + ' advanced parameter hidden';
                 }
-                var showAdvancedButton = ui.buildButton({
+                showAdvancedButton = ui.buildButton({
                     label: 'show advanced',
                     type: 'link',
                     name: 'advanced-parameters-toggler',
@@ -302,7 +289,6 @@ define([
                     ui.buildPanel({
                         type: 'default',
                         body: [
-                            // ui.makeButton('Show Advanced', 'toggle-advanced', {events: events}),
                             div(
                                 {
                                     class: 'btn-toolbar pull-right',
@@ -316,7 +302,6 @@ define([
                                         },
                                         label: 'Reset',
                                     }),
-                                    // ui.makeButton('Reset to Defaults', 'reset-to-defaults', {events: events})
                                 ]
                             ),
                         ],
@@ -334,7 +319,6 @@ define([
                         body: div({ dataElement: 'input-fields' }),
                         classes: ['kb-panel-light'],
                     }),
-                    // ui.makePanel('Input Objects', 'input-fields'),
                     ui.buildPanel({
                         title: span([
                             'Parameters',
@@ -353,7 +337,6 @@ define([
                         body: div({ dataElement: 'output-fields' }),
                         classes: ['kb-panel-light'],
                     }),
-                    // ui.makePanel('Output Report', 'output-report')
                 ]);
 
             return {
@@ -390,13 +373,6 @@ define([
                 });
             });
             bus.on('toggle-advanced', () => {
-                // we can just do that here? Or defer to the inputs?
-                // I don't know ...
-                //inputBusses.forEach(function (bus) {
-                //    bus.send({
-                //        type: 'toggle-advanced'
-                //    });
-                //});
                 settings.showAdvanced = !settings.showAdvanced;
                 renderAdvanced('input-objects');
                 renderAdvanced('parameters');
@@ -406,25 +382,6 @@ define([
                 widgets.forEach((widget) => {
                     widget.bus.emit('workspace-changed');
                 });
-            });
-        }
-
-        // Maybe
-        function validateParameterSpec(spec) {
-            // ensure that inputs are consistent with inputs
-
-            // and outputs with output
-
-            // and params with param
-
-            // validate type
-
-            return spec;
-        }
-
-        function validateParameterSpecs(params) {
-            return params.map((spec) => {
-                return validateParameterSpec(spec);
             });
         }
 
@@ -503,8 +460,7 @@ define([
                 // based on the param ordering (layout), render the html layout,
                 // with an id mapped per parameter in this set
 
-                return (
-                    Promise.resolve()
+                return Promise.resolve()
                         .then(() => {
                             if (inputParams.layout.length === 0) {
                                 places.inputFields.innerHTML = span(
@@ -623,27 +579,10 @@ define([
                                 );
                             }
                         })
-                        // .then(function () {
-                        //     console.log('advance-ing...');
-                        //     return Promise.all(widgets.map(function (widget) {
-                        //         return widget.widget.start()
-                        //             .catch(function (err) {
-                        //                 console.error('error', err, widget);
-                        //                 throw err;
-                        //             })
-                        //     }));
-                        // })
-                        // .then(function () {
-                        //     console.log('advance-ing2...');
-                        //     return Promise.all(widgets.map(function (widget) {
-                        //         return widget.widget.run(params);
-                        //     }));
-                        // })
                         .then(() => {
                             renderAdvanced('input-objects');
                             renderAdvanced('parameters');
-                        })
-                );
+                        });
             });
         }
 
@@ -683,7 +622,6 @@ define([
                                 parameter: message.parameter,
                             },
                         });
-                        // bus.emit('parameter-changed', message);
                     });
                 });
             });

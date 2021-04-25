@@ -8,7 +8,7 @@ define([
     'util/icon',
     'common/jupyter',
     'common/error',
-    './widgets/appInfoDialog',
+    'common/cellComponents/appInfoDialog',
     './widgets/appCellWidget',
     'common/spec',
 ], (

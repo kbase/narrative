@@ -1,13 +1,12 @@
 define([
     'bluebird',
-    // CDN
-    'kb_common/html',
     // LOCAL
+    'common/html',
     'common/ui',
     'common/events',
     'common/props',
     // Wrapper for inputs
-    './inputWrapperWidget',
+    'common/cellComponents/inputWrapperWidget',
     'widgets/appWidgets2/fieldWidget',
     'widgets/appWidgets2/paramResolver',
     'common/runtime',

@@ -44,21 +44,18 @@ define([
                     div({ class: 'header' }, 'Information'),
                     div([
                         'Author',
-                        data.authors.length > 1 ? 's' : '',
+                        data.authors.length === 1 ? '' : 's',
                         ': ',
-                        span(
-                            { class: 'value' },
-                            (function () {
-                                if (data.authors.length === 1) {
-                                    return data.authors[0];
-                                }
-                                return ul(data.authors.map(li));
-                            })()
-                        ),
+                        data.authors.length > 1
+                        ? ul({
+                            class: 'value'
+                        }, data.authors.map((auth) => {
+                            return li(auth)
+                        }))
+                        :   span({
+                            class: 'value'
+                        },  data.authors[0] || 'No authors listed')
                     ]),
-                    //div([
-                    //    'ID: ', span({class: 'value'}, data.id)
-                    //]),
                     div(['Tag: ', span({ class: 'value' }, data.tag)]),
                     div(['Version: ', span({ class: 'value' }, data.version)]),
                     div(['Updated: ', span({ class: 'value' }, data.updateDate)]),
@@ -116,10 +113,8 @@ define([
                 });
             })
             .then((result) => {
-                switch (result.action) {
-                    case 'link':
-                        window.open(result.result.url, result.result.name);
-                        break;
+                if (result.action === 'link') {
+                    window.open(result.result.url, result.result.name);
                 }
             })
             .catch((err) => {

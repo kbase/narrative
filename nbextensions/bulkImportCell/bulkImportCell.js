@@ -772,15 +772,19 @@ define([
                     updateState('launching');
                     break;
                 case 'cancel':
+                    // TODO implement
                     alert('canceling run');
                     break;
                 case 'reRunApp':
+                    // TODO implement
                     alert('re-running app');
                     break;
                 case 'resetApp':
+                    // TODO implement
                     alert('resetting app');
                     break;
                 case 'offline':
+                    // TODO implement / test better
                     alert('currently disconnected from the server');
                     break;
                 default:

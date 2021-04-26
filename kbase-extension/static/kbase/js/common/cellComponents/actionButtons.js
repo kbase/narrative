@@ -67,7 +67,7 @@ define(['common/html'], (html) => {
                 });
             });
             bus.on('actionButton', (message) => {
-                const action = message.data;
+                const action = message.data.action;
                 runAction(action);
             });
 

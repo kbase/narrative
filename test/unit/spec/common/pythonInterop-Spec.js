@@ -21,13 +21,6 @@ define(['common/pythonInterop'], (PythonInterop) => {
             });
         });
 
-        it('build nice args list', () => {
-            const args = ['foo', 'bar', 'baz=5'];
-            expect(PythonInterop.buildNiceArgsList(args)).toEqual(
-                '\n    foo,\n    bar,\n    baz=5\n'
-            );
-        });
-
         it('Pythonify an undefined value fails properly', () => {
             let foo;
             expect(() => {
@@ -190,6 +183,67 @@ define(['common/pythonInterop'], (PythonInterop) => {
                     '    run_id="my_run_id"\n' +
                     ')';
             expect(PythonInterop.buildAppRunner(cellId, runId, app, params)).toEqual(code);
+        });
+
+        it('Builds bulk app runner', () => {
+            const cellId = 'some_cell',
+                runId = 'some_app_run',
+                appInfo = [
+                    {
+                        app_id: 'some_module/some_app',
+                        tag: 'release',
+                        version: '1.0.0',
+                        params: [
+                            {
+                                p1: 'v1',
+                                p2: 'v2',
+                            },
+                            {
+                                p1: 'v3',
+                                p2: 'v4',
+                            },
+                        ],
+                    },
+                    {
+                        app_id: 'some_other_module/some_other_app',
+                        tag: 'release',
+                        version: '1.1.1',
+                        params: [
+                            {
+                                p3: 'v5',
+                                p4: 'v6',
+                            },
+                        ],
+                    },
+                ],
+                expectedCode = [
+                    'from biokbase.narrative.jobs.appmanager import AppManager',
+                    'AppManager().run_app_bulk(',
+                    '    [{',
+                    '        "app_id": "some_module/some_app",',
+                    '        "tag": "release",',
+                    '        "version": "1.0.0",',
+                    '        "params": [{',
+                    '            "p1": "v1",',
+                    '            "p2": "v2"',
+                    '        }, {',
+                    '            "p1": "v3",',
+                    '            "p2": "v4"',
+                    '        }]',
+                    '    }, {',
+                    '        "app_id": "some_other_module/some_other_app",',
+                    '        "tag": "release",',
+                    '        "version": "1.1.1",',
+                    '        "params": [{',
+                    '            "p3": "v5",',
+                    '            "p4": "v6"',
+                    '        }]',
+                    '    }],',
+                    `    cell_id="${cellId}",`,
+                    `    run_id="${runId}"`,
+                    ')',
+                ].join('\n');
+            expect(PythonInterop.buildBulkAppRunner(cellId, runId, appInfo)).toEqual(expectedCode);
         });
     });
 });

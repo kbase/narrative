@@ -299,6 +299,5 @@ define([], () => {
         buildCustomWidgetRunner,
         buildDataWidgetRunner,
         buildBulkAppRunner,
-        buildNiceArgsList,
     };
 });

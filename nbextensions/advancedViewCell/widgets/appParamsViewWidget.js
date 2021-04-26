@@ -461,128 +461,128 @@ define([
                 // with an id mapped per parameter in this set
 
                 return Promise.resolve()
-                        .then(() => {
-                            if (inputParams.layout.length === 0) {
-                                places.inputFields.innerHTML = span(
-                                    { style: { fontStyle: 'italic' } },
-                                    'This app does not have input objects'
-                                );
-                            } else {
-                                places.inputFields.innerHTML = inputParams.content;
-                                return Promise.all(
-                                    inputParams.layout.map((parameterId) => {
-                                        const spec = inputParams.paramMap[parameterId];
-                                        try {
-                                            return makeFieldWidget(
-                                                appSpec,
-                                                spec,
-                                                model.getItem(['params', spec.id])
-                                            ).then((widget) => {
-                                                widgets.push(widget);
+                    .then(() => {
+                        if (inputParams.layout.length === 0) {
+                            places.inputFields.innerHTML = span(
+                                { style: { fontStyle: 'italic' } },
+                                'This app does not have input objects'
+                            );
+                        } else {
+                            places.inputFields.innerHTML = inputParams.content;
+                            return Promise.all(
+                                inputParams.layout.map((parameterId) => {
+                                    const spec = inputParams.paramMap[parameterId];
+                                    try {
+                                        return makeFieldWidget(
+                                            appSpec,
+                                            spec,
+                                            model.getItem(['params', spec.id])
+                                        ).then((widget) => {
+                                            widgets.push(widget);
 
-                                                return widget.start({
-                                                    node: document.getElementById(
-                                                        inputParams.view[parameterId].id
-                                                    ),
-                                                });
+                                            return widget.start({
+                                                node: document.getElementById(
+                                                    inputParams.view[parameterId].id
+                                                ),
                                             });
-                                        } catch (ex) {
-                                            console.error('Error making input field widget', ex);
-                                            const errorDisplay = div(
-                                                { style: { border: '1px solid red' } },
-                                                [ex.message]
-                                            );
-                                            document.getElementById(
-                                                inputParams.view[parameterId].id
-                                            ).innerHTML = errorDisplay;
-                                        }
-                                    })
-                                );
-                            }
-                        })
-                        .then(() => {
-                            if (outputParams.layout.length === 0) {
-                                places.outputFields.innerHTML = span(
-                                    { style: { fontStyle: 'italic' } },
-                                    'This app does not create any named output objects'
-                                );
-                            } else {
-                                places.outputFields.innerHTML = outputParams.content;
-                                return Promise.all(
-                                    outputParams.layout.map((parameterId) => {
-                                        const spec = outputParams.paramMap[parameterId];
-                                        try {
-                                            return makeFieldWidget(
-                                                appSpec,
-                                                spec,
-                                                model.getItem(['params', spec.id])
-                                            ).then((widget) => {
-                                                widgets.push(widget);
+                                        });
+                                    } catch (ex) {
+                                        console.error('Error making input field widget', ex);
+                                        const errorDisplay = div(
+                                            { style: { border: '1px solid red' } },
+                                            [ex.message]
+                                        );
+                                        document.getElementById(
+                                            inputParams.view[parameterId].id
+                                        ).innerHTML = errorDisplay;
+                                    }
+                                })
+                            );
+                        }
+                    })
+                    .then(() => {
+                        if (outputParams.layout.length === 0) {
+                            places.outputFields.innerHTML = span(
+                                { style: { fontStyle: 'italic' } },
+                                'This app does not create any named output objects'
+                            );
+                        } else {
+                            places.outputFields.innerHTML = outputParams.content;
+                            return Promise.all(
+                                outputParams.layout.map((parameterId) => {
+                                    const spec = outputParams.paramMap[parameterId];
+                                    try {
+                                        return makeFieldWidget(
+                                            appSpec,
+                                            spec,
+                                            model.getItem(['params', spec.id])
+                                        ).then((widget) => {
+                                            widgets.push(widget);
 
-                                                return widget.start({
-                                                    node: document.getElementById(
-                                                        outputParams.view[parameterId].id
-                                                    ),
-                                                });
+                                            return widget.start({
+                                                node: document.getElementById(
+                                                    outputParams.view[parameterId].id
+                                                ),
                                             });
-                                        } catch (ex) {
-                                            console.error('Error making input field widget', ex);
-                                            const errorDisplay = div(
-                                                { style: { border: '1px solid red' } },
-                                                [ex.message]
-                                            );
-                                            document.getElementById(
-                                                outputParams.view[parameterId].id
-                                            ).innerHTML = errorDisplay;
-                                        }
-                                    })
-                                );
-                            }
-                        })
-                        .then(() => {
-                            if (parameterParams.layout.length === 0) {
-                                // TODO: should be own node
-                                places.parameterFields.innerHTML = span(
-                                    { style: { fontStyle: 'italic' } },
-                                    'No parameters for this app'
-                                );
-                            } else {
-                                places.parameterFields.innerHTML = parameterParams.content;
-                                return Promise.all(
-                                    parameterParams.layout.map((parameterId) => {
-                                        const spec = parameterParams.paramMap[parameterId];
-                                        try {
-                                            return makeFieldWidget(
-                                                appSpec,
-                                                spec,
-                                                model.getItem(['params', spec.id])
-                                            ).then((widget) => {
-                                                widgets.push(widget);
+                                        });
+                                    } catch (ex) {
+                                        console.error('Error making input field widget', ex);
+                                        const errorDisplay = div(
+                                            { style: { border: '1px solid red' } },
+                                            [ex.message]
+                                        );
+                                        document.getElementById(
+                                            outputParams.view[parameterId].id
+                                        ).innerHTML = errorDisplay;
+                                    }
+                                })
+                            );
+                        }
+                    })
+                    .then(() => {
+                        if (parameterParams.layout.length === 0) {
+                            // TODO: should be own node
+                            places.parameterFields.innerHTML = span(
+                                { style: { fontStyle: 'italic' } },
+                                'No parameters for this app'
+                            );
+                        } else {
+                            places.parameterFields.innerHTML = parameterParams.content;
+                            return Promise.all(
+                                parameterParams.layout.map((parameterId) => {
+                                    const spec = parameterParams.paramMap[parameterId];
+                                    try {
+                                        return makeFieldWidget(
+                                            appSpec,
+                                            spec,
+                                            model.getItem(['params', spec.id])
+                                        ).then((widget) => {
+                                            widgets.push(widget);
 
-                                                return widget.start({
-                                                    node: document.getElementById(
-                                                        parameterParams.view[spec.id].id
-                                                    ),
-                                                });
+                                            return widget.start({
+                                                node: document.getElementById(
+                                                    parameterParams.view[spec.id].id
+                                                ),
                                             });
-                                        } catch (ex) {
-                                            console.error('Error making input field widget', ex);
-                                            const errorDisplay = div(
-                                                { style: { border: '1px solid red' } },
-                                                [ex.message]
-                                            );
-                                            document.getElementById(
-                                                parameterParams.view[spec.id].id
-                                            ).innerHTML = errorDisplay;
-                                        }
-                                    })
-                                );
-                            }
-                        })
-                        .then(() => {
-                            renderAdvanced('input-objects');
-                            renderAdvanced('parameters');
-                        });
+                                        });
+                                    } catch (ex) {
+                                        console.error('Error making input field widget', ex);
+                                        const errorDisplay = div(
+                                            { style: { border: '1px solid red' } },
+                                            [ex.message]
+                                        );
+                                        document.getElementById(
+                                            parameterParams.view[spec.id].id
+                                        ).innerHTML = errorDisplay;
+                                    }
+                                })
+                            );
+                        }
+                    })
+                    .then(() => {
+                        renderAdvanced('input-objects');
+                        renderAdvanced('parameters');
+                    });
             });
         }
 

@@ -47,14 +47,20 @@ define([
                         data.authors.length === 1 ? '' : 's',
                         ': ',
                         data.authors.length > 1
-                        ? ul({
-                            class: 'value'
-                        }, data.authors.map((auth) => {
-                            return li(auth)
-                        }))
-                        :   span({
-                            class: 'value'
-                        },  data.authors[0] || 'No authors listed')
+                            ? ul(
+                                  {
+                                      class: 'value',
+                                  },
+                                  data.authors.map((auth) => {
+                                      return li(auth);
+                                  })
+                              )
+                            : span(
+                                  {
+                                      class: 'value',
+                                  },
+                                  data.authors[0] || 'No authors listed'
+                              ),
                     ]),
                     div(['Tag: ', span({ class: 'value' }, data.tag)]),
                     div(['Version: ', span({ class: 'value' }, data.version)]),

@@ -1,11 +1,10 @@
-define(['kb_common/html'], (html) => {
+define(['common/html'], (html) => {
     'use strict';
     const t = html.tag,
         div = t('div');
-
     function factory(config) {
-        let container,
-            wrappedWidget = config.widget,
+        let container;
+        const wrappedWidget = config.widget,
             wrappedId = html.genId();
 
         function layout() {
@@ -20,13 +19,11 @@ define(['kb_common/html'], (html) => {
             container.classList.add('container-fluid');
             return wrappedWidget.attach(container.querySelector('#' + wrappedId));
         }
-
         function start() {
             if (wrappedWidget.start) {
                 return wrappedWidget.start();
             }
         }
-
         function run(input) {
             if (wrappedWidget.run) {
                 return wrappedWidget.run(input);

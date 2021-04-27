@@ -1,14 +1,14 @@
 define([
     'jquery',
     'bluebird',
-    'common/events',
     'common/html',
     'common/jobs',
     'common/runtime',
     './jobStateListRow',
+    './jobActionDropdown',
     'util/developerMode',
     'jquery-dataTables',
-], ($, Promise, Events, html, Jobs, Runtime, JobStateListRow, devMode) => {
+], ($, Promise, html, Jobs, Runtime, JobStateListRow, JobActionDropdown, devMode) => {
     'use strict';
 
     const t = html.tag,
@@ -17,10 +17,6 @@ define([
         tr = t('tr'),
         th = t('th'),
         tbody = t('tbody'),
-        span = t('span'),
-        button = t('button'),
-        ul = t('ul'),
-        li = t('li'),
         div = t('div'),
         dataTablePageLength = 50,
         cssBaseClass = 'kb-job-status';
@@ -132,29 +128,7 @@ define([
             throw new Error('Cannot start JobStateList without a jobs object in the config');
         }
 
-        let container, tableBody;
-
-        /**
-         * Kick off a batch job action
-         *
-         * @param {event} e - event
-         *
-         * The target element's "data-" properties encode the action to be performed:
-         *
-         * - data-action - either "cancel" or "retry"
-         * - data-target - the job status of the jobs to perform the action on
-         */
-
-        function doBatchJobAction(e) {
-            const el = e.target;
-            const action = el.getAttribute('data-action'),
-                target = el.getAttribute('data-target');
-
-            // valid actions: cancel or retry
-            if (['cancel', 'retry'].includes(action)) {
-                jobManager[`${action}JobsByStatus`](target);
-            }
-        }
+        let container, tableBody, dropdownWidget;
 
         /**
          * Execute an action for a single job
@@ -179,88 +153,6 @@ define([
                 }
                 return jobManager[`${action}Job`](target);
             }
-        }
-
-        function createActionsDropdown(events) {
-            // each button has an action, either 'cancel' or 'retry',
-            // and a target, which refers to the status of the jobs
-            // that the action will be performed upon.
-
-            const actionArr = [
-                {
-                    label: 'Cancel queued jobs',
-                    action: 'cancel',
-                    target: 'queued',
-                },
-                {
-                    label: 'Cancel running jobs',
-                    action: 'cancel',
-                    target: 'running',
-                },
-                {
-                    label: 'Retry cancelled jobs',
-                    action: 'retry',
-                    target: 'terminated',
-                },
-                {
-                    label: 'Retry failed jobs',
-                    action: 'retry',
-                    target: 'error',
-                },
-            ];
-            const uniqueId = html.genId();
-            return div(
-                {
-                    class: `${cssBaseClass}__dropdown dropdown`,
-                },
-                [
-                    button(
-                        {
-                            id: uniqueId,
-                            type: 'button',
-                            dataToggle: 'dropdown',
-                            ariaHaspopup: true,
-                            ariaExpanded: false,
-                            ariaLabel: 'Job options',
-                            class: `btn btn-default ${cssBaseClass}__dropdown_header`,
-                        },
-                        [
-                            'Cancel / retry all',
-                            span({
-                                class: `fa fa-caret-down kb-pointer ${cssBaseClass}__icon`,
-                            }),
-                        ]
-                    ),
-                    ul(
-                        {
-                            class: `${cssBaseClass}__dropdown-menu dropdown-menu`,
-                            ariaLabelledby: uniqueId,
-                        },
-                        actionArr.map((actionObj) => {
-                            return li(
-                                {
-                                    class: `${cssBaseClass}__dropdown-menu-item`,
-                                },
-                                button(
-                                    {
-                                        class: `${cssBaseClass}__dropdown-menu-item-link--${actionObj.action}`,
-                                        type: 'button',
-                                        title: actionObj.label,
-                                        dataElement: `${actionObj.action}-${actionObj.target}`,
-                                        id: events.addEvent({
-                                            type: 'click',
-                                            handler: doBatchJobAction,
-                                        }),
-                                        dataAction: actionObj.action,
-                                        dataTarget: actionObj.target,
-                                    },
-                                    actionObj.label
-                                )
-                            );
-                        })
-                    ),
-                ]
-            );
         }
 
         function startParamsListener(jobId) {
@@ -369,6 +261,7 @@ define([
                 // update the row widget
                 widgetsById[jobId].updateState(jobState);
             }
+            dropdownWidget.updateState();
             jobManager.updateJobState();
         }
 
@@ -410,17 +303,11 @@ define([
                 throw new Error('Must provide at least one job to show the job state list');
             }
 
-            const events = Events.make({ node: args.node });
             container = args.node;
-            const actionDropdown = createActionsDropdown(events);
-
             container.innerHTML = [
-                div(
-                    {
-                        class: `${cssBaseClass}__dropdown_container`,
-                    },
-                    actionDropdown
-                ),
+                div({
+                    class: `${cssBaseClass}__dropdown_container`,
+                }),
                 createTable(),
             ].join('\n');
 
@@ -431,20 +318,27 @@ define([
                 jobs.map((jobState, index) => {
                     createJobStateListRowWidget(jobState, index);
                 })
-            ).then(() => {
-                renderTable($(container), jobs.length);
-                events.attachEvents();
+            )
+                .then(() => {
+                    // start the dropdown widget
+                    dropdownWidget = JobActionDropdown.make(config);
+                    return dropdownWidget.start({
+                        node: container.querySelector(`.${cssBaseClass}__dropdown_container`),
+                    });
+                })
+                .then(() => {
+                    renderTable($(container), jobs.length);
 
-                jobs.forEach((jobState) => {
-                    startStatusListener(jobState.job_id);
-                    startJobDoesNotExistListener(jobState.job_id);
-                    // populate the job params
-                    startParamsListener(jobState.job_id);
-                    bus.emit('request-job-info', {
-                        jobId: jobState.job_id,
+                    jobs.forEach((jobState) => {
+                        startStatusListener(jobState.job_id);
+                        startJobDoesNotExistListener(jobState.job_id);
+                        // populate the job params
+                        startParamsListener(jobState.job_id);
+                        bus.emit('request-job-info', {
+                            jobId: jobState.job_id,
+                        });
                     });
                 });
-            });
         }
 
         function stop() {
@@ -453,6 +347,7 @@ define([
                 Object.keys(listeners).forEach((key) => {
                     delete listeners[key];
                 });
+                dropdownWidget.stop();
             });
         }
 

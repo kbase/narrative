@@ -228,7 +228,7 @@ define([
                         const argCombos = Array.from(dropdownButtons).map((button) => {
                             return [
                                 button.getAttribute('data-action'),
-                                button.getAttribute('data-target'),
+                                button.getAttribute('data-target').split('||'),
                             ];
                         });
                         argCombos.forEach((args) => {

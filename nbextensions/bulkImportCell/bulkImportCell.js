@@ -862,7 +862,7 @@ define([
             FSMBar.showFsmBar({
                 ui: ui,
                 state: {},
-                job: testDataModel.getItem('exec.jobState'),
+                job: model.getItem('exec.jobState'),
             });
         }
 

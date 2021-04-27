@@ -11,6 +11,7 @@ define([
     'common/spec',
     'common/ui',
     'common/utils',
+    'common/pythonInterop',
     'base/js/namespace',
     'kb_service/client/workspace',
     './fileTypePanel',
@@ -36,6 +37,7 @@ define([
     Spec,
     UI,
     Utils,
+    PythonInterop,
     Jupyter,
     Workspace,
     FileTypePanel,
@@ -141,32 +143,8 @@ define([
             busEventManager = BusEventManager.make({
                 bus: runtime.bus(),
             }),
-            typesToFiles = setupFileData(options.importData);
-
-        /**
-         * If importData exists, and has the right structure, use it.
-         * //TODO decide on right structure, should we test for knowledge about each file type?
-         * If not, and there's input data in the metadata, use that.
-         * If not, and there's nothing? throw an error.
-         * @param {object} importData
-         */
-        function setupFileData(importData) {
-            if (importData && Object.keys(importData).length) {
-                return importData;
-            }
-            const metaInputs = Utils.getCellMeta(cell, 'kbase.bulkImportCell.inputs');
-            if (metaInputs && Object.keys(metaInputs).length) {
-                return metaInputs;
-            }
-            throw new Error('No files were selected to upload!');
-        }
-
-        let kbaseNode = null, // the DOM element used as the container for everything in this cell
-            cellBus = null, // the parent cell bus that gets external messages
-            controllerBus = null, // the main bus for this cell and its children
-            ui = null,
-            tabWidget = null; // the widget currently in view
-        const workspaceClient = getWorkspaceClient(),
+            typesToFiles = setupFileData(options.importData),
+            workspaceClient = getWorkspaceClient(),
             tabSet = {
                 selected: 'configure',
                 tabs: {
@@ -235,8 +213,15 @@ define([
                     },
                 },
             };
+        let readOnly = false,
+            kbaseNode = null, // the DOM element used as the container for everything in this cell
+            cellBus = null, // the parent cell bus that gets external messages
+            controllerBus = null, // the main bus for this cell and its children
+            ui = null,
+            tabWidget = null; // the widget currently in view
         // widgets this cell owns
         let cellTabs, controlPanel, fileTypePanel;
+
         if (options.initialize) {
             initialize(options.specs);
         }
@@ -246,9 +231,10 @@ define([
                     Utils.setMeta(cell, 'bulkImportCell', props.getRawObject());
                 },
             }),
-            state = getInitialState(),
             // These are the processed Spec object with proper layout order, etc.
             specs = {};
+        // gets updated in total later by updateState
+        let state = getInitialState();
 
         for (const [appId, appSpec] of Object.entries(model.getItem('app.specs'))) {
             specs[appId] = Spec.make({
@@ -257,6 +243,24 @@ define([
         }
 
         setupCell();
+
+        /**
+         * If importData exists, and has the right structure, use it.
+         * //TODO decide on right structure, should we test for knowledge about each file type?
+         * If not, and there's input data in the metadata, use that.
+         * If not, and there's nothing? throw an error.
+         * @param {object} importData
+         */
+        function setupFileData(importData) {
+            if (importData && Object.keys(importData).length) {
+                return importData;
+            }
+            const metaInputs = Utils.getCellMeta(cell, 'kbase.bulkImportCell.inputs');
+            if (metaInputs && Object.keys(metaInputs).length) {
+                return metaInputs;
+            }
+            throw new Error('No files were selected to upload!');
+        }
 
         /**
          * Filters the app spec's parameters into two separate arrays and return them
@@ -468,15 +472,16 @@ define([
          * Update the internal readiness state for the app cell parameters. When all fileTypes have
          * a "complete" state, then they are all completely filled out and ready to run.
          * @param {string} fileType - which filetype's app state to update
-         * @param {string} state - what the new ready state should be - one of complete, incomplete, error
+         * @param {string} newState - what the new ready state should be - one of complete, incomplete, error
          */
-        function updateParameterState(fileType, state) {
-            model.setItem(['state', 'param', fileType], state);
+        function updateParameterState(fileType, newState) {
+            model.setItem(['state', 'param', fileType], newState);
             const newFileTypeState = {};
-            for (const [fileId, state] of Object.entries(model.getItem(['state', 'param']))) {
-                newFileTypeState[fileId] = state === 'complete';
+            for (const [fileId, fileState] of Object.entries(model.getItem(['state', 'param']))) {
+                newFileTypeState[fileId] = fileState === 'complete';
             }
-            fileTypePanel.updateState({ completed: newFileTypeState });
+
+            state.fileType.completed = newFileTypeState;
             let cellReady = true;
             for (const state of Object.values(model.getItem('state.param'))) {
                 if (state !== 'complete') {
@@ -484,9 +489,49 @@ define([
                     break;
                 }
             }
+            const uiState = cellReady ? 'editingComplete' : 'editingIncomplete';
+            updateState(uiState);
             if (cellReady) {
-                console.log('cell ready!');
+                buildPythonCode();
+            } else {
+                clearPythonCode();
             }
+        }
+
+        function buildPythonCode() {
+            const runId = new Uuid(4).format(),
+                cellId = Utils.getMeta(cell, 'attributes', 'id'),
+                appInfos = [],
+                inputs = model.getItem('inputs'),
+                params = model.getItem('params'),
+                appSpecs = model.getItem('app.specs');
+            /* appInfo should look like:
+             * [{
+             *   app_id: string,
+             *   version: string,
+             *   tag: string
+             *   params: [{ set of params for individual run }]
+             * }]
+             */
+            Object.keys(inputs).forEach((fileType) => {
+                const appSpecInfo = appSpecs[inputs[fileType].appId].full_info;
+                const appInfo = {
+                    app_id: appSpecInfo.id,
+                    tag: 'release',
+                    version: appSpecInfo.ver,
+                    params: params[fileType].filePaths.map((filePathParams) => {
+                        return Object.assign({}, filePathParams, params[fileType].params);
+                    }),
+                };
+                appInfos.push(appInfo);
+            });
+
+            const code = PythonInterop.buildBulkAppRunner(cellId, runId, appInfos);
+            cell.set_text(code);
+        }
+
+        function clearPythonCode() {
+            cell.set_text('');
         }
 
         /**
@@ -622,23 +667,6 @@ define([
         }
 
         /**
-         * Passes the updated state to various widgets, and serialize it in
-         * the cell metadata, where appropriate.
-         */
-        function updateState() {
-            cellTabs.setState(state.tab);
-            controlPanel.setActionState(state.action);
-            fileTypePanel.updateState(state.fileType);
-            updateJobState();
-            // TODO: add in the FSM state
-            FSMBar.showFsmBar({
-                ui: ui,
-                state: {},
-                job: testDataModel.getItem('exec.jobState'),
-            });
-        }
-
-        /**
          * Should do the following steps:
          * 1. if there's a tab showing, stop() it and detach it
          * 2. update the tabs state to be selected
@@ -729,8 +757,40 @@ define([
             updateState();
         }
 
+        /**
+         * @param {string} action
+         * @returns
+         */
         function runAction(action) {
-            alert(action);
+            if (readOnly) {
+                console.warn('ignoring attempted action in readonly mode');
+                return;
+            }
+            switch (action) {
+                case 'runApp':
+                    cell.execute();
+                    updateState('launching');
+                    break;
+                case 'cancel':
+                    // TODO implement
+                    alert('canceling run');
+                    break;
+                case 'reRunApp':
+                    // TODO implement
+                    alert('re-running app');
+                    break;
+                case 'resetApp':
+                    // TODO implement
+                    alert('resetting app');
+                    break;
+                case 'offline':
+                    // TODO implement / test better
+                    alert('currently disconnected from the server');
+                    break;
+                default:
+                    alert(`Unknown command ${action}`);
+                    break;
+            }
         }
 
         /**
@@ -774,6 +834,33 @@ define([
 
             uiState.fileType = fileTypeState;
             return uiState;
+        }
+
+        /**
+         * Passes the updated state to various widgets, and serialize it in
+         * the cell metadata, where appropriate.
+         * @param {string} newUiState - change to a new UI state, if defined.
+         */
+        function updateState(newUiState) {
+            if (newUiState && newUiState in States) {
+                const stateDiff = Object.assign({}, States[newUiState].ui);
+                model.setItem('state.state', newUiState);
+                // update selections
+                stateDiff.tab.selected = state.tab.selected;
+                stateDiff.fileType = state.fileType;
+                state = stateDiff;
+            }
+
+            cellTabs.setState(state.tab);
+            controlPanel.setActionState(state.action);
+            fileTypePanel.updateState(state.fileType);
+            updateJobState();
+            // TODO: add in the FSM state
+            FSMBar.showFsmBar({
+                ui: ui,
+                state: {},
+                job: testDataModel.getItem('exec.jobState'),
+            });
         }
 
         /**

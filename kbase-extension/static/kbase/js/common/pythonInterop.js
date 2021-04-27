@@ -1,5 +1,6 @@
 define([], () => {
     'use strict';
+    const indentString = '    ';
 
     function escapeString(stringValue, delimiter) {
         const delimiterRegex = new RegExp(delimiter, 'g');
@@ -13,7 +14,6 @@ define([], () => {
         return "'";
     }
 
-    const indentString = '    ';
     function makeIndent(level) {
         let retval = '';
         for (let i = 0; i < level; i += 1) {
@@ -21,14 +21,12 @@ define([], () => {
         }
         return retval;
     }
+
     function pythonifyValue(value, options, indentLevel) {
         options = options || {};
         indentLevel = indentLevel || 0;
         switch (typeof value) {
             case 'number':
-                if (value === null) {
-                    return 'None';
-                }
                 return String(value);
             case 'string':
                 return '"' + escapeString(value, options.delimiter || autoDelimiter(value)) + '"';
@@ -49,13 +47,12 @@ define([], () => {
                 if (value === null) {
                     return 'None';
                 }
-                var prefix = makeIndent(indentLevel + 1);
                 return (
                     '{\n' +
                     Object.keys(value)
                         .map((key) => {
                             return (
-                                prefix +
+                                makeIndent(indentLevel + 1) +
                                 pythonifyValue(key, options) +
                                 ': ' +
                                 pythonifyValue(value[key], options, indentLevel + 1)
@@ -89,22 +86,32 @@ define([], () => {
             });
     }
 
+    /**
+     * Builds a "nice" list of args by adding indentations and returns between each.
+     * E.g., turns ["foo", "bar", "baz"] into:
+     * "
+     *     foo,
+     *     bar,
+     *     baz
+     * "
+     * @param {array} args - the array of arguments to make pretty
+     * @returns
+     */
     function buildNiceArgsList(args) {
         const indent = indentString;
         return '\n' + indent + args.join(',\n' + indent) + '\n';
     }
 
     function buildBatchAppRunner(cellId, runId, app, params) {
-        let paramSetName = 'batch_params',
+        const paramSetName = 'batch_params',
             pythonifiedParams = pythonifyValue(params, { autoIndent: true }),
-            positionalArgs = [pythonifyValue(app.id), paramSetName],
             namedArgs = objectToNamedArgs({
                 tag: app.tag,
                 version: app.version,
                 cell_id: cellId,
                 run_id: runId,
             });
-        positionalArgs = positionalArgs.concat(namedArgs);
+        const positionalArgs = [pythonifyValue(app.id), paramSetName].concat(namedArgs);
         return [
             paramSetName + ' = ' + pythonifiedParams,
             'from biokbase.narrative.jobs.appmanager import AppManager',
@@ -244,16 +251,53 @@ define([], () => {
         return pythonCode;
     }
 
+    /**
+     * Builds the call to run_app_bulk
+     * @param {string} cellId the unique id of the cell, for run metadata
+     * @param {string} runId the unique id of the run, for metadata
+     * @param {array} appInfo the set of information to send to the function.
+     * This should have the following format:
+     * [{
+     *   app_id: 'MyModule/my_app',
+     *   tag: 'release' (or 'beta' or 'dev'),
+     *   version: '1.2.3' (or a git hash if not released),
+     *   params: [{
+     *     param1: value1,
+     *     param2: value2,
+     *   }, {
+     *     param1: value3,
+     *     param2: value4
+     *   }]
+     * }, ...repeat the above]
+     * Each app gets its own entry in the list, and each object in the params list
+     * is an individual run of that app.
+     * @returns string - the Python code to run
+     */
+    function buildBulkAppRunner(cellId, runId, appInfo) {
+        const args = [
+            pythonifyValue(appInfo, {}, 1),
+            ...objectToNamedArgs({
+                cell_id: cellId,
+                run_id: runId,
+            }),
+        ];
+        return [
+            'from biokbase.narrative.jobs.appmanager import AppManager',
+            `AppManager().run_app_bulk(${buildNiceArgsList(args)})`,
+        ].join('\n');
+    }
+
     return {
-        objectToNamedArgs: objectToNamedArgs,
-        pythonifyValue: pythonifyValue,
-        buildAppRunner: buildAppRunner,
-        buildBatchAppRunner: buildBatchAppRunner,
-        buildEditorRunner: buildEditorRunner,
-        buildViewRunner: buildViewRunner,
-        buildAdvancedViewRunner: buildAdvancedViewRunner,
-        buildOutputRunner: buildOutputRunner,
-        buildCustomWidgetRunner: buildCustomWidgetRunner,
-        buildDataWidgetRunner: buildDataWidgetRunner,
+        objectToNamedArgs,
+        pythonifyValue,
+        buildAppRunner,
+        buildBatchAppRunner,
+        buildEditorRunner,
+        buildViewRunner,
+        buildAdvancedViewRunner,
+        buildOutputRunner,
+        buildCustomWidgetRunner,
+        buildDataWidgetRunner,
+        buildBulkAppRunner,
     };
 });

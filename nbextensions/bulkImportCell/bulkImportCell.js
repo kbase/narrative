@@ -475,6 +475,11 @@ define([
          */
         function updateParameterState(fileType, newState) {
             model.setItem(['state', 'param', fileType], newState);
+            const newFileTypeState = {};
+            for (const [fileId, fileState] of Object.entries(model.getItem(['state', 'param']))) {
+                newFileTypeState[fileId] = fileState === 'complete';
+            }
+            state.fileType.completed = newFileTypeState;
             let cellReady = true;
             for (const _state of Object.values(model.getItem('state.param'))) {
                 if (_state !== 'complete') {
@@ -483,6 +488,7 @@ define([
                 }
             }
             if (cellReady) {
+                console.log('cell ready!');
             }
         }
 

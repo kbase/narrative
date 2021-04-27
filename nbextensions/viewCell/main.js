@@ -19,7 +19,7 @@ define([
     'base/js/namespace',
     'bluebird',
     'uuid',
-    'kb_common/html',
+    'common/html',
     './widgets/viewCellWidget',
     'common/runtime',
     'common/parameterSpec',
@@ -32,7 +32,7 @@ define([
     'common/spec',
     'kb_service/utils',
     'kb_service/client/workspace',
-    './widgets/appInfoDialog',
+    'common/cellComponents/appInfoDialog',
     'bootstrap',
     'custom/custom',
 ], (

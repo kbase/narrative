@@ -1,14 +1,12 @@
 define([
     'bluebird',
     'jquery',
-    // CDN
-    'kb_common/html',
-    // LOCAL
+    'common/html',
     'common/ui',
     'common/events',
     'common/props',
     // Wrapper for inputs
-    './inputWrapperWidget',
+    'common/cellComponents/inputWrapperWidget',
     'widgets/appWidgets2/fieldWidgetCompact',
     'widgets/appWidgets2/paramResolver',
 
@@ -128,7 +126,7 @@ define([
                     key: {
                         type: 'get-param-state',
                     },
-                    handle: function (message) {
+                    handle: function () {
                         return paramsBus.request(
                             { id: parameterSpec.id },
                             {
@@ -222,17 +220,19 @@ define([
                     $(actualInput).trigger('advanced-shown.kbase');
                 }
             }
+
             // Also update the count in the paramters.
             const events = Events.make({ node: container });
 
             let message;
+            let showAdvancedButton;
             if (settings.showAdvanced) {
                 if (advancedInputs.length > 1) {
                     message = String(advancedInputs.length) + ' advanced parameters showing';
                 } else {
                     message = String(advancedInputs.length) + ' advanced parameter showing';
                 }
-                var showAdvancedButton = ui.buildButton({
+                showAdvancedButton = ui.buildButton({
                     label: 'hide advanced',
                     type: 'link',
                     name: 'advanced-parameters-toggler',
@@ -252,7 +252,7 @@ define([
                 } else {
                     message = String(advancedInputs.length) + ' advanced parameter hidden';
                 }
-                var showAdvancedButton = ui.buildButton({
+                showAdvancedButton = ui.buildButton({
                     label: 'show advanced',
                     type: 'link',
                     name: 'advanced-parameters-toggler',
@@ -294,8 +294,8 @@ define([
         }
 
         function renderLayout(batchMode) {
-            let events = Events.make(),
-                formContent = [];
+            const events = Events.make();
+            let formContent = [];
             if (batchMode) {
                 formContent.push(renderBatchModeMessage());
             } else {
@@ -312,7 +312,6 @@ define([
                         body: div({ dataElement: 'input-fields' }),
                         classes: ['kb-panel-light'],
                     }),
-                    // ui.makePanel('Input Objects', 'input-fields'),
                     ui.buildPanel({
                         title: span([
                             'Parameters',
@@ -331,7 +330,6 @@ define([
                         body: div({ dataElement: 'output-fields' }),
                         classes: ['kb-panel-light'],
                     }),
-                    // ui.makePanel('Output Report', 'output-report')
                 ]);
             }
             const content = form({ dataElement: 'input-widget-form' }, formContent);
@@ -455,11 +453,6 @@ define([
                     .then(() => {
                         if (inputParams.layout.length === 0) {
                             ui.getElement('input-objects-area').classList.add('hidden');
-                            // places.inputFields.innerHTML = span({
-                            //     style: {
-                            //         fontStyle: 'italic'
-                            //     }
-                            // }, 'This app does not have input objects');
                         } else {
                             places.inputFields.innerHTML = inputParams.content;
                             return Promise.all(
@@ -500,7 +493,6 @@ define([
                     .then(() => {
                         if (outputParams.layout.length === 0) {
                             ui.getElement('output-objects-area').classList.add('hidden');
-                            // places.outputFields.innerHTML = span({ style: { fontStyle: 'italic' } }, 'This app does not create any named output objects');
                         } else {
                             places.outputFields.innerHTML = outputParams.content;
                             return Promise.all(
@@ -540,7 +532,6 @@ define([
                             if (ui.getElement('parameter-objects-area')) {
                                 ui.getElement('parameter-objects-area').classList.add('hidden');
                             }
-                            // places.parameterFields.innerHTML = span({ style: { fontStyle: 'italic' } }, 'No parameters for this app');
                         } else {
                             places.parameterFields.innerHTML = parameterParams.content;
 
@@ -603,7 +594,6 @@ define([
                                     parameter: message.parameter,
                                 },
                             });
-                            // bus.emit('parameter-changed', message);
                         });
                     });
                     // we then create our widgets

@@ -114,7 +114,8 @@ define([
             });
 
             fieldWidget.bus.on('validation', (message) => {
-                // only propagate if its invalid
+                // only propagate if invalid. value changes come through
+                // the 'changed' message
                 if (!message.isValid) {
                     bus.emit('invalid-param-value', {
                         parameter: parameterSpec.id,

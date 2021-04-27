@@ -1,37 +1,55 @@
 define([
     'common/cellComponents/tabs/jobStatus/jobStateList',
+    'common/jobs',
     'common/props',
-    '/test/data/testAppObj',
-], (jobStateList, Props, TestAppObject) => {
+    'common/runtime',
+    'testUtil',
+    '/test/data/jobsData',
+], (JobStateList, Jobs, Props, Runtime, TestUtil, JobsData) => {
     'use strict';
 
-    const batchJobObject = TestAppObject.exec.jobState;
+    const model = Props.make({
+        data: {
+            exec: {
+                jobs: Jobs.jobArrayToIndexedObject(JobsData.validJobs),
+            },
+        },
+    });
 
     function createInstance(config = {}) {
-        return jobStateList.make(config);
+        return JobStateList.make(
+            Object.assign(
+                {},
+                {
+                    model: model,
+                    jobManager: {},
+                    devMode: true,
+                },
+                config
+            )
+        );
     }
 
     async function createStartedInstance(container, config = {}) {
         const instance = createInstance(config);
         await instance.start({
             node: container,
-            jobState: batchJobObject,
         });
         return instance;
     }
 
     describe('The job state list module', () => {
         it('loads', () => {
-            expect(jobStateList).not.toBe(null);
+            expect(JobStateList).not.toBe(null);
         });
 
         it('has expected functions', () => {
-            expect(jobStateList.make).toEqual(jasmine.any(Function));
+            expect(JobStateList.make).toEqual(jasmine.any(Function));
         });
 
         it('has a cssBaseClass variable', () => {
-            expect(jobStateList.cssBaseClass).toEqual(jasmine.any(String));
-            expect(jobStateList.cssBaseClass).toContain('kb-job-status');
+            expect(JobStateList.cssBaseClass).toEqual(jasmine.any(String));
+            expect(JobStateList.cssBaseClass).toContain('kb-job-status');
         });
     });
 
@@ -61,14 +79,13 @@ define([
             expect(container.children.length).toBe(0);
             await this.jobStateListInstance.start({
                 node: container,
-                jobState: batchJobObject,
             });
             expect(container.children.length).toBeGreaterThan(0);
         });
     });
 
     describe('the started job state list instance', () => {
-        const cssBaseClass = jobStateList.cssBaseClass;
+        const cssBaseClass = JobStateList.cssBaseClass;
         describe('structure and content', () => {
             let container;
             beforeAll(async function () {
@@ -116,7 +133,7 @@ define([
 
             it('should generate a row for each job', () => {
                 expect(container.querySelectorAll(`.${cssBaseClass}__row`).length).toEqual(
-                    batchJobObject.child_jobs.length
+                    Object.keys(JobsData.validJobs).length
                 );
             });
         });
@@ -128,6 +145,7 @@ define([
                 'retryJob',
                 'retryJobsByStatus',
                 'viewJobResults',
+                'updateJobState',
             ];
 
             const actionButtonToFunction = {
@@ -210,7 +228,7 @@ define([
                         const argCombos = Array.from(dropdownButtons).map((button) => {
                             return [
                                 button.getAttribute('data-action'),
-                                button.getAttribute('data-target'),
+                                button.getAttribute('data-target').split('||'),
                             ];
                         });
                         argCombos.forEach((args) => {
@@ -219,6 +237,70 @@ define([
                         });
                     });
                 });
+            });
+        });
+        describe('response to updates', () => {
+            let container;
+            beforeEach(async function () {
+                container = document.createElement('div');
+                window.kbaseRuntime = null;
+                this.bus = Runtime.make().bus();
+                this.jobStateUpdated = false;
+                this.jobStateListInstance = await createStartedInstance(container, {
+                    jobManager: {
+                        updateJobState: () => {
+                            this.jobStateUpdated = true;
+                        },
+                    },
+                });
+            });
+
+            afterEach(async function () {
+                await this.jobStateListInstance.stop();
+                container.remove();
+                window.kbaseRuntime = null;
+            });
+
+            it('should respond to a job status update', async function () {
+                // update the queued job to running
+                document.body.append(container);
+                const queuedJob = JobsData.jobsByStatus.queued[0],
+                    runningJob = JobsData.jobsByStatus.running[0];
+
+                ['doesNotExist', 'params', 'status'].forEach((type) => {
+                    expect(
+                        this.jobStateListInstance.listeners[`${type}__${queuedJob.job_id}`]
+                    ).toBeDefined();
+                });
+                // wait for change under the queuedJob.job_id node
+                await TestUtil.waitForElementChange(
+                    container.querySelector(`[data-element-job-id="${queuedJob.job_id}"]`),
+                    () => {
+                        this.bus.send(
+                            {
+                                jobState: Object.assign({}, runningJob, {
+                                    job_id: queuedJob.job_id,
+                                    status: 'running',
+                                }),
+                            },
+                            {
+                                channel: {
+                                    jobId: queuedJob.job_id,
+                                },
+                                key: {
+                                    type: 'job-status',
+                                },
+                            }
+                        );
+                    }
+                );
+                expect(
+                    this.jobStateListInstance.listeners[`doesNotExist__${queuedJob.job_id}`]
+                ).not.toBeDefined();
+                expect(this.jobStateUpdated).toBeTrue();
+                expect(model.getItem('exec.jobs.byStatus.queued')).not.toBeDefined();
+                const runningJobs = model.getItem('exec.jobs.byStatus.running');
+                expect(Object.keys(runningJobs).length).toEqual(2);
             });
         });
     });

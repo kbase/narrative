@@ -1,8 +1,9 @@
-define(['common/html', 'common/format', 'common/ui', 'common/errorDisplay'], (
+define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', 'common/ui'], (
+    ErrorDisplay,
+    Format,
     html,
-    format,
-    UI,
-    ErrorDisplay
+    Props,
+    UI
 ) => {
     'use strict';
 
@@ -31,7 +32,7 @@ define(['common/html', 'common/format', 'common/ui', 'common/errorDisplay'], (
 
     const jobStrings = {
         does_not_exist: {
-            action: 'retry',
+            action: null,
             nice: 'does not exist',
             status: 'not found',
             statusBatch: 'not found',
@@ -179,6 +180,30 @@ define(['common/html', 'common/format', 'common/ui', 'common/errorDisplay'], (
     }
 
     /**
+     * Given a job state object, return a boolean indicating whether the job can be cancelled
+     *
+     * Jobs that are queued or running can be cancelled.
+     *
+     * @param {object} jobState
+     * @returns {boolean} whether or not the job can be cancelled
+     */
+    function canCancel(jobState) {
+        return isValidJobStateObject(jobState) && getJobString(jobState, 'action') === 'cancel';
+    }
+
+    /**
+     * Given a job state object, return a boolean indicating whether the job can be retried
+     *
+     * To be retried, the job must have failed or been cancelled
+     *
+     * @param {object} jobState
+     * @returns {boolean} whether or not the job can be retried
+     */
+    function canRetry(jobState) {
+        return isValidJobStateObject(jobState) && getJobString(jobState, 'action') === 'retry';
+    }
+
+    /**
      * Convert a job state into a short string to present in the UI
      *
      * @param {object} jobState
@@ -283,6 +308,34 @@ define(['common/html', 'common/format', 'common/ui', 'common/errorDisplay'], (
     }
 
     /**
+     * Given an array of jobState objects, create an object with jobs indexed by ID and by status
+     *
+     * @param {array} jobArray array of jobState objects
+     * @returns {object} with indexed job data:
+     *      byId        key: job_id, value: jobState object
+     *      byStatus    key: status, value: object whose keys are the job IDs
+     *                      of jobs with that status
+     */
+
+    function jobArrayToIndexedObject(jobArray = []) {
+        return {
+            // save job status info under job ID
+            byId: jobArray.reduce((acc, curr) => {
+                acc[curr.job_id] = curr;
+                return acc;
+            }, {}),
+            // save job IDs grouped by status
+            byStatus: jobArray.reduce((acc, curr) => {
+                if (!acc[curr.status]) {
+                    acc[curr.status] = {};
+                }
+                acc[curr.status][curr.job_id] = true;
+                return acc;
+            }, {}),
+        };
+    }
+
+    /**
      * Ensures that the child_jobs data is in the correct place in the jobState object
      *
      * It should be possible to remove this function after migrating to ee 2.5
@@ -361,7 +414,7 @@ define(['common/html', 'common/format', 'common/ui', 'common/errorDisplay'], (
                         {
                             class: 'kb-timestamp',
                         },
-                        format.niceTime(jobState.finished)
+                        Format.niceTime(jobState.finished)
                     )
             );
 
@@ -401,7 +454,7 @@ define(['common/html', 'common/format', 'common/ui', 'common/errorDisplay'], (
                     {
                         class: 'kb-timestamp',
                     },
-                    format.niceTime(jobState.running)
+                    Format.niceTime(jobState.running)
                 ) +
                 span({ class: 'runClock', dataElement: 'clock' })
             );
@@ -412,7 +465,7 @@ define(['common/html', 'common/format', 'common/ui', 'common/errorDisplay'], (
                 {
                     class: 'kb-elapsed-time',
                 },
-                format.niceDuration(jobState.finished - jobState.running)
+                Format.niceDuration(jobState.finished - jobState.running)
             )
         );
     }
@@ -437,7 +490,7 @@ define(['common/html', 'common/format', 'common/ui', 'common/errorDisplay'], (
                     {
                         class: 'kb-elapsed-time',
                     },
-                    format.niceDuration(endTime - jobState.created)
+                    Format.niceDuration(endTime - jobState.created)
                 )
             );
         }
@@ -449,7 +502,7 @@ define(['common/html', 'common/format', 'common/ui', 'common/errorDisplay'], (
                 {
                     class: 'kb-timestamp',
                 },
-                format.niceTime(jobState.created)
+                Format.niceTime(jobState.created)
             );
 
         return queueString;
@@ -481,38 +534,24 @@ define(['common/html', 'common/format', 'common/ui', 'common/errorDisplay'], (
     }
 
     /**
-     * Given a parent jobState object, summarise the status of the child jobs
-     * @param {object} jobState
+     * Given an object containing job IDs indexed by status, summarise the status of the jobs
+     * @param {object} jobsByStatus job IDs indexed by status
      * @returns {string} summary string
      */
 
-    function createCombinedJobState(jobState) {
-        if (!jobState) {
+    function createCombinedJobState(jobsByStatus) {
+        if (!jobsByStatus || !Object.keys(jobsByStatus).length) {
             return '';
         }
 
-        // if there are no child jobs
-        // the parent job was cancelled
-        if (jobState.status === 'terminated') {
-            return `${batch} cancelled`;
-        }
-
-        if (jobState.status === 'does_not_exist') {
-            return `${batch} not found`;
-        }
-
-        if (!jobState.child_jobs || !jobState.child_jobs.length) {
-            return `${batch} not found`;
-        }
-
         const statuses = {};
-        jobState.child_jobs.forEach((job) => {
-            let status = job.status;
+        Object.keys(jobsByStatus).forEach((status) => {
+            const nJobs = Object.keys(jobsByStatus[status]).length;
             // reduce down the queued states
             if (status === 'estimating' || status === 'created') {
                 status = 'queued';
             }
-            statuses[status] ? statuses[status]++ : (statuses[status] = 1);
+            statuses[status] ? (statuses[status] += nJobs) : (statuses[status] = nJobs);
         });
 
         const textStatusSummary = _createBatchSummaryState(statuses);
@@ -524,7 +563,7 @@ define(['common/html', 'common/format', 'common/ui', 'common/errorDisplay'], (
             'terminated',
             'does_not_exist',
         ];
-        return (
+        const summaryHtml =
             `${textStatusSummary}: ` +
             orderedStatuses
                 .filter((state) => {
@@ -546,11 +585,17 @@ define(['common/html', 'common/format', 'common/ui', 'common/errorDisplay'], (
                         )
                     );
                 })
-                .join(', ')
-        );
+                .join(', ');
+
+        const jobSpan = document.createElement('span');
+        jobSpan.innerHTML = summaryHtml;
+        jobSpan.title = jobSpan.textContent;
+        return jobSpan.outerHTML;
     }
 
     return {
+        canCancel,
+        canRetry,
         createCombinedJobState,
         createJobStatusFromFsm,
         createJobStatusLines,
@@ -559,6 +604,7 @@ define(['common/html', 'common/format', 'common/ui', 'common/errorDisplay'], (
         isValidJobStateObject,
         isValidJobInfoObject,
         jobAction,
+        jobArrayToIndexedObject,
         jobLabel,
         jobNotFound,
         jobStatusUnknown,

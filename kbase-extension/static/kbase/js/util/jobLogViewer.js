@@ -1321,7 +1321,7 @@ define([
                 startEventListeners();
 
                 // if an initial job state object has been supplied, render it
-                if (arg.jobState) {
+                if (arg.jobState && Jobs.isValidJobStateObject(arg.jobState)) {
                     lastJobState = arg.jobState;
                 }
 

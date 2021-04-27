@@ -13,10 +13,11 @@ define(['common/html', 'util/developerMode'], (html, devMode) => {
      * @param {object} args with keys
      *      ui: common/ui object with the appropriate node set
      *      state: current FSM state
-     *      job: current jobState object
+     *      job: current jobState object OR
+     *      indexedJobs: object containing jobState objects, indexed by job ID
      */
     function showFsmBar(args) {
-        const { ui, state, job } = args;
+        const { ui, state, job, indexedJobs } = args;
 
         if (!developerMode) {
             return;
@@ -63,6 +64,29 @@ define(['common/html', 'util/developerMode'], (html, devMode) => {
                     ),
                 ]) + content;
         }
+        if (indexedJobs && Object.keys(indexedJobs).length) {
+            content =
+                span([
+                    span(
+                        {
+                            class: 'kb-fsm__key',
+                        },
+                        'jobs:'
+                    ),
+                    Object.keys(indexedJobs)
+                        .sort()
+                        .map((jobId) => {
+                            return span(
+                                {
+                                    class: 'kb-fsm__value',
+                                },
+                                jobId
+                            );
+                        })
+                        .join('; '),
+                ]) + content;
+        }
+
         ui.getElement('fsm-display').classList.remove('hidden');
         ui.setContent('fsm-display', content);
     }

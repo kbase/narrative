@@ -47,9 +47,9 @@ module.exports = function (config) {
             { pattern: 'test/unit/spec/**/*.js', included: false, nocache: true },
             { pattern: 'test/testConfig.json', included: false, nocache: true },
             { pattern: 'test/*.tok', included: false, nocache: true },
-            { pattern: 'test/data/**/*', included: false },
+            { pattern: 'test/data/**/*', included: false, nocache: true },
             // JS files
-            'kbase-extension/static/narrative_paths.js',
+            { pattern: 'kbase-extension/static/narrative_paths.js', nocache: true },
             { pattern: 'kbase-extension/static/**/*.js', included: false },
             { pattern: 'nbextensions/**/*.js', included: false },
             { pattern: 'nbextensions/**/*.json', included: false },

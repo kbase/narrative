@@ -1,4 +1,4 @@
-define(['./jobsData'], (JobsData) => {
+define(['./jobsData', 'common/jobs'], (JobsData, Jobs) => {
     'use strict';
 
     const jobData = JobsData.validJobs;
@@ -437,6 +437,7 @@ define(['./jobsData'], (JobsData) => {
                 user: 'ialarmedalien',
                 wsid: 57373,
             },
+            jobs: Jobs.jobArrayToIndexedObject(jobData),
             jobStateUpdated: 1607109635241,
             launchState: {
                 cell_id: '13395335-1f3d-4e0c-80f7-44b634968da0',

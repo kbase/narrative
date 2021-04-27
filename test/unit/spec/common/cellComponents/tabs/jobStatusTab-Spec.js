@@ -29,6 +29,7 @@ define([
             container = document.createElement('div');
             this.jobStatusTabInstance = JobStatusTab.make({
                 model: model,
+                jobManager: {},
             });
         });
 

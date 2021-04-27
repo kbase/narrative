@@ -56,12 +56,50 @@ define('testUtil', ['bluebird', 'json!/test/testConfig.json'], (Promise, TestCon
     }
 
     /**
-     * Wait for an element to appear in the DOM underneath `documentElement`
-     * @param {DOM element} documentElement to watch for the appearance of the element
+     * Wait for something to happen in the DOM underneath `documentElement`
+     * @param {Object} args with keys
+     *      {object}   config           configuration for the MutationObserver
+     *      {string}   documentElement  DOM element to watch
+     *      {function} domStateFunction function that returns true when the watched event happens
+     *      {function} executeFirst     a function to execute after setting up the observer
      * @param {string} selector to identify the element being watched for
      * @returns {Promise} that resolves to produce the element
      */
-    function waitForElement(documentElement, selector) {
+
+    function waitFor(args) {
+        const { documentElement, domStateFunction, executeFirst } = args;
+        const config = args.config || { attributes: true, childList: true, subtree: true };
+
+        if (!documentElement || !domStateFunction) {
+            throw new Error('Please provide documentElement and domStateFunction to run waitFor');
+        }
+
+        return new Promise((resolve) => {
+            if (domStateFunction()) {
+                resolve();
+            }
+
+            const observer = new MutationObserver((mutations) => {
+                if (domStateFunction(mutations)) {
+                    observer.disconnect();
+                    resolve();
+                }
+            });
+            observer.observe(documentElement, config);
+            if (executeFirst) {
+                executeFirst();
+            }
+        });
+    }
+
+    /**
+     * Wait for an element to appear in the DOM underneath `documentElement`
+     * @param {DOM element} documentElement to watch for the appearance of the element
+     * @param {string} selector to identify the element being watched for
+     * @param {function} doThisFirst (optional) function to execute before returning the Promise
+     * @returns {Promise} that resolves when the element is seen
+     */
+    function waitForElement(documentElement, selector, doThisFirst) {
         return new Promise((resolve) => {
             const element = document.querySelector(selector);
             if (element) {
@@ -75,7 +113,10 @@ define('testUtil', ['bluebird', 'json!/test/testConfig.json'], (Promise, TestCon
                     resolve(el);
                 }
             });
-            observer.observe(documentElement, { attributes: true, childList: true, subtree: true });
+            observer.observe(documentElement, { childList: true });
+            if (doThisFirst) {
+                doThisFirst();
+            }
         });
     }
 
@@ -83,35 +124,43 @@ define('testUtil', ['bluebird', 'json!/test/testConfig.json'], (Promise, TestCon
      * Wait for a certain DOM state
      * @param {DOM element} documentElement to watch for changes
      * @param {function} elementStateFunction function returning true when the state occurs
+     * @param {function} doThisFirst (optional) function to execute before returning the Promise
      * @returns {Promise} that resolves when the DOM state is seen
      */
-    function waitForElementState(documentElement, elementStateFunction) {
+    function waitForElementState(documentElement, elementStateFunction, doThisFirst) {
         return new Promise((resolve) => {
             if (elementStateFunction()) {
                 resolve();
             }
-            const observer = new MutationObserver(() => {
-                if (elementStateFunction()) {
+            const observer = new MutationObserver((mutations) => {
+                if (elementStateFunction(mutations)) {
                     observer.disconnect();
                     resolve();
                 }
             });
             observer.observe(documentElement, { attributes: true, childList: true, subtree: true });
+            if (doThisFirst) {
+                doThisFirst();
+            }
         });
     }
 
     /**
      * Wait for an element to change
      * @param {DOM element} documentElement to watch for changes
+     * @param {function} doThisFirst (optional) function to execute before returning the Promise
      * @returns {Promise} that resolves when the element changes
      */
-    function waitForElementChange(documentElement) {
+    function waitForElementChange(documentElement, doThisFirst) {
         return new Promise((resolve) => {
             const observer = new MutationObserver(() => {
                 observer.disconnect();
                 resolve();
             });
             observer.observe(documentElement, { attributes: true, childList: true, subtree: true });
+            if (doThisFirst) {
+                doThisFirst();
+            }
         });
     }
 
@@ -121,6 +170,7 @@ define('testUtil', ['bluebird', 'json!/test/testConfig.json'], (Promise, TestCon
         pendingIfNoToken,
         getUserId,
         wait,
+        waitFor,
         waitForElement,
         waitForElementState,
         waitForElementChange,

@@ -57,12 +57,6 @@ define([
     const div = html.tag('div'),
         cssCellType = 'kb-bulk-import';
 
-    // TODO: remove once jobs are hooked up to cell
-    const testDataModel = Props.make({
-        data: TestAppObj,
-        onUpdate: () => {},
-    });
-
     function DefaultWidget() {
         function make() {
             function start() {
@@ -225,8 +219,17 @@ define([
         if (options.initialize) {
             initialize(options.specs);
         }
+
         const model = Props.make({
-                data: Utils.getMeta(cell, 'bulkImportCell'),
+                // TODO: Remove and replace with the commented-out line below
+                // once the backend is hooked up
+                data: Object.assign(
+                    {},
+                    Utils.getMeta(cell, 'bulkImportCell'),
+                    // execution data
+                    { exec: TestAppObj.exec }
+                ),
+                // data: Utils.getMeta(cell, 'bulkImportCell'),
                 onUpdate: function (props) {
                     Utils.setMeta(cell, 'bulkImportCell', props.getRawObject());
                 },
@@ -483,8 +486,8 @@ define([
 
             state.fileType.completed = newFileTypeState;
             let cellReady = true;
-            for (const state of Object.values(model.getItem('state.param'))) {
-                if (state !== 'complete') {
+            for (const _state of Object.values(model.getItem('state.param'))) {
+                if (_state !== 'complete') {
                     cellReady = false;
                     break;
                 }
@@ -535,12 +538,12 @@ define([
         }
 
         /**
-         * Update the execMessage panel with details of the active job
+         * Update the execMessage panel with details of the active jobs
          */
         function updateJobState() {
-            // TODO: this will need to be updated once the backend is in place
-            const jobState = testDataModel.getItem('exec.jobState');
-            controlPanel.setExecMessage(Jobs.createCombinedJobState(jobState));
+            controlPanel.setExecMessage(
+                Jobs.createCombinedJobState(model.getItem('exec.jobs.byStatus'))
+            );
         }
 
         /* JOB MANAGEMENT */
@@ -559,17 +562,19 @@ define([
         }
 
         /**
-         * Cancel all jobs with the specified status
+         * Cancel all jobs with the specified statuses
          *
-         * @param {string} status
+         * @param {array} statusList - array of statuses to cancel
          */
-        function cancelJobsByStatus(status) {
+        function cancelJobsByStatus(statusList) {
             const validStates = ['created', 'estimating', 'queued', 'running'];
-            if (!validStates.includes(status)) {
-                throw new Error(`${status} is not a valid job state`);
-            }
+            statusList.forEach((status) => {
+                if (!validStates.includes(status)) {
+                    throw new Error(`${status} is not a valid job state`);
+                }
+            });
             // TODO: implement
-            alert(`Cancel jobs with status ${status}`);
+            alert(`Cancel jobs with status ${statusList.join(', ')}`);
         }
 
         /**
@@ -583,17 +588,19 @@ define([
         }
 
         /**
-         * Retry all jobs that ended with the specified status
+         * Retry all jobs that ended with the specified status(es)
          *
-         * @param {string} status
+         * @param {array} statusList - array of statuses to retry
          */
-        function retryJobsByStatus(status) {
+        function retryJobsByStatus(statusList) {
             const validStates = ['error', 'terminated'];
-            if (!validStates.includes(status)) {
-                throw new Error(`${status} is not a valid job state`);
-            }
+            statusList.forEach((status) => {
+                if (!validStates.includes(status)) {
+                    throw new Error(`${status} is not a valid job state`);
+                }
+            });
             // TODO: implement
-            alert(`Retry jobs with status ${status}`);
+            alert(`Retry jobs with status ${statusList.join(', ')}`);
         }
 
         const jobManager = {
@@ -601,6 +608,7 @@ define([
             cancelJobsByStatus,
             retryJob,
             retryJobsByStatus,
+            updateJobState,
         };
 
         // add in an alias to switch to the results panel for the job status table
@@ -713,19 +721,14 @@ define([
          * @param {string} fileType
          */
         function runTab(tab, fileType) {
-            let tabModel = model;
-            // TODO: Remove once jobs and results are hooked up
-            if (tab === 'jobStatus' || tab === 'results') {
-                tabModel = testDataModel;
-            }
             tabWidget = tabSet.tabs[tab].widget.make({
                 bus: controllerBus,
                 cell,
-                jobManager,
-                model: tabModel,
-                spec: specs[typesToFiles[state.fileType.selected].appId],
                 fileType,
                 jobId: undefined,
+                jobManager,
+                model,
+                spec: specs[typesToFiles[state.fileType.selected].appId],
                 workspaceClient,
             });
 

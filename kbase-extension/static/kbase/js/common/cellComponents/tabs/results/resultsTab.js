@@ -34,7 +34,9 @@ define(['bluebird', 'common/ui', 'common/events', './outputWidget', './reportWid
          * @returns {Array} an array of report ids.
          */
         function getReportRefs() {
-            const jobStates = model.getItem('exec.jobState.child_jobs');
+            const jobindex = model.getItem('exec.jobs.byId');
+            const jobStates = Object.values(jobindex);
+
             const reportRefs = [];
             jobStates.forEach((job) => {
                 if ('result' in job && job.result.length > 0) {

@@ -1,4 +1,4 @@
-define(['narrativeConfig', './testAppObj-ci', 'json!./testAppObj-prod.json'], (
+define(['narrativeConfig', './testAppObj-ci', './testAppObj-prod'], (
     Config,
     TestDataCi,
     TestDataProd

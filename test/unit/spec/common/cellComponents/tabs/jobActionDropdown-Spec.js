@@ -52,7 +52,7 @@ define([
         });
     });
 
-    describe('The job action dropdown instance', () => {
+    fdescribe('The job action dropdown instance', () => {
         let container;
         beforeEach(function () {
             container = document.createElement('div');
@@ -83,6 +83,12 @@ define([
             expect(container.children.length).toBeGreaterThan(0);
             // button to trigger the dropdown, four dropdown options
             expect(container.querySelectorAll('button').length).toBe(5);
+        });
+
+        it('should throw an error without the required start argument', async function () {
+            await expectAsync(this.jobActionDropdownInstance.start({})).toBeRejectedWithError(
+                /start argument must have the key "node"/
+            );
         });
     });
 

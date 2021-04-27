@@ -8,4 +8,5 @@ module.exports = function (config) {
         }
     });
     config.preprocessors = {};
+    config.reporters = ['kjhtml', 'brief'];
 };

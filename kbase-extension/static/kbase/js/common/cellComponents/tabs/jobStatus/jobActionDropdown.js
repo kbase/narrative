@@ -159,17 +159,13 @@ define(['bluebird', 'common/events', 'common/html'], (Promise, Events, html) => 
          *
          * @param {object} args  -- with keys
          *      node:       DOM node to attach to
-        //  *      model:      Props object with job status information
          *
          * @returns {Promise} started JobStateList widget
          */
         function start(args) {
             return Promise.try(() => {
-                const requiredArgs = ['node'];
-                if (!requiredArgs.every((arg) => arg in args && args[arg])) {
-                    throw new Error(
-                        'start argument must have these keys: ' + requiredArgs.join(', ')
-                    );
+                if (!args.node) {
+                    throw new Error('start argument must have the key "node"');
                 }
                 container = args.node;
                 const events = Events.make({ node: args.node });

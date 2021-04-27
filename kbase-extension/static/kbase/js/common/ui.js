@@ -415,6 +415,9 @@ define([
      *                  with the value as the label
      *      {string}    bsClass (opt) - the bootstrap theme to use for the modal
      *                  one of 'primary', 'success', 'info', 'warning', 'danger'
+     *      {function}  doThisFirst - a function to perform after creating the promise;
+     *                  this allows actions to be performed between creating the modal
+     *                  and before the modal is dismissed by keyboard or mouse action
      *
      * @returns {Promise} that resolves to false if the modal is dismissed using the
      * cancel button, the close button, by clicking on the modal backdrop, or by pressing

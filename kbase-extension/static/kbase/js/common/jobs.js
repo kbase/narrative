@@ -17,7 +17,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
         ],
         jobStatusUnknown = ['Determining job state...'],
         // valid job states from ee2, plus 'does_not_exist'
-        validJobStates = [
+        validJobStatuses = [
             'created',
             'estimating',
             'queued',
@@ -103,7 +103,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
      * 1. It's an object (not an array or atomic type)
      * 2. It has a 'created' key
      * 3. It has a 'job_id' key
-     * 4. It has a 'status' key, which appears in the array validJobStates
+     * 4. It has a 'status' key, which appears in the array validJobStatuses
      *
      * There are other required fields, but these checks are sufficient for the UI.
      *
@@ -121,7 +121,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
             jobState !== null &&
             typeof jobState === 'object' &&
             requiredProperties.every((prop) => prop in jobState) &&
-            validJobStates.includes(jobState.status)
+            validJobStatuses.includes(jobState.status)
         );
     }
 
@@ -132,7 +132,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
      * @returns {boolean} true|false
      */
     function isValidJobStatus(status) {
-        return status && validJobStates.includes(status);
+        return status && validJobStatuses.includes(status);
     }
 
     /**
@@ -611,6 +611,6 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
         jobStrings,
         niceState,
         updateJobModel,
-        validJobStates,
+        validJobStatuses,
     };
 });

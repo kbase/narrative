@@ -28,6 +28,23 @@ define([
         cssClassName = 'kb-ui';
 
     // "static" methods
+    const staticMethods = {
+        buildCollapsiblePanel,
+        buildIcon,
+        buildPanel,
+        confirmDialog,
+        htmlEncode,
+        loading,
+        makeCollapsiblePanel,
+        makePanel,
+        na,
+        showConfirmDialog,
+        showDialog,
+        showErrorDialog,
+        showInfoDialog,
+        cssClassName,
+    };
+
     function na() {
         return span({ class: `${cssClassName}__text--na` }, 'NA');
     }
@@ -278,145 +295,15 @@ define([
         return window.confirm(prompt);
     }
 
-    function renderConfirmDialog(arg) {
-        const yesLabel = arg.yesLabel || 'Yes',
-            noLabel = arg.noLabel || 'No';
-        const dialog = div({ class: 'modal fade', tabindex: '-1', role: 'dialog' }, [
-            div({ class: 'modal-dialog' }, [
-                div({ class: 'modal-content' }, [
-                    div({ class: 'modal-header' }, [
-                        button(
-                            {
-                                type: 'button',
-                                class: 'close',
-                                dataDismiss: 'modal',
-                                ariaLabel: noLabel,
-                            },
-                            [span({ ariaHidden: 'true' }, '&times;')]
-                        ),
-                        span({ class: 'modal-title' }, arg.title),
-                    ]),
-                    div({ class: 'modal-body' }, [arg.body]),
-                    div({ class: 'modal-footer' }, [
-                        button(
-                            {
-                                type: 'button',
-                                class: 'btn btn-default',
-                                dataDismiss: 'modal',
-                                dataElement: 'no',
-                            },
-                            noLabel
-                        ),
-                        button(
-                            { type: 'button', class: 'btn btn-primary', dataElement: 'yes' },
-                            yesLabel
-                        ),
-                    ]),
-                ]),
-            ]),
-        ]);
-        return dialog;
-    }
-
-    function showConfirmDialog(arg) {
-        const dialog = renderConfirmDialog(arg),
-            dialogId = html.genId(),
-            confirmNode = document.createElement('div');
-        let kbaseNode, modalNode;
-
-        confirmNode.id = dialogId;
+    function _generateConfirmNode(dialog) {
+        const confirmNode = document.createElement('div');
+        confirmNode.id = html.genId();
         confirmNode.innerHTML = dialog;
-
-        // top level element for kbase usage
-        kbaseNode = document.querySelector('[data-element="kbase"]');
-        if (!kbaseNode) {
-            kbaseNode = document.createElement('div');
-            kbaseNode.setAttribute('data-element', 'kbase');
-            document.body.appendChild(kbaseNode);
-        }
-
-        // a node uponwhich to place Bootstrap modals.
-        modalNode = kbaseNode.querySelector('[data-element="modal"]');
-        if (!modalNode) {
-            modalNode = document.createElement('div');
-            modalNode.setAttribute('data-element', 'modal');
-            kbaseNode.appendChild(modalNode);
-        }
-
-        modalNode.appendChild(confirmNode);
-
-        const modalDialogNode = modalNode.querySelector('.modal');
-
-        $(modalDialogNode).modal('show');
-        return new Promise((resolve) => {
-            modalDialogNode.querySelector('[data-element="yes"]').addEventListener('click', () => {
-                $(modalDialogNode).modal('hide');
-                confirmNode.parentElement.removeChild(confirmNode);
-                resolve(true);
-            });
-            modalDialogNode.addEventListener('keyup', (e) => {
-                if (e.keyCode === 13) {
-                    $(modalDialogNode).modal('hide');
-                    confirmNode.parentElement.removeChild(confirmNode);
-                    resolve(true);
-                }
-            });
-            modalDialogNode.querySelector('[data-element="no"]').addEventListener('click', () => {
-                confirmNode.parentElement.removeChild(confirmNode);
-                resolve(false);
-            });
-            modalDialogNode.addEventListener('hide.bs.modal', () => {
-                resolve(false);
-            });
-        });
+        return confirmNode;
     }
 
-    function renderInfoDialog(title, content, okLabel, type) {
-        let extraClass = '';
-        if (type) {
-            extraClass = ' bg-' + type;
-        }
-        return div({ class: 'modal fade', tabindex: '-1', role: 'dialog' }, [
-            div({ class: 'modal-dialog' }, [
-                div({ class: 'modal-content' }, [
-                    div({ class: 'modal-header' + extraClass }, [
-                        button(
-                            {
-                                type: 'button',
-                                class: 'close',
-                                dataDismiss: 'modal',
-                                ariaLabel: okLabel,
-                            },
-                            [span({ ariaHidden: 'true' }, '&times;')]
-                        ),
-                        span({ class: 'modal-title' }, title),
-                    ]),
-                    div({ class: 'modal-body' }, [content]),
-                    div({ class: 'modal-footer' }, [
-                        button(
-                            {
-                                type: 'button',
-                                class: 'btn btn-default',
-                                dataDismiss: 'modal',
-                                dataElement: 'ok',
-                            },
-                            okLabel
-                        ),
-                    ]),
-                ]),
-            ]),
-        ]);
-    }
-
-    function showInfoDialog(arg) {
-        const dialog = renderInfoDialog(arg.title, arg.body, arg.okLabel || 'OK'),
-            dialogId = html.genId(),
-            confirmNode = document.createElement('div');
+    function _setUpModalNodes(confirmNode) {
         let kbaseNode, modalNode;
-
-        confirmNode.id = dialogId;
-        confirmNode.innerHTML = dialog;
-
         // top level element for kbase usage
         kbaseNode = document.querySelector('[data-element="kbase"]');
         if (!kbaseNode) {
@@ -432,23 +319,190 @@ define([
             modalNode.setAttribute('data-element', 'modal');
             kbaseNode.appendChild(modalNode);
         }
-
         modalNode.appendChild(confirmNode);
+        return modalNode.querySelector('.modal');
+    }
 
-        const modalDialogNode = modalNode.querySelector('.modal');
-        $(modalDialogNode).modal('show');
-        return new Promise((resolve) => {
+    /**
+     * Build a bootstrap modal
+     * @param {object} args with keys
+     *      title   - title for the modal
+     *      body    - the modal content (should be HTML)
+     *      buttons - an array of buttons to add to the modal
+     *      style   - additional style attributes to add to the modal (opt)
+     *      bsClass - the bootstrap theme to use for the modal (opt)
+     *                one of 'primary', 'success', 'info', 'warning', 'danger'
+     *      includeCancel - if present, create a 'Cancel' button (closes the modal)
+     *          the value of the includeCancel key will be used as the button label
+     *      includeOK     - if present, create a 'OK' button (closes the modal)
+     *          the value of the includeOK key will be used as the button label
+     * @returns {string} HTML string to create the panel
+     */
+
+    function _renderModal(arg = {}) {
+        if (!arg.title || !arg.body) {
+            throw new Error('Missing required arguments "title" and "body"');
+        }
+
+        const bgClass = arg.bsClass ? `bg-${arg.bsClass}` : '';
+        const titleClass = arg.bsClass
+            ? arg.bsClass === 'primary'
+                ? ''
+                : `text-${arg.bsClass}`
+            : 'text-primary';
+
+        const buttons = arg.buttons || [];
+        if (arg.includeCancel) {
+            buttons.unshift(
+                button(
+                    {
+                        type: 'button',
+                        class: 'btn btn-default',
+                        dataDismiss: 'modal',
+                        dataElement: 'cancel',
+                    },
+                    arg.includeCancel
+                )
+            );
+        }
+
+        if (arg.includeOK) {
+            buttons.push(
+                button(
+                    {
+                        type: 'button',
+                        class: 'btn btn-' + (arg.bsClass || 'primary'),
+                        dataDismiss: 'modal',
+                        dataElement: 'ok',
+                    },
+                    arg.includeOK
+                )
+            );
+        }
+
+        return div({ class: 'modal fade', tabindex: '-1', role: 'dialog' }, [
+            div({ class: 'modal-dialog', style: arg.style }, [
+                div({ class: 'modal-content' }, [
+                    div({ class: `modal-header ${bgClass}` }, [
+                        button(
+                            {
+                                type: 'button',
+                                class: 'close',
+                                dataDismiss: 'modal',
+                                ariaLabel: 'close modal',
+                            },
+                            [span({ ariaHidden: 'true' }, '&times;')]
+                        ),
+                        span({ class: `modal-title ${titleClass}` }, arg.title),
+                    ]),
+                    div({ class: 'modal-body' }, [arg.body]),
+                    div({ class: 'modal-footer' }, buttons),
+                ]),
+            ]),
+        ]);
+    }
+
+    /**
+     * Show a generic, configurable dialog
+     * @param {Object} arg with keys
+     *      {string}    title
+     *      {string}    body
+     *      {string}    type - the type of dialog; 'confirm' dialogs can return true
+     *                  or false, whereas others return false
+     *      {string}    includeOK (opt) - if defined, an 'OK' button is added with
+     *                  the value as the label
+     *      {string}    includeCancel (opt) - if defined, a 'Cancel' button is added
+     *                  with the value as the label
+     *      {string}    bsClass (opt) - the bootstrap theme to use for the modal
+     *                  one of 'primary', 'success', 'info', 'warning', 'danger'
+     *
+     * @returns {Promise} that resolves to false if the modal is dismissed using the
+     * cancel button, the close button, by clicking on the modal backdrop, or by pressing
+     * the escape key. It resolves to true if the ok button is clicked or the user hits
+     * enter.
+     */
+    function showGenericDialog(args) {
+        const dialog = _renderModal(args),
+            confirmNode = _generateConfirmNode(dialog),
+            modalDialogNode = _setUpModalNodes(confirmNode);
+
+        // this shows the modal
+        $(modalDialogNode).modal({ keyboard: false });
+
+        let resolution = false;
+
+        if (args.type === 'confirm') {
             modalDialogNode.querySelector('[data-element="ok"]').addEventListener('click', () => {
-                confirmNode.parentElement.removeChild(confirmNode);
-                resolve(false);
+                resolution = true;
             });
-            modalDialogNode.addEventListener('hide.bs.modal', () => {
-                resolve(false);
+        }
+
+        modalDialogNode.addEventListener('keyup', (e) => {
+            // 13 = enter, 27 = escape
+            // the key is sometimes a string, hence == instead of ===
+            if (e.key == 13 || e.key == 27) {
+                $(modalDialogNode).modal('hide');
+                if (e.key == 13 && args.type === 'confirm') {
+                    resolution = true;
+                }
+            }
+        });
+
+        return new Promise((resolve) => {
+            $(modalDialogNode).on('hidden.bs.modal', () => {
+                confirmNode.remove();
+                resolve(resolution);
             });
+            if (args.doThisFirst) {
+                args.doThisFirst();
+            }
         });
     }
 
-    function buildError(error) {
+    /**
+     * Show a dialog with 'cancel' and 'ok' options
+     * @param {Object} arg with keys
+     *      {string}    title
+     *      {string}    body
+     *      {string}    okLabel (opt) - the label for the OK button
+     *      {string}    cancelLabel (opt) - the label for the Cancel button
+     *      {string}    bsClass (opt) - the bootstrap theme to use for the modal
+     *                  one of 'primary', 'success', 'info', 'warning', 'danger'
+     * @returns {Promise} that resolves to false if the modal is dismissed using the
+     * cancel button, the close button, by clicking on the modal backdrop, or by pressing
+     * the escape key. It resolves to true if the ok button is clicked or the user hits
+     * enter.
+     */
+    function showConfirmDialog(arg) {
+        return showGenericDialog(
+            Object.assign({}, arg, {
+                type: 'confirm',
+                includeOK: arg.okLabel || 'OK',
+                includeCancel: arg.cancelLabel || 'Cancel',
+            })
+        );
+    }
+
+    /**
+     * Show an information dialog; can be dismissed by clicking the 'OK' button
+     * @param {Object} arg with keys
+     *      {string}    title
+     *      {string}    body
+     *      {string}    okLabel (opt) - the label for the OK button
+     *      {string}    bsClass (opt) - the bootstrap theme to use for the modal
+     *                  one of 'primary', 'success', 'info', 'warning', 'danger'
+     * @returns {Promise} that resolves to false when the modal is dismissed
+     */
+    function showInfoDialog(arg) {
+        return showGenericDialog(
+            Object.assign({}, arg, {
+                type: 'info',
+                includeOK: arg.okLabel || 'OK',
+            })
+        );
+    }
+
+    function _buildErrorTable(error) {
         return table(
             {
                 class: 'table table-striped',
@@ -463,168 +517,90 @@ define([
         );
     }
 
+    /**
+     * Show an error dialog; can be dismissed by clicking the 'OK' button
+     * @param {Object} arg with keys
+     *      {string}    title
+     *      {object}    error - the error to be displayed
+     *      {string}    okLabel (opt) - the label for the OK button
+     * @returns {Promise} that resolves to false when the modal is dismissed
+     */
     function showErrorDialog(arg) {
-        const body = buildError(arg.error),
-            dialog = renderInfoDialog(arg.title, body, 'OK', 'danger'),
-            dialogId = html.genId(),
-            confirmNode = document.createElement('div');
-        let kbaseNode, modalNode;
+        return showGenericDialog(
+            Object.assign({}, arg, {
+                type: 'error',
+                bsClass: 'danger',
+                body: _buildErrorTable(arg.error),
+                includeOK: arg.okLabel || 'OK',
+            })
+        );
+    }
 
-        confirmNode.id = dialogId;
-        confirmNode.innerHTML = dialog;
-
-        // top level element for kbase usage
-        kbaseNode = document.querySelector('[data-element="kbase"]');
-        if (!kbaseNode) {
-            kbaseNode = document.createElement('div');
-            kbaseNode.setAttribute('data-element', 'kbase');
-            document.body.appendChild(kbaseNode);
+    function _renderDialog(arg) {
+        const style = {};
+        if (arg.options && arg.options.width) {
+            style.width = arg.options.width;
+        }
+        if (!arg.buttons) {
+            arg.buttons = [];
         }
 
-        // a node upon which to place Bootstrap modals.
-        modalNode = kbaseNode.querySelector('[data-element="modal"]');
-        if (!modalNode) {
-            modalNode = document.createElement('div');
-            modalNode.setAttribute('data-element', 'modal');
-            kbaseNode.appendChild(modalNode);
-        }
+        const renderedButtons = arg.buttons.map((btn) => {
+            return button(
+                {
+                    type: 'button',
+                    class: 'btn btn-' + (btn.type || 'default'),
+                    dataElement: btn.action,
+                    dataDismiss: 'modal',
+                },
+                btn.label
+            );
+        });
 
-        modalNode.appendChild(confirmNode);
-
-        const modalDialogNode = modalNode.querySelector('.modal');
-        $(modalDialogNode).modal('show');
-        return new Promise((resolve) => {
-            modalDialogNode.querySelector('[data-element="ok"]').addEventListener('click', () => {
-                confirmNode.parentElement.removeChild(confirmNode);
-                resolve(false);
-            });
-            modalDialogNode.addEventListener('hide.bs.modal', () => {
-                resolve(false);
-            });
+        return _renderModal({
+            title: arg.title,
+            body: arg.body,
+            includeCancel: arg.cancelLabel || 'Cancel',
+            buttons: renderedButtons,
+            style: style,
         });
     }
 
-    function renderDialog(title, content, cancelLabel, buttons, options) {
-        const style = {};
-        if (options && options.width) {
-            style.width = options.width;
-        }
-        return div({ class: 'modal fade', tabindex: '-1', role: 'dialog' }, [
-            div({ class: 'modal-dialog', style: style }, [
-                div({ class: 'modal-content' }, [
-                    div({ class: 'modal-header' }, [
-                        button(
-                            {
-                                type: 'button',
-                                class: 'close',
-                                dataDismiss: 'modal',
-                                ariaLabel: cancelLabel,
-                            },
-                            [span({ ariaHidden: 'true' }, '&times;')]
-                        ),
-                        span({ class: 'modal-title kb-title' }, title),
-                    ]),
-                    div({ class: 'modal-body' }, [content]),
-                    div(
-                        { class: 'modal-footer' },
-                        buttons
-                            .map((btn) => {
-                                return button(
-                                    {
-                                        type: 'button',
-                                        class: 'btn btn-' + (btn.type || 'default'),
-                                        dataElement: btn.action,
-                                    },
-                                    btn.label
-                                );
-                            })
-                            .concat([
-                                button(
-                                    {
-                                        type: 'button',
-                                        class: 'btn btn-default',
-                                        dataDismiss: 'modal',
-                                        dataElement: 'cancel',
-                                    },
-                                    cancelLabel
-                                ),
-                            ])
-                    ),
-                ]),
-            ]),
-        ]);
-    }
+    function showDialog(arg) {
+        const dialog = _renderDialog(arg),
+            confirmNode = _generateConfirmNode(dialog),
+            modalDialogNode = _setUpModalNodes(confirmNode);
 
-    function showDialog(args) {
-        args.buttons = args.buttons || [];
-        const dialog = renderDialog(
-                args.title,
-                args.body,
-                args.cancelLabel || 'Cancel',
-                args.buttons,
-                args.options
-            ),
-            dialogId = html.genId(),
-            confirmNode = document.createElement('div');
-        let kbaseNode, modalNode;
-
-        confirmNode.id = dialogId;
-        confirmNode.innerHTML = dialog;
-
-        // top level element for kbase usage
-        kbaseNode = document.querySelector('[data-element="kbase"]');
-        if (!kbaseNode) {
-            kbaseNode = document.createElement('div');
-            kbaseNode.setAttribute('data-element', 'kbase');
-            document.body.appendChild(kbaseNode);
-        }
-
-        // a node upon which to place Bootstrap modals.
-        modalNode = kbaseNode.querySelector('[data-element="modal"]');
-        if (!modalNode) {
-            modalNode = document.createElement('div');
-            modalNode.setAttribute('data-element', 'modal');
-            kbaseNode.appendChild(modalNode);
-        }
-
-        modalNode.appendChild(confirmNode);
-
-        const modalDialogNode = modalNode.querySelector('.modal');
         $(modalDialogNode).modal('show');
-        return new Promise((resolve, reject) => {
-            modalDialogNode
-                .querySelector('[data-element="cancel"]')
-                .addEventListener('click', () => {
-                    confirmNode.parentElement.removeChild(confirmNode);
-                    resolve({
-                        action: 'cancel',
-                    });
-                });
-            args.buttons.forEach((btn) => {
-                modalDialogNode
-                    .querySelector('[data-element="' + btn.action + '"]')
-                    .addEventListener('click', (e) => {
-                        try {
-                            const result = btn.handler(e);
-                            if (result) {
-                                $(modalDialogNode).modal('hide');
-                                confirmNode.parentElement.removeChild(confirmNode);
-                                resolve({
-                                    action: btn.action,
-                                    result: result,
-                                });
-                            }
-                        } catch (ex) {
-                            reject(ex);
-                        }
-                    });
-            });
 
-            modalDialogNode.addEventListener('hide.bs.modal', () => {
-                resolve({
-                    action: 'cancel',
+        let resolution = { action: 'cancel' };
+
+        arg.buttons.forEach((btn) => {
+            modalDialogNode
+                .querySelector('[data-element="' + btn.action + '"]')
+                .addEventListener('click', (e) => {
+                    try {
+                        const result = btn.handler(e);
+                        if (result) {
+                            resolution = {
+                                action: btn.action,
+                                result: result,
+                            };
+                        }
+                    } catch (ex) {
+                        console.error(ex);
+                    }
                 });
+        });
+
+        return new Promise((resolve) => {
+            $(modalDialogNode).on('hidden.bs.modal', () => {
+                confirmNode.remove();
+                resolve(resolution);
             });
+            if (arg.doThisFirst) {
+                arg.doThisFirst();
+            }
         });
     }
 
@@ -1440,76 +1416,67 @@ define([
             });
         }
 
-        return Object.freeze({
-            activateButton: activateButton,
-            addClass: addClass,
-            buildButton: buildButton,
-            buildButtonToolbar: buildButtonToolbar,
-            buildCollapsiblePanel: buildCollapsiblePanel,
-            buildErrorTabs: buildErrorTabs,
-            buildGridTable: buildGridTable,
-            buildIcon: buildIcon,
-            buildPanel: buildPanel,
-            buildPresentableJson: buildPresentableJson,
-            buildTabs: buildTabs,
-            collapsePanel: collapsePanel,
-            confirmDialog: confirmDialog,
-            createNode: createNode,
-            deactivateButton: deactivateButton,
-            disableButton: disableButton,
-            enableButton: enableButton,
-            enableTooltips: enableTooltips,
-            expandPanel: expandPanel,
-            getButton: getButton,
-            getElement: getElement,
-            getElements: getElements,
-            getNode: getNode,
-            hideButton: hideButton,
-            hideElement: hideElement,
-            htmlEncode: htmlEncode,
-            ifAdvanced: ifAdvanced,
-            ifDeveloper: ifDeveloper,
-            isAdvanced: isAdvanced,
-            isDeveloper: isDeveloper,
-            jsonBlockWidget: jsonBlockWidget(),
-            loading: loading,
-            makeButton: makeButton,
-            makeCollapsiblePanel: makeCollapsiblePanel,
-            makePanel: makePanel,
-            na: na,
-            removeClass: removeClass,
-            setButtonLabel: setButtonLabel,
-            setContent: setContent,
-            setText: setText,
-            showButton: showButton,
-            showConfirmDialog: showConfirmDialog,
-            showDialog: showDialog,
-            showElement: showElement,
-            showErrorDialog: showErrorDialog,
-            showInfoDialog: showInfoDialog,
-            updateFromViewModel: updateFromViewModel,
-            updateTab: updateTab,
-        });
+        return Object.freeze(
+            Object.assign({}, staticMethods, {
+                activateButton,
+                addClass,
+                buildButton,
+                buildButtonToolbar,
+                buildCollapsiblePanel,
+                buildErrorTabs,
+                buildGridTable,
+                buildIcon,
+                buildPanel,
+                buildPresentableJson,
+                buildTabs,
+                collapsePanel,
+                confirmDialog,
+                createNode,
+                deactivateButton,
+                disableButton,
+                enableButton,
+                enableTooltips,
+                expandPanel,
+                getButton,
+                getElement,
+                getElements,
+                getNode,
+                hideButton,
+                hideElement,
+                htmlEncode,
+                ifAdvanced,
+                ifDeveloper,
+                isAdvanced,
+                isDeveloper,
+                jsonBlockWidget: jsonBlockWidget(),
+                loading,
+                makeButton,
+                makeCollapsiblePanel,
+                makePanel,
+                na,
+                removeClass,
+                setButtonLabel,
+                setContent,
+                setText,
+                showButton,
+                showConfirmDialog,
+                showDialog,
+                showElement,
+                showErrorDialog,
+                showInfoDialog,
+                updateFromViewModel,
+                updateTab,
+            })
+        );
     }
 
-    return {
-        make: function (config) {
-            return factory(config);
+    return Object.assign(
+        {},
+        {
+            make: function (config) {
+                return factory(config);
+            },
         },
-        // "static" methods
-        buildCollapsiblePanel: buildCollapsiblePanel,
-        buildIcon: buildIcon,
-        buildPanel: buildPanel,
-        htmlEncode: htmlEncode,
-        confirmDialog: confirmDialog,
-        loading: loading,
-        makeCollapsiblePanel: makeCollapsiblePanel,
-        makePanel: makePanel,
-        na: na,
-        showConfirmDialog: showConfirmDialog,
-        showDialog: showDialog,
-        showErrorDialog: showErrorDialog,
-        showInfoDialog: showInfoDialog,
-        cssClassName: cssClassName,
-    };
+        staticMethods
+    );
 });

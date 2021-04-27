@@ -14,12 +14,7 @@
 
 .modal {
   .modal-title {
-    color: use_color('primary-vivid');
-    font: normal 700 130% $typeface-page-text;
-  }
-
-  &.bg-danger .modal-title {
-    color: use-color('error-darker');
+    font: normal 700 18px/24px $typeface-page-text;
   }
 
   &.kb-modal-alert .modal-title {

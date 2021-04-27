@@ -52,7 +52,7 @@ define([
         });
     });
 
-    fdescribe('The job action dropdown instance', () => {
+    describe('The job action dropdown instance', () => {
         let container;
         beforeEach(function () {
             container = document.createElement('div');

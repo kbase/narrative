@@ -54,8 +54,8 @@ module.exports = function (config) {
             { pattern: 'nbextensions/**/*.js', included: false },
             { pattern: 'nbextensions/**/*.json', included: false },
             // static resources
-            { pattern: 'kbase-extension/kbase_templates/*.html', included: false },
-            { pattern: 'kbase-extension/static/**/*.css' },
+            { pattern: 'kbase-extension/kbase_templates/*.html', included: false, nocache: true },
+            { pattern: 'kbase-extension/static/**/*.css', nocache: true },
             { pattern: 'kbase-extension/static/**/*.gif', included: false },
             {
                 pattern: 'kbase-extension/static/kbase/templates/**/*.html',

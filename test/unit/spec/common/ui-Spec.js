@@ -579,4 +579,201 @@ define(['common/ui'], (UI) => {
             expect(bananaButton.textContent).toMatch(/the great big banana!/);
         });
     });
+
+    describe('dialog function', () => {
+        function buttonCheck(bs) {
+            expect(document.querySelector('[data-element="cancel"]')).not.toHaveClass(`btn-${bs}`);
+            expect(document.querySelector('[data-element="ok"]')).toHaveClass(`btn-${bs}`);
+            document.querySelector('[data-element="ok"]').click();
+        }
+
+        describe('dialog theming', () => {
+            const classes = ['success', 'info', 'warning', 'danger'];
+            classes.forEach((bs) => {
+                it(`can use the bootstrap ${bs} theme`, async () => {
+                    await UI.showConfirmDialog({
+                        body: `${bs} test dialog`,
+                        title: bs,
+                        okLabel: bs,
+                        bsClass: bs,
+                        doThisFirst: () => {
+                            expect(document.querySelector('.modal-header')).toHaveClass(`bg-${bs}`);
+                            expect(document.querySelector('.modal-title')).toHaveClass(
+                                `text-${bs}`
+                            );
+                            buttonCheck(bs);
+                        },
+                    });
+                });
+            });
+
+            it('can use the bootstrap primary theme', async () => {
+                const bs = 'primary';
+                await UI.showConfirmDialog({
+                    body: `${bs} test dialog`,
+                    title: bs,
+                    okLabel: bs,
+                    bsClass: bs,
+                    doThisFirst: () => {
+                        expect(document.querySelector('.modal-header')).toHaveClass(`bg-${bs}`);
+                        // uses the text colour from the bg
+                        expect(document.querySelector('.modal-title')).not.toHaveClass(
+                            `text-${bs}`
+                        );
+                        buttonCheck(bs);
+                    },
+                });
+            });
+
+            it('can be unthemed', async () => {
+                const bs = 'primary';
+                await UI.showConfirmDialog({
+                    body: `unthemed test dialog`,
+                    title: 'No theme',
+                    doThisFirst: () => {
+                        // no background!
+                        expect(document.querySelector('.modal-header')).not.toHaveClass(`bg-${bs}`);
+                        expect(document.querySelector('.modal-title')).toHaveClass(`text-${bs}`);
+                        buttonCheck(bs);
+                    },
+                });
+            });
+        });
+
+        describe('showConfirmDialog', () => {
+            const clickLocation = {
+                '.modal-header .close': false,
+                '[data-element="ok"]': true,
+                '[data-element="cancel"]': false,
+                // modal backdrop
+                '.modal': false,
+            };
+            const keyCode = {
+                13: true,
+                27: false,
+            };
+            Object.keys(clickLocation).forEach((loc) => {
+                it(`returns ${clickLocation[loc]} when clicking on ${loc}`, async () => {
+                    await UI.showConfirmDialog({
+                        title: 'showConfirmDialog',
+                        body: 'blah blah blah',
+                        doThisFirst: () => {
+                            document.querySelector(loc).click();
+                        },
+                    }).then((res) => {
+                        expect(res).toBe(clickLocation[loc]);
+                        expect(document.querySelector('.modal-dialog')).toBeNull();
+                    });
+                });
+            });
+
+            Object.keys(keyCode).forEach((key) => {
+                it(`returns ${keyCode[key]} when hitting key ${key}`, async () => {
+                    await UI.showConfirmDialog({
+                        title: 'showConfirmDialog',
+                        body: 'blah blah blah',
+                        doThisFirst: () => {
+                            const e = new KeyboardEvent('keyup', { key: key });
+                            document.querySelector('.modal').dispatchEvent(e);
+                        },
+                    }).then((res) => {
+                        expect(res).toBe(keyCode[key]);
+                        expect(document.querySelector('.modal-dialog')).toBeNull();
+                    });
+                });
+            });
+        });
+
+        const dialogData = {
+            Info: {
+                body: 'Info dialog body',
+            },
+            Error: {
+                error: Error('string'),
+            },
+        };
+        // showInfoDialog and showErrorDialog
+        Object.keys(dialogData).forEach((dialog) => {
+            describe(`show${dialog}Dialog`, () => {
+                const clickLocation = {
+                    '.modal-header .close': false,
+                    '[data-element="ok"]': false,
+                    // modal backdrop
+                    '.modal': false,
+                };
+                Object.keys(clickLocation).forEach((loc) => {
+                    it(`returns ${clickLocation[loc]} when clicking on ${loc}`, async () => {
+                        const args = Object.assign(dialogData[dialog], {
+                            title: `show an ${dialog} dialog`,
+                            doThisFirst: () => {
+                                document.querySelector(loc).click();
+                            },
+                        });
+
+                        await UI[`show${dialog}Dialog`](args).then((outcome) => {
+                            expect(outcome).toBeFalse();
+                            expect(document.querySelector('.modal-dialog')).toBeNull();
+                        });
+                    });
+                });
+
+                // enter and escape keys should close the modal
+                const keyCodes = [13, 27];
+                keyCodes.forEach((key) => {
+                    it(`returns false when hitting key ${key}`, async () => {
+                        const args = Object.assign(dialogData[dialog], {
+                            title: `show an ${dialog} dialog`,
+                            doThisFirst: () => {
+                                const e = new KeyboardEvent('keyup', { key: key });
+                                document.querySelector('.modal').dispatchEvent(e);
+                            },
+                        });
+
+                        await UI[`show${dialog}Dialog`](args).then((outcome) => {
+                            expect(outcome).toBeFalse();
+                            expect(document.querySelector('.modal-dialog')).toBeNull();
+                        });
+                    });
+                });
+            });
+        });
+
+        describe('showDialog', () => {
+            const clickLocation = {
+                '.modal-header .close': { action: 'cancel' },
+                '[data-element="cancel"]': { action: 'cancel' },
+                '[data-element="link"]': { action: 'link', result: 'I DID THIS!' },
+                // modal backdrop
+                '.modal': { action: 'cancel' },
+            };
+
+            Object.keys(clickLocation).forEach((loc) => {
+                it(`returns ${clickLocation[loc]} when clicking on ${loc}`, async () => {
+                    await UI.showDialog({
+                        title: 'show dialog',
+                        body: 'some old crap',
+                        cancelLabel: 'CLICK ME!',
+                        buttons: [
+                            {
+                                action: 'link',
+                                label: 'View in App Catalog',
+                                handler: function () {
+                                    return 'I DID THIS!';
+                                },
+                            },
+                        ],
+                        options: {
+                            width: '70%',
+                        },
+                        doThisFirst: () => {
+                            document.querySelector(loc).click();
+                        },
+                    }).then((res) => {
+                        expect(res).toEqual(clickLocation[loc]);
+                        expect(document.querySelector('.modal-dialog')).toBeNull();
+                    });
+                });
+            });
+        });
+    });
 });

@@ -190,18 +190,18 @@ define([
             const widget = new KBaseNarrativeWorkspace($node);
             widget.deleteCell(0);
 
-            // 'deleteCell' triggers an 'Are you sure?' popup. Wait for the 'Yes' button to appear
-            const yesButton = '[data-element="modal"] [data-element="yes"]';
-            await TestUtil.waitForElement(document.body, yesButton);
+            // 'deleteCell' triggers an 'Are you sure?' popup. Wait for the 'OK' button to appear
+            const okButton = '[data-element="modal"] [data-element="ok"]';
+            await TestUtil.waitForElement(document.body, okButton);
 
-            // spy on the notebook's `delete_cell` function, which is triggered by clicking the 'Yes' button
+            // spy on the notebook's `delete_cell` function, which is triggered by clicking the 'OK' button
             return new Promise((resolve) => {
                 spyOn(Jupyter.notebook, 'delete_cell').and.callFake(() => {
                     expect(Jupyter.notebook.delete_cell).toHaveBeenCalled();
                     resolve();
                 });
                 // this click should trigger delete callback, and this is done. Yay!
-                document.querySelector(yesButton).click();
+                document.querySelector(okButton).click();
             });
         });
 

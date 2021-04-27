@@ -90,8 +90,6 @@ define([
                         p('If enabled again, the values will be set to their defaults.'),
                         p('Continue to disable this parameter group?'),
                     ]),
-                    yesLabel: 'Yes',
-                    noLabel: 'No',
                 }).then((confirmed) => {
                     if (!confirmed) {
                         return;

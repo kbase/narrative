@@ -22,7 +22,7 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
         'jobStrings',
         'niceState',
         'updateJobModel',
-        'validJobStates',
+        'validJobStatuses',
     ];
 
     const jobsByStatus = {};

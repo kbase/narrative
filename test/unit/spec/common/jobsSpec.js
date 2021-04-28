@@ -89,10 +89,15 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
     });
 
     ['canCancel', 'canRetry'].forEach((fn) => {
+        const actions = {
+            canCancel: 'cancel',
+            canRetry: 'retry',
+        };
         describe(`the ${fn} function`, () => {
             JobsData.allJobs.forEach((jobState) => {
                 it(`should respond ${jobState.meta[fn]} for ${jobState.job_id}`, () => {
                     expect(Jobs[fn](jobState)).toBe(jobState.meta[fn]);
+                    expect(Jobs.canDo(actions[fn], jobState)).toBe(jobState.meta[fn]);
                 });
             });
         });

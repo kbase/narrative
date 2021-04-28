@@ -38,10 +38,12 @@ define(['bluebird', 'common/html', './jobStateList'], (Promise, html, JobStateLi
         }
 
         function stop() {
-            container.innerHTML = '';
-            if (jobStateListWidget) {
-                jobStateListWidget.stop();
-            }
+            return Promise.try(() => {
+                container.innerHTML = '';
+                if (jobStateListWidget) {
+                    jobStateListWidget.stop();
+                }
+            });
         }
 
         return {

@@ -478,8 +478,8 @@ define([
                     dataModel.rowOrder.splice(rowIdx, 1);
                     delete dataModel.rowIdToIndex[rowId];
                     // redo the ordering
-                    dataModel.rowOrder.forEach((rowId, idx) => {
-                        dataModel.rowIdToIndex[rowId] = idx;
+                    dataModel.rowOrder.forEach((_rowId, idx) => {
+                        dataModel.rowIdToIndex[_rowId] = idx;
                     });
                     e.target.closest('li').remove();
                     syncDataModel();

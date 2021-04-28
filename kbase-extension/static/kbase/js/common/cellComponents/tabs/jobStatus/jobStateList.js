@@ -149,7 +149,7 @@ define([
             if (['cancel', 'retry', 'go-to-results'].includes(action)) {
                 if (action === 'go-to-results') {
                     // switch to results tab
-                    return jobManager.viewJobResults(target);
+                    return jobManager.viewResults(target);
                 }
                 return jobManager[`${action}Job`](target);
             }

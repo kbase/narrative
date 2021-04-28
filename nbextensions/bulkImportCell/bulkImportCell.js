@@ -23,6 +23,7 @@ define([
     'common/cellComponents/tabs/jobStatus/jobStatusTab',
     'common/cellComponents/tabs/results/resultsTab',
     './bulkImportCellStates',
+    './jobManager',
     './testAppObj',
 ], (
     Uuid,
@@ -49,6 +50,7 @@ define([
     JobStatusTabWidget,
     ResultsWidget,
     States,
+    JobManager,
     TestAppObj
 ) => {
     'use strict';
@@ -214,7 +216,7 @@ define([
             ui = null,
             tabWidget = null; // the widget currently in view
         // widgets this cell owns
-        let cellTabs, controlPanel, fileTypePanel;
+        let cellTabs, controlPanel, fileTypePanel, jobManager;
 
         if (options.initialize) {
             initialize(options.specs);
@@ -538,87 +540,6 @@ define([
         }
 
         /**
-         * Update the execMessage panel with details of the active jobs
-         */
-        function updateJobState() {
-            controlPanel.setExecMessage(
-                Jobs.createCombinedJobState(model.getItem('exec.jobs.byStatus'))
-            );
-        }
-
-        /* JOB MANAGEMENT */
-
-        /**
-         * Cancel a single job from the batch
-         *
-         * @param {string} jobId
-         */
-        function cancelJob(jobId) {
-            // TODO: implement
-            alert(`Cancel job ${jobId}`);
-            // runtime.bus().emit('request-job-cancellation', {
-            //     jobId: jobId,
-            // });
-        }
-
-        /**
-         * Cancel all jobs with the specified statuses
-         *
-         * @param {array} statusList - array of statuses to cancel
-         */
-        function cancelJobsByStatus(statusList) {
-            const validStates = ['created', 'estimating', 'queued', 'running'];
-            statusList.forEach((status) => {
-                if (!validStates.includes(status)) {
-                    throw new Error(`${status} is not a valid job state`);
-                }
-            });
-            // TODO: implement
-            alert(`Cancel jobs with status ${statusList.join(', ')}`);
-        }
-
-        /**
-         * Retry a single job from the batch
-         *
-         * @param {string} jobId
-         */
-        function retryJob(jobId) {
-            // TODO: implement
-            alert(`Retry job ${jobId}`);
-        }
-
-        /**
-         * Retry all jobs that ended with the specified status(es)
-         *
-         * @param {array} statusList - array of statuses to retry
-         */
-        function retryJobsByStatus(statusList) {
-            const validStates = ['error', 'terminated'];
-            statusList.forEach((status) => {
-                if (!validStates.includes(status)) {
-                    throw new Error(`${status} is not a valid job state`);
-                }
-            });
-            // TODO: implement
-            alert(`Retry jobs with status ${statusList.join(', ')}`);
-        }
-
-        const jobManager = {
-            cancelJob,
-            cancelJobsByStatus,
-            retryJob,
-            retryJobsByStatus,
-            updateJobState,
-        };
-
-        // add in an alias to switch to the results panel for the job status table
-        jobManager.viewJobResults = () => {
-            toggleTab('results');
-        };
-
-        /* END JOB MANAGEMENT */
-
-        /**
          * Initializes the DOM node (kbaseNode) for rendering.
          */
         function setupDomNode() {
@@ -654,11 +575,23 @@ define([
             setupMessageBus();
             setupDomNode();
 
+            // initialise the job manager
+            jobManager = JobManager.make({
+                model: model,
+                bus: cellBus,
+                viewResultsFunction: () => {
+                    toggleTab('results');
+                },
+            });
+
             // finalize by updating the lastLoaded attribute, which triggers a toolbar re-render
             const meta = cell.metadata;
             meta.kbase.attributes.lastLoaded = new Date().toUTCString();
             cell.metadata = meta;
             render().then(() => {
+                // add in the control panel so we can update the job status in the cell header
+                jobManager.setControlPanel(controlPanel);
+
                 cell.renderMinMax();
                 // force toolbar refresh
                 // eslint-disable-next-line no-self-assign
@@ -857,7 +790,7 @@ define([
             cellTabs.setState(state.tab);
             controlPanel.setActionState(state.action);
             fileTypePanel.updateState(state.fileType);
-            updateJobState();
+            jobManager.updateJobState();
             // TODO: add in the FSM state
             FSMBar.showFsmBar({
                 ui: ui,

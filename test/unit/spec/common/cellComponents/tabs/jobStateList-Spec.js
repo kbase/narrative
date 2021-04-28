@@ -144,14 +144,14 @@ define([
                 'cancelJobsByStatus',
                 'retryJob',
                 'retryJobsByStatus',
-                'viewJobResults',
+                'viewResults',
                 'updateJobState',
             ];
 
             const actionButtonToFunction = {
                 cancel: 'cancelJob',
                 retry: 'retryJob',
-                'go-to-results': 'viewJobResults',
+                'go-to-results': 'viewResults',
             };
             const dropdownButtonToFunction = {
                 cancel: 'cancelJobsByStatus',
@@ -263,7 +263,6 @@ define([
 
             it('should respond to a job status update', async function () {
                 // update the queued job to running
-                document.body.append(container);
                 const queuedJob = JobsData.jobsByStatus.queued[0],
                     runningJob = JobsData.jobsByStatus.running[0];
 

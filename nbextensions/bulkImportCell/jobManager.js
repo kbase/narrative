@@ -232,12 +232,43 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
             });
         }
 
+        /**
+         * Update the model with the supplied jobState objects
+         * @param {array} jobArray list of jobState objects to update the model with
+         */
+        function updateModel(jobArray) {
+            const jobIndex = model.getItem('exec.jobs');
+            jobArray.forEach((jobState) => {
+                const status = jobState.status,
+                    jobId = jobState.job_id,
+                    oldJob = jobIndex.byId[jobId];
+
+                // update the job object
+                jobIndex.byId[jobId] = jobState;
+                if (!jobIndex.byStatus[status]) {
+                    jobIndex.byStatus[status] = {};
+                }
+                jobIndex.byStatus[status][jobId] = true;
+
+                if (oldJob && status !== oldJob.status) {
+                    const oldStatus = oldJob.status;
+                    delete jobIndex.byStatus[oldStatus][jobId];
+                    if (!Object.keys(jobIndex.byStatus[oldStatus]).length) {
+                        delete jobIndex.byStatus[oldStatus];
+                    }
+                }
+            });
+            model.setItem('exec.jobs', jobIndex);
+            return model;
+        }
+
         return {
             cancelJob,
             cancelJobsByStatus,
             retryJob,
             retryJobsByStatus,
             updateJobState,
+            updateModel,
             viewResults,
             setControlPanel,
         };

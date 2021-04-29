@@ -246,16 +246,8 @@ define([
                 return;
             }
 
-            // otherwise, update the jobState object
-            model.setItem(`exec.jobs.byId.${jobId}`, jobState);
-            model.setItem(`exec.jobs.byStatus.${status}.${jobId}`, true);
-            model.deleteItem(`exec.jobs.byStatus.${previousStatus}.${jobId}`);
-            if (
-                model.getItem(`exec.jobs.byStatus.${previousStatus}`) &&
-                !Object.keys(model.getItem(`exec.jobs.byStatus.${previousStatus}`)).length
-            ) {
-                model.deleteItem(`exec.jobs.byStatus.${previousStatus}`);
-            }
+            // otherwise, update the model using the jobState object
+            jobManager.updateModel([jobState]);
 
             if (widgetsById[jobId]) {
                 // update the row widget

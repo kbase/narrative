@@ -235,6 +235,7 @@ define([
             const cellCollapsed =
                     utils.getCellMeta(_cell, 'kbase.cellState.toggleMinMax', 'maximized') !==
                     'maximized',
+                // TODO: this needs to be updated for kbase.bulkImportCell
                 fsmMode = utils.getCellMeta(_cell, 'kbase.appCell.fsm.currentState.mode', ''),
                 fsmStage = utils.getCellMeta(_cell, 'kbase.appCell.fsm.currentState.stage', ''),
                 collapsedCellJobStatus = cellCollapsed

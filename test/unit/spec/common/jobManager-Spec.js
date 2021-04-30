@@ -1,10 +1,10 @@
-define([
-    '/narrative/nbextensions/bulkImportCell/jobManager',
-    'common/jobs',
-    'common/props',
-    'common/ui',
-    '/test/data/jobsData',
-], (JobManager, Jobs, Props, UI, JobsData) => {
+define(['common/jobManager', 'common/jobs', 'common/props', 'common/ui', '/test/data/jobsData'], (
+    JobManager,
+    Jobs,
+    Props,
+    UI,
+    JobsData
+) => {
     'use strict';
 
     const JobManagerFunctions = [
@@ -12,9 +12,10 @@ define([
         'cancelJobsByStatus',
         'retryJob',
         'retryJobsByStatus',
-        'updateJobState',
+        'updateToolbarJobStatus',
         'updateModel',
         'viewResults',
+        'setControlPanel',
     ];
 
     describe('the JobManager module', () => {
@@ -172,11 +173,11 @@ define([
             });
         });
 
-        describe('the updateJobState function', () => {
+        describe('the updateToolbarJobStatus function', () => {
             it('can execute a function in the controlPanel', function () {
                 const jobManagerInstance = createJobManagerInstance(this);
                 spyOn(this.controlPanel, 'setExecMessage');
-                jobManagerInstance.updateJobState();
+                jobManagerInstance.updateToolbarJobStatus();
                 expect(this.controlPanel.setExecMessage).toHaveBeenCalled();
             });
 
@@ -187,12 +188,12 @@ define([
                     viewResultsFunction: this.viewResultsFunction,
                 });
                 spyOn(console, 'warn');
-                jobManagerInstance.updateJobState();
+                jobManagerInstance.updateToolbarJobStatus();
                 expect(console.warn).toHaveBeenCalledWith('controlPanel has not been initialised');
 
                 jobManagerInstance.setControlPanel(this.controlPanel);
                 spyOn(this.controlPanel, 'setExecMessage');
-                jobManagerInstance.updateJobState();
+                jobManagerInstance.updateToolbarJobStatus();
                 expect(this.controlPanel.setExecMessage).toHaveBeenCalled();
             });
         });

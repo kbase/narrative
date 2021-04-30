@@ -32,7 +32,7 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
         /**
          * Update the execMessage panel with details of the active jobs
          */
-        function updateJobState() {
+        function updateToolbarJobStatus() {
             if (!controlPanel) {
                 console.warn('controlPanel has not been initialised');
                 return;
@@ -267,7 +267,7 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
             cancelJobsByStatus,
             retryJob,
             retryJobsByStatus,
-            updateJobState,
+            updateToolbarJobStatus,
             updateModel,
             viewResults,
             setControlPanel,

@@ -5,7 +5,7 @@ define([
     'common/busEventManager',
     'common/events',
     'common/html',
-    'common/jobs',
+    'common/jobManager',
     'common/props',
     'common/runtime',
     'common/spec',
@@ -23,7 +23,6 @@ define([
     'common/cellComponents/tabs/jobStatus/jobStatusTab',
     'common/cellComponents/tabs/results/resultsTab',
     './bulkImportCellStates',
-    './jobManager',
     './testAppObj',
 ], (
     Uuid,
@@ -32,7 +31,7 @@ define([
     BusEventManager,
     Events,
     html,
-    Jobs,
+    JobManager,
     Props,
     Runtime,
     Spec,
@@ -50,7 +49,6 @@ define([
     JobStatusTabWidget,
     ResultsWidget,
     States,
-    JobManager,
     TestAppObj
 ) => {
     'use strict';
@@ -790,7 +788,7 @@ define([
             cellTabs.setState(state.tab);
             controlPanel.setActionState(state.action);
             fileTypePanel.updateState(state.fileType);
-            jobManager.updateJobState();
+            jobManager.updateToolbarJobStatus();
             // TODO: add in the FSM state
             FSMBar.showFsmBar({
                 ui: ui,

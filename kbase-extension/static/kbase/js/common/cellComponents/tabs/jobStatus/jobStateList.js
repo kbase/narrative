@@ -81,8 +81,8 @@ define([
     }
 
     // Convert the table to a datatable object to get functionality
-    function renderTable($container, rowCount) {
-        return $container.find('table').dataTable({
+    function renderTable(container, rowCount) {
+        return $(container.querySelector('table')).dataTable({
             searching: false,
             pageLength: dataTablePageLength,
             lengthChange: false,
@@ -101,7 +101,7 @@ define([
             fnDrawCallback: () => {
                 // Hide pagination controls if length is less than or equal to table length
                 if (rowCount <= dataTablePageLength) {
-                    $container.find('.dataTables_paginate').hide();
+                    $(container.querySelector('.dataTables_paginate')).hide();
                 }
             },
         });
@@ -254,7 +254,7 @@ define([
                 widgetsById[jobId].updateState(jobState);
             }
             dropdownWidget.updateState();
-            jobManager.updateJobState();
+            jobManager.updateToolbarJobStatus();
         }
 
         /**
@@ -319,7 +319,7 @@ define([
                     });
                 })
                 .then(() => {
-                    renderTable($(container), jobs.length);
+                    renderTable(container, jobs.length);
 
                     jobs.forEach((jobState) => {
                         startStatusListener(jobState.job_id);

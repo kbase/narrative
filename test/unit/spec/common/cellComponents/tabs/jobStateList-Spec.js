@@ -1,11 +1,12 @@
 define([
     'common/cellComponents/tabs/jobStatus/jobStateList',
     'common/jobs',
+    'common/jobManager',
     'common/props',
     'common/runtime',
     'testUtil',
     '/test/data/jobsData',
-], (JobStateList, Jobs, Props, Runtime, TestUtil, JobsData) => {
+], (JobStateList, Jobs, JobManager, Props, Runtime, TestUtil, JobsData) => {
     'use strict';
 
     const model = Props.make({
@@ -145,7 +146,7 @@ define([
                 'retryJob',
                 'retryJobsByStatus',
                 'viewResults',
-                'updateJobState',
+                'updateToolbarJobStatus',
             ];
 
             const actionButtonToFunction = {
@@ -239,6 +240,7 @@ define([
                 });
             });
         });
+
         describe('response to updates', () => {
             let container;
             beforeEach(async function () {
@@ -246,12 +248,13 @@ define([
                 window.kbaseRuntime = null;
                 this.bus = Runtime.make().bus();
                 this.jobStateUpdated = false;
+                this.jobManager = JobManager.make({
+                    model: model,
+                    bus: this.bus,
+                    viewResultsFunction: true,
+                });
                 this.jobStateListInstance = await createStartedInstance(container, {
-                    jobManager: {
-                        updateJobState: () => {
-                            this.jobStateUpdated = true;
-                        },
-                    },
+                    jobManager: this.jobManager,
                 });
             });
 
@@ -265,6 +268,10 @@ define([
                 // update the queued job to running
                 const queuedJob = JobsData.jobsByStatus.queued[0],
                     runningJob = JobsData.jobsByStatus.running[0];
+                spyOn(this.jobManager, 'updateToolbarJobStatus').and.callFake(() => {
+                    this.jobStateUpdated = true;
+                });
+                spyOn(this.jobManager, 'updateModel').and.callThrough();
 
                 ['doesNotExist', 'params', 'status'].forEach((type) => {
                     expect(
@@ -296,6 +303,8 @@ define([
                 expect(
                     this.jobStateListInstance.listeners[`doesNotExist__${queuedJob.job_id}`]
                 ).not.toBeDefined();
+                expect(this.jobManager.updateModel).toHaveBeenCalled();
+                expect(this.jobManager.updateToolbarJobStatus).toHaveBeenCalled();
                 expect(this.jobStateUpdated).toBeTrue();
                 expect(model.getItem('exec.jobs.byStatus.queued')).not.toBeDefined();
                 const runningJobs = model.getItem('exec.jobs.byStatus.running');

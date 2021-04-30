@@ -92,6 +92,12 @@ class JobManagerTest(unittest.TestCase):
         self.assertIn("<td>Incomplete</td>", html)
 
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
+    def test_list_jobs_twice(self):
+        jobs_html_0 = self.jm.list_jobs()
+        jobs_html_1 = self.jm.list_jobs()
+        self.assertTrue(jobs_html_0.data == jobs_html_1.data)
+
+    @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def test_cancel_job_good(self):
         new_job = phony_job()
         job_id = new_job.job_id

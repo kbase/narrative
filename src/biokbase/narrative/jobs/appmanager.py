@@ -23,12 +23,49 @@ import re
 import datetime
 import traceback
 import random
+import functools
+from typing import Callable
 
 """
 A module for managing apps, specs, requirements, and for starting jobs.
 """
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
+
+def _app_error_wrapper(app_func: Callable) -> any:
+    @functools.wraps(app_func)
+    def wrapper(self, *args, **kwargs):
+        try:
+            return app_func(self, *args, **kwargs)
+        except Exception as e:
+            e_type = type(e).__name__
+            e_message = str(e).replace("<", "&lt;").replace(">", "&gt;")
+            e_trace = traceback.format_exc()
+            e_trace = e_trace.replace("<", "&lt;").replace(">", "&gt;")
+            e_code = getattr(e, "code", -1)
+            e_source = getattr(e, "source", "appmanager")
+            msg_info = {
+                "event": "error",
+                "event_at": datetime.datetime.utcnow().isoformat() + "Z",
+                "error_message": e_message,
+                "error_type": e_type,
+                "error_stacktrace": e_trace,
+                "error_code": e_code,
+                "error_source": e_source,
+            }
+            for key in ["cell_id", "run_id"]:
+                if key in kwargs:
+                    msg_info[key] = kwargs[key]
+            self._send_comm_message("run_status", msg_info)
+            print(
+                f"Error while trying to start your app ({app_func.__name__})!\n"
+                + "-----------------------------------------------------\n"
+                + str(e)
+                + "\n"
+                + "-----------------------------------------------------\n"
+                + e_trace
+            )
+    return wrapper
 
 class AppManager(object):
     """
@@ -118,6 +155,7 @@ class AppManager(object):
         """
         return self.spec_manager.available_apps(tag)
 
+    @_app_error_wrapper
     def run_app_batch(
         self,
         app_id,
@@ -128,46 +166,8 @@ class AppManager(object):
         run_id=None,
         dry_run=False,
     ):
-        try:
-            if params is None:
-                params = list()
-            return self._run_app_batch_internal(
-                app_id, params, tag, version, cell_id, run_id, dry_run
-            )
-        except Exception as e:
-            e_type = type(e).__name__
-            e_message = str(e).replace("<", "&lt;").replace(">", "&gt;")
-            e_trace = traceback.format_exc()
-            e_trace = e_trace.replace("<", "&lt;").replace(">", "&gt;")
-            e_code = getattr(e, "code", -1)
-            e_source = getattr(e, "source", "appmanager")
-            self._send_comm_message(
-                "run_status",
-                {
-                    "event": "error",
-                    "event_at": datetime.datetime.utcnow().isoformat() + "Z",
-                    "cell_id": cell_id,
-                    "run_id": run_id,
-                    "error_message": e_message,
-                    "error_type": e_type,
-                    "error_stacktrace": e_trace,
-                    "error_code": e_code,
-                    "error_source": e_source,
-                },
-            )
-            print(
-                "Error while trying to start your app (run_app_batch)!\n"
-                + "-----------------------------------------------------\n"
-                + str(e)
-                + "\n"
-                + "-----------------------------------------------------\n"
-                + e_trace
-            )
-            return
-
-    def _run_app_batch_internal(
-        self, app_id, params, tag, version, cell_id, run_id, dry_run
-    ):
+        if params is None:
+            params = list()
         batch_method = "kb_BatchApp.run_batch"
         batch_app_id = "kb_BatchApp/run_batch"
         batch_method_ver = "dev"
@@ -307,11 +307,10 @@ class AppManager(object):
             },
         )
         self.register_new_job(new_job)
-        if cell_id is not None:
-            return
-        else:
+        if cell_id is None:
             return new_job
 
+    @_app_error_wrapper
     def run_app(
         self,
         app_id,
@@ -349,63 +348,8 @@ class AppManager(object):
                 version='>=1.0.0'
         )
         """
-
-        try:
-            if params is None:
-                params = dict()
-            return self._run_app_internal(
-                app_id, params, tag, version, cell_id, run_id, dry_run
-            )
-        except Exception as e:
-            e_type = type(e).__name__
-            e_message = str(e).replace("<", "&lt;").replace(">", "&gt;")
-            e_trace = traceback.format_exc()
-            e_trace = e_trace.replace("<", "&lt;").replace(">", "&gt;")
-            e_code = getattr(e, "code", -1)
-            e_source = getattr(e, "source", "appmanager")
-            self._send_comm_message(
-                "run_status",
-                {
-                    "event": "error",
-                    "event_at": datetime.datetime.utcnow().isoformat() + "Z",
-                    "cell_id": cell_id,
-                    "run_id": run_id,
-                    "error_message": e_message,
-                    "error_type": e_type,
-                    "error_stacktrace": e_trace,
-                    "error_code": e_code,
-                    "error_source": e_source,
-                },
-            )
-            print(
-                "Error while trying to start your app (run_app)!\n"
-                + "-----------------------------------------------\n"
-                + str(e)
-                + "\n"
-                + "-----------------------------------------------\n"
-                + e_trace
-            )
-            return
-
-    def _run_app_internal(self, app_id, params, tag, version, cell_id, run_id, dry_run):
-        """
-        Attemps to run the app, returns a Job with the running app info.
-        Should *hopefully* also inject that app into the Narrative's metadata.
-        Probably need some kind of JavaScript-foo to get that to work.
-
-        Parameters:
-        -----------
-        app_id - should be from the app spec, e.g. 'build_a_metabolic_model'
-                    or 'MegaHit/run_megahit'.
-        params - a dictionary of parameters.
-        tag - optional, one of [release|beta|dev] (default=release)
-        version - optional, a semantic version string. Only released modules
-                  have versions, so if the tag is not 'release', and a version
-                  is given, a ValueError will be raised.
-        **kwargs - these are the set of parameters to be used with the app.
-                   They can be found by using the app_usage function. If any
-                   non-optional apps are missing, a ValueError will be raised.
-        """
+        if params is None:
+            params = dict()
         ws_id = strict_system_variable("workspace_id")
         spec = self._get_validated_app_spec(app_id, tag, True, version=version)
 
@@ -510,6 +454,44 @@ class AppManager(object):
             return
         else:
             return new_job
+
+    @_app_error_wrapper
+    def run_app_bulk(self, app_info, cell_id=None, run_id=None, dry_run=False):
+        """
+        app_info
+        1. Validate the app_info inputs - keys, apps and tags are real
+        2. Validate the app parameter sets are real
+        3. Build the call to EE2.run_job_batch
+        4. Run the call
+        5. If successful, construct the job(s) and pass to jobmanager
+        """
+
+        assert app_info
+        ws_id = system_variable("workspace_id")
+        return -1
+
+        # typedef structure {
+        #     string method;
+        #     string app_id;
+        #     list<UnspecifiedObject> params;
+        #     string service_ver;
+        #     list<wsref> source_ws_objects;
+        #     Meta meta;
+        #     int wsid;
+        #     string parent_job_id;
+        # } RunJobParams;
+
+        # typedef structure {
+        #     int wsid;
+        # } BatchParams;
+
+        # typedef structure {
+        #     job_id parent_job_id;
+        #     list<job_id> child_job_ids;
+        # } BatchSubmission;
+
+        # funcdef run_job_batch(list<RunJobParams> params, BatchParams batch_params) returns (BatchSubmission job_ids) authentication required;
+
 
     def run_local_app(
         self,

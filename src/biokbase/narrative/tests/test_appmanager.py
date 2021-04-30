@@ -20,6 +20,7 @@ import io
 def mock_agent_token(*args, **kwargs):
     return dict({"user": "testuser", "id": "12345", "token": "abcde"})
 
+
 class AppManagerTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -44,37 +45,44 @@ class AppManagerTestCase(unittest.TestCase):
         cls.ws_id = int(config.get("app_tests", "public_ws_id"))
         cls.app_input_ref = config.get("app_tests", "test_input_ref")
         cls.batch_app_id = config.get("app_tests", "batch_app_id")
-        cls.bulk_run_good_inputs = [{
-            "app_id": "kb_uploadmethods/import_fastq_sra_as_reads_from_staging",
-            "tag": "release",
-            "version": "1.0.46",
-            "params": [{
-                "fastq_fwd_staging_file_name": "",
-                "fastq_rev_staging_file_name": "",
-                "sra_staging_file_name": "",
-                "name": "asdf",
-                "import_type": "FASTQ/FASTA",
-                "insert_size_mean": 0,
-                "insert_size_std_dev": 0,
-                "interleaved": 1,
-                "read_orientation_outward": "0",
-                "sequencing_tech": "Illumina",
-                "single_genome": 1
-            }]
-        }, {
-            "app_id": "kb_uploadmethods/import_sra_as_reads_from_staging",
-            "tag": "release",
-            "version": "1.0.46",
-            "params": [{
-                "sra_staging_file_name": "",
-                "name": "asdf",
-                "insert_size_mean": 1,
-                "insert_size_std_dev": 1,
-                "read_orientation_outward": "0",
-                "sequencing_tech": "Illumina",
-                "single_genome": "1"
-            }]
-        }]
+        cls.bulk_run_good_inputs = [
+            {
+                "app_id": "kb_uploadmethods/import_fastq_sra_as_reads_from_staging",
+                "tag": "release",
+                "version": "1.0.46",
+                "params": [
+                    {
+                        "fastq_fwd_staging_file_name": "",
+                        "fastq_rev_staging_file_name": "",
+                        "sra_staging_file_name": "",
+                        "name": "asdf",
+                        "import_type": "FASTQ/FASTA",
+                        "insert_size_mean": 0,
+                        "insert_size_std_dev": 0,
+                        "interleaved": 1,
+                        "read_orientation_outward": "0",
+                        "sequencing_tech": "Illumina",
+                        "single_genome": 1,
+                    }
+                ],
+            },
+            {
+                "app_id": "kb_uploadmethods/import_sra_as_reads_from_staging",
+                "tag": "release",
+                "version": "1.0.46",
+                "params": [
+                    {
+                        "sra_staging_file_name": "",
+                        "name": "asdf",
+                        "insert_size_mean": 1,
+                        "insert_size_std_dev": 1,
+                        "read_orientation_outward": "0",
+                        "sequencing_tech": "Illumina",
+                        "single_genome": "1",
+                    }
+                ],
+            },
+        ]
 
     def setUp(self):
         os.environ["KB_WORKSPACE_ID"] = self.public_ws
@@ -95,7 +103,9 @@ class AppManagerTestCase(unittest.TestCase):
         self.assertIsNone(run_func())
         sys.stdout = sys.__stdout__
         output_str = output.getvalue()
-        self.assertIn(f"Error while trying to start your app ({func_name})!", output_str)
+        self.assertIn(
+            f"Error while trying to start your app ({func_name})!", output_str
+        )
         self.assertIn(print_error, output_str)
         self._verify_comm_error(comm_mock)
 
@@ -197,31 +207,36 @@ class AppManagerTestCase(unittest.TestCase):
     @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
     def test_run_app_bad_id(self, c):
         c.return_value.send_comm_message = MagicMock()
+
         def run_func():
             return self.am.run_app(self.bad_app_id, None)
+
         self.run_app_expect_error(
             c.return_value.send_comm_message,
             run_func,
             "run_app",
-            f'Unknown app id "{self.bad_app_id}" tagged as "release"'
+            f'Unknown app id "{self.bad_app_id}" tagged as "release"',
         )
 
     @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
     def test_run_app_bad_tag(self, c):
         c.return_value.send_comm_message = MagicMock()
+
         def run_func():
             return self.am.run_app(self.good_app_id, None, tag=self.bad_tag)
+
         self.run_app_expect_error(
             c.return_value.send_comm_message,
             run_func,
             "run_app",
-            f"Can't find tag {self.bad_tag} - allowed tags are release, beta, dev"
+            f"Can't find tag {self.bad_tag} - allowed tags are release, beta, dev",
         )
 
     @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
     def test_run_app_bad_version_match(self, c):
         # fails because a non-release tag can't be versioned
         c.return_value.send_comm_message = MagicMock()
+
         def run_func():
             return self.am.run_app(self.good_app_id, None, tag="dev", version="0.0.1")
 
@@ -229,7 +244,7 @@ class AppManagerTestCase(unittest.TestCase):
             c.return_value.send_comm_message,
             run_func,
             "run_app",
-            f"Semantic versions only apply to released app modules."
+            "Semantic versions only apply to released app modules.",
         )
 
     # Running an app with missing inputs is now allowed. The app can
@@ -291,38 +306,46 @@ class AppManagerTestCase(unittest.TestCase):
     @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
     def test_run_app_batch_bad_id(self, c):
         c.return_value.send_comm_message = MagicMock()
+
         def run_func():
             return self.am.run_app_batch(self.bad_app_id, None)
+
         self.run_app_expect_error(
             c.return_value.send_comm_message,
             run_func,
             "run_app_batch",
-            f'Unknown app id "{self.bad_app_id}" tagged as "release"'
+            f'Unknown app id "{self.bad_app_id}" tagged as "release"',
         )
 
     @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
     def test_run_app_batch_bad_tag(self, c):
         c.return_value.send_comm_message = MagicMock()
+
         def run_func():
             return self.am.run_app_batch(self.good_app_id, None, tag=self.bad_tag)
+
         self.run_app_expect_error(
             c.return_value.send_comm_message,
             run_func,
             "run_app_batch",
-            f"Can't find tag {self.bad_tag} - allowed tags are release, beta, dev"
+            f"Can't find tag {self.bad_tag} - allowed tags are release, beta, dev",
         )
 
     @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
     def test_run_app_batch_bad_version_match(self, c):
         # fails because a non-release tag can't be versioned
         c.return_value.send_comm_message = MagicMock()
+
         def run_func():
-            return self.am.run_app_batch(self.good_app_id, None, tag="dev", version="0.0.1")
+            return self.am.run_app_batch(
+                self.good_app_id, None, tag="dev", version="0.0.1"
+            )
+
         self.run_app_expect_error(
             c.return_value.send_comm_message,
             run_func,
             "run_app_batch",
-            f"Semantic versions only apply to released app modules."
+            "Semantic versions only apply to released app modules.",
         )
 
     # Running an app with missing inputs is now allowed. The app can
@@ -369,6 +392,7 @@ class AppManagerTestCase(unittest.TestCase):
     def test_run_app_bulk_dry_run(self, auth, c):
         c.return_value.send_comm_message = MagicMock()
         new_job = self.am.run_app_bulk(self.bulk_run_good_inputs, dry_run=True)
+        self.assertIsNotNone(new_job)
 
     @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
     def test_run_app_bulk_bad_inputs(self, c):
@@ -595,9 +619,10 @@ class AppManagerTestCase(unittest.TestCase):
         self,
         send_comm_mock: MagicMock,
         num_calls: int,
-        expected_messages: List[str]=None,
-        expected_keys: List[List[str]]=None,
-        expected_values: List[List[dict]]=None) -> None:
+        expected_messages: List[str] = None,
+        expected_keys: List[List[str]] = None,
+        expected_values: List[List[dict]] = None,
+    ) -> None:
         """
         Validates the usage of the MagicMock used instead of sending a comm message to the
         front end. This is expected to mock any calls to JobComm.mock_comm_channel. Each of
@@ -635,27 +660,39 @@ class AppManagerTestCase(unittest.TestCase):
         This is really for app running cases that are expected to fail before trying to start
         the app with EE2. Other cases should run _verify_comm_mock directly.
         """
-        expected_keys = [["event", "event_at", "error_message", "error_code", "error_source", "error_stacktrace", "error_type"]]
-        expected_values=[{
-            "run_id": run_id,
-            "cell_id": cell_id,
-            "event": "error",
-            "error_code": -1,
-            "error_source": "appmanager"
-        }]
+        expected_keys = [
+            [
+                "event",
+                "event_at",
+                "error_message",
+                "error_code",
+                "error_source",
+                "error_stacktrace",
+                "error_type",
+            ]
+        ]
+        expected_values = [
+            {
+                "run_id": run_id,
+                "cell_id": cell_id,
+                "event": "error",
+                "error_code": -1,
+                "error_source": "appmanager",
+            }
+        ]
         self._verify_comm_mock(
             comm_mock,
             1,
             expected_messages=["run_status"],
             expected_keys=expected_keys,
-            expected_values=expected_values
+            expected_values=expected_values,
         )
 
     def _verify_comm_success(self, comm_mock, cell_id=None, run_id=None) -> None:
         expected_messages = ["run_status", "new_job"]
         expected_keys = [
             ["event", "event_at", "cell_id", "run_id", "job_id"],
-            ["job_id"]
+            ["job_id"],
         ]
         expected_values = [
             {
@@ -664,16 +701,15 @@ class AppManagerTestCase(unittest.TestCase):
                 "run_id": run_id,
                 "job_id": "new_job_id",
             },
-            { "job_id": "new_job_id" }
+            {"job_id": "new_job_id"},
         ]
         self._verify_comm_mock(
             comm_mock,
             2,
             expected_messages=expected_messages,
             expected_keys=expected_keys,
-            expected_values=expected_values
+            expected_values=expected_values,
         )
-
 
 
 if __name__ == "__main__":

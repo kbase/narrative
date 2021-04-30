@@ -65,7 +65,9 @@ def _app_error_wrapper(app_func: Callable) -> any:
                 + "-----------------------------------------------------\n"
                 + e_trace
             )
+
     return wrapper
+
 
 class AppManager(object):
     """
@@ -491,7 +493,6 @@ class AppManager(object):
         # } BatchSubmission;
 
         # funcdef run_job_batch(list<RunJobParams> params, BatchParams batch_params) returns (BatchSubmission job_ids) authentication required;
-
 
     def run_local_app(
         self,

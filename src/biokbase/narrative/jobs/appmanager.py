@@ -33,6 +33,13 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 
 def _app_error_wrapper(app_func: Callable) -> any:
+    """
+    This is a decorator meant to wrap any of the `run_app*` methods here.
+    It captures any raised exception, formats it into a message that can be sent
+    over the comm channel to the frontend, then prints a more friendly form of the
+    error, instead of showing an arcane traceback.
+    Otherwise it runs whatever function it decorates with its expected args and kwargs
+    """
     @functools.wraps(app_func)
     def wrapper(self, *args, **kwargs):
         try:
@@ -65,7 +72,6 @@ def _app_error_wrapper(app_func: Callable) -> any:
                 + "-----------------------------------------------------\n"
                 + e_trace
             )
-
     return wrapper
 
 

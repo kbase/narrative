@@ -404,6 +404,18 @@ class AppManagerTestCase(unittest.TestCase):
                 "kwargs": {"tag": "dev"}
             },
             "expected_error": "Missing required parameters"
+        }, {
+            "inputs": {
+                "args": [self.good_app_id, {}],
+                "kwargs": {"tag": self.bad_tag}
+            },
+            "expected_error": f"Can't find tag {self.bad_tag} - allowed tags are release, beta, dev"
+        }, {
+            "inputs": {
+                "args": [self.good_app_id, {}],
+                "kwargs": {"tag": "dev", "version": "1.0.0"}
+            },
+            "expected_error": "Semantic versions only apply to released app modules.",
         }]
         for test_case in cases:
             inputs = test_case["inputs"]

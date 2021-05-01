@@ -42,7 +42,7 @@
         "selenium-webdriver": "3.6.0",
         "string.prototype.endswith": "1.0.0",
         "string.prototype.startswith": "1.0.0",
-        "terser": "^5.6.0",
+        "terser": "^5.7.0",
         "wdio-chromedriver-service": "^6.0.4",
         "webdriverio": "^6.12.0"
     },

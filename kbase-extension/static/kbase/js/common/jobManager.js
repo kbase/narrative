@@ -2,51 +2,100 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
     'use strict';
 
     const div = html.tag('div'),
-        p = html.tag('p');
+        p = html.tag('p'),
+        jobCommand = {
+            cancel: 'request-job-cancellation',
+            retry: 'request-job-retry',
+        };
 
-    /**
-     * Initialise the job manager
-     *
-     * @param {object} config with keys
-     *  {object}    model: cell model, including job information under `exec.jobs`
-     *  {object}    bus: the bus for communicating messages to the kernel
-     *  {function}  viewResultsFunction: function to display the results of a job
-     *  {object}    controlPanel: object with function `setExecMessage` for updating the cell job status (opt)
-     *              the controlPanel object can also be added later using the `setControlPanel` function
-     *
-     * @returns {object} the initialised job manager
-     */
-    function JobManager(config) {
-        const { model, bus, viewResultsFunction } = config;
-        if (!model || !bus || !viewResultsFunction) {
-            throw new Error(
-                'cannot initialise job manager widget without params "bus", "model", and "viewResultsFunction"'
-            );
-        }
-        let controlPanel = config.controlPanel || null;
-
-        function setControlPanel(panel) {
-            controlPanel = panel;
+    class JobManager {
+        /**
+         * Initialise the job manager
+         *
+         * @param {object} config with keys
+         *  {object}    model: cell model, including job information under `exec.jobs`
+         *  {object}    bus: the bus for communicating messages to the kernel
+         *  {function}  viewResultsFunction: function to display the results of a job
+         *
+         * @returns {object} the initialised job manager
+         */
+        constructor(config) {
+            ['bus', 'model', 'viewResultsFunction'].forEach((key) => {
+                if (!config[key]) {
+                    throw new Error(
+                        'cannot initialise job manager widget without params "bus", "model", and "viewResultsFunction"'
+                    );
+                }
+                this[key] = config[key];
+            });
+            this.handlers = {};
         }
 
         /**
-         * Update the execMessage panel with details of the active jobs
+         * Add one or more update handlers to the job manager; these are executed when
+         * a job is updated in the model or when `runUpdateHandlers` is executed.
+         * They should take two arguments, the cell model and an array of jobs.
+         *
+         * @param {object} handlerObject with the handler name as keys and the handler function as values
          */
-        function updateToolbarJobStatus() {
-            if (!controlPanel) {
-                console.warn('controlPanel has not been initialised');
-                return;
+
+        addUpdateHandler(handlerObject) {
+            if (
+                !handlerObject ||
+                Object.prototype.toString.call(handlerObject) !== '[object Object]'
+            ) {
+                throw new Error('Arguments to addUpdateHandler must be of type object');
             }
-            controlPanel.setExecMessage(
-                Jobs.createCombinedJobState(model.getItem('exec.jobs.byStatus'))
-            );
+            const errors = [];
+            for (const [name, handlerFn] of Object.entries(handlerObject)) {
+                if (typeof handlerFn !== 'function') {
+                    errors.push(name);
+                } else {
+                    this.handlers[name] = handlerFn;
+                }
+            }
+            if (errors.length) {
+                throw new Error(
+                    `Handlers must be of type function. Recheck these handlers: ${errors
+                        .sort()
+                        .join(', ')}`
+                );
+            }
+        }
+
+        /**
+         * Remove an update handler
+         *
+         * @param {string} handlerName
+         */
+        removeUpdateHandler(handlerName) {
+            const handlerFunction = this.handlers[handlerName];
+            delete this.handlers[handlerName];
+            return handlerFunction;
+        }
+
+        /**
+         * Trigger the update handlers alphabetically by name.
+         *
+         * @param {array} jobArray -- array of pertinent jobs
+         */
+        runUpdateHandlers(jobArray) {
+            Object.keys(this.handlers)
+                .sort()
+                .forEach((name) => {
+                    try {
+                        this.handlers[name](this.model, jobArray);
+                    } catch (err) {
+                        console.warn(`Error executing handler ${name}:`, err);
+                    }
+                });
         }
 
         /**
          * Execute a function to view job results.
          */
-        function viewResults() {
-            return viewResultsFunction ? viewResultsFunction() : null;
+        viewResults() {
+            return this.viewResultsFunction ? this.viewResultsFunction() : null;
         }
 
         /* JOB MANAGEMENT */
@@ -58,7 +107,7 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
          * @param {array} validStates - array of valid statuses for this action (optional)
          * @returns {array} job IDs to perform the action upon
          */
-        function getJobIDsByStatus(statusList, validStates) {
+        getJobIDsByStatus(statusList, validStates) {
             if (validStates && validStates.length) {
                 const allInTheList = statusList.every((status) => {
                     return validStates.includes(status);
@@ -73,7 +122,7 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
                 }
             }
 
-            const jobsByStatus = model.getItem('exec.jobs.byStatus');
+            const jobsByStatus = this.model.getItem('exec.jobs.byStatus');
             return statusList
                 .map((status) => {
                     return jobsByStatus[status] ? Object.keys(jobsByStatus[status]) : [];
@@ -89,7 +138,7 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
          * @returns {object} arguments to create a modal to confirm or cancel the action
          */
 
-        function _generateDialogArgs(action, statusList, jobList) {
+        _generateDialogArgs(action, statusList, jobList) {
             const statusIx = statusList.reduce((acc, curr) => {
                 acc[curr] = 1;
                 return acc;
@@ -127,11 +176,6 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
             };
         }
 
-        const jobCommand = {
-            cancel: 'request-job-cancellation',
-            retry: 'request-job-rerun',
-        };
-
         /**
          *
          * @param {object} args with keys
@@ -139,12 +183,12 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
          *                 jobId: job to perform it on
          * @returns {boolean}
          */
-        function executeActionOnJobId(args) {
+        executeActionOnJobId(args) {
             const { action, jobId } = args;
-            const jobState = model.getItem(`exec.jobs.byId.${jobId}`);
+            const jobState = this.model.getItem(`exec.jobs.byId.${jobId}`);
 
             if (jobState && Jobs.canDo(action, jobState)) {
-                bus.emit(jobCommand[action], {
+                this.bus.emit(jobCommand[action], {
                     jobId: jobId,
                 });
                 return true;
@@ -163,15 +207,15 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
          * if the user cancels the batch action. If the users confirms the action, the appropriate
          * message will be emitted by the bus.
          */
-        async function executeActionByJobStatus(args) {
+        async executeActionByJobStatus(args) {
             const { action, statusList, validStatuses } = args;
 
-            const jobsList = getJobIDsByStatus(statusList, validStatuses);
+            const jobsList = this.getJobIDsByStatus(statusList, validStatuses);
             if (!jobsList || !jobsList.length) {
                 return Promise.resolve(false);
             }
 
-            await UI.showConfirmDialog(_generateDialogArgs(action, statusList, jobsList)).then(
+            await UI.showConfirmDialog(this._generateDialogArgs(action, statusList, jobsList)).then(
                 (confirmed) => {
                     if (!confirmed) {
                         return false;
@@ -179,7 +223,7 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
                     // TODO: when ee2 adds endpoints to allow submission of multiple jobs to cancel,
                     // this can be rewritten
                     jobsList.forEach((jobId) => {
-                        bus.emit(jobCommand[action], {
+                        this.bus.emit(jobCommand[action], {
                             jobId: jobId,
                         });
                     });
@@ -193,8 +237,8 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
          *
          * @param {string} jobId
          */
-        function cancelJob(jobId) {
-            return executeActionOnJobId({ jobId, action: 'cancel' });
+        cancelJob(jobId) {
+            return this.executeActionOnJobId({ jobId, action: 'cancel' });
         }
 
         /**
@@ -202,8 +246,8 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
          *
          * @param {string} jobId
          */
-        function retryJob(jobId) {
-            return executeActionOnJobId({ jobId, action: 'retry' });
+        retryJob(jobId) {
+            return this.executeActionOnJobId({ jobId, action: 'retry' });
         }
 
         /**
@@ -211,8 +255,8 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
          *
          * @param {array} statusList - array of statuses to cancel
          */
-        function cancelJobsByStatus(statusList) {
-            return executeActionByJobStatus({
+        cancelJobsByStatus(statusList) {
+            return this.executeActionByJobStatus({
                 action: 'cancel',
                 statusList: statusList,
                 validStatuses: ['created', 'estimating', 'queued', 'running'],
@@ -224,8 +268,8 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
          *
          * @param {array} statusList - array of statuses to retry
          */
-        function retryJobsByStatus(statusList) {
-            return executeActionByJobStatus({
+        retryJobsByStatus(statusList) {
+            return this.executeActionByJobStatus({
                 action: 'retry',
                 statusList: statusList,
                 validStatuses: ['error', 'terminated'],
@@ -236,8 +280,8 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
          * Update the model with the supplied jobState objects
          * @param {array} jobArray list of jobState objects to update the model with
          */
-        function updateModel(jobArray) {
-            const jobIndex = model.getItem('exec.jobs');
+        updateModel(jobArray) {
+            const jobIndex = this.model.getItem('exec.jobs');
             jobArray.forEach((jobState) => {
                 const status = jobState.status,
                     jobId = jobState.job_id,
@@ -258,24 +302,11 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
                     }
                 }
             });
-            model.setItem('exec.jobs', jobIndex);
-            return model;
+            this.model.setItem('exec.jobs', jobIndex);
+            this.runUpdateHandlers(jobArray);
+            return this.model;
         }
-
-        return {
-            cancelJob,
-            cancelJobsByStatus,
-            retryJob,
-            retryJobsByStatus,
-            updateToolbarJobStatus,
-            updateModel,
-            viewResults,
-            setControlPanel,
-        };
     }
-    return {
-        make: (config) => {
-            return JobManager(config);
-        },
-    };
+
+    return JobManager;
 });

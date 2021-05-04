@@ -254,7 +254,6 @@ define([
                 widgetsById[jobId].updateState(jobState);
             }
             dropdownWidget.updateState();
-            jobManager.updateToolbarJobStatus();
         }
 
         /**

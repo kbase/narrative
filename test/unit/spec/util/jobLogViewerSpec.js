@@ -178,11 +178,10 @@ define([
 
     describe('The job log viewer module', () => {
         it('Should load the module code successfully', () => {
-            expect(JobLogViewer).toBeDefined();
+            expect(JobLogViewer).toEqual(jasmine.any(Object));
         });
 
         it('Should have the factory method', () => {
-            expect(JobLogViewer.make).toBeDefined();
             expect(JobLogViewer.make).toEqual(jasmine.any(Function));
         });
 

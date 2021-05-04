@@ -6,6 +6,7 @@ define([
     'common/events',
     'common/html',
     'common/jobManager',
+    'common/jobs',
     'common/props',
     'common/runtime',
     'common/spec',
@@ -32,6 +33,7 @@ define([
     Events,
     html,
     JobManager,
+    Jobs,
     Props,
     Runtime,
     Spec,
@@ -574,9 +576,9 @@ define([
             setupDomNode();
 
             // initialise the job manager
-            jobManager = JobManager.make({
+            jobManager = new JobManager({
                 model: model,
-                bus: cellBus,
+                bus: runtime.bus(),
                 viewResultsFunction: () => {
                     toggleTab('results');
                 },
@@ -588,7 +590,16 @@ define([
             cell.metadata = meta;
             render().then(() => {
                 // add in the control panel so we can update the job status in the cell header
-                jobManager.setControlPanel(controlPanel);
+                jobManager.addUpdateHandler({
+                    controlPanel: (updatedModel) => {
+                        // Update the execMessage panel with details of the active jobs
+                        controlPanel.setExecMessage(
+                            Jobs.createCombinedJobState(updatedModel.getItem('exec.jobs.byStatus'))
+                        );
+                    },
+                });
+                // populate the execMessage with the current job state
+                jobManager.runUpdateHandlers();
 
                 cell.renderMinMax();
                 // force toolbar refresh
@@ -788,7 +799,6 @@ define([
             cellTabs.setState(state.tab);
             controlPanel.setActionState(state.action);
             fileTypePanel.updateState(state.fileType);
-            jobManager.updateToolbarJobStatus();
             // TODO: add in the FSM state
             FSMBar.showFsmBar({
                 ui: ui,

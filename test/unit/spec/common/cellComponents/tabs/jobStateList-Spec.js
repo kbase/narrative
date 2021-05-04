@@ -1,4 +1,5 @@
 define([
+    'jquery',
     'common/cellComponents/tabs/jobStatus/jobStateList',
     'common/jobs',
     'common/jobManager',
@@ -6,16 +7,22 @@ define([
     'common/runtime',
     'testUtil',
     '/test/data/jobsData',
-], (JobStateList, Jobs, JobManager, Props, Runtime, TestUtil, JobsData) => {
+], ($, JobStateList, Jobs, JobManager, Props, Runtime, TestUtil, JobsData) => {
     'use strict';
 
-    const model = Props.make({
-        data: {
-            exec: {
-                jobs: Jobs.jobArrayToIndexedObject(JobsData.validJobs),
+    const cssBaseClass = JobStateList.cssBaseClass;
+    const jobArray = JobsData.validJobs;
+    const model = makeModel(jobArray);
+
+    function makeModel(jobs) {
+        return Props.make({
+            data: {
+                exec: {
+                    jobs: Jobs.jobArrayToIndexedObject(jobs),
+                },
             },
-        },
-    });
+        });
+    }
 
     function createInstance(config = {}) {
         return JobStateList.make(
@@ -23,7 +30,11 @@ define([
                 {},
                 {
                     model: model,
-                    jobManager: {},
+                    jobManager: new JobManager({
+                        model: model,
+                        bus: {},
+                        viewResultsFunction: () => {},
+                    }),
                     devMode: true,
                 },
                 config
@@ -86,7 +97,6 @@ define([
     });
 
     describe('the started job state list instance', () => {
-        const cssBaseClass = JobStateList.cssBaseClass;
         describe('structure and content', () => {
             let container;
             beforeAll(async function () {
@@ -133,9 +143,107 @@ define([
             });
 
             it('should generate a row for each job', () => {
-                expect(container.querySelectorAll(`.${cssBaseClass}__row`).length).toEqual(
-                    Object.keys(JobsData.validJobs).length
+                expect(container.querySelectorAll('tbody tr.odd, tbody tr.even').length).toEqual(
+                    Object.keys(jobArray).length
                 );
+            });
+        });
+
+        describe('row selection', () => {
+            let container;
+
+            beforeEach(async function () {
+                container = document.createElement('div');
+                this.thing = await createStartedInstance(container);
+            });
+
+            afterEach(() => {
+                container.remove();
+            });
+
+            it('has no rows selected initially', () => {
+                expect(container.querySelectorAll('tbody tr.odd, tbody tr.even').length).toEqual(
+                    jobArray.length
+                );
+                expect(container.querySelectorAll('tbody tr').length).toEqual(jobArray.length);
+                expect(
+                    container.querySelectorAll(`.${cssBaseClass}__row--selected`).length
+                ).toEqual(0);
+            });
+
+            it('can show and hide child rows', async () => {
+                const rows = container.querySelectorAll('tbody tr.odd, tbody tr.even');
+
+                let $currentRow = $(rows[2]);
+                await TestUtil.waitForElementState(
+                    container.querySelector('tbody'),
+                    () => {
+                        return container.querySelectorAll('.vertical_collapse--open').length === 1;
+                    },
+                    () => {
+                        $currentRow.click();
+                    }
+                );
+
+                // after clicking, there should be one extra row
+                expect(container.querySelectorAll('tbody tr').length).toEqual(rows.length + 1);
+
+                // the current row should be selected and have the class 'vertical_collapse--open'
+                expect($currentRow[0]).toHaveClass('vertical_collapse--open');
+                expect($currentRow[0]).toHaveClass(`${cssBaseClass}__row--selected`);
+
+                // check for the job log viewer in the row underneath the row that was clicked
+                let $nextRow = $currentRow.next();
+                ['odd', 'even'].forEach((cls) => {
+                    expect($nextRow[0]).not.toHaveClass(cls);
+                });
+                expect($nextRow.find('.kb-log__logs_title')[0].textContent).toContain('Logs');
+
+                // click on another row
+                $currentRow = $(rows[5]);
+                await TestUtil.waitForElementState(
+                    container.querySelector('tbody'),
+                    () => {
+                        return container.querySelectorAll('.vertical_collapse--open').length === 2;
+                    },
+                    () => {
+                        $currentRow.click();
+                    }
+                );
+                expect(container.querySelectorAll('tbody tr').length).toEqual(rows.length + 2);
+
+                // the current row should be selected and have the class 'vertical_collapse--open'
+                expect($currentRow[0]).toHaveClass('vertical_collapse--open');
+                expect($currentRow[0]).toHaveClass(`${cssBaseClass}__row--selected`);
+
+                // the next row is a log viewer row
+                $nextRow = $currentRow.next();
+                ['odd', 'even'].forEach((cls) => {
+                    expect($nextRow[0]).not.toHaveClass(cls);
+                });
+                expect($nextRow.find('.kb-log__logs_title')[0].textContent).toContain('Logs');
+
+                // click again to remove the row
+                await TestUtil.waitForElementState(
+                    container.querySelector('tbody'),
+                    () => {
+                        return container.querySelectorAll('.vertical_collapse--open').length === 1;
+                    },
+                    () => {
+                        $currentRow.click();
+                    }
+                );
+                expect(container.querySelectorAll('tbody tr').length).toEqual(rows.length + 1);
+
+                // the current row is still selected but does not have the class 'vertical_collapse--open'
+                expect($currentRow[0]).not.toHaveClass('vertical_collapse--open');
+                expect($currentRow[0]).toHaveClass(`${cssBaseClass}__row--selected`);
+                // the log viewer row has been removed, so the next row is a standard table row
+                if ($currentRow[0].classList.contains('even')) {
+                    expect($currentRow.next()[0]).toHaveClass('odd');
+                } else {
+                    expect($currentRow.next()[0]).toHaveClass('even');
+                }
             });
         });
 
@@ -146,7 +254,6 @@ define([
                 'retryJob',
                 'retryJobsByStatus',
                 'viewResults',
-                'updateToolbarJobStatus',
             ];
 
             const actionButtonToFunction = {
@@ -248,7 +355,7 @@ define([
                 window.kbaseRuntime = null;
                 this.bus = Runtime.make().bus();
                 this.jobStateUpdated = false;
-                this.jobManager = JobManager.make({
+                this.jobManager = new JobManager({
                     model: model,
                     bus: this.bus,
                     viewResultsFunction: true,
@@ -268,7 +375,7 @@ define([
                 // update the queued job to running
                 const queuedJob = JobsData.jobsByStatus.queued[0],
                     runningJob = JobsData.jobsByStatus.running[0];
-                spyOn(this.jobManager, 'updateToolbarJobStatus').and.callFake(() => {
+                spyOn(this.jobManager, 'runUpdateHandlers').and.callFake(() => {
                     this.jobStateUpdated = true;
                 });
                 spyOn(this.jobManager, 'updateModel').and.callThrough();
@@ -304,11 +411,11 @@ define([
                     this.jobStateListInstance.listeners[`doesNotExist__${queuedJob.job_id}`]
                 ).not.toBeDefined();
                 expect(this.jobManager.updateModel).toHaveBeenCalled();
-                expect(this.jobManager.updateToolbarJobStatus).toHaveBeenCalled();
-                expect(this.jobStateUpdated).toBeTrue();
                 expect(model.getItem('exec.jobs.byStatus.queued')).not.toBeDefined();
                 const runningJobs = model.getItem('exec.jobs.byStatus.running');
                 expect(Object.keys(runningJobs).length).toEqual(2);
+                expect(this.jobManager.runUpdateHandlers).toHaveBeenCalled();
+                expect(this.jobStateUpdated).toBeTrue();
             });
         });
     });

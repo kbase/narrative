@@ -43,13 +43,15 @@ define(['common/jobManager', 'common/jobs', 'common/props', 'common/ui', '/test/
         });
 
         it('requires certain params for initialisation', () => {
+            let jobManagerInstance;
             expect(() => {
-                new JobManager({
+                jobManagerInstance = new JobManager({
                     model: null,
                 });
             }).toThrowError(
                 /cannot initialise job manager widget without params "bus", "model", and "viewResultsFunction"/
             );
+            expect(jobManagerInstance).not.toBeDefined();
         });
     });
 
@@ -187,6 +189,22 @@ define(['common/jobManager', 'common/jobs', 'common/props', 'common/ui', '/test/
                     console.warn(shoutStr);
                 };
 
+            /**
+             * test whether a handler is defined
+             * @param {JobManager} jobManagerInstance
+             * @param {boolean} definedStatus
+             * @param {array} handlerArray - array of names of handlers
+             */
+            function expectHandlersDefined(jobManagerInstance, definedStatus, handlerArray) {
+                handlerArray.forEach((name) => {
+                    if (definedStatus) {
+                        expect(jobManagerInstance.handlers[name]).toEqual(jasmine.any(Function));
+                    } else {
+                        expect(jobManagerInstance.handlers[name]).toBeUndefined();
+                    }
+                });
+            }
+
             beforeEach(function () {
                 this.jobManagerInstance = createJobManagerInstance(this);
             });
@@ -195,17 +213,13 @@ define(['common/jobManager', 'common/jobs', 'common/props', 'common/ui', '/test/
                 it('can have handlers added', function () {
                     expect(this.jobManagerInstance.handlers).toEqual({});
                     this.jobManagerInstance.addUpdateHandler({ scream: scream });
-                    expect(this.jobManagerInstance.handlers.scream).toEqual(jasmine.any(Function));
+                    expectHandlersDefined(this.jobManagerInstance, true, ['scream']);
                 });
 
                 it('can have numerous handlers', function () {
                     expect(this.jobManagerInstance.handlers).toEqual({});
                     this.jobManagerInstance.addUpdateHandler({ scream, shout });
-                    ['scream', 'shout'].forEach((name) => {
-                        expect(this.jobManagerInstance.handlers[name]).toEqual(
-                            jasmine.any(Function)
-                        );
-                    });
+                    expectHandlersDefined(this.jobManagerInstance, true, ['scream', 'shout']);
                 });
 
                 it('cannot add handlers that are not functions', function () {
@@ -215,6 +229,7 @@ define(['common/jobManager', 'common/jobs', 'common/props', 'common/ui', '/test/
                     }).toThrowError(
                         /Handlers must be of type function. Recheck these handlers: shout/
                     );
+                    expectHandlersDefined(this.jobManagerInstance, false, ['shout']);
                     expect(this.jobManagerInstance.handlers).toEqual({});
                 });
 
@@ -230,14 +245,8 @@ define(['common/jobManager', 'common/jobs', 'common/props', 'common/ui', '/test/
                     }).toThrowError(
                         /Handlers must be of type function. Recheck these handlers: let_it_all, out/
                     );
-                    ['scream', 'shout'].forEach((name) => {
-                        expect(this.jobManagerInstance.handlers[name]).toEqual(
-                            jasmine.any(Function)
-                        );
-                    });
-                    ['let_it_all', 'out'].forEach((name) => {
-                        expect(this.jobManagerInstance.handlers[name]).toBeUndefined();
-                    });
+                    expectHandlersDefined(this.jobManagerInstance, true, ['scream', 'shout']);
+                    expectHandlersDefined(this.jobManagerInstance, false, ['let_it_all', 'out']);
                 });
 
                 const badArguments = [null, undefined, '', 0, 1.2345, [], [1, 2, 3, 4], () => {}];
@@ -257,13 +266,13 @@ define(['common/jobManager', 'common/jobs', 'common/props', 'common/ui', '/test/
                     this.jobManagerInstance.handlers.scream = scream;
                     expect(this.jobManagerInstance.handlers.scream).toEqual(jasmine.any(Function));
                     this.jobManagerInstance.removeUpdateHandler('scream');
-                    expect(this.jobManagerInstance.handlers.scream).toBeUndefined();
+                    expectHandlersDefined(this.jobManagerInstance, false, ['scream']);
                 });
 
                 it('does not die if the handler name does not exist', function () {
                     expect(this.jobManagerInstance.handlers.scream).toBeUndefined();
                     this.jobManagerInstance.removeUpdateHandler('scream');
-                    expect(this.jobManagerInstance.handlers.scream).toBeUndefined();
+                    expectHandlersDefined(this.jobManagerInstance, false, ['scream']);
                 });
             });
 
@@ -444,16 +453,12 @@ define(['common/jobManager', 'common/jobs', 'common/props', 'common/ui', '/test/
                             const callArgs = this.bus.emit.calls.allArgs();
                             const actionString = actionStatusMatrix[action].request;
                             // all the jobs of status `status` should be included
-                            const expectedJobIds = Object.values(JobsData.jobsByStatus[status]).map(
-                                (jobState) => jobState.job_id
-                            );
-
-                            expectedJobIds.forEach((jobId) => {
-                                expect(callArgs).toContain([
-                                    `request-job-${actionString}`,
-                                    { jobId: jobId },
-                                ]);
-                            });
+                            const expectedJobIds = Object.values(JobsData.jobsByStatus[status])
+                                .map((jobState) => jobState.job_id)
+                                .sort();
+                            expect(callArgs.length).toEqual(1);
+                            expect(callArgs[0][0]).toEqual(`request-job-${actionString}`);
+                            expect(callArgs[0][1].jobIdList.sort()).toEqual(expectedJobIds);
                         });
                     });
                 });
@@ -491,9 +496,9 @@ define(['common/jobManager', 'common/jobs', 'common/props', 'common/ui', '/test/
                     ' and '
                 )}`, async function () {
                     spyOn(this.bus, 'emit');
-                    spyOn(UI, 'showConfirmDialog').and.callFake(async (args) => {
+                    spyOn(UI, 'showConfirmDialog').and.callFake((args) => {
                         // check the dialog structure
-                        return await UI.showConfirmDialog.and.originalFn(
+                        return UI.showConfirmDialog.and.originalFn(
                             Object.assign(
                                 {
                                     doThisFirst: () => {
@@ -519,18 +524,21 @@ define(['common/jobManager', 'common/jobs', 'common/props', 'common/ui', '/test/
                     const callArgs = this.bus.emit.calls.allArgs();
                     const actionString = actionStatusMatrix[test.action].request;
 
+                    expect(callArgs.length).toEqual(1);
+                    expect(callArgs[0][0]).toEqual(`request-job-${actionString}`);
+
                     // this is an ugly way to do this,
                     // but we don't want to just mimic the code we're testing
+                    let acc = 0;
                     test.statusList.forEach((status) => {
                         Object.values(JobsData.jobsByStatus[status])
                             .map((jobState) => jobState.job_id)
                             .forEach((jobId) => {
-                                expect(callArgs).toContain([
-                                    `request-job-${actionString}`,
-                                    { jobId: jobId },
-                                ]);
+                                expect(callArgs[0][1].jobIdList.includes(jobId)).toBeTrue();
+                                acc++;
                             });
                     });
+                    expect(callArgs[0][1].jobIdList.length).toEqual(acc);
                 });
 
                 it('does nothing if the user responds no to the modal', async function () {

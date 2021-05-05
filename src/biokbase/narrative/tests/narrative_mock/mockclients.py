@@ -203,6 +203,13 @@ class MockClients:
     def run_job(self, params):
         return self.test_job_id
 
+    def run_job_batch(self, batch_job_inputs, batch_params):
+        child_job_ids = [self.test_job_id for i in range(len(batch_job_inputs))]
+        return {
+            "parent_job_id": self.test_job_id,
+            "child_job_ids": child_job_ids
+        }
+
     def cancel_job(self, job_id):
         return "done"
 

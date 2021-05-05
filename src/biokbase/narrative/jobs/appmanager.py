@@ -24,7 +24,7 @@ import datetime
 import traceback
 import random
 import functools
-from typing import Callable
+from typing import Callable, Union
 
 """
 A module for managing apps, specs, requirements, and for starting jobs.
@@ -466,7 +466,7 @@ class AppManager(object):
             return new_job
 
     @_app_error_wrapper
-    def run_app_bulk(self, app_info, cell_id=None, run_id=None, dry_run=False):
+    def run_app_bulk(self, app_info: list, cell_id: str=None, run_id: str=None, dry_run: bool=False) -> Union[dict, None]:
         """
         app_info
         1. Validate the app_info inputs - keys, apps and tags are real
@@ -475,6 +475,8 @@ class AppManager(object):
         4. Run the call
         5. If successful, construct the job(s) and pass to jobmanager
         """
+        if not isinstance(app_info, list) or len(app_info) == 0:
+            raise ValueError("app_info must be a list with at least one set of app information")
         batch_run_inputs = list()
         ws_id = strict_system_variable("workspace_id")
         batch_params = { "wsid": ws_id }  # for EE2.run_job_batch
@@ -550,45 +552,40 @@ class AppManager(object):
             },
         )
 
-        # parent_job = Job(
-        #     batch_submission["parent_job_id"],
-        #     app_id,
-        #     input_vals,
-        #     system_variable("user_id"),
-        #     tag=tag,
-        #     app_version=service_ver,
-        #     cell_id=cell_id,
-        #     run_id=run_id,
-        #     token_id=agent_token["id"],
-        # )
+        child_jobs = list()
+        user_id = system_variable("user_id")
+        for idx, child_job_id in enumerate(batch_submission["child_job_ids"]):
+            job_info = batch_run_inputs[idx]
+            child_jobs.append(Job(
+                child_job_id,
+                job_info["app_id"],
+                job_info["params"],
+                user_id,
+                tag=job_info["meta"].get("tag"),
+                app_version=job_info["service_ver"],
+                cell_id=cell_id,
+                run_id=run_id,
+                token_id=agent_token["id"]
+            ))
 
-        # self.register_new_job(new_job)
-        # if cell_id is not None:
-        #     return
-        # else:
-        #     return new_job
+        # TODO make something more reasonable / complete for a parent job
+        parent_job = Job(
+            batch_submission["parent_job_id"],
+            "bulk_app_submission",
+            {},
+            user_id
+        )
 
-        # typedef structure {
-        #     string method;
-        #     string app_id;
-        #     list<UnspecifiedObject> params;
-        #     string service_ver;
-        #     list<wsref> source_ws_objects;
-        #     Meta meta;
-        #     int wsid;
-        #     string parent_job_id;
-        # } RunJobParams;
+        # TODO make a tighter design in the job manager for submitting a family of jobs
+        for new_job in child_jobs:
+            self.register_new_job(new_job)
+        self.register_new_job(parent_job)
 
-        # typedef structure {
-        #     int wsid;
-        # } BatchParams;
-
-        # typedef structure {
-        #     job_id parent_job_id;
-        #     list<job_id> child_job_ids;
-        # } BatchSubmission;
-
-        # funcdef run_job_batch(list<RunJobParams> params, BatchParams batch_params) returns (BatchSubmission job_ids) authentication required;
+        if cell_id is None:
+            return {
+                "parent_job": parent_job,
+                "child_jobs": child_jobs
+            }
 
     def _validate_bulk_app_info(self, app_info: dict):
         """
@@ -598,20 +595,28 @@ class AppManager(object):
         3. optionally have "version" that's a string
         4. must have "params" that's a list of at least one dict.
         """
+        malformed_params_error = "params must be a list of dicts of app parameters"
+
+        # make sure we have all required keys
         required_keys = ["app_id", "tag", "params"]
         for key in required_keys:
             if key not in app_info:
-                raise ValueError(f"app info must contain keys {required_keys}")
-        if re.match(r"\S+\/\S+", app_info["app_id"]) is None:
+                raise ValueError(f"app info must contain keys {', '.join(required_keys)}")
+        # make sure app is of the form "module/app"
+        if not isinstance(app_info["app_id"], str) or re.match(r"\S+\/\S+", app_info["app_id"]) is None:
             raise ValueError("an app_id must be of the format module_name/app_name")
+        # params must be a list with at least one item (even an empty dict)
         if not isinstance(app_info["params"], list) or len(app_info["params"]) == 0:
-            raise ValueError("params must be a list of dicts of app parameters")
+            raise ValueError(malformed_params_error)
+        # each item must be a dict
         for params in app_info["params"]:
             if not isinstance(params, dict):
-                raise ValueError("params must be a list of dicts of app parameters")
+                raise ValueError(malformed_params_error)
+        # make sure tag is an allowed item
         allowed_tags = ["release", "beta", "dev"]
         if app_info["tag"] not in allowed_tags:
-            raise ValueError(f"tag must be one of {allowed_tags}, not {app_info['tag']}")
+            raise ValueError(f"tag must be one of {', '.join(allowed_tags)}, not {app_info['tag']}")
+        # make sure version is a string, if present
         if "version" in app_info and not isinstance(app_info["version"], str):
             raise ValueError(f"an app version must be a string, not {app_info['version']}")
 

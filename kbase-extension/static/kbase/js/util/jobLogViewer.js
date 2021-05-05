@@ -527,7 +527,7 @@ define([
             scrollToEndOnNext = true;
             awaitingLog = true;
             ui.showElement('spinner');
-            bus.emit('request-latest-job-log', {
+            bus.emit('request-job-log-latest', {
                 jobId: jobId,
                 options: {},
             });

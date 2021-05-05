@@ -1,12 +1,12 @@
 # Job Management Architecture
 The Narrative job manager is based on a data flow that operates between the browser, the IPython Kernel behind the Narrative, and the KBase Execution Engine (EE2) behind that. In general, each bit of data flows between those three stops.
 
-In general, there's a single point of information flow on the front end and one on the backend. 
+In general, there's a single point of information flow on the front end and one on the backend.
 
 # Comm channels
 Jupyter provides a "Comm" object that allows for custom messaging between the frontend and the kernel ([details and documentation here](https://jupyter-notebook.readthedocs.io/en/stable/comms.html)). This provides an interface for the frontend to directly request information from the kernel, and to listen to asynchronous responses. On the kernel-side, it allows one or more modules to register message handlers to process those requests out of the band of the usual kernel invocation. These are used to implement the Jupyter Notebook's ipywidgets, for example.
 
-The Narrative Interface uses one of these channels to manage job information. These are funneled through an interface on the frontend side and a matching one in the kernel. 
+The Narrative Interface uses one of these channels to manage job information. These are funneled through an interface on the frontend side and a matching one in the kernel.
 
 ## Frontend Comm Channel
 On the frontend, there's a `jobCommChannel.js` module that uses the MiniBus system to communicate. So, the following happens. Frontend modules use the bus system to send one of the following messages over the main channel, which then get interpreted and crafted into a message that gets passed through a kernel comm object. Most of these take one or more inputs. These are listed below the command, where applicable.
@@ -43,7 +43,7 @@ These messages are sent to the `JobCommChannel` on the front end, to get process
     * `first_line` - the first line (0-indexed) to request
     * `num_lines` - the number of lines to request (will get back up to that many if there aren't more)
 
-`request-latest-job-log` - request the latest several job log lines
+`request-job-log-latest` - request the latest several job log lines
   * `jobId` - a string, the job id
   * `options` - an object, with attributes:
     * `num_lines` - the number of lines to request (will get back up to that many if there aren't more)
@@ -108,7 +108,7 @@ When the kernel sends a message to the front end, the only module set up to list
 `job-logs` - sent with information about some job logs.
   * `jobId` - string, the job id
   * `logs` - the raw message data from the kernel. (see the **Data Structures** section below)
-  * `latest` - if truthy, then these are the latest logs, if falsy, then they don't have to be the latest logs. 
+  * `latest` - if truthy, then these are the latest logs, if falsy, then they don't have to be the latest logs.
 
 `job-error` - sent in response to an error that happened on job information lookup, or another error that happened while processing some other message to the JobManager.
   * `jobId` - string, the job id
@@ -207,15 +207,15 @@ These are organized by the `request_type` field, followed by the expected respon
 }
 ```
 
-`all_status` - request the status of all currently running jobs, responds with `job_status_all`  
+`all_status` - request the status of all currently running jobs, responds with `job_status_all`
 
 `job_status` - request a single job status, responds with `job_status`
 * `job_id` - string,
 * `parent_job_id` - optional string
 
-`start_update_loop` - request starting the global job status update thread, no specific response, but generally with `job_status_all`  
+`start_update_loop` - request starting the global job status update thread, no specific response, but generally with `job_status_all`
 
-`stop_update_loop` - request stopping the global job status update thread, no response  
+`stop_update_loop` - request stopping the global job status update thread, no response
 
 `start_job_update` - request updating a single job during the update thread, no specific response, but generally with `job_status`
 * `job_id` - string
@@ -376,7 +376,7 @@ All cases:
 **bus** `run-status`
 
 ### `result`
-Sent at the end of a `AppManager.run_dynamic_service` call (of which there aren't many). 
+Sent at the end of a `AppManager.run_dynamic_service` call (of which there aren't many).
 
 **content**
   * `cell_id` - the app cell id (used for routing)

@@ -113,6 +113,11 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUtil'], (
                 type: 'cancel_job',
             },
             {
+                channel: 'request-job-retry',
+                message: { jobId: 'someJob' },
+                type: 'retry_job',
+            },
+            {
                 channel: 'request-job-status',
                 message: { jobId: 'someJob', parentJobId: 'someParent' },
                 type: 'job_status',
@@ -130,21 +135,49 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUtil'], (
             {
                 channel: 'request-job-log',
                 message: { jobId: 'someJob', options: {} },
-                type: 'job_logs',
+                expected: {
+                    target_name: 'KBaseJobs',
+                    request_type: 'job_logs',
+                    job_id: 'someJob',
+                },
             },
             {
-                channel: 'request-latest-job-log',
+                channel: 'request-job-log-latest',
                 message: { jobId: 'someJob', options: {} },
                 type: 'job_logs_latest',
+            },
+            {
+                channel: 'request-job-log-latest',
+                message: {
+                    jobId: 'someJob',
+                    parentJobId: 'none',
+                    options: {
+                        firstLine: 2000,
+                        job_id: 'overridden!',
+                    },
+                },
+                expected: {
+                    target_name: 'KBaseJobs',
+                    request_type: 'job_logs_latest',
+                    job_id: 'overridden!',
+                    firstLine: 2000,
+                    parent_job_id: 'none',
+                },
             },
             {
                 channel: 'request-job-info',
                 message: { jobId: 'someJob', parentJobId: 'someParent' },
                 type: 'job_info',
             },
+            {
+                channel: 'request-job-info',
+                message: { jobIdList: ['someJob', 'someOtherJob', 'aThirdJob'] },
+                type: 'job_info',
+            },
         ];
+
         busMsgCases.forEach((testCase) => {
-            it('Should handle ' + testCase.channel + ' bus message', () => {
+            it('Should handle a ' + testCase.channel + ' bus message', () => {
                 const comm = new JobCommChannel();
                 return comm
                     .initCommChannel()
@@ -160,16 +193,20 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUtil'], (
                     })
                     .then((args) => {
                         expect(comm.comm.send).toHaveBeenCalled();
-                        expect(args[0].target_name).toEqual('KBaseJobs');
-                        expect(args[0].request_type).toEqual(testCase.type);
-                        // expect the message values to exist in the comm channel message
-                        // the `options` object gets merged into the message if it is not empty
-                        // since all the examples have an empty options object, we can ignore it
-                        Object.keys(testCase.message)
-                            .filter((key) => key !== 'options')
-                            .forEach((key) => {
-                                expect(Object.values(args[0])).toContain(testCase.message[key]);
-                            });
+                        if (testCase.expected) {
+                            expect(args[0]).toEqual(testCase.expected);
+                        } else {
+                            expect(args[0].target_name).toEqual('KBaseJobs');
+                            expect(args[0].request_type).toEqual(testCase.type);
+                            // expect the message values to exist in the comm channel message
+                            // the `options` object gets merged into the message if it is not empty
+                            // since all the examples have an empty options object, we can ignore it
+                            Object.keys(testCase.message)
+                                .filter((key) => key !== 'options')
+                                .forEach((key) => {
+                                    expect(Object.values(args[0])).toContain(testCase.message[key]);
+                                });
+                        }
                     });
             });
         });
@@ -253,7 +290,7 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUtil'], (
             });
         });
 
-        it('Should send a job-info message to the bus', () => {
+        it('Should send a job_info message to the bus', () => {
             const jobId = 'foo',
                 jobStateMsg = {
                     job_id: jobId,

@@ -91,11 +91,18 @@ class JobManagerTest(unittest.TestCase):
         self.assertIn("<td>Not started</td>", html)
         self.assertIn("<td>Incomplete</td>", html)
 
-    @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def test_list_jobs_twice(self):
-        jobs_html_0 = self.jm.list_jobs()
-        jobs_html_1 = self.jm.list_jobs()
-        self.assertTrue(jobs_html_0.data == jobs_html_1.data)
+        # with no jobs
+        with mock.patch.object(self.jm, '_running_jobs', {}):
+            expected = 'No running jobs!'
+            self.assertEqual(self.jm.list_jobs(), expected)
+            self.assertEqual(self.jm.list_jobs(), expected)
+
+        # with some jobs
+        with mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client):
+            jobs_html_0 = self.jm.list_jobs()
+            jobs_html_1 = self.jm.list_jobs()
+            self.assertEqual(jobs_html_0.data, jobs_html_1.data)
 
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def test_cancel_job_good(self):

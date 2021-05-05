@@ -39,9 +39,6 @@ define(['common/runtime', 'common/events', 'common/ui', 'kb_common/html', 'base/
             if (matchingCells.length === 1) {
                 return matchingCells[0];
             }
-            if (matchingCells.length > 1) {
-                addNotification('Too many cells matched the given id: ' + id);
-            }
             return null;
         }
 

@@ -24,9 +24,7 @@ define([
     RowWidget,
     FieldWidget,
     ParamResolver,
-    Runtime,
-    Config
-
+    Runtime
     // Input widgets
 ) => {
     'use strict';
@@ -34,24 +32,23 @@ define([
     const t = html.tag,
         form = t('form'),
         span = t('span'),
-        div = t('div'),
-        b = t('b');
+        div = t('div');
 
     function factory(config) {
-        let runtime = Runtime.make(),
+        const runtime = Runtime.make(),
             paramsBus = config.bus,
-            workspaceInfo = config.workspaceInfo,
             initialParams = config.initialParams,
-            container,
-            ui,
-            bus,
-            places = {},
+            bus = runtime.bus().makeChannelBus({ description: 'A app params widget' }),
             model = Props.make(),
             paramResolver = ParamResolver.make(),
             settings = {
                 showAdvanced: null,
             },
             widgets = [];
+
+        let container,
+            ui,
+            places = {};
 
         // DATA
         /*
@@ -104,7 +101,7 @@ define([
                     initialValue: value,
                     appSpec: appSpec,
                     parameterSpec: parameterSpec,
-                    workspaceId: workspaceInfo.id,
+                    workspaceId: runtime.workspaceId(),
                     referenceType: 'name',
                     paramsChannelName: paramsBus.channelName,
                     closeParameters: closeParameters,
@@ -164,7 +161,7 @@ define([
                     key: {
                         type: 'get-param-state',
                     },
-                    handle: function (message) {
+                    handle: function () {
                         return paramsBus.request(
                             { id: parameterSpec.id },
                             {
@@ -189,9 +186,9 @@ define([
                                 key: 'get-parameter-value',
                             }
                         )
-                        .then((message) => {
+                        .then((_message) => {
                             bus.emit('parameter-value', {
-                                parameter: message.parameter,
+                                parameter: _message.parameter,
                             });
                         });
                 });
@@ -232,10 +229,8 @@ define([
                                                 },
                                             }
                                         )
-                                        .then((value) => {
-                                            const returnVal = {};
-                                            returnVal[paramName] = value.value;
-                                            return returnVal;
+                                        .then((_value) => {
+                                            return { paramName: _value.value };
                                         });
                                 })
                             ).then((results) => {
@@ -378,8 +373,8 @@ define([
         }
 
         function renderLayout(batchMode) {
-            let events = Events.make(),
-                formContent = [];
+            const events = Events.make();
+            let formContent = [];
             if (batchMode) {
                 formContent.push(renderBatchModeMessage());
             } else {
@@ -727,10 +722,6 @@ define([
                 // really unhook things here.
             });
         }
-
-        // CONSTRUCTION
-
-        bus = runtime.bus().makeChannelBus({ description: 'A app params widget' });
 
         return {
             start: start,

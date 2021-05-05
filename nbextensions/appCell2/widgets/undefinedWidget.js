@@ -1,7 +1,7 @@
 define([], () => {
     'use strict';
 
-    function factory(config) {
+    function factory() {
         function attach(node) {
             node.innerHTML = 'Undefined widget';
         }
@@ -12,8 +12,8 @@ define([], () => {
     }
 
     return {
-        make: function (config) {
-            return factory(config);
+        make: function () {
+            return factory();
         },
     };
 });

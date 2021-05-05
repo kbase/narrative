@@ -48,12 +48,10 @@ define([
     }
 
     function factory(config) {
-        let cell = config.cell,
-            workspaceInfo = config.workspaceInfo,
-            runtime = Runtime.make(),
-            spec,
-            appCellWidget,
-            cellBus;
+        const cell = config.cell,
+            runtime = Runtime.make();
+
+        let spec, appCellWidget, cellBus;
 
         function specializeCell() {
             cell.minimize = function () {
@@ -130,7 +128,7 @@ define([
                 // var codeInputArea = cell.input.find('.input_area');
                 // codeInputArea[0].classList.add('hidden');
 
-                specializeCell(cell);
+                specializeCell();
 
                 // The kbase property is only used for managing runtime state of the cell
                 // for kbase. Anything to be persistent should be on the metadata.
@@ -150,7 +148,6 @@ define([
                     bus: cellBus,
                     cell: cell,
                     runtime: runtime,
-                    workspaceInfo: workspaceInfo,
                 });
                 // inserting after, with raw dom, means telling the parent node
                 // to insert a node before the node following the one we are
@@ -200,7 +197,7 @@ define([
                                 return appCellWidget.detach();
                             })
                             .catch((_err) => {
-                                console.log('ERR in ERR', _err);
+                                console.warn('ERR in ERR', _err);
                             })
                             .finally(() => {
                                 Error.reportCellError(
@@ -259,9 +256,6 @@ define([
                 // initializeParams(appSpec);
                 // Complete the cell setup.
                 return setupCell();
-            }).then((cellStuff) => {
-                // Initialize the cell to its default state.
-                // cellStuff.bus.emit('reset-to-defaults');
             });
         }
 

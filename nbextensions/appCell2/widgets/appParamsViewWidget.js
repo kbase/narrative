@@ -35,20 +35,19 @@ define([
         div = t('div');
 
     function factory(config) {
-        let runtime = Runtime.make(),
+        const runtime = Runtime.make(),
             paramsBus = config.bus,
-            workspaceInfo = config.workspaceInfo,
             initialParams = config.initialParams,
-            container,
-            ui,
-            bus,
-            places = {},
             model = Props.make(),
             paramResolver = ParamResolver.make(),
             settings = {
                 showAdvanced: null,
             },
-            widgets = [];
+            widgets = [],
+            bus = runtime.bus().makeChannelBus({ description: 'A app params widget' });
+        let container,
+            places = {},
+            ui;
 
         // DATA
         /*
@@ -96,7 +95,7 @@ define([
                     initialValue: value,
                     appSpec: appSpec,
                     parameterSpec: parameterSpec,
-                    workspaceId: workspaceInfo.id,
+                    workspaceId: runtime.workspaceId(),
                     referenceType: 'name',
                     paramsChannelName: paramsBus.channelName,
                 });
@@ -151,9 +150,9 @@ define([
                                 key: 'get-parameter-value',
                             }
                         )
-                        .then((message) => {
+                        .then((_message) => {
                             bus.emit('parameter-value', {
-                                parameter: message.parameter,
+                                parameter: _message.parameter,
                             });
                         });
                 });
@@ -621,10 +620,6 @@ define([
                 // really unhook things here.
             });
         }
-
-        // CONSTRUCTION
-
-        bus = runtime.bus().makeChannelBus({ description: 'A app params widget' });
 
         return {
             start: start,

@@ -578,7 +578,7 @@ define([
                 });
 
                 return new Promise((resolve) => {
-                    this.runtimeBus.on('request-latest-job-log', (msg) => {
+                    this.runtimeBus.on('request-job-log-latest', (msg) => {
                         expect(msg).toEqual({ jobId: jobId, options: {} });
                         const logUpdate = logs[acc];
                         acc += 1;
@@ -621,7 +621,7 @@ define([
                 });
 
                 // this is called when the state is 'running'
-                this.runtimeBus.on('request-latest-job-log', (msg) => {
+                this.runtimeBus.on('request-job-log-latest', (msg) => {
                     expect(msg).toEqual({ jobId: jobId, options: {} });
                     this.runtimeBus.send(...formatMessage(jobId, 'log-deleted'));
                 });

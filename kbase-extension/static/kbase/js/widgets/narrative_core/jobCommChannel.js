@@ -58,6 +58,7 @@ define([
         STOP_JOB_UPDATE = 'stop_job_update',
         START_JOB_UPDATE = 'start_job_update',
         CANCEL_JOB = 'cancel_job',
+        RETRY_JOB = 'retry_job',
         JOB_LOGS = 'job_logs',
         JOB_LOGS_LATEST = 'job_logs_latest',
         JOB_INFO = 'job_info',
@@ -102,74 +103,50 @@ define([
         handleBusMessages() {
             const bus = this.runtime.bus();
 
-            bus.on('ping-comm-channel', (message) => {
-                this.sendCommMessage('ping', null, {
-                    ping_id: message.pingId,
+            // valid messages
+            const requestTranslation = {
+                'ping-comm-channel': 'ping',
+
+                // Fetches job status from kernel.
+                'request-job-status': JOB_STATUS,
+
+                // Requests job status updates for this job via the job channel, and also
+                // ensures that job polling is running.
+                'request-job-update': START_JOB_UPDATE,
+                // Tells kernel to stop including a job in the lookup loop.
+                'request-job-completion': STOP_JOB_UPDATE,
+
+                // cancels the job
+                'request-job-cancellation': CANCEL_JOB,
+                // retries the job
+                'request-job-retry': RETRY_JOB,
+
+                // Fetches info (not state) about a job, including the app id, name, and inputs.
+                'request-job-info': JOB_INFO,
+
+                // Fetches job logs from kernel.
+                'request-job-log': JOB_LOGS,
+                // Fetches most recent job logs from kernel.
+                'request-job-log-latest': JOB_LOGS_LATEST,
+            };
+
+            for (const [key, value] of Object.entries(requestTranslation)) {
+                bus.on(key, (message) => {
+                    this.sendCommMessage(value, message);
                 });
-            });
-
-            // Cancels the job.
-            bus.on('request-job-cancellation', (message) => {
-                this.sendCommMessage(CANCEL_JOB, message.jobId);
-            });
-
-            // Fetches job status from kernel.
-            bus.on('request-job-status', (message) => {
-                // console.log('requesting job status for ' + message.jobId);
-                this.sendCommMessage(JOB_STATUS, message.jobId, {
-                    parent_job_id: message.parentJobId,
-                });
-            });
-
-            // Requests job status updates for this job via the job channel, and also
-            // ensures that job polling is running.
-            bus.on('request-job-update', (message) => {
-                // console.log('requesting job updates for ' + message.jobId);
-                this.sendCommMessage(START_JOB_UPDATE, message.jobId, {
-                    parent_job_id: message.parentJobId,
-                });
-            });
-
-            // Tells kernel to stop including a job in the lookup loop.
-            bus.on('request-job-completion', (message) => {
-                // console.log('cancelling job updates for ' + message.jobId);
-                this.sendCommMessage(STOP_JOB_UPDATE, message.jobId, {
-                    parent_job_id: message.parentJobId,
-                });
-            });
-
-            // Fetches job logs from kernel.
-            bus.on('request-job-log', (message) => {
-                this.sendCommMessage(JOB_LOGS, message.jobId, message.options);
-            });
-
-            // Fetches most recent job logs from kernel.
-            bus.on('request-latest-job-log', (message) => {
-                this.sendCommMessage(JOB_LOGS_LATEST, message.jobId, message.options);
-            });
-
-            // Fetches info (not state) about a job. Like the app id, name, and inputs.
-            bus.on('request-job-info', (message) => {
-                this.sendCommMessage(JOB_INFO, message.jobId, {
-                    parent_job_id: message.parentJobId,
-                });
-            });
+            }
         }
 
         /**
          * Sends a comm message to the JobManager in the kernel.
          * If there's no comm channel ready, tries to set one up first.
-         * @param msgType {string} - one of (prepend with this.)
-         *   ALL_STATUS,
-         *   STOP_UPDATE_LOOP,
-         *   START_UPDATE_LOOP,
-         *   STOP_JOB_UPDATE,
-         *   START_JOB_UPDATE,
-         *   JOB_LOGS
-         * @param jobId {string} - optional - a job id to send along with the
-         * message, where appropriate.
+         * @param msgType {string} - one of the values in the requestTranslation object
+         *                           (see function handleBusMessages)
+         *
+         * @param message {object} - an object containing additional parameters for the request
+         *                           such as jobId or jobIdList, or an 'options' object
          */
-        sendCommMessage(msgType, jobId, options) {
+        sendCommMessage(msgType, message) {
             return new Promise((resolve, reject) => {
                 // TODO: send specific error so that client can retry.
                 if (!this.comm) {
@@ -181,23 +158,35 @@ define([
                     target_name: COMM_NAME,
                     request_type: msgType,
                 };
-                if (jobId) {
-                    msg.job_id = jobId;
+
+                const translations = {
+                    jobId: 'job_id',
+                    jobIdList: 'job_id_list',
+                    parentJobId: 'parent_job_id',
+                    pingId: 'ping_id',
+                };
+
+                for (const [key, value] of Object.entries(message)) {
+                    if (key !== 'options') {
+                        const msgKey = translations[key] || key;
+                        msg[msgKey] = value;
+                    }
                 }
-                if (options) {
-                    msg = $.extend({}, msg, options);
+
+                if (message.options) {
+                    msg = Object.assign({}, msg, message.options);
                 }
+
                 this.comm.send(msg);
                 resolve();
             }).catch((err) => {
-                console.error('ERROR sending comm message', err, msgType, jobId, options);
+                console.error('ERROR sending comm message', err, msgType, message);
                 throw new Error(
                     'ERROR sending comm message: ' +
                         JSON.stringify({
                             error: err,
                             msgType: msgType,
-                            jobId: jobId,
-                            options: options,
+                            message: message,
                         })
                 );
             });
@@ -227,8 +216,8 @@ define([
             let jobId = null;
             switch (msgType) {
                 case 'start':
-                    // console.log('START', msgData.time);
                     break;
+
                 case 'new_job':
                     Jupyter.notebook.save_checkpoint();
                     break;
@@ -309,6 +298,7 @@ define([
                         }
                     });
                     break;
+
                 case 'job_info':
                     jobId = msgData.job_id;
                     this.sendBusMessage(JOB, jobId, 'job-info', {
@@ -316,6 +306,7 @@ define([
                         jobInfo: msgData,
                     });
                     break;
+
                 case 'run_status':
                     // Send job status notifications on the default channel,
                     // with a key on the message type and the job id, sending
@@ -327,6 +318,7 @@ define([
                     // filtering.
                     this.sendBusMessage(CELL, msgData.cell_id, 'run-status', msgData);
                     break;
+
                 case 'job_canceled':
                     this.sendBusMessage(JOB, msgData.job_id, 'job-canceled', {
                         jobId: msgData.job_id,
@@ -348,6 +340,10 @@ define([
                         logs: msgData,
                         latest: msgData.latest,
                     });
+                    break;
+
+                case 'result':
+                    this.sendBusMessage(CELL, msgData.address.cell_id, 'result', msgData);
                     break;
 
                 case 'job_comm_error':
@@ -387,70 +383,69 @@ define([
 
                 case 'job_init_err':
                 case 'job_init_lookup_err':
-                    /*
-                 code, error, job_id (opt), message, name, source
-                 */
-                    // eslint-disable-next-line no-case-declarations
-                    const $modalBody = $(Handlebars.compile(JobInitErrorTemplate)(msgData));
-                    // eslint-disable-next-line no-case-declarations
-                    const modal = new BootstrapDialog({
-                        title: 'Job Initialization Error',
-                        body: $modalBody,
-                        buttons: [
-                            $('<a type="button" class="btn btn-default kb-job-err-dialog__button">')
-                                .append('OK')
-                                .click(() => {
-                                    modal.hide();
-                                }),
-                        ],
-                    });
-                    new kbaseAccordion($modalBody.find('div#kb-job-err-trace'), {
-                        elements: [
-                            {
-                                title: 'Detailed Error Information',
-                                body: $(
-                                    '<table class="table table-bordered"><tr><th>code:</th><td>' +
-                                        msgData.code +
-                                        '</td></tr>' +
-                                        '<tr><th>error:</th><td>' +
-                                        msgData.message +
-                                        '</td></tr>' +
-                                        (function () {
-                                            if (msgData.service) {
-                                                return (
-                                                    '<tr><th>service:</th><td>' +
-                                                    msgData.service +
-                                                    '</td></tr>'
-                                                );
-                                            }
-                                            return '';
-                                        })() +
-                                        '<tr><th>type:</th><td>' +
-                                        msgData.name +
-                                        '</td></tr>' +
-                                        '<tr><th>source:</th><td>' +
-                                        msgData.source +
-                                        '</td></tr></table>'
-                                ),
-                            },
-                        ],
-                    });
+                    this.displayJobError(msgData);
+                    console.error('Error from job comm:', msg);
+                    break;
 
-                    $modalBody.find('button#kb-job-err-report').click(() => {});
-                    modal.getElement().on('hidden.bs.modal', () => {
-                        modal.destroy();
-                    });
-                    modal.show();
-                    break;
-                case 'result':
-                    this.sendBusMessage(CELL, msgData.address.cell_id, 'result', msgData);
-                    break;
                 default:
                     console.warn(
-                        "Unhandled KBaseJobs message from kernel (type='" + msgType + "'):"
+                        `Unhandled KBaseJobs message from kernel (type='${msgType}'):`,
+                        msg
                     );
-                    console.warn(msg);
             }
+        }
+
+        displayJobError(msgData) {
+            // code, error, job_id (opt), message, name, source
+            const $modalBody = $(Handlebars.compile(JobInitErrorTemplate)(msgData));
+            const modal = new BootstrapDialog({
+                title: 'Job Initialization Error',
+                body: $modalBody,
+                buttons: [
+                    $('<a type="button" class="btn btn-default kb-job-err-dialog__button">')
+                        .append('OK')
+                        .click(() => {
+                            modal.hide();
+                        }),
+                ],
+            });
+            new kbaseAccordion($modalBody.find('div#kb-job-err-trace'), {
+                elements: [
+                    {
+                        title: 'Detailed Error Information',
+                        body: $(
+                            '<table class="table table-bordered"><tr><th>code:</th><td>' +
+                                msgData.code +
+                                '</td></tr>' +
+                                '<tr><th>error:</th><td>' +
+                                msgData.message +
+                                '</td></tr>' +
+                                (function () {
+                                    if (msgData.service) {
+                                        return (
+                                            '<tr><th>service:</th><td>' +
+                                            msgData.service +
+                                            '</td></tr>'
+                                        );
+                                    }
+                                    return '';
+                                })() +
+                                '<tr><th>type:</th><td>' +
+                                msgData.name +
+                                '</td></tr>' +
+                                '<tr><th>source:</th><td>' +
+                                msgData.source +
+                                '</td></tr></table>'
+                        ),
+                    },
+                ],
+            });
+
+            $modalBody.find('button#kb-job-err-report').click(() => {});
+            modal.getElement().on('hidden.bs.modal', () => {
+                modal.destroy();
+            });
+            modal.show();
         }
 
         /**

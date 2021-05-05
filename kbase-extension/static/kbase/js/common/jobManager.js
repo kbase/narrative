@@ -220,12 +220,8 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
                     if (!confirmed) {
                         return false;
                     }
-                    // TODO: when ee2 adds endpoints to allow submission of multiple jobs to cancel,
-                    // this can be rewritten
-                    jobsList.forEach((jobId) => {
-                        this.bus.emit(jobCommand[action], {
-                            jobId: jobId,
-                        });
+                    this.bus.emit(jobCommand[action], {
+                        jobIdList: jobsList,
                     });
                     return true;
                 }

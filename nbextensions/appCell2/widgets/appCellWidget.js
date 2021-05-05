@@ -750,8 +750,8 @@ define([
             return;
         }
 
-        function doActionButton(data) {
-            switch (data.action) {
+        function doActionButton(action) {
+            switch (action) {
                 case 'runApp':
                     doRun();
                     break;
@@ -765,7 +765,7 @@ define([
                     doCancel();
                     break;
                 default:
-                    alert('Undefined action:' + data.action);
+                    alert(`Undefined action: ${action}`);
             }
         }
 

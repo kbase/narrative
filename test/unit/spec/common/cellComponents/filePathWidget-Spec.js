@@ -36,7 +36,7 @@ define([
             const bus = Runtime.make().bus();
             container = document.createElement('div');
             this.node = document.createElement('div');
-            document.body.appendChild(container);
+            document.body.append(container);
             container.appendChild(this.node);
 
             this.spec = Spec.make({
@@ -112,7 +112,7 @@ define([
                 return TestUtil.waitForElementChange(
                     this.node.querySelector('ol.kb-file-path__list')
                 ).then(() => {
-                    // the job log container should be empty
+                    // there should now be two rows of file paths
                     const postClickNumberOfRows = $node.find('li').length;
                     expect(postClickNumberOfRows).toEqual(2);
                 });
@@ -127,27 +127,32 @@ define([
 
                 // Set up an observer to look for deletion of the <li> for the
                 // row we deleted. This gets returned as a Promise after the simulated click.
-                const watchPromise = new Promise((resolve) => {
-                    const observer = new MutationObserver((mutationList) => {
-                        for (const mutationRecord of mutationList) {
+                return TestUtil.waitFor({
+                    config: { childList: true },
+                    documentElement: container.querySelector('ol.kb-file-path__list'),
+                    domStateFunction: (mutations) => {
+                        if (!mutations) {
+                            return false;
+                        }
+                        for (const mutationRecord of mutations) {
                             if (mutationRecord.removedNodes) {
                                 for (const removedNode of mutationRecord.removedNodes) {
                                     if (removedNode.classList.contains('kb-file-path__list_item')) {
-                                        observer.disconnect();
-                                        resolve();
+                                        return true;
                                     }
                                 }
                             }
                         }
-                    });
-                    observer.observe(listNode, { childList: true }); // leaving out the options should observe on delete
+                        return false;
+                    },
+                    executeFirst: () => {
+                        deleteBtn.click();
+                    },
                 }).then(() => {
-                    // the job log container should be empty
+                    // the file path list should be empty
                     const postClickNumberOfRows = $node.find('li.kb-file-path__list_item').length;
                     expect(postClickNumberOfRows).toEqual(0);
                 });
-
-                return Promise.resolve(deleteBtn.click()).then(() => watchPromise);
             });
         });
     });

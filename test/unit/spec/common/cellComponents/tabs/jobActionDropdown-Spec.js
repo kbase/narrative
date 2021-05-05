@@ -118,7 +118,7 @@ define([
                     },
                 });
 
-                const dropdownButtons = container.querySelectorAll(`.dropdown [data-action]`);
+                const dropdownButtons = container.querySelectorAll('.dropdown [data-action]');
                 dropdownButtons.forEach((button) => {
                     button.click();
                 });
@@ -134,28 +134,53 @@ define([
         });
 
         describe('button state', () => {
-            let container;
+            let container, jobActionDropdownInstance;
+
+            /**
+             * Test the expected state of the job action dropdown buttons
+             *
+             * @param {array}   expectations in the form [
+             *                      ['querySelectorString', expectedValue],
+             *                      ['querySelectorString', expectedValue],
+             *                  ]
+             *                  where querySelectorString is used to select elements
+             *                  using container.querySelectorAll
+             *
+             *                  e.g. ['.dropdown [data-action]', true]
+             *                  expect all elements with a data-action attribute to be disabled
+             *
+             *                  if no expectations are supplied, it is assumed that
+             *                  all buttons are disabled
+             */
+            function expectButtonState(expectations) {
+                jobActionDropdownInstance.updateState();
+                if (!expectations || !expectations.length) {
+                    expectations = [['.dropdown [data-action]', true]];
+                }
+                expectations.forEach((expectation) => {
+                    const dropdownButtons = container.querySelectorAll(expectation[0]);
+                    dropdownButtons.forEach((button) => {
+                        expect(button.disabled).toBe(expectation[1]);
+                    });
+                });
+            }
 
             beforeAll(async function () {
                 container = document.createElement('div');
                 this.model = Props.make({ data: { exec: { jobs: { byStatus: {} } } } });
-                this.jobActionDropdownInstance = await createStartedInstance(container, {
+                jobActionDropdownInstance = await createStartedInstance(container, {
                     model: this.model,
                 });
             });
 
-            afterAll(async function () {
-                await this.jobActionDropdownInstance.stop();
+            afterAll(async () => {
+                await jobActionDropdownInstance.stop();
                 container.remove();
             });
 
             it('should not have any buttons enabled without jobs', function () {
-                this.model.setItem('byStatus', {});
-                this.jobActionDropdownInstance.updateState();
-                const dropdownButtons = container.querySelectorAll(`.dropdown [data-action]`);
-                dropdownButtons.forEach((button) => {
-                    expect(button.disabled).toBeTrue();
-                });
+                this.model.setItem('exec.jobs.byStatus', {});
+                expectButtonState();
             });
 
             it('should not have any buttons enabled if all jobs are completed', function () {
@@ -165,11 +190,7 @@ define([
                         job_2: true,
                     },
                 });
-                this.jobActionDropdownInstance.updateState();
-                const dropdownButtons = container.querySelectorAll(`.dropdown [data-action]`);
-                dropdownButtons.forEach((button) => {
-                    expect(button.disabled).toBeTrue();
-                });
+                expectButtonState();
             });
 
             it('should not have any buttons enabled if all jobs are not found', function () {
@@ -179,11 +200,7 @@ define([
                         job_2: true,
                     },
                 });
-                this.jobActionDropdownInstance.updateState();
-                const dropdownButtons = container.querySelectorAll(`.dropdown [data-action]`);
-                dropdownButtons.forEach((button) => {
-                    expect(button.disabled).toBeTrue();
-                });
+                expectButtonState();
             });
 
             it('should have all buttons enabled with one job of each type', function () {
@@ -192,11 +209,7 @@ define([
                     'exec.jobs.byStatus',
                     batchJobModel.getItem('exec.jobs.byStatus')
                 );
-                this.jobActionDropdownInstance.updateState();
-                const dropdownButtons = container.querySelectorAll(`.dropdown [data-action]`);
-                dropdownButtons.forEach((button) => {
-                    expect(button.disabled).toBeFalse();
-                });
+                expectButtonState([['.dropdown [data-action]', false]]);
             });
 
             it('queued and running jobs: cancel buttons active, retry buttons disabled', function () {
@@ -204,15 +217,10 @@ define([
                     queued: { job_1: true, job_2: true },
                     running: { job_3: true },
                 });
-                this.jobActionDropdownInstance.updateState();
-                const dropdownButtons = container.querySelectorAll(`.dropdown [data-action]`);
-                dropdownButtons.forEach((button) => {
-                    if (button.getAttribute('data-action') === 'cancel') {
-                        expect(button.disabled).toBeFalse();
-                    } else {
-                        expect(button.disabled).toBeTrue();
-                    }
-                });
+                expectButtonState([
+                    ['.dropdown [data-action="cancel"]', false],
+                    ['.dropdown [data-action="retry"]', true],
+                ]);
             });
 
             it('queued and running jobs: cancel buttons active, retry buttons disabled', function () {
@@ -221,15 +229,10 @@ define([
                     estimating: { job_2: true },
                     running: { job_3: true },
                 });
-                this.jobActionDropdownInstance.updateState();
-                const dropdownButtons = container.querySelectorAll(`.dropdown [data-action]`);
-                dropdownButtons.forEach((button) => {
-                    if (button.getAttribute('data-action') === 'cancel') {
-                        expect(button.disabled).toBeFalse();
-                    } else {
-                        expect(button.disabled).toBeTrue();
-                    }
-                });
+                expectButtonState([
+                    ['.dropdown [data-action="cancel"]', false],
+                    ['.dropdown [data-action="retry"]', true],
+                ]);
             });
 
             it('cancelled and failed jobs: retry buttons active, cancel buttons disabled', function () {
@@ -242,15 +245,10 @@ define([
                         job_3: true,
                     },
                 });
-                this.jobActionDropdownInstance.updateState();
-                const dropdownButtons = container.querySelectorAll(`.dropdown [data-action]`);
-                dropdownButtons.forEach((button) => {
-                    if (button.getAttribute('data-action') === 'retry') {
-                        expect(button.disabled).toBeFalse();
-                    } else {
-                        expect(button.disabled).toBeTrue();
-                    }
-                });
+                expectButtonState([
+                    ['.dropdown [data-action="cancel"]', true],
+                    ['.dropdown [data-action="retry"]', false],
+                ]);
             });
         });
     });

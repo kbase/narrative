@@ -43,6 +43,7 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
             metadata: { kbase: metadata },
             cell_type: cellType,
             renderMinMax: () => {},
+            set_text: () => {},
             element: $cellContainer,
             input: $('<div>').addClass('input').append('<div>').addClass('input_area'),
             output: $('<div>').addClass('output_wrapper').append('<div>').addClass('output'),

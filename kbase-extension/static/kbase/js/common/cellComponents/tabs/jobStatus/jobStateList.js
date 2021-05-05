@@ -81,8 +81,8 @@ define([
     }
 
     // Convert the table to a datatable object to get functionality
-    function renderTable($container, rowCount) {
-        return $container.find('table').dataTable({
+    function renderTable(container, rowCount) {
+        return $(container.querySelector('table')).dataTable({
             searching: false,
             pageLength: dataTablePageLength,
             lengthChange: false,
@@ -101,7 +101,7 @@ define([
             fnDrawCallback: () => {
                 // Hide pagination controls if length is less than or equal to table length
                 if (rowCount <= dataTablePageLength) {
-                    $container.find('.dataTables_paginate').hide();
+                    $(container.querySelector('.dataTables_paginate')).hide();
                 }
             },
         });
@@ -149,7 +149,7 @@ define([
             if (['cancel', 'retry', 'go-to-results'].includes(action)) {
                 if (action === 'go-to-results') {
                     // switch to results tab
-                    return jobManager.viewJobResults(target);
+                    return jobManager.viewResults(target);
                 }
                 return jobManager[`${action}Job`](target);
             }
@@ -246,23 +246,14 @@ define([
                 return;
             }
 
-            // otherwise, update the jobState object
-            model.setItem(`exec.jobs.byId.${jobId}`, jobState);
-            model.setItem(`exec.jobs.byStatus.${status}.${jobId}`, true);
-            model.deleteItem(`exec.jobs.byStatus.${previousStatus}.${jobId}`);
-            if (
-                model.getItem(`exec.jobs.byStatus.${previousStatus}`) &&
-                !Object.keys(model.getItem(`exec.jobs.byStatus.${previousStatus}`)).length
-            ) {
-                model.deleteItem(`exec.jobs.byStatus.${previousStatus}`);
-            }
+            // otherwise, update the model using the jobState object
+            jobManager.updateModel([jobState]);
 
             if (widgetsById[jobId]) {
                 // update the row widget
                 widgetsById[jobId].updateState(jobState);
             }
             dropdownWidget.updateState();
-            jobManager.updateJobState();
         }
 
         /**
@@ -327,7 +318,7 @@ define([
                     });
                 })
                 .then(() => {
-                    renderTable($(container), jobs.length);
+                    renderTable(container, jobs.length);
 
                     jobs.forEach((jobState) => {
                         startStatusListener(jobState.job_id);

@@ -180,6 +180,17 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
     }
 
     /**
+     * Given a job state object and an action, return a boolean indicating whether the job can perform that action
+     *
+     * @param {string} action
+     * @param {object} jobState
+     * @returns {boolean} whether or not the job can do the action
+     */
+    function canDo(action, jobState) {
+        return isValidJobStateObject(jobState) && getJobString(jobState, 'action') === action;
+    }
+
+    /**
      * Given a job state object, return a boolean indicating whether the job can be cancelled
      *
      * Jobs that are queued or running can be cancelled.
@@ -188,7 +199,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
      * @returns {boolean} whether or not the job can be cancelled
      */
     function canCancel(jobState) {
-        return isValidJobStateObject(jobState) && getJobString(jobState, 'action') === 'cancel';
+        return canDo('cancel', jobState);
     }
 
     /**
@@ -200,7 +211,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
      * @returns {boolean} whether or not the job can be retried
      */
     function canRetry(jobState) {
-        return isValidJobStateObject(jobState) && getJobString(jobState, 'action') === 'retry';
+        return canDo('retry', jobState);
     }
 
     /**
@@ -595,6 +606,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
 
     return {
         canCancel,
+        canDo,
         canRetry,
         createCombinedJobState,
         createJobStatusFromFsm,

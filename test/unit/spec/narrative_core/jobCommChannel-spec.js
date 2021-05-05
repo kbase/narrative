@@ -106,37 +106,48 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUtil'], (
         });
 
         const busMsgCases = [
-            { channel: 'ping-comm-channel', message: { pingId: 'ping!' }, type: 'ping' },
+            {
+                channel: 'ping-comm-channel',
+                message: { pingId: 'ping!', pongId: 'pong!' },
+                expected: { request_type: 'ping', ping_id: 'ping!', pongId: 'pong!' },
+            },
             {
                 channel: 'request-job-cancellation',
                 message: { jobId: 'someJob' },
-                type: 'cancel_job',
+                expected: { request_type: 'cancel_job', job_id: 'someJob' },
             },
             {
                 channel: 'request-job-retry',
                 message: { jobId: 'someJob' },
-                type: 'retry_job',
+                expected: { request_type: 'retry_job', job_id: 'someJob' },
             },
             {
                 channel: 'request-job-status',
                 message: { jobId: 'someJob', parentJobId: 'someParent' },
-                type: 'job_status',
+                expected: {
+                    request_type: 'job_status',
+                    job_id: 'someJob',
+                    parent_job_id: 'someParent',
+                },
             },
             {
                 channel: 'request-job-update',
                 message: { jobId: 'someJob', parentJobId: 'someParent' },
-                type: 'start_job_update',
+                expected: {
+                    request_type: 'start_job_update',
+                    job_id: 'someJob',
+                    parent_job_id: 'someParent',
+                },
             },
             {
                 channel: 'request-job-completion',
                 message: { jobId: 'someJob' },
-                type: 'stop_job_update',
+                expected: { request_type: 'stop_job_update', job_id: 'someJob' },
             },
             {
                 channel: 'request-job-log',
                 message: { jobId: 'someJob', options: {} },
                 expected: {
-                    target_name: 'KBaseJobs',
                     request_type: 'job_logs',
                     job_id: 'someJob',
                 },
@@ -144,7 +155,7 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUtil'], (
             {
                 channel: 'request-job-log-latest',
                 message: { jobId: 'someJob', options: {} },
-                type: 'job_logs_latest',
+                expected: { request_type: 'job_logs_latest', job_id: 'someJob' },
             },
             {
                 channel: 'request-job-log-latest',
@@ -152,27 +163,33 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUtil'], (
                     jobId: 'someJob',
                     parentJobId: 'none',
                     options: {
-                        firstLine: 2000,
+                        first_line: 2000,
                         job_id: 'overridden!',
                     },
                 },
                 expected: {
-                    target_name: 'KBaseJobs',
                     request_type: 'job_logs_latest',
                     job_id: 'overridden!',
-                    firstLine: 2000,
                     parent_job_id: 'none',
+                    first_line: 2000,
                 },
             },
             {
                 channel: 'request-job-info',
                 message: { jobId: 'someJob', parentJobId: 'someParent' },
-                type: 'job_info',
+                expected: {
+                    request_type: 'job_info',
+                    job_id: 'someJob',
+                    parent_job_id: 'someParent',
+                },
             },
             {
                 channel: 'request-job-info',
                 message: { jobIdList: ['someJob', 'someOtherJob', 'aThirdJob'] },
-                type: 'job_info',
+                expected: {
+                    request_type: 'job_info',
+                    job_id_list: ['someJob', 'someOtherJob', 'aThirdJob'],
+                },
             },
         ];
 
@@ -193,20 +210,9 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUtil'], (
                     })
                     .then((args) => {
                         expect(comm.comm.send).toHaveBeenCalled();
-                        if (testCase.expected) {
-                            expect(args[0]).toEqual(testCase.expected);
-                        } else {
-                            expect(args[0].target_name).toEqual('KBaseJobs');
-                            expect(args[0].request_type).toEqual(testCase.type);
-                            // expect the message values to exist in the comm channel message
-                            // the `options` object gets merged into the message if it is not empty
-                            // since all the examples have an empty options object, we can ignore it
-                            Object.keys(testCase.message)
-                                .filter((key) => key !== 'options')
-                                .forEach((key) => {
-                                    expect(Object.values(args[0])).toContain(testCase.message[key]);
-                                });
-                        }
+                        expect(args[0]).toEqual(
+                            Object.assign(testCase.expected, { target_name: 'KBaseJobs' })
+                        );
                     });
             });
         });

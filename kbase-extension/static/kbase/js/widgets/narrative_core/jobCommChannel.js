@@ -168,7 +168,8 @@ define([
 
                 for (const [key, value] of Object.entries(message)) {
                     if (key !== 'options') {
-                        translations[key] ? (msg[translations[key]] = value) : (msg[key] = value);
+                        const msgKey = translations[key] || key;
+                        msg[msgKey] = value;
                     }
                 }
 

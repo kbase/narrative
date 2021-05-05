@@ -5,7 +5,7 @@ from biokbase.narrative.jobs.appmanager import AppManager
 import biokbase.narrative.jobs.specmanager as specmanager
 import biokbase.narrative.app_util as app_util
 from biokbase.narrative.jobs.job import Job
-from IPython.display import HTML
+from IPython.display import HTML, Javascript
 import unittest
 import mock
 from mock import MagicMock
@@ -31,6 +31,7 @@ class AppManagerTestCase(unittest.TestCase):
         cls.bad_app_id = config.get("app_tests", "bad_app_id")
         cls.bad_tag = config.get("app_tests", "bad_app_tag")
         cls.test_app_id = config.get("app_tests", "test_app_id")
+        cls.test_viewer_app_id = config.get("app_tests", "test_viewer_app_id")
         cls.test_app_params = {
             "read_library_names": ["rhodo.art.jgi.reads"],
             "output_contigset_name": "rhodo_contigs",
@@ -364,6 +365,71 @@ class AppManagerTestCase(unittest.TestCase):
         self._verify_comm_success(c.return_value.send_comm_message)
 
     ############# End tests for run_app_batch #############
+
+    ############# Test run_local_app #############
+    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
+    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(
+        "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
+        side_effect=mock_agent_token,
+    )
+    def test_run_local_app_ok(self, auth, c):
+        c.return_value.send_comm_message = MagicMock()
+        result = self.am.run_local_app(
+            self.test_viewer_app_id,
+            {"param0": "fakegenome"},
+            tag="release",
+        )
+        self.assertIsInstance(result, Javascript)
+        self.assertIn("KBaseNarrativeOutputCell", result.data)
+
+    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
+    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(
+        "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
+        side_effect=mock_agent_token,
+    )
+    def test_run_local_app_fail_cases(self, auth, c):
+        comm_mock = MagicMock()
+        c.return_value.send_comm_message = comm_mock
+        cases = [{
+            "inputs": {
+                "args": [self.bad_app_id, {}],
+                "kwargs": {}
+            },
+            "expected_error": f'Unknown app id "{self.bad_app_id}" tagged as "release"',
+        }, {
+            "inputs": {
+                "args": [self.test_viewer_app_id, {}],
+                "kwargs": {"tag": "dev"}
+            },
+            "expected_error": "Missing required parameters"
+        }, {
+            "inputs": {
+                "args": [self.good_app_id, {}],
+                "kwargs": {"tag": self.bad_tag}
+            },
+            "expected_error": f"Can't find tag {self.bad_tag} - allowed tags are release, beta, dev"
+        }, {
+            "inputs": {
+                "args": [self.good_app_id, {}],
+                "kwargs": {"tag": "dev", "version": "1.0.0"}
+            },
+            "expected_error": "Semantic versions only apply to released app modules.",
+        }]
+        for test_case in cases:
+            inputs = test_case["inputs"]
+            def run_func():
+                return self.am.run_local_app(*inputs["args"], **inputs["kwargs"])
+            comm_mock.reset_mock()
+            self.run_app_expect_error(
+                comm_mock,
+                run_func,
+                "run_local_app",
+                test_case["expected_error"],
+            )
+
+    ############# End tests for run_local_app #############
 
     ############# Test run_app_bulk #############
 

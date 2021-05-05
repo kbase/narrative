@@ -40,6 +40,7 @@ def _app_error_wrapper(app_func: Callable) -> any:
     error, instead of showing an arcane traceback.
     Otherwise it runs whatever function it decorates with its expected args and kwargs
     """
+
     @functools.wraps(app_func)
     def wrapper(self, *args, **kwargs):
         try:
@@ -72,6 +73,7 @@ def _app_error_wrapper(app_func: Callable) -> any:
                 + "-----------------------------------------------------\n"
                 + e_trace
             )
+
     return wrapper
 
 
@@ -500,6 +502,7 @@ class AppManager(object):
 
         # funcdef run_job_batch(list<RunJobParams> params, BatchParams batch_params) returns (BatchSubmission job_ids) authentication required;
 
+    @_app_error_wrapper
     def run_local_app(
         self,
         app_id,
@@ -539,49 +542,6 @@ class AppManager(object):
                       version='0.0.1',
                       input_expression_matrix="MyMatrix")
         """
-        try:
-            if params is None:
-                params = dict()
-            return self._run_local_app_internal(
-                app_id, params, widget_state, tag, version, cell_id, run_id
-            )
-        except Exception as e:
-            e_type = type(e).__name__
-            e_message = str(e).replace("<", "&lt;").replace(">", "&gt;")
-            e_trace = traceback.format_exc()
-            e_trace = e_trace.replace("<", "&lt;").replace(">", "&gt;")
-            self._send_comm_message(
-                "run_status",
-                {
-                    "event": "error",
-                    "event_at": datetime.datetime.utcnow().isoformat() + "Z",
-                    "cell_id": cell_id,
-                    "run_id": run_id,
-                    "error_message": e_message,
-                    "error_type": e_type,
-                    "error_stacktrace": e_trace,
-                },
-            )
-            # raise
-            print(
-                "Error while trying to start your app (run_local_app)!\n"
-                + "-------------------------------------\n"
-                + str(e)
-            )
-
-    def _run_local_app_internal(
-        self, app_id, params, widget_state, tag, version, cell_id, run_id
-    ):
-        self._send_comm_message(
-            "run_status",
-            {
-                "event": "validating_app",
-                "event_at": datetime.datetime.utcnow().isoformat() + "Z",
-                "cell_id": cell_id,
-                "run_id": run_id,
-            },
-        )
-
         spec = self._get_validated_app_spec(app_id, tag, False, version=version)
 
         # Here, we just deal with two behaviors:

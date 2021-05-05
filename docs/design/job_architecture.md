@@ -15,36 +15,49 @@ This section is broken into two parts - kernel requests and kernel responses. Bo
 
 ## Bus requests
 These messages are sent to the `JobCommChannel` on the front end, to get processed into messages sent to the kernel.
+All the `request-job-*` requests take as arguments either a single job ID string, or an array of job IDs.
+
 `ping-comm-channel` - sees that the comm channel is open through the websocket
 
-`request-job-status` - gets the status for a job, one time
-  * `jobId` - a string, the job id
+`request-job-status` - gets the status for a job or an array of jobs.
+  * `jobId` - a string, the job id OR
+  * `jobIdList` - an array of job IDs
   * `parentJobId` - (optional) a string, the id of the requested job's "parent" job
 
-`request-job-update` - request the status for a job, but start an update cycle so that it's continually requested.
-  * `jobId` - a string, the job id
+`request-job-update` - request the status for a job or jobs, but start an update cycle so that it's continually requested.
+  * `jobId` - a string, the job id OR
+  * `jobIdList` - an array of job IDs
   * `parentJobId` - (optional) a string, the id of the requested job's "parent" job
 
-`request-job-completion` - signal that the front end doesn't need any more updates for that job, so stop sending them for each loop cycle. Doesn't actually end the job, only requests for updates.
-  * `jobId` - a string, the job id
+`request-job-completion` - signal that the front end doesn't need any more updates for the specified job(s), so stop sending them for each loop cycle. Doesn't actually end the job, only requests for updates.
+  * `jobId` - a string, the job id OR
+  * `jobIdList` - an array of job IDs
   * `parentJobId` - (optional) a string, the id of the requested job's "parent" job
 
-`request-job-info` - request information about the job, specifically app id, spec, input parameters and (if finished) outputs
-  * `jobId` - a string, the job id
+`request-job-info` - request information about the job(s), specifically app id, spec, input parameters and (if finished) outputs
+  * `jobId` - a string, the job id OR
+  * `jobIdList` - an array of job IDs
   * `parentJobId` - (optional) a string, the id of the requested job's "parent" job
 
-`request-job-cancellation` - request that the server cancel the running job.
-  * `jobId` - a string, the job id
+`request-job-cancellation` - request that the server cancel the running job(s)
+  * `jobId` - a string, the job id OR
+  * `jobIdList` - an array of job IDs
   * `parentJobId` - (optional) a string, the id of the requested job's "parent" job
+
+`request-job-retry` - request that the server rerun a job or set of jobs
+  * `jobId` - a string, the job id OR
+  * `jobIdList` - an array of job IDs
 
 `request-job-log` - request the job logs starting at some given line.
-  * `jobId` - a string, the job id
+  * `jobId` - a string, the job id OR
+  * `jobIdList` - an array of job IDs
   * `options` - an object, with attributes:
     * `first_line` - the first line (0-indexed) to request
     * `num_lines` - the number of lines to request (will get back up to that many if there aren't more)
 
 `request-job-log-latest` - request the latest several job log lines
-  * `jobId` - a string, the job id
+  * `jobId` - a string, the job id OR
+  * `jobIdList` - an array of job IDs
   * `options` - an object, with attributes:
     * `num_lines` - the number of lines to request (will get back up to that many if there aren't more)
 
@@ -209,37 +222,43 @@ These are organized by the `request_type` field, followed by the expected respon
 
 `all_status` - request the status of all currently running jobs, responds with `job_status_all`
 
-`job_status` - request a single job status, responds with `job_status`
-* `job_id` - string,
+`job_status` - request job status, responds with `job_status` for each job
+* `job_id` - string OR `job_id_list` - array of strings
 * `parent_job_id` - optional string
 
 `start_update_loop` - request starting the global job status update thread, no specific response, but generally with `job_status_all`
 
 `stop_update_loop` - request stopping the global job status update thread, no response
 
-`start_job_update` - request updating a single job during the update thread, no specific response, but generally with `job_status`
-* `job_id` - string
+`start_job_update` - request updating job(s) during the update thread, no specific response, but generally with `job_status`
+* `job_id` - string OR `job_id_list` - array of strings
 * `parent_job_id` - optional string
 
-`stop_job_update` - request halting update for a single job during the update thread, no response
-* `job_id` - string
+`stop_job_update` - request halting update for job(s) during the update thread, no response
+* `job_id` - string OR `job_id_list` - array of strings
 * `parent_job_id` - optional string
 
-`job_info` - request general information about a job, responds with `job_info`
-* `job_id` - string
+`job_info` - request general information about job(s), responds with `job_info` for each job
+* `job_id` - string OR `job_id_list` - array of strings
 * `parent_job_id` - optional string
 
-`job_logs` - request job log information, responds with `job_logs`
-* `job_id` - string
+`job_logs` - request job log information, responds with `job_logs` for each job
+* `job_id` - string OR `job_id_list` - array of strings
 * `parent_job_id` - optional string
 * `first_line` - int >= 0,
 * `num_lines` - int > 0
 
 `job_logs_latest` - request the latest set of lines from job logs, responds with `job_logs`
-* `job_id` - string
+* `job_id` - string OR `job_id_list` - array of strings
 * `parent_job_id` - optional string
 * `num_lines` - int > 0
 
+`cancel_job` - cancel a job or list of jobs; responds with `job_canceled` for each job
+* `job_id` - string OR `job_id_list` - array of strings
+* `parent_job_id` - optional string
+
+`retry_job` - retry a job or list of jobs
+* `job_id` - string OR `job_id_list` - array of strings
 
 ## Messages sent from the kernel to the browser
 These are all caught by the `JobCommChannel` on the browser side, then parsed and sent as the bus messages described above. Like other kernel messages, they have a `msg_type` field, and a `content` field containing data meant for the frontend to use. They have a rough structure like this:

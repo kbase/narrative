@@ -8,6 +8,7 @@ from jinja2 import Template
 from datetime import datetime, timezone, timedelta
 from biokbase.narrative.app_util import system_variable
 from biokbase.narrative.exception_util import transform_job_exception
+import copy
 
 """
 KBase Job Manager
@@ -132,7 +133,7 @@ class JobManager(object):
         """
         try:
             all_statuses = self.lookup_all_job_states(ignore_refresh_flag=True)
-            state_list = [s["state"] for s in all_statuses.values()]
+            state_list = [copy.deepcopy(s["state"]) for s in all_statuses.values()]
 
             if not len(state_list):
                 return "No running jobs!"

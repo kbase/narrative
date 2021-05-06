@@ -24,7 +24,7 @@ import datetime
 import traceback
 import random
 import functools
-from typing import Callable, Union
+from typing import Callable, Union, Dict
 
 """
 A module for managing apps, specs, requirements, and for starting jobs.
@@ -247,14 +247,7 @@ class AppManager(object):
         ]
 
         # We're now almost ready to run the job. Last, we need an agent token.
-        try:
-            token_name = "KBApp_{}".format(app_id)
-            token_name = token_name[: self.__MAX_TOKEN_NAME_LEN]
-            agent_token = auth.get_agent_token(
-                auth.get_auth_token(), token_name=token_name
-            )
-        except Exception:
-            raise
+        agent_token = self._get_agent_token(app_id)
 
         job_meta["token_id"] = agent_token["id"]
         # This is the input set for NJSW.run_job. Now we need the workspace id
@@ -371,14 +364,7 @@ class AppManager(object):
             return job_runner_inputs
 
         # We're now almost ready to run the job. Last, we need an agent token.
-        try:
-            token_name = "KBApp_{}".format(app_id)
-            token_name = token_name[: self.__MAX_TOKEN_NAME_LEN]
-            agent_token = auth.get_agent_token(
-                auth.get_auth_token(), token_name=token_name
-            )
-        except Exception:
-            raise
+        agent_token = self._get_agent_token(app_id)
         job_runner_inputs["meta"]["token_id"] = agent_token["id"]
 
         # Log that we're trying to run a job...
@@ -519,9 +505,9 @@ class AppManager(object):
             return {"batch_run_params": batch_run_inputs, "batch_params": batch_params}
 
         # We're now almost ready to run the job. Last, we need an agent token.
-        token_name = "KBApp_{}".format(app_id)
-        token_name = token_name[: self.__MAX_TOKEN_NAME_LEN]
-        agent_token = auth.get_agent_token(auth.get_auth_token(), token_name=token_name)
+        agent_token = self._get_agent_token(
+            f"KBase_app_batch_{len(batch_run_inputs)}_apps"
+        )
 
         # add the token id to the meta for all jobs
         for job_input in batch_run_inputs:
@@ -1100,6 +1086,16 @@ class AppManager(object):
 
     def _send_comm_message(self, msg_type, content):
         JobComm().send_comm_message(msg_type, content)
+
+    def _get_agent_token(self, name: str) -> Dict[str, str]:
+        """
+        Retrieves an agent token from the Auth service with a formatted name.
+        This prepends "KBApp_" to the name for filtering, and trims to make sure the name
+        isn't longer than it should be.
+        """
+        token_name = f"KBApp_{name}"
+        token_name = token_name[: self.__MAX_TOKEN_NAME_LEN]
+        return auth.get_agent_token(auth.get_auth_token(), token_name=token_name)
 
     def register_new_job(self, job: Job) -> None:
         JobManager().register_new_job(job)

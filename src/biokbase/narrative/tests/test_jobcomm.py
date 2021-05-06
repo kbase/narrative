@@ -417,6 +417,34 @@ class JobCommTestCase(unittest.TestCase):
         msg = self.jc._comm.last_message
         self.assertEqual(msg["data"]["msg_type"], "job_logs")
 
+    def _check_rq_equal(self, rq0, rq1):
+        self.assertEqual(rq0.msg_id, rq1.msg_id)
+        self.assertEqual(rq0.rq_data, rq1.rq_data)
+        self.assertEqual(rq0.request, rq1.request)
+        self.assertEqual(rq0.job_id, rq1.job_id)
+
+    def test_split_by_job_id(self):
+        rq_msg = {
+            "msg_id": "some_id",
+            "content": {"data": {"request_type": "a_request", "job_id_list": ["a", "b", "c"]}},
+        }
+        rqa0 = JobRequest({
+            "msg_id": "some_id",
+            "content": {"data": {"request_type": "a_request", "job_id": "a"}},
+        })
+        rqb0 = JobRequest({
+            "msg_id": "some_id",
+            "content": {"data": {"request_type": "a_request", "job_id": "b"}},
+        })
+        rqc0 = JobRequest({
+            "msg_id": "some_id",
+            "content": {"data": {"request_type": "a_request", "job_id": "c"}},
+        })
+        rqa1, rqb1, rqc1 = self.jc._split_request_by_job_id(rq_msg)
+        self._check_rq_equal(rqa0, rqa1)
+        self._check_rq_equal(rqb0, rqb1)
+        self._check_rq_equal(rqc0, rqc1)
+
 
 class JobRequestTestCase(unittest.TestCase):
     """

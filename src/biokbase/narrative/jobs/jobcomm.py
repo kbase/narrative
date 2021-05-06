@@ -1,4 +1,5 @@
 import threading
+import copy
 from ipykernel.comm import Comm
 import biokbase.narrative.jobs.jobmanager as jobmanager
 from biokbase.narrative.exception_util import NarrativeException
@@ -23,6 +24,9 @@ class JobRequest:
     1. It validates that the packet is correct and has some expected values.
     2. If there's a job_id field, it makes sure that it's real (by asking the
        JobManager - avoids a bunch of duplicate validation code)
+
+    Each JobRequest has at most one job_id. If the job comm channel request data
+    is received with a job_id_list, those will be split up into multiple JobRequests
 
     Provides 4 attributes:
     msg_id: str - a unique string (within reason) for a message id.
@@ -313,6 +317,19 @@ class JobComm:
             )
             raise
 
+    def _split_request_by_job_id(self, rq: dict) -> list:
+        """
+        If request data comes with job_id_list instead of job_id, convert it into
+        JobRequest objects each having a single job_id
+        """
+        insts = []
+        for job_id in rq["content"]["data"]["job_id_list"]:
+            rq_ = copy.deepcopy(rq)
+            rq_["content"]["data"]["job_id"] = job_id
+            del rq_["content"]["data"]["job_id_list"]
+            insts.append(JobRequest(rq_))
+        return insts
+
     def _handle_comm_message(self, msg: dict) -> None:
         """
         Handles comm messages that come in from the other end of the KBaseJobs channel.
@@ -324,16 +341,20 @@ class JobComm:
         Any unknown request is returned over the channel as a job_comm_error, and a
         ValueError is raised.
         """
-        request = JobRequest(msg)
-        kblogging.log_event(self._log, "handle_comm_message", {"msg": request.request})
-        if request.request in self._msg_map:
-            self._msg_map[request.request](request)
+        if msg.get("content", {}).get("data", {}).get("job_id_list"):
+            requests = self._split_request_by_job_id(msg)
         else:
-            self.send_comm_message(
-                "job_comm_error",
-                {"message": "Unknown message", "request_type": request.request},
-            )
-            raise ValueError(f"Unknown KBaseJobs message '{request.request}'")
+            requests = [JobRequest(msg)]
+        for request in requests:
+            kblogging.log_event(self._log, "handle_comm_message", {"msg": request.request})
+            if request.request in self._msg_map:
+                self._msg_map[request.request](request)
+            else:
+                self.send_comm_message(
+                    "job_comm_error",
+                    {"message": "Unknown message", "request_type": request.request},
+                )
+                raise ValueError(f"Unknown KBaseJobs message '{request.request}'")
 
     def send_comm_message(self, msg_type: str, content: dict) -> None:
         """

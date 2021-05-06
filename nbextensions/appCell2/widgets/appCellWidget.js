@@ -79,8 +79,7 @@ define([
         cssCellType = 'kb-app-cell';
 
     function factory(config) {
-        const { workspaceInfo } = config,
-            runtime = Runtime.make(),
+        const runtime = Runtime.make(),
             { cell } = config,
             saveMaxFrequency = config.saveMaxFrequency || 5000,
             parentBus = config.bus,
@@ -159,7 +158,7 @@ define([
             readOnly = false,
             viewOnly = false;
 
-        // NEW - TABS
+        // TABS
 
         function pRequire(module) {
             return new Promise((resolve, reject) => {
@@ -179,7 +178,6 @@ define([
                         .makeChannelBus({ description: 'Parent comm bus for input widget' }),
                     widget = Widget.make({
                         bus: widgetBus,
-                        workspaceInfo: workspaceInfo,
                         initialParams: model.getItem('params'),
                     });
 
@@ -294,7 +292,6 @@ define([
                         .makeChannelBus({ description: 'Parent comm bus for input widget' }),
                     widget = Widget.make({
                         bus: widgetBus,
-                        workspaceInfo: workspaceInfo,
                         initialParams: model.getItem('params'),
                     });
 
@@ -988,7 +985,7 @@ define([
                 currentState = { mode: 'new' };
             }
             fsm = Fsm.make({
-                states: AppStates,
+                states: AppStates.appStates,
                 initialState: {
                     mode: 'new',
                 },

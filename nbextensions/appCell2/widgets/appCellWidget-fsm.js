@@ -2,6 +2,7 @@ define([], () => {
     'use strict';
 
     const appStates = [
+        // new
         {
             state: {
                 mode: 'new',
@@ -62,6 +63,7 @@ define([], () => {
                 },
             ],
         },
+        // editing - incomplete
         {
             state: {
                 mode: 'editing',
@@ -164,6 +166,7 @@ define([], () => {
                 },
             ],
         },
+        // editing - complete
         {
             state: {
                 mode: 'editing',
@@ -304,6 +307,7 @@ define([], () => {
                 },
             ],
         },
+        // batch editing - incomplete
         {
             state: {
                 mode: 'editing-batch',
@@ -410,6 +414,7 @@ define([], () => {
                 },
             ],
         },
+        // batch editing - complete
         {
             state: {
                 mode: 'editing-batch',
@@ -554,6 +559,7 @@ define([], () => {
                 },
             ],
         },
+        // execute-requested
         {
             state: {
                 mode: 'execute-requested',
@@ -662,6 +668,7 @@ define([], () => {
                 },
             ],
         },
+        // processing - launched
         {
             state: {
                 mode: 'processing',
@@ -773,6 +780,7 @@ define([], () => {
                 },
             ],
         },
+        // processing - queued
         {
             state: {
                 mode: 'processing',
@@ -843,17 +851,16 @@ define([], () => {
             next: [
                 {
                     mode: 'processing',
+                    stage: 'queued',
+                },
+                {
+                    mode: 'processing',
                     stage: 'running',
                 },
                 {
                     mode: 'processing',
                     stage: 'partial-complete',
                 },
-                {
-                    mode: 'processing',
-                    stage: 'queued',
-                },
-
                 {
                     mode: 'canceled',
                 },
@@ -889,7 +896,7 @@ define([], () => {
                 },
             ],
         },
-
+        // processing - running
         {
             state: {
                 mode: 'processing',
@@ -993,6 +1000,7 @@ define([], () => {
                 },
             ],
         },
+        // processing - partial complete
         {
             state: {
                 mode: 'processing',
@@ -1092,6 +1100,7 @@ define([], () => {
                 },
             ],
         },
+        // cancelling the app run
         {
             state: {
                 mode: 'canceling',
@@ -1186,6 +1195,7 @@ define([], () => {
                 },
             ],
         },
+        // app run cancelled
         {
             state: {
                 mode: 'canceled',
@@ -1264,6 +1274,7 @@ define([], () => {
                 },
             ],
         },
+        // success
         {
             state: {
                 mode: 'success',
@@ -1345,7 +1356,7 @@ define([], () => {
                 },
             ],
         },
-
+        // launch error
         {
             state: {
                 mode: 'error',
@@ -1406,6 +1417,7 @@ define([], () => {
                 },
             ],
         },
+        // error during queueing
         {
             state: {
                 mode: 'error',
@@ -1489,6 +1501,7 @@ define([], () => {
                 },
             ],
         },
+        // runtime app error
         {
             state: {
                 mode: 'error',
@@ -1692,5 +1705,8 @@ define([], () => {
             ],
         },
     ];
-    return appStates;
+
+    return {
+        appStates,
+    };
 });

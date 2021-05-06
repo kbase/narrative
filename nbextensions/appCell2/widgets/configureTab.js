@@ -10,7 +10,6 @@ define(['bluebird', 'common/runtime'], (Promise, runtime) => {
                         .makeChannelBus({ description: 'Parent comm bus for input widget' }),
                     widget = Widget.make({
                         bus: bus,
-                        workspaceInfo: arg.workspaceInfo,
                     });
                 bus.emit('run', {
                     node: arg.node,
@@ -65,7 +64,6 @@ define(['bluebird', 'common/runtime'], (Promise, runtime) => {
 
                 bus.on('parameter-changed', (message) => {
                     arg.model.setItem(['params', message.parameter], message.newValue);
-                    evaluateAppState();
                 });
 
                 return widget.start().then(() => {
@@ -75,13 +73,13 @@ define(['bluebird', 'common/runtime'], (Promise, runtime) => {
                     });
                 });
             }, (err) => {
-                console.log('ERROR', err);
+                console.warn('ERROR', err);
                 reject(err);
             });
         });
     }
 
-    function factory(config) {
+    function factory() {
         let container, widget;
 
         function start(arg) {
@@ -89,7 +87,6 @@ define(['bluebird', 'common/runtime'], (Promise, runtime) => {
 
             return loadParamsWidget({
                 node: container,
-                workspaceInfo: arg.workspaceInfo,
                 appSpec: arg.appSpec,
                 parameters: arg.parameters,
             }).then((result) => {
@@ -112,8 +109,8 @@ define(['bluebird', 'common/runtime'], (Promise, runtime) => {
     }
 
     return {
-        make: function (config) {
-            return factory(config);
+        make: function () {
+            return factory();
         },
     };
 });

@@ -436,7 +436,7 @@ class AppManager(object):
             tag: the app tag to run, one of release, beta, or dev
             version: (optional) the specified version to run, if not provided, this will be the most recent
                 for that particular tag
-            params: a list of at least dictionary. Each dict contains the set of parameters to run the
+            params: a list of at least one dictionary. Each dict contains the set of parameters to run the
                 app once.
         cell_id: if provided, this should be a unique id for the Narrative cell that's running the app.
         run_id: if provided, this should be a unique id representing a Narrative cell's knowledge of
@@ -447,12 +447,23 @@ class AppManager(object):
         Example:
         --------
         run_app_batch([{
-            "app_id": "MegaHit/run_megahit",
+            "app_id": "Some_module/reads_to_contigset",
             "tag": "release",
             "version": "1.0.0",
             "params": [{
-                    "read_library_name" : "My_PE_Library",
-                    "output_contigset_name" : "My_Contig_Assembly"
+                "read_library_name" : "My_PE_Library",
+                "output_contigset_name" : "My_Contig_Assembly"
+            }, {
+                "read_library_name": "Another_reads_library",
+                "output_contigset_name": "Another_contig_assembly"
+            }]
+        }, {
+            "app_id": "Some_module/contigset_to_genome",
+            "tag": "release",
+            "version": "1.1.0",
+            "params": [{
+                "contigset": "My_contigset",
+                "genome_name": "My_genome"
             }]
         }])
         """
@@ -622,6 +633,18 @@ class AppManager(object):
         Builds the set of inputs for EE2.run_job and EE2.run_job_batch (RunJobParams) given a spec
         and set of inputs/parameters.
 
+        Parameters:
+        -----------
+        spec: dict, an app spec
+        tag: str, one of release, beta, dev
+        param_set: dict, key-value pairs for each app input and parameter
+        version: str, should be either a semantic version or git hash for the app to run
+        cell_id: str, the cell id to associate with the job
+        run_id: str, the run id to associate with the job
+        ws_id: int, the workspace id to associate with the job
+
+        Returns:
+        --------
         This returns a dict with the following keys:
             method: the function to run
             service_ver: the version of the app to run
@@ -633,16 +656,6 @@ class AppManager(object):
                 cell_id (if not None),
                 run_id (if not None),
                 tag
-
-        Parameters:
-        -----------
-        spec: dict, an app spec
-        tag: str, one of release, beta, dev
-        param_set: dict, key-value pairs for each app input and parameter
-        version: str, should be either a semantic version or git hash for the app to run
-        cell_id: str, the cell id to associate with the job
-        run_id: str, the run id to associate with the job
-        ws_id: int, the workspace id to associate with the job
         """
         # get the app id from the spec
         app_id = spec["info"]["id"]

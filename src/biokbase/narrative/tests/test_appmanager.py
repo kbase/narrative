@@ -105,7 +105,7 @@ class AppManagerTestCase(unittest.TestCase):
     def tearDown(self):
         try:
             del os.environ["KB_WORKSPACE_ID"]
-        except:
+        except Exception:
             pass
 
     def run_app_expect_error(self, comm_mock, run_func, func_name, print_error):
@@ -436,6 +436,7 @@ class AppManagerTestCase(unittest.TestCase):
         }]
         for test_case in cases:
             inputs = test_case["inputs"]
+
             def run_func():
                 return self.am.run_local_app(*inputs["args"], **inputs["kwargs"])
             comm_mock.reset_mock()
@@ -476,13 +477,16 @@ class AppManagerTestCase(unittest.TestCase):
         side_effect=mock_agent_token,
     )
     def test_run_app_bulk_from_gui_cell(self, auth, c):
-        c.return_value.send_comm_message = MagicMock()
+        comm_mock = MagicMock()
+        c.return_value.send_comm_message = comm_mock
         cell_id = "a_cell_id"
-        run_id = "a_run_id"
+        run_ids = [None, "a_run_id"]
         # test with / w/o run_id
         # should return None, fire a couple of messages
-        self.assertIsNone(self.am.run_app_bulk(self.bulk_run_good_inputs, cell_id=cell_id))
-        self._verify_comm_success(c.return_value.send_comm_message, True, num_jobs=4, cell_id=cell_id)
+        for run_id in run_ids:
+            self.assertIsNone(self.am.run_app_bulk(self.bulk_run_good_inputs, cell_id=cell_id, run_id=run_id))
+            self._verify_comm_success(c.return_value.send_comm_message, True, num_jobs=4, cell_id=cell_id, run_id=run_id)
+            comm_mock.reset_mock()
 
     @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
     @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
@@ -507,19 +511,19 @@ class AppManagerTestCase(unittest.TestCase):
         bad_tag_error = "tag must be one of release, beta, dev, not "
         bad_version_error = "an app version must be a string, not "
 
-        app_info_cases = [{ # tests for bad app_id keys, malformed or not strings
+        app_info_cases = [{  # tests for bad app_id keys, malformed or not strings
             "key": "app_id",
             "bad_values": ["module.app", "moduleapp", None],
             "error": bad_id_error
-        }, { # tests for bad params structure - empty list or not a list
+        }, {  # tests for bad params structure - empty list or not a list
             "key": "params",
             "bad_values": [{}, "nope", None, []],
             "error": bad_params_error
-        }, { # tests for bad tag key
+        }, {  # tests for bad tag key
             "key": "tag",
             "bad_values": [None, "bad", {}, []],
             "error": bad_tag_error
-        }, { # tests for bad version key
+        }, {  # tests for bad version key
             "key": "version",
             "bad_values": [None, 123, {}, []],
             "error": bad_version_error

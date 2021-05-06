@@ -24,7 +24,7 @@ import datetime
 import traceback
 import random
 import functools
-from typing import Callable
+from typing import Callable, Union, Dict
 
 """
 A module for managing apps, specs, requirements, and for starting jobs.
@@ -247,14 +247,7 @@ class AppManager(object):
         ]
 
         # We're now almost ready to run the job. Last, we need an agent token.
-        try:
-            token_name = "KBApp_{}".format(app_id)
-            token_name = token_name[: self.__MAX_TOKEN_NAME_LEN]
-            agent_token = auth.get_agent_token(
-                auth.get_auth_token(), token_name=token_name
-            )
-        except Exception:
-            raise
+        agent_token = self._get_agent_token(app_id)
 
         job_meta["token_id"] = agent_token["id"]
         # This is the input set for NJSW.run_job. Now we need the workspace id
@@ -363,66 +356,22 @@ class AppManager(object):
         ws_id = strict_system_variable("workspace_id")
         spec = self._get_validated_app_spec(app_id, tag, True, version=version)
 
-        # Preflight check the params - all required ones are present, all
-        # values are the right type, all numerical values are in given ranges
-        spec_params = self.spec_manager.app_params(spec)
-
-        spec_params_map = dict(
-            (spec_params[i]["id"], spec_params[i]) for i in range(len(spec_params))
-        )
-        ws_input_refs = extract_ws_refs(app_id, tag, spec_params, params)
-        input_vals = self._map_inputs(
-            spec["behavior"]["kb_service_input_mapping"], params, spec_params_map
+        job_runner_inputs = self._build_run_job_params(
+            spec, tag, params, version, cell_id, run_id, ws_id
         )
 
-        service_method = spec["behavior"]["kb_service_method"]
-        service_name = spec["behavior"]["kb_service_name"]
-        service_ver = spec["behavior"].get("kb_service_version", None)
-
-        # Let the given version override the spec's version.
-        if version is not None:
-            service_ver = version
-
-        # This is what calls the function in the back end - Module.method
-        # This isn't the same as the app spec id.
-        function_name = service_name + "." + service_method
-        job_meta = {"tag": tag}
-        if cell_id is not None:
-            job_meta["cell_id"] = cell_id
-        if run_id is not None:
-            job_meta["run_id"] = run_id
-
-        # This is the input set for NJSW.run_job. Now we need the workspace id
-        # and whatever fits in the metadata.
-        job_runner_inputs = {
-            "method": function_name,
-            "service_ver": service_ver,
-            "params": input_vals,
-            "app_id": app_id,
-            "wsid": ws_id,
-            "meta": job_meta,
-        }
-        if len(ws_input_refs) > 0:
-            job_runner_inputs["source_ws_objects"] = ws_input_refs
         if dry_run:
             return job_runner_inputs
 
         # We're now almost ready to run the job. Last, we need an agent token.
-        try:
-            token_name = "KBApp_{}".format(app_id)
-            token_name = token_name[: self.__MAX_TOKEN_NAME_LEN]
-            agent_token = auth.get_agent_token(
-                auth.get_auth_token(), token_name=token_name
-            )
-        except Exception:
-            raise
+        agent_token = self._get_agent_token(app_id)
         job_runner_inputs["meta"]["token_id"] = agent_token["id"]
 
         # Log that we're trying to run a job...
         log_info = {
             "app_id": app_id,
             "tag": tag,
-            "version": service_ver,
+            "version": job_runner_inputs["service_ver"],
             "username": system_variable("user_id"),
             "wsid": ws_id,
         }
@@ -440,10 +389,10 @@ class AppManager(object):
         new_job = Job(
             job_id,
             app_id,
-            input_vals,
+            job_runner_inputs["params"],
             system_variable("user_id"),
             tag=tag,
-            app_version=service_ver,
+            app_version=job_runner_inputs["service_ver"],
             cell_id=cell_id,
             run_id=run_id,
             token_id=agent_token["id"],
@@ -466,41 +415,294 @@ class AppManager(object):
             return new_job
 
     @_app_error_wrapper
-    def run_app_bulk(self, app_info, cell_id=None, run_id=None, dry_run=False):
+    def run_app_bulk(
+        self,
+        app_info: list,
+        cell_id: str = None,
+        run_id: str = None,
+        dry_run: bool = False,
+    ) -> Union[dict, None]:
         """
-        app_info
-        1. Validate the app_info inputs - keys, apps and tags are real
-        2. Validate the app parameter sets are real
-        3. Build the call to EE2.run_job_batch
-        4. Run the call
-        5. If successful, construct the job(s) and pass to jobmanager
+        Attempts to run a batch of apps in bulk using the Execution Engine's run_app_batch endpoint.
+        If a cell_id is provided, this sends various job messages over the comm channel, and returns None.
+        If dry_run is True, this returns the structure that would be sent to EE2.run_job_batch
+
+        Parameters:
+        -----------
+        app_info: this is a list of app information dictionaries. It's broken down such that a single app
+            can have multiple sets of parameters, which could create multiple runs of that app.
+            Each dictionary is expected to have the following keys:
+            app_id: the id of the app to run
+            tag: the app tag to run, one of release, beta, or dev
+            version: (optional) the specified version to run, if not provided, this will be the most recent
+                for that particular tag
+            params: a list of at least one dictionary. Each dict contains the set of parameters to run the
+                app once.
+        cell_id: if provided, this should be a unique id for the Narrative cell that's running the app.
+        run_id: if provided, this should be a unique id representing a Narrative cell's knowledge of
+            that job.
+        dry_run: if True, this won't start the job, but return the structure that would be sent to the
+            KBase execution engine.
+
+        Example:
+        --------
+        run_app_batch([{
+            "app_id": "Some_module/reads_to_contigset",
+            "tag": "release",
+            "version": "1.0.0",
+            "params": [{
+                "read_library_name" : "My_PE_Library",
+                "output_contigset_name" : "My_Contig_Assembly"
+            }, {
+                "read_library_name": "Another_reads_library",
+                "output_contigset_name": "Another_contig_assembly"
+            }]
+        }, {
+            "app_id": "Some_module/contigset_to_genome",
+            "tag": "release",
+            "version": "1.1.0",
+            "params": [{
+                "contigset": "My_contigset",
+                "genome_name": "My_genome"
+            }]
+        }])
         """
 
-        assert app_info
-        ws_id = system_variable("workspace_id")
-        return -1
+        if not isinstance(app_info, list) or len(app_info) == 0:
+            raise ValueError(
+                "app_info must be a list with at least one set of app information"
+            )
+        batch_run_inputs = list()
+        ws_id = strict_system_variable("workspace_id")
+        batch_params = {"wsid": ws_id}  # for EE2.run_job_batch
+        log_app_info = list()
+        for info in app_info:
+            self._validate_bulk_app_info(info)
+            app_id = info["app_id"]
+            tag = info.get("tag", "release")
+            version = info.get("version")
+            spec = self._get_validated_app_spec(app_id, tag, True, version)
+            for param_set in info["params"]:
+                # will raise a ValueError if anything is wrong or missing
+                # otherwise, will build a set of inputs for EE2.run_job
+                batch_run_inputs.append(
+                    self._build_run_job_params(
+                        spec,
+                        tag,
+                        param_set,
+                        version=version,
+                        cell_id=cell_id,
+                        run_id=run_id,
+                        ws_id=ws_id,
+                    )
+                )
+            log_app_info.append(
+                {
+                    "app_id": app_id,
+                    "tag": tag,
+                    "version": version,
+                    "num_jobs": len(batch_run_inputs),
+                }
+            )
+        log_info = {
+            "app_info": log_app_info,
+            "username": system_variable("user_id"),
+            "wsid": ws_id,
+        }
+        kblogging.log_event(self._log, "run_app_bulk", log_info)
 
-        # typedef structure {
-        #     string method;
-        #     string app_id;
-        #     list<UnspecifiedObject> params;
-        #     string service_ver;
-        #     list<wsref> source_ws_objects;
-        #     Meta meta;
-        #     int wsid;
-        #     string parent_job_id;
-        # } RunJobParams;
+        # if we're doing a dry run, stop here and return the setup
+        if dry_run:
+            return {"batch_run_params": batch_run_inputs, "batch_params": batch_params}
 
-        # typedef structure {
-        #     int wsid;
-        # } BatchParams;
+        # We're now almost ready to run the job. Last, we need an agent token.
+        agent_token = self._get_agent_token(
+            f"KBase_app_batch_{len(batch_run_inputs)}_apps"
+        )
 
-        # typedef structure {
-        #     job_id parent_job_id;
-        #     list<job_id> child_job_ids;
-        # } BatchSubmission;
+        # add the token id to the meta for all jobs
+        for job_input in batch_run_inputs:
+            job_input["meta"]["token_id"] = agent_token["id"]
 
-        # funcdef run_job_batch(list<RunJobParams> params, BatchParams batch_params) returns (BatchSubmission job_ids) authentication required;
+        # run the job batch and get a batch_submission record
+        try:
+            batch_submission = clients.get(
+                "execution_engine2", token=agent_token["token"]
+            ).run_job_batch(batch_run_inputs, batch_params)
+        except Exception as e:
+            log_info.update({"err": str(e)})
+            kblogging.log_event(self._log, "run_job_bulk_error", log_info)
+            raise transform_job_exception(e)
+
+        self._send_comm_message(
+            "run_status",
+            {
+                "event": "launched_job_batch",
+                "event_at": datetime.datetime.utcnow().isoformat() + "Z",
+                "cell_id": cell_id,
+                "run_id": run_id,
+                "parent_job_id": batch_submission["parent_job_id"],
+                "child_job_ids": batch_submission["child_job_ids"],
+            },
+        )
+
+        child_jobs = list()
+        user_id = system_variable("user_id")
+        for idx, child_job_id in enumerate(batch_submission["child_job_ids"]):
+            job_info = batch_run_inputs[idx]
+            child_jobs.append(
+                Job(
+                    child_job_id,
+                    job_info["app_id"],
+                    job_info["params"],
+                    user_id,
+                    tag=job_info["meta"].get("tag"),
+                    app_version=job_info["service_ver"],
+                    cell_id=cell_id,
+                    run_id=run_id,
+                    token_id=agent_token["id"],
+                )
+            )
+
+        # TODO make something more reasonable / complete for a parent job
+        parent_job = Job(
+            batch_submission["parent_job_id"], "bulk_app_submission", {}, user_id
+        )
+
+        # TODO make a tighter design in the job manager for submitting a family of jobs
+        for new_job in child_jobs:
+            self.register_new_job(new_job)
+        self.register_new_job(parent_job)
+
+        if cell_id is None:
+            return {"parent_job": parent_job, "child_jobs": child_jobs}
+
+    def _validate_bulk_app_info(self, app_info: dict):
+        """
+        Validation consists of:
+        1. must have "app_id" with format xyz/abc
+        2. must have "tag" with "release, beta, dev" options
+        3. optionally have "version" that's a string
+        4. must have "params" that's a list of at least one dict.
+        """
+        malformed_params_error = "params must be a list of dicts of app parameters"
+
+        # make sure we have all required keys
+        required_keys = ["app_id", "tag", "params"]
+        for key in required_keys:
+            if key not in app_info:
+                raise ValueError(
+                    f"app info must contain keys {', '.join(required_keys)}"
+                )
+        # make sure app is of the form "module/app"
+        if (
+            not isinstance(app_info["app_id"], str)
+            or re.match(r"\S+\/\S+", app_info["app_id"]) is None
+        ):
+            raise ValueError("an app_id must be of the format module_name/app_name")
+        # params must be a list with at least one item (even an empty dict)
+        if not isinstance(app_info["params"], list) or len(app_info["params"]) == 0:
+            raise ValueError(malformed_params_error)
+        # each item must be a dict
+        for params in app_info["params"]:
+            if not isinstance(params, dict):
+                raise ValueError(malformed_params_error)
+        # make sure tag is an allowed item
+        allowed_tags = ["release", "beta", "dev"]
+        if app_info["tag"] not in allowed_tags:
+            raise ValueError(
+                f"tag must be one of {', '.join(allowed_tags)}, not {app_info['tag']}"
+            )
+        # make sure version is a string, if present
+        if "version" in app_info and not isinstance(app_info["version"], str):
+            raise ValueError(
+                f"an app version must be a string, not {app_info['version']}"
+            )
+
+    def _build_run_job_params(
+        self,
+        spec: dict,
+        tag: str,
+        param_set: dict,
+        version: str = None,
+        cell_id: str = None,
+        run_id: str = None,
+        ws_id: int = None,
+    ) -> dict:
+        """
+        Builds the set of inputs for EE2.run_job and EE2.run_job_batch (RunJobParams) given a spec
+        and set of inputs/parameters.
+
+        Parameters:
+        -----------
+        spec: dict, an app spec
+        tag: str, one of release, beta, dev
+        param_set: dict, key-value pairs for each app input and parameter
+        version: str, should be either a semantic version or git hash for the app to run
+        cell_id: str, the cell id to associate with the job
+        run_id: str, the run id to associate with the job
+        ws_id: int, the workspace id to associate with the job
+
+        Returns:
+        --------
+        This returns a dict with the following keys:
+            method: the function to run
+            service_ver: the version of the app to run
+            params: the set of inputs, mapped to what the method expects to see
+            app_id: the original id of the app to run
+            wsid: the workspace id associated with the new job
+            source_ws_objects: the UPAs for any workspace objects involved with running the app, if any
+            meta: key-value pairs, usually containing:
+                cell_id (if not None),
+                run_id (if not None),
+                tag
+        """
+        # get the app id from the spec
+        app_id = spec["info"]["id"]
+
+        # Preflight check the params - all required ones are present, all
+        # values are the right type, all numerical values are in given ranges
+        spec_params = self.spec_manager.app_params(spec)
+
+        spec_params_map = dict(
+            (spec_params[i]["id"], spec_params[i]) for i in range(len(spec_params))
+        )
+        ws_input_refs = extract_ws_refs(app_id, tag, spec_params, param_set)
+        input_vals = self._map_inputs(
+            spec["behavior"]["kb_service_input_mapping"], param_set, spec_params_map
+        )
+
+        service_method = spec["behavior"]["kb_service_method"]
+        service_name = spec["behavior"]["kb_service_name"]
+        service_ver = spec["behavior"].get("kb_service_version", None)
+
+        # Let the given version override the spec's version.
+        if version is not None:
+            service_ver = version
+
+        # This is what calls the function in the back end - Module.method
+        # This isn't the same as the app spec id.
+        function_name = service_name + "." + service_method
+        job_meta = {"tag": tag}
+        if cell_id is not None:
+            job_meta["cell_id"] = cell_id
+        if run_id is not None:
+            job_meta["run_id"] = run_id
+
+        # This is the input set for EE2.run_job. Now we need the workspace id
+        # and whatever fits in the metadata.
+        job_runner_inputs = {
+            "method": function_name,
+            "service_ver": service_ver,
+            "params": input_vals,
+            "app_id": app_id,
+            "wsid": ws_id,
+            "meta": job_meta,
+        }
+        if len(ws_input_refs) > 0:
+            job_runner_inputs["source_ws_objects"] = ws_input_refs
+
+        return job_runner_inputs
 
     @_app_error_wrapper
     def run_local_app(
@@ -897,6 +1099,16 @@ class AppManager(object):
 
     def _send_comm_message(self, msg_type, content):
         JobComm().send_comm_message(msg_type, content)
+
+    def _get_agent_token(self, name: str) -> Dict[str, str]:
+        """
+        Retrieves an agent token from the Auth service with a formatted name.
+        This prepends "KBApp_" to the name for filtering, and trims to make sure the name
+        isn't longer than it should be.
+        """
+        token_name = f"KBApp_{name}"
+        token_name = token_name[: self.__MAX_TOKEN_NAME_LEN]
+        return auth.get_agent_token(auth.get_auth_token(), token_name=token_name)
 
     def register_new_job(self, job: Job) -> None:
         JobManager().register_new_job(job)

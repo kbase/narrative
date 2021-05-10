@@ -465,12 +465,29 @@ define([
                 description: 'parent bus for BulkImportCell',
             });
             busEventManager.add(cellBus.on('delete-cell', () => deleteCell()));
+            busEventManager.add(cellBus.on('run-status', handleRunStatus));
             controllerBus = runtime.bus().makeChannelBus({
                 description: 'An app cell widget',
             });
             controllerBus.on('update-param-state', (message) => {
                 updateParameterState(message.fileType, message.state);
             });
+        }
+
+        function handleRunStatus(message) {
+            switch (message.event) {
+                case 'launched_job_batch':
+                    jobManager.updateModel(message.child_job_ids);
+                    updateState('queued');
+                    break;
+                case 'error':
+                    updateState('appError');
+                    break;
+                default:
+                    console.warn(`Unknown run-status event ${message.event}!`);
+                    updateState('generalError');
+                    break;
+            }
         }
 
         /**
@@ -480,6 +497,12 @@ define([
          * @param {string} newState - what the new ready state should be - one of complete, incomplete, error
          */
         function updateParameterState(fileType, newState) {
+            const curState = model.getItem('state.state');
+            if (!['editingComplete', 'editingIncomplete'].includes(curState)) {
+                // only change ready state if we're not running yet or in an error.
+                return;
+            }
+
             model.setItem(['state', 'param', fileType], newState);
             const newFileTypeState = {};
             for (const [fileId, fileState] of Object.entries(model.getItem(['state', 'param']))) {
@@ -795,7 +818,6 @@ define([
                 stateDiff.fileType = state.fileType;
                 state = stateDiff;
             }
-
             cellTabs.setState(state.tab);
             controlPanel.setActionState(state.action);
             fileTypePanel.updateState(state.fileType);

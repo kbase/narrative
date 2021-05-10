@@ -1,5 +1,6 @@
-import threading
 import copy
+import threading
+from typing import List
 from ipykernel.comm import Comm
 import biokbase.narrative.jobs.jobmanager as jobmanager
 from biokbase.narrative.exception_util import NarrativeException
@@ -317,11 +318,21 @@ class JobComm:
             )
             raise
 
-    def _split_request_by_job_id(self, rq: dict) -> list:
+    def _split_request_by_job_id(self, rq: dict) -> List[JobRequest]:
         """
         If request data comes with job_id_list instead of job_id, convert it into
         JobRequest objects each having a single job_id
         """
+        if not isinstance(rq["content"]["data"]["job_id_list"], list):
+            message = "List expected for job_id_list"
+            self.send_comm_message(
+                "job_comm_error",
+                {
+                    "message": message,
+                    "request_type": rq["content"]["data"].get("request_type")
+                }
+            )
+            raise ValueError(message)
         insts = []
         for job_id in rq["content"]["data"]["job_id_list"]:
             rq_ = copy.deepcopy(rq)
@@ -333,8 +344,8 @@ class JobComm:
     def _handle_comm_message(self, msg: dict) -> None:
         """
         Handles comm messages that come in from the other end of the KBaseJobs channel.
-        Messages get translated into a JobRequest object, which is then passed to the
-        right handler, based on the request.
+        Messages get translated into one or more JobRequest objects, which are then
+        passed to the right handler, based on the request.
 
         A handler dictionary is created on JobComm creation.
 

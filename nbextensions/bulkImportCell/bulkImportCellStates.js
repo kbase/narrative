@@ -171,7 +171,7 @@ define([], () => {
                     ['viewConfigure', 'info', 'jobStatus', 'results', 'error']
                 ),
                 action: {
-                    name: 'runApp',
+                    name: 'resetApp',
                     disabled: false,
                 },
             },

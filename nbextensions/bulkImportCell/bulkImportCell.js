@@ -465,12 +465,32 @@ define([
                 description: 'parent bus for BulkImportCell',
             });
             busEventManager.add(cellBus.on('delete-cell', () => deleteCell()));
+            busEventManager.add(cellBus.on('run-status', handleRunStatus))
             controllerBus = runtime.bus().makeChannelBus({
                 description: 'An app cell widget',
             });
             controllerBus.on('update-param-state', (message) => {
                 updateParameterState(message.fileType, message.state);
             });
+        }
+
+        function handleRunStatus(message) {
+            switch(message.event) {
+                case 'launched_job_batch':
+                    console.log('new jobs!');
+                    console.log(message.parent_job_id);
+                    console.log(message.child_job_ids);
+                    console.log('switching to running state');
+                    updateState('queued');
+                    break;
+                case 'error':
+                    updateState('appError');
+                    break;
+                default:
+                    console.warn(`Unknown run-status event ${message.event}!`);
+                    updateState('generalError');
+                    break;
+            }
         }
 
         /**
@@ -494,12 +514,16 @@ define([
                     break;
                 }
             }
-            const uiState = cellReady ? 'editingComplete' : 'editingIncomplete';
-            updateState(uiState);
-            if (cellReady) {
-                buildPythonCode();
-            } else {
-                clearPythonCode();
+            const curState = model.getItem('state.state');
+            // only change ready state if we're not running yet.
+            if (curState in ['editingComplete', 'editingIncomplete']) {
+                const uiState = cellReady ? 'editingComplete' : 'editingIncomplete';
+                updateState(uiState);
+                if (cellReady) {
+                    buildPythonCode();
+                } else {
+                    clearPythonCode();
+                }
             }
         }
 
@@ -795,7 +819,6 @@ define([
                 stateDiff.fileType = state.fileType;
                 state = stateDiff;
             }
-
             cellTabs.setState(state.tab);
             controlPanel.setActionState(state.action);
             fileTypePanel.updateState(state.fileType);

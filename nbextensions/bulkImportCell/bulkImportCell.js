@@ -477,10 +477,7 @@ define([
         function handleRunStatus(message) {
             switch (message.event) {
                 case 'launched_job_batch':
-                    console.log('new jobs!');
-                    console.log(message.parent_job_id);
-                    console.log(message.child_job_ids);
-                    console.log('switching to running state');
+                    jobManager.updateModel(message.child_job_ids);
                     updateState('queued');
                     break;
                 case 'error':
@@ -500,6 +497,12 @@ define([
          * @param {string} newState - what the new ready state should be - one of complete, incomplete, error
          */
         function updateParameterState(fileType, newState) {
+            const curState = model.getItem('state.state');
+            if (!['editingComplete', 'editingIncomplete'].includes(curState)) {
+                // only change ready state if we're not running yet or in an error.
+                return;
+            }
+
             model.setItem(['state', 'param', fileType], newState);
             const newFileTypeState = {};
             for (const [fileId, fileState] of Object.entries(model.getItem(['state', 'param']))) {
@@ -514,16 +517,12 @@ define([
                     break;
                 }
             }
-            const curState = model.getItem('state.state');
-            // only change ready state if we're not running yet.
-            if (curState in ['editingComplete', 'editingIncomplete']) {
-                const uiState = cellReady ? 'editingComplete' : 'editingIncomplete';
-                updateState(uiState);
-                if (cellReady) {
-                    buildPythonCode();
-                } else {
-                    clearPythonCode();
-                }
+            const uiState = cellReady ? 'editingComplete' : 'editingIncomplete';
+            updateState(uiState);
+            if (cellReady) {
+                buildPythonCode();
+            } else {
+                clearPythonCode();
             }
         }
 

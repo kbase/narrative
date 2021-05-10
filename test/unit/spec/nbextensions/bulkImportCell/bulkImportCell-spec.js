@@ -150,22 +150,26 @@ define([
             });
         });
 
-        [{
-            msgEvent: 'error',
-            updatedState: 'appError',
-            availableButton: 'rerun',
-            initialState: 'hidden'
-        }, {
-            msgEvent: 'launched_job_batch',
-            updatedState: 'queued',
-            availableButton: 'cancel',
-            initialState: 'hidden'
-        }, {
-            msgEvent: 'some-unknown-event',
-            updatedState: 'generalError',
-            availableButton: 'reset',
-            initialState: 'hidden'
-        }].forEach((testCase) => {
+        [
+            {
+                msgEvent: 'error',
+                updatedState: 'appError',
+                availableButton: 'rerun',
+                initialState: 'hidden',
+            },
+            {
+                msgEvent: 'launched_job_batch',
+                updatedState: 'queued',
+                availableButton: 'cancel',
+                initialState: 'hidden',
+            },
+            {
+                msgEvent: 'some-unknown-event',
+                updatedState: 'generalError',
+                availableButton: 'reset',
+                initialState: 'hidden',
+            },
+        ].forEach((testCase) => {
             it(`responds to run-status bus messages with ${testCase.msgEvent} event`, () => {
                 const runtime = Runtime.make();
                 const cell = Mocks.buildMockCell('code');
@@ -175,16 +179,15 @@ define([
                     specs: fakeSpecs,
                     initialize: true,
                 });
-                const actionButton = cell.element[0].querySelector(`.kb-rcp__action-button-container .-${testCase.availableButton}`);
+                const actionButton = cell.element[0].querySelector(
+                    `.kb-rcp__action-button-container .-${testCase.availableButton}`
+                );
                 // wait for the actionButton to get initialized as hidden,
                 // then send the message to put it in rerun state, and wait for the button to show,
                 // then we can verify both the button and state in the cell metadata.
-                return TestUtil.waitForElementState(
-                    actionButton,
-                    () => {
-                        return actionButton.classList.contains(testCase.initialState);
-                    },
-                )
+                return TestUtil.waitForElementState(actionButton, () => {
+                    return actionButton.classList.contains(testCase.initialState);
+                })
                     .then(() => {
                         return TestUtil.waitForElementState(
                             actionButton,
@@ -194,7 +197,7 @@ define([
                             () => {
                                 runtime.bus().send(
                                     {
-                                        event: testCase.msgEvent
+                                        event: testCase.msgEvent,
                                     },
                                     {
                                         channel: {
@@ -206,10 +209,13 @@ define([
                                     }
                                 );
                             }
-                    )})
+                        );
+                    })
                     .then(() => {
                         expect(actionButton).not.toHaveClass('hidden');
-                        expect(cell.metadata.kbase.bulkImportCell.state.state).toBe(testCase.updatedState);
+                        expect(cell.metadata.kbase.bulkImportCell.state.state).toBe(
+                            testCase.updatedState
+                        );
                     });
             });
         });

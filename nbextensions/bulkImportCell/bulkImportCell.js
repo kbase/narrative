@@ -465,7 +465,7 @@ define([
                 description: 'parent bus for BulkImportCell',
             });
             busEventManager.add(cellBus.on('delete-cell', () => deleteCell()));
-            busEventManager.add(cellBus.on('run-status', handleRunStatus))
+            busEventManager.add(cellBus.on('run-status', handleRunStatus));
             controllerBus = runtime.bus().makeChannelBus({
                 description: 'An app cell widget',
             });
@@ -475,7 +475,7 @@ define([
         }
 
         function handleRunStatus(message) {
-            switch(message.event) {
+            switch (message.event) {
                 case 'launched_job_batch':
                     console.log('new jobs!');
                     console.log(message.parent_job_id);

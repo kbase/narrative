@@ -85,6 +85,10 @@ define([
                 track_total_hits: true,
             };
             if (query !== null) {
+                // Note that this rather convoluted-looking filter how one implements a required "or" filter.
+                // Having the "should" within a "must" ensures that the at least one of the "should" matches 
+                // must succeed. We want a filter here because we don't care about scoring.
+                // There may be better ways to form this query, but this one does work. 
                 params.query.bool.filter = {
                     'bool': {
                         'must': {

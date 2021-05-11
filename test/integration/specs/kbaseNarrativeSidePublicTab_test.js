@@ -592,7 +592,7 @@ async function waitForRows(panel, count) {
         const rows = await panel.$$('[role="table"][data-test-id="result"] > div > [role="row"]');
         return rows.length >= count;
     });
-    return await panel.$$('[role="table"][data-test-id="result"] > div > [role="row"]');
+    return panel.$$('[role="table"][data-test-id="result"] > div > [role="row"]');
 }
 
 async function openPublicData() {

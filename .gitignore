@@ -79,6 +79,9 @@ karma-result.json
 # Integration test logs
 /selenium-standalone-logs/
 
+# Test tokens
+/test/*.tok
+
 # Translations
 *.mo
 *.pot

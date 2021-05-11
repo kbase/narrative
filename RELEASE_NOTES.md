@@ -10,6 +10,7 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 -   PTV-1635: fix data and app slideout button and opening behavior
 -   DEVOPS-475: Change dockerfile so that container runs as nobody, without need to setuid for initialization. Enables removing CAP_SETUID from container initialization
 - SCT-2935 - fix refseq public data search behavior to properly restrict the search with multiple terms
+- SCT-3038 - refseq public data search now includes genome_id and source_id
 ### Version 4.3.2
 
 -   SCT-2778 - convert data slideout, public tab, refseq data source to use searchapi2/rpc api rather than searchapi2/legacy.

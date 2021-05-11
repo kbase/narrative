@@ -15,9 +15,16 @@ job_info = config.load_json_file(config.get("jobs", "ee2_job_info_file"))
 
 
 def make_comm_msg(
-    msg_type: str, job_id: str, as_job_request: bool, content: dict = None
+    msg_type: str, job_id_like, as_job_request: bool, content: dict = None
 ):
-    msg = {"content": {"data": {"request_type": msg_type, "job_id": job_id}}}
+    if type(job_id_like) is list:
+        job_id_key = "job_id_list"
+    else:
+        job_id_key = "job_id"
+    msg = {
+        "msg_id": "some_id",
+        "content": {"data": {"request_type": msg_type, job_id_key: job_id_like}}
+    }
     if content is not None:
         msg["content"]["data"].update(content)
     if as_job_request:
@@ -416,6 +423,33 @@ class JobCommTestCase(unittest.TestCase):
         self.jc._handle_comm_message(req)
         msg = self.jc._comm.last_message
         self.assertEqual(msg["data"]["msg_type"], "job_logs")
+
+    @mock.patch(
+        "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get", get_mock_client
+    )
+    def test_handle_cancel_job_msg_with_job_id_list(self):
+        job_id_list = ["5d64935ab215ad4128de94d6"]
+        req = make_comm_msg("cancel_job", job_id_list, False)
+        self.jc._handle_comm_message(req)
+        msg = self.jc._comm.last_message
+        self.assertEqual(msg["data"]["msg_type"], "job_status")
+
+    def _check_rq_equal(self, rq0, rq1):
+        self.assertEqual(rq0.msg_id, rq1.msg_id)
+        self.assertEqual(rq0.rq_data, rq1.rq_data)
+        self.assertEqual(rq0.request, rq1.request)
+        self.assertEqual(rq0.job_id, rq1.job_id)
+
+    def test_split_by_job_id(self):
+        rq_msg = make_comm_msg("a_request", ["a", "b", "c"], False)
+        rqa1, rqb1, rqc1 = self.jc._split_request_by_job_id(rq_msg)
+        rqa0 = make_comm_msg("a_request", "a", True)
+        rqb0 = make_comm_msg("a_request", "b", True)
+        rqc0 = make_comm_msg("a_request", "c", True)
+        rqa1, rqb1, rqc1 = self.jc._split_request_by_job_id(rq_msg)
+        self._check_rq_equal(rqa0, rqa1)
+        self._check_rq_equal(rqb0, rqb1)
+        self._check_rq_equal(rqc0, rqc1)
 
 
 class JobRequestTestCase(unittest.TestCase):

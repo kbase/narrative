@@ -655,17 +655,6 @@ async function doScrolling(publicPanel, testCase) {
 async function validateResultRow(row, testCase) {
     const nameCell = await row.$('[role="cell"][data-test-id="name"]');
     await expect(nameCell).toHaveText(testCase.name);
-
-    // Confirm the metadata fields.
-    // for (const { id, label, value } of testCase.metadata) {
-    //     await testField({
-    //         container: row,
-    //         id,
-    //         label,
-    //         value,
-    //     });
-    // }
-
     await Promise.all(testCase.metadata.map(({ id, label, value }) => {
         return testField({
             container: row,

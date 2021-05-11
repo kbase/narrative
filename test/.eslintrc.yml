@@ -2,3 +2,4 @@ env:
   amd: true
   es6: true
   jasmine: true
+  mocha: true

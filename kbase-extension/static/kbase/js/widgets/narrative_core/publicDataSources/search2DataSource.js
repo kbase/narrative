@@ -85,14 +85,34 @@ define([
                 track_total_hits: true,
             };
             if (query !== null) {
-                params.query.bool.must.push({
-                    'match': {
-                        'scientific_name': {
-                            'query': query,
-                            'operator': 'AND',
+                params.query.bool.filter = {
+                    'bool': {
+                        'must': {
+                            'bool': {
+                                'should': [
+                                    {
+                                        'match': {
+                                            'scientific_name': {
+                                                'query': query,
+                                                'operator': 'AND',
+                                            },
+                                        },
+                                    },
+                                    {
+                                        'match': {
+                                            'source_id': query,
+                                        },
+                                    },
+                                    {
+                                        'match': {
+                                            'genome_id': query,
+                                        },
+                                    },
+                                ],
+                            },
                         },
                     },
-                });
+                };
             }
             return this.searchAPI2.search_objects({ params, timeout: this.timeout });
         }

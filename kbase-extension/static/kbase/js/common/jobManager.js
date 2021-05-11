@@ -215,7 +215,7 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
                 return Promise.resolve(false);
             }
 
-            await UI.showConfirmDialog(this._generateDialogArgs(action, statusList, jobsList)).then(
+            return await UI.showConfirmDialog(this._generateDialogArgs(action, statusList, jobsList)).then(
                 (confirmed) => {
                     if (!confirmed) {
                         return false;

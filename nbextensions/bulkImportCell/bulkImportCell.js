@@ -64,9 +64,12 @@ define([
         function make() {
             function start() {
                 alert('starting default widget');
+                return Promise.resolve();
             }
 
-            function stop() {}
+            function stop() {
+                return Promise.resolve();
+            }
 
             return {
                 start: start,
@@ -511,6 +514,14 @@ define([
             }
 
             state.fileType.completed = newFileTypeState;
+            updateEditingState();
+        }
+
+        /**
+         * This will toggle the cell to either the editingComplete or editingIncomplete state,
+         * based on the ready state of each filetype.
+         */
+        function updateEditingState() {
             let cellReady = true;
             for (const _state of Object.values(model.getItem('state.param'))) {
                 if (_state !== 'complete') {
@@ -784,25 +795,31 @@ define([
         async function doCancelCellAction() {
             // if we're currently listening to the run_status event, stop.
             if (runStatusListener !== null) {
-                const confirmationMessage = div([
-                    p([
-                        'Canceling the job will halt any currently running jobs.',
-                        'Any output objects already created will remain in your narrative and can be removed from the Data panel.',
-                    ]),
-                    p('Continue to Cancel the running job batch?'),
-                ]);
-                await UI.showConfirmDialog(confirmationMessage).then(
+                const dialogArgs = {
+                    title: 'Cancel job batch?',
+                    body: div([
+                        p([
+                            'Canceling the job will halt any currently running jobs.',
+                            'Any output objects already created will remain in your narrative and can be removed from the Data panel.',
+                        ]),
+                        p('Continue to Cancel the running job batch?'),
+                    ])
+                }
+
+                await UI.showConfirmDialog(dialogArgs).then(
                     (confirmed) => {
                         if (!confirmed) {
                             return false;
                         }
                         busEventManager.remove(runStatusListener);
+                        updateEditingState();
                         return true;
                     }
                 );
             }
             else {
-                return jobManager.cancelJobsByStatus(['created', 'estimating', 'queued', 'running']);
+                await jobManager.cancelJobsByStatus(['created', 'estimating', 'queued', 'running']);
+                updateEditingState();
             }
         }
 

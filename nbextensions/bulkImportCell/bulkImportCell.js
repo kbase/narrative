@@ -57,6 +57,7 @@ define([
     const CELL_TYPE = 'app-bulk-import';
 
     const div = html.tag('div'),
+        p = html.tag('p'),
         cssCellType = 'kb-bulk-import';
 
     function DefaultWidget() {
@@ -209,7 +210,8 @@ define([
                     },
                 },
             };
-        let readOnly = false,
+        let runStatusListener = null, // only used while listening for the jobs to start
+            readOnly = false,
             kbaseNode = null, // the DOM element used as the container for everything in this cell
             cellBus = null, // the parent cell bus that gets external messages
             controllerBus = null, // the main bus for this cell and its children
@@ -465,7 +467,6 @@ define([
                 description: 'parent bus for BulkImportCell',
             });
             busEventManager.add(cellBus.on('delete-cell', () => deleteCell()));
-            busEventManager.add(cellBus.on('run-status', handleRunStatus));
             controllerBus = runtime.bus().makeChannelBus({
                 description: 'An app cell widget',
             });
@@ -736,12 +737,10 @@ define([
             }
             switch (action) {
                 case 'runApp':
-                    cell.execute();
-                    updateState('launching');
+                    doRunCellAction();
                     break;
                 case 'cancel':
-                    // TODO implement
-                    alert('canceling run');
+                    doCancelCellAction();
                     break;
                 case 'reRunApp':
                     // TODO implement
@@ -758,6 +757,52 @@ define([
                 default:
                     alert(`Unknown command ${action}`);
                     break;
+            }
+        }
+
+        /**
+         * Starts the cell by executing the generated code in its input area.
+         * Then changes the global cell state to "launching".
+         */
+        function doRunCellAction() {
+            runStatusListener = cellBus.on('run-status', handleRunStatus);
+            busEventManager.add(runStatusListener);
+            cell.execute();
+            updateState('launching');
+        }
+
+        /**
+         * Globally cancels all running jobs and the run status by the following steps.
+         * 1. If we've clicked run, but we don't have any jobs yet, just remove the
+         *    listener and ignore the jobs.
+         *    //TODO: make this wait for jobs to start first, then cancel them all in turn?
+         *      or set up some state that we catch jobs when they appear and THEN cancel them?
+         *      Maybe send a kernel message to stop all jobs with this run id?
+         * 2. If we have a list of jobs, cancel them all.
+         * 3. Return to the editing state, trigger updateParameterState.
+         */
+        async function doCancelCellAction() {
+            // if we're currently listening to the run_status event, stop.
+            if (runStatusListener !== null) {
+                const confirmationMessage = div([
+                    p([
+                        'Canceling the job will halt any currently running jobs.',
+                        'Any output objects already created will remain in your narrative and can be removed from the Data panel.',
+                    ]),
+                    p('Continue to Cancel the running job batch?'),
+                ]);
+                await UI.showConfirmDialog(confirmationMessage).then(
+                    (confirmed) => {
+                        if (!confirmed) {
+                            return false;
+                        }
+                        busEventManager.remove(runStatusListener);
+                        return true;
+                    }
+                );
+            }
+            else {
+                return jobManager.cancelJobsByStatus(['created', 'estimating', 'queued', 'running']);
             }
         }
 

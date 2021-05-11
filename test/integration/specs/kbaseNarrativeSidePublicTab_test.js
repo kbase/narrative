@@ -22,8 +22,7 @@ const allTestCases = {
                 {
                     id: 'lineage',
                     label: 'Lineage',
-                    value:
-                        'Bacteria > Terrabacteria group > Firmicutes > Bacilli > Lactobacillales > Aerococcaceae > Abiotrophia > Abiotrophia defectiva',
+                    value: 'Bacteria > Terrabacteria group > Firmicutes > Bacilli > Lactobacillales > Aerococcaceae > Abiotrophia > Abiotrophia defectiva',
                 },
                 {
                     id: 'kbase_id',
@@ -56,8 +55,7 @@ const allTestCases = {
                 {
                     id: 'lineage',
                     label: 'Lineage',
-                    value:
-                        'Bacteria > Terrabacteria group > Tenericutes > Mollicutes > Acholeplasmatales > Acholeplasmataceae > Candidatus Phytoplasma > Candidatus Phytoplasma asteris',
+                    value: 'Bacteria > Terrabacteria group > Tenericutes > Mollicutes > Acholeplasmatales > Acholeplasmataceae > Candidatus Phytoplasma > Candidatus Phytoplasma asteris',
                 },
                 {
                     id: 'kbase_id',
@@ -92,8 +90,7 @@ const allTestCases = {
                 {
                     id: 'lineage',
                     label: 'Lineage',
-                    value:
-                        'Bacteria > Terrabacteria group > Cyanobacteria/Melainabacteria group > Cyanobacteria > Synechococcales > Prochloraceae > Prochlorococcus',
+                    value: 'Bacteria > Terrabacteria group > Cyanobacteria/Melainabacteria group > Cyanobacteria > Synechococcales > Prochloraceae > Prochlorococcus',
                 },
                 {
                     id: 'kbase_id',
@@ -133,8 +130,7 @@ const allTestCases = {
                 {
                     id: 'lineage',
                     label: 'Lineage',
-                    value:
-                        'Bacteria > Proteobacteria > Gammaproteobacteria > Pseudomonadales > Moraxellaceae > Acinetobacter > Acinetobacter calcoaceticus/baumannii complex',
+                    value: 'Bacteria > Proteobacteria > Gammaproteobacteria > Pseudomonadales > Moraxellaceae > Acinetobacter > Acinetobacter calcoaceticus/baumannii complex',
                 },
                 {
                     id: 'kbase_id',
@@ -162,9 +158,7 @@ const allTestCases = {
             narrativeId: 53983,
             row: 30,
             scrollTo: true,
-            scrolls: [
-                20,
-            ],
+            scrolls: [20],
             searchFor: 'coli',
             foundCount: '13,181',
             name: 'Campylobacter coli',
@@ -303,7 +297,7 @@ const allTestCases = {
         TEST_CASE_1: {
             narrativeId: 78050,
             row: 3,
-            name: '\'Massilia aquatica\' Holochova et al. 2020',
+            name: "'Massilia aquatica' Holochova et al. 2020",
             metadata: [
                 {
                     id: 'lineage',
@@ -341,8 +335,7 @@ const allTestCases = {
                 {
                     id: 'lineage',
                     label: 'Lineage',
-                    value:
-                        'Bacteria > Terrabacteria group > Firmicutes > Bacilli > Bacillales > Staphylococcaceae > Abyssicoccus',
+                    value: 'Bacteria > Terrabacteria group > Firmicutes > Bacilli > Bacillales > Staphylococcaceae > Abyssicoccus',
                 },
                 {
                     id: 'kbase_id',
@@ -377,8 +370,7 @@ const allTestCases = {
                 {
                     id: 'lineage',
                     label: 'Lineage',
-                    value:
-                        'Bacteria > Terrabacteria group > Cyanobacteria/Melainabacteria group > Cyanobacteria > Synechococcales > Prochloraceae > Prochlorococcus',
+                    value: 'Bacteria > Terrabacteria group > Cyanobacteria/Melainabacteria group > Cyanobacteria > Synechococcales > Prochloraceae > Prochlorococcus',
                 },
                 {
                     id: 'kbase_id',
@@ -417,8 +409,7 @@ const allTestCases = {
                 {
                     id: 'lineage',
                     label: 'Lineage',
-                    value:
-                        'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter',
+                    value: 'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter',
                 },
                 {
                     id: 'kbase_id',
@@ -446,9 +437,7 @@ const allTestCases = {
             narrativeId: 78050,
             row: 30,
             scrollTo: true,
-            scrolls: [
-                20,
-            ],
+            scrolls: [20],
             searchFor: 'orientalis',
             foundCount: '',
             name: 'Francisella orientalis',
@@ -589,11 +578,11 @@ const testCases = allTestCases[browser.config.testParams.ENV];
 
 async function testField({ container, id, label, value }) {
     const lineageLabel = await container.$(
-        `[role="row"][data-test-id="${id}"] [data-test-id="label"]`,
+        `[role="row"][data-test-id="${id}"] [data-test-id="label"]`
     );
     await expect(lineageLabel).toHaveText(label);
     const lineageValue = await container.$(
-        `[role="row"][data-test-id="${id}"] [data-test-id="value"]`,
+        `[role="row"][data-test-id="${id}"] [data-test-id="value"]`
     );
     await expect(lineageValue).toHaveText(value);
 }
@@ -655,14 +644,16 @@ async function doScrolling(publicPanel, testCase) {
 async function validateResultRow(row, testCase) {
     const nameCell = await row.$('[role="cell"][data-test-id="name"]');
     await expect(nameCell).toHaveText(testCase.name);
-    await Promise.all(testCase.metadata.map(({ id, label, value }) => {
-        return testField({
-            container: row,
-            id,
-            label,
-            value,
-        });
-    }));
+    await Promise.all(
+        testCase.metadata.map(({ id, label, value }) => {
+            return testField({
+                container: row,
+                id,
+                label,
+                value,
+            });
+        })
+    );
 }
 
 async function getRow(publicPanel, testCase) {
@@ -695,8 +686,8 @@ async function validateFoundCount(publicPanel, testCase) {
 
 describe('Test kbaseNarrativeSidePublicTab', () => {
     before(() => {
-        require('expect-webdriverio').setOptions({ wait: 5000 })
-    })
+        require('expect-webdriverio').setOptions({ wait: 5000 });
+    });
     beforeEach(async () => {
         await browser.setTimeout({ implicit: 30000 });
         await browser.reloadSession();

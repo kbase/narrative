@@ -215,17 +215,17 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
                 return Promise.resolve(false);
             }
 
-            return await UI.showConfirmDialog(this._generateDialogArgs(action, statusList, jobsList)).then(
-                (confirmed) => {
-                    if (!confirmed) {
-                        return false;
-                    }
-                    this.bus.emit(jobCommand[action], {
-                        jobIdList: jobsList,
-                    });
-                    return true;
+            return await UI.showConfirmDialog(
+                this._generateDialogArgs(action, statusList, jobsList)
+            ).then((confirmed) => {
+                if (!confirmed) {
+                    return false;
                 }
-            );
+                this.bus.emit(jobCommand[action], {
+                    jobIdList: jobsList,
+                });
+                return true;
+            });
         }
 
         /**

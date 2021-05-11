@@ -803,21 +803,18 @@ define([
                             'Any output objects already created will remain in your narrative and can be removed from the Data panel.',
                         ]),
                         p('Continue to Cancel the running job batch?'),
-                    ])
-                }
+                    ]),
+                };
 
-                await UI.showConfirmDialog(dialogArgs).then(
-                    (confirmed) => {
-                        if (!confirmed) {
-                            return false;
-                        }
-                        busEventManager.remove(runStatusListener);
-                        updateEditingState();
-                        return true;
+                await UI.showConfirmDialog(dialogArgs).then((confirmed) => {
+                    if (!confirmed) {
+                        return false;
                     }
-                );
-            }
-            else {
+                    busEventManager.remove(runStatusListener);
+                    updateEditingState();
+                    return true;
+                });
+            } else {
                 await jobManager.cancelJobsByStatus(['created', 'estimating', 'queued', 'running']);
                 updateEditingState();
             }

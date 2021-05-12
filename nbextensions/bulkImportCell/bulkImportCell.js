@@ -796,7 +796,7 @@ define([
                     title: 'Cancel job batch?',
                     body: div([
                         p([
-                            'Canceling the job will halt any currently running jobs.',
+                            'Canceling the job will halt any currently running jobs. ',
                             'Any output objects already created will remain in your narrative and can be removed from the Data panel.',
                         ]),
                         p('Continue to Cancel the running job batch?'),

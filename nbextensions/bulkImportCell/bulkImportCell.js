@@ -791,7 +791,6 @@ define([
          * 3. Return to the editing state, trigger updateParameterState.
          */
         async function doCancelCellAction() {
-            // if we're currently listening to the run_status event, stop.
             if (runStatusListener !== null) {
                 const dialogArgs = {
                     title: 'Cancel job batch?',
@@ -804,14 +803,12 @@ define([
                     ]),
                 };
 
-                await UI.showConfirmDialog(dialogArgs).then((confirmed) => {
-                    if (!confirmed) {
-                        return false;
-                    }
-                    busEventManager.remove(runStatusListener);
-                    updateEditingState();
-                    return true;
-                });
+                const confirmed = await UI.showConfirmDialog(dialogArgs);
+                if (!confirmed) {
+                    return;
+                }
+                busEventManager.remove(runStatusListener);
+                updateEditingState();
             } else {
                 await jobManager.cancelJobsByStatus(['created', 'estimating', 'queued', 'running']);
                 updateEditingState();

@@ -185,7 +185,7 @@ define([
                         state: 'editingComplete',
                         selectedFileType: 'fastq_reads',
                         selectedTab: 'configure',
-                        params: {
+                        param: {
                             fastq_reads: 'complete',
                         },
                     },
@@ -245,6 +245,92 @@ define([
                         // expect(actionButton).not.toHaveClass('hidden');
                         expect(cell.metadata.kbase.bulkImportCell.state.state).toBe(
                             testCase.updatedState
+                        );
+                    });
+            });
+        });
+
+        // [{
+        //     state: 'launching',
+        //     jobs: [],
+        // }, {
+        //     state: 'queued',
+        //     jobs: ['job1', 'job2'],
+        // }, {
+        //     state: 'running',
+        //     jobs: ['job1', 'job2']
+        // }]
+        ['launching', 'queued', 'running'].forEach((testCase) => {
+            it(`should cancel the ${testCase} state and return to a previous state`, () => {
+                // init cell with the test case state and jobs (they're all run-related)
+                // wait for the cancel button to appear and be ready
+                // click it
+                // wait for it to reset to editingComplete
+                // expect the exec part of the cell metadata to be gone
+                // const runtime = Runtime.make();
+                const cell = Mocks.buildMockCell('code');
+                cell.execute = () => {};
+                // add dummy metadata so we can make a cell that's in the ready-to-run state.
+                const state = {
+                    state: {
+                        state: testCase,
+                        selectedFileType: 'fastq_reads',
+                        selectedTab: 'configure',
+                        param: {
+                            fastq_reads: 'complete',
+                        },
+                    },
+                };
+                cell.metadata = {
+                    kbase: {
+                        bulkImportCell: Object.assign({}, state, TestAppObj),
+                        type: 'app-bulk-import',
+                        attributes: {
+                            id: 'some-fake-bulk-import-cell',
+                        },
+                    },
+                };
+                BulkImportCell.make({ cell });
+                const cancelButton = cell.element[0].querySelector(
+                    '.kb-rcp__action-button-container .-cancel'
+                );
+                const runButton = cell.element[0].querySelector(
+                    '.kb-rcp__action-button-container .-run'
+                );
+                // wait for the cancel button to appear and the run button to disappear
+                return TestUtil.waitForElementState(cancelButton, () => {
+                    return (
+                        !cancelButton.classList.contains('hidden') &&
+                        !cancelButton.classList.contains('disabled') &&
+                        runButton.classList.contains('hidden')
+                    );
+                })
+                    .then(() => {
+                        // click the button and wait for the dialog to pop up
+                        // const dialogOkButton = document.querySelector(
+                        const okBtnSelector =
+                            '[data-element="kbase"] [data-element="modal"] .modal-footer button[data-element="ok"]';
+                        return TestUtil.waitForElement(document.body, okBtnSelector, () => {
+                            cancelButton.click();
+                        });
+                    })
+                    .then((okButton) => {
+                        return TestUtil.waitForElementState(
+                            runButton,
+                            () => {
+                                return (
+                                    !runButton.classList.contains('hidden') &&
+                                    !runButton.classList.contains('disabled')
+                                );
+                            },
+                            () => {
+                                okButton.click();
+                            }
+                        );
+                    })
+                    .then(() => {
+                        expect(cell.metadata.kbase.bulkImportCell.state.state).toBe(
+                            'editingComplete'
                         );
                     });
             });

@@ -19,7 +19,7 @@ define([
             fileType: the fileType we're looking at
     */
     function ConfigureWidget(options) {
-        const {model, specs, typesToFiles} = options;
+        const { model, specs, typesToFiles } = options;
         const cellBus = options.bus,
             runtime = Runtime.make(),
             FILE_PATH_TYPE = 'filePaths',
@@ -39,7 +39,7 @@ define([
         function start(args) {
             return Promise.try(() => {
                 container = args.node;
-                const ui = UI.make({node: container});
+                const ui = UI.make({ node: container });
 
                 const events = Events.make();
                 const layout = renderLayout();
@@ -58,7 +58,7 @@ define([
                         events.attachEvents(container);
                         paramsWidget = instance.widget;
                     }),
-                    buildFileTypePanel(fileTypeNode)
+                    buildFileTypePanel(fileTypeNode),
                 ];
 
                 return Promise.all(initPromises);
@@ -67,27 +67,33 @@ define([
 
         function renderLayout() {
             const div = html.tag('div');
-            return div({
-                class: `${cssBaseClass}__container`
-            }, [
-                div({
-                    class: `${cssBaseClass}__filetype_panel`,
-                    dataElement: 'filetype-panel',
-                }),
-                div({
-                    class: `${cssBaseClass}__inputs`,
-                    dataElement: 'input-container'
-                }, [
+            return div(
+                {
+                    class: `${cssBaseClass}__container`,
+                },
+                [
                     div({
-                        class: `${cssBaseClass}__file_paths`,
-                        dataElement: 'file-paths'
+                        class: `${cssBaseClass}__filetype_panel`,
+                        dataElement: 'filetype-panel',
                     }),
-                    div({
-                        class: `${cssBaseClass}__params`,
-                        dataElement: 'params'
-                    })
-                ])
-            ]);
+                    div(
+                        {
+                            class: `${cssBaseClass}__inputs`,
+                            dataElement: 'input-container',
+                        },
+                        [
+                            div({
+                                class: `${cssBaseClass}__file_paths`,
+                                dataElement: 'file-paths',
+                            }),
+                            div({
+                                class: `${cssBaseClass}__params`,
+                                dataElement: 'params',
+                            }),
+                        ]
+                    ),
+                ]
+            );
         }
 
         /**
@@ -131,7 +137,7 @@ define([
          * has the selected file type.
          * @param {string} fileType - the file type that should be shown
          */
-         function toggleFileType(fileType) {
+        function toggleFileType(fileType) {
             // alert(`new filetype: ${fileType}`);
             if (model.getItem('state.selectedFileType') === fileType) {
                 return; // do nothing if we're toggling to the same fileType
@@ -157,7 +163,10 @@ define([
             we make the bulk import work with multiple data types
         */
         function buildParamsWidget(node, spec) {
-            const paramBus = buildMessageBus(selectedFileType, 'Parent comm bus for parameters widget');
+            const paramBus = buildMessageBus(
+                selectedFileType,
+                'Parent comm bus for parameters widget'
+            );
             paramBus.on('parameter-changed', (message) => {
                 updateModelParameterValue(selectedFileType, PARAM_TYPE, message);
             });
@@ -185,7 +194,10 @@ define([
 
         function buildFilePathWidget(node, spec) {
             // This is the key in the model that maps to the list of params for the current app.
-            const paramBus = buildMessageBus(selectedFileType, 'Parent comm bus for filePath widget');
+            const paramBus = buildMessageBus(
+                selectedFileType,
+                'Parent comm bus for filePath widget'
+            );
             paramBus.on('parameter-changed', (message) => {
                 updateModelParameterValue(selectedFileType, FILE_PATH_TYPE, message);
             });

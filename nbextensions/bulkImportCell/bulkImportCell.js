@@ -687,7 +687,8 @@ define([
          * @param {string} tab
         //  * @param {string} fileType
          */
-        function runTab(tab) { //}, fileType) {
+        function runTab(tab) {
+            //}, fileType) {
             tabWidget = tabSet.tabs[tab].widget.make({
                 bus: controllerBus,
                 cell,
@@ -706,7 +707,7 @@ define([
             return tabWidget.start({
                 node: ui.getElement('body.tab-pane.widget'),
                 // currentApp: typesToFiles[state.fileType.selected].appId,
-                currentApp: typesToFiles[model.getItem('state.selectedFileType')].appId
+                currentApp: typesToFiles[model.getItem('state.selectedFileType')].appId,
             });
         }
 
@@ -963,10 +964,9 @@ define([
         function render() {
             const layout = renderLayout();
             kbaseNode.innerHTML = layout.content;
-            return buildTabs(ui.getElement('body.run-control-panel.toolbar'))
-                .then(() => {
-                    layout.events.attachEvents(kbaseNode);
-                });
+            return buildTabs(ui.getElement('body.run-control-panel.toolbar')).then(() => {
+                layout.events.attachEvents(kbaseNode);
+            });
             // const proms = [
             //     buildFileTypePanel(ui.getElement('body.tab-pane.filetype-panel')),
             //     buildTabs(ui.getElement('body.run-control-panel.toolbar')),

@@ -242,7 +242,6 @@ define([
                         );
                     })
                     .then(() => {
-                        // expect(actionButton).not.toHaveClass('hidden');
                         expect(cell.metadata.kbase.bulkImportCell.state.state).toBe(
                             testCase.updatedState
                         );
@@ -250,24 +249,13 @@ define([
             });
         });
 
-        // [{
-        //     state: 'launching',
-        //     jobs: [],
-        // }, {
-        //     state: 'queued',
-        //     jobs: ['job1', 'job2'],
-        // }, {
-        //     state: 'running',
-        //     jobs: ['job1', 'job2']
-        // }]
         ['launching', 'queued', 'running'].forEach((testCase) => {
             it(`should cancel the ${testCase} state and return to a previous state`, () => {
                 // init cell with the test case state and jobs (they're all run-related)
-                // wait for the cancel button to appear and be ready
+                // wait for the cancel button to appear and be ready, and for the run button to disappear
                 // click it
-                // wait for it to reset to editingComplete
-                // expect the exec part of the cell metadata to be gone
-                // const runtime = Runtime.make();
+                // wait for it to reset so the run button is visible
+                // expect the state to be editingComplete
                 const cell = Mocks.buildMockCell('code');
                 cell.execute = () => {};
                 // add dummy metadata so we can make a cell that's in the ready-to-run state.
@@ -307,7 +295,6 @@ define([
                 })
                     .then(() => {
                         // click the button and wait for the dialog to pop up
-                        // const dialogOkButton = document.querySelector(
                         const okBtnSelector =
                             '[data-element="kbase"] [data-element="modal"] .modal-footer button[data-element="ok"]';
                         return TestUtil.waitForElement(document.body, okBtnSelector, () => {

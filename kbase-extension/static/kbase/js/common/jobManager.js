@@ -207,7 +207,7 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
          * if the user cancels the batch action. If the users confirms the action, the appropriate
          * message will be emitted by the bus.
          */
-        async executeActionByJobStatus(args) {
+        executeActionByJobStatus(args) {
             const { action, statusList, validStatuses } = args;
 
             const jobsList = this.getJobIDsByStatus(statusList, validStatuses);
@@ -215,7 +215,7 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
                 return Promise.resolve(false);
             }
 
-            return await UI.showConfirmDialog(
+            return UI.showConfirmDialog(
                 this._generateDialogArgs(action, statusList, jobsList)
             ).then((confirmed) => {
                 if (!confirmed) {

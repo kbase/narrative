@@ -1,10 +1,14 @@
 define([
     'bluebird',
+    'narrativeConfig',
     'common/events',
     'common/runtime',
+    'common/html',
+    'common/ui',
+    '../fileTypePanel',
     'common/cellComponents/paramsWidget',
     'common/cellComponents/filePathWidget',
-], (Promise, Events, Runtime, ParamsWidget, FilePathWidget) => {
+], (Promise, Config, Events, Runtime, html, UI, FileTypePanel, ParamsWidget, FilePathWidget) => {
     'use strict';
 
     /*
@@ -15,16 +19,17 @@ define([
             fileType: the fileType we're looking at
     */
     function ConfigureWidget(options) {
-        const model = options.model, // the data model, inputs, params, etc.
-            spec = options.spec, // the Spec object
-            fileType = options.fileType, // which which filetype we're configuring here
+        const {model, specs, typesToFiles} = options;
+        const cellBus = options.bus,
             runtime = Runtime.make(),
-            cellBus = options.bus, // the bus to communicate with the main widget
             FILE_PATH_TYPE = 'filePaths',
-            PARAM_TYPE = 'params';
+            PARAM_TYPE = 'params',
+            cssBaseClass = 'kb-configure-tab';
         let container = null,
             filePathWidget,
-            paramsWidget;
+            paramsWidget,
+            fileTypePanel,
+            selectedFileType = model.getItem('state.selectedFileType');
 
         /**
          * args includes:
@@ -34,25 +39,114 @@ define([
         function start(args) {
             return Promise.try(() => {
                 container = args.node;
+                const ui = UI.make({node: container});
 
                 const events = Events.make();
+                const layout = renderLayout();
+                container.innerHTML = layout;
 
-                const filePathNode = document.createElement('div');
-                container.appendChild(filePathNode);
+                const filePathNode = ui.getElement('input-container.file-paths');
+                const paramNode = ui.getElement('input-container.params');
+                const fileTypeNode = ui.getElement('filetype-panel');
+                const appSpec = specs[typesToFiles[selectedFileType].appId];
+                const initPromises = [
+                    buildFilePathWidget(filePathNode, appSpec).then((instance) => {
+                        events.attachEvents(container);
+                        filePathWidget = instance.widget;
+                    }),
+                    buildParamsWidget(paramNode, appSpec).then((instance) => {
+                        events.attachEvents(container);
+                        paramsWidget = instance.widget;
+                    }),
+                    buildFileTypePanel(fileTypeNode)
+                ];
 
-                const paramNode = document.createElement('div');
-                container.appendChild(paramNode);
-
-                buildFilePathWidget(filePathNode).then((instance) => {
-                    events.attachEvents(container);
-                    filePathWidget = instance.widget;
-                });
-
-                buildParamsWidget(paramNode).then((instance) => {
-                    events.attachEvents(container);
-                    paramsWidget = instance.widget;
-                });
+                return Promise.all(initPromises);
             });
+        }
+
+        function renderLayout() {
+            const div = html.tag('div');
+            return div({
+                class: `${cssBaseClass}__container`
+            }, [
+                div({
+                    class: `${cssBaseClass}__filetype_panel`,
+                    dataElement: 'filetype-panel',
+                }),
+                div({
+                    class: `${cssBaseClass}__inputs`,
+                    dataElement: 'input-container'
+                }, [
+                    div({
+                        class: `${cssBaseClass}__file_paths`,
+                        dataElement: 'file-paths'
+                    }),
+                    div({
+                        class: `${cssBaseClass}__params`,
+                        dataElement: 'params'
+                    })
+                ])
+            ]);
+        }
+
+        /**
+         * This builds the file type panel (the left column) of the cell and starts
+         * it up attached to the given DOM node.
+         * @param {DOMElement} node - the node that should be used for the left column
+         */
+        function buildFileTypePanel(node) {
+            const fileTypesDisplay = {},
+                fileTypeMapping = {},
+                uploaders = Config.get('uploaders');
+            for (const uploader of uploaders.dropdown_order) {
+                fileTypeMapping[uploader.id] = uploader.name;
+            }
+            for (const fileType of Object.keys(typesToFiles)) {
+                fileTypesDisplay[fileType] = {
+                    label: fileTypeMapping[fileType] || `Unknown type "${fileType}"`,
+                };
+            }
+            fileTypePanel = FileTypePanel.make({
+                bus: cellBus,
+                header: {
+                    label: 'Data type',
+                    icon: 'icon icon-genome',
+                },
+                fileTypes: fileTypesDisplay,
+                toggleAction: toggleFileType,
+            });
+            return fileTypePanel.start({
+                node: node,
+                state: selectedFileType,
+            });
+        }
+
+        /**
+         * This toggles which file type should be shown. This sets the
+         * fileType state, then updates the rest of the cell state to modify
+         * which set of tabs should be active.
+         *
+         * Toggling the filetype also toggles the active tab to ensure it
+         * has the selected file type.
+         * @param {string} fileType - the file type that should be shown
+         */
+         function toggleFileType(fileType) {
+            // alert(`new filetype: ${fileType}`);
+            if (model.getItem('state.selectedFileType') === fileType) {
+                return; // do nothing if we're toggling to the same fileType
+            }
+            selectedFileType = fileType;
+            // stop and start the widgets.
+
+            // if (state.fileType.selected === fileType) {
+            //     return; // do nothing if we're toggling to the same fileType
+            // }
+            // state.fileType.selected = fileType;
+            // // stop existing tab widget
+            // // restart it with the new filetype
+            // toggleTab(state.tab.selected, fileType);
+            // updateState();
         }
 
         /*
@@ -62,17 +156,17 @@ define([
             This model assumes one instance of the params widget per cell, so may need some adjustment as
             we make the bulk import work with multiple data types
         */
-        function buildParamsWidget(node) {
-            const paramBus = buildMessageBus(fileType, 'Parent comm bus for parameters widget');
+        function buildParamsWidget(node, spec) {
+            const paramBus = buildMessageBus(selectedFileType, 'Parent comm bus for parameters widget');
             paramBus.on('parameter-changed', (message) => {
-                updateModelParameterValue(fileType, PARAM_TYPE, message);
+                updateModelParameterValue(selectedFileType, PARAM_TYPE, message);
             });
 
             const widget = ParamsWidget.make({
                 bus: paramBus,
                 workspaceId: runtime.workspaceId(),
-                paramIds: model.getItem(['app', 'otherParamIds', fileType]),
-                initialParams: model.getItem(['params', fileType, PARAM_TYPE]),
+                paramIds: model.getItem(['app', 'otherParamIds', selectedFileType]),
+                initialParams: model.getItem(['params', selectedFileType, PARAM_TYPE]),
             });
 
             return widget
@@ -89,16 +183,16 @@ define([
                 });
         }
 
-        function buildFilePathWidget(node) {
+        function buildFilePathWidget(node, spec) {
             // This is the key in the model that maps to the list of params for the current app.
-            const paramBus = buildMessageBus(fileType, 'Parent comm bus for filePath widget');
+            const paramBus = buildMessageBus(selectedFileType, 'Parent comm bus for filePath widget');
             paramBus.on('parameter-changed', (message) => {
-                updateModelParameterValue(fileType, FILE_PATH_TYPE, message);
+                updateModelParameterValue(selectedFileType, FILE_PATH_TYPE, message);
             });
 
             paramBus.on('sync-data-model', (message) => {
                 if (message.values) {
-                    model.setItem(['params', fileType, FILE_PATH_TYPE], message.values);
+                    model.setItem(['params', selectedFileType, FILE_PATH_TYPE], message.values);
                     updateAppConfigState();
                 }
             });
@@ -112,8 +206,8 @@ define([
             const widget = FilePathWidget.make({
                 bus: paramBus,
                 workspaceId: runtime.workspaceId(),
-                paramIds: model.getItem(['app', 'fileParamIds', fileType]),
-                initialParams: model.getItem(['params', fileType, FILE_PATH_TYPE]),
+                paramIds: model.getItem(['app', 'fileParamIds', selectedFileType]),
+                initialParams: model.getItem(['params', selectedFileType, FILE_PATH_TYPE]),
             });
 
             return widget
@@ -221,10 +315,10 @@ define([
                 }
                 return evaluateAppConfig();
             }).then((state) => {
-                const currentState = model.getItem(['state', 'params', fileType]);
+                const currentState = model.getItem(['state', 'params', selectedFileType]);
                 if (currentState !== state) {
                     cellBus.emit('update-param-state', {
-                        fileType,
+                        selectedFileType,
                         state,
                     });
                 }
@@ -244,10 +338,11 @@ define([
              * 2 - eval the array of file inputs and outputs.
              * If both are up to snuff, we're good.
              */
-            const otherParamIds = model.getItem(['app', 'otherParamIds', fileType]),
-                paramValues = model.getItem(['params', fileType, PARAM_TYPE]),
-                filePathIds = model.getItem(['app', 'fileParamIds', fileType]),
-                filePathValues = model.getItem(['params', fileType, FILE_PATH_TYPE]);
+            const otherParamIds = model.getItem(['app', 'otherParamIds', selectedFileType]),
+                paramValues = model.getItem(['params', selectedFileType, PARAM_TYPE]),
+                filePathIds = model.getItem(['app', 'fileParamIds', selectedFileType]),
+                filePathValues = model.getItem(['params', selectedFileType, FILE_PATH_TYPE]),
+                spec = specs[typesToFiles[selectedFileType].appId];
 
             // must have at least one file row of file paths to be complete
             if (filePathValues.length === 0) {

@@ -1,6 +1,6 @@
 define([
     'uuid',
-    'narrativeConfig',
+    // 'narrativeConfig',
     'util/icon',
     'common/busEventManager',
     'common/events',
@@ -15,7 +15,7 @@ define([
     'common/pythonInterop',
     'base/js/namespace',
     'kb_service/client/workspace',
-    './fileTypePanel',
+    // './fileTypePanel',
     './tabs/configure',
     'common/cellComponents/cellControlPanel',
     'common/cellComponents/cellTabs',
@@ -27,7 +27,7 @@ define([
     './testAppObj',
 ], (
     Uuid,
-    Config,
+    // Config,
     Icon,
     BusEventManager,
     Events,
@@ -42,7 +42,7 @@ define([
     PythonInterop,
     Jupyter,
     Workspace,
-    FileTypePanel,
+    // FileTypePanel,
     ConfigureWidget,
     CellControlPanel,
     CellTabs,
@@ -216,7 +216,7 @@ define([
             ui = null,
             tabWidget = null; // the widget currently in view
         // widgets this cell owns
-        let cellTabs, controlPanel, fileTypePanel, jobManager;
+        let cellTabs, controlPanel, /*fileTypePanel*/ jobManager;
 
         if (options.initialize) {
             initialize(options.specs);
@@ -384,6 +384,7 @@ define([
                         state: {
                             state: 'editingIncomplete',
                             selectedTab: 'configure',
+                            selectedFileType: Object.keys(typesToFiles)[0],
                             params: initialParamStates,
                         },
                     },
@@ -469,9 +470,9 @@ define([
             controllerBus = runtime.bus().makeChannelBus({
                 description: 'An app cell widget',
             });
-            controllerBus.on('update-param-state', (message) => {
-                updateParameterState(message.fileType, message.state);
-            });
+            // controllerBus.on('update-param-state', (message) => {
+            //     updateParameterState(message.fileType, message.state);
+            // });
         }
 
         function handleRunStatus(message) {
@@ -496,35 +497,35 @@ define([
          * @param {string} fileType - which filetype's app state to update
          * @param {string} newState - what the new ready state should be - one of complete, incomplete, error
          */
-        function updateParameterState(fileType, newState) {
-            const curState = model.getItem('state.state');
-            if (!['editingComplete', 'editingIncomplete'].includes(curState)) {
-                // only change ready state if we're not running yet or in an error.
-                return;
-            }
+        // function updateParameterState(fileType, newState) {
+        //     const curState = model.getItem('state.state');
+        //     if (!['editingComplete', 'editingIncomplete'].includes(curState)) {
+        //         // only change ready state if we're not running yet or in an error.
+        //         return;
+        //     }
 
-            model.setItem(['state', 'param', fileType], newState);
-            const newFileTypeState = {};
-            for (const [fileId, fileState] of Object.entries(model.getItem(['state', 'param']))) {
-                newFileTypeState[fileId] = fileState === 'complete';
-            }
+        //     model.setItem(['state', 'param', fileType], newState);
+        //     const newFileTypeState = {};
+        //     for (const [fileId, fileState] of Object.entries(model.getItem(['state', 'param']))) {
+        //         newFileTypeState[fileId] = fileState === 'complete';
+        //     }
 
-            state.fileType.completed = newFileTypeState;
-            let cellReady = true;
-            for (const _state of Object.values(model.getItem('state.param'))) {
-                if (_state !== 'complete') {
-                    cellReady = false;
-                    break;
-                }
-            }
-            const uiState = cellReady ? 'editingComplete' : 'editingIncomplete';
-            updateState(uiState);
-            if (cellReady) {
-                buildPythonCode();
-            } else {
-                clearPythonCode();
-            }
-        }
+        //     state.fileType.completed = newFileTypeState;
+        //     let cellReady = true;
+        //     for (const _state of Object.values(model.getItem('state.param'))) {
+        //         if (_state !== 'complete') {
+        //             cellReady = false;
+        //             break;
+        //         }
+        //     }
+        //     const uiState = cellReady ? 'editingComplete' : 'editingIncomplete';
+        //     updateState(uiState);
+        //     if (cellReady) {
+        //         buildPythonCode();
+        //     } else {
+        //         clearPythonCode();
+        //     }
+        // }
 
         function buildPythonCode() {
             const runId = new Uuid(4).format(),
@@ -629,7 +630,7 @@ define([
                 // eslint-disable-next-line no-self-assign
                 cell.metadata = cell.metadata;
                 updateState();
-                toggleTab(state.tab.selected, state.fileType.selected);
+                runTab(state.tab.selected); //, state.fileType.selected);
             });
         }
 
@@ -644,21 +645,22 @@ define([
          * 1. if there's a tab showing, stop() it and detach it
          * 2. update the tabs state to be selected
          * @param {string} tab id of the tab to display
-         * @param {string} fileType id of the filetype we're swapping to
+        //  * @param {string} fileType id of the filetype we're swapping to
          */
-        function toggleTab(tab, fileType) {
+        function toggleTab(tab) {
             // if we're toggling the currently selected tab off,
             // then it should be turned off.
-            if (tab === state.tab.selected && tab !== null && !fileType) {
+            if (tab === state.tab.selected && tab !== null) {
                 tab = null;
             }
             state.tab.selected = tab;
             return stopWidget().then(() => {
                 if (tab !== null) {
-                    if (!fileType) {
-                        fileType = state.fileType.selected;
-                    }
-                    runTab(tab, fileType);
+                    runTab(tab);
+                    // if (!fileType) {
+                    //     fileType = state.fileType.selected;
+                    // }
+                    // runTab(tab, fileType);
                 }
                 model.setItem('state.selectedTab', tab);
                 cellTabs.setState(state.tab);
@@ -683,17 +685,19 @@ define([
          * This doesn't change any state, just runs what it's told to,
          * and returns the widget's start() Promise.
          * @param {string} tab
-         * @param {string} fileType
+        //  * @param {string} fileType
          */
-        function runTab(tab, fileType) {
+        function runTab(tab) { //}, fileType) {
             tabWidget = tabSet.tabs[tab].widget.make({
                 bus: controllerBus,
                 cell,
-                fileType,
+                // fileType,
                 jobId: undefined,
                 jobManager,
                 model,
-                spec: specs[typesToFiles[state.fileType.selected].appId],
+                // spec: specs[typesToFiles[state.fileType.selected].appId],
+                specs,
+                typesToFiles,
                 workspaceClient,
             });
 
@@ -701,29 +705,30 @@ define([
 
             return tabWidget.start({
                 node: ui.getElement('body.tab-pane.widget'),
-                currentApp: typesToFiles[state.fileType.selected].appId,
+                // currentApp: typesToFiles[state.fileType.selected].appId,
+                currentApp: typesToFiles[model.getItem('state.selectedFileType')].appId
             });
         }
 
-        /**
-         * This toggles which file type should be shown. This sets the
-         * fileType state, then updates the rest of the cell state to modify
-         * which set of tabs should be active.
-         *
-         * Toggling the filetype also toggles the active tab to ensure it
-         * has the selected file type.
-         * @param {string} fileType - the file type that should be shown
-         */
-        function toggleFileType(fileType) {
-            if (state.fileType.selected === fileType) {
-                return; // do nothing if we're toggling to the same fileType
-            }
-            state.fileType.selected = fileType;
-            // stop existing tab widget
-            // restart it with the new filetype
-            toggleTab(state.tab.selected, fileType);
-            updateState();
-        }
+        // /**
+        //  * This toggles which file type should be shown. This sets the
+        //  * fileType state, then updates the rest of the cell state to modify
+        //  * which set of tabs should be active.
+        //  *
+        //  * Toggling the filetype also toggles the active tab to ensure it
+        //  * has the selected file type.
+        //  * @param {string} fileType - the file type that should be shown
+        //  */
+        // function toggleFileType(fileType) {
+        //     if (state.fileType.selected === fileType) {
+        //         return; // do nothing if we're toggling to the same fileType
+        //     }
+        //     state.fileType.selected = fileType;
+        //     // stop existing tab widget
+        //     // restart it with the new filetype
+        //     toggleTab(state.tab.selected, fileType);
+        //     updateState();
+        // }
 
         /**
          * @param {string} action
@@ -766,7 +771,7 @@ define([
          */
         function deleteCell() {
             busEventManager.removeAll();
-            fileTypePanel.stop();
+            // fileTypePanel.stop();
             const cellIndex = Jupyter.notebook.find_cell_index(cell);
             Jupyter.notebook.delete_cell(cellIndex);
         }
@@ -792,15 +797,16 @@ define([
             // TODO: inspect the parameters to see which file types are
             // completely filled out, maybe store that in the metadata
             // on completion?
-            const fileTypeState = {
-                completed: {},
-            };
-            for (const fileType of Object.keys(typesToFiles)) {
-                fileTypeState.completed[fileType] = false;
-            }
-            fileTypeState.selected = Object.keys(typesToFiles)[0];
+            // uiState.selectedFileType = model.getItem('state.selectedFileType', Object.keys(typesToFiles)[0]);
+            // const fileTypeState = {
+            //     completed: {},
+            // };
+            // for (const fileType of Object.keys(typesToFiles)) {
+            //     fileTypeState.completed[fileType] = false;
+            // }
+            // fileTypeState.selected = Object.keys(typesToFiles)[0];
 
-            uiState.fileType = fileTypeState;
+            // uiState.fileType = fileTypeState;
             return uiState;
         }
 
@@ -815,12 +821,13 @@ define([
                 model.setItem('state.state', newUiState);
                 // update selections
                 stateDiff.tab.selected = state.tab.selected;
-                stateDiff.fileType = state.fileType;
+                // stateDiff.fileType = state.fileType;
+                stateDiff.selectedFileType = state.selectedFileType;
                 state = stateDiff;
             }
             cellTabs.setState(state.tab);
             controlPanel.setActionState(state.action);
-            fileTypePanel.updateState(state.fileType);
+            // fileTypePanel.updateState(state.fileType);
             // TODO: add in the FSM state
             FSMBar.showFsmBar({
                 ui: ui,
@@ -865,37 +872,37 @@ define([
             });
         }
 
-        /**
-         * This builds the file type panel (the left column) of the cell and starts
-         * it up attached to the given DOM node.
-         * @param {DOMElement} node - the node that should be used for the left column
-         */
-        function buildFileTypePanel(node) {
-            const fileTypesDisplay = {},
-                fileTypeMapping = {},
-                uploaders = Config.get('uploaders');
-            for (const uploader of uploaders.dropdown_order) {
-                fileTypeMapping[uploader.id] = uploader.name;
-            }
-            for (const fileType of Object.keys(typesToFiles)) {
-                fileTypesDisplay[fileType] = {
-                    label: fileTypeMapping[fileType] || `Unknown type "${fileType}"`,
-                };
-            }
-            fileTypePanel = FileTypePanel.make({
-                bus: cellBus,
-                header: {
-                    label: 'Data type',
-                    icon: 'icon icon-genome',
-                },
-                fileTypes: fileTypesDisplay,
-                toggleAction: toggleFileType,
-            });
-            return fileTypePanel.start({
-                node: node,
-                state: state.fileType,
-            });
-        }
+        // /**
+        //  * This builds the file type panel (the left column) of the cell and starts
+        //  * it up attached to the given DOM node.
+        //  * @param {DOMElement} node - the node that should be used for the left column
+        //  */
+        // function buildFileTypePanel(node) {
+        //     const fileTypesDisplay = {},
+        //         fileTypeMapping = {},
+        //         uploaders = Config.get('uploaders');
+        //     for (const uploader of uploaders.dropdown_order) {
+        //         fileTypeMapping[uploader.id] = uploader.name;
+        //     }
+        //     for (const fileType of Object.keys(typesToFiles)) {
+        //         fileTypesDisplay[fileType] = {
+        //             label: fileTypeMapping[fileType] || `Unknown type "${fileType}"`,
+        //         };
+        //     }
+        //     fileTypePanel = FileTypePanel.make({
+        //         bus: cellBus,
+        //         header: {
+        //             label: 'Data type',
+        //             icon: 'icon icon-genome',
+        //         },
+        //         fileTypes: fileTypesDisplay,
+        //         toggleAction: toggleFileType,
+        //     });
+        //     return fileTypePanel.start({
+        //         node: node,
+        //         state: state.fileType,
+        //     });
+        // }
 
         /**
          * Renders the initial layout structure for the cell.
@@ -934,10 +941,6 @@ define([
                                     },
                                     [
                                         div({
-                                            class: `${cssCellType}__filetype_panel`,
-                                            dataElement: 'filetype-panel',
-                                        }),
-                                        div({
                                             class: `${cssCellType}__tab_pane_widget`,
                                             dataElement: 'widget',
                                         }),
@@ -960,13 +963,17 @@ define([
         function render() {
             const layout = renderLayout();
             kbaseNode.innerHTML = layout.content;
-            const proms = [
-                buildFileTypePanel(ui.getElement('body.tab-pane.filetype-panel')),
-                buildTabs(ui.getElement('body.run-control-panel.toolbar')),
-            ];
-            return Promise.all(proms).then(() => {
-                layout.events.attachEvents(kbaseNode);
-            });
+            return buildTabs(ui.getElement('body.run-control-panel.toolbar'))
+                .then(() => {
+                    layout.events.attachEvents(kbaseNode);
+                });
+            // const proms = [
+            //     buildFileTypePanel(ui.getElement('body.tab-pane.filetype-panel')),
+            //     buildTabs(ui.getElement('body.run-control-panel.toolbar')),
+            // ];
+            // return Promise.all(proms).then(() => {
+            //     layout.events.attachEvents(kbaseNode);
+            // });
         }
 
         /**

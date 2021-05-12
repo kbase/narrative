@@ -157,16 +157,16 @@ define([
                 updatedState: 'appError',
                 testSelector: '.kb-rcp__action-button-container .-rerun',
                 testState: (elem) => !elem.classList.contains('hidden'),
-                enabledTabs: ['viewConfigure', 'info', 'jobStatus', 'results', 'error']
+                enabledTabs: ['viewConfigure', 'info', 'jobStatus', 'results', 'error'],
             },
             {
                 msgEvent: 'launched_job_batch',
                 msgData: {
-                    child_job_ids: ['foo']
+                    child_job_ids: ['foo'],
                 },
                 updatedState: 'queued',
                 testSelector: '.kb-rcp__btn-toolbar button[data-button="jobStatus"]',
-                testState: (elem) => !elem.classList.contains('disabled')
+                testState: (elem) => !elem.classList.contains('disabled'),
             },
             {
                 msgEvent: 'some-unknown-event',
@@ -186,18 +186,18 @@ define([
                         selectedFileType: 'fastq_reads',
                         selectedTab: 'configure',
                         params: {
-                            fastq_reads: 'complete'
-                        }
-                    }
+                            fastq_reads: 'complete',
+                        },
+                    },
                 };
                 cell.metadata = {
                     kbase: {
                         bulkImportCell: Object.assign({}, state, TestAppObj),
                         type: 'app-bulk-import',
                         attributes: {
-                            id: 'some-fake-bulk-import-cell'
-                        }
-                    }
+                            id: 'some-fake-bulk-import-cell',
+                        },
+                    },
                 };
                 BulkImportCell.make({ cell });
                 const testElem = cell.element[0].querySelector(testCase.testSelector);
@@ -211,31 +211,33 @@ define([
                     '.kb-rcp__action-button-container .-cancel'
                 );
                 return TestUtil.waitForElementState(cancelButton, () => {
-                    return !runButton.classList.contains('disabled') &&
-                        cancelButton.classList.contains('hidden');
+                    return (
+                        !runButton.classList.contains('disabled') &&
+                        cancelButton.classList.contains('hidden')
+                    );
                 })
                     .then(() => {
                         runButton.click();
                         return TestUtil.waitForElementState(
                             testElem,
                             () => {
-                                return testCase.testState(testElem)
+                                return testCase.testState(testElem);
                             },
                             () => {
-                                const message = Object.assign({
-                                    event: testCase.msgEvent
-                                }, testCase.msgData ? testCase.msgData : {});
-                                runtime.bus().send(
-                                    message,
+                                const message = Object.assign(
                                     {
-                                        channel: {
-                                            cell: cell.metadata.kbase.attributes.id,
-                                        },
-                                        key: {
-                                            type: 'run-status',
-                                        },
-                                    }
+                                        event: testCase.msgEvent,
+                                    },
+                                    testCase.msgData ? testCase.msgData : {}
                                 );
+                                runtime.bus().send(message, {
+                                    channel: {
+                                        cell: cell.metadata.kbase.attributes.id,
+                                    },
+                                    key: {
+                                        type: 'run-status',
+                                    },
+                                });
                             }
                         );
                     })

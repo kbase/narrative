@@ -479,7 +479,7 @@ define(['./jobsData', 'common/jobs'], (JobsData, Jobs) => {
             fastq_reads: {
                 appId: 'kb_uploadmethods/import_fastq_sra_as_reads_from_staging',
                 files: ['file1.txt'],
-            }
+            },
         },
         params: {
             fastq_reads: {

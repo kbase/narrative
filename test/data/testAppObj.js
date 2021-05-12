@@ -20,6 +20,8 @@ define(['./jobsData', 'common/jobs'], (JobsData, Jobs) => {
             },
             specs: {
                 'kb_uploadmethods/import_fastq_sra_as_reads_from_staging': {
+                    tag: 'release',
+                    version: '1.0.43',
                     gitCommitHash: '25e7a896377f5ec50bd15a27ade9f279cb16cd0b',
                     id: 'kb_uploadmethods/import_fastq_sra_as_reads_from_staging',
                     behavior: {
@@ -395,8 +397,6 @@ define(['./jobsData', 'common/jobs'], (JobsData, Jobs) => {
                         output: 'no-display',
                     },
                 },
-                tag: 'release',
-                version: '1.0.43',
             },
         },
         exec: {
@@ -476,7 +476,10 @@ define(['./jobsData', 'common/jobs'], (JobsData, Jobs) => {
             byJob: {},
         },
         inputs: {
-            fastq_reads: ['file1.txt'],
+            fastq_reads: {
+                appId: 'kb_uploadmethods/import_fastq_sra_as_reads_from_staging',
+                files: ['file1.txt'],
+            }
         },
         params: {
             fastq_reads: {

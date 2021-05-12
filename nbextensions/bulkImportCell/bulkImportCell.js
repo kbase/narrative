@@ -247,9 +247,7 @@ define([
         let state = getInitialState();
 
         for (const [appId, appSpec] of Object.entries(model.getItem('app.specs'))) {
-            specs[appId] = Spec.make({
-                appSpec: appSpec,
-            });
+            specs[appId] = Spec.make({ appSpec });
         }
 
         setupCell();

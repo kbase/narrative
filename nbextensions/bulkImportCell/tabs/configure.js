@@ -4,7 +4,7 @@ define([
     'common/runtime',
     'common/html',
     'common/ui',
-    '../fileTypePanel',
+    './fileTypePanel',
     'common/cellComponents/paramsWidget',
     'common/cellComponents/filePathWidget',
 ], (Promise, Config, Runtime, html, UI, FileTypePanel, ParamsWidget, FilePathWidget) => {

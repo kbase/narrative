@@ -621,7 +621,7 @@ define([
                 // eslint-disable-next-line no-self-assign
                 cell.metadata = cell.metadata;
                 updateState();
-                runTab(state.tab.selected); //, state.fileType.selected);
+                runTab(state.tab.selected);
             });
         }
 
@@ -636,7 +636,6 @@ define([
          * 1. if there's a tab showing, stop() it and detach it
          * 2. update the tabs state to be selected
          * @param {string} tab id of the tab to display
-        //  * @param {string} fileType id of the filetype we're swapping to
          */
         function toggleTab(tab) {
             // if we're toggling the currently selected tab off,
@@ -672,7 +671,6 @@ define([
          * This doesn't change any state, just runs what it's told to,
          * and returns the widget's start() Promise.
          * @param {string} tab
-        //  * @param {string} fileType
          */
         function runTab(tab) {
             tabWidget = tabSet.tabs[tab].widget.make({
@@ -779,7 +777,6 @@ define([
          */
         function deleteCell() {
             busEventManager.removeAll();
-            // fileTypePanel.stop();
             const cellIndex = Jupyter.notebook.find_cell_index(cell);
             Jupyter.notebook.delete_cell(cellIndex);
         }

@@ -24,7 +24,7 @@ define([
             runtime = Runtime.make(),
             FILE_PATH_TYPE = 'filePaths',
             PARAM_TYPE = 'params',
-            cssBaseClass = 'kb-configure-tab';
+            cssBaseClass = 'kb-bulk-import-configure';
         let container = null,
             filePathWidget,
             paramsWidget,

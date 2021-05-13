@@ -298,7 +298,7 @@ These are described below. The name (`msg_type`) is given, followed by the keys 
 By design, these should only be seen by the `JobCommChannel` instance, then sent into bus messages that get sent on specific channels. That information is also given in each block.
 
 ### `job_does_not_exist`
-This is an error message triggered when trying to get info/state/logs on a job that either doesn't exist in EE2 or that the JobManager doesn't have associated with the running narrative.
+This is an error message triggered when trying to get info/logs on a job that either doesn't exist in EE2 or that the JobManager doesn't have associated with the running narrative.
 
 **content**
   * `job_id` - a string, the job id
@@ -347,7 +347,7 @@ Includes information about the running job
 The current job state. This one is probably most common.
 
 **content**
-  * `state` - see **Data Structures** below for details (it's big and shouldn't be repeated all over this document)
+  * `state` - see **Data Structures** below for details (it's big and shouldn't be repeated all over this document). Non-existent jobs have the status `does_not_exist`
   * `widget_info` - the parameters to send to output widgets, only available for a completed job
   * `owner` - string, username of user who submitted the job
 

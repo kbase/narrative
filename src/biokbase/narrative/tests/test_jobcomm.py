@@ -129,9 +129,9 @@ class JobCommTestCase(unittest.TestCase):
         self.assertIn(f"No job present with id {job_id}", str(e.exception))
         msg = self.jc._comm.last_message
         self.assertEqual(
-            {"job_id": job_id, "source": "job_state"}, msg["data"]["content"]
+            {"state": {"job_id": job_id, "status": "does_not_exist"}}, msg["data"]["content"]
         )
-        self.assertEqual("job_does_not_exist", msg["data"]["msg_type"])
+        self.assertEqual("job_status", msg["data"]["msg_type"])
 
     # ---------------
     # Lookup job info

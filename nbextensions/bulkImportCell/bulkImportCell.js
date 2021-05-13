@@ -1,6 +1,5 @@
 define([
     'uuid',
-    // 'narrativeConfig',
     'util/icon',
     'common/busEventManager',
     'common/events',
@@ -15,7 +14,6 @@ define([
     'common/pythonInterop',
     'base/js/namespace',
     'kb_service/client/workspace',
-    // './fileTypePanel',
     './tabs/configure',
     'common/cellComponents/cellControlPanel',
     'common/cellComponents/cellTabs',
@@ -27,7 +25,6 @@ define([
     './testAppObj',
 ], (
     Uuid,
-    // Config,
     Icon,
     BusEventManager,
     Events,
@@ -42,7 +39,6 @@ define([
     PythonInterop,
     Jupyter,
     Workspace,
-    // FileTypePanel,
     ConfigureWidget,
     CellControlPanel,
     CellTabs,
@@ -57,15 +53,19 @@ define([
     const CELL_TYPE = 'app-bulk-import';
 
     const div = html.tag('div'),
+        p = html.tag('p'),
         cssCellType = 'kb-bulk-import';
 
     function DefaultWidget() {
         function make() {
             function start() {
                 alert('starting default widget');
+                return Promise.resolve();
             }
 
-            function stop() {}
+            function stop() {
+                return Promise.resolve();
+            }
 
             return {
                 start: start,
@@ -209,14 +209,15 @@ define([
                     },
                 },
             };
-        let readOnly = false,
+        let runStatusListener = null, // only used while listening for the jobs to start
+            readOnly = false,
             kbaseNode = null, // the DOM element used as the container for everything in this cell
             cellBus = null, // the parent cell bus that gets external messages
             controllerBus = null, // the main bus for this cell and its children
             ui = null,
             tabWidget = null; // the widget currently in view
         // widgets this cell owns
-        let cellTabs, controlPanel, /*fileTypePanel*/ jobManager;
+        let cellTabs, controlPanel, jobManager;
 
         if (options.initialize) {
             initialize(options.specs);
@@ -242,16 +243,13 @@ define([
         let state = getInitialState();
 
         for (const [appId, appSpec] of Object.entries(model.getItem('app.specs'))) {
-            specs[appId] = Spec.make({
-                appSpec: appSpec,
-            });
+            specs[appId] = Spec.make({ appSpec });
         }
 
         setupCell();
 
         /**
          * If importData exists, and has the right structure, use it.
-         * //TODO decide on right structure, should we test for knowledge about each file type?
          * If not, and there's input data in the metadata, use that.
          * If not, and there's nothing? throw an error.
          * @param {object} importData
@@ -466,7 +464,6 @@ define([
                 description: 'parent bus for BulkImportCell',
             });
             busEventManager.add(cellBus.on('delete-cell', () => deleteCell()));
-            busEventManager.add(cellBus.on('run-status', handleRunStatus));
             controllerBus = runtime.bus().makeChannelBus({
                 description: 'An app cell widget',
             });
@@ -491,15 +488,30 @@ define([
             }
         }
 
-        function updateParameterState(paramsReady) {
+        function updateParameterState() {
             const curState = model.getItem('state.state');
             if (!['editingComplete', 'editingIncomplete'].includes(curState)) {
                 // only change ready state if we're not running yet or in an error.
                 return;
             }
-            const uiState = paramsReady ? 'editingComplete' : 'editingIncomplete';
+            updateEditingState();
+        }
+
+        /**
+         * This will toggle the cell to either the editingComplete or editingIncomplete state,
+         * based on the ready state of each filetype.
+         */
+        function updateEditingState() {
+            let cellReady = true;
+            for (const _state of Object.values(model.getItem('state.params'))) {
+                if (_state !== 'complete') {
+                    cellReady = false;
+                    break;
+                }
+            }
+            const uiState = cellReady ? 'editingComplete' : 'editingIncomplete';
             updateState(uiState);
-            if (paramsReady) {
+            if (cellReady) {
                 buildPythonCode();
             } else {
                 clearPythonCode();
@@ -636,10 +648,6 @@ define([
             return stopWidget().then(() => {
                 if (tab !== null) {
                     runTab(tab);
-                    // if (!fileType) {
-                    //     fileType = state.fileType.selected;
-                    // }
-                    // runTab(tab, fileType);
                 }
                 model.setItem('state.selectedTab', tab);
                 cellTabs.setState(state.tab);
@@ -667,15 +675,12 @@ define([
         //  * @param {string} fileType
          */
         function runTab(tab) {
-            //}, fileType) {
             tabWidget = tabSet.tabs[tab].widget.make({
                 bus: controllerBus,
                 cell,
-                // fileType,
                 jobId: undefined,
                 jobManager,
                 model,
-                // spec: specs[typesToFiles[state.fileType.selected].appId],
                 specs,
                 typesToFiles,
                 workspaceClient,
@@ -685,30 +690,9 @@ define([
 
             return tabWidget.start({
                 node: ui.getElement('body.tab-pane.widget'),
-                // currentApp: typesToFiles[state.fileType.selected].appId,
                 currentApp: typesToFiles[model.getItem('state.selectedFileType')].appId,
             });
         }
-
-        // /**
-        //  * This toggles which file type should be shown. This sets the
-        //  * fileType state, then updates the rest of the cell state to modify
-        //  * which set of tabs should be active.
-        //  *
-        //  * Toggling the filetype also toggles the active tab to ensure it
-        //  * has the selected file type.
-        //  * @param {string} fileType - the file type that should be shown
-        //  */
-        // function toggleFileType(fileType) {
-        //     if (state.fileType.selected === fileType) {
-        //         return; // do nothing if we're toggling to the same fileType
-        //     }
-        //     state.fileType.selected = fileType;
-        //     // stop existing tab widget
-        //     // restart it with the new filetype
-        //     toggleTab(state.tab.selected, fileType);
-        //     updateState();
-        // }
 
         /**
          * @param {string} action
@@ -721,12 +705,10 @@ define([
             }
             switch (action) {
                 case 'runApp':
-                    cell.execute();
-                    updateState('launching');
+                    doRunCellAction();
                     break;
                 case 'cancel':
-                    // TODO implement
-                    alert('canceling run');
+                    doCancelCellAction();
                     break;
                 case 'reRunApp':
                     // TODO implement
@@ -743,6 +725,52 @@ define([
                 default:
                     alert(`Unknown command ${action}`);
                     break;
+            }
+        }
+
+        /**
+         * Starts the cell by executing the generated code in its input area.
+         * Then changes the global cell state to "launching".
+         */
+        function doRunCellAction() {
+            runStatusListener = cellBus.on('run-status', handleRunStatus);
+            busEventManager.add(runStatusListener);
+            cell.execute();
+            updateState('launching');
+        }
+
+        /**
+         * Globally cancels all running jobs and the run status by the following steps.
+         * 1. If we've clicked run, but we don't have any jobs yet, just remove the
+         *    listener and ignore the jobs.
+         *    //TODO: make this wait for jobs to start first, then cancel them all in turn?
+         *      or set up some state that we catch jobs when they appear and THEN cancel them?
+         *      Maybe send a kernel message to stop all jobs with this run id?
+         * 2. If we have a list of jobs, cancel them all.
+         * 3. Return to the editing state, trigger updateParameterState.
+         */
+        async function doCancelCellAction() {
+            if (runStatusListener !== null) {
+                const dialogArgs = {
+                    title: 'Cancel job batch?',
+                    body: div([
+                        p([
+                            'Canceling the job will halt any currently running jobs. ',
+                            'Any output objects already created will remain in your narrative and can be removed from the Data panel.',
+                        ]),
+                        p('Continue to Cancel the running job batch?'),
+                    ]),
+                };
+
+                const confirmed = await UI.showConfirmDialog(dialogArgs);
+                if (!confirmed) {
+                    return;
+                }
+                busEventManager.remove(runStatusListener);
+                updateEditingState();
+            } else {
+                await jobManager.cancelJobsByStatus(['created', 'estimating', 'queued', 'running']);
+                updateEditingState();
             }
         }
 
@@ -774,19 +802,6 @@ define([
             }
             const uiState = States[currentState].ui;
             uiState.tab.selected = model.getItem('state.selectedTab', 'configure');
-            // TODO: inspect the parameters to see which file types are
-            // completely filled out, maybe store that in the metadata
-            // on completion?
-            // uiState.selectedFileType = model.getItem('state.selectedFileType', Object.keys(typesToFiles)[0]);
-            // const fileTypeState = {
-            //     completed: {},
-            // };
-            // for (const fileType of Object.keys(typesToFiles)) {
-            //     fileTypeState.completed[fileType] = false;
-            // }
-            // fileTypeState.selected = Object.keys(typesToFiles)[0];
-
-            // uiState.fileType = fileTypeState;
             return uiState;
         }
 
@@ -850,38 +865,6 @@ define([
             });
         }
 
-        // /**
-        //  * This builds the file type panel (the left column) of the cell and starts
-        //  * it up attached to the given DOM node.
-        //  * @param {DOMElement} node - the node that should be used for the left column
-        //  */
-        // function buildFileTypePanel(node) {
-        //     const fileTypesDisplay = {},
-        //         fileTypeMapping = {},
-        //         uploaders = Config.get('uploaders');
-        //     for (const uploader of uploaders.dropdown_order) {
-        //         fileTypeMapping[uploader.id] = uploader.name;
-        //     }
-        //     for (const fileType of Object.keys(typesToFiles)) {
-        //         fileTypesDisplay[fileType] = {
-        //             label: fileTypeMapping[fileType] || `Unknown type "${fileType}"`,
-        //         };
-        //     }
-        //     fileTypePanel = FileTypePanel.make({
-        //         bus: cellBus,
-        //         header: {
-        //             label: 'Data type',
-        //             icon: 'icon icon-genome',
-        //         },
-        //         fileTypes: fileTypesDisplay,
-        //         toggleAction: toggleFileType,
-        //     });
-        //     return fileTypePanel.start({
-        //         node: node,
-        //         state: state.fileType,
-        //     });
-        // }
-
         /**
          * Renders the initial layout structure for the cell.
          * This returns an object with the created events and DOM content
@@ -944,13 +927,6 @@ define([
             return buildTabs(ui.getElement('body.run-control-panel.toolbar')).then(() => {
                 layout.events.attachEvents(kbaseNode);
             });
-            // const proms = [
-            //     buildFileTypePanel(ui.getElement('body.tab-pane.filetype-panel')),
-            //     buildTabs(ui.getElement('body.run-control-panel.toolbar')),
-            // ];
-            // return Promise.all(proms).then(() => {
-            //     layout.events.attachEvents(kbaseNode);
-            // });
         }
 
         /**

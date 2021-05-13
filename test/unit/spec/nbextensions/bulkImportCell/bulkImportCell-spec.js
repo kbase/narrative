@@ -4,8 +4,10 @@ define([
     'common/runtime',
     'narrativeMocks',
     'testUtil',
+    '/test/data/testAppObj',
+    'common/ui',
     'json!/test/data/NarrativeTest.test_input_params.spec.json',
-], (BulkImportCell, Jupyter, Runtime, Mocks, TestUtil, TestAppSpec) => {
+], (BulkImportCell, Jupyter, Runtime, Mocks, TestUtil, TestAppObj, UI, TestAppSpec) => {
     'use strict';
     const fakeInputs = {
         dataType: {
@@ -155,67 +157,165 @@ define([
             {
                 msgEvent: 'error',
                 updatedState: 'appError',
-                availableButton: 'rerun',
-                initialState: 'hidden',
+                testSelector: '.kb-rcp__action-button-container .-rerun',
+                testState: (elem) => !elem.classList.contains('hidden'),
+                enabledTabs: ['viewConfigure', 'info', 'jobStatus', 'results', 'error'],
             },
             {
                 msgEvent: 'launched_job_batch',
+                msgData: {
+                    child_job_ids: ['foo'],
+                },
                 updatedState: 'queued',
-                availableButton: 'cancel',
-                initialState: 'hidden',
+                testSelector: '.kb-rcp__btn-toolbar button[data-button="jobStatus"]',
+                testState: (elem) => !elem.classList.contains('disabled'),
             },
             {
                 msgEvent: 'some-unknown-event',
                 updatedState: 'generalError',
-                availableButton: 'reset',
-                initialState: 'hidden',
+                testSelector: '.kb-rcp__action-button-container .-reset',
+                testState: (elem) => !elem.classList.contains('hidden'),
             },
         ].forEach((testCase) => {
             it(`responds to run-status bus messages with ${testCase.msgEvent} event`, () => {
                 const runtime = Runtime.make();
                 const cell = Mocks.buildMockCell('code');
-                BulkImportCell.make({
-                    cell,
-                    importData: fakeInputs,
-                    specs: fakeSpecs,
-                    initialize: true,
-                });
-                const actionButton = cell.element[0].querySelector(
-                    `.kb-rcp__action-button-container .-${testCase.availableButton}`
-                );
+                cell.execute = () => {};
+                // add dummy metadata so we can make a cell that's in the ready-to-run state.
+                const state = {
+                    state: {
+                        state: 'editingComplete',
+                        selectedFileType: 'fastq_reads',
+                        selectedTab: 'configure',
+                        param: {
+                            fastq_reads: 'complete',
+                        },
+                    },
+                };
+                cell.metadata = {
+                    kbase: {
+                        bulkImportCell: Object.assign({}, state, TestAppObj),
+                        type: 'app-bulk-import',
+                        attributes: {
+                            id: 'some-fake-bulk-import-cell',
+                        },
+                    },
+                };
+                BulkImportCell.make({ cell });
+                const testElem = cell.element[0].querySelector(testCase.testSelector);
                 // wait for the actionButton to get initialized as hidden,
                 // then send the message to put it in rerun state, and wait for the button to show,
                 // then we can verify both the button and state in the cell metadata.
-                return TestUtil.waitForElementState(actionButton, () => {
-                    return actionButton.classList.contains(testCase.initialState);
+                const runButton = cell.element[0].querySelector(
+                    '.kb-rcp__action-button-container .-run'
+                );
+                const cancelButton = cell.element[0].querySelector(
+                    '.kb-rcp__action-button-container .-cancel'
+                );
+                return TestUtil.waitForElementState(cancelButton, () => {
+                    return (
+                        !runButton.classList.contains('disabled') &&
+                        cancelButton.classList.contains('hidden')
+                    );
                 })
                     .then(() => {
+                        runButton.click();
                         return TestUtil.waitForElementState(
-                            actionButton,
+                            testElem,
                             () => {
-                                return !actionButton.classList.contains(testCase.initialState);
+                                return testCase.testState(testElem);
                             },
                             () => {
-                                runtime.bus().send(
+                                const message = Object.assign(
                                     {
                                         event: testCase.msgEvent,
                                     },
-                                    {
-                                        channel: {
-                                            cell: cell.metadata.kbase.attributes.id,
-                                        },
-                                        key: {
-                                            type: 'run-status',
-                                        },
-                                    }
+                                    testCase.msgData ? testCase.msgData : {}
                                 );
+                                runtime.bus().send(message, {
+                                    channel: {
+                                        cell: cell.metadata.kbase.attributes.id,
+                                    },
+                                    key: {
+                                        type: 'run-status',
+                                    },
+                                });
                             }
                         );
                     })
                     .then(() => {
-                        expect(actionButton).not.toHaveClass('hidden');
                         expect(cell.metadata.kbase.bulkImportCell.state.state).toBe(
                             testCase.updatedState
+                        );
+                    });
+            });
+        });
+
+        ['launching', 'queued', 'running'].forEach((testCase) => {
+            it(`should cancel the ${testCase} state and return to a previous state`, () => {
+                // init cell with the test case state and jobs (they're all run-related)
+                // wait for the cancel button to appear and be ready, and for the run button to disappear
+                // click it
+                // wait for it to reset so the run button is visible
+                // expect the state to be editingComplete
+                const cell = Mocks.buildMockCell('code');
+                // mock the Jupyter execute function.
+                cell.execute = () => {};
+                // kind of a cheat, but waiting on the dialogs to show up is really really inconsistent.
+                // I'm guessing it's a jquery fadeIn event thing.
+                spyOn(UI, 'showConfirmDialog').and.resolveTo(true);
+                // add dummy metadata so we can make a cell that's in the ready-to-run state.
+                const state = {
+                    state: {
+                        state: testCase,
+                        selectedFileType: 'fastq_reads',
+                        selectedTab: 'configure',
+                        params: {
+                            fastq_reads: 'complete',
+                        },
+                    },
+                };
+                cell.metadata = {
+                    kbase: {
+                        bulkImportCell: Object.assign({}, state, TestAppObj),
+                        type: 'app-bulk-import',
+                        attributes: {
+                            id: 'some-fake-bulk-import-cell',
+                        },
+                    },
+                };
+                BulkImportCell.make({ cell });
+                const cancelButton = cell.element[0].querySelector(
+                    '.kb-rcp__action-button-container .-cancel'
+                );
+                const runButton = cell.element[0].querySelector(
+                    '.kb-rcp__action-button-container .-run'
+                );
+                // wait for the cancel button to appear and the run button to disappear
+                return TestUtil.waitForElementState(cancelButton, () => {
+                    return (
+                        !cancelButton.classList.contains('hidden') &&
+                        !cancelButton.classList.contains('disabled') &&
+                        runButton.classList.contains('hidden')
+                    );
+                })
+                    .then(() => {
+                        return TestUtil.waitForElementState(
+                            runButton,
+                            () => {
+                                return (
+                                    !runButton.classList.contains('hidden') &&
+                                    !runButton.classList.contains('disabled')
+                                );
+                            },
+                            () => {
+                                cancelButton.click();
+                            }
+                        );
+                    })
+                    .then(() => {
+                        expect(cell.metadata.kbase.bulkImportCell.state.state).toBe(
+                            'editingComplete'
                         );
                     });
             });

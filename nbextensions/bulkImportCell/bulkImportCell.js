@@ -470,9 +470,9 @@ define([
             controllerBus = runtime.bus().makeChannelBus({
                 description: 'An app cell widget',
             });
-            // controllerBus.on('update-param-state', (message) => {
-            //     updateParameterState(message.fileType, message.state);
-            // });
+            controllerBus.on('update-param-state', (message) => {
+                updateParameterState(message.paramsReady);
+            });
         }
 
         function handleRunStatus(message) {
@@ -491,41 +491,20 @@ define([
             }
         }
 
-        /**
-         * Update the internal readiness state for the app cell parameters. When all fileTypes have
-         * a "complete" state, then they are all completely filled out and ready to run.
-         * @param {string} fileType - which filetype's app state to update
-         * @param {string} newState - what the new ready state should be - one of complete, incomplete, error
-         */
-        // function updateParameterState(fileType, newState) {
-        //     const curState = model.getItem('state.state');
-        //     if (!['editingComplete', 'editingIncomplete'].includes(curState)) {
-        //         // only change ready state if we're not running yet or in an error.
-        //         return;
-        //     }
-
-        //     model.setItem(['state', 'param', fileType], newState);
-        //     const newFileTypeState = {};
-        //     for (const [fileId, fileState] of Object.entries(model.getItem(['state', 'param']))) {
-        //         newFileTypeState[fileId] = fileState === 'complete';
-        //     }
-
-        //     state.fileType.completed = newFileTypeState;
-        //     let cellReady = true;
-        //     for (const _state of Object.values(model.getItem('state.param'))) {
-        //         if (_state !== 'complete') {
-        //             cellReady = false;
-        //             break;
-        //         }
-        //     }
-        //     const uiState = cellReady ? 'editingComplete' : 'editingIncomplete';
-        //     updateState(uiState);
-        //     if (cellReady) {
-        //         buildPythonCode();
-        //     } else {
-        //         clearPythonCode();
-        //     }
-        // }
+        function updateParameterState(paramsReady) {
+            const curState = model.getItem('state.state');
+            if (!['editingComplete', 'editingIncomplete'].includes(curState)) {
+                // only change ready state if we're not running yet or in an error.
+                return;
+            }
+            const uiState = paramsReady ? 'editingComplete' : 'editingIncomplete';
+            updateState(uiState);
+            if (paramsReady) {
+                buildPythonCode();
+            } else {
+                clearPythonCode();
+            }
+        }
 
         function buildPythonCode() {
             const runId = new Uuid(4).format(),
@@ -822,13 +801,11 @@ define([
                 model.setItem('state.state', newUiState);
                 // update selections
                 stateDiff.tab.selected = state.tab.selected;
-                // stateDiff.fileType = state.fileType;
                 stateDiff.selectedFileType = state.selectedFileType;
                 state = stateDiff;
             }
             cellTabs.setState(state.tab);
             controlPanel.setActionState(state.action);
-            // fileTypePanel.updateState(state.fileType);
             // TODO: add in the FSM state
             FSMBar.showFsmBar({
                 ui: ui,

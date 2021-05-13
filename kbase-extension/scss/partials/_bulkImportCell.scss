@@ -66,15 +66,6 @@ $tab-widget-padding: 4px;
     margin: $tab-widget-margin;
   }
 
-
-  &__tab_pane .kb-bulk-import__filetype_panel {
-    display: none;
-  }
-
-  &__tab_pane[data-active-tab="configure"] .kb-bulk-import__filetype_panel {
-    display: block;
-  }
-
   // kb-bulk-import-configure
   &-configure {
     &__container {

@@ -1,23 +1,33 @@
 define([
     'bluebird',
     'narrativeConfig',
-    'common/events',
     'common/runtime',
     'common/html',
     'common/ui',
     '../fileTypePanel',
     'common/cellComponents/paramsWidget',
     'common/cellComponents/filePathWidget',
-], (Promise, Config, Events, Runtime, html, UI, FileTypePanel, ParamsWidget, FilePathWidget) => {
+], (Promise, Config, Runtime, html, UI, FileTypePanel, ParamsWidget, FilePathWidget) => {
     'use strict';
 
-    /*
-        Options:
-            bus: message bus
-            model: cell metadata
-            spec: app spec
-            fileType: the fileType we're looking at
-    */
+    /**
+     * This widget is responsible for providing an interactive interface for setting the
+     * inputs and parameters for each of the bulk import apps.
+     *
+     * It maintains the state of:
+     *   - parameters
+     *   - currently shown app info (by file type)
+     * It sends messages to the bulk import cell when the global configuration ready state
+     * has changed. So if we transfer from globally not ready -> ready to run (and vice-versa),
+     * it sends a message.
+     * It also updates the cell model with set parameters.
+     * @param {object} options has keys:
+     *     bus: message bus
+     *     model: cell metadata, contains such fun items as the app parameters and state
+     *     specs: app specs, keyed by their app id
+     *     typesToFiles: map from object type to appId and list of input files
+     * @returns
+     */
     function ConfigureWidget(options) {
         const { model, specs, typesToFiles } = options;
         const cellBus = options.bus,
@@ -29,7 +39,8 @@ define([
             filePathWidget,
             paramsWidget,
             fileTypePanel,
-            selectedFileType = model.getItem('state.selectedFileType');
+            selectedFileType = model.getItem('state.selectedFileType'),
+            ui;
 
         /**
          * args includes:
@@ -39,30 +50,30 @@ define([
         function start(args) {
             return Promise.try(() => {
                 container = args.node;
-                const ui = UI.make({ node: container });
+                ui = UI.make({ node: container });
 
-                const events = Events.make();
                 const layout = renderLayout();
                 container.innerHTML = layout;
 
-                const filePathNode = ui.getElement('input-container.file-paths');
-                const paramNode = ui.getElement('input-container.params');
                 const fileTypeNode = ui.getElement('filetype-panel');
-                const appSpec = specs[typesToFiles[selectedFileType].appId];
-                const initPromises = [
-                    buildFilePathWidget(filePathNode, appSpec).then((instance) => {
-                        events.attachEvents(container);
-                        filePathWidget = instance.widget;
-                    }),
-                    buildParamsWidget(paramNode, appSpec).then((instance) => {
-                        events.attachEvents(container);
-                        paramsWidget = instance.widget;
-                    }),
-                    buildFileTypePanel(fileTypeNode),
-                ];
+                const initPromises = [buildFileTypePanel(fileTypeNode), startInputWidgets()];
 
                 return Promise.all(initPromises);
             });
+        }
+
+        function startInputWidgets() {
+            const appSpec = specs[typesToFiles[selectedFileType].appId];
+            const filePathNode = ui.getElement('input-container.file-paths');
+            const paramNode = ui.getElement('input-container.params');
+            return Promise.all([
+                buildFilePathWidget(filePathNode, appSpec).then((instance) => {
+                    filePathWidget = instance.widget;
+                }),
+                buildParamsWidget(paramNode, appSpec).then((instance) => {
+                    paramsWidget = instance.widget;
+                }),
+            ]);
         }
 
         function renderLayout() {
@@ -122,10 +133,24 @@ define([
                 fileTypes: fileTypesDisplay,
                 toggleAction: toggleFileType,
             });
+            const state = getFileTypeState();
+
             return fileTypePanel.start({
-                node: node,
-                state: selectedFileType,
+                node,
+                state,
             });
+        }
+
+        function getFileTypeState() {
+            const fileTypeCompleted = {};
+            const fileTypeState = model.getItem('state.params', {});
+            for (const [fileType, status] of Object.entries(fileTypeState)) {
+                fileTypeCompleted[fileType] = status === 'complete';
+            }
+            return {
+                selected: selectedFileType,
+                completed: fileTypeCompleted,
+            };
         }
 
         /**
@@ -138,21 +163,14 @@ define([
          * @param {string} fileType - the file type that should be shown
          */
         function toggleFileType(fileType) {
-            // alert(`new filetype: ${fileType}`);
             if (model.getItem('state.selectedFileType') === fileType) {
                 return; // do nothing if we're toggling to the same fileType
             }
             selectedFileType = fileType;
+            fileTypePanel.updateState(getFileTypeState());
+            model.setItem('state.selectedFileType', fileType);
             // stop and start the widgets.
-
-            // if (state.fileType.selected === fileType) {
-            //     return; // do nothing if we're toggling to the same fileType
-            // }
-            // state.fileType.selected = fileType;
-            // // stop existing tab widget
-            // // restart it with the new filetype
-            // toggleTab(state.tab.selected, fileType);
-            // updateState();
+            return stopInputWidgets().then(startInputWidgets());
         }
 
         /*
@@ -315,7 +333,9 @@ define([
 
         /**
          * Updates the configuration state for the currently loaded app. If the state has
-         * changed from what's in the current model, this emits a message up the cellBus.
+         * changed from what's in the current model, this updates it and sends a message
+         * up the cellBus.
+         *
          * @param {boolean} isError
          * @returns Promise that resolves when finished sending a message (if relevant).
          */
@@ -329,9 +349,17 @@ define([
             }).then((state) => {
                 const currentState = model.getItem(['state', 'params', selectedFileType]);
                 if (currentState !== state) {
+                    model.setItem(['state', 'params', selectedFileType], state);
+                    const fileTypeState = getFileTypeState();
+                    fileTypePanel.updateState(fileTypeState);
+                    const paramsReady = Object.values(fileTypeState.completed).reduce(
+                        (prev, cur) => {
+                            return cur && prev;
+                        },
+                        true
+                    );
                     cellBus.emit('update-param-state', {
-                        selectedFileType,
-                        state,
+                        paramsReady,
                     });
                 }
             });
@@ -397,7 +425,7 @@ define([
             return updateAppConfigState(message.isError);
         }
 
-        function stop() {
+        function stopInputWidgets() {
             const widgetStopPromises = [];
             if (filePathWidget) {
                 widgetStopPromises.push(filePathWidget.stop());
@@ -405,7 +433,11 @@ define([
             if (paramsWidget) {
                 widgetStopPromises.push(paramsWidget.stop());
             }
-            return Promise.all(widgetStopPromises).then(() => {
+            return Promise.all(widgetStopPromises);
+        }
+
+        function stop() {
+            return stopInputWidgets().then(() => {
                 container.innerHTML = '';
             });
         }

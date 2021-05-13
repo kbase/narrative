@@ -52,6 +52,7 @@ define(['bluebird', 'common/ui', 'common/html', 'common/events'], (Promise, UI, 
              *      fileType1: boolean,  // if true, then this file type is completed
              *      fileType2: boolean   // if absent or falsy, then the file type is incomplete
              *   }
+             * }
              */
             state;
 

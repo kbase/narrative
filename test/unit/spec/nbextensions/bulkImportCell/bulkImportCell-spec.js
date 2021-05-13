@@ -55,6 +55,7 @@ define([
             expect(cell.metadata.kbase.bulkImportCell.state).toEqual({
                 state: 'editingIncomplete',
                 selectedTab: 'configure',
+                selectedFileType: 'dataType',
                 params: {
                     dataType: 'incomplete',
                 },
@@ -218,30 +219,6 @@ define([
                         );
                     });
             });
-        });
-
-        it('should toggle the active file type', () => {
-            const cell = Mocks.buildMockCell('code');
-            const importData = {
-                fastq: {
-                    files: ['file1', 'file2', 'file3'],
-                    appId: 'someApp',
-                },
-                sra: {
-                    files: ['file4', 'file5'],
-                    appId: 'someApp',
-                },
-            };
-            BulkImportCell.make({
-                cell,
-                initialize: true,
-                specs: fakeSpecs,
-                importData,
-            });
-            const elem = cell.element.find('[data-element="filetype-panel"] [data-element="sra"]'),
-                before = elem[0].outerHTML;
-            elem.click();
-            expect(elem[0].outerHTML).not.toEqual(before);
         });
     });
 });

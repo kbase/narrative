@@ -110,7 +110,9 @@ define([
             const control = ui.getElement('input-container.input'),
                 selected = $(control).select2('data')[0];
 
-            const selection_val = selected[dd_options.selection_id] || selected.subpath;
+            const selection_val = selected
+                ? selected[dd_options.selection_id] || selected.subpath
+                : '';
             if (!selected || !selection_val) {
                 // might have just started up, and we don't have a selection value, but
                 // we might have a model value.
@@ -289,6 +291,16 @@ define([
         }
 
         /**
+         * Clears the current selection and updates the model.
+         */
+        function doClear() {
+            model.value = spec.data.nullValue;
+            channel.emit('changed', {
+                newValue: spec.data.nullValue,
+            });
+        }
+
+        /**
          * Formats the display of an object in the dropdown.
          id: "data/bulk/wjriehl/subfolder/i_am_a_file.txt"
          isFolder: false
@@ -359,6 +371,7 @@ define([
 
                 $(ui.getElement('input-container.input'))
                     .select2({
+                        allowClear: true,
                         templateResult: formatObjectDisplay,
                         templateSelection: selectionTemplate,
                         ajax: {
@@ -374,9 +387,15 @@ define([
                                     });
                             },
                         },
+                        placeholder: {
+                            id: 'select an option',
+                        },
                     })
                     .on('change', () => {
                         doChange();
+                    })
+                    .on('select2:clear', () => {
+                        doClear();
                     });
                 events.attachEvents(container);
             });

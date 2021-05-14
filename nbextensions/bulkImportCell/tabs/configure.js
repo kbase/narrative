@@ -20,7 +20,7 @@ define([
      * It sends messages to the bulk import cell when the global configuration ready state
      * has changed. So if we transfer from globally not ready -> ready to run (and vice-versa),
      * it sends a message.
-     * It also updates the cell model with set parameters.
+     * It also updates the cell model with changes to the set of app parameters.
      * @param {object} options has keys:
      *     bus: message bus
      *     model: cell metadata, contains such fun items as the app parameters and state
@@ -154,12 +154,9 @@ define([
         }
 
         /**
-         * This toggles which file type should be shown. This sets the
-         * fileType state, then updates the rest of the cell state to modify
-         * which set of tabs should be active.
-         *
-         * Toggling the filetype also toggles the active tab to ensure it
-         * has the selected file type.
+         * This toggles the active file type to the new type. It stores this in
+         * the cell state, then resets the input widgets to display parameters for
+         * the newly set app.
          * @param {string} fileType - the file type that should be shown
          */
         function toggleFileType(fileType) {
@@ -173,13 +170,15 @@ define([
             return stopInputWidgets().then(startInputWidgets());
         }
 
-        /*
-            node: container node to build the widget into
-
-            This is more or less copied over from the way that the appCell handles building the widget.
-            This model assumes one instance of the params widget per cell, so may need some adjustment as
-            we make the bulk import work with multiple data types
-        */
+        /**
+         * This shows the parameters widget - the inputs for the singleton set of parameters
+         * that get applied to every job in the bulk run.
+         * @param {DOMElement} node the container node for the widget
+         * @param {object} spec the app spec with parameters we want to show
+         * @returns {object} keys:
+         *   bus - the message bus created for this widget
+         *   instance - the created widget
+         */
         function buildParamsWidget(node, spec) {
             const paramBus = buildMessageBus(
                 selectedFileType,
@@ -210,6 +209,15 @@ define([
                 });
         }
 
+        /**
+         * This shows the file path widget - the inputs for the file paths that get populated - one
+         * row for each job that gets run.
+         * @param {DOMElement} node the container node for the widget
+         * @param {object} spec the app spec with parameters we want to show
+         * @returns {object} keys:
+         *   bus - the message bus created for this widget
+         *   instance - the created widget
+         */
         function buildFilePathWidget(node, spec) {
             // This is the key in the model that maps to the list of params for the current app.
             const paramBus = buildMessageBus(

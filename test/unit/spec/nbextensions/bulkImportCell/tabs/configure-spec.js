@@ -168,6 +168,14 @@ define([
                 })
                 .then(() => {
                     expect(_model.getItem('state.selectedFileType')).toBe('dataType2');
+                    const btn1 = container.querySelector(
+                        '[data-element="filetype-panel"] [data-element="dataType1"]'
+                    );
+                    expect(
+                        btn1.classList.contains(
+                            'kb-bulk-import-configure__filetype_panel__filetype_button--selected'
+                        )
+                    ).toBeFalsy();
                 });
         });
     });

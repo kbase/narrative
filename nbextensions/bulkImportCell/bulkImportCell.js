@@ -467,8 +467,11 @@ define([
             controllerBus = runtime.bus().makeChannelBus({
                 description: 'An app cell widget',
             });
-            controllerBus.on('update-param-state', (message) => {
-                updateParameterState(message.paramsReady);
+            controllerBus.on('update-param-state', () => {
+                const curState = model.getItem('state.state');
+                if (['editingComplete', 'editingIncomplete'].includes(curState)) {
+                    updateEditingState();
+                }
             });
         }
 
@@ -486,15 +489,6 @@ define([
                     updateState('generalError');
                     break;
             }
-        }
-
-        function updateParameterState() {
-            const curState = model.getItem('state.state');
-            if (!['editingComplete', 'editingIncomplete'].includes(curState)) {
-                // only change ready state if we're not running yet or in an error.
-                return;
-            }
-            updateEditingState();
         }
 
         /**
@@ -745,7 +739,7 @@ define([
          *      or set up some state that we catch jobs when they appear and THEN cancel them?
          *      Maybe send a kernel message to stop all jobs with this run id?
          * 2. If we have a list of jobs, cancel them all.
-         * 3. Return to the editing state, trigger updateParameterState.
+         * 3. Return to the editing state, trigger updateEditingState.
          */
         async function doCancelCellAction() {
             if (runStatusListener !== null) {
@@ -765,11 +759,10 @@ define([
                     return;
                 }
                 busEventManager.remove(runStatusListener);
-                updateEditingState();
             } else {
                 await jobManager.cancelJobsByStatus(['created', 'estimating', 'queued', 'running']);
-                updateEditingState();
             }
+            updateEditingState();
         }
 
         /**

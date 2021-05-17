@@ -5,3 +5,5 @@ js-coverage
 kbase-extension/static/ext_components
 kbase-extension/static/ext_packages
 kbase-extension/static/kbase/js/patched-components
+venv
+cover

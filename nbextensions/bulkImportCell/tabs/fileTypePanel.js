@@ -4,7 +4,7 @@ define(['bluebird', 'common/ui', 'common/html', 'common/events'], (Promise, UI, 
     const div = html.tag('div'),
         span = html.tag('span'),
         button = html.tag('button'),
-        baseCss = 'kb-bulk-import__filetype_panel',
+        baseCss = 'kb-bulk-import-configure__filetype_panel',
         completeIcon = 'fa-check-circle',
         incompleteIcon = 'fa-circle-thin';
 
@@ -52,6 +52,7 @@ define(['bluebird', 'common/ui', 'common/html', 'common/events'], (Promise, UI, 
              *      fileType1: boolean,  // if true, then this file type is completed
              *      fileType2: boolean   // if absent or falsy, then the file type is incomplete
              *   }
+             * }
              */
             state;
 

@@ -5,8 +5,9 @@ define([
     'narrativeMocks',
     'testUtil',
     '/test/data/testAppObj',
+    'common/ui',
     'json!/test/data/NarrativeTest.test_input_params.spec.json',
-], (BulkImportCell, Jupyter, Runtime, Mocks, TestUtil, TestAppObj, TestAppSpec) => {
+], (BulkImportCell, Jupyter, Runtime, Mocks, TestUtil, TestAppObj, UI, TestAppSpec) => {
     'use strict';
     const fakeInputs = {
         dataType: {
@@ -56,6 +57,7 @@ define([
             expect(cell.metadata.kbase.bulkImportCell.state).toEqual({
                 state: 'editingIncomplete',
                 selectedTab: 'configure',
+                selectedFileType: 'dataType',
                 params: {
                     dataType: 'incomplete',
                 },
@@ -257,14 +259,18 @@ define([
                 // wait for it to reset so the run button is visible
                 // expect the state to be editingComplete
                 const cell = Mocks.buildMockCell('code');
+                // mock the Jupyter execute function.
                 cell.execute = () => {};
+                // kind of a cheat, but waiting on the dialogs to show up is really really inconsistent.
+                // I'm guessing it's a jquery fadeIn event thing.
+                spyOn(UI, 'showConfirmDialog').and.resolveTo(true);
                 // add dummy metadata so we can make a cell that's in the ready-to-run state.
                 const state = {
                     state: {
                         state: testCase,
                         selectedFileType: 'fastq_reads',
                         selectedTab: 'configure',
-                        param: {
+                        params: {
                             fastq_reads: 'complete',
                         },
                     },
@@ -294,14 +300,6 @@ define([
                     );
                 })
                     .then(() => {
-                        // click the button and wait for the dialog to pop up
-                        const okBtnSelector =
-                            '[data-element="kbase"] [data-element="modal"] .modal-footer button[data-element="ok"]';
-                        return TestUtil.waitForElement(document.body, okBtnSelector, () => {
-                            cancelButton.click();
-                        });
-                    })
-                    .then((okButton) => {
                         return TestUtil.waitForElementState(
                             runButton,
                             () => {
@@ -311,7 +309,7 @@ define([
                                 );
                             },
                             () => {
-                                okButton.click();
+                                cancelButton.click();
                             }
                         );
                     })
@@ -321,30 +319,6 @@ define([
                         );
                     });
             });
-        });
-
-        it('should toggle the active file type', () => {
-            const cell = Mocks.buildMockCell('code');
-            const importData = {
-                fastq: {
-                    files: ['file1', 'file2', 'file3'],
-                    appId: 'someApp',
-                },
-                sra: {
-                    files: ['file4', 'file5'],
-                    appId: 'someApp',
-                },
-            };
-            BulkImportCell.make({
-                cell,
-                initialize: true,
-                specs: fakeSpecs,
-                importData,
-            });
-            const elem = cell.element.find('[data-element="filetype-panel"] [data-element="sra"]'),
-                before = elem[0].outerHTML;
-            elem.click();
-            expect(elem[0].outerHTML).not.toEqual(before);
         });
     });
 });

@@ -7,6 +7,8 @@ $filetype-icon-color: rgb(3, 81, 125);
 $filetype-highlight-color: use-color('white');
 $filetype-hover-color: use-color('base-lighter');
 $panel-separator-color: rgb(33, 150, 243);
+$tab-widget-margin: 15px;
+$tab-widget-padding: 4px;
 
 %file_type_button {
   display: flex;
@@ -60,74 +62,76 @@ $panel-separator-color: rgb(33, 150, 243);
 
   // kb-bulk-import__tab_pane_widget
   &__tab_pane_widget {
-    flex: 1;
-    padding: 4px;
-    margin: 15px;
-  }
-
-  // kb-bulk-import__filetype_panel
-  &__filetype_panel {
-    background-color: use-color('base-lightest');
-    width: 24rem;
-
-    &__header {
-      padding: 8px;
-      border-bottom: 1px solid $component-border;
-      @include font-h4;
-
-      &_icon {
-        padding: 8px 6px 8px 8px;
-        color: rgb(0 0 0);
-      }
-    }
-
-    &__filetype {
-      // .kb-bulk-import__filetype_panel__filetype_button
-      &_button {
-        @include base-text;
-        @extend %file_type_button;
-
-        &:hover:not(&--selected) {
-          @extend %file_type_button;
-          background-color: $filetype-hover-color;
-          cursor: pointer;
-        }
-
-        // .kb-bulk-import__filetype_panel__filetype_button--selected
-        &--selected {
-          @extend %file_type_button;
-          background-color: $filetype-highlight-color;
-          box-shadow: 0 3px 2px -2px use-color('base');
-        }
-
-        &--selected + .kb-bulk-import__filetype_panel__filetype_button {
-          box-shadow: inset 0 3px 2px -2px use-color('base');
-        }
-      }
-
-      // .kb-bulk-import__filetype_panel__filetype_icon
-      &_icon {
-        padding: 2px 8px 0;
-        color: $filetype-icon-color;
-      }
-
-      // .kb-bulk-import__filetype_panel__filetype_label
-      &_label {
-        flex: 1;
-      }
-    }
-  }
-
-  &__tab_pane .kb-bulk-import__filetype_panel {
-    display: none;
-  }
-
-  &__tab_pane[data-active-tab="configure"] .kb-bulk-import__filetype_panel {
-    display: block;
+    padding: $tab-widget-padding;
+    margin: $tab-widget-margin;
   }
 
   // kb-bulk-import-configure
   &-configure {
+    &__container {
+      display: flex;
+      margin: -($tab-widget-margin + $tab-widget-padding);
+    }
+
+    // kb-bulk-import__filetype_panel
+    &__filetype_panel {
+      background-color: use-color('base-lightest');
+      width: 24rem;
+
+      &__header {
+        padding: 8px;
+        border-bottom: 1px solid $component-border;
+        @include font-h4;
+
+        &_icon {
+          padding: 8px 6px 8px 8px;
+          color: rgb(0 0 0);
+        }
+      }
+
+      &__filetype {
+        // .kb-bulk-import__filetype_panel__filetype_button
+        &_button {
+          @include base-text;
+          @extend %file_type_button;
+
+          &:hover:not(&--selected) {
+            @extend %file_type_button;
+            background-color: $filetype-hover-color;
+            cursor: pointer;
+          }
+
+          // .kb-bulk-import__filetype_panel__filetype_button--selected
+          &--selected {
+            @extend %file_type_button;
+            background-color: $filetype-highlight-color;
+            box-shadow: 0 3px 2px -2px use-color('base');
+          }
+
+          &--selected + .kb-bulk-import__filetype_panel__filetype_button {
+            box-shadow: inset 0 3px 2px -2px use-color('base');
+          }
+        }
+
+        // .kb-bulk-import__filetype_panel__filetype_icon
+        &_icon {
+          padding: 2px 8px 0;
+          color: $filetype-icon-color;
+        }
+
+        // .kb-bulk-import__filetype_panel__filetype_label
+        &_label {
+          flex: 1;
+        }
+      }
+    }
+
+    &__inputs {
+      flex: 1;
+      margin: $tab-widget-margin;
+      padding: $tab-widget-padding;
+    }
+
     &__advanced_hidden_message {
       margin-left: 6px;
       font-style: italic;

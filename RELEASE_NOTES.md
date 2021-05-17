@@ -4,21 +4,20 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
-### Version NEXT
+### Version 4.4.0
 -   No ticket: boatloads of code cleanup and fixes to the unit and internal testing
 -   PTV-1635: fix bug in data slideout tab selection
 -   PTV-1635: fix data and app slideout button and opening behavior
 -   DEVOPS-475: Change dockerfile so that container runs as nobody, without need to setuid for initialization. Enables removing CAP_SETUID from container initialization
-- SCT-2935 - fix refseq public data search behavior to properly restrict the search with multiple terms
-- SCT-3038 - refseq public data search now includes genome_id and source_id
-### Version 4.3.2
+-   SCT-2935 - fix refseq public data search behavior to properly restrict the search with multiple terms
+-   SCT-3038 - refseq public data search now includes genome_id and source_id
 
+### Version 4.3.2
 -   SCT-2778 - convert data slideout, public tab, refseq data source to use searchapi2/rpc api rather than searchapi2/legacy.
 -   Enhanced integration testing support to add service, host, browser, screen size support.
 -   Changed the "Dashboard" link in hamburger menu to "Narratives" and use the new /narratives path.
 
 ### Version 4.3.1
-
 -   Fixed problem where code cells could forget their toggled state after saving.
 -   Fixed setting up local authentication for developers.
 -   DATAUP-69 - added a pull request template to the narrative repo.

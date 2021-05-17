@@ -39,7 +39,11 @@ define(['bluebird', 'common/ui', 'common/events', './outputWidget', './reportWid
 
             const reportRefs = [];
             jobStates.forEach((job) => {
-                if ('job_output' in job && 'result' in job.job_output && job.job_output.result.length > 0) {
+                if (
+                    'job_output' in job &&
+                    'result' in job.job_output &&
+                    job.job_output.result.length > 0
+                ) {
                     job.job_output.result.forEach((result) => {
                         if ('report_ref' in result) {
                             reportRefs.push(result.report_ref);

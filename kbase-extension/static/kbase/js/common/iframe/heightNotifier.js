@@ -1,43 +1,38 @@
-define([
-    './messages'
-], function (IFrameMessages) {
-
-
-// interface ConstructorParams {
-//     interval: number,
-//     messageManager: IFrameMessages,
-//     nodeGetter: Function
-// }
+define(['./messages'], (IFrameMessages) => {
+    // interface ConstructorParams {
+    //     interval: number,
+    //     messageManager: IFrameMessages,
+    //     nodeGetter: Function
+    // }
 
     function factory(config) {
+        const resizeCheckInterval = config.interval;
+        const messageManager = config.messageManager;
+        const nodeGetter = config.nodeGetter;
 
-        var resizeCheckInterval = config.interval;
-        var messageManager = config.messageManager;
-        var nodeGetter = config.nodeGetter;
-
-        var lastHeight; //: number;
-        var intervalId; //: number;
+        let lastHeight; //: number;
+        let intervalId; //: number;
 
         function getHeight() {
             var node = node || (nodeGetter && nodeGetter());
             if (!node) {
                 return;
             }
-            var rect = node.getBoundingClientRect();
+            const rect = node.getBoundingClientRect();
             return rect.height;
         }
 
         function sendSize() {
             messageManager.send('parent', {
                 name: 'rendered',
-                height: getHeight()
+                height: getHeight(),
             });
         }
 
         function listenForResize() {
             lastHeight = getHeight();
-            intervalId = window.setInterval(function () {
-                var currentHeight = getHeight();
+            intervalId = window.setInterval(() => {
+                const currentHeight = getHeight();
                 if (!currentHeight) {
                     return;
                 }
@@ -61,13 +56,13 @@ define([
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

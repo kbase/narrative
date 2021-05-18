@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'jquery',
@@ -12,28 +10,18 @@ define([
     'common/runtime',
     'common/dom',
     'bootstrap',
-    'css!font-awesome'
-], function(
-    Promise,
-    $,
-    html,
-    utils,
-    Workspace,
-    serviceUtils,
-    Validation,
-    Events,
-    Runtime,
-    Dom) {
+    'css!font-awesome',
+], (Promise, $, html, utils, Workspace, serviceUtils, Validation, Events, Runtime, Dom) => {
     'use strict';
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         select = t('select'),
         option = t('option');
 
     function factory(config) {
-        var runtime = Runtime.make(),
+        let runtime = Runtime.make(),
             constraints = config.parameterSpec.data.constraints,
             workspaceId = runtime.getEnv('workspaceId'),
             objectRefType = config.referenceType || 'name',
@@ -44,7 +32,7 @@ define([
             model = {
                 blacklistValues: undefined,
                 availableValues: undefined,
-                value: undefined
+                value: undefined,
             };
 
         model.blacklistValues = config.blacklist || [];
@@ -57,58 +45,63 @@ define([
         function makeInputControl(events, bus) {
             // There is an input control, and a dropdown,
             // TODO select2 after we get a handle on this...
-            var selectOptions;
+            let selectOptions;
             if (model.availableValues) {
                 selectOptions = model.availableValues
-                    .filter(function(objectInfo) {
+                    .filter((objectInfo) => {
                         if (model.blacklistValues) {
-                            return !model.blacklistValues.some(function(value) {
-                                return (value === getObjectRef(objectInfo));
+                            return !model.blacklistValues.some((value) => {
+                                return value === getObjectRef(objectInfo);
                             });
                         }
                     })
-                    .map(function(objectInfo) {
-                        var selected = false,
+                    .map((objectInfo) => {
+                        let selected = false,
                             ref = getObjectRef(objectInfo);
                         if (ref === model.value) {
                             selected = true;
                         }
-                        return option({
-                            value: ref,
-                            selected: selected,
-                            disabled: true
-                        }, objectInfo.name);
+                        return option(
+                            {
+                                value: ref,
+                                selected: selected,
+                                disabled: true,
+                            },
+                            objectInfo.name
+                        );
                     });
             }
 
             // CONTROL
-            return select({
-                id: events.addEvent({
-                    type: 'change',
-                    handler: function(e) {
-                        validate()
-                            .then(function(result) {
+            return select(
+                {
+                    id: events.addEvent({
+                        type: 'change',
+                        handler: function (e) {
+                            validate().then((result) => {
                                 if (result.isValid) {
                                     model.value = result.value;
                                     bus.emit('changed', {
-                                        newValue: result.value
+                                        newValue: result.value,
                                     });
                                 } else if (result.diagnosis === 'required-missing') {
                                     model.value = result.value;
                                     bus.emit('changed', {
-                                        newValue: result.value
+                                        newValue: result.value,
                                     });
                                 }
                                 bus.emit('validation', {
                                     errorMessage: result.errorMessage,
-                                    diagnosis: result.diagnosis
+                                    diagnosis: result.diagnosis,
                                 });
                             });
-                    }
-                }),
-                class: 'form-control',
-                dataElement: 'input'
-            }, [option({ value: '' }, '')].concat(selectOptions));
+                        },
+                    }),
+                    class: 'form-control',
+                    dataElement: 'input',
+                },
+                [option({ value: '' }, '')].concat(selectOptions)
+            );
         }
 
         /*
@@ -120,40 +113,40 @@ define([
          * values.
          */
         function getInputValue() {
-            var control = dom.getElement('input-container.input'),
+            const control = dom.getElement('input-container.input'),
                 selected = control.selectedOptions;
             if (selected.length === 0) {
                 return;
             }
-            // we are modeling a single string value, so we always just get the 
+            // we are modeling a single string value, so we always just get the
             // first selected element, which is all there should be!
             return selected.item(0).value;
         }
 
         function setModelValue(value) {
-            return Promise.try(function() {
-                    if (model.value !== value) {
-                        model.value = value;
-                        return true;
-                    }
-                    return false;
-                })
-                .then(function(changed) {
+            return Promise.try(() => {
+                if (model.value !== value) {
+                    model.value = value;
+                    return true;
+                }
+                return false;
+            })
+                .then((changed) => {
                     return render();
                 })
-                .then(function() {
+                .then(() => {
                     autoValidate();
                 });
         }
 
         function unsetModelValue() {
-            return Promise.try(function() {
-                    model.value = undefined;
-                })
-                .then(function(changed) {
+            return Promise.try(() => {
+                model.value = undefined;
+            })
+                .then((changed) => {
                     render();
                 })
-                .then(function() {
+                .then(() => {
                     autoValidate();
                 });
         }
@@ -167,78 +160,81 @@ define([
         }
 
         function validate() {
-            return Promise.try(function() {
-                    var rawValue = getInputValue(),
-                        validationOptions = {
-                            required: constraints.required,
-                            authToken: runtime.authToken(),
-                            workspaceServiceUrl: runtime.config('services.workspace.url')
-                        };
-
-                    switch (objectRefType) {
-                        case 'ref':
-                            return Validation.validateWorkspaceObjectRef(rawValue, validationOptions);
-                        case 'name':
-                        default:
-                            return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
-                    }
-                })
-                .then(function(validationResult) {
-                    return {
-                        isValid: validationResult.isValid,
-                        validated: true,
-                        diagnosis: validationResult.diagnosis,
-                        errorMessage: validationResult.errorMessage,
-                        value: validationResult.parsedValue
+            return Promise.try(() => {
+                const rawValue = getInputValue(),
+                    validationOptions = {
+                        required: constraints.required,
+                        authToken: runtime.authToken(),
+                        workspaceServiceUrl: runtime.config('services.workspace.url'),
                     };
-                });
+
+                switch (objectRefType) {
+                    case 'ref':
+                        return Validation.validateWorkspaceObjectRef(rawValue, validationOptions);
+                    case 'name':
+                    default:
+                        return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
+                }
+            }).then((validationResult) => {
+                return {
+                    isValid: validationResult.isValid,
+                    validated: true,
+                    diagnosis: validationResult.diagnosis,
+                    errorMessage: validationResult.errorMessage,
+                    value: validationResult.parsedValue,
+                };
+            });
         }
 
         function getObjectsByType(type) {
-            return new Promise(function(resolve) {
+            return new Promise((resolve) => {
                 // wow, creative (ab)use of trigger!
                 $(document).trigger('dataLoadedQuery.Narrative', [
-                    [type], 0,
-                    function(data) {
-                        var items = [];
-                        Object.keys(data).forEach(function(type) {
-                            data[type].forEach(function(objInfo) {
+                    [type],
+                    0,
+                    function (data) {
+                        const items = [];
+                        Object.keys(data).forEach((type) => {
+                            data[type].forEach((objInfo) => {
                                 items.push(serviceUtils.objectInfoToObject(objInfo));
                             });
                         });
                         resolve(items);
-                    }
+                    },
                 ]);
             });
         }
 
         function getObjectsByTypex(type) {
-            var workspace = new Workspace(runtime.config('services.workspace.url'), {
-                token: runtime.authToken()
+            const workspace = new Workspace(runtime.config('services.workspace.url'), {
+                token: runtime.authToken(),
             });
-            return workspace.list_objects({
+            return workspace
+                .list_objects({
                     type: type,
-                    ids: [workspaceId]
+                    ids: [workspaceId],
                 })
-                .then(function(data) {
-                    return data.map(function(objectInfo) {
+                .then((data) => {
+                    return data.map((objectInfo) => {
                         return serviceUtils.objectInfoToObject(objectInfo);
                     });
                 });
         }
 
         function fetchData() {
-            var types = constraints.types;
-            return Promise.all(types.map(function(type) {
+            const types = constraints.types;
+            return Promise.all(
+                types.map((type) => {
                     return getObjectsByType(type);
-                }))
-                .then(function(objectSets) {
+                })
+            )
+                .then((objectSets) => {
                     // we could also use [] rather than Array.prototype, but
                     // this way is both more mysterious and better performing.
                     return Array.prototype.concat.apply([], objectSets);
                 })
-                .then(function(objects) {
-                    objects.sort(function(a, b) {
+                .then((objects) => {
+                    objects.sort((a, b) => {
                         if (a.name < b.name) {
                             return -1;
                         }
@@ -257,8 +253,8 @@ define([
          * Hooks up event listeners
          */
         function render() {
-            return Promise.try(function() {
-                var events = Events.make(),
+            return Promise.try(() => {
+                const events = Events.make(),
                     inputControl = makeInputControl(events, bus),
                     content = div({ class: 'input-group', style: { width: '100%' } }, inputControl);
 
@@ -273,25 +269,25 @@ define([
          * For the objectInput, there is only ever one control.
          */
         function layout(events) {
-            var content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' })
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' })]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
         function autoValidate() {
-            return validate()
-                .then(function(result) {
-                    bus.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
+            return validate().then((result) => {
+                bus.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
 
         function getObjectRef(objectInfo) {
@@ -314,64 +310,61 @@ define([
          */
         function doWorkspaceChanged() {
             // there are a few thin
-            fetchData()
-                .then(function(data) {
-                    // compare to availableData.
-                    if (!utils.isEqual(data, model.availableValues)) {
-                        model.availableValues = data;
-                        var matching = model.availableValues.filter(function(value) {
-                            if (value.name === getObjectRef(value)) {
-                                return true;
-                            }
-                            return false;
-                        });
+            fetchData().then((data) => {
+                // compare to availableData.
+                if (!utils.isEqual(data, model.availableValues)) {
+                    model.availableValues = data;
+                    const matching = model.availableValues.filter((value) => {
+                        if (value.name === getObjectRef(value)) {
+                            return true;
+                        }
+                        return false;
+                    });
 
-                        // disable for now -- race between this widget and the data panel
-                        // the data panel is slower, so this widget thinks there are
-                        // no availale objects, so it empties the model...
-                        //if (matching.length === 0) {
-                        //    model.value = null;
-                        // }
+                    // disable for now -- race between this widget and the data panel
+                    // the data panel is slower, so this widget thinks there are
+                    // no availale objects, so it empties the model...
+                    //if (matching.length === 0) {
+                    //    model.value = null;
+                    // }
 
-                        render()
-                            .then(function() {
-                                autoValidate();
-                            });
-                    }
-                });
-
+                    render().then(() => {
+                        autoValidate();
+                    });
+                }
+            });
         }
 
         // LIFECYCLE API
         function start() {
-            return Promise.try(function() {
-                bus.on('run', function(message) {
+            return Promise.try(() => {
+                bus.on('run', (message) => {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
                     dom = Dom.make({ node: container });
 
-                    var events = Events.make(),
+                    const events = Events.make(),
                         theLayout = layout(events);
 
                     container.innerHTML = theLayout.content;
                     events.attachEvents(container);
 
                     return fetchData()
-                        .then(function(data) {
+                        .then((data) => {
                             model.availableValues = data;
                             render();
                         })
-                        .then(function() {
-                            bus.on('reset-to-defaults', function(message) {
+                        .then(() => {
+                            bus.on('reset-to-defaults', (message) => {
                                 resetModelValue();
                             });
-                            bus.on('update', function(message) {
+                            bus.on('update', (message) => {
                                 setModelValue(message.value);
                             });
                             //bus.on('workspace-changed', function (message) {
                             //    doWorkspaceChanged();
                             //});
-                            runtime.bus().on('workspace-changed', function(message) {
+                            runtime.bus().on('workspace-changed', (message) => {
                                 doWorkspaceChanged();
                             });
                             bus.emit('sync');
@@ -381,13 +374,13 @@ define([
         }
 
         return {
-            start: start
+            start: start,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

@@ -17,10 +17,10 @@ jobs:
         auto-update-conda: true
         condarc-file: test/condarc.yml
 
-    - name: Use Node JS 10.x
+    - name: Use Node JS 14.x
       uses: actions/setup-node@v1
       with:
-        node-version: 10.x
+        node-version: 14.x
 
     - name: Install JS dependencies
       run: |
@@ -32,7 +32,7 @@ jobs:
       shell: bash -l {0}
       run: |
           bash ./scripts/install_narrative.sh
-          grunt minify
+          npm run minify
           sed <src/config.json.templ >src/config.json "s/{{ .Env.CONFIG_ENV }}/dev/"
           sed -i 's/{{ if ne .Env.CONFIG_ENV "prod" }} true {{- else }} false {{- end }}/true/' src/config.json
           jupyter notebook --version
@@ -44,6 +44,13 @@ jobs:
     - name: Run Narrative Frontend Unit Tests
       shell: bash -l {0}
       run: make test-frontend-unit
+
+    - name: make test output available as artefact in case of failure
+      if: ${{ failure() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: karma-result.json
+        path: karma-result.json
 
     - name: Run Narrative Frontend Integration Tests
       shell: bash -l {0}

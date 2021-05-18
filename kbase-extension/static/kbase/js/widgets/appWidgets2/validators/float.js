@@ -1,25 +1,33 @@
-define([
-    'bluebird'
-], function(
-    Promise
-) {
+define(['bluebird'], (Promise) => {
     'use strict';
 
-    function importString(value) {
-        var normalizedValue;
+    function toFloat(value) {
+        const valueType = typeof value;
+        if (valueType === 'number') {
+            return value;
+        } else if (valueType === 'string') {
+            const number = Number(value);
+            if (isNaN(number)) {
+                throw new Error('Invalid float format: ' + value);
+            }
+            return number;
+        }
+        throw new Error('Type ' + valueType + ' cannot be converted to float');
+    }
 
+    function importString(value) {
         if (value === undefined || value === null) {
             return null;
         }
 
         if (typeof value !== 'string') {
-            throw new Error('value must be a string (it is of type "' + (typeof value) + '")');
+            throw new Error('value must be a string (it is of type "' + typeof value + '")');
         }
-        normalizedValue = value.trim();
+        const normalizedValue = value.trim();
         if (value === '') {
             return null;
         }
-        return parseFloat(normalizedValue);
+        return toFloat(normalizedValue);
     }
 
     function validateFloat(value, min, max) {
@@ -38,7 +46,7 @@ define([
     }
 
     function applyConstraints(value, constraints) {
-        var errorMessage, diagnosis;
+        let errorMessage, diagnosis;
 
         if (value === null) {
             if (constraints.required) {
@@ -58,44 +66,19 @@ define([
         return {
             isValid: errorMessage ? false : true,
             errorMessage: errorMessage,
-            diagnosis: diagnosis
+            diagnosis: diagnosis,
         };
     }
 
     function validate(value, spec) {
-        return Promise.try(function() {
+        return Promise.try(() => {
             return applyConstraints(value, spec.data.constraints);
         });
     }
 
-    // For text values, there is
-    // function validate(value, spec) {
-    //     try {
-    //         var nativeValue = importString(value);
-    //         return {
-    //             value: {
-    //                 original: value,
-    //                 parsed: nativeValue
-    //             },
-    //             validation: applyConstraints(nativeValue, spec.data.constraints)
-    //         };
-    //     } catch (ex) {
-    //         return {
-    //             value: {
-    //                 original: value
-    //             },
-    //             validation: {
-    //                 isValid: false,
-    //                 errorMessage: ex.message,
-    //                 diagnosis: 'invalid'
-    //             }
-    //         };
-    //     }
-    // }
-
     return {
         importString: importString,
         applyConstraints: applyConstraints,
-        validate: validate
-    }
+        validate: validate,
+    };
 });

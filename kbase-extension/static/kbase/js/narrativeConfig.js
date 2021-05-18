@@ -1,5 +1,3 @@
-/*global define,window,console,require*/
-/*jslint white:true,browser:true*/
 /**
  * Loads the required narrative configuration files.
  * This returns a Promise that will eventually hold the results.
@@ -20,8 +18,8 @@ define([
     'json!kbase/config/cdn-service-config.json',
     'json!kbase/config/feature-config.json',
     'json!kbase/config/staging_upload.json',
-    'require'
-], function (
+    'require',
+], (
     paths,
     $,
     Promise,
@@ -31,13 +29,13 @@ define([
     FeatureSet,
     StagingUpload,
     localRequire
-) {
+) => {
     'use strict';
 
-    var config, debug;
+    let config, debug;
 
     // Get the workspace id from the URL
-    var workspaceId = null,
+    let workspaceId = null,
         objectId = null,
         narrativeRef = null;
     // m = window.location.href.match(/(ws\.)?(\d+)((\.obj\.(\d+))(\.ver\.(\d+))?)?$/);
@@ -124,18 +122,18 @@ define([
     // Add a remote UI-common to the Require.js config
     require.config({
         paths: {
-            uiCommonPaths: config.urls.ui_common_root + 'widget-paths'
-        }
+            uiCommonPaths: config.urls.ui_common_root + 'widget-paths',
+        },
     });
 
     window.kbconfig = config;
-    Object.keys(ServiceSet).forEach(function (key) {
+    Object.keys(ServiceSet).forEach((key) => {
         config[key] = ServiceSet[key];
     });
 
     config['services'] = {};
-    Object.keys(config.urls).forEach(function (key) {
-        config.services[key] = { 'url': config.urls[key], 'name': key };
+    Object.keys(config.urls).forEach((key) => {
+        config.services[key] = { url: config.urls[key], name: key };
     });
 
     function assertConfig() {
@@ -155,7 +153,7 @@ define([
      * and just run the callback.
      */
     function updateConfig() {
-        return new Promise(function (resolve, reject) {
+        return new Promise((resolve, reject) => {
             if (window.kbconfig) {
                 resolve(window.kbconfig);
             }
@@ -163,66 +161,80 @@ define([
             assertConfig();
             if (!config.use_local_widgets) {
                 // var uiCommonPaths = config.urls.ui_common_root + "widget-paths.json";
-                require(['uiCommonPaths'], function (pathConfig) {
-                    for (var name in pathConfig.paths) {
-                        pathConfig.paths[name] = config.urls.ui_common_root + pathConfig.paths[name];
+                require(['uiCommonPaths'], (pathConfig) => {
+                    for (const name in pathConfig.paths) {
+                        pathConfig.paths[name] =
+                            config.urls.ui_common_root + pathConfig.paths[name];
                     }
                     require.config(pathConfig);
                     config.new_paths = pathConfig;
                     resolve(config);
-                }, function () {
-                    console.warn("Unable to get updated widget paths. Sticking with what we've got.");
+                }, () => {
+                    console.warn(
+                        "Unable to get updated widget paths. Sticking with what we've got."
+                    );
                     resolve(config);
                 });
             } else {
                 resolve(config);
             }
-        }).then(function (config) {
-            console.log('Config: fetching remote data configuration.');
-            return Promise.resolve($.ajax({
-                dataType: 'json',
-                cache: false,
-                url: config.urls.data_panel_sources
-            }));
-        }).then(function (dataCategories) {
-            console.log('Config: processing remote data configuration.');
-            var env = config.environment;
-            // little bit of a hack, but dev should => ci for all things data.
-            // it doesn't seem worth making a new dev block for the example data.
-            if (env === 'dev') {
-                env = 'ci';
-            }
-            config.publicCategories = dataCategories[env].publicData;
-            config.exampleData = dataCategories[env].exampleData;
-            return Promise.try(function () {
-                return config;
-            });
-        }).catch(function () {
-            console.error('Config: unable to process remote data configuration options. Searching locally.');
-            // hate embedding this stuff, but it seems the only good way.
-            // the filename is the last step of that url path (after the last /)
-            var path = config.urls.data_panel_sources.split('/');
-
-            return Promise.resolve($.ajax({
-                dataType: 'json',
-                cache: false,
-                url: 'static/kbase/config/' + path[path.length - 1]
-            }))
-                .then(function (dataCategories) {
-                    console.log('Config: processing local data configuration.');
-                    var env = config.environment;
-                    if (env === 'dev') {
-                        env = 'ci';
-                    }
-                    config.publicCategories = dataCategories[env].publicData;
-                    config.exampleData = dataCategories[env].exampleData;
-                    return config;
-                })
-                .catch(function () {
-                    console.error('Config: unable to process local configuration options, too! Public and Example data unavailable!');
+        })
+            .then((config) => {
+                console.log('Config: fetching remote data configuration.');
+                return Promise.resolve(
+                    $.ajax({
+                        dataType: 'json',
+                        cache: false,
+                        url: config.urls.data_panel_sources,
+                    })
+                );
+            })
+            .then((dataCategories) => {
+                console.log('Config: processing remote data configuration.');
+                let env = config.environment;
+                // little bit of a hack, but dev should => ci for all things data.
+                // it doesn't seem worth making a new dev block for the example data.
+                if (env === 'dev') {
+                    env = 'ci';
+                }
+                config.publicCategories = dataCategories[env].publicData;
+                config.exampleData = dataCategories[env].exampleData;
+                return Promise.try(() => {
                     return config;
                 });
-        });
+            })
+            .catch(() => {
+                console.error(
+                    'Config: unable to process remote data configuration options. Searching locally.'
+                );
+                // hate embedding this stuff, but it seems the only good way.
+                // the filename is the last step of that url path (after the last /)
+                const path = config.urls.data_panel_sources.split('/');
+
+                return Promise.resolve(
+                    $.ajax({
+                        dataType: 'json',
+                        cache: false,
+                        url: 'static/kbase/config/' + path[path.length - 1],
+                    })
+                )
+                    .then((dataCategories) => {
+                        console.log('Config: processing local data configuration.');
+                        let env = config.environment;
+                        if (env === 'dev') {
+                            env = 'ci';
+                        }
+                        config.publicCategories = dataCategories[env].publicData;
+                        config.exampleData = dataCategories[env].exampleData;
+                        return config;
+                    })
+                    .catch(() => {
+                        console.error(
+                            'Config: unable to process local configuration options, too! Public and Example data unavailable!'
+                        );
+                        return config;
+                    });
+            });
     }
 
     /**
@@ -255,6 +267,6 @@ define([
         getConfig: getConfig,
         url: url,
         get: get,
-        debug: debug
+        debug: debug,
     };
 });

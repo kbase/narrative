@@ -1,14 +1,8 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-define([
-    'kbaseGrowthParametersAbstract'
-], function(Widget) {
-    describe('Test the kbaseGrowthParametersAbstract widget', function() {
-        it('Should do things', function() {
-
+define(['kbaseGrowthParametersAbstract'], (Widget) => {
+    'use strict';
+    describe('The kbaseGrowthParametersAbstract widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
         });
     });
 });

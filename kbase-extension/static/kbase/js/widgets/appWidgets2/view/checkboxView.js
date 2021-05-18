@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'base/js/namespace',
@@ -8,30 +6,25 @@ define([
     'common/events',
     'common/ui',
     'bootstrap',
-    'css!font-awesome'
-], function(
-    Promise,
-    Jupyter,
-    html,
-    Validation,
-    Events,
-    UI) {
+    'css!font-awesome',
+], (Promise, Jupyter, html, Validation, Events, UI) => {
     'use strict';
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         input = t('input'),
         label = t('label');
 
     function factory(config) {
-        var spec = config.parameterSpec,
+        let spec = config.parameterSpec,
             bus = config.bus,
-            parent, container,
+            parent,
+            container,
             ui,
             model = {
                 updates: 0,
-                value: undefined
+                value: undefined,
             };
 
         // MODEL
@@ -40,7 +33,7 @@ define([
             if (model.value !== value) {
                 model.value = value;
                 bus.emit('changed', {
-                    newValue: model.value
+                    newValue: model.value,
                 });
             }
         }
@@ -52,7 +45,7 @@ define([
         // CONTROL
 
         function getControlValue() {
-            var checkbox = ui.getElement('input-container.input');
+            const checkbox = ui.getElement('input-container.input');
             if (checkbox.checked) {
                 return 1;
             }
@@ -60,7 +53,7 @@ define([
         }
 
         function syncModelToControl() {
-            var control = ui.getElement('input-control.input');
+            const control = ui.getElement('input-control.input');
             if (model.value === 1) {
                 control.checked = true;
             } else {
@@ -71,31 +64,30 @@ define([
         // VALIDATION
 
         function validate() {
-            return Promise.try(function() {
-                var rawValue = getControlValue(),
+            return Promise.try(() => {
+                const rawValue = getControlValue(),
                     validationOptions = {
                         required: spec.data.constraints.required,
-                        values: [0, 1]
+                        values: [0, 1],
                     };
                 return Validation.validateSet(rawValue, validationOptions);
             });
         }
 
         function autoValidate() {
-            return validate()
-                .then(function(result) {
-                    bus.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
+            return validate().then((result) => {
+                bus.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
 
         // RENDERING
 
         function makeViewControl() {
             // CONTROL
-            var checked = false;
+            let checked = false;
             if (model.value === 1) {
                 checked = true;
             }
@@ -106,34 +98,33 @@ define([
                     checked: checked,
                     value: 1,
                     disabled: true,
-                    readonly: true
-                })
+                    readonly: true,
+                }),
             ]);
         }
 
         function render(events) {
-            return div({
-                dataElement: 'main-panel'
-            }, [
-                div({ dataElement: 'input-container' },
-                    makeViewControl(events, bus)
-                )
-            ]);
+            return div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [div({ dataElement: 'input-container' }, makeViewControl(events, bus))]
+            );
         }
 
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
 
                 ui = UI.make({
-                    node: container
+                    node: container,
                 });
 
-                var events = Events.make({
-                    node: container
+                const events = Events.make({
+                    node: container,
                 });
 
                 setModelValue(config.initialValue);
@@ -144,11 +135,11 @@ define([
 
                 // Listen for events from the containing environment.
 
-                bus.on('reset-to-defaults', function() {
+                bus.on('reset-to-defaults', () => {
                     resetModelValue();
                 });
 
-                bus.on('update', function(message) {
+                bus.on('update', (message) => {
                     setModelValue(message.value);
                     syncModelToControl();
                 });
@@ -165,13 +156,13 @@ define([
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

@@ -630,6 +630,20 @@ class JobManager(object):
                 self._running_jobs[job_id]["refresh"] = is_refreshing
                 del self._running_jobs[job_id]["canceling"]
 
+    def retry_job(self, job_id: str):
+        if job_id is None:
+            raise ValueError("Job id required for retrying")
+        if job_id not in self._running_jobs:
+            raise ValueError(f"No job present with id {job_id}")
+
+        try:
+            retry_results = clients.get("execution_engine2").retry_job(
+                {"job_id": job_id}
+            )
+        except Exception as e:
+            raise transform_job_exception(e)
+        return retry_results
+
     def get_job_state(self, job_id: str, parent_job_id: str = None) -> dict:
         if parent_job_id is not None:
             self._verify_job_parentage(parent_job_id, job_id)

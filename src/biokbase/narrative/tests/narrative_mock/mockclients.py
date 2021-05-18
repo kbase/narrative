@@ -213,6 +213,10 @@ class MockClients:
     def cancel_job(self, job_id):
         return "done"
 
+    def retry_job(self, params):
+        job_id = params["job_id"]
+        return {"job_id": job_id, "retry_id": job_id[::-1]}
+
     def check_job_canceled(self, params):
         return {"finished": 0, "canceled": 0, "job_id": params.get("job_id")}
 
@@ -452,6 +456,9 @@ class FailingMockClient:
 
     def cancel_job(self, params):
         raise ServerError("JSONRPCError", -32000, "Can't cancel job")
+
+    def retry_job(self, params):
+        raise ServerError("JSONRPCError", -32000, "Job retry failed")
 
     def check_job_canceled(self, params):
         raise ServerError("JSONRPCError", 1, "Can't cancel job")

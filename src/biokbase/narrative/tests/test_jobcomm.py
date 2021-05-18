@@ -234,6 +234,59 @@ class JobCommTestCase(unittest.TestCase):
         self.assertEqual("job_comm_error", msg["data"]["msg_type"])
         self.assertEqual("Unable to cancel job", msg["data"]["content"]["error"])
 
+    # ------------
+    # Retry a job
+    # ------------
+    @mock.patch(
+        "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get", get_mock_client
+    )
+    def test_retry_job_ok(self):
+        job_id = "5d64935cb215ad4128de94d9"
+        req = make_comm_msg("retry_job", job_id, True)
+        self.jc._retry_job(req)
+        msg = self.jc._comm.last_message
+        self.assertEqual(
+            {"job_id": "9d49ed8214da512bc53946d5"}, msg["data"]["content"]
+        )
+        self.assertEqual("new_job", msg["data"]["msg_type"])
+
+    def test_retry_job_no_job(self):
+        req = make_comm_msg("retry_job", None, True)
+        with self.assertRaises(ValueError) as e:
+            self.jc._retry_job(req)
+        self.assertIn("Job id required to process retry_job request", str(e.exception))
+        msg = self.jc._comm.last_message
+        self.assertEqual(
+            {"job_id": None, "source": "retry_job"}, msg["data"]["content"]
+        )
+        self.assertEqual("job_does_not_exist", msg["data"]["msg_type"])
+
+    def test_retry_job_bad_job(self):
+        job_id = "nope"
+        req = make_comm_msg("retry_job", job_id, True)
+        with self.assertRaises(ValueError) as e:
+            self.jc._retry_job(req)
+        self.assertIn(f"No job present with id {job_id}", str(e.exception))
+        msg = self.jc._comm.last_message
+        self.assertEqual(
+            {"job_id": job_id, "source": "retry_job"}, msg["data"]["content"]
+        )
+        self.assertEqual("job_does_not_exist", msg["data"]["msg_type"])
+
+    @mock.patch(
+        "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get",
+        get_failing_mock_client,
+    )
+    def test_retry_job_failure(self):
+        job_id = "5d64935ab215ad4128de94d6"
+        req = make_comm_msg("retry_job", job_id, True)
+        with self.assertRaises(NarrativeException) as e:
+            self.jc._retry_job(req)
+        self.assertIn("Job retry failed", str(e.exception))
+        msg = self.jc._comm.last_message
+        self.assertEqual("job_comm_error", msg["data"]["msg_type"])
+        self.assertEqual("Unable to retry job", msg["data"]["content"]["error"])
+
     # -----------------
     # Fetching job logs
     # -----------------

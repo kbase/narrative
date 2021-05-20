@@ -21,6 +21,7 @@ define([
     'common/cellComponents/tabs/infoTab',
     'common/cellComponents/tabs/jobStatus/jobStatusTab',
     'common/cellComponents/tabs/results/resultsTab',
+    'common/errorDisplay',
     './bulkImportCellStates',
     './testAppObj',
 ], (
@@ -46,6 +47,7 @@ define([
     InfoTabWidget,
     JobStatusTabWidget,
     ResultsWidget,
+    ErrorTabWidget,
     States,
     TestAppObj
 ) => {
@@ -167,7 +169,7 @@ define([
                     error: {
                         label: 'Error',
                         type: 'danger',
-                        widget: DefaultWidget(),
+                        widget: ErrorTabWidget,
                     },
                 },
             },
@@ -482,7 +484,17 @@ define([
                     updateState('queued');
                     break;
                 case 'error':
+                    model.setItem('appError', {
+                        type: 'App Startup Error',
+                        message: message.error_message,
+                        stacktrace: message.error_stacktrace,
+                        code: message.error_code,
+                        source: message.error_source,
+                        method: message.error_method,
+                        exceptionType: message.error_type,
+                    });
                     updateState('appError');
+                    toggleTab('error');
                     break;
                 default:
                     console.warn(`Unknown run-status event ${message.event}!`);

@@ -32,6 +32,8 @@ define(['bluebird', 'common/html'], (Promise, html) => {
             errorObject = convertJobError(rawObject.jobState);
         } else if (rawObject.internalError) {
             errorObject = convertInternalError(rawObject.internalError);
+        } else if (rawObject.appError) {
+            errorObject = convertAppError(rawObject.appError);
         }
 
         if (!errorObject) {
@@ -50,6 +52,17 @@ define(['bluebird', 'common/html'], (Promise, html) => {
         };
     }
 
+    /**
+     *
+     * @param {Object} inputErrorObject can render attributes:
+     *   detail - str,
+     *   errorDump - JSON,
+     *   stacktrace - preformatted text str,
+     *   type - str,
+     *   message - str,
+     *   advice - array of str, made into bullet points
+     * @returns
+     */
     function renderErrorLayout(inputErrorObject) {
         const errorObject = Object.assign(defaultError(), inputErrorObject);
 
@@ -115,34 +128,6 @@ define(['bluebird', 'common/html'], (Promise, html) => {
                   )
                 : '',
 
-            errorObject.errorDump
-                ? div(
-                      {
-                          class: `${cssBaseClass}__error_dump_container`,
-                      },
-                      [
-                          div(
-                              {
-                                  class: `${cssBaseClass}__error_dump_title collapsed`,
-                                  role: 'button',
-                                  dataToggle: 'collapse',
-                                  dataTarget: `#${uniqueID}__dump`,
-                                  ariaExpanded: 'false',
-                                  ariaControls: `${uniqueID}__dump`,
-                              },
-                              [span({}, ['Raw error JSON'])]
-                          ),
-                          pre(
-                              {
-                                  class: `${cssBaseClass}__error_dump_code collapse`,
-                                  id: `${uniqueID}__dump`,
-                              },
-                              [JSON.stringify(errorObject.errorDump, null, 1)]
-                          ),
-                      ]
-                  )
-                : '',
-
             errorObject.stacktrace
                 ? div(
                       {
@@ -170,6 +155,34 @@ define(['bluebird', 'common/html'], (Promise, html) => {
                       ]
                   )
                 : '',
+
+            errorObject.errorDump
+                ? div(
+                      {
+                          class: `${cssBaseClass}__error_dump_container`,
+                      },
+                      [
+                          div(
+                              {
+                                  class: `${cssBaseClass}__error_dump_title collapsed`,
+                                  role: 'button',
+                                  dataToggle: 'collapse',
+                                  dataTarget: `#${uniqueID}__dump`,
+                                  ariaExpanded: 'false',
+                                  ariaControls: `${uniqueID}__dump`,
+                              },
+                              [span({}, ['Raw error JSON'])]
+                          ),
+                          pre(
+                              {
+                                  class: `${cssBaseClass}__error_dump_code collapse`,
+                                  id: `${uniqueID}__dump`,
+                              },
+                              [JSON.stringify(errorObject.errorDump, null, 1)]
+                          ),
+                      ]
+                  )
+                : '',
         ];
         return elements.join('\n');
     }
@@ -189,6 +202,28 @@ define(['bluebird', 'common/html'], (Promise, html) => {
             message: rawError.message,
             advice: rawError.advice,
             detail: rawError.detail,
+        });
+    }
+
+    /**
+     *
+     * @param {Object} rawError - can contain keys:
+     *   type: str,
+     *   message: str,
+     *   stacktract: str,
+     *   code: int or str,
+     *   source: str,
+     *   method: str,
+     *   exceptionType: str
+     * @returns
+     */
+    function convertAppError(rawError) {
+        return Object.assign(defaultError(), {
+            location: 'app manager',
+            type: rawError.type,
+            message: rawError.message,
+            stacktrace: rawError.stacktrace,
+            errorDump: rawError,
         });
     }
 
@@ -292,8 +327,8 @@ define(['bluebird', 'common/html'], (Promise, html) => {
         make: function (config) {
             return factory(config);
         },
-        defaultAdvice: defaultAdvice,
-        cssBaseClass: cssBaseClass,
-        normaliseErrorObject: normaliseErrorObject,
+        defaultAdvice,
+        cssBaseClass,
+        normaliseErrorObject,
     };
 });

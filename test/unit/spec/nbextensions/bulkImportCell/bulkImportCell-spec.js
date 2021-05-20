@@ -165,8 +165,9 @@ define([
                 msgEvent: 'launched_job_batch',
                 msgData: {
                     child_job_ids: ['foo'],
+                    parent_job_id: 'bar',
                 },
-                updatedState: 'queued',
+                updatedState: 'inProgress',
                 testSelector: '.kb-rcp__btn-toolbar button[data-button="jobStatus"]',
                 testState: (elem) => !elem.classList.contains('disabled'),
             },
@@ -251,7 +252,7 @@ define([
             });
         });
 
-        ['launching', 'queued', 'running'].forEach((testCase) => {
+        ['launching', 'inProgress'].forEach((testCase) => {
             it(`should cancel the ${testCase} state and return to a previous state`, () => {
                 // init cell with the test case state and jobs (they're all run-related)
                 // wait for the cancel button to appear and be ready, and for the run button to disappear

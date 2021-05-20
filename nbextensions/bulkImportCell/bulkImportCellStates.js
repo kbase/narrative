@@ -111,6 +111,19 @@ define([], () => {
                 },
             },
         },
+        // apps are running, none are complete yet
+        inProgress: {
+            ui: {
+                tab: tabState(
+                    ['viewConfigure', 'info', 'jobStatus'],
+                    ['viewConfigure', 'info', 'jobStatus', 'results']
+                ),
+                action: {
+                    name: 'cancel',
+                    disabled: false,
+                },
+            },
+        },
         // at least one child job is complete
         appPartialComplete: {
             ui: {

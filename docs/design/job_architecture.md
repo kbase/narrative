@@ -257,7 +257,7 @@ These are organized by the `request_type` field, followed by the expected respon
 * `job_id` - string OR `job_id_list` - array of strings
 * `parent_job_id` - optional string
 
-`retry_job` - retry a job or list of jobs
+`retry_job` - retry a job or list of jobs, responds with `job_retried` and `new_job` for each job
 * `job_id` - string OR `job_id_list` - array of strings
 
 ## Messages sent from the kernel to the browser
@@ -366,6 +366,13 @@ Includes log statement information for a given job.
     * `is_error` - 0 or 1, if 1 then the line is an "error" as reported by the server
 
 **bus** `job-logs`
+
+### `job_retried`
+Sent when a job is retried
+
+**content**
+  * `job_id` - string, the job id of the retried job
+  * `retry_id` - string, the job id of the job that was launched
 
 ### `new_job`
 Sent when a new job is launched and serialized. This just triggers a save/checkpoint on the frontend - no other bus message is sent

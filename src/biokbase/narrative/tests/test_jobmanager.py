@@ -116,12 +116,28 @@ class JobManagerTest(unittest.TestCase):
             self.jm.cancel_job(None)
 
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
+    def test_retry_job_good(self):
+        job_id = "5d64935cb215ad4128de94d9"
+        retry_results = self.jm.retry_job(job_id)
+        self.assertEqual(
+            retry_results,
+            {"job_id": job_id, "retry_id": "9d49ed8214da512bc53946d5"}
+        )
+
+    @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
+    def test_retry_job_bad(self):
+        with self.assertRaises(ValueError):
+            self.jm.retry_job(None)
+        with self.assertRaises(ValueError):
+            self.jm.retry_job("nope")
+
+    @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def test_lookup_all_job_states(self):
         states = self.jm.lookup_all_job_states()
         self.assertEqual(len(states), 2)
 
         states = self.jm.lookup_all_job_states(ignore_refresh_flag=True)
-        self.assertEqual(len(states), 3)
+        self.assertEqual(len(states), 4)
 
     # @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_mock_client)
     # def test_job_status_fetching(self):

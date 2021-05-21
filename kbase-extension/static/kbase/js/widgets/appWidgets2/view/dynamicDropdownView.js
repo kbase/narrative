@@ -1,15 +1,13 @@
 define([
     'bluebird',
     'kb_common/html',
-    '../validators/text',
     'common/events',
     'common/ui',
     'common/props',
-    '../inputUtils',
 
     'bootstrap',
     'css!font-awesome',
-], (Promise, html, Validation, Events, UI, Props, inputUtils) => {
+], (Promise, html, Events, UI, Props) => {
     'use strict';
 
     const t = html.tag,
@@ -18,12 +16,9 @@ define([
         option = t('option');
 
     function factory(config) {
-        let spec = config.parameterSpec,
-            bus = config.bus,
-            parent,
-            container,
-            ui,
-            model;
+        const spec = config.parameterSpec,
+            bus = config.bus;
+        let parent, container, ui, model;
 
         // CONTROL
 
@@ -125,7 +120,7 @@ define([
             data: {
                 value: null,
             },
-            onUpdate: function () {},
+            onUpdate: () => {},
         });
 
         setModelValue(config.initialValue);

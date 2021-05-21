@@ -1,13 +1,8 @@
-define([
-    'bluebird',
-    'kb_common/html',
-    '../validation',
-    'common/events',
-    'common/runtime',
-    'common/dom',
-    'bootstrap',
-    'css!font-awesome',
-], (Promise, html, Validation, Events, Runtime, Dom) => {
+define(['bluebird', 'kb_common/html', 'common/dom', 'bootstrap', 'css!font-awesome'], (
+    Promise,
+    html,
+    Dom
+) => {
     'use strict';
 
     const t = html.tag,
@@ -15,43 +10,33 @@ define([
         input = t('input');
 
     function factory(config) {
-        let options = {},
+        const options = {},
             spec = config.parameterSpec,
-            parent,
-            container,
             bus = config.bus,
             model = {
-                value: undefined,
-            },
-            dom;
+                value: config.initialValue ? config.initialValue : undefined,
+            };
+        let parent, container, dom;
 
         options.enabled = true;
 
         function setModelValue(value) {
-            return Promise.try(() => {
-                if (model.value !== value) {
-                    model.value = value;
-                    return true;
-                }
-                return false;
-            }).then((changed) => {
-                render();
-            });
+            if (model.value !== value) {
+                model.value = value;
+            }
+            render();
         }
 
         function unsetModelValue() {
-            return Promise.try(() => {
-                model.value = undefined;
-            }).then((changed) => {
-                render();
-            });
+            model.value = undefined;
+            render();
         }
 
         function resetModelValue() {
             if (spec.data.defaultValue) {
-                setModelValue(spec.data.defaultValue);
+                return setModelValue(spec.data.defaultValue);
             } else {
-                unsetModelValue();
+                return unsetModelValue();
             }
         }
 
@@ -60,7 +45,7 @@ define([
          * Places it into the dom node
          * Hooks up event listeners
          */
-        function makeInputControl(currentValue, events, bus) {
+        function makeInputControl(currentValue) {
             return input({
                 class: 'form-control',
                 dataElement: 'input',
@@ -71,16 +56,10 @@ define([
         }
 
         function render() {
-            Promise.try(() => {
-                const events = Events.make(),
-                    inputControl = makeInputControl(model.value, events, bus);
-
-                dom.setContent('input-container', inputControl);
-                events.attachEvents(container);
-            });
+            dom.setContent('input-container', makeInputControl(model.value));
         }
 
-        function layout(events) {
+        function layout() {
             const content = div(
                 {
                     dataElement: 'main-panel',
@@ -88,8 +67,7 @@ define([
                 [div({ dataElement: 'input-container' })]
             );
             return {
-                content: content,
-                events: events,
+                content,
             };
         }
 
@@ -102,13 +80,11 @@ define([
                     container = parent.appendChild(document.createElement('div'));
                     dom = Dom.make({ node: container });
 
-                    const events = Events.make(),
-                        theLayout = layout(events);
+                    const theLayout = layout();
 
                     container.innerHTML = theLayout.content;
-                    events.attachEvents(container);
 
-                    bus.on('reset-to-defaults', (message) => {
+                    bus.on('reset-to-defaults', () => {
                         resetModelValue();
                     });
                     bus.on('update', (message) => {
@@ -116,13 +92,21 @@ define([
                     });
                     bus.on('refresh', () => {});
 
+                    render();
                     bus.emit('sync');
                 });
             });
         }
 
+        function stop() {
+            return Promise.try(() => {
+                container.innerHTML = '';
+            });
+        }
+
         return {
-            start: start,
+            start,
+            stop,
         };
     }
 

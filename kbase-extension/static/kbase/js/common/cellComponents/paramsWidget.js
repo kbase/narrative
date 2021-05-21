@@ -18,11 +18,8 @@ define([
         div = tag('div');
 
     function factory(config) {
+        const { bus, workspaceId, paramIds, initialParams, viewOnly } = config;
         const runtime = Runtime.make(),
-            bus = config.bus,
-            workspaceId = config.workspaceId,
-            paramIds = config.paramIds,
-            initialParams = config.initialParams,
             model = Props.make(),
             paramResolver = ParamResolver.make(),
             settings = {
@@ -88,138 +85,141 @@ define([
                 referenceType: 'name',
                 paramsChannelName: bus.channelName,
                 closeParameters: closeParameters,
+                viewOnly,
             });
 
-            // Forward all changed parameters to the controller. That is our main job!
-            fieldWidget.bus.on('changed', (message) => {
-                bus.send(
-                    {
-                        parameter: parameterSpec.id,
-                        newValue: message.newValue,
-                        isError: message.isError,
-                    },
-                    {
-                        key: {
-                            type: 'parameter-changed',
+            if (!viewOnly) {
+                // Forward all changed parameters to the controller. That is our main job!
+                fieldWidget.bus.on('changed', (message) => {
+                    bus.send(
+                        {
                             parameter: parameterSpec.id,
+                            newValue: message.newValue,
+                            isError: message.isError,
                         },
-                    }
-                );
-
-                bus.emit('parameter-changed', {
-                    parameter: parameterSpec.id,
-                    newValue: message.newValue,
-                    isError: message.isError,
-                });
-            });
-
-            fieldWidget.bus.on('validation', (message) => {
-                // only propagate if invalid. value changes come through
-                // the 'changed' message
-                if (!message.isValid) {
-                    bus.emit('invalid-param-value', {
-                        parameter: parameterSpec.id,
-                    });
-                }
-            });
-
-            fieldWidget.bus.on('touched', () => {
-                bus.emit('parameter-touched', {
-                    parameter: parameterSpec.id,
-                });
-            });
-
-            // An input widget may ask for the current model value at any time.
-            fieldWidget.bus.on('sync', () => {
-                bus.emit('parameter-sync', {
-                    parameter: parameterSpec.id,
-                });
-            });
-
-            fieldWidget.bus.on('sync-params', (message) => {
-                bus.emit('sync-params', {
-                    parameters: message.parameters,
-                    replyToChannel: fieldWidget.bus.channelName,
-                });
-            });
-
-            fieldWidget.bus.on('set-param-state', (message) => {
-                bus.emit('set-param-state', {
-                    id: parameterSpec.id,
-                    state: message.state,
-                });
-            });
-
-            fieldWidget.bus.respond({
-                key: {
-                    type: 'get-param-state',
-                },
-                handle: function () {
-                    return bus.request(
-                        { id: parameterSpec.id },
                         {
                             key: {
-                                type: 'get-param-state',
+                                type: 'parameter-changed',
+                                parameter: parameterSpec.id,
                             },
                         }
                     );
-                },
-            });
 
-            fieldWidget.bus.respond({
-                key: {
-                    type: 'get-parameter',
-                },
-                handle: function (message) {
-                    if (message.parameterName) {
-                        return bus.request(message, {
-                            key: {
-                                type: 'get-parameter',
-                            },
+                    bus.emit('parameter-changed', {
+                        parameter: parameterSpec.id,
+                        newValue: message.newValue,
+                        isError: message.isError,
+                    });
+                });
+
+                fieldWidget.bus.on('validation', (message) => {
+                    // only propagate if invalid. value changes come through
+                    // the 'changed' message
+                    if (!message.isValid) {
+                        bus.emit('invalid-param-value', {
+                            parameter: parameterSpec.id,
                         });
-                    } else {
-                        return null;
                     }
-                },
-            });
+                });
 
-            fieldWidget.bus.respond({
-                key: {
-                    type: 'get-parameters',
-                },
-                handle: (message) => {
-                    if (message.parameterNames) {
-                        return Promise.all(
-                            message.parameterNames.map((paramName) => {
-                                return bus
-                                    .request(
-                                        {
-                                            parameterName: paramName,
-                                        },
-                                        {
-                                            key: {
-                                                type: 'get-parameter',
-                                            },
-                                        }
-                                    )
-                                    .then((result) => {
-                                        const returnVal = {};
-                                        returnVal[paramName] = result.value;
-                                        return returnVal;
-                                    });
-                            })
-                        ).then((results) => {
-                            const combined = {};
-                            results.forEach((res) => {
-                                Object.keys(res).forEach((key) => {
-                                    combined[key] = res[key];
-                                });
+                fieldWidget.bus.on('touched', () => {
+                    bus.emit('parameter-touched', {
+                        parameter: parameterSpec.id,
+                    });
+                });
+
+                // An input widget may ask for the current model value at any time.
+                fieldWidget.bus.on('sync', () => {
+                    bus.emit('parameter-sync', {
+                        parameter: parameterSpec.id,
+                    });
+                });
+
+                fieldWidget.bus.on('sync-params', (message) => {
+                    bus.emit('sync-params', {
+                        parameters: message.parameters,
+                        replyToChannel: fieldWidget.bus.channelName,
+                    });
+                });
+
+                fieldWidget.bus.on('set-param-state', (message) => {
+                    bus.emit('set-param-state', {
+                        id: parameterSpec.id,
+                        state: message.state,
+                    });
+                });
+
+                fieldWidget.bus.respond({
+                    key: {
+                        type: 'get-param-state',
+                    },
+                    handle: function () {
+                        return bus.request(
+                            { id: parameterSpec.id },
+                            {
+                                key: {
+                                    type: 'get-param-state',
+                                },
+                            }
+                        );
+                    },
+                });
+
+                fieldWidget.bus.respond({
+                    key: {
+                        type: 'get-parameter',
+                    },
+                    handle: function (message) {
+                        if (message.parameterName) {
+                            return bus.request(message, {
+                                key: {
+                                    type: 'get-parameter',
+                                },
                             });
-                            return combined;
-                        });
-                    }
-                },
-            });
+                        } else {
+                            return null;
+                        }
+                    },
+                });
+
+                fieldWidget.bus.respond({
+                    key: {
+                        type: 'get-parameters',
+                    },
+                    handle: (message) => {
+                        if (message.parameterNames) {
+                            return Promise.all(
+                                message.parameterNames.map((paramName) => {
+                                    return bus
+                                        .request(
+                                            {
+                                                parameterName: paramName,
+                                            },
+                                            {
+                                                key: {
+                                                    type: 'get-parameter',
+                                                },
+                                            }
+                                        )
+                                        .then((result) => {
+                                            const returnVal = {};
+                                            returnVal[paramName] = result.value;
+                                            return returnVal;
+                                        });
+                                })
+                            ).then((results) => {
+                                const combined = {};
+                                results.forEach((res) => {
+                                    Object.keys(res).forEach((key) => {
+                                        combined[key] = res[key];
+                                    });
+                                });
+                                return combined;
+                            });
+                        }
+                    },
+                });
+            }
 
             // Just pass the update along to the input widget.
             bus.listen({
@@ -402,8 +402,13 @@ define([
 
         function createParameterWidget(appSpec, parameterInfo, parameterId) {
             const paramSpec = parameterInfo.paramMap[parameterId];
-            return paramResolver
-                .loadInputControl(paramSpec)
+            let controlPromise;
+            if (viewOnly) {
+                controlPromise = paramResolver.loadViewControl(paramSpec);
+            } else {
+                controlPromise = paramResolver.loadInputControl(paramSpec);
+            }
+            return controlPromise
                 .then((inputWidget) => {
                     const widget = makeFieldWidget(
                         inputWidget,

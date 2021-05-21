@@ -154,8 +154,8 @@ define([], () => {
         appError: {
             ui: {
                 tab: tabState(
-                    ['viewConfigure', 'info', 'jobStatus', 'results', 'error'],
-                    ['viewConfigure', 'info', 'jobStatus', 'results', 'error']
+                    ['viewConfigure', 'info', 'jobStatus', 'error'],
+                    ['viewConfigure', 'info', 'jobStatus', 'error']
                 ),
                 action: {
                     name: 'reRunApp',
@@ -167,8 +167,8 @@ define([], () => {
         generalError: {
             ui: {
                 tab: tabState(
-                    ['viewConfigure', 'info', 'jobStatus', 'results', 'error'],
-                    ['viewConfigure', 'info', 'jobStatus', 'results', 'error']
+                    ['viewConfigure', 'info', 'jobStatus', 'error'],
+                    ['viewConfigure', 'info', 'jobStatus', 'error']
                 ),
                 action: {
                     name: 'resetApp',

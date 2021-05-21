@@ -10,20 +10,28 @@ define([
 ], (BulkImportCell, Jupyter, Runtime, Mocks, TestUtil, TestAppObj, UI, TestAppSpec) => {
     'use strict';
     const fakeInputs = {
-        dataType: {
-            files: ['some_file'],
-            appId: 'someApp',
+            dataType: {
+                files: ['some_file'],
+                appId: 'someApp',
+            },
         },
-    };
-    const fakeSpecs = {
-        someApp: TestAppSpec,
-    };
+        fakeSpecs = {
+            someApp: TestAppSpec,
+        },
+        runtime = Runtime.make();
 
     describe('test the bulk import cell module', () => {
         beforeAll(() => {
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',
             };
+            jasmine.Ajax.install();
+            jasmine.Ajax.stubRequest(runtime.config('services.workspace.url')).andReturn({
+                status: 200,
+                statusText: 'HTTP/1.1 200 OK',
+                contentType: 'application/json',
+                responseText: '',
+            });
         });
 
         afterEach(() => {
@@ -32,6 +40,8 @@ define([
 
         afterAll(() => {
             Jupyter.narrative = null;
+            jasmine.Ajax.requests.reset();
+            jasmine.Ajax.uninstall();
         });
 
         it('should construct a bulk import cell class', () => {
@@ -123,7 +133,6 @@ define([
         });
 
         it('responds to a delete-cell bus message', () => {
-            const runtime = Runtime.make();
             const cell = Mocks.buildMockCell('code');
             return new Promise((resolve) => {
                 Jupyter.notebook = Mocks.buildMockNotebook({
@@ -179,7 +188,6 @@ define([
             },
         ].forEach((testCase) => {
             it(`responds to run-status bus messages with ${testCase.msgEvent} event`, () => {
-                const runtime = Runtime.make();
                 const cell = Mocks.buildMockCell('code');
                 cell.execute = () => {};
                 // add dummy metadata so we can make a cell that's in the ready-to-run state.
@@ -252,7 +260,7 @@ define([
             });
         });
 
-        ['launching', 'inProgress'].forEach((testCase) => {
+        ['launching', 'inProgress', 'inProgressResultsAvailable'].forEach((testCase) => {
             it(`should cancel the ${testCase} state and return to a previous state`, () => {
                 // init cell with the test case state and jobs (they're all run-related)
                 // wait for the cancel button to appear and be ready, and for the run button to disappear

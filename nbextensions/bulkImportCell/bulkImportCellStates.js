@@ -8,13 +8,10 @@
  *      the configuration, this just means it's ready to go.
  * launching - a user clicked "run" and is waiting on a response from the server. This should be
  *      cancelable.
- * queued - the jobs have launched, but all are either in the queue, or otherwise have no state
- *      that's worth looking at
- * running - the jobs are running and have a job state / logs to look at
- * appPartialComplete - at least one job is finished with results to look at
- * appComplete - all of the jobs are complete
- * appCanceled - the cell has canceled its running. Any jobs that have finished can still be looked
- *      at, and logs are still available
+ * inProgress - the jobs have launched and at least one is queued or running; none have completed yet
+ * inProgressResultsAvailable - at least one job is queued or running and at least one job has completed successfully, yielding results
+ * jobsFinished - all jobs are in a terminal state (error/terminated), but none completed successfully
+ * jobsFinishedResultsAvailable - all jobs are in a terminal state, and at least one job completed successfully
  * appError - some unrecoverable error has happened during the app run
  * generalError - not sure how this might get reached, but some horrible error has rendered the
  *      cell unusable. Maybe some mangled data, maybe some mangled internal information.
@@ -48,7 +45,7 @@ define([], () => {
         return state;
     }
 
-    const states = {
+    return {
         // for when the cell is in configuration mode, hasn't been run, has no jobs, no results
         editingIncomplete: {
             ui: {
@@ -85,33 +82,8 @@ define([], () => {
                 },
             },
         },
-        // the main app is queued, no child apps have started yet
-        queued: {
-            ui: {
-                tab: tabState(
-                    ['viewConfigure', 'info', 'jobStatus'],
-                    ['viewConfigure', 'info', 'jobStatus', 'results']
-                ),
-                action: {
-                    name: 'cancel',
-                    disabled: false,
-                },
-            },
-        },
-        // apps are running, none are complete yet
-        running: {
-            ui: {
-                tab: tabState(
-                    ['viewConfigure', 'info', 'jobStatus'],
-                    ['viewConfigure', 'info', 'jobStatus', 'results']
-                ),
-                action: {
-                    name: 'cancel',
-                    disabled: false,
-                },
-            },
-        },
-        // apps are running, none are complete yet
+        // at least one job is queued or running
+        // no results are available
         inProgress: {
             ui: {
                 tab: tabState(
@@ -124,8 +96,9 @@ define([], () => {
                 },
             },
         },
-        // at least one child job is complete
-        appPartialComplete: {
+        // at least one job is queued or running
+        // at least one job has completed successfully
+        inProgressResultsAvailable: {
             ui: {
                 tab: tabState(
                     ['viewConfigure', 'info', 'jobStatus', 'results'],
@@ -137,21 +110,23 @@ define([], () => {
                 },
             },
         },
-        // all child jobs are complete
-        appComplete: {
+        // all jobs are in a terminal state
+        // no results are available
+        jobsFinished: {
             ui: {
                 tab: tabState(
-                    ['viewConfigure', 'info', 'jobStatus', 'results'],
+                    ['viewConfigure', 'info', 'jobStatus'],
                     ['viewConfigure', 'info', 'jobStatus', 'results']
                 ),
                 action: {
-                    name: 'reRunApp',
+                    name: 'resetApp',
                     disabled: false,
                 },
             },
         },
-        // user canceled the run, and hasn't done anything else yet
-        appCanceled: {
+        // all jobs are in a terminal state
+        // at least one job finished successfully
+        jobsFinishedResultsAvailable: {
             ui: {
                 tab: tabState(
                     ['viewConfigure', 'info', 'jobStatus', 'results'],
@@ -167,21 +142,22 @@ define([], () => {
         appError: {
             ui: {
                 tab: tabState(
-                    ['viewConfigure', 'info', 'jobStatus', 'results', 'error'],
-                    ['viewConfigure', 'info', 'jobStatus', 'results', 'error']
+                    ['viewConfigure', 'info', 'jobStatus', 'error'],
+                    ['viewConfigure', 'info', 'jobStatus', 'error']
                 ),
                 action: {
-                    name: 'reRunApp',
+                    name: 'resetApp',
                     disabled: false,
                 },
             },
         },
-        // something tragic and unrecoverable has happened
+        // something tragic and unrecoverable has happened to the cell
+        // (not a job error -- those are handled by the jobStatus tab)
         generalError: {
             ui: {
                 tab: tabState(
-                    ['viewConfigure', 'info', 'jobStatus', 'results', 'error'],
-                    ['viewConfigure', 'info', 'jobStatus', 'results', 'error']
+                    ['viewConfigure', 'info', 'jobStatus', 'error'],
+                    ['viewConfigure', 'info', 'jobStatus', 'error']
                 ),
                 action: {
                     name: 'resetApp',
@@ -190,5 +166,4 @@ define([], () => {
             },
         },
     };
-    return states;
 });

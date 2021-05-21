@@ -326,6 +326,12 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
                     })
                 )
             );
+            this.model.setItem('exec.jobState', parent_job_id);
+        }
+
+        getFsmStateFromJobs() {
+            const jobsByStatus = this.model.getItem(`exec.jobs.byStatus`);
+            return Jobs.getFsmStateFromJobs(jobsByStatus);
         }
     }
 

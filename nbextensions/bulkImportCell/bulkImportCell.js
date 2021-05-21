@@ -470,7 +470,7 @@ define([
                     // remove any existing jobs
                     jobManager.initBatchJob(message);
                     updateState('inProgress');
-                    // TODO: remove when job management is sorted out
+                    // TODO: remove when cell state management is sorted out
                     toggleTab('jobStatus');
                     break;
                 case 'error':
@@ -601,6 +601,16 @@ define([
                 });
                 // populate the execMessage with the current job state
                 jobManager.runUpdateHandlers();
+                jobManager.addUpdateHandler({
+                    fsmState: (updatedModel) => {
+                        const fsmState = Jobs.getFsmStateFromJobs(
+                            updatedModel.getItem('exec.jobs.byStatus')
+                        );
+                        if (fsmState) {
+                            updateState(fsmState);
+                        }
+                    },
+                });
 
                 cell.renderMinMax();
                 // force toolbar refresh
@@ -694,13 +704,10 @@ define([
                 case 'cancel':
                     doCancelCellAction();
                     break;
-                case 'reRunApp':
-                    // TODO implement
-                    alert('re-running app');
-                    break;
                 case 'resetApp':
                     // TODO implement
                     alert('resetting app');
+                    doResetCellAction();
                     break;
                 case 'offline':
                     // TODO implement / test better
@@ -755,6 +762,20 @@ define([
                 await jobManager.cancelJobsByStatus(['created', 'estimating', 'queued', 'running']);
             }
             updateEditingState();
+        }
+
+        /**
+         * Reset the cell to the editing state
+         */
+        function doResetCellAction() {
+            // TODO: ensure this makes all the necessary changes
+            if (runStatusListener !== null) {
+                busEventManager.remove(runStatusListener);
+            }
+            jobManager.model.deleteItem('exec');
+            controlPanel.setExecMessage('');
+            updateEditingState();
+            toggleTab('configure');
         }
 
         /**

@@ -274,7 +274,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
     }
 
     /**
-     * Use the FSM mode and stage data to generate the appropriate job status summary
+     * Use the app cell FSM mode and stage data to generate the appropriate job status summary
      * @param {string} mode
      * @param {string} stage
      * @returns {string} HTML string with a single word status
@@ -506,7 +506,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
             );
         }
         // job hasn't run or finished (yet)
-        const queueString =
+        return (
             UI.loading({ color: 'orange' }) +
             ' In the queue since ' +
             span(
@@ -514,9 +514,8 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
                     class: 'kb-timestamp',
                 },
                 Format.niceTime(jobState.created)
-            );
-
-        return queueString;
+            )
+        );
     }
 
     const batch = 'batch job';
@@ -544,6 +543,21 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
         return `${batch} finished`;
     }
 
+    // reduce down jobs sorted by status into an object with keys being the job status
+    // and values the number of jobs in that state
+    function _jobCountByStatus(jobsByStatus) {
+        const statuses = {};
+        Object.keys(jobsByStatus).forEach((status) => {
+            const nJobs = Object.keys(jobsByStatus[status]).length;
+            // reduce down the queued states
+            if (status === 'estimating' || status === 'created') {
+                status = 'queued';
+            }
+            statuses[status] ? (statuses[status] += nJobs) : (statuses[status] = nJobs);
+        });
+        return statuses;
+    }
+
     /**
      * Given an object containing job IDs indexed by status, summarise the status of the jobs
      * @param {object} jobsByStatus job IDs indexed by status
@@ -555,16 +569,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
             return '';
         }
 
-        const statuses = {};
-        Object.keys(jobsByStatus).forEach((status) => {
-            const nJobs = Object.keys(jobsByStatus[status]).length;
-            // reduce down the queued states
-            if (status === 'estimating' || status === 'created') {
-                status = 'queued';
-            }
-            statuses[status] ? (statuses[status] += nJobs) : (statuses[status] = nJobs);
-        });
-
+        const statuses = _jobCountByStatus(jobsByStatus);
         const textStatusSummary = _createBatchSummaryState(statuses);
         const orderedStatuses = [
             'queued',
@@ -604,6 +609,26 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
         return jobSpan.outerHTML;
     }
 
+    /**
+     * Get the FSM state for a bulk cell from the jobs
+     *
+     * @param {object} jobsByStatus job IDs indexed by status
+     * @returns {string} FSM state
+     */
+    function getFsmStateFromJobs(jobsByStatus) {
+        if (!jobsByStatus || !Object.keys(jobsByStatus).length) {
+            return null;
+        }
+
+        const statuses = _jobCountByStatus(jobsByStatus);
+
+        // if at least one job is running or queued, the status is 'inProgress'; otherwise,
+        // all jobs are in a terminal state, so the status is 'jobsFinished'
+        const baseStatus = statuses.running || statuses.queued ? 'inProgress' : 'jobsFinished';
+        // check whether or not any jobs ran successfully and hence whether results are available
+        return statuses.completed ? `${baseStatus}ResultsAvailable` : baseStatus;
+    }
+
     return {
         canCancel,
         canDo,
@@ -611,6 +636,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
         createCombinedJobState,
         createJobStatusFromFsm,
         createJobStatusLines,
+        getFsmStateFromJobs,
         isTerminalStatus,
         isValidJobStatus,
         isValidJobStateObject,

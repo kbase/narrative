@@ -302,6 +302,37 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
             this.runUpdateHandlers(jobArray);
             return this.model;
         }
+
+        initBatchJob(message) {
+            const { parent_job_id, child_job_ids } = message;
+
+            if (
+                !parent_job_id ||
+                !child_job_ids ||
+                Object.prototype.toString.call(child_job_ids) !== '[object Array]' ||
+                !child_job_ids.length
+            ) {
+                throw new Error(
+                    'Batch job must have a parent job ID and at least one child job ID'
+                );
+            }
+
+            // initialise `exec.jobs` with the new child jobs
+            this.model.setItem(
+                'exec.jobs',
+                Jobs.jobArrayToIndexedObject(
+                    child_job_ids.map((id) => {
+                        return { job_id: id, status: 'created', created: 0 };
+                    })
+                )
+            );
+            this.model.setItem('exec.jobState', parent_job_id);
+        }
+
+        getFsmStateFromJobs() {
+            const jobsByStatus = this.model.getItem(`exec.jobs.byStatus`);
+            return Jobs.getFsmStateFromJobs(jobsByStatus);
+        }
     }
 
     return JobManager;

@@ -22,7 +22,6 @@ define([
     'common/cellComponents/tabs/jobStatus/jobStatusTab',
     'common/cellComponents/tabs/results/resultsTab',
     './bulkImportCellStates',
-    './testAppObj',
 ], (
     Uuid,
     Icon,
@@ -46,8 +45,7 @@ define([
     InfoTabWidget,
     JobStatusTabWidget,
     ResultsWidget,
-    States,
-    TestAppObj
+    States
 ) => {
     'use strict';
     const CELL_TYPE = 'app-bulk-import';
@@ -224,15 +222,7 @@ define([
         }
 
         const model = Props.make({
-                // TODO: Remove and replace with the commented-out line below
-                // once the backend is hooked up
-                data: Object.assign(
-                    {},
-                    Utils.getMeta(cell, 'bulkImportCell'),
-                    // execution data
-                    { exec: TestAppObj.exec }
-                ),
-                // data: Utils.getMeta(cell, 'bulkImportCell'),
+                data: Utils.getMeta(cell, 'bulkImportCell'),
                 onUpdate: function (props) {
                     Utils.setMeta(cell, 'bulkImportCell', props.getRawObject());
                 },
@@ -286,11 +276,10 @@ define([
                 if (param.text_options && param.text_options.is_output_name) {
                     return true;
                 }
-                const isFilePathParam =
+                return (
                     param.dynamic_dropdown_options &&
-                    param.dynamic_dropdown_options.data_source === 'ftp_staging';
-
-                return isFilePathParam;
+                    param.dynamic_dropdown_options.data_source === 'ftp_staging'
+                );
             });
             const allParamIds = appSpec.parameters.map((param) => param.id);
             const fileParamIds = fileParams.map((param) => param.id);
@@ -478,8 +467,11 @@ define([
         function handleRunStatus(message) {
             switch (message.event) {
                 case 'launched_job_batch':
-                    jobManager.updateModel(message.child_job_ids);
-                    updateState('queued');
+                    // remove any existing jobs
+                    jobManager.initBatchJob(message);
+                    updateState('inProgress');
+                    // TODO: remove when cell state management is sorted out
+                    toggleTab('jobStatus');
                     break;
                 case 'error':
                     updateState('appError');
@@ -609,6 +601,16 @@ define([
                 });
                 // populate the execMessage with the current job state
                 jobManager.runUpdateHandlers();
+                jobManager.addUpdateHandler({
+                    fsmState: (updatedModel) => {
+                        const fsmState = Jobs.getFsmStateFromJobs(
+                            updatedModel.getItem('exec.jobs.byStatus')
+                        );
+                        if (fsmState) {
+                            updateState(fsmState);
+                        }
+                    },
+                });
 
                 cell.renderMinMax();
                 // force toolbar refresh
@@ -702,13 +704,10 @@ define([
                 case 'cancel':
                     doCancelCellAction();
                     break;
-                case 'reRunApp':
-                    // TODO implement
-                    alert('re-running app');
-                    break;
                 case 'resetApp':
                     // TODO implement
                     alert('resetting app');
+                    doResetCellAction();
                     break;
                 case 'offline':
                     // TODO implement / test better
@@ -763,6 +762,20 @@ define([
                 await jobManager.cancelJobsByStatus(['created', 'estimating', 'queued', 'running']);
             }
             updateEditingState();
+        }
+
+        /**
+         * Reset the cell to the editing state
+         */
+        function doResetCellAction() {
+            // TODO: ensure this makes all the necessary changes
+            if (runStatusListener !== null) {
+                busEventManager.remove(runStatusListener);
+            }
+            jobManager.model.deleteItem('exec');
+            controlPanel.setExecMessage('');
+            updateEditingState();
+            toggleTab('configure');
         }
 
         /**

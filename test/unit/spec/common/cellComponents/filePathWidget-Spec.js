@@ -19,8 +19,6 @@ define([
         });
     });
 
-    describe('The file path widget can start in different view modes.', () => {});
-
     describe('The file path widget instance', () => {
         let container;
 

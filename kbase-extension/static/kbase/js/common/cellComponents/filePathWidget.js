@@ -33,7 +33,8 @@ define([
      * @returns
      */
     function factory(config) {
-        const { workspaceId, initialParams, paramIds, viewOnly } = config;
+        const viewOnly = config.viewOnly || false;
+        const { workspaceId, initialParams, paramIds } = config;
         const runtime = Runtime.make(),
             // paramsBus is used to communicate from this parameter container to the parent that
             // created and owns it

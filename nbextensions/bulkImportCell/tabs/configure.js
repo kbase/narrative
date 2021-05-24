@@ -30,10 +30,8 @@ define([
      * @returns
      */
     function ConfigureWidget(options) {
-        if (!options.viewOnly) {
-            options.viewOnly = false;
-        }
-        const { model, specs, typesToFiles, viewOnly } = options;
+        const viewOnly = options.viewOnly || false;
+        const { model, specs, typesToFiles } = options;
         const cellBus = options.bus,
             runtime = Runtime.make(),
             FILE_PATH_TYPE = 'filePaths',

@@ -50,27 +50,50 @@ define([
             Jupyter.narrative = null;
         });
 
-        it('should start and render itself', () => {
-            const model = Props.make({
-                data: Object.assign({}, TestAppObject, { state: initialState }),
-                onUpdate: () => {},
-            });
-            const configure = ConfigureTab.make({
-                bus,
-                model,
-                specs,
-                typesToFiles,
-            });
-
-            return configure
-                .start({
-                    node: container,
-                })
-                .then(() => {
-                    // just make sure it renders the "File Paths" and "Parameters" headers
-                    expect(container.innerHTML).toContain('Parameters');
-                    expect(container.innerHTML).toContain('File Paths');
+        [
+            {
+                widget: ConfigureTab,
+                viewOnly: false,
+                label: 'default',
+            },
+            {
+                widget: ConfigureTab.editMode,
+                viewOnly: false,
+                label: 'edit',
+            },
+            {
+                widget: ConfigureTab.viewMode,
+                viewOnly: true,
+                label: 'view',
+            },
+        ].forEach((testCase) => {
+            it(`should start in ${testCase.label} mode`, () => {
+                const model = Props.make({
+                    data: Object.assign({}, TestAppObject, { state: initialState }),
+                    onUpdate: () => {},
                 });
+                const configure = testCase.widget.make({
+                    bus,
+                    model,
+                    specs,
+                    typesToFiles,
+                });
+
+                return configure
+                    .start({
+                        node: container,
+                    })
+                    .then(() => {
+                        // just make sure it renders the "File Paths" and "Parameters" headers
+                        expect(container.innerHTML).toContain('Parameters');
+                        expect(container.innerHTML).toContain('File Paths');
+                        const inputForm = container.querySelector(
+                            '[data-parameter="import_type"] select[data-element="input"]'
+                        );
+                        expect(inputForm.hasAttribute('readonly')).toBe(testCase.viewOnly);
+                        return configure.stop();
+                    });
+            });
         });
 
         it('should stop itself and empty the node it was in', () => {

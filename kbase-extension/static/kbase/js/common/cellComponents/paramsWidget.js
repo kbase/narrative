@@ -16,7 +16,8 @@ define([
         div = tag('div');
 
     function factory(config) {
-        const { bus, workspaceId, paramIds, initialParams, viewOnly } = config;
+        const viewOnly = config.viewOnly || false;
+        const { bus, workspaceId, paramIds, initialParams } = config;
         const runtime = Runtime.make(),
             model = Props.make(),
             paramResolver = ParamResolver.make(),

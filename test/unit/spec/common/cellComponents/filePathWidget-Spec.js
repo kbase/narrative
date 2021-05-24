@@ -19,36 +19,27 @@ define([
         });
     });
 
+    describe('The file path widget can start in different view modes.', () => {});
+
     describe('The file path widget instance', () => {
         let container;
-        beforeAll(() => {
+
+        function makeFilePathWidget(fpwArgs, viewOnly) {
+            if (viewOnly !== undefined) {
+                fpwArgs.viewOnly = viewOnly;
+            }
+            return FilePathWidget.make(fpwArgs);
+        }
+
+        beforeAll(function () {
             window.kbaseRuntime = null;
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',
             };
-        });
 
-        afterAll(() => {
-            Jupyter.narrative = null;
-        });
-
-        beforeEach(function () {
-            const bus = Runtime.make().bus();
-            container = document.createElement('div');
-            this.node = document.createElement('div');
-            document.body.append(container);
-            container.appendChild(this.node);
-
-            this.spec = Spec.make({
-                appSpec: TestSpec,
-            });
-
-            this.parameters = this.spec.getSpec().parameters;
-
-            const workspaceId = 54745;
-            this.filePathWidgetInstance = FilePathWidget.make({
-                bus: bus,
-                workspaceId: workspaceId,
+            this.workspaceId = 54745;
+            this.defaultArgs = {
+                workspaceId: this.workspaceId,
                 initialParams: [
                     {
                         actual_input_object: 'foo',
@@ -56,7 +47,24 @@ define([
                     },
                 ],
                 paramIds: ['actual_input_object', 'actual_output_object'],
+            };
+            this.appSpec = Spec.make({
+                appSpec: TestSpec,
             });
+            this.parameters = this.appSpec.getSpec().parameters;
+        });
+
+        afterAll(() => {
+            Jupyter.narrative = null;
+        });
+
+        beforeEach(function () {
+            this.bus = Runtime.make().bus();
+            container = document.createElement('div');
+            this.node = document.createElement('div');
+            document.body.append(container);
+            container.appendChild(this.node);
+            this.fpwArgs = Object.assign({ bus: this.bus }, this.defaultArgs);
         });
 
         afterEach(() => {
@@ -64,22 +72,56 @@ define([
             window.kbaseRuntime = null;
         });
 
+        [
+            {
+                label: 'default',
+            },
+            {
+                label: 'edit',
+                viewOnly: false,
+            },
+            {
+                label: 'view',
+                viewOnly: true,
+            },
+        ].forEach((testCase) => {
+            it(`it can be made in ${testCase.label} mode`, function () {
+                const filePathWidget = makeFilePathWidget(this.fpwArgs, testCase.viewOnly);
+                return filePathWidget
+                    .start({
+                        node: this.node,
+                        appSpec: this.appSpec,
+                        parameters: this.parameters,
+                    })
+                    .then(() => {
+                        const viewOnly = testCase.viewOnly || false;
+                        const inputField = this.node.querySelector(
+                            '[data-parameter="actual_input_object"] [data-element="input"]'
+                        );
+                        expect(inputField.hasAttribute('readonly')).toBe(viewOnly);
+                    });
+            });
+        });
+
         it('has a make function that returns an object', function () {
-            expect(this.filePathWidgetInstance).not.toBeNull();
-            expect(this.filePathWidgetInstance).toEqual(jasmine.any(Object));
+            const filePathWidget = makeFilePathWidget(this.fpwArgs);
+            expect(filePathWidget).not.toBeNull();
+            expect(filePathWidget).toEqual(jasmine.any(Object));
         });
 
         it('has the required methods', function () {
+            const filePathWidget = makeFilePathWidget(this.fpwArgs);
             ['bus', 'start', 'stop'].forEach((fn) => {
-                expect(this.filePathWidgetInstance[fn]).toBeDefined();
+                expect(filePathWidget[fn]).toBeDefined();
             });
         });
 
         describe('the started widget', () => {
             beforeEach(async function () {
+                this.filePathWidgetInstance = makeFilePathWidget(this.fpwArgs);
                 await this.filePathWidgetInstance.start({
                     node: this.node,
-                    appSpec: this.spec,
+                    appSpec: this.appSpec,
                     parameters: this.parameters,
                 });
             });

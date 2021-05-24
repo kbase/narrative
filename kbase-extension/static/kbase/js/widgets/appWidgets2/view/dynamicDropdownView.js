@@ -16,7 +16,7 @@ define([
     function factory(config) {
         const spec = config.parameterSpec,
             bus = config.bus,
-            model  = Props.make({
+            model = Props.make({
                 data: {
                     value: null,
                 },

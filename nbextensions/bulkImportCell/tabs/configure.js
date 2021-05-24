@@ -473,7 +473,7 @@ define([
                 return ConfigureWidget(Object.assign({}, options, { viewOnly: true }));
             },
         },
-        // the standard constructor, let the caller decide which mode manually
+        // the standard constructor, let the caller manually decide which mode to use
         make: ConfigureWidget,
     };
 });

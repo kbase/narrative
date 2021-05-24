@@ -1,8 +1,6 @@
 define([
     'bluebird',
-    // CDN
     'common/html',
-    // LOCAL
     'common/ui',
     'common/events',
     'common/props',

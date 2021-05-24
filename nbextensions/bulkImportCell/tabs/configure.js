@@ -30,6 +30,9 @@ define([
      * @returns
      */
     function ConfigureWidget(options) {
+        if (!options.viewOnly) {
+            options.viewOnly = false;
+        }
         const { model, specs, typesToFiles, viewOnly } = options;
         const cellBus = options.bus,
             runtime = Runtime.make(),
@@ -460,16 +463,19 @@ define([
     }
 
     return {
-        ConfigureWidget: {
+        // wrapper to make a widget in edit mode
+        editMode: {
             make: (options) => {
                 return ConfigureWidget(Object.assign({}, options, { viewOnly: false }));
             },
         },
-        ViewConfigureWidget: {
+        // wrapper to make a widget in view mode
+        viewMode: {
             make: (options) => {
                 return ConfigureWidget(Object.assign({}, options, { viewOnly: true }));
             },
         },
+        // the standard constructor, let the caller decide which mode manually
         make: ConfigureWidget,
     };
 });

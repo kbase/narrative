@@ -29,6 +29,7 @@ define([
      *  - workspaceId - the id of the workspace we should use for searching for objects
      *  - initialParams - Array of objects. Each item represents a row of parameter values.
      *    So each item has an object with parameter id -> value
+     *  - viewOnly - boolean, if true start with the view version of input widgets
      * @returns
      */
     function factory(config) {

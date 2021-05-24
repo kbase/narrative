@@ -146,11 +146,11 @@ define([
                 tabs: {
                     configure: {
                         label: 'Configure',
-                        widget: ConfigureWidget.ConfigureWidget,
+                        widget: ConfigureWidget.editMode,
                     },
                     viewConfigure: {
                         label: 'View Configure',
-                        widget: ConfigureWidget.ViewConfigureWidget,
+                        widget: ConfigureWidget.viewMode,
                     },
                     info: {
                         label: 'Info',

@@ -173,8 +173,8 @@ define([
             {
                 msgEvent: 'launched_job_batch',
                 msgData: {
-                    child_job_ids: ['foo'],
                     parent_job_id: 'bar',
+                    child_job_ids: ['foo'],
                 },
                 updatedState: 'inProgress',
                 testSelector: '.kb-rcp__btn-toolbar button[data-button="jobStatus"]',

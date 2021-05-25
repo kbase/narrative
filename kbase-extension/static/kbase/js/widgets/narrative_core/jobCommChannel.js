@@ -280,46 +280,47 @@ define([
                     break;
 
                 case 'job_comm_error':
-                    if (msgData) {
-                        jobId = msgData.job_id;
-                        switch (msgData.source) {
-                            case 'cancel_job':
-                                this.sendBusMessage(JOB, jobId, 'job-cancel-error', {
-                                    jobId,
-                                    message: msgData.message,
-                                });
-                                this.sendBusMessage(JOB, jobId, 'job-canceled', {
-                                    jobId,
-                                    error: msgData.message,
-                                });
-                                break;
-                            case 'job_logs':
-                            case 'job_logs_latest':
-                                this.sendBusMessage(JOB, jobId, 'job-log-deleted', {
-                                    jobId,
-                                    message: msgData.message,
-                                });
-                                this.sendBusMessage(JOB, jobId, 'job-logs', {
-                                    jobId,
-                                    error: msgData.message,
-                                });
-                                break;
-                            case 'job_retried':
-                                this.sendBusMessage(JOB, jobId, 'job-retried', {
-                                    jobId: jobId,
-                                    error: msgData.message,
-                                });
-                                break;
-                            default:
-                                this.sendBusMessage(JOB, jobId, 'job-error', {
-                                    jobId,
-                                    message: msgData.message,
-                                    request: msgData.source,
-                                });
-                                break;
-                        }
-                    }
                     console.error('Error from job comm:', msg);
+                    if (!msgData) {
+                        break;
+                    }
+                    jobId = msgData.job_id;
+                    switch (msgData.source) {
+                        case 'cancel_job':
+                            this.sendBusMessage(JOB, jobId, 'job-cancel-error', {
+                                jobId,
+                                message: msgData.message,
+                            });
+                            this.sendBusMessage(JOB, jobId, 'job-canceled', {
+                                jobId,
+                                error: msgData.message,
+                            });
+                            break;
+                        case 'job_logs':
+                        case 'job_logs_latest':
+                            this.sendBusMessage(JOB, jobId, 'job-log-deleted', {
+                                jobId,
+                                message: msgData.message,
+                            });
+                            this.sendBusMessage(JOB, jobId, 'job-logs', {
+                                jobId,
+                                error: msgData.message,
+                            });
+                            break;
+                        case 'job_retried':
+                            this.sendBusMessage(JOB, jobId, 'job-retried', {
+                                jobId: jobId,
+                                error: msgData.message,
+                            });
+                            break;
+                        default:
+                            this.sendBusMessage(JOB, jobId, 'job-error', {
+                                jobId,
+                                message: msgData.message,
+                                request: msgData.source,
+                            });
+                            break;
+                    }
                     break;
 
                 case 'job_does_not_exist':

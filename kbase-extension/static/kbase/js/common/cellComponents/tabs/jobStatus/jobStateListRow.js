@@ -1,12 +1,4 @@
-define([
-    'bluebird',
-    'common/ui',
-    'common/html',
-    'common/events',
-    'jquery',
-    'common/jobs',
-    'util/jobLogViewer',
-], (Promise, UI, html, Events, $, Jobs, JobLogViewer) => {
+define(['bluebird', 'common/ui', 'common/html', 'common/jobs'], (Promise, UI, html, Jobs) => {
     'use strict';
 
     const t = html.tag,
@@ -16,12 +8,10 @@ define([
         button = t('button'),
         ul = t('ul'),
         li = t('li'),
-        cssBaseClass = 'kb-job-status',
-        events = Events.make();
+        cssBaseClass = 'kb-job-status';
 
     function factory() {
-        let container, ui, jobId, jobState, clickAction;
-        const widgets = {};
+        let container, ui, jobId, jobState;
 
         function _updateStatusLabel(jobStateObject) {
             const statusLabel = Jobs.jobLabel(jobStateObject, true);
@@ -82,11 +72,8 @@ define([
                     },
                     button(
                         {
-                            id: events.addEvent({
-                                type: 'click',
-                                handler: clickAction,
-                            }),
                             role: 'button',
+                            dataElement: 'job-action-button',
                             dataTarget: jobId,
                         },
                         ''
@@ -123,65 +110,16 @@ define([
             _updateActionButton(jobState);
         }
 
-        function showHideChildRow(e) {
-            const $currentRow = $(e.target).closest('tr');
-            const $table = $(e.target).closest('table');
-            const $dtTable = $table.DataTable();
-            const dtRow = $dtTable.row($currentRow);
-
-            // remove the existing row selection
-            $table
-                .find(`.${cssBaseClass}__row--selected`)
-                .removeClass(`${cssBaseClass}__row--selected`);
-            // select the current row
-            $currentRow.addClass(`${cssBaseClass}__row--selected`);
-
-            if (dtRow.child.isShown()) {
-                // This row is already open - close it
-                dtRow.child.hide();
-                $currentRow.removeClass('vertical_collapse--open');
-                if (widgets.log) {
-                    widgets.log.stop();
-                }
-                dtRow.child.remove();
-                return Promise.resolve();
-            }
-
-            // create the child row contents, add to the child row, and show it
-            const str = div({
-                class: `${cssBaseClass}__log_container`,
-                dataElement: 'job-log-container',
-            });
-            dtRow.child(str).show();
-
-            // add the log widget to the next `tr` element
-            widgets.log = JobLogViewer.make({ showHistory: true });
-            return Promise.try(() => {
-                widgets.log.start({
-                    node: $currentRow.next().find('[data-element="job-log-container"]')[0],
-                    jobId: jobId,
-                    jobState: jobState,
-                });
-            })
-                .then(() => {
-                    $currentRow.addClass('vertical_collapse--open');
-                })
-                .catch((err) => {
-                    console.error(err);
-                });
-        }
-
         /**
          * Start the job status row widget
          * @param {object} args, with keys
          *      jobState:  a job state object for the job to be represented
          *      name: the value of the input parameter(s) for the job
          *      node: the node to insert the row into (will presumably be a `tr` element)
-         *      clickAction: the function to perform when the job action button is clicked
          */
         function start(args) {
             return Promise.try(() => {
-                const requiredArgs = ['jobState', 'name', 'node', 'clickAction'];
+                const requiredArgs = ['jobState', 'name', 'node'];
                 if (
                     Object.prototype.toString.call(args) !== '[object Object]' ||
                     !requiredArgs.every((arg) => arg in args && args[arg])
@@ -199,18 +137,9 @@ define([
                 }
                 jobId = args.jobState.job_id;
 
-                if (typeof args.clickAction !== 'function') {
-                    throw new Error('invalid click action supplied');
-                }
-                clickAction = args.clickAction;
-
                 container = args.node;
                 ui = UI.make({ node: container });
                 container.innerHTML = buildRow(args.name);
-                container.onclick = async (e) => {
-                    await showHideChildRow(e);
-                };
-                events.attachEvents(container);
 
                 _updateRowStatus(args.jobState);
             }).catch((err) => {
@@ -218,10 +147,10 @@ define([
             });
         }
 
-        function stop() {}
+        function stop() {
+            // no op
+        }
 
-        // TODO: ensure that narrative does not create invalid job objects,
-        // e.g. { job_state: 'does_not_exist' }
         function updateState(newState) {
             if (!Jobs.isValidJobStateObject(newState)) {
                 throw new Error(
@@ -313,17 +242,17 @@ define([
         }
 
         return {
-            start: start,
-            stop: stop,
-            updateState: updateState,
-            updateParams: updateParams,
+            start,
+            stop,
+            updateState,
+            updateParams,
         };
     }
 
     return {
-        make: function () {
+        make: () => {
             return factory();
         },
-        cssBaseClass: cssBaseClass,
+        cssBaseClass,
     };
 });

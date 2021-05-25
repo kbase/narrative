@@ -1,5 +1,3 @@
-/*global define */
-/*jslint white:true,global:true*/
 /*
  * MonoBus
  * One bus to rule them all...
@@ -16,14 +14,9 @@
  *
  *
  */
-define([
-    'uuid',
-    'bluebird',
-    './lang',
-    './unodep'
-], function(Uuid, Promise, lang, utils) {
+define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) => {
     'use strict';
-    var instanceId = 0;
+    let instanceId = 0;
 
     function newInstance() {
         instanceId += 1;
@@ -31,7 +24,7 @@ define([
     }
 
     function factory(cfg) {
-        var api,
+        let api,
             config = cfg || {},
             listenerRegistry = {},
             verbose = config.verbose || false,
@@ -44,7 +37,6 @@ define([
             channels = {},
             doLogMessages = false,
             strictMode = config.strict;
-
 
         function warn(message) {
             if (verbose) {
@@ -90,7 +82,7 @@ define([
                 listeners: {},
                 keyListeners: {},
                 testListeners: [],
-                persistentMessages: {}
+                persistentMessages: {},
             };
             return spec.name;
         }
@@ -104,7 +96,7 @@ define([
         }
 
         function getChannel(name) {
-            var channel = channels[name];
+            const channel = channels[name];
             if (!channel) {
                 // throw new Error('Channel with name "' + name + '" does not exist');
                 return;
@@ -128,7 +120,7 @@ define([
         }
 
         function processListener(channel, item) {
-            var listener = channel.listeners[item.envelope.listenerId],
+            const listener = channel.listeners[item.envelope.listenerId],
                 handled = false;
             if (!listener) {
                 return;
@@ -138,12 +130,12 @@ define([
         }
 
         function processKeyListeners(channel, item) {
-            var listeners = channel.keyListeners[item.envelope.key],
+            let listeners = channel.keyListeners[item.envelope.key],
                 handled = false;
             if (!listeners) {
                 return;
             }
-            listeners.forEach(function(listener) {
+            listeners.forEach((listener) => {
                 handled = true;
                 log('PROCESSING KEY LISTENER', channel, item);
                 letListenerHandle(item, listener.handle);
@@ -200,9 +192,8 @@ define([
             return String(channelName);
         }
 
-
         function listen(spec) {
-            var id = new Uuid(4).format(),
+            let id = new Uuid(4).format(),
                 key,
                 channelName = canonicalizeChannelName(spec.channel),
                 channel = ensureChannel(channelName),
@@ -210,7 +201,7 @@ define([
                     spec: spec,
                     id: id,
                     created: new Date(),
-                    channelName: channelName
+                    channelName: channelName,
                 };
 
             if (spec.key) {
@@ -245,8 +236,10 @@ define([
         }
 
         function removeListener(id) {
-            var listenerToRemove = listenerRegistry[id],
-                channel, listeners, newListeners;
+            let listenerToRemove = listenerRegistry[id],
+                channel,
+                listeners,
+                newListeners;
             if (!listenerToRemove) {
                 return;
             }
@@ -259,22 +252,22 @@ define([
                 if (!listeners) {
                     return;
                 }
-                channel.keyListeners[listenerToRemove.key] = listeners.filter(function(listener) {
-                    return (listener.id !== listenerToRemove.id);
+                channel.keyListeners[listenerToRemove.key] = listeners.filter((listener) => {
+                    return listener.id !== listenerToRemove.id;
                 });
             } else if (listenerToRemove.test) {
                 listeners = channel.testListeners;
                 if (!listeners) {
                     return;
                 }
-                channel.testListeners = listeners.filter(function(listener) {
-                    return (listener.id !== listenerToRemove.id);
+                channel.testListeners = listeners.filter((listener) => {
+                    return listener.id !== listenerToRemove.id;
                 });
             }
         }
 
         function removeListeners(ids) {
-            ids.forEach(function(id) {
+            ids.forEach((id) => {
                 removeListener(id);
             });
         }
@@ -284,8 +277,8 @@ define([
         // PROCESSING ENGINE
 
         function processTestListeners(channel, item) {
-            var handled = false;
-            channel.testListeners.forEach(function(listener) {
+            let handled = false;
+            channel.testListeners.forEach((listener) => {
                 log('PROCESSING TEST LISTENER?', channel, item);
                 if (testListener(item, listener.test)) {
                     handled = true;
@@ -296,9 +289,8 @@ define([
             return handled;
         }
 
-
         function processQueueItem(item) {
-            var channel = getChannel(item.envelope.channel),
+            let channel = getChannel(item.envelope.channel),
                 handled;
 
             if (!channel) {
@@ -320,19 +312,17 @@ define([
             }
         }
 
-
         function processQueues() {
-            var processingQueue = transientMessages;
+            const processingQueue = transientMessages;
             transientMessages = [];
 
-            processingQueue.forEach(function(item) {
+            processingQueue.forEach((item) => {
                 try {
                     processQueueItem(item);
                 } catch (ex) {
                     console.error('ERROR processing queue item', ex);
                 }
             });
-
         }
         /*
          *
@@ -342,7 +332,7 @@ define([
             if (timer) {
                 return;
             }
-            timer = window.setTimeout(function() {
+            timer = window.setTimeout(() => {
                 timer = null;
                 try {
                     processQueues();
@@ -355,7 +345,7 @@ define([
         // SENDING
 
         function setPersistentMessage(message, envelope) {
-            var channel = ensureChannel(envelope.channel),
+            let channel = ensureChannel(envelope.channel),
                 key = envelope.key,
                 existingMessage;
             if (!key) {
@@ -371,25 +361,25 @@ define([
 
             channel.persistentMessages[key] = {
                 message: message,
-                envelope: envelope
+                envelope: envelope,
             };
             transientMessages.push({
                 message: message,
-                envelope: envelope
+                envelope: envelope,
             });
             run();
         }
 
         function maybeSendPersistentMessages(channel, key, id) {
-            var persistentMessage = channel.persistentMessages[key];
+            const persistentMessage = channel.persistentMessages[key];
             if (!persistentMessage) {
                 return;
             }
-            var envelope = lang.copy(persistentMessage.envelope);
+            const envelope = lang.copy(persistentMessage.envelope);
             envelope.listenerId = id;
             transientMessages.push({
                 message: persistentMessage.message,
-                envelope: envelope
+                envelope: envelope,
             });
             run();
         }
@@ -404,10 +394,10 @@ define([
             // support simple message sending ...
             address = address || {};
 
-            var envelope = {
+            const envelope = {
                 created: new Date(),
                 id: new Uuid(4).format(),
-                address: address
+                address: address,
             };
 
             if (address.key) {
@@ -420,7 +410,7 @@ define([
 
             transientMessages.push({
                 message: message,
-                envelope: envelope
+                envelope: envelope,
             });
             run();
         }
@@ -429,10 +419,10 @@ define([
             // support simple message sending ...
             address = address || {};
 
-            var envelope = {
+            const envelope = {
                 created: new Date(),
                 id: new Uuid(4).format(),
-                address: address
+                address: address,
             };
 
             if (!address.key) {
@@ -449,14 +439,14 @@ define([
         }
 
         function get(spec, defaultValue) {
-            var key,
+            let key,
                 channelName = canonicalizeChannelName(spec.channel),
                 channel = ensureChannel(channelName);
 
             if (spec.key) {
                 key = encodeKey(spec.key);
 
-                var persistentMessage = channel.persistentMessages[key];
+                const persistentMessage = channel.persistentMessages[key];
                 if (!persistentMessage) {
                     return defaultValue;
                 }
@@ -484,14 +474,14 @@ define([
          *
          */
         function respond(spec) {
-            var originalHandle = spec.handle;
+            const originalHandle = spec.handle;
 
             function newHandle(message, envelope) {
                 try {
-                    var responseMessage = originalHandle(message);
+                    const responseMessage = originalHandle(message);
                     send(responseMessage, {
                         channel: envelope.channel,
-                        key: { requestId: envelope.address.requestId }
+                        key: { requestId: envelope.address.requestId },
                     });
                 } catch (ex) {
                     console.error('Error handling in respond', ex);
@@ -507,8 +497,8 @@ define([
          * pending requests - which is a map of all request messages.
          */
         function request(message, address) {
-            return new Promise(function(resolve, reject) {
-                var requestId = new Uuid(4).format();
+            return new Promise((resolve, reject) => {
+                const requestId = new Uuid(4).format();
 
                 // when this listener with a key set to the request id
                 // is called, it will resolve the promise, and it is
@@ -520,9 +510,9 @@ define([
                     key: { requestId: requestId },
                     once: true,
                     timeout: address.timeout || 10000,
-                    handle: function(responseMessage) {
+                    handle: function (responseMessage) {
                         resolve(responseMessage);
-                    }
+                    },
                 });
 
                 // NB - respond understands requestId in the envelope.
@@ -549,13 +539,13 @@ define([
         //     });
         // }
         function plisten(spec) {
-            var initialized = false;
-            var id;
-            var p = new Promise(function(resolve) {
+            let initialized = false;
+            let id;
+            const p = new Promise((resolve) => {
                 id = listen({
                     channel: spec.channel,
                     key: spec.key,
-                    handle: function(message, address) {
+                    handle: function (message, address) {
                         if (!initialized) {
                             initialized = true;
                             resolve(message);
@@ -566,25 +556,24 @@ define([
                                 console.error('ERROR in plisten', ex);
                             }
                         }
-                    }
+                    },
                 });
             });
             return {
                 promise: p,
-                id: id
+                id: id,
             };
         }
 
         function when(spec) {
-
-            return new Promise(function(resolve) {
+            return new Promise((resolve) => {
                 listen({
                     channel: spec.channel,
                     key: spec.key,
                     once: true,
-                    handle: function(message) {
+                    handle: function (message) {
                         resolve(message);
-                    }
+                    },
                 });
             });
         }
@@ -603,7 +592,7 @@ define([
             return listen({
                 channel: channel,
                 key: JSON.stringify({ type: type }),
-                handle: handler
+                handle: handler,
             });
         }
 
@@ -612,7 +601,7 @@ define([
                 message = {};
             }
             send(message, {
-                key: { type: type }
+                key: { type: type },
             });
         }
 
@@ -634,11 +623,11 @@ define([
          */
         function makeChannelBus(arg) {
             arg = arg || {};
-            var channelName = canonicalizeChannelName(arg.name, new Uuid(4).format());
+            const channelName = canonicalizeChannelName(arg.name, new Uuid(4).format());
             if (arg.description) {
                 makeChannel({
                     name: channelName,
-                    description: arg.description
+                    description: arg.description,
                 });
             } else {
                 ensureChannel(channelName);
@@ -648,7 +637,7 @@ define([
                 return listen({
                     channel: channelName,
                     key: { type: type },
-                    handle: handler
+                    handle: handler,
                 });
             }
 
@@ -658,7 +647,7 @@ define([
                 }
                 return send(message, {
                     channel: channelName,
-                    key: { type: type }
+                    key: { type: type },
                 });
             }
 
@@ -675,11 +664,11 @@ define([
             }
 
             function channelSet2(type, message) {
-                var address = {
+                const address = {
                     channel: channelName,
                     key: {
-                        type: type
-                    }
+                        type: type,
+                    },
                 };
                 return set(message, address);
             }
@@ -688,8 +677,8 @@ define([
                 if (typeof spec === 'string') {
                     spec = {
                         key: {
-                            type: spec
-                        }
+                            type: spec,
+                        },
                     };
                 }
                 spec.channel = channelName;
@@ -715,7 +704,7 @@ define([
             function channelWhen(type) {
                 return when({
                     channel: channelName,
-                    key: { type: type }
+                    key: { type: type },
                 });
             }
 
@@ -733,13 +722,13 @@ define([
             }
 
             function stats() {
-                var channel = ensureChannel(channelName);
+                const channel = ensureChannel(channelName);
                 return {
                     listeners: {
                         persistent: Object.keys(channel.persistentMessages).length,
                         key: Object.keys(channel.keyListeners).length,
-                        test: channel.testListeners.length
-                    }
+                        test: channel.testListeners.length,
+                    },
                 };
             }
 
@@ -758,7 +747,7 @@ define([
                 plisten: channelPlisten,
                 stop: stop,
                 channelName: channelName,
-                stats: stats
+                stats: stats,
             };
         }
 
@@ -772,21 +761,20 @@ define([
         */
 
         function connect() {
-            var listeners = [];
+            let listeners = [];
 
             function channel(channelName) {
-
                 // Without a channel name, we use the main bus.
                 if (!channelName) {
                     channelName = new Uuid(4).format();
                 }
 
-                var localChannel = makeChannelBus({
-                    name: channelName
+                const localChannel = makeChannelBus({
+                    name: channelName,
                 });
 
                 function on() {
-                    var l = localChannel.on.apply(null, arguments);
+                    const l = localChannel.on.apply(null, arguments);
                     listeners.push(l);
                 }
 
@@ -795,7 +783,7 @@ define([
                 }
 
                 function listen() {
-                    var l = localChannel.listen.apply(null, arguments);
+                    const l = localChannel.listen.apply(null, arguments);
                     listeners.push(l);
                 }
 
@@ -804,7 +792,7 @@ define([
                 }
 
                 function respond() {
-                    var l = localChannel.respond.apply(null, arguments);
+                    const l = localChannel.respond.apply(null, arguments);
                     listeners.push(l);
                 }
 
@@ -813,7 +801,7 @@ define([
                 }
 
                 function plisten() {
-                    var result = localChannel.plisten.apply(null, arguments);
+                    const result = localChannel.plisten.apply(null, arguments);
                     listeners.push(result.id);
                     return result;
                 }
@@ -845,12 +833,12 @@ define([
                     set: set,
                     get: get,
                     when: when,
-                    stats: stats
+                    stats: stats,
                 };
             }
 
             function stop() {
-                listeners.forEach(function(l) {
+                listeners.forEach((l) => {
                     removeListener(l);
                 });
                 listeners = [];
@@ -859,8 +847,8 @@ define([
             function stats() {
                 return {
                     listeners: {
-                        active: listeners.length
-                    }
+                        active: listeners.length,
+                    },
                 };
             }
 
@@ -869,10 +857,9 @@ define([
             }
 
             function connectionListen() {
-                var l = listen.apply(null, arguments);
+                const l = listen.apply(null, arguments);
                 listeners.push(l);
             }
-
 
             return {
                 channel: channel,
@@ -880,10 +867,9 @@ define([
                 stats: stats,
                 stop: stop,
                 // global listeners, etc.
-                listen: connectionListen
+                listen: connectionListen,
             };
         }
-
 
         // MAIN
         makeChannel({ name: 'default', description: 'The Default Channel' });
@@ -905,15 +891,15 @@ define([
             logMessages: logMessages,
             removeListener: removeListener,
             removeListeners: removeListeners,
-            connect: connect
+            connect: connect,
         };
 
         return api;
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

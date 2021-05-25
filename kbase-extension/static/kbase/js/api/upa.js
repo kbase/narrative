@@ -1,32 +1,31 @@
-define([
-    'common/runtime'
-], function(Runtime) {
+define(['common/runtime'], (Runtime) => {
     'use strict';
 
-    var UpaApi = function() {
-        var externalTag = '&';
+    const UpaApi = function () {
+        const externalTag = '&';
 
         /**
          * Runs a regex that tests the given string to see if it's a valid upa.
          * valid upas are of the form:
          * ws/obj/ver or ws1/obj1/ver1;ws2/obj2/ver2;...
          */
-        var isUpa = function(upa) {
+        const isUpa = function (upa) {
             return RegExp(/^\d+(\/\d+){2}(;\d+(\/\d+){2})*$/).test(upa);
         };
 
-        var prepareUpaSerialization = function(upa) {
+        const prepareUpaSerialization = function (upa) {
             if (typeof upa !== 'string') {
                 // stringify the array version of an UPA, if that's what we have.
                 if (Array.isArray(upa)) {
                     upa = upa.join(';');
-                }
-                else {
-                    throw {error: 'Can only serialize UPA strings or Arrays of UPA paths'};
+                } else {
+                    throw { error: 'Can only serialize UPA strings or Arrays of UPA paths' };
                 }
             }
             if (!isUpa(upa)) {
-                throw {error: '"' + upa + '" is not a valid UPA. It may already have been serialized.'};
+                throw {
+                    error: '"' + upa + '" is not a valid UPA. It may already have been serialized.',
+                };
             }
             return upa;
         };
@@ -45,7 +44,7 @@ define([
          *
          * If the passed upa is not properly formatted, this will throw an Error.
          */
-        var serialize = function(upa) {
+        const serialize = function (upa) {
             upa = prepareUpaSerialization(upa);
             return upa.replace(/^(\d+)\//, '[$1]/');
         };
@@ -65,7 +64,7 @@ define([
          *
          * If the passed upa is not properly formatted, this will throw an Error.
          */
-        var serializeExternal = function(upa) {
+        const serializeExternal = function (upa) {
             upa = prepareUpaSerialization(upa);
             return externalTag + upa;
         };
@@ -82,75 +81,71 @@ define([
          * In the [ws] case, the current workspace id replaces that whole token. In the &ws case,
          * the & tag is removed.
          */
-        var deserialize = function(serial) {
+        const deserialize = function (serial) {
             if (typeof serial !== 'string') {
                 throw {
-                    error: 'Can only deserialize UPAs from strings.'
+                    error: 'Can only deserialize UPAs from strings.',
                 };
             }
-            var deserial;
+            let deserial;
             if (serial[0] === externalTag) {
                 deserial = serial.substring(externalTag.length);
             } else {
-                var wsId = Runtime.make().workspaceId();
+                const wsId = Runtime.make().workspaceId();
                 if (!wsId) {
                     throw {
-                        error: 'Currently loaded workspace is unknown! Unable to deserialize UPA.'
+                        error: 'Currently loaded workspace is unknown! Unable to deserialize UPA.',
                     };
                 }
                 deserial = serial.replace(/^\[\d+\]\//, Runtime.make().workspaceId() + '/');
             }
             if (!isUpa(deserial)) {
                 throw {
-                    error: 'Deserialized UPA: ' + deserial + ' is invalid!'
+                    error: 'Deserialized UPA: ' + deserial + ' is invalid!',
                 };
             }
             return deserial;
         };
 
-        var changeUpaVersion = function(upa, newVersion) {
+        const changeUpaVersion = function (upa, newVersion) {
             if (!isUpa(upa)) {
                 throw {
-                    error: upa + ' is not a valid upa, so its version cannot be changed!'
+                    error: upa + ' is not a valid upa, so its version cannot be changed!',
                 };
             }
-            if ((!(/^\d+$/.test(newVersion)) || newVersion <= 0)) {
+            if (!/^\d+$/.test(newVersion) || newVersion <= 0) {
                 throw {
-                    error: newVersion + ' is not a valid version number!'
+                    error: newVersion + ' is not a valid version number!',
                 };
             }
-            var newUpa = upa.replace(/^(.+\/)(\d+)$/, '$1' + newVersion);
+            const newUpa = upa.replace(/^(.+\/)(\d+)$/, '$1' + newVersion);
             return newUpa;
         };
 
-        var serializeAll = function(upas) {
+        const serializeAll = function (upas) {
             if (typeof upas === 'string') {
                 return serialize(upas);
-            }
-            else if (Array.isArray(upas)) {
-                return upas.map(function(upa) {
+            } else if (Array.isArray(upas)) {
+                return upas.map((upa) => {
                     return serialize(upa);
                 });
-            }
-            else {
-                return Object.keys(upas).reduce(function(acc, key) {
+            } else {
+                return Object.keys(upas).reduce((acc, key) => {
                     acc[key] = serializeAll(upas[key]);
                     return acc;
                 }, {});
             }
         };
 
-        var deserializeAll = function(upas) {
+        const deserializeAll = function (upas) {
             if (typeof upas === 'string') {
                 return deserialize(upas);
-            }
-            else if (Array.isArray(upas)) {
-                return upas.map(function(upa) {
+            } else if (Array.isArray(upas)) {
+                return upas.map((upa) => {
                     return deserialize(upa);
                 });
-            }
-            else {
-                return Object.keys(upas).reduce(function(acc, key) {
+            } else {
+                return Object.keys(upas).reduce((acc, key) => {
                     acc[key] = deserializeAll(upas[key]);
                     return acc;
                 }, {});
@@ -165,10 +160,9 @@ define([
             isUpa: isUpa,
             changeUpaVersion: changeUpaVersion,
             serializeAll: serializeAll,
-            deserializeAll: deserializeAll
+            deserializeAll: deserializeAll,
         };
     };
 
     return UpaApi;
-
 });

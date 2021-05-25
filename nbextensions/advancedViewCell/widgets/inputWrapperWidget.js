@@ -1,14 +1,10 @@
-define([
-    'kb_common/html'
-], function (
-    html
-) {
+define(['kb_common/html'], (html) => {
     'use strict';
-    var t = html.tag,
+    const t = html.tag,
         div = t('div');
 
     function factory(config) {
-        var container,
+        let container,
             wrappedWidget = config.widget,
             wrappedId = html.genId();
 
@@ -39,13 +35,13 @@ define([
         return {
             attach: attach,
             start: start,
-            run: run
+            run: run,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

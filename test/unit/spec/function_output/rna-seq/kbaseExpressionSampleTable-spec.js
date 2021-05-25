@@ -1,14 +1,8 @@
-/*global define*/
-/*global describe, it, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-define([
-    'kbaseExpressionSampleTable'
-], function(Widget) {
-    describe('Test the kbaseExpressionSampleTable widget', function() {
-        it('Should do things', function() {
-
+define(['kbaseExpressionSampleTable'], (Widget) => {
+    'use strict';
+    describe('The kbaseExpressionSampleTable widget', () => {
+        it('should be defined', () => {
+            expect(Widget).toBeDefined();
         });
     });
 });

@@ -1,5 +1,3 @@
-/*global define */
-/*jslint white:true,global:true*/
 /*
  * MiniBus
  * A lightweight message bus implementation.
@@ -21,19 +19,16 @@
  * listen - a component requests that messages meeting a certain pattern invoke a function it provides
  *
  */
-define([
-    'uuid',
-    'bluebird'
-], function (Uuid, Promise) {
+define(['uuid', 'bluebird'], (Uuid, Promise) => {
     'use strict';
-    var instanceId = 0;
+    let instanceId = 0;
     function newInstance() {
         instanceId += 1;
         return instanceId;
     }
 
     function factory(config) {
-        var testListeners = [],
+        let testListeners = [],
             keyListeners = {},
             listenerRegistry = {},
             sendQueue = [],
@@ -41,7 +36,6 @@ define([
             interval = 0,
             timer,
             instanceId = newInstance();
-
 
         function letListenerHandle(item, handle) {
             try {
@@ -52,11 +46,11 @@ define([
         }
 
         function processKeyListeners(item) {
-            var listeners = keyListeners[item.envelope.key];
+            const listeners = keyListeners[item.envelope.key];
             if (!listeners) {
                 return;
             }
-            listeners.forEach(function (listener) {
+            listeners.forEach((listener) => {
                 letListenerHandle(item, listener.handle);
             });
         }
@@ -70,16 +64,16 @@ define([
             }
         }
         function processTestListeners(item) {
-            testListeners.forEach(function (listener) {
+            testListeners.forEach((listener) => {
                 if (testListener(item, listener.test)) {
                     letListenerHandle(item, listener.handle);
                 }
             });
         }
         function processPending() {
-            var processingQueue = sendQueue;
+            const processingQueue = sendQueue;
             sendQueue = [];
-            processingQueue.forEach(function (item) {
+            processingQueue.forEach((item) => {
                 if (item.envelope.key) {
                     processKeyListeners(item);
                 } else {
@@ -95,7 +89,7 @@ define([
             if (timer) {
                 return;
             }
-            timer = window.setTimeout(function () {
+            timer = window.setTimeout(() => {
                 timer = null;
                 try {
                     processPending();
@@ -123,12 +117,12 @@ define([
             return tryKey;
         }
         function listen(spec) {
-            var id = new Uuid(4).format(),
+            let id = new Uuid(4).format(),
                 key,
                 listener = {
                     spec: spec,
                     id: id,
-                    created: new Date()
+                    created: new Date(),
                 };
 
             if (spec.key) {
@@ -160,10 +154,10 @@ define([
         function send(message, address) {
             // support simple message sending ...
 
-            var envelope = {
+            const envelope = {
                 created: new Date(),
                 id: new Uuid(4).format(),
-                address: address
+                address: address,
             };
             if (address) {
                 if (address.key) {
@@ -172,7 +166,7 @@ define([
             }
             sendQueue.push({
                 message: message,
-                envelope: envelope
+                envelope: envelope,
             });
             run();
         }
@@ -185,12 +179,12 @@ define([
          *
          */
         function respond(spec) {
-            var originalHandle = spec.handle;
+            const originalHandle = spec.handle;
             function newHandle(message, envelope) {
                 try {
-                    var result = originalHandle(message);
+                    const result = originalHandle(message);
                     send(result, {
-                        key: {requestId: envelope.address.requestId}
+                        key: { requestId: envelope.address.requestId },
                     });
                 } catch (ex) {
                     console.error('Error handling in respond', ex);
@@ -206,8 +200,8 @@ define([
          * pending requests - which is a map of all request messages.
          */
         function request(message, address) {
-            return new Promise(function (resolve, reject) {
-                var requestId = new Uuid(4).format();
+            return new Promise((resolve, reject) => {
+                const requestId = new Uuid(4).format();
 
                 // when this listener with a key set to the request id
                 // is called, it will resolve the promise, and it is
@@ -215,12 +209,12 @@ define([
                 // is run, as well as to invoke the error handler upon
                 // timeout. (TODO)
                 listen({
-                    key: {requestId: requestId},
+                    key: { requestId: requestId },
                     once: true,
                     timeout: address.timeout || 10000,
                     handle: function (message) {
                         resolve(message);
-                    }
+                    },
                 });
 
                 // NB - respond understands requestId in the envelope.
@@ -241,20 +235,19 @@ define([
             //     handle: handler
             // });
             listen({
-               key: JSON.stringify({type: type}),
-               handle: handler
+                key: JSON.stringify({ type: type }),
+                handle: handler,
             });
         }
 
         function emit(type, message) {
-          if (message === undefined) {
-            message = {};
-          }
-          send(message, {
-            key: {type: type}
-          });
+            if (message === undefined) {
+                message = {};
+            }
+            send(message, {
+                key: { type: type },
+            });
         }
-
 
         return {
             listen: listen,
@@ -262,13 +255,13 @@ define([
             respond: respond,
             request: request,
             on: on,
-            emit: emit
+            emit: emit,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

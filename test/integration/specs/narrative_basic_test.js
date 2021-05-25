@@ -1,31 +1,28 @@
-/*global describe, it, browser, expect, beforeEach $*/
+'use strict';
 const Utils = require('../wdioUtils');
 
 const env = process.env.ENV || 'ci';
 
 const allTestCases = {
     ci: {
-        CASE_1: {
-            narrativeId: 31932
-        }
-        
+        CASE1: {
+            narrativeId: 31932,
+        },
     },
     'narrative-dev': {
-        CASE_1: {
-            narrativeId: 78050
-        }
-    }
+        CASE1: {
+            narrativeId: 78050,
+        },
+    },
 };
 
 const testCases = allTestCases[env];
 
 describe('Narrative tree page with login', () => {
-    'use strict';
-
     beforeEach(async () => await Utils.login());
 
     it('opens a narrative', async () => {
-        await browser.url(Utils.makeURL(`narrative/${testCases.CASE_1.narrativeId}`));
+        await browser.url(Utils.makeURL(`narrative/${testCases.CASE1.narrativeId}`));
         const loadingBlocker = await $('#kb-loading-blocker');
         const loadingText = await loadingBlocker.getText();
         expect(loadingText).toContain('Connecting to KBase services...');

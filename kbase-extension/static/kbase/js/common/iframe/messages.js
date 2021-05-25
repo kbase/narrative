@@ -1,23 +1,16 @@
-define([
-    'bluebird',
-    'uuid'
-], function (
-    Promise,
-    Uuid
-) {
+define(['bluebird', 'uuid'], (Promise, Uuid) => {
     function factory(config) {
-        var root = config.root;
-        var name = config.name;
+        const root = config.root;
+        const name = config.name;
 
-        var serviceId = new Uuid(4).format();
+        const serviceId = new Uuid(4).format();
 
-        var lastId = 0; //: number;
-        var sentCount; //: number;
-        var receivedCount; //: number;
-        var partners = {}; // Map<String, any>;
-        var listeners = {}; //Map<String, Array<any>>;
-        var awaitingResponse = {}; //: Map<String, any>;
-
+        let lastId = 0; //: number;
+        let sentCount; //: number;
+        let receivedCount; //: number;
+        const partners = {}; // Map<String, any>;
+        const listeners = {}; //Map<String, Array<any>>;
+        const awaitingResponse = {}; //: Map<String, any>;
 
         function genId() {
             lastId += 1;
@@ -36,9 +29,10 @@ define([
         }
 
         function receive(event) {
-            var origin = event.origin || event.originalEvent.origin,
+            let origin = event.origin || event.originalEvent.origin,
                 message = event.data,
-                listener, response;
+                listener,
+                response;
 
             receivedCount += 1;
 
@@ -64,7 +58,7 @@ define([
             }
 
             if (listeners[message.name]) {
-                listeners[message.name].forEach(function (listener) {
+                listeners[message.name].forEach((listener) => {
                     try {
                         listener.handler(message);
                         return;
@@ -83,29 +77,29 @@ define([
         }
 
         function send(partnerName, message) {
-            var partner = getPartner(partnerName);
+            const partner = getPartner(partnerName);
             message.from = name;
             message.address = {
                 to: partner.serviceId,
-                from: serviceId
+                from: serviceId,
             };
             sentCount += 1;
             partner.window.postMessage(message, partner.host);
         }
 
         function sendRequest(partnerName, message, handler) {
-            var id = genId();
+            const id = genId();
             message.id = id;
             awaitingResponse[id] = {
                 started: new Date(),
-                handler: handler
+                handler: handler,
             };
             send(partnerName, message);
         }
 
         function request(partnerName, message) {
-            return new Promise(function (resolve, reject) {
-                sendRequest(partnerName, message, function (response) {
+            return new Promise((resolve, reject) => {
+                sendRequest(partnerName, message, (response) => {
                     resolve(response);
                 });
             });
@@ -127,13 +121,13 @@ define([
             receive: receive,
             listen: listen,
             addPartner: addPartner,
-            serviceId: serviceId
+            serviceId: serviceId,
         });
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

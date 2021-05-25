@@ -96,7 +96,7 @@ try:
         print("narrative started")
         try:
             resp_unit = subprocess.check_call(
-                ["npx", "grunt", "test"],
+                ["npm", "run", "test"],
                 stderr=subprocess.STDOUT,
                 shell=False,
             )  # nosec

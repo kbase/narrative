@@ -35,7 +35,7 @@ define([
     FtpFileTableHtml,
     FtpFileHeaderHtml,
     FilePathHtml,
-    Workspace,
+    Workspace
 ) => {
     'use strict';
     return new KBWidget({
@@ -46,7 +46,7 @@ define([
             path: '/',
         },
 
-        init: function(options) {
+        init: function (options) {
             this._super(options);
 
             const runtime = Runtime.make();
@@ -74,7 +74,7 @@ define([
             return this;
         },
 
-        activate: function() {
+        activate: function () {
             this.render();
             if (!this.refreshInterval) {
                 this.refreshInterval = setInterval(() => {
@@ -83,7 +83,7 @@ define([
             }
         },
 
-        deactivate: function() {
+        deactivate: function () {
             if (this.refreshInterval) {
                 clearInterval(this.refreshInterval);
                 this.refreshInterval = undefined;
@@ -93,15 +93,15 @@ define([
         /**
          * Returns a Promise that resolves once the rendering is done.
          */
-        render: function() {
+        render: function () {
             return this.updateView();
         },
 
-        updateView: function() {
+        updateView: function () {
             return Promise.resolve(
                 this.stagingServiceClient.list({
                     path: this.subpath,
-                }),
+                })
             )
                 .then((data) => {
                     //list is recursive, so it'd show all files in all subdirectories. This filters 'em out.
@@ -136,7 +136,7 @@ define([
                     this.renderError(
                         xhr.responseText
                             ? xhr.responseText
-                            : 'Unknown error - directory was not found, or may have been deleted',
+                            : 'Unknown error - directory was not found, or may have been deleted'
                     );
                 })
                 .finally(() => {
@@ -148,7 +148,7 @@ define([
          * Expect that 'path' is only any subdirectories. The root directory is still the
          * user id.
          */
-        setPath: function(path) {
+        setPath: function (path) {
             this.path = path;
             // factor out the current subdirectory path into its own variable
             const subpath = path.split('/');
@@ -160,14 +160,14 @@ define([
             return this.updateView();
         },
 
-        renderFileHeader: function() {
+        renderFileHeader: function () {
             const uploadConfig = Config.get('upload');
             this.$elem.append(
                 this.ftpFileHeaderTmpl({
                     globusUrl:
                         uploadConfig.globus_upload_url + '&destination_path=' + this.userInfo.user,
                     userInfo: this.userInfo,
-                }),
+                })
             );
 
             // Set up the link to the web upload app.
@@ -181,7 +181,7 @@ define([
             $globusLink.click(() => {
                 const globusWindow = window.open('', 'globus');
                 globusWindow.document.write(
-                    '<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>',
+                    '<html><body><h2 style="text-align:center; font-family:\'Oxygen\', arial, sans-serif;">Loading Globus...</h2></body></html>'
                 );
                 this.stagingServiceClient.addAcl().done(() => {
                     window.open($globusLink.attr('href'), 'globus');
@@ -195,7 +195,7 @@ define([
             });
         },
 
-        renderPath: function() {
+        renderPath: function () {
             let splitPath = this.path;
             if (splitPath.startsWith('/')) {
                 splitPath = splitPath.substring(1);
@@ -219,7 +219,7 @@ define([
             this.$elem.find('div.file-path').append(
                 this.filePathTmpl({
                     path: pathTerms,
-                }),
+                })
             );
             this.$elem.find('div.file-path a').click((e) => {
                 this.updatePathFn($(e.currentTarget).data().element);
@@ -229,7 +229,7 @@ define([
             });
         },
 
-        downloadFile: function(url) {
+        downloadFile: function (url) {
             const hiddenIFrameID = 'hiddenDownloader';
             let iframe = document.getElementById(hiddenIFrameID);
             if (iframe === null) {
@@ -241,7 +241,7 @@ define([
             iframe.src = url;
         },
 
-        renderError: function(error) {
+        renderError: function (error) {
             const errorElem = `
                 <div class='file-path pull-left'></div>
                 <div style='margin-top:2em' class='alert alert-danger'>
@@ -257,14 +257,14 @@ define([
          * @param {object} data
          * keys: files (list of file info) and error (optional error)
          */
-        renderFiles: function(files) {
+        renderFiles: function (files) {
             files = files || [];
             const emptyMsg = 'No files found.';
             const $fileTable = $(
                 this.ftpFileTableTmpl({
                     files: files,
                     uploaders: this.uploaders.dropdown_order,
-                }),
+                })
             );
             this.$elem.append($fileTable);
             this.$elem.find('table').dataTable({
@@ -277,7 +277,7 @@ define([
                 aoColumnDefs: [
                     {
                         aTargets: [0],
-                        mRender: function(data, type, full) {
+                        mRender: function (data, type, full) {
                             if (type === 'display') {
                                 const isFolder = data === 'true' ? true : false;
                                 const icon = isFolder ? 'folder' : 'file-o';
@@ -305,7 +305,7 @@ define([
                     {
                         aTargets: [1],
                         sClass: 'staging-name',
-                        mRender: function(data, type, full) {
+                        mRender: function (data, type, full) {
                             if (type === 'display') {
                                 let decompressButton = '';
 
@@ -339,7 +339,7 @@ define([
                     },
                     {
                         aTargets: [2],
-                        mRender: function(data, type) {
+                        mRender: function (data, type) {
                             if (type === 'display') {
                                 return StringUtil.readableBytes(Number(data));
                             } else {
@@ -350,7 +350,7 @@ define([
                     },
                     {
                         aTargets: [3],
-                        mRender: function(data, type) {
+                        mRender: function (data, type) {
                             if (type === 'display') {
                                 return TimeFormat.getShortTimeStampStr(Number(data));
                             } else {
@@ -360,8 +360,8 @@ define([
                         sType: 'numeric',
                     },
                 ],
-                rowCallback: function(nRow) {
-                    const getFileFromName = function(_fileName) {
+                rowCallback: function (nRow) {
+                    const getFileFromName = function (_fileName) {
                         return files.filter((file) => {
                             return file.name === _fileName;
                         })[0];
@@ -484,7 +484,7 @@ define([
                             const _myFile = getFileFromName(_fileName);
 
                             $(e.currentTarget).replaceWith(
-                                $.jqElem('i').addClass('fa fa-spinner fa-spin'),
+                                $.jqElem('i').addClass('fa fa-spinner fa-spin')
                             );
 
                             this.stagingServiceClient
@@ -501,7 +501,7 @@ define([
             });
         },
 
-        renderMoreFileInfo: function(fileData) {
+        renderMoreFileInfo: function (fileData) {
             const self = this;
 
             if (fileData.loaded) {
@@ -509,7 +509,7 @@ define([
             }
 
             const $tabsDiv = $.jqElem('div').append(
-                '<i class="fa fa-spinner fa-spin"></i> Loading file info...please wait',
+                '<i class="fa fa-spinner fa-spin"></i> Loading file info...please wait'
             );
 
             let filePath = this.subpath;
@@ -537,12 +537,12 @@ define([
 
                     const $upa = data.UPA
                         ? $.jqElem('li')
-                            .append(
-                                $.jqElem('span')
-                                    .addClass('kb-data-staging-metadata-list')
-                                    .append('Imported as'),
-                            )
-                            .append($upaField)
+                              .append(
+                                  $.jqElem('span')
+                                      .addClass('kb-data-staging-metadata-list')
+                                      .append('Imported as')
+                              )
+                              .append($upaField)
                         : '';
 
                     self.workspaceClient
@@ -559,7 +559,7 @@ define([
                                 $.jqElem('a')
                                     .attr('href', '/#dataview/' + data.UPA)
                                     .attr('target', '_blank')
-                                    .append(name[0][1]),
+                                    .append(name[0][1])
                             );
                         })
                         .catch((xhr) => {
@@ -590,45 +590,45 @@ define([
                                             .append(
                                                 $.jqElem('span')
                                                     .addClass('kb-data-staging-metadata-list')
-                                                    .append('Name'),
+                                                    .append('Name')
                                             )
-                                            .append(data.name),
+                                            .append(data.name)
                                     )
                                     .append(
                                         $.jqElem('li')
                                             .append(
                                                 $.jqElem('span')
                                                     .addClass('kb-data-staging-metadata-list')
-                                                    .append('Created'),
+                                                    .append('Created')
                                             )
-                                            .append(TimeFormat.reformatDate(new Date(data.mtime))),
+                                            .append(TimeFormat.reformatDate(new Date(data.mtime)))
                                     )
                                     .append(
                                         $.jqElem('li')
                                             .append(
                                                 $.jqElem('span')
                                                     .addClass('kb-data-staging-metadata-list')
-                                                    .append('Size'),
+                                                    .append('Size')
                                             )
-                                            .append(StringUtil.readableBytes(Number(data.size))),
+                                            .append(StringUtil.readableBytes(Number(data.size)))
                                     )
                                     .append(
                                         $.jqElem('li')
                                             .append(
                                                 $.jqElem('span')
                                                     .addClass('kb-data-staging-metadata-list')
-                                                    .append('Line Count'),
+                                                    .append('Line Count')
                                             )
-                                            .append(lineCount),
+                                            .append(lineCount)
                                     )
                                     .append(
                                         $.jqElem('li')
                                             .append(
                                                 $.jqElem('span')
                                                     .addClass('kb-data-staging-metadata-list')
-                                                    .append('MD5'),
+                                                    .append('MD5')
                                             )
-                                            .append(data.md5 || 'Not provided'),
+                                            .append(data.md5 || 'Not provided')
                                     )
                                     .append($upa),
                             },
@@ -679,14 +679,14 @@ define([
                     $tabsDiv.append(
                         $.jqElem('div')
                             .addClass('alert alert-danger')
-                            .append('Error ' + xhr.status + '<br/>' + xhr.responseText),
+                            .append('Error ' + xhr.status + '<br/>' + xhr.responseText)
                     );
                 });
 
             return (fileData.loaded = $.jqElem('tr')
                 .addClass('staging-area-file-metadata')
                 .append(
-                    $.jqElem('td').attr('colspan', 5).css('vertical-align', 'top').append($tabsDiv),
+                    $.jqElem('td').attr('colspan', 5).css('vertical-align', 'top').append($tabsDiv)
                 ));
         },
 
@@ -696,7 +696,7 @@ define([
          * Expects 'file' to be an object with the following attributes:
          *   name = string, name of the file
          */
-        initImportApp: function(type, file) {
+        initImportApp: function (type, file) {
             const appInfo = this.uploaders.app_info[type];
             if (appInfo) {
                 const tag = APIUtil.getAppVersionTag(),
@@ -727,12 +727,9 @@ define([
             }
         },
 
-        startTour: function() {
+        startTour: function () {
             if (!this.tour) {
-                this.tour = new UploadTour.Tour(
-                    this.$elem.parent(),
-                    this.globus_name,
-                );
+                this.tour = new UploadTour.Tour(this.$elem.parent(), this.globus_name);
             }
             this.tour.start();
         },

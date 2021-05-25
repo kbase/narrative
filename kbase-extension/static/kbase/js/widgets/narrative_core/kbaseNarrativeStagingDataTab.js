@@ -15,12 +15,12 @@ define([
         lastRefresh: 0, // the last time (in ms since epoch) that updateView was run
         updateTimeout: null, // a Timeout that reconciles the above times (resets to null)
 
-        init: function(options) {
+        init: function (options) {
             this._super(options);
             this.path = '/';
         },
 
-        getUserInfo: function() {
+        getUserInfo: function () {
             const auth = Auth.make({ url: Config.url('auth') });
             let userInfo;
             return auth
@@ -31,14 +31,14 @@ define([
                         globusLinked:
                             info.idents &&
                             info.idents.some(
-                                (ident) => ident.provider.toLocaleLowerCase() === 'globus',
+                                (ident) => ident.provider.toLocaleLowerCase() === 'globus'
                             ),
                     };
                     return userInfo;
                 })
                 .catch(() => {
                     console.error(
-                        'An error occurred while determining whether the user account is linked to Globus. Continuing without links.',
+                        'An error occurred while determining whether the user account is linked to Globus. Continuing without links.'
                     );
                     userInfo = {
                         user: Jupyter.narrative.userId,
@@ -51,21 +51,21 @@ define([
                 });
         },
 
-        activate: function() {
+        activate: function () {
             this.stagingAreaViewer.activate();
         },
 
-        deactivate: function() {
+        deactivate: function () {
             this.stagingAreaViewer.deactivate();
         },
 
-        updatePath: function(newPath) {
+        updatePath: function (newPath) {
             this.path = newPath;
             this.uploadWidget.setPath(newPath);
             this.stagingAreaViewer.setPath(newPath);
         },
 
-        render: function() {
+        render: function () {
             return this.getUserInfo().then((userInfo) => {
                 const $mainElem = $('<div>').addClass('kb-data-staging__container');
                 const $dropzoneElem = $('<div>');
@@ -81,13 +81,11 @@ define([
                     this.updateView();
                 });
 
-                const stagingAreaArgs = Object.assign({},
-                    this.options.stagingAreaViewer || {},
-                    {
-                        path: this.path,
-                        updatePathFn: this.updatePath.bind(this),
-                        userInfo: userInfo,
-                    });
+                const stagingAreaArgs = Object.assign({}, this.options.stagingAreaViewer || {}, {
+                    path: this.path,
+                    updatePathFn: this.updatePath.bind(this),
+                    userInfo: userInfo,
+                });
                 this.stagingAreaViewer = new StagingAreaViewer(this.$myFiles, stagingAreaArgs);
 
                 this.updateView();
@@ -103,7 +101,7 @@ define([
          * If the next time this is called is less than some minRefreshTime apart, this
          * makes a timeout with the time difference.
          */
-        updateView: function() {
+        updateView: function () {
             // this does the staging area re-render, then tracks the time
             // it was last done.
             const renderStagingArea = () => {

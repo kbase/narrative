@@ -14,19 +14,7 @@ define([
     'select2',
     'bootstrap',
     'css!font-awesome',
-], (
-    Promise,
-    $,
-    html,
-    utils,
-    Data,
-    Events,
-    Runtime,
-    UI,
-    Validation,
-    TimeFormat,
-    WidgetCommon,
-) => {
+], (Promise, $, html, utils, Data, Events, Runtime, UI, Validation, TimeFormat, WidgetCommon) => {
     'use strict';
 
     // Constants
@@ -50,9 +38,7 @@ define([
                 availableValuesMap: {},
                 value: undefined,
             };
-        let parent,
-            container,
-            ui;
+        let parent, container, ui;
 
         // TODO: getting rid of blacklist temporarily until we work out how to state-ify everything by reference.
         model.blacklistValues = []; //config.blacklist || [];
@@ -89,7 +75,7 @@ define([
                                 value: ref,
                                 selected: selected,
                             },
-                            objectInfo.name,
+                            objectInfo.name
                         );
                     });
             }
@@ -104,7 +90,7 @@ define([
                     },
                     id: html.genId(),
                 },
-                [option({ value: '' }, '')].concat(selectOptions),
+                [option({ value: '' }, '')].concat(selectOptions)
             );
 
             return selectElem;
@@ -174,7 +160,7 @@ define([
                 if (objInfo && objInfo.dataPaletteRef) {
                     return Validation.validateWorkspaceDataPaletteRef(
                         objInfo.dataPaletteRef,
-                        validationOptions,
+                        validationOptions
                     );
                 }
 
@@ -186,13 +172,13 @@ define([
                     case 'ref':
                         return Validation.validateWorkspaceObjectRef(
                             processedValue,
-                            validationOptions,
+                            validationOptions
                         );
                     case 'name':
                     default:
                         return Validation.validateWorkspaceObjectName(
                             processedValue,
-                            validationOptions,
+                            validationOptions
                         );
                 }
             });
@@ -279,11 +265,11 @@ define([
                         '<i>' + objectInfo.typeName + '</i><br>',
                         'Narrative id: ' + objectInfo.wsid + '<br>',
                         'updated ' +
-                        TimeFormat.getTimeStampStr(objectInfo.save_date) +
-                        ' by ' +
-                        objectInfo.saved_by,
+                            TimeFormat.getTimeStampStr(objectInfo.save_date) +
+                            ' by ' +
+                            objectInfo.saved_by,
                     ]),
-                ]),
+                ])
             );
         }
 
@@ -305,14 +291,14 @@ define([
                     events,
                     ui,
                     _container,
-                    inputControl,
+                    inputControl
                 );
                 ui.setContent('input-container', content);
 
                 $(ui.getElement('input-container.input'))
                     .select2({
                         templateResult: formatObjectDisplay,
-                        templateSelection: function(object) {
+                        templateSelection: function (object) {
                             if (!object.id) {
                                 return object.text;
                             }
@@ -339,7 +325,7 @@ define([
                 {
                     dataElement: 'main-panel',
                 },
-                [div({ dataElement: 'input-container' })],
+                [div({ dataElement: 'input-container' })]
             );
             return {
                 content: content,
@@ -460,7 +446,7 @@ define([
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
         },
     };

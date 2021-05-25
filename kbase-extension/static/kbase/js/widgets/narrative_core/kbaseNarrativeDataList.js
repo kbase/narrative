@@ -53,7 +53,7 @@ define([
     BootstrapDialog,
     BootstrapSearch,
     kbaseDataCard,
-    DataProvider,
+    DataProvider
 ) => {
     'use strict';
 
@@ -133,7 +133,7 @@ define([
          * @param obj Info tuple from ws_list_objects
          * @return Identifier (string)
          */
-        itemId: function(obj) {
+        itemId: function (obj) {
             return obj[6] + '/' + obj[0];
         },
 
@@ -147,14 +147,14 @@ define([
          * @param obj_info Object info tuple, as returned by ws.list_objects()
          * @return true if in a set, false otherwise
          */
-        isASet: function(objInfo) {
+        isASet: function (objInfo) {
             return this.setInfo[this.itemId(objInfo)] ? true : false;
         },
 
         /**
          * Returns true if in set view mode AND the object is a set.
          */
-        isAViewedSet: function(objInfo) {
+        isAViewedSet: function (objInfo) {
             if (this.setViewMode) {
                 return this.isASet(objInfo);
             } else {
@@ -169,7 +169,7 @@ define([
          *                  workspace API for list_objects()
          * @return true or false
          */
-        inAnySet: function(item_info) {
+        inAnySet: function (item_info) {
             if (this.setViewMode) {
                 const item_id = this.itemId(item_info);
                 return _.has(this.setItems, item_id);
@@ -178,7 +178,7 @@ define([
             }
         },
 
-        getSetInfo: function(obj_info) {
+        getSetInfo: function (obj_info) {
             return this.setInfo[this.itemId(obj_info)];
         },
 
@@ -190,7 +190,7 @@ define([
          * @return All parents, expanded or not, as a mapping with
          *         the keys: (item_id, expanded, div).
          */
-        getItemParents: function(item_info) {
+        getItemParents: function (item_info) {
             const item_id = this.itemId(item_info);
             // empty if not in ANY set
             if (!_.has(this.setItems, item_id)) {
@@ -211,12 +211,12 @@ define([
          * Clear data structures tracking the workspace sets.
          * This will cause the next refresh to fetch new data.
          */
-        clearSets: function() {
+        clearSets: function () {
             this.setItems = {};
             this.setInfo = {};
         },
 
-        itemIdsInSet: function(set_id) {
+        itemIdsInSet: function (set_id) {
             if (this.setViewMode) {
                 return this.setInfo[set_id].item_ids;
             } else {
@@ -234,7 +234,7 @@ define([
          * @returns {Object} this shiny new widget.
          * @private
          */
-        init: function(options) {
+        init: function (options) {
             this._super(options);
 
             const dataConfig = Config.get('data_panel');
@@ -277,7 +277,10 @@ define([
                     height: this.mainListPanelHeight,
                 })
                 .on('scroll', (event) => {
-                    if ($(event.target).scrollTop() + $(event.target).innerHeight() >= event.target.scrollHeight) {
+                    if (
+                        $(event.target).scrollTop() + $(event.target).innerHeight() >=
+                        event.target.scrollHeight
+                    ) {
                         this.renderMore();
                     }
                 });
@@ -317,7 +320,7 @@ define([
             return this;
         },
 
-        destroy: function() {
+        destroy: function () {
             this.token = null;
             this.ws = null;
             this.isLoggedIn = false;
@@ -329,7 +332,7 @@ define([
             }
         },
 
-        setListHeight: function(height, animate) {
+        setListHeight: function (height, animate) {
             if (this.$mainListDiv) {
                 if (animate) {
                     this.$mainListDiv.animate({ height: height }, this.options.slideTime);
@@ -346,7 +349,7 @@ define([
          * It associates the new auth token with this widget and refreshes the data panel.
          * @private
          */
-        loggedInCallback: function(event, auth) {
+        loggedInCallback: function (event, auth) {
             this.token = auth.token;
             this.ws = new Workspace(this.options.ws_url, auth);
             this.my_username = auth.user_id;
@@ -362,22 +365,22 @@ define([
          * It throws away the auth token and workspace client, and refreshes the widget
          * @private
          */
-        loggedOutCallback: function() {
+        loggedOutCallback: function () {
             this.destroy();
         },
 
-        showLoading: function(caption) {
+        showLoading: function (caption) {
             this.$mainListDiv.hide();
             this.loadingDiv.setText(caption || '');
             this.loadingDiv.div.show();
         },
 
-        hideLoading: function() {
+        hideLoading: function () {
             this.loadingDiv.div.hide();
             this.$mainListDiv.show();
         },
 
-        refresh: function(showError) {
+        refresh: function (showError) {
             if (this.writingLock) {
                 return Promise.resolve();
             }
@@ -398,7 +401,7 @@ define([
             return Promise.resolve(
                 this.ws.get_workspace_info({
                     workspace: this.ws_name,
-                }),
+                })
             )
                 .then((wsInfo) => {
                     if (this.wsLastUpdateTimestamp !== wsInfo[3]) {
@@ -416,13 +419,13 @@ define([
                     if (showError) {
                         this.showBlockingError(
                             'Sorry, an error occurred while fetching your data.',
-                            { error: 'Unable to connect to KBase database.' },
+                            { error: 'Unable to connect to KBase database.' }
                         );
                     }
                 });
         },
 
-        refreshTimeStrings: function() {
+        refreshTimeStrings: function () {
             Object.keys(this.dataObjects).forEach((i) => {
                 if (this.dataObjects[i].$div) {
                     const newTime = TimeFormat.getTimeStampStr(this.dataObjects[i].info[3]);
@@ -431,7 +434,7 @@ define([
             });
         },
 
-        reloadWsData: function() {
+        reloadWsData: function () {
             // empty the existing object list first
             this.objData = {};
             this.availableTypes = {};
@@ -471,7 +474,7 @@ define([
                             key: {
                                 type: 'workspace-data-updated',
                             },
-                        },
+                        }
                     );
                 })
                 .then(() => {
@@ -519,14 +522,14 @@ define([
          * This empties out the main data div and injects an error into it.
          * Used mainly when lookups fail.
          */
-        showBlockingError: function(title, error) {
+        showBlockingError: function (title, error) {
             this.$mainListDiv.empty();
             this.$mainListDiv.append(DisplayUtil.createError(title, error));
             this.loadingDiv.div.hide();
             this.$mainListDiv.show();
         },
 
-        fetchWorkspaceData: function() {
+        fetchWorkspaceData: function () {
             const addObjectInfo = (objInfo, dpInfo) => {
                 // Get the object info
                 const objId = this.itemId(objInfo);
@@ -614,12 +617,12 @@ define([
                 .catch((error) => {
                     this.showBlockingError(
                         'Sorry, an error occurred while fetching your data.',
-                        error,
+                        error
                     );
                     console.error(error);
                     window.KBError(
                         'kbaseNarrativeDataList.fetchWorkspaceData',
-                        error.error.message,
+                        error.error.message
                     );
                     throw error;
                 });
@@ -629,7 +632,7 @@ define([
          * Returns the available object data for a type.
          * If no type is specified (type is falsy), returns all object data
          */
-        getObjData: function(types) {
+        getObjData: function (types) {
             if (types) {
                 const dataSet = {};
                 if (typeof types === 'string') {
@@ -650,7 +653,7 @@ define([
          * if asObject is truthy, it will package this array up as an object and include the reference
          * path as key refPath.
          */
-        getDataObjectByRef: function(ref, asObject) {
+        getDataObjectByRef: function (ref, asObject) {
             if (!ref) {
                 return null;
             }
@@ -677,7 +680,7 @@ define([
             return retVal;
         },
 
-        getDataObjectByName: function(name, wsId) {
+        getDataObjectByName: function (name, wsId) {
             // means we gotta search. Oof.
             let objInfo = null;
             Object.keys(this.dataObjects).forEach((id) => {
@@ -698,7 +701,7 @@ define([
         $currentSelectedRow: null,
         selectedObject: null,
 
-        setSelected: function($selectedRow, object_info) {
+        setSelected: function ($selectedRow, object_info) {
             if (this.$currentSelectedRow) {
                 this.$currentSelectedRow.removeClass('kb-data-list-obj-row-selected');
             }
@@ -709,11 +712,11 @@ define([
             }
         },
 
-        showReportLandingPage: function(reportRef) {
+        showReportLandingPage: function (reportRef) {
             window.open('/#dataview/' + reportRef, '_blank');
         },
 
-        makeToolbarButton: function(name) {
+        makeToolbarButton: function (name) {
             const btnClasses = 'btn btn-xs btn-default';
             const btnCss = { color: '#888' };
 
@@ -726,7 +729,7 @@ define([
             return $btn;
         },
 
-        filterMethodInputButton: function(objData) {
+        filterMethodInputButton: function (objData) {
             return this.makeToolbarButton()
                 .tooltip({
                     title: 'Show Apps with this as input',
@@ -740,12 +743,12 @@ define([
                 .click(() => {
                     this.trigger(
                         'filterMethods.Narrative',
-                        'input:' + objData.objectInfo.type.split('-')[0],
+                        'input:' + objData.objectInfo.type.split('-')[0]
                     );
                 });
         },
 
-        filterMethodOutputButton: function(objData) {
+        filterMethodOutputButton: function (objData) {
             return this.makeToolbarButton()
                 .tooltip({
                     title: 'Show Apps with this as output',
@@ -759,12 +762,12 @@ define([
                 .click(() => {
                     this.trigger(
                         'filterMethods.Narrative',
-                        'output:' + objData.objectInfo.type.split('-')[0],
+                        'output:' + objData.objectInfo.type.split('-')[0]
                     );
                 });
         },
 
-        openLandingPageButton: function(objData, $alertContainer) {
+        openLandingPageButton: function (objData, $alertContainer) {
             return this.makeToolbarButton()
                 .tooltip({
                     title: 'Explore data',
@@ -783,20 +786,20 @@ define([
                 });
         },
 
-        openReportButton: function() {
+        openReportButton: function () {
             return this.makeToolbarButton('report');
         },
 
-        renderError: function($alertContainer, message) {
+        renderError: function ($alertContainer, message) {
             $alertContainer.empty();
             $alertContainer.append(
                 $('<span>')
                     .css({ color: '#F44336' })
-                    .append('Error! ' + message),
+                    .append('Error! ' + message)
             );
         },
 
-        openHistoryButton: function(objData, $alertContainer) {
+        openHistoryButton: function (objData, $alertContainer) {
             return this.makeToolbarButton()
                 .tooltip({
                     title: 'View history to revert changes',
@@ -822,8 +825,8 @@ define([
                                             .append('Hide History')
                                             .click(() => {
                                                 $alertContainer.empty();
-                                            }),
-                                    ),
+                                            })
+                                    )
                                 );
                                 history.reverse();
                                 const $tbl = $('<table>').css({ width: '100%' });
@@ -869,9 +872,9 @@ define([
                                                             console.error(error);
                                                             this.renderError(
                                                                 $alertContainer,
-                                                                error.error.message,
+                                                                error.error.message
                                                             );
-                                                        },
+                                                        }
                                                     );
                                                 });
                                         })(revertRef);
@@ -882,17 +885,17 @@ define([
                                             .append(
                                                 $('<td>').append(
                                                     'Saved by ' +
-                                                    historyItem[5] +
-                                                    '<br>' +
-                                                    TimeFormat.getTimeStampStr(historyItem[3]),
-                                                ),
+                                                        historyItem[5] +
+                                                        '<br>' +
+                                                        TimeFormat.getTimeStampStr(historyItem[3])
+                                                )
                                             )
                                             .append(
                                                 $('<td>')
                                                     .append(
                                                         $('<span>')
                                                             .css({ margin: '4px' })
-                                                            .addClass('fa fa-info pull-right'),
+                                                            .addClass('fa fa-info pull-right')
                                                     )
                                                     .tooltip({
                                                         title:
@@ -909,8 +912,8 @@ define([
                                                             show: Config.get('tooltip').showDelay,
                                                             hide: Config.get('tooltip').hideDelay,
                                                         },
-                                                    }),
-                                            ),
+                                                    })
+                                            )
                                     );
                                 }
                                 $alertContainer.append($tbl);
@@ -918,13 +921,13 @@ define([
                             (error) => {
                                 console.error(error);
                                 this.renderError($alertContainer, error.error.message);
-                            },
+                            }
                         );
                     }
                 });
         },
 
-        openProvenanceButton: function(objData, $alertContainer) {
+        openProvenanceButton: function (objData, $alertContainer) {
             return this.makeToolbarButton()
                 .tooltip({
                     title: 'View data provenance and relationships',
@@ -942,7 +945,7 @@ define([
                 });
         },
 
-        downloadButton: function(objData, ref_path, $alertContainer) {
+        downloadButton: function (objData, ref_path, $alertContainer) {
             return this.makeToolbarButton()
                 .tooltip({
                     title: 'Export / Download data',
@@ -973,7 +976,7 @@ define([
                 });
         },
 
-        renameButton: function(objData, $alertContainer) {
+        renameButton: function (objData, $alertContainer) {
             return this.makeToolbarButton()
                 .tooltip({
                     title: 'Rename data',
@@ -992,8 +995,8 @@ define([
                             $('<div>').append(
                                 $('<span>')
                                     .append('Read-only Narrative - Cannot rename data object')
-                                    .addClass('text-warning'),
-                            ),
+                                    .addClass('text-warning')
+                            )
                         );
                         return;
                     }
@@ -1029,7 +1032,7 @@ define([
                     $alertContainer.append(
                         $('<div>')
                             .append(
-                                $('<div>').append('Warning: Apps using the old name may break.'),
+                                $('<div>').append('Warning: Apps using the old name may break.')
                             )
                             .append($('<div>').append($newNameInput))
                             .append(
@@ -1056,12 +1059,12 @@ define([
                                                     console.error(error);
                                                     this.renderError(
                                                         $alertContainer,
-                                                        error.error.message,
+                                                        error.error.message
                                                     );
-                                                },
+                                                }
                                             );
                                         }
-                                    }),
+                                    })
                             )
                             .append(
                                 $('<button>')
@@ -1070,13 +1073,13 @@ define([
                                     .click(() => {
                                         this.writingLock = false;
                                         $alertContainer.empty();
-                                    }),
-                            ),
+                                    })
+                            )
                     );
                 });
         },
 
-        deleteButton: function(objData, $alertContainer) {
+        deleteButton: function (objData, $alertContainer) {
             return this.makeToolbarButton()
                 .tooltip({
                     title: 'Delete data',
@@ -1097,8 +1100,8 @@ define([
                             $('<div>').append(
                                 $('<span>')
                                     .append('Read-only Narrative - Cannot delete data object')
-                                    .addClass('text-warning'),
-                            ),
+                                    .addClass('text-warning')
+                            )
                         );
                         return;
                     }
@@ -1121,7 +1124,7 @@ define([
                                                     },
                                                     new_name:
                                                         objData.objectInfo.name.split(
-                                                            '-deleted-',
+                                                            '-deleted-'
                                                         )[0] +
                                                         '-deleted-' +
                                                         new Date().getTime(),
@@ -1139,7 +1142,7 @@ define([
                                                         () => {
                                                             $(document).trigger(
                                                                 'deleteDataList.Narrative',
-                                                                objData.objectInfo.name,
+                                                                objData.objectInfo.name
                                                             );
                                                             this.writingLock = false;
                                                             this.refresh();
@@ -1148,21 +1151,21 @@ define([
                                                             console.error(error);
                                                             this.renderError(
                                                                 $alertContainer,
-                                                                error.error.message,
+                                                                error.error.message
                                                             );
-                                                        },
+                                                        }
                                                     );
                                                 },
                                                 (error) => {
                                                     console.error(error);
                                                     this.renderError(
                                                         $alertContainer,
-                                                        error.error.message,
+                                                        error.error.message
                                                     );
-                                                },
+                                                }
                                             );
                                         }
-                                    }),
+                                    })
                             )
                             .append(
                                 $('<button>')
@@ -1170,13 +1173,13 @@ define([
                                     .append('Cancel')
                                     .click(() => {
                                         $alertContainer.empty();
-                                    }),
-                            ),
+                                    })
+                            )
                     );
                 });
         },
 
-        addDataControls: function(objData, $alertContainer, ref_path) {
+        addDataControls: function (objData, $alertContainer, ref_path) {
             const $filterMethodInput = this.filterMethodInputButton(objData);
             const $filterMethodOutput = this.filterMethodOutputButton(objData);
             const $openLandingPage = this.openLandingPageButton(objData, $alertContainer);
@@ -1208,7 +1211,7 @@ define([
             return $btnToolbar;
         },
 
-        toggleSetExpansion: function(objId, $setDiv) {
+        toggleSetExpansion: function (objId, $setDiv) {
             const setInfo = this.setInfo[objId];
             let setItemsShown, i;
             if (!setInfo) {
@@ -1235,7 +1238,7 @@ define([
             }
         },
 
-        getReportForObject: function(objectInfo) {
+        getReportForObject: function (objectInfo) {
             const narrativeService = new DynamicServiceClient({
                 module: 'NarrativeService',
                 url: Config.url('service_wizard'),
@@ -1287,7 +1290,7 @@ define([
                                     return reportObject.data.objects_created.some(
                                         (objectCreated) => {
                                             return objectCreated.ref === reportRef;
-                                        },
+                                        }
                                     );
                                 })
                                 .map((reportObject) => {
@@ -1302,7 +1305,7 @@ define([
                                 objectReportsForOutput = objectReportsForOutput.filter(
                                     (reportInfo) => {
                                         return reportInfo.wsid === objectInfo.wsid;
-                                    },
+                                    }
                                 );
                             }
 
@@ -1311,7 +1314,7 @@ define([
                 });
         },
 
-        onOpenDataListItem: function($moreRow, objData) {
+        onOpenDataListItem: function ($moreRow, objData) {
             if ('reportRef' in objData) {
                 return;
             }
@@ -1323,7 +1326,7 @@ define([
             $reportButton
                 .empty()
                 .append(
-                    $('<span>').addClass('fa fa-spinner fa-spin fa-fw fa-sm').css('width', '0.75em'),
+                    $('<span>').addClass('fa fa-spinner fa-spin fa-fw fa-sm').css('width', '0.75em')
                 );
 
             this.getReportForObject(objectInfo).then((result) => {
@@ -1386,7 +1389,7 @@ define([
          * This is the main function for rendering a data object
          * in the data list.
          */
-        renderObjectRowDiv: function(objId) {
+        renderObjectRowDiv: function (objId) {
             const objData = this.dataObjects[objId];
             const object_info = objData.info;
             const ref_path = objData.refPath;
@@ -1449,16 +1452,16 @@ define([
                     $('<table style="width:100%;">')
                         .append(
                             '<tr><th>Permanent Id</th><td>' +
-                            object_info[6] +
-                            '/' +
-                            object_info[0] +
-                            '/' +
-                            object_info[4] +
-                            '</td></tr>',
+                                object_info[6] +
+                                '/' +
+                                object_info[0] +
+                                '/' +
+                                object_info[4] +
+                                '</td></tr>'
                         )
                         .append('<tr><th>Full Type</th><td>' + typeLink + '</td></tr>')
                         .append($('<tr>').append('<th>Saved by</th>').append($savedByUserSpan))
-                        .append(metadataText),
+                        .append(metadataText)
                 );
 
             const $card = kbaseDataCard.apply(this, [
@@ -1521,7 +1524,7 @@ define([
 
         // ============= DnD ==================
 
-        addDropZone: function(container, targetCell, isBelow) {
+        addDropZone: function (container, targetCell, isBelow) {
             const targetDiv = document.createElement('div');
 
             targetDiv.classList.add('kb-data-list-drag-target');
@@ -1581,7 +1584,7 @@ define([
             }
         },
 
-        addDragAndDrop: function($row) {
+        addDragAndDrop: function ($row) {
             const node = $row.children().get(0),
                 key = $row.attr('kb-oid'),
                 obj = this.dataObjects[this.keyToObjId[key]], //_.findWhere(this.objectList, {key: key}),
@@ -1612,7 +1615,7 @@ define([
             node.addEventListener('dragend', () => {
                 const container = document.querySelector('#notebook-container'),
                     targetCells = document.querySelectorAll(
-                        '#notebook-container .kb-data-list-drag-target',
+                        '#notebook-container .kb-data-list-drag-target'
                     );
                 for (let i = 0; i < targetCells.length; i += 1) {
                     const targetCell = targetCells.item(i);
@@ -1641,7 +1644,7 @@ define([
          * Helper function to create named object attrs from
          * list of fields returned from Workspace service.
          */
-        createInfoObject: function(info, refPath) {
+        createInfoObject: function (info, refPath) {
             const ret = ServiceUtils.objectInfoToObject(info);
 
             if (refPath) {
@@ -1651,11 +1654,11 @@ define([
         },
         // ============= end DnD ================
 
-        insertViewer: function(key) {
+        insertViewer: function (key) {
             Jupyter.narrative.addViewerCell(this.keyToObjId[key]);
         },
 
-        renderMore: function() {
+        renderMore: function () {
             const start = this.lastObjectRendered;
             const limit = this.n_objs_rendered + this.options.objs_to_render_on_scroll;
             for (
@@ -1671,13 +1674,13 @@ define([
             }
         },
 
-        detachAllRows: function() {
+        detachAllRows: function () {
             this.$mainListDiv.children().detach();
             this.n_objs_rendered = 0;
             this.renderedAll = false;
         },
 
-        shouldRenderObject: function(viewInfo) {
+        shouldRenderObject: function (viewInfo) {
             let render = viewInfo.inFilter;
             if (render) {
                 if (this.setViewMode && this.inAnySet(this.dataObjects[viewInfo.objId].info)) {
@@ -1687,7 +1690,7 @@ define([
             return render;
         },
 
-        renderList: function() {
+        renderList: function () {
             this.detachAllRows();
             this.n_objs_rendered = 0;
 
@@ -1720,7 +1723,7 @@ define([
                                 this.trigger('toggleSidePanelOverlay.Narrative', [
                                     this.options.parentControlPanel.$overlayPanel,
                                 ]);
-                            }),
+                            })
                     );
                     this.$addDataButton.hide();
                 }
@@ -1729,7 +1732,7 @@ define([
             }
         },
 
-        renderObject: function(objId) {
+        renderObject: function (objId) {
             const $renderedDiv = this.renderObjectRowDiv(objId);
             this.dataObjects[objId].$div = $renderedDiv;
             this.$mainListDiv.append($renderedDiv);
@@ -1738,11 +1741,11 @@ define([
             }
         },
 
-        renderController: function() {
+        renderController: function () {
             const $upOrDown = $('<button class="btn btn-default btn-sm" type="button">')
                 .css({ 'margin-left': '5px' })
                 .append(
-                    '<span class="fa fa-sort-amount-asc" style="color:#777" aria-hidden="true" />',
+                    '<span class="fa fa-sort-amount-asc" style="color:#777" aria-hidden="true" />'
                 )
                 .on('click', () => {
                     this.reverseData();
@@ -1763,13 +1766,13 @@ define([
             };
 
             const $byDate = $(
-                '<label id="nar-data-list-default-sort-label" class="btn btn-default">',
+                '<label id="nar-data-list-default-sort-label" class="btn btn-default">'
             )
                 .addClass('btn btn-default')
                 .append(
                     $(
-                        '<input type="radio" name="options" id="nar-data-list-default-sort-option" autocomplete="off">',
-                    ),
+                        '<input type="radio" name="options" id="nar-data-list-default-sort-option" autocomplete="off">'
+                    )
                 )
                 .append('date')
                 .on('click', () => {
@@ -1777,7 +1780,7 @@ define([
                         return (
                             this.sortOrder *
                             this.dataObjects[a.objId].info[3].localeCompare(
-                                this.dataObjects[b.objId].info[3],
+                                this.dataObjects[b.objId].info[3]
                             )
                         );
                     });
@@ -1989,7 +1992,7 @@ define([
                             .append(Config.get('features').hierarchicalDataView ? $viewMode : '')
                             .append($openSearch)
                             .append($openSort)
-                            .append($openFilter),
+                            .append($openFilter)
                     );
             }
 
@@ -2014,7 +2017,7 @@ define([
         /**
          * Populates the filter set of available types.
          */
-        populateAvailableTypes: function() {
+        populateAvailableTypes: function () {
             if (this.availableTypes && this.$filterTypeSelect) {
                 const selected = this.$filterTypeSelect.val();
                 this.$filterTypeSelect.empty();
@@ -2032,8 +2035,8 @@ define([
                                     ' ',
                                     this.pluralize('object', typeInfo.count),
                                     ')',
-                                ].join(''),
-                            ),
+                                ].join('')
+                            )
                         );
                         runningCount += typeInfo.count;
                     });
@@ -2041,21 +2044,21 @@ define([
                     .prepend(
                         $('<option value="">').append(
                             'Show All Types (' +
-                            runningCount +
-                            ' ' +
-                            this.pluralize('object', runningCount) +
-                            ')',
-                        ),
+                                runningCount +
+                                ' ' +
+                                this.pluralize('object', runningCount) +
+                                ')'
+                        )
                     )
                     .val(selected);
             }
         },
-        reverseData: function() {
+        reverseData: function () {
             this.viewOrder.reverse();
             this.renderList();
             this.search();
         },
-        sortData: function(sortfunction) {
+        sortData: function (sortfunction) {
             this.selectedType = 'sortData';
             this.lastSortFunction = sortfunction;
             this.viewOrder.sort(sortfunction);
@@ -2067,11 +2070,11 @@ define([
                 {
                     scrollTop: 0,
                 },
-                300,
+                300
             ); // fast = 200, slow = 600
         },
 
-        search: function(term, type) {
+        search: function (term, type) {
             if (!this.dataObjects) {
                 return;
             }
@@ -2149,11 +2152,11 @@ define([
             this.currentTerm = term;
         },
 
-        filterByType: function(type) {
+        filterByType: function (type) {
             this.search(null, type);
         },
 
-        getRichData: function(object_info, $moreRow) {
+        getRichData: function (object_info, $moreRow) {
             // spawn off expensive operations required to enable "more" functionality.
             // e.g. the report button.
 

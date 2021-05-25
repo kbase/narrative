@@ -255,7 +255,7 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
             return this.executeActionByJobStatus({
                 action: 'cancel',
                 statusList: statusList,
-                validStatuses: ['created', 'estimating', 'queued', 'running'],
+                validStatuses: Jobs.validStatusesForAction.cancel,
             });
         }
 
@@ -268,7 +268,7 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
             return this.executeActionByJobStatus({
                 action: 'retry',
                 statusList: statusList,
-                validStatuses: ['error', 'terminated'],
+                validStatuses: Jobs.validStatusesForAction.retry,
             });
         }
 

@@ -34,6 +34,7 @@ define([
     'handlebars',
     'kbaseAccordion',
     'util/bootstrapDialog',
+    'util/developerMode',
     'base/js/namespace',
     'common/runtime',
     'services/kernels/comm',
@@ -45,6 +46,7 @@ define([
     Handlebars,
     kbaseAccordion,
     BootstrapDialog,
+    devMode,
     Jupyter,
     Runtime,
     JupyterComm,
@@ -65,15 +67,71 @@ define([
         JOB = 'jobId',
         CELL = 'cell';
 
+    // Conversion of the message type of an incoming message
+    // to the type used for the message to be sent to the backend
+    const requestTranslation = {
+        'ping-comm-channel': 'ping',
+
+        // Fetches job status from kernel.
+        'request-job-status': JOB_STATUS,
+
+        // Requests job status updates for this job via the job channel, and also
+        // ensures that job polling is running.
+        'request-job-update': START_JOB_UPDATE,
+        // Tells kernel to stop including a job in the lookup loop.
+        'request-job-completion': STOP_JOB_UPDATE,
+
+        // cancels the job
+        'request-job-cancellation': CANCEL_JOB,
+        // retries the job
+        'request-job-retry': RETRY_JOB,
+
+        // Fetches info (not state) about a job, including the app id, name, and inputs.
+        'request-job-info': JOB_INFO,
+
+        // Fetches job logs from kernel.
+        'request-job-log': JOB_LOGS,
+        // Fetches most recent job logs from kernel.
+        'request-job-log-latest': JOB_LOGS_LATEST,
+    };
+
     class JobCommChannel {
         /**
          * Grabs the runtime, inits the set of job states, and registers callbacks against the
          * main Bus.
          */
-        constructor() {
+        constructor(config = {}) {
             this.runtime = Runtime.make();
             this.jobStates = {};
             this.handleBusMessages();
+            this.devMode = config.devMode || devMode.mode;
+            this.debug = this.devMode
+                ? (...args) => {
+                      // eslint-disable-next-line no-console
+                      console.log(...args);
+                  }
+                : () => {
+                      /* no op */
+                  };
+        }
+
+        validIncomingMessageTypes() {
+            return Object.keys(requestTranslation);
+        }
+
+        validOutgoingMessageTypes() {
+            return [
+                'job-cancel-error',
+                'job-canceled',
+                'job-does-not-exist',
+                'job-error',
+                'job-info',
+                'job-log-deleted',
+                'job-logs',
+                'job-status',
+                'result',
+                'run-status',
+            ];
         }
 
         /**
@@ -93,6 +151,7 @@ define([
                     type: msgType,
                 },
             });
+            this.debug(`sending bus message: ${channelName} ${channelId} ${msgType}`);
         }
 
         /**
@@ -102,33 +161,6 @@ define([
          */
         handleBusMessages() {
             const bus = this.runtime.bus();
-
-            // valid messages
-            const requestTranslation = {
-                'ping-comm-channel': 'ping',
-
-                // Fetches job status from kernel.
-                'request-job-status': JOB_STATUS,
-
-                // Requests job status updates for this job via the job channel, and also
-                // ensures that job polling is running.
-                'request-job-update': START_JOB_UPDATE,
-                // Tells kernel to stop including a job in the lookup loop.
-                'request-job-completion': STOP_JOB_UPDATE,
-
-                // cancels the job
-                'request-job-cancellation': CANCEL_JOB,
-                // retries the job
-                'request-job-retry': RETRY_JOB,
-
-                // Fetches info (not state) about a job, including the app id, name, and inputs.
-                'request-job-info': JOB_INFO,
-
-                // Fetches job logs from kernel.
-                'request-job-log': JOB_LOGS,
-                // Fetches most recent job logs from kernel.
-                'request-job-log-latest': JOB_LOGS_LATEST,
-            };
 
             for (const [key, value] of Object.entries(requestTranslation)) {
                 bus.on(key, (message) => {
@@ -176,8 +208,8 @@ define([
                 if (message.options) {
                     msg = Object.assign({}, msg, message.options);
                 }
-
                 this.comm.send(msg);
+                this.debug(`sending comm message: ${COMM_NAME} ${msgType}`);
                 resolve();
             }).catch((err) => {
                 console.error('ERROR sending comm message', err, msgType, message);
@@ -221,6 +253,113 @@ define([
                 case 'new_job':
                     Jupyter.notebook.save_checkpoint();
                     break;
+
+                // CELL messages
+                case 'run_status':
+                    // Send job status notifications on the default channel,
+                    // with a key on the message type and the job id, sending
+                    // a copy of the original message.
+                    // This allows widgets which are interested in the job
+                    // to subscribe to just that job, and nothing else.
+                    // If there is a need for a generic broadcast message, we
+                    // can either send a second message or implement key
+                    // filtering.
+                    this.sendBusMessage(CELL, msgData.cell_id, 'run-status', msgData);
+                    break;
+
+                case 'result':
+                    this.sendBusMessage(CELL, msgData.address.cell_id, 'result', msgData);
+                    break;
+
+                // JOB messages
+                case 'job_canceled':
+                    this.sendBusMessage(JOB, msgData.job_id, 'job-canceled', {
+                        jobId: msgData.job_id,
+                        via: 'job_canceled',
+                    });
+                    break;
+
+                case 'job_comm_error':
+                    if (msgData) {
+                        jobId = msgData.job_id;
+                        switch (msgData.source) {
+                            case 'cancel_job':
+                                this.sendBusMessage(JOB, jobId, 'job-cancel-error', {
+                                    jobId,
+                                    message: msgData.message,
+                                });
+                                this.sendBusMessage(JOB, jobId, 'job-canceled', {
+                                    jobId,
+                                    error: msgData.message,
+                                });
+                                break;
+                            case 'job_logs':
+                            case 'job_logs_latest':
+                                this.sendBusMessage(JOB, jobId, 'job-log-deleted', {
+                                    jobId,
+                                    message: msgData.message,
+                                });
+                                this.sendBusMessage(JOB, jobId, 'job-logs', {
+                                    jobId,
+                                    error: msgData.message,
+                                });
+                                break;
+                            case 'job_retried':
+                                this.sendBusMessage(JOB, jobId, 'job-retried', {
+                                    jobId: jobId,
+                                    error: msgData.message,
+                                });
+                                break;
+                            default:
+                                this.sendBusMessage(JOB, jobId, 'job-error', {
+                                    jobId,
+                                    message: msgData.message,
+                                    request: msgData.source,
+                                });
+                                break;
+                        }
+                    }
+                    console.error('Error from job comm:', msg);
+                    break;
+
+                case 'job_does_not_exist':
+                    if (msgData.source === 'job_status') {
+                        this.sendBusMessage(JOB, msgData.job_id, 'job-status', {
+                            jobId: msgData.job_id,
+                            jobState: {
+                                job_id: msgData.job_id,
+                                status: 'does_not_exist',
+                            },
+                        });
+                        break;
+                    }
+                    this.sendBusMessage(JOB, msgData.job_id, 'job-does-not-exist', {
+                        jobId: msgData.job_id,
+                        source: msgData.source,
+                    });
+                    break;
+
+                case 'job_info':
+                    this.sendBusMessage(JOB, msgData.job_id, 'job-info', {
+                        jobId: msgData.job_id,
+                        jobInfo: msgData,
+                    });
+                    break;
+
+                case 'job_init_err':
+                case 'job_init_lookup_err':
+                    this.displayJobError(msgData);
+                    console.error('Error from job comm:', msg);
+                    break;
+
+                case 'job_logs':
+                    this.sendBusMessage(JOB, msgData.job_id, 'job-logs', {
+                        jobId: msgData.job_id,
+                        logs: msgData,
+                        latest: msgData.latest,
+                    });
+                    break;
+
                 /*
                  * The job status for one or more jobs. See job_status_all
                  * for a message which covers all active jobs.
@@ -243,14 +382,14 @@ define([
                      * states.
                      */
                     this.sendBusMessage(JOB, jobId, 'job-status', {
-                        jobId: jobId,
+                        jobId,
                         jobState: msgData.state,
                         outputWidgetInfo: msgData.widget_info,
                     });
                     break;
                 /*
                  * This message must carry all jobs linked to this narrative.
-                 * The "job-deleted" logic, specifically, requires that the job
+                 * The job deletion logic, specifically, requires that the job
                  * actually not exist in the job service.
                  * NB there is logic in the job management back end to allow
                  * job notification to be turned off per job -- this would
@@ -289,102 +428,18 @@ define([
                             // If this job is not found in the incoming list of all
                             // jobs, then we must both delete it locally, and
                             // notify any interested parties.
-                            this.sendBusMessage(JOB, _jobId, 'job-deleted', {
+                            this.sendBusMessage(JOB, _jobId, 'job-status', {
                                 jobId: _jobId,
-                                via: 'no_longer_exists',
+                                jobState: {
+                                    job_id: _jobId,
+                                    status: 'does_not_exist',
+                                },
                             });
+
                             // it is safe to delete properties here
                             delete this.jobStates[_jobId];
                         }
                     });
-                    break;
-
-                case 'job_info':
-                    jobId = msgData.job_id;
-                    this.sendBusMessage(JOB, jobId, 'job-info', {
-                        jobId: jobId,
-                        jobInfo: msgData,
-                    });
-                    break;
-
-                case 'run_status':
-                    // Send job status notifications on the default channel,
-                    // with a key on the message type and the job id, sending
-                    // a copy of the original message.
-                    // This allows widgets which are interested in the job
-                    // to subscribe to just that job, and nothing else.
-                    // If there is a need for a generic broadcast message, we
-                    // can either send a second message or implement key
-                    // filtering.
-                    this.sendBusMessage(CELL, msgData.cell_id, 'run-status', msgData);
-                    break;
-
-                case 'job_canceled':
-                    this.sendBusMessage(JOB, msgData.job_id, 'job-canceled', {
-                        jobId: msgData.job_id,
-                        via: 'job_canceled',
-                    });
-                    break;
-
-                case 'job_does_not_exist':
-                    this.sendBusMessage(JOB, msgData.job_id, 'job-does-not-exist', {
-                        jobId: msgData.job_id,
-                        source: msgData.source,
-                    });
-                    break;
-
-                case 'job_logs':
-                    jobId = msgData.job_id;
-                    this.sendBusMessage(JOB, jobId, 'job-logs', {
-                        jobId: jobId,
-                        logs: msgData,
-                        latest: msgData.latest,
-                    });
-                    break;
-
-                case 'result':
-                    this.sendBusMessage(CELL, msgData.address.cell_id, 'result', msgData);
-                    break;
-
-                case 'job_comm_error':
-                    if (msgData) {
-                        jobId = msgData.job_id;
-                        switch (msgData.source) {
-                            case 'cancel_job':
-                                this.sendBusMessage(JOB, jobId, 'job-cancel-error', {
-                                    jobId: jobId,
-                                    message: msgData.message,
-                                });
-                                break;
-                            case 'job_logs':
-                            case 'job_logs_latest':
-                                this.sendBusMessage(JOB, jobId, 'job-log-deleted', {
-                                    jobId: jobId,
-                                    message: msgData.message,
-                                });
-                                break;
-                            case 'job_status':
-                                this.sendBusMessage(JOB, jobId, 'job-status-error', {
-                                    jobId: jobId,
-                                    message: msgData.message,
-                                });
-                                break;
-                            default:
-                                this.sendBusMessage(JOB, jobId, 'job-error', {
-                                    jobId: jobId,
-                                    message: msgData.message,
-                                    request: msgData.source,
-                                });
-                                break;
-                        }
-                    }
-                    console.error('Error from job comm:', msg);
-                    break;
-
-                case 'job_init_err':
-                case 'job_init_lookup_err':
-                    this.displayJobError(msgData);
-                    console.error('Error from job comm:', msg);
                     break;
 
                 default:

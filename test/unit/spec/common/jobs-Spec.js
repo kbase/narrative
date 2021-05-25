@@ -62,9 +62,21 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
 
     describe('The isValidJobStateObject function', () => {
         it('Should know how to tell good job states', () => {
-            JobsData.allJobs.forEach((elem) => {
-                expect(Jobs.isValidJobStateObject(elem)).toBeTrue();
-            });
+            JobsData.allJobs
+                .concat([
+                    {
+                        job_id: 'zero_created',
+                        created: 0,
+                        status: 'created',
+                    },
+                    {
+                        job_id: 'does_not_exist',
+                        status: 'does_not_exist',
+                    },
+                ])
+                .forEach((elem) => {
+                    expect(Jobs.isValidJobStateObject(elem)).toBeTrue();
+                });
         });
 
         it('Should know how to tell bad job states', () => {

@@ -112,6 +112,14 @@ define([
                                             'genome_id': query,
                                         },
                                     },
+                                    {
+                                        'match': {
+                                            'taxonomy': {
+                                                'query': query,
+                                                'operator': 'AND',
+                                            },
+                                        },
+                                    },
                                 ],
                             },
                         },

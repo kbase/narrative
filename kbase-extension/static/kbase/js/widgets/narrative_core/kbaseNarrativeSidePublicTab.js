@@ -345,6 +345,7 @@ define([
                             $filterInput.val('');
                             inputFieldLastValue = '';
                             $filterInput.change();
+                            $filterInput.focus();
                         })
                 );
 
@@ -360,6 +361,7 @@ define([
                         this.$dataSourceLogo.append($('<img>').attr('src', dataSource.logoUrl));
                     }
                 }
+                $filterInput.focus();
                 this.searchAndRender(newDataSourceID, $filterInput.val());
             });
 
@@ -430,6 +432,12 @@ define([
             this.$elem.append(this.resultArea);
             const dataSourceID = parseInt($typeInput.val(), 10);
             this.searchAndRender(dataSourceID, $filterInput.val());
+            // Invocation of focus must be delayed until the next timer loop,
+            // probably because the element is not yet visible. Perhaps the
+            // tab content has an overlay.
+            window.setTimeout(() => {
+                $filterInput.focus();
+            }, 0);
             return this;
         },
 

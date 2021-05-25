@@ -5,12 +5,12 @@ The search data source performs a fresh search with every new query.
 Whereas the workspace data source fetches the data once, and then performs
 a search against these cached results
 */
-define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
+define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], (
     Promise,
     Handlebars,
     SearchAPI2,
     common
-) {
+) => {
     'use strict';
 
     class RefDataSearch {

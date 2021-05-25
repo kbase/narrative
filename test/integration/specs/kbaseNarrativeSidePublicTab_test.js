@@ -752,14 +752,6 @@ async function getRow(publicPanel, testCase) {
     return row;
 }
 
-// async function doScrolling(publicPanel, testCase) {
-//     for (const scrollRow of testCase.scrolls) {
-//         const rowElements = await waitForRows(publicPanel, scrollRow);
-//         const rowElement = rowElements[scrollRow - 1];
-//         await rowElement.scrollIntoView();
-//     }
-// }
-
 async function doScrolls(publicPanel, scrolls) {
     for (let i = 1; i <= scrolls; i += 1) {
         const scrollRow = ROWS_PER_SCROLL_PAGE * i;

@@ -67,8 +67,8 @@ define([
             let value;
             if (item.value instanceof Array) {
                 value = item.value
-                    .map((item) => {
-                        return formatItem(item);
+                    .map((value) => {
+                        return formatItem(value);
                     })
                     .join('&nbsp;&nbsp;&nbsp;');
             } else {

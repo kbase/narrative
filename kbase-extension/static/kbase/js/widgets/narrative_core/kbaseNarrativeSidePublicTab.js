@@ -104,13 +104,13 @@ define([
             $totals
                 .append($('<span data-test-id="found-count">').css('font-weight', 'bold').text('None'))
                 .append($('<span>').text(' found out of '))
-                .append($('<span>').css('font-weight', 'bold').text(numeral(total).format('0,0')))
+                .append($('<span data-test-id="total-count">').css('font-weight', 'bold').text(numeral(total).format('0,0')))
                 .append($('<span>').text(' available'));
         } else if (total > found) {
             $totals
                 .append($('<span data-test-id="found-count">').css('font-weight', 'bold').text(numeral(found).format('0,0')))
                 .append($('<span>').text(' found out of '))
-                .append($('<span>').css('font-weight', 'bold').text(numeral(total).format('0,0')))
+                .append($('<span data-test-id="total-count">').css('font-weight', 'bold').text(numeral(total).format('0,0')))
                 .append($('<span>').text(' available'));
 
         } else {
@@ -440,7 +440,7 @@ define([
             this.objectList = [];
             this.currentCategory = category;
             this.currentQuery = query;
-            this.currentPage = 0;
+            this.currentPage = null;
             this.totalAvailable = null;
             this.currentFilteredResults = null;
 

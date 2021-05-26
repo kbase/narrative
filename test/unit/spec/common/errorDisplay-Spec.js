@@ -106,10 +106,10 @@ define(['common/errorDisplay', 'common/props'], (ErrorDisplay, Props) => {
                 }
             });
             // fails for unknown reasons => disabled for now
-            xit(`should pass a toThrow(Error, /regex/) test with invalid input ${JSON.stringify(
+            it(`should pass a toThrow(Error, /regex/) test with invalid input ${JSON.stringify(
                 input
             )}`, () => {
-                expect(() => ErrorDisplay.make(input)).toThrow(
+                expect(() => ErrorDisplay.make(input)).toThrowError(
                     Error,
                     /Invalid input for the ErrorDisplay module/
                 );
@@ -249,6 +249,54 @@ define(['common/errorDisplay', 'common/props'], (ErrorDisplay, Props) => {
                         message: 'error in unknown format',
                         advice: [defaultAdvice],
                         errorDump: JSON.stringify({ this: 'that' }, null, 1),
+                    },
+                },
+                {
+                    desc: 'app startup error',
+                    in: Props.make({
+                        data: {
+                            appError: {
+                                type: 'App Startup Error',
+                                message: 'No job for you!',
+                                stacktrace: 'Some stacktrace',
+                                source: 'some source',
+                                method: 'AppManager.run_job_batch',
+                                exceptionType: 'ValueError',
+                            },
+                        },
+                    }),
+                    outObject: {
+                        location: 'app manager',
+                        type: 'App Startup Error',
+                        message: 'No job for you!',
+                        stacktrace: 'Some stacktrace',
+                        advice: [defaultAdvice],
+                        errorDump: {
+                            type: 'App Startup Error',
+                            message: 'No job for you!',
+                            stacktrace: 'Some stacktrace',
+                            source: 'some source',
+                            method: 'AppManager.run_job_batch',
+                            exceptionType: 'ValueError',
+                        },
+                    },
+                    outDisplay: {
+                        type: 'App Startup Error',
+                        message: 'No job for you!',
+                        stacktrace: 'Some stacktrace',
+                        advice: [defaultAdvice],
+                        errorDump: JSON.stringify(
+                            {
+                                type: 'App Startup Error',
+                                message: 'No job for you!',
+                                stacktrace: 'Some stacktrace',
+                                source: 'some source',
+                                method: 'AppManager.run_job_batch',
+                                exceptionType: 'ValueError',
+                            },
+                            null,
+                            1
+                        ),
                     },
                 },
             ];

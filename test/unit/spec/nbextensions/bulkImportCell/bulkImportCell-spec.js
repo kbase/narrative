@@ -166,9 +166,18 @@ define([
             {
                 msgEvent: 'error',
                 updatedState: 'appError',
+                msgData: {
+                    message: 'app startup error',
+                    stacktrace: 'doom\nDoom\nDOOOM',
+                    code: '-1',
+                    source: 'app manager',
+                    method: 'AppManager.run_job_bulk',
+                    exceptionType: 'ValueError',
+                },
                 testSelector: '.kb-rcp__action-button-container .-reset',
                 testState: (elem) => !elem.classList.contains('hidden'),
                 enabledTabs: ['viewConfigure', 'info', 'jobStatus', 'results', 'error'],
+                selectedTab: 'error',
             },
             {
                 msgEvent: 'launched_job_batch',
@@ -187,7 +196,7 @@ define([
                 testState: (elem) => !elem.classList.contains('hidden'),
             },
         ].forEach((testCase) => {
-            it(`responds to run-status bus messages with ${testCase.msgEvent} event`, () => {
+            it(`responds to run-status bus messages with ${testCase.msgEvent} event`, async () => {
                 const cell = Mocks.buildMockCell('code');
                 cell.execute = () => {};
                 // add dummy metadata so we can make a cell that's in the ready-to-run state.
@@ -221,42 +230,45 @@ define([
                 const cancelButton = cell.element[0].querySelector(
                     '.kb-rcp__action-button-container .-cancel'
                 );
-                return TestUtil.waitForElementState(cancelButton, () => {
+                await TestUtil.waitForElementState(cancelButton, () => {
                     return (
                         !runButton.classList.contains('disabled') &&
                         cancelButton.classList.contains('hidden')
                     );
-                })
-                    .then(() => {
-                        runButton.click();
-                        return TestUtil.waitForElementState(
-                            testElem,
-                            () => {
-                                return testCase.testState(testElem);
+                });
+                runButton.click();
+                await TestUtil.waitForElementState(
+                    testElem,
+                    () => {
+                        return testCase.testState(testElem);
+                    },
+                    () => {
+                        const message = Object.assign(
+                            {
+                                event: testCase.msgEvent,
                             },
-                            () => {
-                                const message = Object.assign(
-                                    {
-                                        event: testCase.msgEvent,
-                                    },
-                                    testCase.msgData ? testCase.msgData : {}
-                                );
-                                runtime.bus().send(message, {
-                                    channel: {
-                                        cell: cell.metadata.kbase.attributes.id,
-                                    },
-                                    key: {
-                                        type: 'run-status',
-                                    },
-                                });
-                            }
+                            testCase.msgData ? testCase.msgData : {}
                         );
-                    })
-                    .then(() => {
-                        expect(cell.metadata.kbase.bulkImportCell.state.state).toBe(
-                            testCase.updatedState
-                        );
-                    });
+                        runtime.bus().send(message, {
+                            channel: {
+                                cell: cell.metadata.kbase.attributes.id,
+                            },
+                            key: {
+                                type: 'run-status',
+                            },
+                        });
+                    }
+                );
+                expect(cell.metadata.kbase.bulkImportCell.state.state).toBe(testCase.updatedState);
+                if (testCase.selectedTab) {
+                    expect(cell.metadata.kbase.bulkImportCell.state.selectedTab).toBe(
+                        testCase.selectedTab
+                    );
+                    const tab = cell.element[0].querySelector(
+                        `.kb-rcp__tab-button[data-button="${testCase.selectedTab}"]`
+                    );
+                    expect(tab.classList.contains('active')).toBeTrue();
+                }
             });
         });
 

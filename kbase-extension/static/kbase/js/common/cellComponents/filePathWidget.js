@@ -29,16 +29,16 @@ define([
      *  - workspaceId - the id of the workspace we should use for searching for objects
      *  - initialParams - Array of objects. Each item represents a row of parameter values.
      *    So each item has an object with parameter id -> value
+     *  - viewOnly - boolean, if true start with the view version of input widgets
      * @returns
      */
     function factory(config) {
+        const viewOnly = config.viewOnly || false;
+        const { workspaceId, initialParams, paramIds } = config;
         const runtime = Runtime.make(),
             // paramsBus is used to communicate from this parameter container to the parent that
             // created and owns it
             paramsBus = config.bus,
-            workspaceId = config.workspaceId,
-            initialParams = config.initialParams,
-            paramIds = config.paramIds, // these aren't in the right order, get the right order in start()
             model = Props.make(),
             /**
              * Internal data model
@@ -154,23 +154,6 @@ define([
                         parameter: parameterSpec.id,
                     });
                 }
-            });
-
-            // The 'sync' message is a request for the current model value from the
-            // input widget.
-            fieldWidget.bus.on('sync', () => {
-                const newValue = dataModel.rows[rowId].values[parameterSpec.id];
-                fieldWidget.bus.send(
-                    {
-                        value: newValue,
-                    },
-                    {
-                        // This points the update back to a listener on this key
-                        key: {
-                            type: 'update',
-                        },
-                    }
-                );
             });
 
             fieldWidget.bus.respond({
@@ -304,35 +287,40 @@ define([
          */
         function renderLayout() {
             let formContent = [];
+            const panelBody = [
+                ol({
+                    class: `${cssBaseClass}__list`,
+                    dataElement: `${cssClassType}-fields`,
+                }),
+            ];
+            if (!viewOnly) {
+                panelBody.push(
+                    button(
+                        {
+                            class: `${cssBaseClass}__button--add_row`,
+                            type: 'button',
+                            id: events.addEvent({
+                                type: 'click',
+                                handler: function () {
+                                    addRow();
+                                },
+                            }),
+                        },
+                        [
+                            span({
+                                class: `${cssBaseClass}__button_icon--add_row fa fa-plus`,
+                            }),
+                            'Add Row',
+                        ]
+                    )
+                );
+            }
 
             formContent = formContent.concat([
                 ui.buildPanel({
                     title: span(['File Paths']),
                     name: `${cssClassType}s-area`,
-                    body: [
-                        ol({
-                            class: `${cssBaseClass}__list`,
-                            dataElement: `${cssClassType}-fields`,
-                        }),
-                        button(
-                            {
-                                class: `${cssBaseClass}__button--add_row`,
-                                type: 'button',
-                                id: events.addEvent({
-                                    type: 'click',
-                                    handler: function () {
-                                        addRow();
-                                    },
-                                }),
-                            },
-                            [
-                                span({
-                                    class: `${cssBaseClass}__button_icon--add_row fa fa-plus`,
-                                }),
-                                'Add Row',
-                            ]
-                        ),
-                    ],
+                    body: panelBody,
                     classes: ['kb-panel-light'],
                 }),
             ]);
@@ -430,8 +418,13 @@ define([
         function createFilePathWidget(rowId, appSpec, filePathParams, parameterId, parameterValue) {
             const spec = filePathParams.paramMap[parameterId];
             let widget;
-            return paramResolver
-                .loadInputControl(spec)
+            let controlPromise;
+            if (viewOnly) {
+                controlPromise = paramResolver.loadViewControl(spec);
+            } else {
+                controlPromise = paramResolver.loadInputControl(spec);
+            }
+            return controlPromise
                 .then((inputWidget) => {
                     widget = makeFieldWidget(rowId, inputWidget, appSpec, spec, parameterValue);
 
@@ -505,7 +498,7 @@ define([
                 );
             }
 
-            filePathRow.innerHTML = [
+            const fpRowHtml = (filePathRow.innerHTML = [
                 div(
                     {
                         class: `${cssBaseClass}__params`,
@@ -519,24 +512,30 @@ define([
                         ),
                     ]
                 ),
-                button(
-                    {
-                        class: `${cssBaseClass}__button--delete`,
-                        type: 'button',
-                        id: rowEvents.addEvent({
-                            type: 'click',
-                            handler: function (e) {
-                                deleteRow(e, rowId);
-                            },
-                        }),
-                    },
-                    [
-                        icon({
-                            class: 'fa fa-trash-o fa-lg',
-                        }),
-                    ]
-                ),
-            ].join('');
+            ]);
+            if (!viewOnly) {
+                fpRowHtml.push(
+                    button(
+                        {
+                            class: `${cssBaseClass}__button--delete`,
+                            type: 'button',
+                            id: rowEvents.addEvent({
+                                type: 'click',
+                                handler: function (e) {
+                                    deleteRow(e, rowId);
+                                },
+                            }),
+                        },
+                        [
+                            icon({
+                                class: 'fa fa-trash-o fa-lg',
+                            }),
+                        ]
+                    )
+                );
+            }
+
+            filePathRow.innerHTML = fpRowHtml.join('');
 
             return Promise.all(
                 filePathParams.layout.map(async (parameterId) => {

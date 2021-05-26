@@ -1,15 +1,11 @@
 define([
     'bluebird',
     'kb_common/html',
-    '../validators/text',
-    'common/events',
     'common/ui',
     'common/props',
-    '../inputUtils',
-
     'bootstrap',
     'css!font-awesome',
-], (Promise, html, Validation, Events, UI, Props, inputUtils) => {
+], (Promise, html, UI, Props) => {
     'use strict';
 
     const t = html.tag,
@@ -18,12 +14,19 @@ define([
         option = t('option');
 
     function factory(config) {
-        let spec = config.parameterSpec,
+        const spec = config.parameterSpec,
             bus = config.bus,
-            parent,
-            container,
-            ui,
-            model;
+            model = Props.make({
+                data: {
+                    value: null,
+                },
+                onUpdate: () => {},
+            });
+        let parent, container, ui;
+
+        // INIT
+
+        setModelValue(config.initialValue);
 
         // CONTROL
 
@@ -54,7 +57,7 @@ define([
 
         // DOM & RENDERING
 
-        function makeViewControl(events) {
+        function makeViewControl() {
             return select(
                 {
                     class: 'form-control',
@@ -66,12 +69,12 @@ define([
             );
         }
 
-        function render(events) {
+        function render() {
             return div(
                 {
                     dataElement: 'input-container',
                 },
-                [makeViewControl(events)]
+                [makeViewControl()]
             );
         }
 
@@ -95,10 +98,7 @@ define([
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
-                const events = Events.make();
-                container.innerHTML = render(events);
-                events.attachEvents(container);
-                // model.setItem('value', config.initialValue);
+                container.innerHTML = render();
                 syncModelToControl();
 
                 bus.on('reset-to-defaults', () => {
@@ -107,7 +107,6 @@ define([
                 bus.on('focus', () => {
                     doFocus();
                 });
-                // bus.emit('sync');
             });
         }
 
@@ -119,20 +118,9 @@ define([
             });
         }
 
-        // INIT
-
-        model = Props.make({
-            data: {
-                value: null,
-            },
-            onUpdate: function () {},
-        });
-
-        setModelValue(config.initialValue);
-
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

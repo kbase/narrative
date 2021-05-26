@@ -25,10 +25,12 @@ define([
      *     bus: message bus
      *     model: cell metadata, contains such fun items as the app parameters and state
      *     specs: app specs, keyed by their app id
-     *     typesToFiles: map from object type to appId and list of input files
+     *     typesToFiles: map from object type to appId and list of input files,
+     *     viewOnly: boolean - if true, then will start child widgets in view only mode
      * @returns
      */
     function ConfigureWidget(options) {
+        const viewOnly = options.viewOnly || false;
         const { model, specs, typesToFiles } = options;
         const cellBus = options.bus,
             runtime = Runtime.make(),
@@ -193,6 +195,7 @@ define([
                 workspaceId: runtime.workspaceId(),
                 paramIds: model.getItem(['app', 'otherParamIds', selectedFileType]),
                 initialParams: model.getItem(['params', selectedFileType, PARAM_TYPE]),
+                viewOnly,
             });
 
             return widget
@@ -246,6 +249,7 @@ define([
                 workspaceId: runtime.workspaceId(),
                 paramIds: model.getItem(['app', 'fileParamIds', selectedFileType]),
                 initialParams: model.getItem(['params', selectedFileType, FILE_PATH_TYPE]),
+                viewOnly,
             });
 
             return widget
@@ -457,6 +461,19 @@ define([
     }
 
     return {
+        // wrapper to make a widget in edit mode
+        editMode: {
+            make: (options) => {
+                return ConfigureWidget(Object.assign({}, options, { viewOnly: false }));
+            },
+        },
+        // wrapper to make a widget in view mode
+        viewMode: {
+            make: (options) => {
+                return ConfigureWidget(Object.assign({}, options, { viewOnly: true }));
+            },
+        },
+        // the standard constructor, let the caller manually decide which mode to use
         make: ConfigureWidget,
     };
 });

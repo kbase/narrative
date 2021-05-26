@@ -166,7 +166,7 @@ define([
             {
                 msgEvent: 'error',
                 updatedState: 'appError',
-                testSelector: '.kb-rcp__action-button-container .-rerun',
+                testSelector: '.kb-rcp__action-button-container .-reset',
                 testState: (elem) => !elem.classList.contains('hidden'),
                 enabledTabs: ['viewConfigure', 'info', 'jobStatus', 'results', 'error'],
             },

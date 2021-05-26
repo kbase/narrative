@@ -145,7 +145,7 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
             return cell;
         }
 
-        const mockNotebook = {
+        return {
             delete_cell: () => (options.deleteCallback ? options.deleteCallback() : null),
             find_cell_index: () => 1,
             get_cells: () => cells,
@@ -166,8 +166,6 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
             insert_cell_above: (type, index, data) => insertCell(type, index - 1, data),
             insert_cell_below: (type, index, data) => insertCell(type, index + 1, data),
         };
-
-        return mockNotebook;
     }
 
     /**

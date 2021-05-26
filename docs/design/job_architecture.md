@@ -98,50 +98,46 @@ define(
 ## Bus responses
 When the kernel sends a message to the front end, the only module set up to listen to them is the `JobCommChannel` as mentioned above. This takes the responses, unpacks them, and turns them into a response message that is passed back over the bus to any frontend Javascript module that listens to them. The message types are described below, along with the content that gets sent, followed by an example of how to make use of them.
 
-`job-status` - contains the current job state
-  * `jobId` - string, the job id
-  * `jobState` - object, describes the job state (see the **Data Structures** section below for the structure)
-  * `outputWidgetInfo` - object, contains the parameters to be sent to an output widget. This will be different for all widgets, depending on the App that invokes them.
-
-`job-deleted` - sent when a job has been deleted, but some information about it has been requested
-  * `jobId` - the id of the deleted job
-  * `via` - a string about why it's been deleted (generally "no_longer_exists")
-
-`job-info` - contains information about the current job
-  * `jobId` - string, the job id
-  * `jobInfo` - object, the job information object (see the **Data Structures** section below)
+### Cell-related
 
 `run-status` - updates the run status of the job - this is part of the initial flow of starting a job through the AppManager.
   * TODO
+
+### Job-related
 
 `job-canceled` - sent when a job has been canceled in the kernel, as a response to other messages
   * `jobId` - string, the job id
   * `via` - string, generally "job_canceled"
 
-`job-logs` - sent with information about some job logs.
-  * `jobId` - string, the job id
-  * `logs` - the raw message data from the kernel. (see the **Data Structures** section below)
-  * `latest` - if truthy, then these are the latest logs, if falsy, then they don't have to be the latest logs.
-
-`job-error` - sent in response to an error that happened on job information lookup, or another error that happened while processing some other message to the JobManager.
-  * `jobId` - string, the job id
-  * `message` - string, some message about the error
-
 `job-cancel-error` - a cancel request has thrown an error
-  * `jobId` - string, the job id
-  * `message` - string, a reason for the error
-
-`job-log-deleted` - a log request has thrown an error
-  * `jobId` - string, the job id
-  * `message` - string, a reason for the error
-
-`job-status-error` - a status request as thrown an error
   * `jobId` - string, the job id
   * `message` - string, a reason for the error
 
 `job-does-not-exist` - sent in response to a request for information about a job that doesn't exist. Jobs might not exist if (1) they have been previously canceled, or (2) a malformed request was sent.
   * `jobId` - string, the job id
   * `source` - string, the source of the message in the kernel (what service, or module, was invoked. Usually "JobManager" or "ExecutionEngine2")
+
+`job-error` - sent in response to an error that happened on job information lookup, or another error that happened while processing some other message to the JobManager.
+  * `jobId` - string, the job id
+  * `message` - string, some message about the error
+
+`job-info` - contains information about the current job
+  * `jobId` - string, the job id
+  * `jobInfo` - object, the job information object (see the **Data Structures** section below)
+
+`job-logs` - sent with information about some job logs.
+  * `jobId` - string, the job id
+  * `logs` - the raw message data from the kernel. (see the **Data Structures** section below)
+  * `latest` - if truthy, then these are the latest logs, if falsy, then they don't have to be the latest logs.
+
+`job-log-deleted` - a log request has thrown an error
+  * `jobId` - string, the job id
+  * `message` - string, a reason for the error
+
+`job-status` - contains the current job state
+  * `jobId` - string, the job id
+  * `jobState` - object, describes the job state (see the **Data Structures** section below for the structure)
+  * `outputWidgetInfo` - object, contains the parameters to be sent to an output widget. This will be different for all widgets, depending on the App that invokes them.
 
 ### Usage example
 As in the Bus requests section above, the front end response handling is done through the Runtime bus. The bus provides both an `on` and a `listen` function, examples will show how to use both. Generally, the `listen` function is more specific and binds the listener to a specific bus channel. These channels can invoke the jobId, or the cellId, to make sure that only information about specific jobs is listened for.
@@ -314,7 +310,7 @@ A general job comm error, capturing most errors that get thrown by the kernel
   * `job_id` - string, the job id (if present)
   * `message` - string, an error message
 
-**bus** one of `job-cancel-error`, `job-log-deleted`, `job-status-error`, `job-error`
+**bus** one of `job-cancel-error`, `job-log-deleted`, `job-error`
 
 ### `job_status_all`
 The set of all job states for all running jobs, or at least the set that should be updated (those that are complete and not requested by the front end are not included - if a job is sitting in an error or finished state, it doesn't need ot have its app cell updated)

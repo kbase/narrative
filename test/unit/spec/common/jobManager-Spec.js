@@ -366,7 +366,7 @@ define(['common/jobManager', 'common/jobs', 'common/props', 'common/ui', '/test/
                     request: 'cancellation',
                 },
                 retry: {
-                    valid: ['terminated', 'error'],
+                    valid: ['created', 'estimating', 'queued', 'running', 'terminated', 'error'],
                     invalid: [],
                     request: 'retry',
                 },

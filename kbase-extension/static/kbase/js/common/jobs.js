@@ -101,9 +101,9 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
     /**
      * A jobState object is deemed valid if
      * 1. It's an object (not an array or atomic type)
-     * 2. It has a 'created' key
-     * 3. It has a 'job_id' key
-     * 4. It has a 'status' key, which appears in the array validJobStatuses
+     * 2. It has a 'job_id' key
+     * 3. It has a 'status' key, which appears in the array validJobStatuses
+     * 4. If the status is NOT 'does_not_exist', it must have a 'created' key
      *
      * There are other required fields, but these checks are sufficient for the UI.
      *
@@ -116,12 +116,16 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
      * @returns {boolean} true|false
      */
     function isValidJobStateObject(jobState) {
-        const requiredProperties = ['job_id', 'created', 'status'];
-        return (
+        const requiredProperties = ['job_id', 'status'];
+        return !!(
             jobState !== null &&
             typeof jobState === 'object' &&
             requiredProperties.every((prop) => prop in jobState) &&
-            validJobStatuses.includes(jobState.status)
+            validJobStatuses.includes(jobState.status) &&
+            // require the 'created' key if the status is not 'does_not_exist'
+            (jobState.status === 'does_not_exist'
+                ? true
+                : Object.prototype.hasOwnProperty.call(jobState, 'created'))
         );
     }
 
@@ -179,6 +183,11 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
         return getJobString(jobState, 'action');
     }
 
+    const validStatusesForAction = {
+        cancel: ['created', 'estimating', 'queued', 'running'],
+        retry: ['created', 'estimating', 'queued', 'running', 'error', 'terminated'],
+    };
+
     /**
      * Given a job state object and an action, return a boolean indicating whether the job can perform that action
      *
@@ -187,7 +196,10 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
      * @returns {boolean} whether or not the job can do the action
      */
     function canDo(action, jobState) {
-        return isValidJobStateObject(jobState) && getJobString(jobState, 'action') === action;
+        return (
+            isValidJobStateObject(jobState) &&
+            validStatusesForAction[action].includes(jobState.status)
+        );
     }
 
     /**
@@ -553,7 +565,11 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
             if (status === 'estimating' || status === 'created') {
                 status = 'queued';
             }
-            statuses[status] ? (statuses[status] += nJobs) : (statuses[status] = nJobs);
+            if (statuses[status]) {
+                statuses[status] += nJobs;
+            } else {
+                statuses[status] = nJobs;
+            }
         });
         return statuses;
     }
@@ -650,5 +666,6 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
         niceState,
         updateJobModel,
         validJobStatuses,
+        validStatusesForAction,
     };
 });

@@ -78,12 +78,12 @@ define([
                 showHint: true,
                 useRowHighight: true,
                 initialValue: value,
-                appSpec: appSpec,
-                parameterSpec: parameterSpec,
-                workspaceId: workspaceId,
                 referenceType: 'name',
                 paramsChannelName: bus.channelName,
-                closeParameters: closeParameters,
+                appSpec,
+                parameterSpec,
+                workspaceId,
+                closeParameters,
                 viewOnly,
             });
 
@@ -393,9 +393,9 @@ define([
             return {
                 content: layout,
                 layout: orderedParams,
-                params: params,
-                view: view,
-                paramMap: paramMap,
+                params,
+                view,
+                paramMap,
             };
         }
 
@@ -517,8 +517,8 @@ define([
         }
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
             bus: function () {
                 return bus;
             },

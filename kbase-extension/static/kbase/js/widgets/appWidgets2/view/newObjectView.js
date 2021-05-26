@@ -1,74 +1,53 @@
-define(['bluebird', 'kb_common/html', 'common/dom', 'bootstrap', 'css!font-awesome'], (
+define(['bluebird', 'common/html', 'common/ui', 'bootstrap', 'css!font-awesome'], (
     Promise,
     html,
-    Dom
+    UI
 ) => {
     'use strict';
 
-    const t = html.tag,
-        div = t('div'),
-        input = t('input');
+    const div = html.tag('div'),
+        input = html.tag('input');
 
     function factory(config) {
-        const options = {},
-            spec = config.parameterSpec,
-            bus = config.bus,
-            model = {
-                value: config.initialValue ? config.initialValue : undefined,
-            };
-        let parent, container, dom;
+        const spec = config.parameterSpec,
+            bus = config.bus;
+        let container,
+            ui,
+            value = config.initialValue;
 
-        options.enabled = true;
-
-        function setModelValue(value) {
-            if (model.value !== value) {
-                model.value = value;
+        function setModelValue(newValue) {
+            value = newValue;
+            const inputField = ui.getElement('input');
+            if (value === null || value === undefined) {
+                inputField.removeAttribute('value');
             }
-            render();
-        }
-
-        function unsetModelValue() {
-            model.value = undefined;
-            render();
+            else {
+                inputField.setAttribute('value', newValue);
+            }
         }
 
         function resetModelValue() {
-            if (spec.data.defaultValue) {
-                return setModelValue(spec.data.defaultValue);
-            } else {
-                return unsetModelValue();
-            }
-        }
-
-        /*
-         * Creates the markup
-         * Places it into the dom node
-         * Hooks up event listeners
-         */
-        function makeInputControl(currentValue) {
-            return input({
-                class: 'form-control',
-                dataElement: 'input',
-                value: currentValue,
-                readonly: true,
-                disabled: true,
-            });
+            setModelValue(spec.data.defaultValue);
         }
 
         function render() {
-            dom.setContent('input-container', makeInputControl(model.value));
+            const inputControl = input({
+                class: 'form-control',
+                dataElement: 'input',
+                value,
+                readonly: true,
+                disabled: true,
+            })
+            ui.setContent('input-container', inputControl);
         }
 
         function layout() {
-            const content = div(
+            return div(
                 {
                     dataElement: 'main-panel',
                 },
                 [div({ dataElement: 'input-container' })]
             );
-            return {
-                content,
-            };
         }
 
         // LIFECYCLE API
@@ -76,13 +55,10 @@ define(['bluebird', 'kb_common/html', 'common/dom', 'bootstrap', 'css!font-aweso
         function start() {
             return Promise.try(() => {
                 bus.on('run', (message) => {
-                    parent = message.node;
-                    container = parent.appendChild(document.createElement('div'));
-                    dom = Dom.make({ node: container });
+                    container = message.node;
+                    ui = UI.make({ node: container });
 
-                    const theLayout = layout();
-
-                    container.innerHTML = theLayout.content;
+                    container.innerHTML = layout();
 
                     bus.on('reset-to-defaults', () => {
                         resetModelValue();

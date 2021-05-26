@@ -523,8 +523,9 @@ define([
     }
 
     return {
-        make: function (config) {
-            return factory(config);
+        // eslint-disable-next-line no-unused-vars
+        make: function (_config) {
+            return factory();
         },
     };
 });

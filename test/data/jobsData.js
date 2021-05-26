@@ -34,13 +34,13 @@ define(['common/format'], (format) => {
 
     const validJobs = [
         {
-            job_id: 'job created',
+            job_id: 'job-created',
             status: 'created',
             created: t.created,
             updated: t.created,
             meta: {
                 canCancel: true,
-                canRetry: false,
+                canRetry: true,
                 createJobStatusLines: {
                     line: jobStrings.queued,
                     history: [jobStrings.queued],
@@ -55,13 +55,13 @@ define(['common/format'], (format) => {
             },
         },
         {
-            job_id: 'job estimating',
+            job_id: 'job-estimating',
             status: 'estimating',
             created: t.created,
             updated: t.created,
             meta: {
                 canCancel: true,
-                canRetry: false,
+                canRetry: true,
                 createJobStatusLines: {
                     line: jobStrings.queued,
                     history: [jobStrings.queued],
@@ -76,14 +76,14 @@ define(['common/format'], (format) => {
             },
         },
         {
-            job_id: 'job in the queue',
+            job_id: 'job-in-the-queue',
             status: 'queued',
             created: t.created,
             queued: t.queued,
             updated: 12345678910,
             meta: {
                 canCancel: true,
-                canRetry: false,
+                canRetry: true,
                 createJobStatusLines: {
                     line: jobStrings.queued,
                     history: [jobStrings.queued],
@@ -98,7 +98,7 @@ define(['common/format'], (format) => {
             },
         },
         {
-            job_id: 'job cancelled whilst in the queue',
+            job_id: 'job-cancelled-whilst-in-the-queue',
             status: 'terminated',
             created: t.created,
             finished: t.finished,
@@ -121,7 +121,7 @@ define(['common/format'], (format) => {
             },
         },
         {
-            job_id: 'job running',
+            job_id: 'job-running',
             status: 'running',
             created: t.created,
             queued: t.queued,
@@ -129,7 +129,7 @@ define(['common/format'], (format) => {
             updated: 12345678910,
             meta: {
                 canCancel: true,
-                canRetry: false,
+                canRetry: true,
                 createJobStatusLines: {
                     line: jobStrings.running,
                     history: [jobStrings.queueHistory, jobStrings.running],
@@ -144,7 +144,7 @@ define(['common/format'], (format) => {
             },
         },
         {
-            job_id: 'job cancelled during run',
+            job_id: 'job-cancelled-during-run',
             status: 'terminated',
             created: t.created,
             finished: t.finished,
@@ -172,7 +172,7 @@ define(['common/format'], (format) => {
             },
         },
         {
-            job_id: 'job died whilst queueing',
+            job_id: 'job-died-whilst-queueing',
             status: 'error',
             error: {
                 code: 666,
@@ -204,7 +204,7 @@ define(['common/format'], (format) => {
             },
         },
         {
-            job_id: 'job died with error',
+            job_id: 'job-died-with-error',
             status: 'error',
             error: {
                 code: -32000,
@@ -237,7 +237,7 @@ define(['common/format'], (format) => {
             },
         },
         {
-            job_id: 'job finished with success',
+            job_id: 'job-finished-with-success',
             status: 'completed',
             created: t.created,
             finished: t.finished,
@@ -272,9 +272,8 @@ define(['common/format'], (format) => {
 
     // the 'does_not_exist' job state is created by the narrative backend
     const unknownJob = {
-        job_id: 'unknown job',
+        job_id: 'unknown-job',
         status: 'does_not_exist',
-        created: t.created,
         other: 'key',
         another: 'key',
         meta: {

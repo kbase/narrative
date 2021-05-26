@@ -101,9 +101,9 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
     /**
      * A jobState object is deemed valid if
      * 1. It's an object (not an array or atomic type)
-     * 2. It has a 'created' key
-     * 3. It has a 'job_id' key
-     * 4. It has a 'status' key, which appears in the array validJobStatuses
+     * 2. It has a 'job_id' key
+     * 3. It has a 'status' key, which appears in the array validJobStatuses
+     * 4. If the status is NOT 'does_not_exist', it must have a 'created' key
      *
      * There are other required fields, but these checks are sufficient for the UI.
      *
@@ -116,12 +116,16 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
      * @returns {boolean} true|false
      */
     function isValidJobStateObject(jobState) {
-        const requiredProperties = ['job_id', 'created', 'status'];
-        return (
+        const requiredProperties = ['job_id', 'status'];
+        return !!(
             jobState !== null &&
             typeof jobState === 'object' &&
             requiredProperties.every((prop) => prop in jobState) &&
-            validJobStatuses.includes(jobState.status)
+            validJobStatuses.includes(jobState.status) &&
+            // require the 'created' key if the status is not 'does_not_exist'
+            (jobState.status === 'does_not_exist'
+                ? true
+                : Object.prototype.hasOwnProperty.call(jobState, 'created'))
         );
     }
 
@@ -179,6 +183,11 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
         return getJobString(jobState, 'action');
     }
 
+    const validStatusesForAction = {
+        cancel: ['created', 'estimating', 'queued', 'running'],
+        retry: ['created', 'estimating', 'queued', 'running', 'error', 'terminated'],
+    };
+
     /**
      * Given a job state object and an action, return a boolean indicating whether the job can perform that action
      *
@@ -187,7 +196,10 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
      * @returns {boolean} whether or not the job can do the action
      */
     function canDo(action, jobState) {
-        return isValidJobStateObject(jobState) && getJobString(jobState, 'action') === action;
+        return (
+            isValidJobStateObject(jobState) &&
+            validStatusesForAction[action].includes(jobState.status)
+        );
     }
 
     /**
@@ -274,7 +286,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
     }
 
     /**
-     * Use the FSM mode and stage data to generate the appropriate job status summary
+     * Use the app cell FSM mode and stage data to generate the appropriate job status summary
      * @param {string} mode
      * @param {string} stage
      * @returns {string} HTML string with a single word status
@@ -506,7 +518,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
             );
         }
         // job hasn't run or finished (yet)
-        const queueString =
+        return (
             UI.loading({ color: 'orange' }) +
             ' In the queue since ' +
             span(
@@ -514,9 +526,8 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
                     class: 'kb-timestamp',
                 },
                 Format.niceTime(jobState.created)
-            );
-
-        return queueString;
+            )
+        );
     }
 
     const batch = 'batch job';
@@ -544,6 +555,25 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
         return `${batch} finished`;
     }
 
+    // reduce down jobs sorted by status into an object with keys being the job status
+    // and values the number of jobs in that state
+    function _jobCountByStatus(jobsByStatus) {
+        const statuses = {};
+        Object.keys(jobsByStatus).forEach((status) => {
+            const nJobs = Object.keys(jobsByStatus[status]).length;
+            // reduce down the queued states
+            if (status === 'estimating' || status === 'created') {
+                status = 'queued';
+            }
+            if (statuses[status]) {
+                statuses[status] += nJobs;
+            } else {
+                statuses[status] = nJobs;
+            }
+        });
+        return statuses;
+    }
+
     /**
      * Given an object containing job IDs indexed by status, summarise the status of the jobs
      * @param {object} jobsByStatus job IDs indexed by status
@@ -555,16 +585,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
             return '';
         }
 
-        const statuses = {};
-        Object.keys(jobsByStatus).forEach((status) => {
-            const nJobs = Object.keys(jobsByStatus[status]).length;
-            // reduce down the queued states
-            if (status === 'estimating' || status === 'created') {
-                status = 'queued';
-            }
-            statuses[status] ? (statuses[status] += nJobs) : (statuses[status] = nJobs);
-        });
-
+        const statuses = _jobCountByStatus(jobsByStatus);
         const textStatusSummary = _createBatchSummaryState(statuses);
         const orderedStatuses = [
             'queued',
@@ -604,6 +625,26 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
         return jobSpan.outerHTML;
     }
 
+    /**
+     * Get the FSM state for a bulk cell from the jobs
+     *
+     * @param {object} jobsByStatus job IDs indexed by status
+     * @returns {string} FSM state
+     */
+    function getFsmStateFromJobs(jobsByStatus) {
+        if (!jobsByStatus || !Object.keys(jobsByStatus).length) {
+            return null;
+        }
+
+        const statuses = _jobCountByStatus(jobsByStatus);
+
+        // if at least one job is running or queued, the status is 'inProgress'; otherwise,
+        // all jobs are in a terminal state, so the status is 'jobsFinished'
+        const baseStatus = statuses.running || statuses.queued ? 'inProgress' : 'jobsFinished';
+        // check whether or not any jobs ran successfully and hence whether results are available
+        return statuses.completed ? `${baseStatus}ResultsAvailable` : baseStatus;
+    }
+
     return {
         canCancel,
         canDo,
@@ -611,6 +652,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
         createCombinedJobState,
         createJobStatusFromFsm,
         createJobStatusLines,
+        getFsmStateFromJobs,
         isTerminalStatus,
         isValidJobStatus,
         isValidJobStateObject,
@@ -624,5 +666,6 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
         niceState,
         updateJobModel,
         validJobStatuses,
+        validStatusesForAction,
     };
 });

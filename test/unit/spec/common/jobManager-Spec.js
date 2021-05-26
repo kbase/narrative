@@ -366,7 +366,7 @@ define(['common/jobManager', 'common/jobs', 'common/props', 'common/ui', '/test/
                     request: 'cancellation',
                 },
                 retry: {
-                    valid: ['terminated', 'error'],
+                    valid: ['created', 'estimating', 'queued', 'running', 'terminated', 'error'],
                     invalid: [],
                     request: 'retry',
                 },
@@ -548,6 +548,50 @@ define(['common/jobManager', 'common/jobs', 'common/props', 'common/ui', '/test/
                     expect(UI.showConfirmDialog).toHaveBeenCalled();
                     expect(this.bus.emit).not.toHaveBeenCalled();
                 });
+            });
+        });
+
+        describe('initBatchJob', () => {
+            beforeEach(function () {
+                this.jobManagerInstance = createJobManagerInstance(this);
+            });
+
+            const invalidInput = [
+                {},
+                { parent_job: 12345 },
+                { parent_job_id: 12345, child_jobs: [] },
+                { parent_job_id: 12345, child_job_ids: [] },
+                { parent_job_id: 12345, child_job_ids: {} },
+            ];
+
+            invalidInput.forEach((input) => {
+                it(`will not accept invalid input ${JSON.stringify(input)}`, function () {
+                    expect(() => {
+                        this.jobManagerInstance.initBatchJob(input);
+                    }).toThrowError(
+                        /Batch job must have a parent job ID and at least one child job ID/
+                    );
+                });
+            });
+
+            it('replaces any existing job data with the new input', function () {
+                const childJobs = ['this', 'that', 'the other'];
+                expect(
+                    Object.keys(this.jobManagerInstance.model.getItem('exec.jobs.byId')).sort()
+                ).toEqual(
+                    JobsData.allJobs
+                        .map((job) => {
+                            return job.job_id;
+                        })
+                        .sort()
+                );
+                this.jobManagerInstance.initBatchJob({
+                    parent_job_id: 'something',
+                    child_job_ids: childJobs,
+                });
+                expect(
+                    Object.keys(this.jobManagerInstance.model.getItem('exec.jobs.byId')).sort()
+                ).toEqual(['that', 'the other', 'this']);
             });
         });
     });

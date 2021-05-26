@@ -47,6 +47,15 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUtil'], (
         };
     }
 
+    function makeJobStatusMsg(jobId, jobState, outputWidgetInfo) {
+        if (!jobState) {
+            jobState = {
+                job_id: jobId,
+            };
+        }
+        return outputWidgetInfo ? { jobId, jobState, outputWidgetInfo } : { jobId, jobState };
+    }
+
     describe('The jobCommChannel widget', () => {
         let testBus;
         beforeEach(() => {
@@ -245,6 +254,43 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUtil'], (
             });
         });
 
+        it('Should send a run_status message to the bus', () => {
+            const jobId = 'foo',
+                cellId = 'bar',
+                busMsg = {
+                    cell_id: cellId,
+                    job_id: jobId,
+                },
+                msg = makeCommMsg('run_status', busMsg);
+            const comm = new JobCommChannel();
+            spyOn(testBus, 'send');
+            return comm.initCommChannel().then(() => {
+                comm.handleCommMessages(msg);
+                expect(testBus.send).toHaveBeenCalledWith(busMsg, {
+                    channel: { cell: cellId },
+                    key: { type: 'run-status' },
+                });
+            });
+        });
+
+        it('Should send a result message to the bus', () => {
+            const cellId = 'someCellId',
+                busMsg = {
+                    address: { cell_id: cellId },
+                    result: [1],
+                },
+                msg = makeCommMsg('result', busMsg),
+                comm = new JobCommChannel();
+            spyOn(testBus, 'send');
+            return comm.initCommChannel().then(() => {
+                comm.handleCommMessages(msg);
+                expect(testBus.send).toHaveBeenCalledWith(busMsg, {
+                    channel: { cell: cellId },
+                    key: { type: 'result' },
+                });
+            });
+        });
+
         it('Should send job_status messages to the bus', () => {
             const jobId = 'someJob',
                 msg = makeCommMsg('job_status', {
@@ -254,13 +300,7 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUtil'], (
                     spec: {},
                     widget_info: {},
                 }),
-                busMsg = {
-                    jobId: jobId,
-                    jobState: {
-                        job_id: jobId,
-                    },
-                    outputWidgetInfo: {},
-                };
+                busMsg = makeJobStatusMsg(jobId, null, {});
 
             const comm = new JobCommChannel();
             spyOn(testBus, 'send');
@@ -275,24 +315,60 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUtil'], (
         });
 
         it('Should send a set of job statuses to the bus, and delete extras', () => {
+            const id1 = 'id1',
+                id2 = 'id2',
+                deletedJob = 'deletedJob';
+
             const msg = makeCommMsg('job_status_all', {
                 id1: {
                     state: {
-                        job_id: 'id1',
+                        job_id: id1,
                     },
                 },
                 id2: {
                     state: {
-                        job_id: 'id2',
+                        job_id: id2,
                     },
                 },
             });
             const comm = new JobCommChannel();
-            comm.jobStates['deletedJob'] = { state: { job_id: 'deletedJob' } };
+            comm.jobStates[deletedJob] = { state: { job_id: deletedJob } };
             spyOn(testBus, 'send');
             return comm.initCommChannel().then(() => {
                 comm.handleCommMessages(msg);
                 expect(testBus.send).toHaveBeenCalledTimes(3);
+
+                const allArgs = testBus.send.calls.allArgs();
+                const expected = [
+                    [
+                        makeJobStatusMsg(id1, null),
+                        {
+                            channel: { jobId: id1 },
+                            key: { type: 'job-status' },
+                        },
+                    ],
+                    [
+                        makeJobStatusMsg(id2, null),
+                        {
+                            channel: { jobId: id2 },
+                            key: { type: 'job-status' },
+                        },
+                    ],
+                    [
+                        {
+                            jobId: deletedJob,
+                            jobState: {
+                                job_id: deletedJob,
+                                status: 'does_not_exist',
+                            },
+                        },
+                        {
+                            channel: { jobId: deletedJob },
+                            key: { type: 'job-status' },
+                        },
+                    ],
+                ];
+                expect(allArgs).toEqual(expected);
             });
         });
 
@@ -317,25 +393,6 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUtil'], (
                 expect(testBus.send).toHaveBeenCalledWith(busMsg, {
                     channel: { jobId: jobId },
                     key: { type: 'job-info' },
-                });
-            });
-        });
-
-        it('Should send a run_status message to the bus', () => {
-            const jobId = 'foo',
-                cellId = 'bar',
-                busMsg = {
-                    cell_id: cellId,
-                    job_id: jobId,
-                },
-                msg = makeCommMsg('run_status', busMsg);
-            const comm = new JobCommChannel();
-            spyOn(testBus, 'send');
-            return comm.initCommChannel().then(() => {
-                comm.handleCommMessages(msg);
-                expect(testBus.send).toHaveBeenCalledWith(busMsg, {
-                    channel: { cell: cellId },
-                    key: { type: 'run-status' },
                 });
             });
         });
@@ -385,6 +442,32 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUtil'], (
             });
         });
 
+        it('Should convert job_does_not_exist status messages into job_status messages', () => {
+            const jobId = 'foo-dne',
+                msg = makeCommMsg('job_does_not_exist', {
+                    job_id: jobId,
+                    source: 'job_status',
+                }),
+                comm = new JobCommChannel();
+            spyOn(testBus, 'send');
+            return comm.initCommChannel().then(() => {
+                comm.handleCommMessages(msg);
+                expect(testBus.send).toHaveBeenCalledWith(
+                    {
+                        jobId: jobId,
+                        jobState: {
+                            job_id: jobId,
+                            status: 'does_not_exist',
+                        },
+                    },
+                    {
+                        channel: { jobId: jobId },
+                        key: { type: 'job-status' },
+                    }
+                );
+            });
+        });
+
         it('Should send job_logs to the bus', () => {
             const jobId = 'foo-logs',
                 msg = makeCommMsg('job_logs', {
@@ -411,10 +494,18 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUtil'], (
         });
 
         const errCases = {
-            cancel_job: 'job-cancel-error',
-            job_logs: 'job-log-deleted',
-            job_logs_latest: 'job-log-deleted',
-            job_status: 'job-status-error',
+            cancel_job: {
+                ok: 'job-canceled',
+                error: 'job-cancel-error',
+            },
+            job_logs: {
+                ok: 'job-logs',
+                error: 'job-log-deleted',
+            },
+            job_logs_latest: {
+                ok: 'job-logs',
+                error: 'job-log-deleted',
+            },
         };
 
         Object.keys(errCases).forEach((errCase) => {
@@ -430,16 +521,28 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUtil'], (
                 spyOn(testBus, 'send');
                 return comm.initCommChannel().then(() => {
                     comm.handleCommMessages(msg);
-                    expect(testBus.send).toHaveBeenCalledWith(
-                        {
-                            jobId: jobId,
-                            message: errMsg,
-                        },
-                        {
-                            channel: { jobId: jobId },
-                            key: { type: errCases[errCase] },
-                        }
-                    );
+                    expect(testBus.send.calls.allArgs()).toEqual([
+                        [
+                            {
+                                jobId: jobId,
+                                message: errMsg,
+                            },
+                            {
+                                channel: { jobId: jobId },
+                                key: { type: errCases[errCase].error },
+                            },
+                        ],
+                        [
+                            {
+                                jobId: jobId,
+                                error: errMsg,
+                            },
+                            {
+                                channel: { jobId: jobId },
+                                key: { type: errCases[errCase].ok },
+                            },
+                        ],
+                    ]);
                 });
             });
         });
@@ -502,24 +605,6 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUtil'], (
                     .then(() => {
                         expect(document.querySelector(modalQuerySelector)).toBeNull();
                     });
-            });
-        });
-
-        it('Should send a result message to the bus', () => {
-            const cellId = 'someCellId',
-                busMsg = {
-                    address: { cell_id: cellId },
-                    result: [1],
-                },
-                msg = makeCommMsg('result', busMsg),
-                comm = new JobCommChannel();
-            spyOn(testBus, 'send');
-            return comm.initCommChannel().then(() => {
-                comm.handleCommMessages(msg);
-                expect(testBus.send).toHaveBeenCalledWith(busMsg, {
-                    channel: { cell: cellId },
-                    key: { type: 'result' },
-                });
             });
         });
 

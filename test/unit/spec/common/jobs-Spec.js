@@ -62,9 +62,21 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
 
     describe('The isValidJobStateObject function', () => {
         it('Should know how to tell good job states', () => {
-            JobsData.allJobs.forEach((elem) => {
-                expect(Jobs.isValidJobStateObject(elem)).toBeTrue();
-            });
+            JobsData.allJobs
+                .concat([
+                    {
+                        job_id: 'zero_created',
+                        created: 0,
+                        status: 'created',
+                    },
+                    {
+                        job_id: 'does_not_exist',
+                        status: 'does_not_exist',
+                    },
+                ])
+                .forEach((elem) => {
+                    expect(Jobs.isValidJobStateObject(elem)).toBeTrue();
+                });
         });
 
         it('Should know how to tell bad job states', () => {
@@ -276,46 +288,55 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
                 desc: 'all jobs queued',
                 jobs: { created: { a: 1 }, estimating: { b: 1 }, queued: { c: 1 } },
                 expected: `${batch} in progress: 3 queued`,
+                fsmState: 'inProgress',
             },
             {
                 desc: 'queued and running jobs',
                 jobs: { estimating: { a: 1 }, running: { a: 1 } },
                 expected: `${batch} in progress: 1 queued, 1 running`,
+                fsmState: 'inProgress',
             },
             {
                 desc: 'all running',
                 jobs: { running: { a: 1 } },
                 expected: `${batch} in progress: 1 running`,
+                fsmState: 'inProgress',
             },
             {
                 desc: 'all jobs',
                 jobs: JobsData.jobsByStatus,
                 expected: `${batch} in progress: 3 queued, 1 running, 1 success, 2 failed, 2 cancelled, 1 not found`,
+                fsmState: 'inProgressResultsAvailable',
             },
             {
                 desc: 'in progress and finished',
                 jobs: { estimating: { a: 1 }, running: { b: 1 }, completed: { c: 1 } },
                 expected: `${batch} in progress: 1 queued, 1 running, 1 success`,
+                fsmState: 'inProgressResultsAvailable',
             },
             {
                 desc: 'all completed',
                 jobs: { completed: { a: 1, b: 1, c: 1 } },
                 expected: `${batch} finished with success: 3 successes`,
+                fsmState: 'jobsFinishedResultsAvailable',
             },
             {
                 desc: 'all failed',
                 jobs: { error: { a: 1, b: 1 } },
                 expected: `${batch} finished with error: 2 failed`,
+                fsmState: 'jobsFinished',
             },
             {
                 desc: 'all terminated',
                 jobs: { terminated: { a: 1, b: 1, c: 1 } },
                 expected: `${batch} finished with cancellation: 3 cancelled`,
+                fsmState: 'jobsFinished',
             },
             {
                 desc: 'mix of finish states',
                 jobs: { terminated: { a: 1 }, error: { a: 1, b: 1, c: 1 }, completed: { a: 1 } },
                 expected: `${batch} finished: 1 success, 3 failed, 1 cancelled`,
+                fsmState: 'jobsFinishedResultsAvailable',
             },
             {
                 desc: 'in progress, finished, not found',
@@ -326,21 +347,25 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
                     does_not_exist: { d: 1 },
                 },
                 expected: `${batch} in progress: 1 queued, 1 running, 1 success, 1 not found`,
+                fsmState: 'inProgressResultsAvailable',
             },
             {
                 desc: 'jobs do not exist',
                 jobs: { does_not_exist: { a: 1, b: 1 } },
                 expected: `${batch} finished with error: 2 not found`,
+                fsmState: 'jobsFinished',
             },
             {
                 desc: 'no jobs',
                 jobs: {},
                 expected: '',
+                fsmState: null,
             },
             {
                 desc: 'nothing at all',
                 jobs: null,
                 expected: '',
+                fsmState: null,
             },
         ];
 
@@ -354,6 +379,9 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
                 } else {
                     expect(div.childNodes.length).toBe(0);
                 }
+            });
+            it('deduces the FSM state', () => {
+                expect(Jobs.getFsmStateFromJobs(test.jobs)).toEqual(test.fsmState);
             });
         });
     });

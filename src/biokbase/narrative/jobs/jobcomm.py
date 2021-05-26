@@ -116,6 +116,7 @@ class JobComm:
                 "start_job_update": self._modify_job_update,
                 "stop_job_update": self._modify_job_update,
                 "cancel_job": self._cancel_job,
+                "retry_job": self._retry_job,
                 "job_logs": self._get_job_logs,
                 "job_logs_latest": self._get_job_logs,
             }
@@ -280,6 +281,35 @@ class JobComm:
             )
             raise
         self._lookup_job_state(req)
+
+    def _retry_job(self, req: JobRequest) -> None:
+        """
+        In this case, retry_results is formatted as:
+        {
+            "job_id": original_job_id,
+            "retry_id": new_job_id
+        }
+        """
+        self._verify_job_id(req)
+        try:
+            retry_results = self._jm.retry_job(req.job_id)
+            self.send_comm_message("job_retried", retry_results)
+            self.send_comm_message("new_job", {"job_id": retry_results["retry_id"]})
+        except ValueError:
+            self.send_error_message("job_does_not_exist", req)
+            raise
+        except NarrativeException as e:
+            self.send_error_message(
+                "job_comm_error",
+                req,
+                {
+                    "error": "Unable to retry job",
+                    "message": getattr(e, "message", "Unknown reason"),
+                    "code": getattr(e, "code", -1),
+                    "name": getattr(e, "name", type(e).__name__),
+                },
+            )
+            raise
 
     def _get_job_logs(self, req: JobRequest) -> None:
         """

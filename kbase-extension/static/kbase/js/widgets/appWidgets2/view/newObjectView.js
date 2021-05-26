@@ -20,8 +20,7 @@ define(['bluebird', 'common/html', 'common/ui', 'bootstrap', 'css!font-awesome']
             const inputField = ui.getElement('input');
             if (value === null || value === undefined) {
                 inputField.removeAttribute('value');
-            }
-            else {
+            } else {
                 inputField.setAttribute('value', newValue);
             }
         }
@@ -37,7 +36,7 @@ define(['bluebird', 'common/html', 'common/ui', 'bootstrap', 'css!font-awesome']
                 value,
                 readonly: true,
                 disabled: true,
-            })
+            });
             ui.setContent('input-container', inputControl);
         }
 

@@ -174,7 +174,6 @@ define([
                     method: 'AppManager.run_job_bulk',
                     exceptionType: 'ValueError',
                 },
-                testSelector: '.kb-rcp__action-button-container .-rerun',
                 testSelector: '.kb-rcp__action-button-container .-reset',
                 testState: (elem) => !elem.classList.contains('hidden'),
                 enabledTabs: ['viewConfigure', 'info', 'jobStatus', 'results', 'error'],
@@ -197,7 +196,7 @@ define([
                 testState: (elem) => !elem.classList.contains('hidden'),
             },
         ].forEach((testCase) => {
-            it(`responds to run-status bus messages with ${testCase.msgEvent} event`, () => {
+            it(`responds to run-status bus messages with ${testCase.msgEvent} event`, async () => {
                 const cell = Mocks.buildMockCell('code');
                 cell.execute = () => {};
                 // add dummy metadata so we can make a cell that's in the ready-to-run state.

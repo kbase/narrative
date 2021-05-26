@@ -46,6 +46,7 @@ define([
     InfoTabWidget,
     JobStatusTabWidget,
     ResultsWidget,
+    ErrorTabWidget,
     States
 ) => {
     'use strict';

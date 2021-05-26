@@ -79,8 +79,8 @@ define([
     /**
      * itHasRowStructure expects `this` to be set up as follows:
      *
-     * row: a row element, altered by the jobStateListRow functions
-     * job: the original job object used to create the jobStateListRow
+     * row: a row element from the job status table
+     * job: the original job object used to create the table row
      *      it has extra data under the key 'meta'
      * input: an altered job object with extra data under the key 'meta'
      */
@@ -237,7 +237,6 @@ define([
                     `${cssBaseClass}__table_head`,
                     `${cssBaseClass}__table_head_row`,
                     `${cssBaseClass}__table_body`,
-                    `${cssBaseClass}__row`,
                 ];
 
                 classContents.forEach((item) => {

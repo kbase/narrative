@@ -67,8 +67,8 @@ define([
             let value;
             if (item.value instanceof Array) {
                 value = item.value
-                    .map((item) => {
-                        return formatItem(item);
+                    .map((value) => {
+                        return formatItem(value);
                     })
                     .join('&nbsp;&nbsp;&nbsp;');
             } else {
@@ -111,7 +111,11 @@ define([
                     $('<span data-test-id="found-count">').css('font-weight', 'bold').text('None')
                 )
                 .append($('<span>').text(' found out of '))
-                .append($('<span>').css('font-weight', 'bold').text(numeral(total).format('0,0')))
+                .append(
+                    $('<span data-test-id="total-count">')
+                        .css('font-weight', 'bold')
+                        .text(numeral(total).format('0,0'))
+                )
                 .append($('<span>').text(' available'));
         } else if (total > found) {
             $totals
@@ -121,7 +125,11 @@ define([
                         .text(numeral(found).format('0,0'))
                 )
                 .append($('<span>').text(' found out of '))
-                .append($('<span>').css('font-weight', 'bold').text(numeral(total).format('0,0')))
+                .append(
+                    $('<span data-test-id="total-count">')
+                        .css('font-weight', 'bold')
+                        .text(numeral(total).format('0,0'))
+                )
                 .append($('<span>').text(' available'));
         } else {
             $totals
@@ -337,6 +345,7 @@ define([
                             $filterInput.val('');
                             inputFieldLastValue = '';
                             $filterInput.change();
+                            $filterInput.focus();
                         })
                 );
 
@@ -352,6 +361,7 @@ define([
                         this.$dataSourceLogo.append($('<img>').attr('src', dataSource.logoUrl));
                     }
                 }
+                $filterInput.focus();
                 this.searchAndRender(newDataSourceID, $filterInput.val());
             });
 
@@ -422,6 +432,12 @@ define([
             this.$elem.append(this.resultArea);
             const dataSourceID = parseInt($typeInput.val(), 10);
             this.searchAndRender(dataSourceID, $filterInput.val());
+            // Invocation of focus must be delayed until the next timer loop,
+            // probably because the element is not yet visible. Perhaps the
+            // tab content has an overlay.
+            window.setTimeout(() => {
+                $filterInput.focus();
+            }, 0);
             return this;
         },
 
@@ -464,7 +480,7 @@ define([
             this.objectList = [];
             this.currentCategory = category;
             this.currentQuery = query;
-            this.currentPage = 0;
+            this.currentPage = null;
             this.totalAvailable = null;
             this.currentFilteredResults = null;
 

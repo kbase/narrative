@@ -5,12 +5,12 @@ The search data source performs a fresh search with every new query.
 Whereas the workspace data source fetches the data once, and then performs
 a search against these cached results
 */
-define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
+define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], (
     Promise,
     Handlebars,
     SearchAPI2,
     common
-) {
+) => {
     'use strict';
 
     class RefDataSearch {
@@ -106,6 +106,14 @@ define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
                                     {
                                         match: {
                                             genome_id: query,
+                                        },
+                                    },
+                                    {
+                                        match: {
+                                            taxonomy: {
+                                                query: query,
+                                                operator: 'AND',
+                                            },
                                         },
                                     },
                                 ],
@@ -300,63 +308,6 @@ define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
                     }).finally(() => {
                         this.searchState.currentQueryState = null;
                     });
-                },
-            },
-            setQuery: {
-                value: function (query) {
-                    this.queryExpression = query.replace(/[*]/g, ' ').trim().toLowerCase();
-                },
-            },
-            applyQuery: {
-                value: () => {
-                    return this.searchApi
-                        .referenceGenomeSearch({
-                            source: this.config.source,
-                            pageSize: this.itemsPerPage,
-                            query: this.queryExpression,
-                            page: this.page,
-                        })
-                        .then((result) => {
-                            this.availableDataCount = result.totalAvailable;
-                            this.filteredDataCount = result.result.count;
-                            this.availableData = result.result.objects.map(function (item) {
-                                // This call gives us a normalized genome result object.
-                                // In porting this over, we are preserving the field names.
-                                const genomeRecord = parseGenomeSearchResultItem(item);
-
-                                const name = this.titleTemplate(genomeRecord);
-                                const metadata = common.applyMetadataTemplates(
-                                    this.metadataTemplates,
-                                    genomeRecord
-                                );
-                                return {
-                                    info: null,
-                                    id: genomeRecord.genome_id,
-                                    objectId: null,
-                                    name,
-                                    objectName: genomeRecord.object_name,
-                                    metadata,
-                                    ws: this.config.workspaceName,
-                                    type: this.config.type,
-                                    attached: false,
-                                };
-                            });
-                            return this.availableData;
-                        });
-                },
-            },
-            load: {
-                value: function () {
-                    return common
-                        .listObjectsWithSets(
-                            this.narrativeService,
-                            this.config.workspaceName,
-                            this.config.type
-                        )
-                        .then((data) => {
-                            this.availableData = data;
-                            this.availableDataCount = this.availableData.length;
-                        });
                 },
             },
         }

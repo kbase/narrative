@@ -1,4 +1,3 @@
-/*global describe, it, browser, afterEach, beforeEach*/
 /* eslint {strict: ['error', 'global']} */
 'use strict';
 
@@ -22,8 +21,8 @@ test cases can be could be in separate files.
 
 */
 
-async function testCellMovement({caseLabel, selectCell, direction}) {
-    const t = new NarrativeTesting({testData, timeout: TIMEOUT, caseLabel});
+async function testCellMovement({ caseLabel, selectCell, direction }) {
+    const t = new NarrativeTesting({ testData, timeout: TIMEOUT, caseLabel });
     const cellIndex = t.caseData.cellIndex;
     const cells = t.testData.common.cells;
     const narrativeContainer = await t.openNarrative(t.caseData.narrativeId);
@@ -60,19 +59,21 @@ async function testCellMovement({caseLabel, selectCell, direction}) {
     // This relies on the "cellOrder" array, which contains expected ordering
     // of cells, where each cell is identified by it's original cell position.
     const cellOrder = t.caseData.expect.afterMove[direction].cellOrder;
-    await Promise.all(cellOrder.map((originalCellIndex, index) => {
-        const actualCellIndex = index + 1;
-        // Get the expected title or body for the cell at that position, based
-        // on the master list of starting cells.
-        const expected = cells[originalCellIndex - 1];
+    await Promise.all(
+        cellOrder.map((originalCellIndex, index) => {
+            const actualCellIndex = index + 1;
+            // Get the expected title or body for the cell at that position, based
+            // on the master list of starting cells.
+            const expected = cells[originalCellIndex - 1];
 
-        return waitForExpectedCell(actualCellIndex, expected);
-    }));
+            return waitForExpectedCell(actualCellIndex, expected);
+        })
+    );
 }
 
 describe('Test kbaseCellToolbarMenu movement buttons', () => {
     beforeEach(async () => {
-        await browser.setTimeout({ 'implicit': 30000 });
+        await browser.setTimeout({ implicit: 30000 });
         await browser.reloadSession();
         await login();
     });
@@ -81,13 +82,13 @@ describe('Test kbaseCellToolbarMenu movement buttons', () => {
         await browser.deleteCookies();
     });
 
-    // Move first cell 
+    // Move first cell
 
     it('moves a minimized selected first cell down', async () => {
         await testCellMovement({
             caseLabel: 'TEST_CASE_1',
             direction: 'up',
-            selectCell: false
+            selectCell: false,
         });
     });
 
@@ -95,7 +96,7 @@ describe('Test kbaseCellToolbarMenu movement buttons', () => {
         await testCellMovement({
             caseLabel: 'TEST_CASE_1',
             direction: 'down',
-            selectCell: false
+            selectCell: false,
         });
     });
 
@@ -105,7 +106,7 @@ describe('Test kbaseCellToolbarMenu movement buttons', () => {
         await testCellMovement({
             caseLabel: 'TEST_CASE_2',
             direction: 'up',
-            selectCell: false
+            selectCell: false,
         });
     });
 
@@ -113,7 +114,7 @@ describe('Test kbaseCellToolbarMenu movement buttons', () => {
         await testCellMovement({
             caseLabel: 'TEST_CASE_2',
             direction: 'down',
-            selectCell: false
+            selectCell: false,
         });
     });
 
@@ -123,7 +124,7 @@ describe('Test kbaseCellToolbarMenu movement buttons', () => {
         await testCellMovement({
             caseLabel: 'TEST_CASE_2',
             direction: 'up',
-            selectCell: true
+            selectCell: true,
         });
     });
 
@@ -131,7 +132,7 @@ describe('Test kbaseCellToolbarMenu movement buttons', () => {
         await testCellMovement({
             caseLabel: 'TEST_CASE_2',
             direction: 'down',
-            selectCell: true
+            selectCell: true,
         });
     });
 
@@ -141,7 +142,7 @@ describe('Test kbaseCellToolbarMenu movement buttons', () => {
         await testCellMovement({
             caseLabel: 'TEST_CASE_3',
             direction: 'up',
-            selectCell: false
+            selectCell: false,
         });
     });
 
@@ -149,7 +150,7 @@ describe('Test kbaseCellToolbarMenu movement buttons', () => {
         await testCellMovement({
             caseLabel: 'TEST_CASE_3',
             direction: 'down',
-            selectCell: false
+            selectCell: false,
         });
     });
 
@@ -159,7 +160,7 @@ describe('Test kbaseCellToolbarMenu movement buttons', () => {
         await testCellMovement({
             caseLabel: 'TEST_CASE_3',
             direction: 'up',
-            selectCell: true
+            selectCell: true,
         });
     });
 
@@ -167,7 +168,7 @@ describe('Test kbaseCellToolbarMenu movement buttons', () => {
         await testCellMovement({
             caseLabel: 'TEST_CASE_3',
             direction: 'down',
-            selectCell: true
+            selectCell: true,
         });
     });
 
@@ -177,7 +178,7 @@ describe('Test kbaseCellToolbarMenu movement buttons', () => {
         await testCellMovement({
             caseLabel: 'TEST_CASE_4',
             direction: 'up',
-            selectCell: false
+            selectCell: false,
         });
     });
 
@@ -185,7 +186,7 @@ describe('Test kbaseCellToolbarMenu movement buttons', () => {
         await testCellMovement({
             caseLabel: 'TEST_CASE_4',
             direction: 'down',
-            selectCell: false
+            selectCell: false,
         });
     });
 
@@ -195,7 +196,7 @@ describe('Test kbaseCellToolbarMenu movement buttons', () => {
         await testCellMovement({
             caseLabel: 'TEST_CASE_4',
             direction: 'up',
-            selectCell: true
+            selectCell: true,
         });
     });
 
@@ -203,7 +204,7 @@ describe('Test kbaseCellToolbarMenu movement buttons', () => {
         await testCellMovement({
             caseLabel: 'TEST_CASE_4',
             direction: 'down',
-            selectCell: true
+            selectCell: true,
         });
     });
 
@@ -213,7 +214,7 @@ describe('Test kbaseCellToolbarMenu movement buttons', () => {
         await testCellMovement({
             caseLabel: 'TEST_CASE_5',
             direction: 'up',
-            selectCell: false
+            selectCell: false,
         });
     });
 
@@ -221,7 +222,7 @@ describe('Test kbaseCellToolbarMenu movement buttons', () => {
         await testCellMovement({
             caseLabel: 'TEST_CASE_5',
             direction: 'down',
-            selectCell: false
+            selectCell: false,
         });
     });
 
@@ -231,7 +232,7 @@ describe('Test kbaseCellToolbarMenu movement buttons', () => {
         await testCellMovement({
             caseLabel: 'TEST_CASE_5',
             direction: 'up',
-            selectCell: true
+            selectCell: true,
         });
     });
 
@@ -239,7 +240,7 @@ describe('Test kbaseCellToolbarMenu movement buttons', () => {
         await testCellMovement({
             caseLabel: 'TEST_CASE_5',
             direction: 'down',
-            selectCell: true
+            selectCell: true,
         });
     });
 });

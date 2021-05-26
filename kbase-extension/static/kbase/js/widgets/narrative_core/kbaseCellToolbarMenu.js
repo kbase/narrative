@@ -15,7 +15,6 @@ define([
         div = t('div'),
         a = t('a'),
         button = t('button'),
-        p = t('p'),
         span = t('span'),
         ul = t('ul'),
         li = t('li');
@@ -33,10 +32,9 @@ define([
         return cell.metadata.kbase[group][name];
     }
 
-    function factory(config) {
-        let container,
-            cell,
-            readOnly = Jupyter.narrative.readonly;
+    function factory() {
+        let container, cell;
+        const readOnly = Jupyter.narrative.readonly;
 
         function doMoveCellUp() {
             const cellIndex = Jupyter.notebook.find_cell_index(cell);
@@ -63,32 +61,11 @@ define([
         }
 
         function getCellSubtitle(cell) {
-            const subTitle = getMeta(cell, 'attributes', 'subtitle'),
-                showTitle = utils.getCellMeta(cell, 'kbase.cellState.showTitle', true),
-                showSubtitle = utils.getCellMeta(cell, 'kbase.cellState.showSubtitle', true);
+            const subTitle = getMeta(cell, 'attributes', 'subtitle');
+            const showTitle = utils.getCellMeta(cell, 'kbase.cellState.showTitle', true);
 
             if (showTitle) {
                 return subTitle;
-            }
-            return '';
-        }
-
-        function getCellInfoLink(cell, events) {
-            const url = utils.getCellMeta(cell, 'kbase.attributes.info.url'),
-                label = utils.getCellMeta(cell, 'kbase.attributes.info.label');
-
-            if (url) {
-                return a(
-                    {
-                        href: url,
-                        target: '_blank',
-                        id: events.addEvent({
-                            type: 'click',
-                            handler: doShowInfoModal,
-                        }),
-                    },
-                    label || 'ref'
-                );
             }
             return '';
         }
@@ -97,7 +74,7 @@ define([
             if (e.getModifierState) {
                 const modifier = e.getModifierState('Alt');
                 if (modifier) {
-                    console.log('I want to toggle all cells!');
+                    console.warn('I want to toggle all cells!');
                 }
             }
             cell.toggleMinMax();
@@ -114,70 +91,6 @@ define([
             return null;
         }
 
-        function doShowInfoModal(e) {
-            e.preventDefault();
-            const version = utils.getCellMeta(cell, 'kbase.appCell.app.version'),
-                authors = utils.getCellMeta(cell, 'kbase.appCell.app.spec.info.authors'),
-                title = getMeta(cell, 'attributes', 'title') + ' v' + version,
-                appStoreUrl = utils.getCellMeta(cell, 'kbase.attributes.info.url'),
-                tag = utils.getCellMeta(cell, 'kbase.appCell.app.tag'),
-                module = utils.getCellMeta(cell, 'kbase.appCell.app.spec.info.module_name');
-            var dialog = new BootstrapDialog({
-                title: title,
-                body: $('<div class="container"></div>'),
-                buttons: [
-                    $(
-                        '<a href="' +
-                            appStoreUrl +
-                            '" target="_blank" type="button" class="btn btn-default">View on App Store</a>'
-                    ),
-                    $('<button type="button" class="btn btn-primary">Close</button>').click(() => {
-                        dialog.hide();
-                    }),
-                ],
-                enterToTrigger: true,
-                closeButton: true,
-            });
-
-            const infoPanel = AppInfoPanel.make({
-                appId: utils.getCellMeta(cell, 'kbase.appCell.app.id'),
-                appVersion: version,
-                appAuthors: authors,
-                appModule: module,
-                tag: tag,
-            });
-            infoPanel.start({ node: dialog.getBody() });
-
-            dialog.getElement().on('hidden.bs.modal', () => {
-                dialog.destroy();
-            });
-            dialog.show();
-        }
-
-        function doToggleCellSettings() {
-            cell.element.trigger('toggleCellSettings.cell');
-        }
-
-        function renderToggleCellSettings(events) {
-            // Only kbase cells have cell settings.
-            if (!cell.metadata || !cell.metadata.kbase || !cell.metadata.kbase.type) {
-                return;
-            }
-
-            return button(
-                {
-                    type: 'button',
-                    class: 'btn btn-default btn-xs',
-                    dataToggle: 'tooltip',
-                    dataPlacement: 'left',
-                    title: true,
-                    dataOriginalTitle: 'Cell Settings',
-                    id: events.addEvent({ type: 'click', handler: doToggleCellSettings }),
-                },
-                [span({ class: 'fa fa-cog', style: 'font-size: 14pt' })]
-            );
-        }
-
         function renderIcon(icon) {
             return span({
                 class: 'fa fa-' + icon.type + ' fa-sm',
@@ -185,24 +98,7 @@ define([
             });
         }
 
-        function isKBaseCell(cell) {
-            if (!cell.metadata || !cell.metadata.kbase || !cell.metadata.kbase.type) {
-                return false;
-            }
-            return true;
-        }
-
-        function doHelp() {
-            alert('help here...');
-        }
-
         function renderOptions(cell, events) {
-            const toggleMinMax = utils.getCellMeta(
-                    cell,
-                    'kbase.cellState.toggleMinMax',
-                    'maximized'
-                );
-            const toggleIcon = toggleMinMax === 'maximized' ? 'minus' : 'plus';
             const dropdownId = html.genId();
             const menuItems = [];
 
@@ -429,13 +325,15 @@ define([
                               ),
                         (function () {
                             const toggleMinMax = utils.getCellMeta(
-                                    cell,
-                                    'kbase.cellState.toggleMinMax',
-                                    'maximized'
-                                );
+                                cell,
+                                'kbase.cellState.toggleMinMax',
+                                'maximized'
+                            );
                             const toggleIcon = toggleMinMax === 'maximized' ? 'minus' : 'plus';
-                            const color = toggleMinMax === 'maximized' ? '#000' : 'rgba(255,137,0,1)';
-                            const classModifier = (toggleMinMax === 'maximized' ? '-maximized' : '-minimized');
+                            const color =
+                                toggleMinMax === 'maximized' ? '#000' : 'rgba(255,137,0,1)';
+                            const classModifier =
+                                toggleMinMax === 'maximized' ? '-maximized' : '-minimized';
                             return button(
                                 {
                                     type: 'button',

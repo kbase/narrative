@@ -56,9 +56,14 @@
         "prettier": "prettier --write '**/*.js'",
         "prettier_check": "prettier --check '**/*.js'",
         "prettier_debug": "prettier --debug-check '**/*.js'",
+        "eslint-check": "eslint '**/*.js'",
+        "eslint-pre-push": "eslint $(git diff HEAD  --name-only | egrep \"\\.js$\")",
         "requirejs": "r.js -o build.js",
         "test": "karma start test/unit/karma.conf.js",
         "uglify": "terser kbase-extension/static/kbase-narrative.js -c --source-map --output kbase-extension/static/kbase-narrative-min.js",
         "postinstall": "husky install"
+    },
+    "lint-staged": {
+        "*.js": "eslint"
     }
 }

@@ -113,8 +113,8 @@ class NarrativeTesting {
 
         await clickWhenReady(loginButton);
 
-        const realnameElement = await $('[data-element="realname"]');
-        const usernameElement = await $('[data-element="username"]');
+        const realnameElement = await $('[data-testid="realname"]');
+        const usernameElement = await $('[data-testid="username"]');
         await browser.waitUntil(async () => {
             const text = await realnameElement.getText();
             return text && text.length > 0;

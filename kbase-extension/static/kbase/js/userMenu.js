@@ -57,59 +57,62 @@ define([
         }
 
         function render() {
-            const menu = div({ class: 'dropdown', style: 'display:inline-block' }, [
-                button(
-                    {
-                        type: 'button',
-                        class: 'btn btn-default dropdown-toggle',
-                        'data-toggle': 'dropdown',
-                        'aria-expanded': 'false',
-                    },
-                    [renderAvatar(), span({ class: 'caret', style: 'margin-left: 5px;' })]
-                ),
-                ul({ class: 'dropdown-menu', role: 'menu' }, [
-                    li({}, [
-                        a(
-                            {
-                                href: '/#people/' + userName,
-                                target: '_blank',
-                                'data-menu-item': 'userlabel',
-                            },
-                            [
-                                div(
-                                    {
-                                        style:
-                                            'display:inline-block; width: 34px; vertical-align: top;',
-                                    },
-                                    [
-                                        span({
-                                            class: 'fa fa-user',
-                                            style: 'font-size: 150%; margin-right: 10px;',
-                                        }),
-                                    ]
-                                ),
-                                div({ style: 'display: inline-block' }, [
-                                    span({ 'data-element': 'realname' }, displayName),
-                                    br(),
-                                    i({ 'data-element': 'username' }, userName),
+            const menu = div(
+                { class: 'dropdown', style: 'display:inline-block', dataTestid: 'userMenu' },
+                [
+                    button(
+                        {
+                            type: 'button',
+                            class: 'btn btn-default dropdown-toggle',
+                            'data-toggle': 'dropdown',
+                            'aria-expanded': 'false',
+                        },
+                        [renderAvatar(), span({ class: 'caret', style: 'margin-left: 5px;' })]
+                    ),
+                    ul({ class: 'dropdown-menu', role: 'menu' }, [
+                        li({}, [
+                            a(
+                                {
+                                    href: '/#people/' + userName,
+                                    target: '_blank',
+                                    'data-menu-item': 'userlabel',
+                                },
+                                [
+                                    div(
+                                        {
+                                            style:
+                                                'display:inline-block; width: 34px; vertical-align: top;',
+                                        },
+                                        [
+                                            span({
+                                                class: 'fa fa-user',
+                                                style: 'font-size: 150%; margin-right: 10px;',
+                                            }),
+                                        ]
+                                    ),
+                                    div({ style: 'display: inline-block' }, [
+                                        span({ dataTestid: 'realname' }, displayName),
+                                        br(),
+                                        i({ dataTestid: 'username' }, userName),
+                                    ]),
+                                ]
+                            ),
+                        ]),
+                        li({ class: 'divider' }),
+                        li({}, [
+                            a({ href: '#', 'data-menu-item': 'logout', id: 'signout-button' }, [
+                                div({ style: 'display: inline-block; width: 34px;' }, [
+                                    span({
+                                        class: 'fa fa-sign-out',
+                                        style: 'font-size: 150%; margin-right: 10px;',
+                                    }),
                                 ]),
-                            ]
-                        ),
-                    ]),
-                    li({ class: 'divider' }),
-                    li({}, [
-                        a({ href: '#', 'data-menu-item': 'logout', id: 'signout-button' }, [
-                            div({ style: 'display: inline-block; width: 34px;' }, [
-                                span({
-                                    class: 'fa fa-sign-out',
-                                    style: 'font-size: 150%; margin-right: 10px;',
-                                }),
+                                'Sign Out',
                             ]),
-                            'Sign Out',
                         ]),
                     ]),
-                ]),
-            ]);
+                ]
+            );
             target.append(menu);
             target.find('#signout-button').click(logout);
         }

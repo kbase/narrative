@@ -135,8 +135,8 @@ class NarrativeTesting {
     }
 
     waitForCell(notebookContainer, cellIndex) {
-        return browser.waitUntil(async () => {
-            return await notebookContainer.$(`.cell:nth-child(${cellIndex})`);
+        return browser.waitUntil(() => {
+            return notebookContainer.$(`.cell:nth-child(${cellIndex})`);
         });
     }
 

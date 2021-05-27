@@ -1,12 +1,14 @@
 {
     "token": {
-        "user": "wjriehl",
-        "file": "test/wjriehl.tok"
+        "user": "narrativetest",
+        "file": "test/narrativetest.tok"
     },
     "currentNarrative": "bar",
-    "data": [{
-        "file": "/test/data/blah.xyz",
-        "type": "Module.type-1.0",
-        "name": "obj_name"
-    }]
+    "data": [
+        {
+            "file": "/test/data/blah.xyz",
+            "type": "Module.type-1.0",
+            "name": "obj_name"
+        }
+    ]
 }

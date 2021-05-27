@@ -5,9 +5,16 @@ CSS should go in /kbase-extension/static/kbase/css/kbaseNarrative.css
 (or the specific css file if available)
 */
 @font-face {
-  font-family: 'Glyphicons Halflings';
-  src: url('../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.eot');
-  src: url('../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.eot?#iefix') format('embedded-opentype'), url('../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.woff2') format('woff2'), url('../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.woff') format('woff'), url('../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.ttf') format('truetype'), url('../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.svg#glyphicons_halflingsregular') format('svg');
+  font-family: "Glyphicons Halflings";
+  src: url("../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.eot");
+  src:
+    url("../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.eot?#iefix")
+    format("embedded-opentype"),
+    url("../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.woff2") format("woff2"),
+    url("../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.woff") format("woff"),
+    url("../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.ttf") format("truetype"),
+    url("../../ext_components/bootstrap/dist/fonts/glyphicons-halflings-regular.svg#glyphicons_halflingsregular")
+    format("svg");
 }
 
 .select2-container--default .select2-results__option--highlighted[aria-selected] {
@@ -315,12 +322,24 @@ div#notebook {
   color: #ccc;
 }
 
+.cell.unselected .btn-default:hover {
+  color: #000;
+}
+
 .cell.unselected .kb-cell-toolbar .title-container {
   opacity: 0.5;
 }
 
-.cell.unselected .kb-cell-toolbar .buttons-container {
-  opacity: 0.2;
+.btn.btn-default.kb-btn-expander.-minimized {
+  color: rgba(255, 137, 0, 1);
+}
+
+.cell.unselected .kb-btn-expander.-minimized {
+  color: rgba(255, 137, 0, 0.5);
+}
+
+.cell.unselected .kb-btn-expander.-minimized:hover {
+  color: rgba(255, 137, 0, 1);
 }
 
 .kb-btn-icon {

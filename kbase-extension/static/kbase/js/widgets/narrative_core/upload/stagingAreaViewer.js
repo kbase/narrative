@@ -717,7 +717,7 @@ define([
                 }
                 if (appInfo.app_static_params) {
                     for (const p in appInfo.app_static_params) {
-                        if (appInfo.app_static_params.hasOwnProperty(p)) {
+                        if (Object.prototype.hasOwnProperty.call(appInfo.app_static_params, p)) {
                             inputs[p] = appInfo.app_static_params[p];
                         }
                     }

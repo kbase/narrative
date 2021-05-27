@@ -16,11 +16,13 @@ build-narrative-container:
 
 docker_image: build-narrative-container
 
-# Per PR #1328, adding an option to skip minification
+dev-network:
+	docker network create kbase-dev || true
+
 dev-image:
 	SKIP_MINIFY=1 DOCKER_TAG=dev sh $(DOCKER_INSTALLER)
 
-run-dev-image:
+run-dev-image: dev-network
 	ENV=$(ENV) sh scripts/local-dev-run.sh
 
 install:

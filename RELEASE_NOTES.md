@@ -7,6 +7,7 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 ### Unreleased
 
 - SCT-3602 - refseq public data tool now searches by lineage as well; for all public data tools: automatically focus the search input; fix paging bug
+- SCT-2914 / PUBLIC-1493 - fix up/down cell movement behavior for unselected cells
 
 ### Version 4.4.0
 -   No ticket: boatloads of code cleanup and fixes to the unit and internal testing

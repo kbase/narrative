@@ -156,6 +156,21 @@ define([
                 }
             });
 
+            fieldWidget.bus.on('sync', () => {
+                const newValue = dataModel.rows[rowId].values[parameterSpec.id];
+                fieldWidget.bus.send(
+                    {
+                        value: newValue,
+                    },
+                    {
+                        // This points the update back to a listener on this key
+                        key: {
+                            type: 'update',
+                        },
+                    }
+                );
+            });
+
             fieldWidget.bus.respond({
                 key: {
                     type: 'get-param-state',

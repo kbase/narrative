@@ -18,17 +18,17 @@ function mergeObjects(listOfObjects) {
         // Note that the source object is not copied, since we don't care if
         // there is object sharing in the result, we just want to ensure that
         // we don't overwrite properties of shared objects.
-        const merged = JSON.parse(JSON.stringify(targetObj));
+        const mergedObj = JSON.parse(JSON.stringify(targetObj));
 
         Object.keys(sourceObj).forEach((key) => {
-            if (isSimpleObject(merged[key]) && isSimpleObject(sourceObj[key])) {
-                merged[key] = merge(merged[key], sourceObj[key]);
+            if (isSimpleObject(mergedObj[key]) && isSimpleObject(sourceObj[key])) {
+                mergedObj[key] = merge(mergedObj[key], sourceObj[key]);
             } else {
-                merged[key] = sourceObj[key];
+                mergedObj[key] = sourceObj[key];
             }
         });
 
-        return merged;
+        return mergedObj;
     }
 
     const objectsToMerge = listOfObjects.map((obj, index) => {
@@ -126,8 +126,6 @@ class NarrativeTesting {
         await loginButton.click();
 
         // Ensure narrative notebook has displayed
-        // TODO: more interesting waitUntil loop to signal the
-        // failure reason (useful for debugging tests?)
         const container = await $('#notebook-container');
         await container.waitForDisplayed({
             timeout,
@@ -136,10 +134,9 @@ class NarrativeTesting {
         return container;
     }
 
-    async waitForCell(notebookContainer, cellIndex) {
-        return await browser.waitUntil(async () => {
-            const cell = await notebookContainer.$(`.cell:nth-child(${cellIndex})`);
-            return cell;
+    waitForCell(notebookContainer, cellIndex) {
+        return browser.waitUntil(async () => {
+            return await notebookContainer.$(`.cell:nth-child(${cellIndex})`);
         });
     }
 
@@ -170,20 +167,15 @@ class NarrativeTesting {
             const cellText = await element.getText();
             return text === cellText;
         });
-        return await this.waitForCell(container, cellIndex);
+        return this.waitForCell(container, cellIndex);
     }
 
-    async waitForCellWithTitle(container, cellIndex, titleText) {
-        return await this.waitForCellWithText(
-            container,
-            cellIndex,
-            '[data-element="title"]',
-            titleText
-        );
+    waitForCellWithTitle(container, cellIndex, titleText) {
+        return this.waitForCellWithText(container, cellIndex, '[data-element="title"]', titleText);
     }
 
-    async waitForCellWithBody(container, cellIndex, bodyText) {
-        return await this.waitForCellWithText(
+    waitForCellWithBody(container, cellIndex, bodyText) {
+        return this.waitForCellWithText(
             container,
             cellIndex,
             '.text_cell_render.rendered_html',

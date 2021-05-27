@@ -16,9 +16,6 @@ The first three cells are collapsed, the last two are expanded.
 Tests currently cover moving cells up and down, in both selected and unselected state, and ensuring that the moved 
 cell is in the expected position.
 
-TODO: This test suite could be expanded to cover all usage of the cell toolbar (kbaseCellToolbarMenu.js), or such 
-test cases can be could be in separate files.
-
 */
 
 async function testCellMovement({ caseLabel, selectCell, direction }) {

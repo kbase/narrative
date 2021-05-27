@@ -18,17 +18,17 @@ function mergeObjects(listOfObjects) {
         // Note that the source object is not copied, since we don't care if
         // there is object sharing in the result, we just want to ensure that
         // we don't overwrite properties of shared objects.
-        targetObj = JSON.parse(JSON.stringify(targetObj));
+        const merged = JSON.parse(JSON.stringify(targetObj));
 
         Object.keys(sourceObj).forEach(function (key) {
-            if (isSimpleObject(targetObj[key]) && isSimpleObject(sourceObj[key])) {
-                targetObj[key] = merge(targetObj[key], sourceObj[key]);
+            if (isSimpleObject(merged[key]) && isSimpleObject(sourceObj[key])) {
+                merged[key] = merge(merged[key], sourceObj[key]);
             } else {
-                targetObj[key] = sourceObj[key];
+                merged[key] = sourceObj[key];
             }
         });
 
-        return targetObj;
+        return merged;
     }
 
     const objectsToMerge = listOfObjects.map((obj, index) => {
@@ -41,6 +41,7 @@ function mergeObjects(listOfObjects) {
             return JSON.parse(JSON.stringify(obj));
         }
     });
+
     let merged = objectsToMerge[0];
     for (let i = 1; i < objectsToMerge.length; i += 1) {
         merged = merge(merged, objectsToMerge[i]);

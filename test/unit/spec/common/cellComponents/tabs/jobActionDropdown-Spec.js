@@ -180,12 +180,11 @@ define([
                 this.clickTarget.setAttribute('data-action', 'go-to-results');
                 this.clickTarget.setAttribute('data-target', 'running');
                 spyOn(this.jobManager, 'getJobIDsByStatus');
-                await jobActionDropdownInstance
-                    .doBatchJobAction({ target: this.clickTarget })
-                    .then((outcome) => {
-                        expect(outcome).toBeFalse();
-                        expect(this.jobManager.getJobIDsByStatus).not.toHaveBeenCalled();
-                    });
+                const outcome = await jobActionDropdownInstance.doBatchJobAction({
+                    target: this.clickTarget,
+                });
+                expect(outcome).toBeFalse();
+                expect(this.jobManager.getJobIDsByStatus).not.toHaveBeenCalled();
             });
 
             [null, undefined, []].forEach((returnValue) => {
@@ -195,15 +194,14 @@ define([
                     this.clickTarget.setAttribute('data-action', 'cancel');
                     this.clickTarget.setAttribute('data-target', 'running');
                     spyOn(this.jobManager, 'getJobIDsByStatus').and.returnValue(returnValue);
-                    await jobActionDropdownInstance
-                        .doBatchJobAction({ target: this.clickTarget })
-                        .then((outcome) => {
-                            expect(outcome).toBeFalse();
-                            expect(this.jobManager.getJobIDsByStatus).toHaveBeenCalled();
-                            expect(this.jobManager.getJobIDsByStatus.calls.allArgs()).toEqual([
-                                [['running'], Jobs.validStatusesForAction.cancel],
-                            ]);
-                        });
+                    const outcome = await jobActionDropdownInstance.doBatchJobAction({
+                        target: this.clickTarget,
+                    });
+                    expect(outcome).toBeFalse();
+                    expect(this.jobManager.getJobIDsByStatus).toHaveBeenCalled();
+                    expect(this.jobManager.getJobIDsByStatus.calls.allArgs()).toEqual([
+                        [['running'], Jobs.validStatusesForAction.cancel],
+                    ]);
                 });
             });
 
@@ -217,16 +215,15 @@ define([
                 spyOn(this.jobManager, 'getJobIDsByStatus').and.returnValue(returnValue);
                 spyOn(this.jobManager, 'doJobAction');
                 spyOn(JobMessages, 'showDialog').and.resolveTo(false);
-                await jobActionDropdownInstance
-                    .doBatchJobAction({ target: this.clickTarget })
-                    .then((outcome) => {
-                        expect(outcome).toBeFalse();
-                        expect(this.jobManager.getJobIDsByStatus).toHaveBeenCalled();
-                        expect(this.jobManager.getJobIDsByStatus.calls.allArgs()).toEqual([
-                            [[target], Jobs.validStatusesForAction.cancel],
-                        ]);
-                        expect(this.jobManager.doJobAction).not.toHaveBeenCalled();
-                    });
+                const outcome = await jobActionDropdownInstance.doBatchJobAction({
+                    target: this.clickTarget,
+                });
+                expect(outcome).toBeFalse();
+                expect(this.jobManager.getJobIDsByStatus).toHaveBeenCalled();
+                expect(this.jobManager.getJobIDsByStatus.calls.allArgs()).toEqual([
+                    [[target], Jobs.validStatusesForAction.cancel],
+                ]);
+                expect(this.jobManager.doJobAction).not.toHaveBeenCalled();
             });
 
             it('resolves to true if the user accepts the dialog', async function () {
@@ -238,19 +235,18 @@ define([
                 spyOn(this.jobManager, 'getJobIDsByStatus').and.returnValue(returnValue);
                 spyOn(this.jobManager, 'doJobAction');
                 spyOn(JobMessages, 'showDialog').and.resolveTo(true);
-                await jobActionDropdownInstance
-                    .doBatchJobAction({ target: this.clickTarget })
-                    .then((outcome) => {
-                        expect(outcome).toBeTrue();
-                        expect(this.jobManager.getJobIDsByStatus).toHaveBeenCalled();
-                        expect(this.jobManager.getJobIDsByStatus.calls.allArgs()).toEqual([
-                            [[target], Jobs.validStatusesForAction.retry],
-                        ]);
-                        expect(this.jobManager.doJobAction).toHaveBeenCalled();
-                        expect(this.jobManager.doJobAction.calls.allArgs()).toEqual([
-                            [action, returnValue],
-                        ]);
-                    });
+                const outcome = await jobActionDropdownInstance.doBatchJobAction({
+                    target: this.clickTarget,
+                });
+                expect(outcome).toBeTrue();
+                expect(this.jobManager.getJobIDsByStatus).toHaveBeenCalled();
+                expect(this.jobManager.getJobIDsByStatus.calls.allArgs()).toEqual([
+                    [[target], Jobs.validStatusesForAction.retry],
+                ]);
+                expect(this.jobManager.doJobAction).toHaveBeenCalled();
+                expect(this.jobManager.doJobAction.calls.allArgs()).toEqual([
+                    [action, returnValue],
+                ]);
             });
         });
 

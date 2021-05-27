@@ -232,8 +232,7 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
         removeJobListeners(jobId) {
             if (this.listeners[jobId] && Object.keys(this.listeners[jobId]).length) {
                 Object.keys(this.listeners[jobId]).forEach((type) => {
-                    this.bus.removeListener(this.listeners[jobId][type]);
-                    delete this.listeners[jobId][type];
+                    this.removeListener(jobId, type);
                 });
                 delete this.listeners[jobId];
             }

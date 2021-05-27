@@ -17,21 +17,18 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
 
     function generateDialogArgs(args) {
         const { action, statusList, jobIdList } = args;
-        const statusIx = statusList.reduce((acc, curr) => {
-            acc[curr] = 1;
-            return acc;
-        }, {});
+        const statusSet = new Set(statusList);
 
         // for presentation, created and estimating jobs are listed as 'queued'
         ['created', 'estimating'].forEach((status) => {
-            if (statusIx[status]) {
-                delete statusIx[status];
-                statusIx.queued = 1;
+            if (statusSet.has(status)) {
+                statusSet.delete(status);
+                statusSet.add('queued');
             }
         });
 
         const jobLabelString = String.arrayToEnglish(
-            Object.keys(statusIx)
+            Array.from(statusSet.keys())
                 .sort()
                 .map((status) => Jobs.jobLabel({ status: status }))
         );

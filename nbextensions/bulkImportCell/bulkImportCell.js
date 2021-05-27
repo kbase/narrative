@@ -189,12 +189,6 @@ define([
                         classes: ['-cancel'],
                         label: 'Cancel',
                     },
-                    reRunApp: {
-                        help: 'Edit and re-run the app',
-                        type: 'default',
-                        classes: ['-rerun'],
-                        label: 'Reset',
-                    },
                     resetApp: {
                         help: 'Reset the app and return to Edit mode',
                         type: 'default',
@@ -592,9 +586,6 @@ define([
             jobManager = new JobManager({
                 model: model,
                 bus: runtime.bus(),
-                viewResultsFunction: () => {
-                    toggleTab('results');
-                },
             });
 
             // finalize by updating the lastLoaded attribute, which triggers a toolbar re-render
@@ -603,26 +594,27 @@ define([
             cell.metadata = meta;
             render().then(() => {
                 // add in the control panel so we can update the job status in the cell header
-                jobManager.addUpdateHandler({
-                    controlPanel: (updatedModel) => {
+                jobManager.addHandler('modelUpdate', {
+                    controlPanel: (jobManagerContext) => {
                         // Update the execMessage panel with details of the active jobs
                         controlPanel.setExecMessage(
-                            Jobs.createCombinedJobState(updatedModel.getItem('exec.jobs.byStatus'))
+                            Jobs.createCombinedJobState(
+                                jobManagerContext.model.getItem('exec.jobs.byStatus')
+                            )
                         );
                     },
-                });
-                // populate the execMessage with the current job state
-                jobManager.runUpdateHandlers();
-                jobManager.addUpdateHandler({
-                    fsmState: (updatedModel) => {
+                    fsmState: (jobManagerContext) => {
                         const fsmState = Jobs.getFsmStateFromJobs(
-                            updatedModel.getItem('exec.jobs.byStatus')
+                            jobManagerContext.model.getItem('exec.jobs.byStatus')
                         );
                         if (fsmState) {
                             updateState(fsmState);
                         }
                     },
                 });
+
+                // TODO: assess cell state, update job info if required
+                // jobManager.restorefromSaved()
 
                 cell.renderMinMax();
                 // force toolbar refresh
@@ -688,6 +680,7 @@ define([
                 jobManager,
                 model,
                 specs,
+                toggleTab,
                 typesToFiles,
                 workspaceClient,
             });
@@ -774,6 +767,7 @@ define([
                 await jobManager.cancelJobsByStatus(['created', 'estimating', 'queued', 'running']);
             }
             updateEditingState();
+            toggleTab('configure');
         }
 
         /**
@@ -837,6 +831,8 @@ define([
             cellTabs.setState(state.tab);
             controlPanel.setActionState(state.action);
             // TODO: add in the FSM state
+            // controlPanel.setExecMessage(...)
+
             FSMBar.showFsmBar({
                 ui: ui,
                 state: {},

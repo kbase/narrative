@@ -1,4 +1,11 @@
-define(['bluebird', 'common/events', 'common/html'], (Promise, Events, html) => {
+define([
+    'jquery',
+    'bluebird',
+    'common/html',
+    'common/jobMessages',
+    'common/jobs',
+    'util/developerMode',
+], ($, Promise, html, JobMessages, Jobs, DevMode) => {
     'use strict';
 
     const t = html.tag,
@@ -39,21 +46,29 @@ define(['bluebird', 'common/events', 'common/html'], (Promise, Events, html) => 
      *
      * The config should be an object with a property 'jobManager', an object with
      * functions that are executed when one of the dropdown options is selected.
-     * The job manager functions use the 'action' and 'target' properties of the dropdown
-     * option to generate the appropriate function name and arguments.
-     *
-     * The config also supplies the model that holds the cell's job data, which the widget uses
-     * to enable or disable dropdown options, depending on the statuses of the current jobs.
+     * The job manager supplies the model that holds the cell's job data, which the widget uses
+     * to enable or disable dropdown options, depending on the statuses of the current jobs. It
+     * also supplies the bus, using which the appropriate messages to cancel or retry jobs are sent.
      *
      * @param {object} config
      * @returns jobActionDropdown instance
      */
     function factory(config) {
-        const { jobManager, model } = config;
+        const { jobManager } = config;
 
-        if (!jobManager || !model) {
+        const api = {
+            start,
+            stop,
+            updateState,
+        };
+
+        if (config.devMode || DevMode.mode) {
+            api.doBatchJobAction = doBatchJobAction;
+        }
+
+        if (!jobManager) {
             throw new Error(
-                'Cannot create jobActionDropdown: must supply config object with keys "jobManager" and "model"'
+                'Cannot create jobActionDropdown: must supply config object with key "jobManager"'
             );
         }
         let container;
@@ -67,24 +82,42 @@ define(['bluebird', 'common/events', 'common/html'], (Promise, Events, html) => 
          *
          * - data-action - either "cancel" or "retry"
          * - data-target - the job status(es) of the jobs to perform the action on
+         *
+         * @returns {Promise} that resolves to false if there is some error with the input or
+         * if the user cancels the batch action. If the users confirms the action, the appropriate
+         * message will be emitted by the bus.
          */
 
         function doBatchJobAction(e) {
             const el = e.target;
             const action = el.getAttribute('data-action'),
-                target = el.getAttribute('data-target').split(TARGET_SEPARATOR);
+                statusList = el.getAttribute('data-target').split(TARGET_SEPARATOR);
 
             // valid actions: cancel or retry
-            if (['cancel', 'retry'].includes(action)) {
-                jobManager[`${action}JobsByStatus`](target);
+            if (!['cancel', 'retry'].includes(action)) {
+                return Promise.resolve(false);
             }
+
+            const jobIdList = jobManager.getJobIDsByStatus(
+                statusList,
+                Jobs.validStatusesForAction[action]
+            );
+            if (!jobIdList || !jobIdList.length) {
+                return Promise.resolve(false);
+            }
+
+            return JobMessages.showDialog({ action, statusList, jobIdList }).then((confirmed) => {
+                if (confirmed) {
+                    jobManager.doJobAction(action, jobIdList);
+                }
+                return Promise.resolve(confirmed);
+            });
         }
 
-        function createActionsDropdown(events) {
+        function createActionsDropdown() {
             // each button has an action, either 'cancel' or 'retry',
             // and a target, which refers to the status of the jobs
             // that the action will be performed upon.
-
             const uniqueId = html.genId();
             return div(
                 {
@@ -126,10 +159,6 @@ define(['bluebird', 'common/events', 'common/html'], (Promise, Events, html) => 
                                         dataElement: `${actionObj.action}-${actionObj.target.join(
                                             TARGET_SEPARATOR
                                         )}`,
-                                        id: events.addEvent({
-                                            type: 'click',
-                                            handler: doBatchJobAction,
-                                        }),
                                         dataAction: actionObj.action,
                                         dataTarget: actionObj.target.join(TARGET_SEPARATOR),
                                     },
@@ -143,7 +172,7 @@ define(['bluebird', 'common/events', 'common/html'], (Promise, Events, html) => 
         }
 
         function updateState() {
-            const jobsByStatus = model.getItem(`exec.jobs.byStatus`);
+            const jobsByStatus = jobManager.model.getItem(`exec.jobs.byStatus`);
             actionArr.forEach((action) => {
                 const result = action.target.some((status) => {
                     return jobsByStatus[status];
@@ -168,31 +197,35 @@ define(['bluebird', 'common/events', 'common/html'], (Promise, Events, html) => 
                     throw new Error('start argument must have the key "node"');
                 }
                 container = args.node;
-                const events = Events.make({ node: args.node });
-                const actionDropdown = createActionsDropdown(events);
-                container.innerHTML = actionDropdown;
+                container.innerHTML = createActionsDropdown();
                 updateState();
-                events.attachEvents();
+
+                container.querySelector('.kb-job-action__dropdown-menu').onclick = (e) => {
+                    e.stopPropagation();
+                    const $currentButton = $(e.target).closest('button');
+                    if ($currentButton[0]) {
+                        return Promise.resolve(doBatchJobAction(e));
+                    }
+                    return Promise.resolve(false);
+                };
             });
         }
 
         function stop() {
             return Promise.try(() => {
-                container.remove();
+                if (container) {
+                    container.remove();
+                }
             });
         }
 
-        return {
-            start,
-            stop,
-            updateState,
-        };
+        return api;
     }
 
     return {
-        make: function (config) {
+        make: (config) => {
             return factory(config);
         },
-        cssBaseClass: cssBaseClass,
+        cssBaseClass,
     };
 });

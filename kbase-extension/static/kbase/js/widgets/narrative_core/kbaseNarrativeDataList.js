@@ -2119,9 +2119,9 @@ define([
                         match = true;
                     } // match on saved_by user
 
-                    if (!match && info[10]) {
+                    if (!match && Object.prototype.toString.call(info[10]) === '[object Object]') {
                         // match on metadata values
-                        for (const [metaKey, metaValue] of info[10].entries()) {
+                        for (const [metaKey, metaValue] of Object.entries(info[10])) {
                             // Omits enumerable properties not directly on this object,
                             // which in reality simply won't occur.
                             if (!Object.prototype.hasOwnProperty.call(info[10], metaKey)) {

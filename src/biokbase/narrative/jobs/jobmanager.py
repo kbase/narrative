@@ -7,8 +7,9 @@ from IPython.display import HTML
 from jinja2 import Template
 from datetime import datetime, timezone, timedelta
 from biokbase.narrative.app_util import system_variable
-from biokbase.narrative.exception_util import transform_job_exception
+from biokbase.narrative.exception_util import JobException, transform_job_exception
 import copy
+from typing import List
 
 """
 KBase Job Manager
@@ -630,15 +631,21 @@ class JobManager(object):
                 self._running_jobs[job_id]["refresh"] = is_refreshing
                 del self._running_jobs[job_id]["canceling"]
 
-    def retry_job(self, job_id: str):
-        if job_id is None:
-            raise ValueError("Job id required for retrying")
-        if job_id not in self._running_jobs:
-            raise ValueError(f"No job present with id {job_id}")
+    def retry_jobs(self, job_id_list: List[str]) -> List[dict]:
+        err_job_ids = []
+        for job_id in job_id_list:
+            if job_id is None or job_id not in self._running_jobs:
+                err_job_ids.append(job_id)
+        if len(err_job_ids) > 0:
+            # Raise exception while passing missing/bad job ids
+            raise JobException(
+                f"No jobs present with ids: {err_job_ids}",
+                err_job_ids=err_job_ids
+            )
 
         try:
-            retry_results = clients.get("execution_engine2").retry_job(
-                {"job_id": job_id}
+            retry_results = clients.get("execution_engine2").retry_jobs(
+                {"job_ids": job_id_list}
             )
         except Exception as e:
             raise transform_job_exception(e)

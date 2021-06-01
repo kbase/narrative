@@ -253,7 +253,7 @@ These are organized by the `request_type` field, followed by the expected respon
 * `job_id` - string OR `job_id_list` - array of strings
 * `parent_job_id` - optional string
 
-`retry_job` - retry a job or list of jobs, responds with `job_retried` and `new_job` for each job
+`retry_job` - retry a job or list of jobs, responds with `jobs_retried` and `new_job` for each job
 * `job_id` - string OR `job_id_list` - array of strings
 
 ## Messages sent from the kernel to the browser
@@ -297,7 +297,7 @@ By design, these should only be seen by the `JobCommChannel` instance, then sent
 This is an error message triggered when trying to get info/logs on a job that either doesn't exist in EE2 or that the JobManager doesn't have associated with the running narrative.
 
 **content**
-  * `job_id` - a string, the job id
+  * `job_id` - string OR `job_id_list` - array of strings, the job id(s)
   * `source` - string, the source of the error
 
 **bus** `job-does-not-exist`
@@ -307,7 +307,7 @@ A general job comm error, capturing most errors that get thrown by the kernel
 
 **content** (this varies, but usually includes the below)
   * `request_type` - the original request message that wound up in an error
-  * `job_id` - string, the job id (if present)
+  * `job_id` - string OR `job_id_list` - array of strings, the job id(s) (if present)
   * `message` - string, an error message
 
 **bus** one of `job-cancel-error`, `job-log-deleted`, `job-error`
@@ -363,15 +363,26 @@ Includes log statement information for a given job.
 
 **bus** `job-logs`
 
-### `job_retried`
-Sent when a job is retried
+### `jobs_retried`
+Sent when one or more jobs is retried
 
-**content**
+**content** An array of objects, each containing these keys, e.g.:
+```json
+{
+  [
+    { ...contents... },
+    { ...contents... }
+  ]
+}
+```
   * `job_id` - string, the job id of the retried job
   * `retry_id` - string, the job id of the job that was launched
 
 ### `new_job`
 Sent when a new job is launched and serialized. This just triggers a save/checkpoint on the frontend - no other bus message is sent
+
+**content**
+  * `job_id` - string OR `job_id_list` - array of strings
 
 ### `run_status`
 Sent during the job startup process. There are a few of these containing various startup status, including errors (if they happen).

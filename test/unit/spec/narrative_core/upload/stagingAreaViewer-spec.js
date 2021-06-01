@@ -220,9 +220,9 @@ define([
         });
 
         it('Should initialize an import app with the expected inputs', () => {
-            const fileType = 'fastq_reads',
+            const fileType = 'fastq_reads_interleaved',
                 fileName = 'foobar.txt',
-                appId = 'kb_uploadmethods/import_fastq_sra_as_reads_from_staging',
+                appId = 'kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging',
                 tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag,
                 inputs = {
                     fastq_fwd_staging_file_name: fileName,
@@ -260,7 +260,6 @@ define([
 
             //The options that should be in the import as dropdown
             const menuOptions = [
-                'FASTQ Reads',
                 'SRA Reads',
                 'GenBank Genome',
                 'GFF Genome',

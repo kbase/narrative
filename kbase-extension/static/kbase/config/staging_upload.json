@@ -1,10 +1,6 @@
 {
     "dropdown_order": [
         {
-            "id": "fastq_reads",
-            "name": "FASTQ Reads"
-        },
-        {
             "id": "sra_reads",
             "name": "SRA Reads"
         },
@@ -47,7 +43,8 @@
         {
             "id": "phenotype_set",
             "name": "Phenotype Set"
-        },{
+        },
+        {
             "id": "sample_set",
             "name": "Sample Set"
         },
@@ -55,6 +52,14 @@
             "id": "decompress",
             "name": "Decompress/Unpack"
         }
+    ],
+    "bulk_import_types": [
+        "sra_reads",
+        "fastq_reads_interleaved",
+        "fastq_reads_noninterleaved",
+        "gff_metagenome",
+        "assembly",
+        "genbank_genome"
     ],
     "app_info": {
         "web_upload": {

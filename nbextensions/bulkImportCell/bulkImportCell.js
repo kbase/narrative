@@ -56,27 +56,6 @@ define([
         p = html.tag('p'),
         cssCellType = 'kb-bulk-import';
 
-    function DefaultWidget() {
-        function make() {
-            function start() {
-                alert('starting default widget');
-                return Promise.resolve();
-            }
-
-            function stop() {
-                return Promise.resolve();
-            }
-
-            return {
-                start: start,
-                stop: stop,
-            };
-        }
-        return {
-            make: make,
-        };
-    }
-
     /**
      * This class creates and manages the bulk import cell. This works with, and wraps around,
      * the Jupyter Cell object.

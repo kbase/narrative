@@ -22,4 +22,4 @@ semantic_version==2.8.5
 setuptools==56.0.0
 simplegeneric==0.8.1
 sympy==1.8
-terminado==0.9.4
+terminado==0.10.0

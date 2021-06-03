@@ -53,7 +53,6 @@ define([
 
         init: function (options) {
             this._super(options);
-            this.bulkImportTypes = ['fastq_reads', 'sra_reads'];
             const runtime = Runtime.make();
 
             this.workspaceClient = new Workspace(Config.url('workspace'), {
@@ -70,6 +69,7 @@ define([
             this.filePathTmpl = Handlebars.compile(FilePathHtml);
             this.updatePathFn = options.updatePathFn || this.setPath;
             this.uploaders = Config.get('uploaders');
+            this.bulkImportTypes = this.uploaders.bulk_import_types;
             this.userInfo = options.userInfo;
 
             // Get this party started.

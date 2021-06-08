@@ -69,8 +69,7 @@ class JobRequest:
         If a message comes with job_id instead of job_id_list, it may be converted
         into a JobRequest with a job_id_list
         """
-        job_id = msg["content"]["data"]["job_id"]
-        msg["content"]["data"]["job_id_list"] = [job_id]
+        msg["content"]["data"]["job_id_list"] = [msg["content"]["data"]["job_id"]]
         del msg["content"]["data"]["job_id"]
         return cls(msg)
 

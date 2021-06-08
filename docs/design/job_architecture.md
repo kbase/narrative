@@ -253,7 +253,7 @@ These are organized by the `request_type` field, followed by the expected respon
 * `job_id` - string OR `job_id_list` - array of strings
 * `parent_job_id` - optional string
 
-`retry_job` - retry a job or list of jobs, responds with `jobs_retried` and `new_job` for each job
+`retry_job` - retry a job or list of jobs, responds with `jobs_retried` and `new_job`
 * `job_id` - string OR `job_id_list` - array of strings
 
 ## Messages sent from the kernel to the browser
@@ -366,12 +366,12 @@ Includes log statement information for a given job.
 ### `jobs_retried`
 Sent when one or more jobs is retried
 
-**content** An array of objects, each containing these keys, e.g.:
+**content** An array of objects, each containing the below keys, e.g.:
 ```json
 {
   [
-    { ...contents... },
-    { ...contents... }
+    { "job_id": "0", "retry_id": "1" },
+    { "job_id": "2", "retry_id": "3" }
   ]
 }
 ```

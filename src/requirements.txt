@@ -13,7 +13,7 @@ plotly==4.14.3
 pyasn1==0.4.8
 pycrypto>=2.6
 pygments==2.8.1
-pymongo==3.11.3
+pymongo==3.11.4
 pytest==6.2.3
 pytest-cov==2.11.1
 pyyaml==5.4.1

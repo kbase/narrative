@@ -4,7 +4,7 @@ coverage==5.5
 decorator==5.0.7
 jinja2==2.11.3
 jsonschema==3.2.0
-markupsafe==1.1.1
+markupsafe==2.0.1
 mock==4.0.3
 pexpect==4.8.0
 pickleshare==0.7.5

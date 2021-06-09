@@ -11,7 +11,6 @@ import mock
 from mock import MagicMock
 from .narrative_mock.mockclients import get_mock_client
 import os
-from .util import TestConfig
 from typing import List
 import sys
 import io

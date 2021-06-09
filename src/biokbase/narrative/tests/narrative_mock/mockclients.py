@@ -1,4 +1,4 @@
-from ..util import TestConfig
+from ..util import ConfigTests
 from biokbase.workspace.baseclient import ServerError
 
 
@@ -34,7 +34,7 @@ class MockClients:
     def __init__(self, token=None):
         if token is not None:
             assert isinstance(token, str)
-        self.config = TestConfig()
+        self.config = ConfigTests()
         self.job_info = self.config.load_json_file(
             self.config.get("jobs", "job_info_file")
         )

@@ -14,7 +14,7 @@ if [ -z "$PORT" ]; then
 fi
 echo "Starting Narrative for environment '${ENV}'"
 
-mount_local_dirs="${mount:-t}"
+mount_local_dirs="${MOUNT:-t}"
 
 if [ "${mount_local_dirs}" == "t" ]; then
 	echo "Mounting local dirs ${mount_local_dirs}"
@@ -31,7 +31,7 @@ if [ "${mount_local_dirs}" == "t" ]; then
 		--rm -it \
 		kbase/narrative:dev
 else
-	echo "Not mounting local dirs ${mount}"
+	echo "Not mounting local dirs ${MOUNT}"
 	docker run \
 		--dns=8.8.8.8 \
 		-e "CONFIG_ENV=${ENV}" \

@@ -19,7 +19,7 @@ class TestClient(unittest.TestCase):
     recv, recv_thread = None, None
 
     def setUp(self):
-        config = util.TestConfig()
+        config = util.ConfigTests()
         tlog = logging.getLogger("tornado.application")
         tlog.setLevel(logging.INFO)
         tlog.addHandler(logging.StreamHandler())

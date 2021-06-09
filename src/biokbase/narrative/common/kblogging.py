@@ -216,7 +216,7 @@ def get_proxy_config():
     if config_file:
         _log.info("Configuring KBase logging from file '{}'".format(config_file))
     else:
-        _log.warn(
+        _log.warning(
             "Configuring KBase logging from defaults ({} is empty, or not found)".format(
                 KBASE_PROXY_ENV
             )

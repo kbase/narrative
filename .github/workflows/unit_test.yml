@@ -1,0 +1,65 @@
+name: CI-unit-testing
+
+on:
+  [push, pull_request]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: conda-incubator/setup-miniconda@v2.0.0
+      with:
+        miniconda-version: 'latest'
+        activate-environment: test-environment
+        python-version: 3.6.10
+        auto-activate-base: false
+        auto-update-conda: true
+        condarc-file: test/condarc.yml
+
+    - name: Use Node JS 14.x
+      uses: actions/setup-node@v2.1.2
+      with:
+        node-version: 14.x
+
+    - name: Install JS dependencies
+      run: |
+        npm ci
+        npm install bower
+        ./node_modules/bower/bin/bower install
+
+    - name: Install Narrative Application
+      shell: bash -l {0}
+      run: |
+          bash ./scripts/install_narrative.sh
+          npm run minify
+          sed <src/config.json.templ >src/config.json "s/{{ .Env.CONFIG_ENV }}/dev/"
+          sed -i 's/{{ if ne .Env.CONFIG_ENV "prod" }} true {{- else }} false {{- end }}/true/' src/config.json
+          jupyter notebook --version
+
+    - name: Set up environment vars
+      run: |
+        echo "KBASE_TEST_TOKEN=${{ secrets.NARRATIVE_TEST_TOKEN }}" >> $GITHUB_ENV
+
+    - name: Run Narrative Backend Tests
+      shell: bash -l {0}
+      run: make test-backend
+
+    - name: Run Narrative Frontend Unit Tests
+      shell: bash -l {0}
+      run: make test-frontend-unit
+
+    - name: make test output available as artifact in case of failure
+      if: ${{ failure() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: karma-result.json
+        path: karma-result.json
+
+    - name: Send to Codecov
+      uses: codecov/codecov-action@v1.5.2
+      with:
+        file: |
+          ./python-coverage/coverage.xml
+          ./js-coverage/lcov/lcov.info
+        fail_ci_if_error: true

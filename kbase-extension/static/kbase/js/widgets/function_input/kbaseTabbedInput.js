@@ -78,7 +78,10 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseTabs', 'kbaseNarrativeMethodInp
                 if (self.options.isInSidePanel) {
                     self.buildTabs(self.tabPane);
                 } else {
-                    self.tabPaneWidget = new kbaseTabs(self.tabPane, { canDelete: true, tabs: [] });
+                    self.tabPaneWidget = new kbaseTabs(self.tabPane, {
+                        canDelete: true,
+                        tabs: [],
+                    });
                 }
                 self.tabs = {};
                 self.tabParamToSpec = {};

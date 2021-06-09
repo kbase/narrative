@@ -25,7 +25,7 @@
         "jasmine-ajax": "4.0.0",
         "jasmine-core": "3.7.1",
         "jasmine-jquery": "2.1.1",
-        "karma": "6.1.1",
+        "karma": "6.3.2",
         "karma-chrome-launcher": "^3.1.0",
         "karma-coverage": "2.0.3",
         "karma-es6-shim": "1.0.0",

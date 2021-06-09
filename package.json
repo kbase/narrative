@@ -11,7 +11,7 @@
         "@wdio/local-runner": "^6.10.5",
         "@wdio/mocha-framework": "^6.11.0",
         "@wdio/selenium-standalone-service": "^6.11.0",
-        "@wdio/spec-reporter": "^6.6.0",
+        "@wdio/spec-reporter": "^7.0.0",
         "bower": "^1.8.12",
         "chrome-launcher": "^0.13.4",
         "chromedriver": "^90.0.0",

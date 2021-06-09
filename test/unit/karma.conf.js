@@ -22,6 +22,8 @@ module.exports = function (config) {
             'karma-mocha-reporter',
             'karma-es6-shim',
             'karma-json-result-reporter',
+            'karma-brief-reporter',
+            'karma-jasmine-html-reporter',
         ],
         preprocessors: {
             'kbase-extension/static/kbase/js/**/!(api)/*.js': ['coverage'],

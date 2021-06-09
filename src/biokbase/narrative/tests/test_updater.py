@@ -4,10 +4,10 @@ from biokbase.narrative.contents.updater import (
     find_app_info,
     suggest_apps,
 )
-from .util import TestConfig
+from .util import ConfigTests
 
 
-class TestKeyError(ValueError):
+class KeyErrorTest(ValueError):
     def __init__(self, keyname, source):
         ValueError.__init__(self, "Key {} not found in {}".format(keyname, source))
 
@@ -15,7 +15,7 @@ class TestKeyError(ValueError):
 class UpdaterTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        config = TestConfig()
+        config = ConfigTests()
 
         # read in test file stuff from ./data/...
         self.test_nar = config.load_json_file(config.get("narratives", "updater_file"))[
@@ -63,7 +63,7 @@ class UpdaterTestCase(unittest.TestCase):
         """
         for key in ["metadata", "cells", "nbformat", "nbformat_minor"]:
             if key not in nar:
-                raise TestKeyError(key, "Narrative")
+                raise KeyErrorTest(key, "Narrative")
 
         if not isinstance(nar["nbformat"], int):
             raise ValueError("nbformat must be an int")
@@ -91,12 +91,12 @@ class UpdaterTestCase(unittest.TestCase):
         ]
         for key in req_keys:
             if key not in meta:
-                raise TestKeyError(key, "Narrative Metadata")
+                raise KeyErrorTest(key, "Narrative Metadata")
         if not isinstance(meta["kbase"], dict):
             raise ValueError("metadata.kbase must be a dict")
         for key in ["job_ids", "name", "creator", "ws_name"]:
             if key not in meta["kbase"]:
-                raise TestKeyError(key, 'narrative["metadata"]["kbase"]')
+                raise KeyErrorTest(key, 'narrative["metadata"]["kbase"]')
         return True
 
     def validate_cell(self, cell):
@@ -115,7 +115,7 @@ class UpdaterTestCase(unittest.TestCase):
         """
         for key in ["source", "cell_type"]:
             if key not in cell:
-                raise TestKeyError(key, "Cell")
+                raise KeyErrorTest(key, "Cell")
         if not isinstance(cell["source"], str):
             raise ValueError("cell.source must be a string")
         if not isinstance(cell["cell_type"], str):

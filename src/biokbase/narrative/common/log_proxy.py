@@ -61,7 +61,7 @@ class Configuration(object):
             if not isinstance(input_file, IOBase):
                 input_file = open(str(input_file), "r")
             try:
-                self._obj = yaml.load(input_file)
+                self._obj = yaml.load(input_file, Loader=yaml.SafeLoader)
                 if self._obj is None:
                     raise ValueError("Empty configuration file")
             except (IOError, ValueError):

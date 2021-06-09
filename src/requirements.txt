@@ -12,7 +12,7 @@ pillow==8.2.0
 plotly==4.14.3
 pyasn1==0.4.8
 pycrypto>=2.6
-pygments==2.8.1
+pygments==2.9.0
 pymongo==3.11.3
 pytest==6.2.3
 pytest-cov==2.11.1

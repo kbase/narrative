@@ -642,9 +642,9 @@ define([
 
                 require([selectedWidget], (Widget) => {
                     // TODO: widget should make own bus.
-                    const bus = runtime
-                            .bus()
-                            .makeChannelBus({ description: 'Parent comm bus for input widget' }),
+                    const bus = runtime.bus().makeChannelBus({
+                            description: 'Parent comm bus for input widget',
+                        }),
                         widget = Widget.make({
                             bus: bus,
                             workspaceInfo: workspaceInfo,

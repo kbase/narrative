@@ -194,19 +194,18 @@ define([
         const specs = {};
 
         if (options.initialize) {
-            initialize(options.specs);  // fills out the specs object
-        }
-        else {
+            initialize(options.specs); // fills out the specs object
+        } else {
             // this gets called as part of initialize if we're doing the initialize step
             setupAppSpecs(Utils.getMeta(cell, 'bulkImportCell', 'app').specs);
         }
 
         const model = Props.make({
-                data: Utils.getMeta(cell, 'bulkImportCell'),
-                onUpdate: function (props) {
-                    Utils.setMeta(cell, 'bulkImportCell', props.getRawObject());
-                },
-            });
+            data: Utils.getMeta(cell, 'bulkImportCell'),
+            onUpdate: function (props) {
+                Utils.setMeta(cell, 'bulkImportCell', props.getRawObject());
+            },
+        });
         // gets updated in total later by updateState
         let state = getInitialState();
 

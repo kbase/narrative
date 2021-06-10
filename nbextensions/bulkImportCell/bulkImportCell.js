@@ -191,9 +191,14 @@ define([
             tabWidget = null; // the widget currently in view
         // widgets this cell owns
         let cellTabs, controlPanel, jobManager;
+        const specs = {};
 
         if (options.initialize) {
-            initialize(options.specs);
+            initialize(options.specs);  // fills out the specs object
+        }
+        else {
+            // this gets called as part of initialize if we're doing the initialize step
+            setupAppSpecs(Utils.getMeta(cell, 'bulkImportCell', 'app').specs);
         }
 
         const model = Props.make({
@@ -201,15 +206,9 @@ define([
                 onUpdate: function (props) {
                     Utils.setMeta(cell, 'bulkImportCell', props.getRawObject());
                 },
-            }),
-            // These are the processed Spec object with proper layout order, etc.
-            specs = {};
+            });
         // gets updated in total later by updateState
         let state = getInitialState();
-
-        for (const [appId, appSpec] of Object.entries(model.getItem('app.specs'))) {
-            specs[appId] = Spec.make({ appSpec });
-        }
 
         setupCell();
 
@@ -263,6 +262,12 @@ define([
             return [fileParamIds, nonFileParamIds];
         }
 
+        function setupAppSpecs(appSpecs) {
+            for (const [appId, appSpec] of Object.entries(appSpecs)) {
+                specs[appId] = Spec.make({ appSpec });
+            }
+        }
+
         /**
          * Does the initial pass on newly created cells to initialize its metadata and get it
          * set up for a new life as a Bulk Import Cell.
@@ -293,6 +298,7 @@ define([
                 fileParamIds = {},
                 otherParamIds = {},
                 initialParamStates = {};
+            setupAppSpecs(appSpecs);
             /* Initialize the parameters set.
              * Get the app spec and split the set of parameters into filePaths and params.
              * Each input file (typesToFiles[fileType].files) gets its own set of filePath
@@ -300,7 +306,8 @@ define([
              * TODO: figure a good way to initialize these with one file use per param file row.
              */
             Object.keys(typesToFiles).forEach((fileType) => {
-                const spec = appSpecs[typesToFiles[fileType].appId];
+                const appId = typesToFiles[fileType].appId;
+                const spec = appSpecs[appId];
                 initialParams[fileType] = {
                     filePaths: [],
                     params: {},
@@ -315,11 +322,16 @@ define([
                         }, {});
                     }
                 );
-                spec.parameters.forEach((param) => {
-                    if (otherParamIds[fileType].includes(param.id)) {
-                        initialParams[fileType].params[param.id] = param.default_values[0];
-                    }
+                const defaultSpecModel = specs[appId].makeDefaultedModel();
+                otherParamIds[fileType].forEach((paramId) => {
+                    initialParams[fileType].params[paramId] = defaultSpecModel[paramId];
                 });
+
+                // spec.parameters.forEach((param) => {
+                //     if (otherParamIds[fileType].includes(param.id)) {
+                //         initialParams[fileType].params[param.id] = param.default_values[0];
+                //     }
+                // });
             });
             const meta = {
                 kbase: {

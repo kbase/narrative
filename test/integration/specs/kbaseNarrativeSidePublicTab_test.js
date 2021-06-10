@@ -5,30 +5,38 @@ const { login, openNarrative, sendString, clickWhenReady } = require('../wdioUti
 // Ideally the test data should be the same, except for narrative id, in each env.
 // But currently CI and prod are indexed differently.
 
+// Also note that refseq test data can be volatile during data loads. narrative-dev data is
+// from prod, so should be stable for long periods of time. CI data can be volatile, but in
+// practice rarely changes. Both are most volatile during refseq data updates, which may
+// be every year or two.
+
 // Note that the narrativeIds used below must be owned or shared with full rights (at least edit) with the narrativetest user.
 // Note that narrativetest is not yet set up in narrative-dev/prod.
+
+const ROWS_PER_SCROLL_PAGE = 20;
+
 const allTestCases = {
     ci: {
-        TEST_CASE1: {
+        TEST_CASE_1: {
             narrativeId: 53983,
             row: 4,
-            name: 'Acetobacter ascendens',
+            name: 'Abiotrophia defectiva ATCC 49176',
             metadata: [
                 {
                     id: 'lineage',
                     label: 'Lineage',
                     value:
-                        'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter',
+                        'Bacteria > Terrabacteria group > Firmicutes > Bacilli > Lactobacillales > Aerococcaceae > Abiotrophia > Abiotrophia defectiva',
                 },
                 {
                     id: 'kbase_id',
                     label: 'KBase ID',
-                    value: 'GCF_001766255.1',
+                    value: 'GCF_000160075.2',
                 },
                 {
                     id: 'refseq_id',
                     label: 'RefSeq ID',
-                    value: 'NZ_CP015168',
+                    value: 'NZ_KI535340',
                 },
                 {
                     id: 'contigs',
@@ -38,195 +46,49 @@ const allTestCases = {
                 {
                     id: 'features',
                     label: 'Features',
-                    value: '3,032',
+                    value: '1,848',
                 },
             ],
         },
-        TEST_CASE2: {
-            narrativeId: 53983,
-            row: 10,
-            scrollTo: true,
-            name: 'Acidaminococcus fermentans',
-            metadata: [
-                {
-                    id: 'lineage',
-                    label: 'Lineage',
-                    value:
-                        'Bacteria > Terrabacteria group > Firmicutes > Negativicutes > Acidaminococcales > Acidaminococcaceae > Acidaminococcus',
-                },
-                {
-                    id: 'kbase_id',
-                    label: 'KBase ID',
-                    value: 'GCF_900107075.1',
-                },
-                {
-                    id: 'refseq_id',
-                    label: 'RefSeq ID',
-                    value: 'NZ_FNOP01000039',
-                },
-                {
-                    id: 'contigs',
-                    label: 'Contigs',
-                    value: '40',
-                },
-                {
-                    id: 'features',
-                    label: 'Features',
-                    value: '2,067',
-                },
-            ],
-        },
-        TEST_CASE3: {
+        TEST_CASE_2: {
             narrativeId: 53983,
             row: 1,
-            scrollTo: false,
-            searchFor: 'prochlorococcus',
-            foundCount: '14',
-            name: 'Prochlorococcus marinus str. GP2',
+            name: "'Chrysanthemum coronarium' phytoplasma",
             metadata: [
                 {
                     id: 'lineage',
                     label: 'Lineage',
                     value:
-                        'Bacteria > Terrabacteria group > Cyanobacteria/Melainabacteria group > Cyanobacteria > Synechococcales > Prochloraceae > Prochlorococcus > Prochlorococcus marinus',
+                        'Bacteria > Terrabacteria group > Tenericutes > Mollicutes > Acholeplasmatales > Acholeplasmataceae > Candidatus Phytoplasma > Candidatus Phytoplasma asteris',
                 },
                 {
                     id: 'kbase_id',
                     label: 'KBase ID',
-                    value: 'GCF_000759885.1',
+                    value: 'GCF_000744065.1',
                 },
                 {
                     id: 'refseq_id',
                     label: 'RefSeq ID',
-                    value: 'NZ_JNAH01000001',
+                    value: 'NZ_BBIY01000170',
                 },
                 {
                     id: 'contigs',
                     label: 'Contigs',
-                    value: '11',
+                    value: '170',
                 },
                 {
                     id: 'features',
                     label: 'Features',
-                    value: '1,760',
+                    value: '839',
                 },
             ],
         },
-        TEST_CASE4: {
+        TEST_CASE_3: {
             narrativeId: 53983,
-            searchFor: 'foobar',
-            foundCount: 'None',
-        },
-        TEST_CASE5: {
-            narrativeId: 53983,
-            row: 30,
-            scrollTo: true,
-            scrolls: [20],
-            name: 'Acinetobacter baumannii',
-            metadata: [
-                {
-                    id: 'lineage',
-                    label: 'Lineage',
-                    value:
-                        'Bacteria > Proteobacteria > Gammaproteobacteria > Pseudomonadales > Moraxellaceae > Acinetobacter > Acinetobacter calcoaceticus/baumannii complex',
-                },
-                {
-                    id: 'kbase_id',
-                    label: 'KBase ID',
-                    value: 'GCF_000804875.1',
-                },
-                {
-                    id: 'refseq_id',
-                    label: 'RefSeq ID',
-                    value: 'NZ_JSCS01000001',
-                },
-                {
-                    id: 'contigs',
-                    label: 'Contigs',
-                    value: '74',
-                },
-                {
-                    id: 'features',
-                    label: 'Features',
-                    value: '3,862',
-                },
-            ],
-        },
-    },
-    'narrative-dev': {
-        TEST_CASE1: {
-            narrativeId: 78050,
-            row: 3,
-            name: 'Absiella sp. AM09-45',
-            metadata: [
-                {
-                    id: 'lineage',
-                    label: 'Lineage',
-                    value:
-                        'Bacteria > Terrabacteria group > Firmicutes > Erysipelotrichia > Erysipelotrichales > Erysipelotrichaceae > Absiella > unclassified Absiella',
-                },
-                {
-                    id: 'kbase_id',
-                    label: 'KBase ID',
-                    value: 'GCF_003433745.1',
-                },
-                {
-                    id: 'refseq_id',
-                    label: 'RefSeq ID',
-                    value: 'NZ_QVFJ01000001',
-                },
-                {
-                    id: 'contigs',
-                    label: 'Contigs',
-                    value: '96',
-                },
-                {
-                    id: 'features',
-                    label: 'Features',
-                    value: '4,170',
-                },
-            ],
-        },
-        TEST_CASE2: {
-            narrativeId: 78050,
-            row: 10,
-            scrollTo: true,
-            name: 'Abyssicoccus albus',
-            metadata: [
-                {
-                    id: 'lineage',
-                    label: 'Lineage',
-                    value:
-                        'Bacteria > Terrabacteria group > Firmicutes > Bacilli > Bacillales > Staphylococcaceae > Abyssicoccus',
-                },
-                {
-                    id: 'kbase_id',
-                    label: 'KBase ID',
-                    value: 'GCF_003815035.1',
-                },
-                {
-                    id: 'refseq_id',
-                    label: 'RefSeq ID',
-                    value: 'NZ_RKRK01000002',
-                },
-                {
-                    id: 'contigs',
-                    label: 'Contigs',
-                    value: '10',
-                },
-                {
-                    id: 'features',
-                    label: 'Features',
-                    value: '1,777',
-                },
-            ],
-        },
-        TEST_CASE3: {
-            narrativeId: 78050,
             row: 1,
-            scrollTo: false,
             searchFor: 'prochlorococcus',
-            foundCount: '28',
+            foundCount: '69',
+            totalCount: '109,613',
             name: 'Prochlorococcus marinus',
             metadata: [
                 {
@@ -253,20 +115,348 @@ const allTestCases = {
                 {
                     id: 'features',
                     label: 'Features',
-                    value: '1,648',
+                    value: '1,616',
                 },
             ],
         },
-        TEST_CASE4: {
+        TEST_CASE_4: {
+            narrativeId: 53983,
+            searchFor: 'foobar',
+            foundCount: 'None',
+            totalCount: '109,613',
+        },
+        TEST_CASE_5: {
+            narrativeId: 53983,
+            row: 30,
+            searchFor: 'coli',
+            foundCount: '13,181',
+            totalCount: '109,613',
+            name: 'Campylobacter coli',
+            metadata: [
+                {
+                    id: 'lineage',
+                    label: 'Lineage',
+                    value:
+                        'Bacteria > Proteobacteria > delta/epsilon subdivisions > Epsilonproteobacteria > Campylobacterales > Campylobacteraceae > Campylobacter',
+                },
+                {
+                    id: 'kbase_id',
+                    label: 'KBase ID',
+                    value: 'GCF_001233705.1',
+                },
+                {
+                    id: 'refseq_id',
+                    label: 'RefSeq ID',
+                    value: 'NZ_CUOB01000001',
+                },
+                {
+                    id: 'contigs',
+                    label: 'Contigs',
+                    value: '27',
+                },
+                {
+                    id: 'features',
+                    label: 'Features',
+                    value: '1,767',
+                },
+            ],
+        },
+        TEST_CASE_6: {
+            narrativeId: 53983,
+            row: 30,
+            searchFor: 'Campylobacter coli',
+            foundCount: '950',
+            totalCount: '109,613',
+            name: 'Campylobacter coli',
+            metadata: [
+                {
+                    id: 'lineage',
+                    label: 'Lineage',
+                    value:
+                        'Bacteria > Proteobacteria > delta/epsilon subdivisions > Epsilonproteobacteria > Campylobacterales > Campylobacteraceae > Campylobacter',
+                },
+                {
+                    id: 'kbase_id',
+                    label: 'KBase ID',
+                    value: 'GCF_001233705.1',
+                },
+                {
+                    id: 'refseq_id',
+                    label: 'RefSeq ID',
+                    value: 'NZ_CUOB01000001',
+                },
+                {
+                    id: 'contigs',
+                    label: 'Contigs',
+                    value: '27',
+                },
+                {
+                    id: 'features',
+                    label: 'Features',
+                    value: '1,767',
+                },
+            ],
+        },
+        TEST_CASE_7: {
+            narrativeId: 53983,
+            searchFor: 'Acetobacter pasteurianus',
+            foundCount: '29',
+            totalCount: '109,613',
+            row: 2,
+            name: 'Acetobacter pasteurianus',
+            metadata: [
+                {
+                    id: 'lineage',
+                    label: 'Lineage',
+                    value:
+                        'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter',
+                },
+                {
+                    id: 'kbase_id',
+                    label: 'KBase ID',
+                    value: 'GCF_001662905.1',
+                },
+                {
+                    id: 'refseq_id',
+                    label: 'RefSeq ID',
+                    value: 'NZ_LYUD01000001',
+                },
+                {
+                    id: 'contigs',
+                    label: 'Contigs',
+                    value: '184',
+                },
+                {
+                    id: 'features',
+                    label: 'Features',
+                    value: '3,093',
+                },
+            ],
+        },
+        TEST_CASE_8: {
+            narrativeId: 53983,
+            searchFor: 'GCF_001662905.1',
+            foundCount: '1',
+            totalCount: '109,613',
+            row: 1,
+            name: 'Acetobacter pasteurianus',
+            metadata: [
+                {
+                    id: 'lineage',
+                    label: 'Lineage',
+                    value:
+                        'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter',
+                },
+                {
+                    id: 'kbase_id',
+                    label: 'KBase ID',
+                    value: 'GCF_001662905.1',
+                },
+                {
+                    id: 'refseq_id',
+                    label: 'RefSeq ID',
+                    value: 'NZ_LYUD01000001',
+                },
+                {
+                    id: 'contigs',
+                    label: 'Contigs',
+                    value: '184',
+                },
+                {
+                    id: 'features',
+                    label: 'Features',
+                    value: '3,093',
+                },
+            ],
+        },
+        TEST_CASE_9: {
+            narrativeId: 53983,
+            searchFor: 'NZ_LYUD01000001',
+            foundCount: '1',
+            totalCount: '109,613',
+            row: 1,
+            name: 'Acetobacter pasteurianus',
+            metadata: [
+                {
+                    id: 'lineage',
+                    label: 'Lineage',
+                    value:
+                        'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter',
+                },
+                {
+                    id: 'kbase_id',
+                    label: 'KBase ID',
+                    value: 'GCF_001662905.1',
+                },
+                {
+                    id: 'refseq_id',
+                    label: 'RefSeq ID',
+                    value: 'NZ_LYUD01000001',
+                },
+                {
+                    id: 'contigs',
+                    label: 'Contigs',
+                    value: '184',
+                },
+                {
+                    id: 'features',
+                    label: 'Features',
+                    value: '3,093',
+                },
+            ],
+        },
+        TEST_CASE_10: {
+            narrativeId: 53983,
+            searchFor: 'Synechococcales',
+            foundCount: '164',
+            totalCount: '109,613',
+            row: 3,
+            name: 'Acaryochloris sp. RCC1774',
+            metadata: [
+                {
+                    id: 'lineage',
+                    label: 'Lineage',
+                    value:
+                        'Bacteria > Terrabacteria group > Cyanobacteria/Melainabacteria group > Cyanobacteria > Synechococcales > Acaryochloridaceae > Acaryochloris',
+                },
+                {
+                    id: 'kbase_id',
+                    label: 'KBase ID',
+                    value: 'GCF_003231495.1',
+                },
+                {
+                    id: 'refseq_id',
+                    label: 'RefSeq ID',
+                    value: 'NZ_PQWO01000001',
+                },
+                {
+                    id: 'contigs',
+                    label: 'Contigs',
+                    value: '72',
+                },
+                {
+                    id: 'features',
+                    label: 'Features',
+                    value: '5,523',
+                },
+            ],
+        },
+    },
+    'narrative-dev': {
+        TEST_CASE_1: {
+            narrativeId: 78050,
+            row: 3,
+            name: "'Cynodon dactylon' phytoplasma",
+            metadata: [
+                {
+                    id: 'lineage',
+                    label: 'Lineage',
+                    value:
+                        'Bacteria > Terrabacteria group > Tenericutes > Mollicutes > Acholeplasmatales > Acholeplasmataceae > Candidatus Phytoplasma > unclassified phytoplasmas',
+                },
+                {
+                    id: 'kbase_id',
+                    label: 'KBase ID',
+                    value: 'GCF_009268075.1',
+                },
+                {
+                    id: 'refseq_id',
+                    label: 'RefSeq ID',
+                    value: 'NZ_VWOH01000010',
+                },
+                {
+                    id: 'contigs',
+                    label: 'Contigs',
+                    value: '21',
+                },
+                {
+                    id: 'features',
+                    label: 'Features',
+                    value: '442',
+                },
+            ],
+        },
+        TEST_CASE_2: {
+            narrativeId: 78050,
+            row: 23,
+            name: 'Absicoccus porci',
+            metadata: [
+                {
+                    id: 'lineage',
+                    label: 'Lineage',
+                    value:
+                        'Bacteria > Terrabacteria group > Firmicutes > Erysipelotrichia > Erysipelotrichales > Erysipelotrichaceae > unclassified Erysipelotrichaceae > unclassified Erysipelotrichaceae (miscellaneous)',
+                },
+                {
+                    id: 'kbase_id',
+                    label: 'KBase ID',
+                    value: 'GCF_003725415.1',
+                },
+                {
+                    id: 'refseq_id',
+                    label: 'RefSeq ID',
+                    value: 'NZ_RJQC01000001',
+                },
+                {
+                    id: 'contigs',
+                    label: 'Contigs',
+                    value: '13',
+                },
+                {
+                    id: 'features',
+                    label: 'Features',
+                    value: '2,267',
+                },
+            ],
+        },
+        TEST_CASE_3: {
+            narrativeId: 78050,
+            row: 3,
+            searchFor: 'prochlorococcus',
+            foundCount: '111',
+            totalCount: '234,255',
+            name: 'Cyanobacteria bacterium 150SLHB',
+            metadata: [
+                {
+                    id: 'lineage',
+                    label: 'Lineage',
+                    value:
+                        'Bacteria > Terrabacteria group > Cyanobacteria/Melainabacteria group > Cyanobacteria > Synechococcales > Prochloraceae > Prochlorococcus > unclassified Prochlorococcus',
+                },
+                {
+                    id: 'kbase_id',
+                    label: 'KBase ID',
+                    value: 'GCF_012933605.1',
+                },
+                {
+                    id: 'refseq_id',
+                    label: 'RefSeq ID',
+                    value: 'NZ_JABBYR010000001',
+                },
+                {
+                    id: 'contigs',
+                    label: 'Contigs',
+                    value: '106',
+                },
+                {
+                    id: 'features',
+                    label: 'Features',
+                    value: '2,469',
+                },
+            ],
+        },
+        TEST_CASE_4: {
             narrativeId: 78050,
             searchFor: 'foobar',
             foundCount: 'None',
+            totalCount: '234,255',
         },
-        TEST_CASE5: {
+        TEST_CASE_5: {
             narrativeId: 78050,
-            row: 30,
-            scrollTo: true,
-            scrolls: [20],
+            row: 3,
+            searchFor: 'orientalis',
+            foundCount: '100',
+            totalCount: '234,255',
             name: 'Acetobacter orientalis',
             metadata: [
                 {
@@ -278,22 +468,202 @@ const allTestCases = {
                 {
                     id: 'kbase_id',
                     label: 'KBase ID',
-                    value: 'GCF_002153475.1',
+                    value: 'GCF_002153735.1',
                 },
                 {
                     id: 'refseq_id',
                     label: 'RefSeq ID',
-                    value: 'NZ_JOMO01000001',
+                    value: 'NZ_JOPK01000001',
                 },
                 {
                     id: 'contigs',
                     label: 'Contigs',
-                    value: '106',
+                    value: '122',
                 },
                 {
                     id: 'features',
                     label: 'Features',
-                    value: '2,539',
+                    value: '2,596',
+                },
+            ],
+        },
+        TEST_CASE_6: {
+            narrativeId: 78050,
+            row: 3,
+            searchFor: 'Acetobacter orientalis',
+            foundCount: '6',
+            totalCount: '234,255',
+            name: 'Acetobacter orientalis',
+            metadata: [
+                {
+                    id: 'lineage',
+                    label: 'Lineage',
+                    value:
+                        'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter',
+                },
+                {
+                    id: 'kbase_id',
+                    label: 'KBase ID',
+                    value: 'GCF_002153735.1',
+                },
+                {
+                    id: 'refseq_id',
+                    label: 'RefSeq ID',
+                    value: 'NZ_JOPK01000001',
+                },
+                {
+                    id: 'contigs',
+                    label: 'Contigs',
+                    value: '122',
+                },
+                {
+                    id: 'features',
+                    label: 'Features',
+                    value: '2,596',
+                },
+            ],
+        },
+        TEST_CASE_7: {
+            narrativeId: 78050,
+            searchFor: 'Acetobacter pasteurianus',
+            foundCount: '30',
+            totalCount: '234,255',
+            row: 1,
+            name: 'Acetobacter pasteurianus',
+            metadata: [
+                {
+                    id: 'lineage',
+                    label: 'Lineage',
+                    value:
+                        'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter',
+                },
+                {
+                    id: 'kbase_id',
+                    label: 'KBase ID',
+                    value: 'GCF_001183745.1',
+                },
+                {
+                    id: 'refseq_id',
+                    label: 'RefSeq ID',
+                    value: 'NZ_CP012111',
+                },
+                {
+                    id: 'contigs',
+                    label: 'Contigs',
+                    value: '1',
+                },
+                {
+                    id: 'features',
+                    label: 'Features',
+                    value: '2,604',
+                },
+            ],
+        },
+        TEST_CASE_8: {
+            narrativeId: 78050,
+            searchFor: 'GCF_001662905.1',
+            foundCount: '1',
+            totalCount: '234,255',
+            row: 1,
+            name: 'Acetobacter pasteurianus',
+            metadata: [
+                {
+                    id: 'lineage',
+                    label: 'Lineage',
+                    value:
+                        'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter',
+                },
+                {
+                    id: 'kbase_id',
+                    label: 'KBase ID',
+                    value: 'GCF_001662905.1',
+                },
+                {
+                    id: 'refseq_id',
+                    label: 'RefSeq ID',
+                    value: 'NZ_LYUD01000001',
+                },
+                {
+                    id: 'contigs',
+                    label: 'Contigs',
+                    value: '184',
+                },
+                {
+                    id: 'features',
+                    label: 'Features',
+                    value: '3,093',
+                },
+            ],
+        },
+        TEST_CASE_9: {
+            narrativeId: 78050,
+            searchFor: 'NZ_LYUD01000001',
+            foundCount: '1',
+            totalCount: '234,255',
+            row: 1,
+            name: 'Acetobacter pasteurianus',
+            metadata: [
+                {
+                    id: 'lineage',
+                    label: 'Lineage',
+                    value:
+                        'Bacteria > Proteobacteria > Alphaproteobacteria > Rhodospirillales > Acetobacteraceae > Acetobacter',
+                },
+                {
+                    id: 'kbase_id',
+                    label: 'KBase ID',
+                    value: 'GCF_001662905.1',
+                },
+                {
+                    id: 'refseq_id',
+                    label: 'RefSeq ID',
+                    value: 'NZ_LYUD01000001',
+                },
+                {
+                    id: 'contigs',
+                    label: 'Contigs',
+                    value: '184',
+                },
+                {
+                    id: 'features',
+                    label: 'Features',
+                    value: '3,093',
+                },
+            ],
+        },
+        TEST_CASE_10: {
+            narrativeId: 78050,
+            searchFor: 'Synechococcales',
+            foundCount: '385',
+            totalCount: '234,255',
+            row: 3,
+            name: 'Acaryochloris sp. RCC1774',
+            metadata: [
+                {
+                    id: 'lineage',
+                    label: 'Lineage',
+                    value:
+                        'Bacteria > Terrabacteria group > Cyanobacteria/Melainabacteria group > Cyanobacteria > Synechococcales > Acaryochloridaceae > Acaryochloris > unclassified Acaryochloris',
+                },
+                {
+                    id: 'kbase_id',
+                    label: 'KBase ID',
+                    value: 'GCF_003231495.1',
+                },
+                {
+                    id: 'refseq_id',
+                    label: 'RefSeq ID',
+                    value: 'NZ_PQWO01000001',
+                },
+                {
+                    id: 'contigs',
+                    label: 'Contigs',
+                    value: '72',
+                },
+                {
+                    id: 'features',
+                    label: 'Features',
+                    value: '5,519',
                 },
             ],
         },
@@ -306,11 +676,11 @@ async function testField({ container, id, label, value }) {
     const lineageLabel = await container.$(
         `[role="row"][data-test-id="${id}"] [data-test-id="label"]`
     );
-    expect(lineageLabel).toHaveText(label);
+    await expect(lineageLabel).toHaveText(label);
     const lineageValue = await container.$(
         `[role="row"][data-test-id="${id}"] [data-test-id="value"]`
     );
-    expect(lineageValue).toHaveText(value);
+    await expect(lineageValue).toHaveText(value);
 }
 
 async function waitForRows(panel, count) {
@@ -318,43 +688,116 @@ async function waitForRows(panel, count) {
         const rows = await panel.$$('[role="table"][data-test-id="result"] > div > [role="row"]');
         return rows.length >= count;
     });
-    return await panel.$$('[role="table"][data-test-id="result"] > div > [role="row"]');
+    return panel.$$('[role="table"][data-test-id="result"] > div > [role="row"]');
 }
 
 async function openPublicData() {
-    // Open the data slideout
+    // Open the data slide-out
     const button = await $('[data-test-id="data-slideout-button"]');
     await button.waitForExist();
     await clickWhenReady(button);
-
-    // Here we locate the public data tab, move the mouse cursor to it, and then
-    // click on its container, which should open the public data panel.
-    // The reason for this roundabout approach is that the click handler is on the
-    // container, not the individual tabs.
     const panel = await $('[data-test-id="data-slideout-panel"]');
     await panel.waitForExist();
 
-    const tablist = await panel.$('[role="tablist"]');
-    await tablist.waitForExist();
-
-    const publicTab = await panel.$('[data-test-id="tab-public"]');
+    // Then click the public data tab.
+    const publicTab = await panel.$('[role="tablist"] [data-test-id="tab-public"]');
     await publicTab.waitForExist();
-
     await clickWhenReady(publicTab);
 
+    // Then wait for the associated panel to be displayed.
     const publicPanel = await panel.$('[data-test-id="panel-public"]');
     await publicPanel.waitForExist();
 
-    // get rows
-    // When using roles, we sometimes need to be very specific in our queries.
-    // Maybe roles are not suitable for integration tests, then.
-
+    // Finally, ensure the refseq public data table displayed.
+    // Initially, the public data tab, if loaded with refseq data to any reasonable degree,
+    // will have the initial page of 20 rows fully filled.
     const rows = await waitForRows(publicPanel, 20);
-    expect(rows.length).toEqual(20);
+    await expect(rows.length).toEqual(20);
     return publicPanel;
 }
 
+async function doSearch(publicPanel, testCase) {
+    const searchInput = await publicPanel.$('[data-test-id="search-input"]');
+    await clickWhenReady(searchInput);
+    await sendString(testCase.searchFor);
+    await browser.keys('Enter');
+
+    const foundCount = await publicPanel.$('[data-test-id="found-count"]');
+    await expect(foundCount).toHaveText(testCase.foundCount);
+
+    const totalCount = await publicPanel.$('[data-test-id="total-count"]');
+    await expect(totalCount).toHaveText(testCase.totalCount);
+}
+
+async function validateResultRow(row, testCase) {
+    const nameCell = await row.$('[role="cell"][data-test-id="name"]');
+    await expect(nameCell).toHaveText(testCase.name);
+    await Promise.all(
+        testCase.metadata.map(({ id, label, value }) => {
+            return testField({
+                container: row,
+                id,
+                label,
+                value,
+            });
+        })
+    );
+}
+
+async function getRow(publicPanel, testCase) {
+    const rows = await waitForRows(publicPanel, testCase.row);
+    await expect(rows.length).toBeGreaterThanOrEqual(testCase.row);
+    const row = rows[testCase.row - 1];
+    await expect(row).toBeDefined();
+    return row;
+}
+
+async function doScrolls(publicPanel, scrolls) {
+    for (let i = 1; i <= scrolls; i += 1) {
+        const scrollRow = ROWS_PER_SCROLL_PAGE * i;
+        const rowElements = await waitForRows(publicPanel, scrollRow);
+        const rowElement = rowElements[scrollRow - 1];
+        await rowElement.scrollIntoView();
+    }
+}
+
+async function scrollToRow(publicPanel, testCase) {
+    const scrolls = Math.floor(testCase.row / ROWS_PER_SCROLL_PAGE);
+    await doScrolls(publicPanel, scrolls);
+    const row = await getRow(publicPanel, testCase);
+    await row.scrollIntoView();
+    return row;
+}
+
+async function validateFoundCount(publicPanel, testCase) {
+    await browser.waitUntil(async () => {
+        const foundCountElement = await publicPanel.$('[data-test-id="found-count"]');
+        if (await foundCountElement.isDisplayed()) {
+            const text = await foundCountElement.getText();
+            return text === testCase.foundCount;
+        } else {
+            return false;
+        }
+    });
+    const foundCount = await publicPanel.$('[data-test-id="found-count"]');
+    await expect(foundCount).toHaveText(testCase.foundCount);
+}
+
+async function simpleSearchTest(testCase) {
+    await login();
+    await openNarrative(testCase.narrativeId);
+
+    const publicPanel = await openPublicData();
+    await doSearch(publicPanel, testCase);
+    await validateFoundCount(publicPanel, testCase);
+    const row = await scrollToRow(publicPanel, testCase);
+    await validateResultRow(row, testCase);
+}
+
 describe('Test kbaseNarrativeSidePublicTab', () => {
+    before(() => {
+        require('expect-webdriverio').setOptions({ wait: 5000 });
+    });
     beforeEach(async () => {
         await browser.setTimeout({ implicit: 30000 });
         await browser.reloadSession();
@@ -364,159 +807,69 @@ describe('Test kbaseNarrativeSidePublicTab', () => {
         await browser.deleteCookies();
     });
 
-    it('opens the public data search tab, should show default results', async () => {
-        const testCase = testCases.TEST_CASE1;
+    it('opens the public data search tab, should show default results, desired row is in the first scroll page', async () => {
+        const testCase = testCases.TEST_CASE_1;
         await login();
         await openNarrative(testCase.narrativeId);
 
         const publicPanel = await openPublicData();
-        const rows = await waitForRows(publicPanel, testCase.row);
-
-        expect(rows.length).toBeGreaterThanOrEqual(testCase.row);
-        const row = rows[testCase.row - 1];
-        expect(row).toBeDefined();
-
-        const nameCell = await row.$('[role="cell"][data-test-id="name"]');
-        expect(nameCell).toHaveText(testCase.name);
-
-        // Confirm the metadata fields.
-        for (const { id, label, value } of testCase.metadata) {
-            await testField({
-                container: row,
-                id,
-                label,
-                value,
-            });
-        }
+        const row = await getRow(publicPanel, testCase);
+        await validateResultRow(row, testCase);
     });
 
     it('opens the public data search tab, should show default results, scroll to desired row', async () => {
-        const testCase = testCases.TEST_CASE2;
+        const testCase = testCases.TEST_CASE_2;
         await login();
         await openNarrative(testCase.narrativeId);
 
         const publicPanel = await openPublicData();
-        const rows = await waitForRows(publicPanel, testCase.row);
-
-        // Look at the row - it should already be in view.
-        const row = rows[testCase.row - 1];
-        await row.scrollIntoView();
-
-        const nameCell = await row.$('[role="cell"][data-test-id="name"]');
-        expect(nameCell).toHaveText(testCase.name);
-
-        // Confirm the metadata fields.
-        for (const { id, label, value } of testCase.metadata) {
-            await testField({
-                container: row,
-                id,
-                label,
-                value,
-            });
-        }
+        const row = await scrollToRow(publicPanel, testCase);
+        await validateResultRow(row, testCase);
     });
 
     it('opens the public data search tab, searches for a term, should find an expected row', async () => {
-        const testCase = testCases.TEST_CASE3;
+        const testCase = testCases.TEST_CASE_3;
 
         await login();
         await openNarrative(testCase.narrativeId);
 
         const publicPanel = await openPublicData();
-
-        // Select search input and input a search term
-        const searchInput = await publicPanel.$('[data-test-id="search-input"]');
-        await clickWhenReady(searchInput);
-        await sendString(testCase.searchFor);
-        await browser.keys('Enter');
-
-        const foundCount = await publicPanel.$('[data-test-id="found-count"]');
-        expect(foundCount).toHaveText(testCase.foundCount);
-
-        // get rows
-        // When using roles, we sometimes need to be very specific in our queries.
-        // Maybe roles are not suitable for integration tests, then.
-        const rows = await waitForRows(publicPanel, testCase.row);
-
-        expect(rows.length).toBeGreaterThanOrEqual(testCase.row);
-
-        // Look at the row - it should already be in view.
-        const row = rows[testCase.row - 1];
-        await row.scrollIntoView();
-        const nameCell = await row.$('[role="cell"][data-test-id="name"]');
-        expect(nameCell).toHaveText(testCase.name);
-
-        // Confirm the metadata fields.
-        for (const { id, label, value } of testCase.metadata) {
-            await testField({
-                container: row,
-                id,
-                label,
-                value,
-            });
-        }
+        await doSearch(publicPanel, testCase);
+        const row = await scrollToRow(publicPanel, testCase);
+        await validateResultRow(row, testCase);
     });
 
     it('opens the public data search tab, searches for a term which should not be found', async () => {
         await login();
-        const testCase = testCases.TEST_CASE4;
+        const testCase = testCases.TEST_CASE_4;
         await openNarrative(testCase.narrativeId);
 
         const publicPanel = await openPublicData();
-
-        // Select search input and input a search term
-        const searchInput = await publicPanel.$('[data-test-id="search-input"]');
-        await clickWhenReady(searchInput);
-        await sendString(testCase.searchFor);
-        await browser.keys('Enter');
-
-        await browser.waitUntil(async () => {
-            const foundCountElement = await publicPanel.$('[data-test-id="found-count"]');
-
-            if (await foundCountElement.isDisplayed()) {
-                const text = await foundCountElement.getText();
-                return text === testCase.foundCount;
-            } else {
-                return false;
-            }
-        });
-
-        const foundCount = await publicPanel.$('[data-test-id="found-count"]');
-        expect(foundCount).toHaveText(testCase.foundCount);
+        await doSearch(publicPanel, testCase);
+        await validateFoundCount(publicPanel, testCase);
     });
 
-    it('opens the public data search tab, should show default results, scroll to desired row', async () => {
-        const testCase = testCases.TEST_CASE5;
-        await login();
-        await openNarrative(testCase.narrativeId);
+    it('opens the public data search tab, search for species part of scientific name', async () => {
+        await simpleSearchTest(testCases.TEST_CASE_5);
+    });
 
-        // Open the data slideout
-        const publicPanel = await openPublicData();
+    it('opens the public data search tab, search for binomial form for the above species', async () => {
+        await simpleSearchTest(testCases.TEST_CASE_6);
+    });
 
-        // get rows
-        // When using roles, we sometimes need to be very specific in our queries.
-        // Maybe roles are not suitable for integration tests, then.
-        for (const scrollRow of testCase.scrolls) {
-            const rowElements = await waitForRows(publicPanel, scrollRow);
-            const rowElement = rowElements[scrollRow - 1];
-            await rowElement.scrollIntoView();
-        }
+    it('opens the public data search tab, searches for a binomial scientific name for a different species', async () => {
+        await simpleSearchTest(testCases.TEST_CASE_7);
+    });
 
-        // ensure we have all of the rows.
-        const rows = await waitForRows(publicPanel, testCase.row);
-        const row = rows[testCase.row - 1];
-        await row.scrollIntoView();
-        const nameCell = await row.$('[role="cell"][data-test-id="name"]');
-        expect(nameCell).toHaveText(testCase.name);
+    it('opens the public data search tab, searches for a kbase_id (aka RefSeq assembly accession)', async () => {
+        await simpleSearchTest(testCases.TEST_CASE_8);
+    });
 
-        // Confirm the metadata fields.
-        for (const { id, label, value } of testCase.metadata) {
-            await testField({
-                container: row,
-                id,
-                label,
-                value,
-            });
-        }
+    it('opens the public data search tab, searches for a source_id (aka NCBI project accession)', async () => {
+        await simpleSearchTest(testCases.TEST_CASE_9);
+    });
+
+    it('opens the public data search tab, searches for an order, "Synechococcales"', async () => {
+        await simpleSearchTest(testCases.TEST_CASE_10);
     });
 });

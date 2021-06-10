@@ -9,7 +9,6 @@ jsonschema
 markdown
 ncurses
 networkx
-nose
 pexpect
 pip
 plotly
@@ -18,6 +17,8 @@ pycrypto>=2.6
 pycurl
 pygments
 pymongo
+pytest==6.2.3
+pytest-cov==2.11.1
 python-daemon
 python-dateutil
 pyyaml>=3.10

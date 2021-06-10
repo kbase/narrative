@@ -5,7 +5,7 @@ import unittest
 from unittest import mock
 import biokbase.narrative.jobs.jobmanager
 from biokbase.narrative.jobs.job import Job
-from .util import TestConfig
+from .util import ConfigTests
 import os
 from IPython.display import HTML
 from .narrative_mock.mockclients import get_mock_client, get_failing_mock_client
@@ -13,7 +13,7 @@ from biokbase.narrative.exception_util import NarrativeException
 
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
-config = TestConfig()
+config = ConfigTests()
 job_info = config.load_json_file(config.get("jobs", "ee2_job_info_file"))
 
 

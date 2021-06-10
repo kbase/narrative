@@ -50,8 +50,17 @@ define([
 
             return span({ style: '' }, [
                 span(
-                    { class: 'fa-stack fa-2x', style: { textAlign: 'center', color: iconColor } },
-                    [span({ class: 'fa fa-square fa-stack-2x', style: { color: iconColor } }), icon]
+                    {
+                        class: 'fa-stack fa-2x',
+                        style: { textAlign: 'center', color: iconColor },
+                    },
+                    [
+                        span({
+                            class: 'fa fa-square fa-stack-2x',
+                            style: { color: iconColor },
+                        }),
+                        icon,
+                    ]
                 ),
             ]);
         };

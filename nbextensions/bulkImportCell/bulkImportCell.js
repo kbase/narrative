@@ -325,12 +325,6 @@ define([
                 otherParamIds[fileType].forEach((paramId) => {
                     initialParams[fileType].params[paramId] = defaultSpecModel[paramId];
                 });
-
-                // spec.parameters.forEach((param) => {
-                //     if (otherParamIds[fileType].includes(param.id)) {
-                //         initialParams[fileType].params[param.id] = param.default_values[0];
-                //     }
-                // });
             });
             const meta = {
                 kbase: {

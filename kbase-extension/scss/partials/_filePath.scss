@@ -1,33 +1,33 @@
 .kb-file-path {
   // .kb-file-path__list
   &__list {
-    width: 100%;
-    list-style-type: none;
-    list-style-position: outside;
     counter-reset: fpw-item;
+    list-style-position: outside;
+    list-style-type: none;
     padding: 0;
+    width: 100%;
   }
 
   // .kb-file-path__list_item
   &__list_item {
-    display: flex;
     align-items: center;
+    display: flex;
     font: normal 400 14px/18px $typeface-page-text;
   }
 
   &__list_item::before {
-    content: counter(fpw-item) " ";
+    content: counter(fpw-item) ' ';
     counter-increment: fpw-item;
     font-weight: 700;
-    vertical-align: middle;
     padding-right: 0.5rem;
     padding-top: 20px;
+    vertical-align: middle;
   }
 
   // .kb-file-path__param_container
   &__param_container {
-    flex: 1;
     display: flex;
+    flex: 1;
     flex-wrap: wrap;
     // .kb-file-path__param_container .input_group .select2-container
     .input-group .select2-container {

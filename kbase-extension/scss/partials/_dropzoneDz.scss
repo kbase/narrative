@@ -5,11 +5,11 @@
 }
 
 .dz-file {
-  width: 100%;
-  padding: 5px 0;
   border: 1px solid rgb(238 238 238);
-  margin: 2px 0;
   font: 16px $typeface-page-text;
+  margin: 2px 0;
+  padding: 5px 0;
+  width: 100%;
 
   // .dz-file__progress__bar
   &__progress__bar {
@@ -24,8 +24,8 @@
 
   // .dz-file__row
   &__row {
-    display: flex;
     align-items: center;
+    display: flex;
   }
 
   // .dz-file__name
@@ -49,8 +49,8 @@
 
   // .dz-file__msg__success
   &__msg__success {
-    display: none;
     color: rgb(75 175 79);
+    display: none;
   }
 
   // .dz-file__status
@@ -77,21 +77,21 @@
 }
 
 .kb-dropzone {
-  max-height: 150px;
   border: 2px dashed rgb(33 150 243) !important;
   margin-bottom: 5px;
+  max-height: 150px;
   overflow-y: auto;
 
   &-progress__header {
-    display: none;
     border-bottom: 1px solid rgb(238 238 238);
+    display: none;
     margin-bottom: 5px;
   }
 
   .dz-message {
-    margin: 2em 4.5em;
     color: rgb(0 0 0);
     font: normal 400 24px/28px $typeface-page-text;
+    margin: 2em 4.5em;
     mix-blend-mode: normal;
     text-align: center;
   }

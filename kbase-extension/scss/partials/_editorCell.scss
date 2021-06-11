@@ -36,10 +36,10 @@
   }
 
   .kb-app-parameter-name {
-    padding-right: 4px;
-    padding-left: 0;
     color: rgb(119 119 119);
     font-family: $typeface-page-text;
+    padding-left: 0;
+    padding-right: 4px;
     text-align: left;
     vertical-align: bottom;
     white-space: normal;
@@ -54,10 +54,9 @@
 
     .kb-app-parameter-accepted-glyph,
     .kb-app-parameter-required-glyph {
-      margin-left: 0;
-
       /* This scoots the icon inside */
       font-size: 15px;
+      margin-left: 0;
     }
   }
 
@@ -70,9 +69,9 @@
   }
 
   .kb-app-parameter-hint {
-    padding-left: 7px;
-    margin-top: 3px;
     color: rgb(119 119 119);
+    margin-top: 3px;
+    padding-left: 7px;
     text-align: left;
   }
 
@@ -103,15 +102,15 @@
   }
 
   .kb-app-footer {
-    overflow: none;
-    width: 100%;
-    padding: 10px;
     background-color: rgb(245 245 245);
+    overflow: none;
+    padding: 10px;
+    width: 100%;
   }
 
   .kb-app-subtitle {
-    padding: 3px 5px;
     background-color: rgb(245 245 245);
+    padding: 3px 5px;
   }
 
   .advanced-parameter-showing {
@@ -161,10 +160,10 @@
 }
 
 .kb-editor-cell-info-desc {
-  min-height: 100px;
-  padding: 10px;
   border: 1px solid rgb(119 119 119);
   margin-right: 10px;
+  min-height: 100px;
+  padding: 10px;
 }
 
 .kb-editor-cell-info {
@@ -172,9 +171,9 @@
   font: 16px $typeface-page-text;
 
   .header {
-    padding: 5px 0;
     border-bottom: 1px solid rgb(119 119 119);
     margin-bottom: 8px;
+    padding: 5px 0;
   }
 
   .value {
@@ -189,10 +188,10 @@ Buttons
 */
 
 .btn.kb-editor-cell-btn {
-  border: 2px solid rgb(33 150 243);
-  margin-bottom: 4px;
   background-color: rgb(255 255 255);
+  border: 2px solid rgb(33 150 243);
   color: rgb(33 150 243);
+  margin-bottom: 4px;
 
   &.btn-primary {
     border: 2px solid rgb(33 150 243);
@@ -216,10 +215,10 @@ Buttons
       margin-bottom: 0;
 
       &:hover {
-        border-bottom: 2px solid rgb(33 150 243);
-        margin-bottom: 4px;
         background-color: rgb(221 221 221);
+        border-bottom: 2px solid rgb(33 150 243);
         color: rgb(33 150 243);
+        margin-bottom: 4px;
       }
     }
   }
@@ -229,38 +228,38 @@ Buttons
     color: rgb(209 82 65);
 
     &:hover {
-      border-bottom: 6px solid rgb(209 82 65);
-      margin-bottom: 0;
       background-color: rgb(209 82 65);
+      border-bottom: 6px solid rgb(209 82 65);
       color: rgb(255 255 255);
+      margin-bottom: 0;
     }
 
     &.active {
+      background-color: rgb(209 82 65);
       border: solid rgb(209 82 65);
       border-width: 2px 2px 6px;
-      margin-bottom: 0;
-      background-color: rgb(209 82 65);
       color: rgb(255 255 255);
+      margin-bottom: 0;
 
       &:hover {
-        border-bottom: 2px solid rgb(209 82 65);
-        margin-bottom: 4px;
         background-color: rgb(221 221 221);
+        border-bottom: 2px solid rgb(209 82 65);
         color: rgb(209 82 65);
+        margin-bottom: 4px;
       }
     }
   }
 
   &.disabled {
     border: 2px solid rgb(136 136 136);
-    margin-bottom: 4px;
     color: rgb(136 136 136);
+    margin-bottom: 4px;
 
     &:active,
     &:hover {
       border: 2px solid rgb(136 136 136);
-      margin-bottom: 4px;
       color: rgb(136 136 136);
+      margin-bottom: 4px;
     }
   }
 }

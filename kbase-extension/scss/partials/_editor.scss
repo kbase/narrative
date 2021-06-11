@@ -3,8 +3,8 @@
  */
 
 .modal-body .dataTables_processing {
-  border: 1px solid rgb(170 170 170);
   background: rgb(232 249 255);
+  border: 1px solid rgb(170 170 170);
   opacity: 0.8;
 }
 
@@ -24,13 +24,13 @@
   }
 
   .btn-primary {
-    border-color: rgb(46 109 164) !important;
     background-color: rgb(51 122 183) !important;
+    border-color: rgb(46 109 164) !important;
   }
 
   .btn-danger {
-    border-color: rgb(212 63 58) !important;
     background-color: rgb(217 83 79) !important;
+    border-color: rgb(212 63 58) !important;
   }
 
   .btn i {
@@ -91,12 +91,12 @@
       position: relative;
 
       &:hover::after {
-        position: absolute;
-        right: 2px;
         bottom: 0;
         color: rgb(136 136 136);
         content: '\f044';
         font-family: $typeface-font-awesome;
+        position: absolute;
+        right: 2px;
       }
     }
   }

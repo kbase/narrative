@@ -4,24 +4,23 @@
 */
 
 .kb-app-cell {
-
   &__container {
-    font-family: $typeface-page-text;
-    display: flex;
     align-items: stretch;
+    display: flex;
+    font-family: $typeface-page-text;
   }
 
   &__prompt {
-    display: flex;
     align-items: stretch;
+    display: flex;
     flex-direction: column;
   }
 
   &__body {
-    display: flex;
     align-items: stretch;
-    flex-direction: column;
+    display: flex;
     flex: 1;
+    flex-direction: column;
     width: 100%;
   }
 
@@ -44,9 +43,9 @@
   }
 
   .kb-app-parameter-row {
-    padding: 5px;
-    margin: 0;
     border-radius: 5px;
+    margin: 0;
+    padding: 5px;
 
     &:hover {
       background-color: rgb(0 0 0 / 0.03);
@@ -68,10 +67,10 @@
   }
 
   .kb-app-parameter-name {
-    padding-right: 4px;
-    padding-left: 0;
     color: rgb(119 119 119);
     font-family: $typeface-page-text;
+    padding-left: 0;
+    padding-right: 4px;
     text-align: left;
     vertical-align: bottom;
     white-space: normal;
@@ -86,10 +85,9 @@
 
     .kb-app-parameter-accepted-glyph,
     .kb-app-parameter-required-glyph {
-      margin-left: 0;
-
       /* This scoots the icon inside */
       font-size: 15px;
+      margin-left: 0;
     }
   }
 
@@ -102,9 +100,9 @@
   }
 
   .kb-app-parameter-hint {
-    padding-left: 7px;
-    margin-top: 3px;
     color: rgb(119 119 119);
+    margin-top: 3px;
+    padding-left: 7px;
     text-align: left;
   }
 
@@ -135,15 +133,15 @@
   }
 
   .kb-app-footer {
-    overflow: none;
-    width: 100%;
-    padding: 10px;
     background-color: rgb(245 245 245);
+    overflow: none;
+    padding: 10px;
+    width: 100%;
   }
 
   .kb-app-subtitle {
-    padding: 3px 5px;
     background-color: rgb(245 245 245);
+    padding: 3px 5px;
   }
 
   .advanced-parameter-showing {
@@ -173,8 +171,8 @@
 
 .kb-app-row-clip-btn-addon,
 .kb-app-row-close-btn-addon {
-  border: 0;
   background: transparent;
+  border: 0;
 }
 
 .kb-app-row-clip-btn-addon {
@@ -182,13 +180,13 @@
   padding: 0 10px 0 0;
 
   &:active::after {
-    position: absolute;
-    padding: 7px;
-    border: 1px solid rgb(128 128 128);
-    margin-top: -5px;
     background-color: rgb(255 255 255);
+    border: 1px solid rgb(128 128 128);
     border-radius: 3px;
     content: 'copied!';
+    margin-top: -5px;
+    padding: 7px;
+    position: absolute;
   }
 }
 
@@ -197,9 +195,9 @@
 }
 
 .kb-input-row-flex {
+  align-items: center;
   display: flex;
   flex-direction: row;
-  align-items: center;
 }
 
 .cell.selected .btn-default.kb-app-row-close-btn {
@@ -208,27 +206,27 @@
 
 .kb-app-row-clip-btn,
 .kb-app-row-close-btn {
-  height: 100%;
-  border: 0;
-  margin-left: 1px;
   background-color: transparent;
+  border: 0;
   color: rgb(128 128 128);
+  height: 100%;
+  margin-left: 1px;
 }
 
 .kb-app-parameter-right-error-bar {
-  height: 28px;
   background: rgb(255 0 0);
+  height: 28px;
 }
 
 .kb-app-field-feedback {
-  border: 0;
   background: transparent;
+  border: 0;
 }
 
 .kb-input-group-addon {
-  padding: 0 0 0 10px;
-  border: 0;
   background: transparent;
+  border: 0;
+  padding: 0 0 0 10px;
 }
 
 /* tweaks to elemnts that should be dimmed when the cell is not selected */
@@ -246,10 +244,10 @@
 }
 
 .kb-app-cell-info-desc {
-  min-height: 100px;
-  padding: 10px;
   border: 1px solid rgb(119 119 119);
   margin-right: 10px;
+  min-height: 100px;
+  padding: 10px;
 }
 
 .kb-app-cell-info {
@@ -257,9 +255,9 @@
   font: 16px $typeface-page-text;
 
   .header {
-    padding: 5px 0;
     border-bottom: 1px solid rgb(119 119 119);
     margin-bottom: 8px;
+    padding: 5px 0;
   }
 
   .value {
@@ -275,8 +273,8 @@ Buttons
 
 .btn {
   &.batch-active {
-    border-color: rgb(173 173 173);
     background-color: rgb(238 238 238);
+    border-color: rgb(173 173 173);
     box-shadow: inset 0 3px 7px rgb(0 0 0 / 0.125);
 
     &:hover {
@@ -285,10 +283,10 @@ Buttons
   }
 
   &.kb-app-cell-btn {
-    border: 2px solid rgb(33 150 243);
-    margin-bottom: 4px;
     background-color: rgb(255 255 255);
+    border: 2px solid rgb(33 150 243);
     color: rgb(33 150 243);
+    margin-bottom: 4px;
 
     &.btn-primary {
       border: 2px solid rgb(33 150 243);
@@ -312,10 +310,10 @@ Buttons
         margin-bottom: 0;
 
         &:hover {
-          border-bottom: 2px solid rgb(33 150 243);
-          margin-bottom: 4px;
           background-color: rgb(221 221 221);
+          border-bottom: 2px solid rgb(33 150 243);
           color: rgb(33 150 243);
+          margin-bottom: 4px;
         }
       }
     }
@@ -330,9 +328,9 @@ Buttons
 
       &.active,
       &:hover {
-        margin-bottom: 0;
         background-color: rgb(209 82 65);
         color: rgb(255 255 255);
+        margin-bottom: 0;
       }
 
       &.active {
@@ -340,26 +338,26 @@ Buttons
         border-width: 2px 2px 6px;
 
         &:hover {
-          border-bottom: 2px solid rgb(209 82 65);
-          margin-bottom: 4px;
           background-color: rgb(221 221 221);
+          border-bottom: 2px solid rgb(209 82 65);
           color: rgb(209 82 65);
+          margin-bottom: 4px;
         }
       }
     }
 
     &.disabled {
-      border: 2px solid rgb(136 136 136);
-      margin-bottom: 4px;
       background-color: rgb(255 255 255);
+      border: 2px solid rgb(136 136 136);
       color: rgb(136 136 136);
+      margin-bottom: 4px;
 
       &:active,
       &:hover {
-        border: 2px solid rgb(136 136 136);
-        margin-bottom: 4px;
         background-color: rgb(255 255 255);
+        border: 2px solid rgb(136 136 136);
         color: rgb(136 136 136);
+        margin-bottom: 4px;
       }
     }
   }
@@ -399,14 +397,14 @@ Buttons
 /* TODO: higher level selector */
 
 .parameter-panel .info-panel {
-  padding-top: 4px;
   background: transparent;
+  padding-top: 4px;
 }
 
 .tt-input,
 .tt-query {
-  width: 100%;
   box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.075);
+  width: 100%;
 }
 
 .tt-hint {
@@ -414,20 +412,20 @@ Buttons
 }
 
 .tt-menu {
-  width: 100%;
-  padding: 4px 0;
+  background-color: rgb(255 255 255);
   border: 1px solid rgb(0 0 0 / 0.2);
+  border-radius: 4px;
+  box-shadow: 0 5px 10px rgb(0 0 0 / 0.2);
 
   /* used to be tt-dropdown-menu in older versions */
   margin-top: 4px;
-  background-color: rgb(255 255 255);
-  border-radius: 4px;
-  box-shadow: 0 5px 10px rgb(0 0 0 / 0.2);
+  padding: 4px 0;
+  width: 100%;
 }
 
 .tt-suggestion {
-  padding: 3px 20px;
   line-height: 24px;
+  padding: 3px 20px;
 
   &.tt-cursor,
   &:hover {
@@ -441,7 +439,7 @@ Buttons
 }
 
 .tt-header {
-  padding-left: 5px;
   font-size: 75%;
   font-style: italic;
+  padding-left: 5px;
 }

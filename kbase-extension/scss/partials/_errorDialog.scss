@@ -1,13 +1,12 @@
 // Tabbed error dialog
 .kb-error-dialog {
-
   &__body .tab-content {
     padding-top: 1rem;
   }
 
   &__err {
-    /* kb-error-dialog__err_preamble,
-      kb-error-dialog__err_message */
+    // kb-error-dialog__err_preamble,
+    // kb-error-dialog__err_message
     &_preamble,
     &_message {
       margin: 1rem 0;

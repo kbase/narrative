@@ -3,22 +3,22 @@
 */
 
 $component-border: use-color('silver');
-$filetype-icon-color: rgb(3, 81, 125);
+$filetype-icon-color: rgb(3 81 125);
 $filetype-highlight-color: use-color('white');
 $filetype-hover-color: use-color('base-lighter');
-$panel-separator-color: rgb(33, 150, 243);
+$panel-separator-color: rgb(33 150 243);
 $tab-widget-margin: 15px;
 $tab-widget-padding: 4px;
 
 %file_type_button {
-  display: flex;
-  width: 100%;
-  flex-direction: row;
   background-color: inherit;
   border: 0 solid $component-border;
   border-top-width: 1px;
+  display: flex;
+  flex-direction: row;
   padding: 8px;
   text-align: left;
+  width: 100%;
 }
 
 .kb-bulk-import {
@@ -27,15 +27,15 @@ $tab-widget-padding: 4px;
   }
 
   &__layout_container {
-    display: flex;
     align-items: stretch;
+    display: flex;
   }
 
   // kb-bulk-import__prompt
   &__prompt {
+    align-items: stretch;
     display: flex;
     flex-direction: column;
-    align-items: stretch;
   }
 
   // kb-bulk-import__prompt_status
@@ -44,26 +44,26 @@ $tab-widget-padding: 4px;
 
   // kb-bulk-import__body
   &__body {
+    align-items: stretch;
     display: flex;
-    width: 100%;
     flex: 1;
     flex-direction: column;
-    align-items: stretch;
+    width: 100%;
   }
 
   // kb-bulk-import__tab_pane
   &__tab_pane {
+    align-content: stretch;
+    align-items: stretch;
     border-top: 2px solid $panel-separator-color;
     display: flex;
     flex-direction: row;
-    align-content: stretch;
-    align-items: stretch;
   }
 
   // kb-bulk-import__tab_pane_widget
   &__tab_pane_widget {
-    padding: $tab-widget-padding;
     margin: $tab-widget-margin;
+    padding: $tab-widget-padding;
   }
 
   // kb-bulk-import-configure
@@ -79,24 +79,27 @@ $tab-widget-padding: 4px;
       width: 24rem;
 
       &__header {
-        padding: 8px;
-        border-bottom: 1px solid $component-border;
         @include font-h4;
 
+        border-bottom: 1px solid $component-border;
+        padding: 8px;
+
         &_icon {
-          padding: 8px 6px 8px 8px;
           color: rgb(0 0 0);
+          padding: 8px 6px 8px 8px;
         }
       }
 
       &__filetype {
         // .kb-bulk-import__filetype_panel__filetype_button
         &_button {
-          @include base-text;
           @extend %file_type_button;
+
+          @include base-text;
 
           &:hover:not(&--selected) {
             @extend %file_type_button;
+
             background-color: $filetype-hover-color;
             cursor: pointer;
           }
@@ -104,6 +107,7 @@ $tab-widget-padding: 4px;
           // .kb-bulk-import__filetype_panel__filetype_button--selected
           &--selected {
             @extend %file_type_button;
+
             background-color: $filetype-highlight-color;
             box-shadow: 0 3px 2px -2px use-color('base');
           }
@@ -115,8 +119,8 @@ $tab-widget-padding: 4px;
 
         // .kb-bulk-import__filetype_panel__filetype_icon
         &_icon {
-          padding: 2px 8px 0;
           color: $filetype-icon-color;
+          padding: 2px 8px 0;
         }
 
         // .kb-bulk-import__filetype_panel__filetype_label
@@ -133,8 +137,8 @@ $tab-widget-padding: 4px;
     }
 
     &__advanced_hidden_message {
-      margin-left: 6px;
       font-style: italic;
+      margin-left: 6px;
     }
   }
 }
@@ -153,7 +157,7 @@ $tab-widget-padding: 4px;
 }
 
 .kb-field-widget__error_message--parameters {
-  border: 1px solid use_color("error");
+  border: 1px solid use_color('error');
 }
 
 .kb-field-cell {
@@ -166,7 +170,7 @@ $tab-widget-padding: 4px;
   }
 
   &__cell_label {
-    padding-top: 8px;
     margin-bottom: 0;
+    padding-top: 8px;
   }
 }

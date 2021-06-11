@@ -5,7 +5,7 @@ import os
 import biokbase.narrative.jobs.jobcomm
 import biokbase.narrative.jobs.jobmanager
 from biokbase.narrative.jobs.jobcomm import JobRequest
-from biokbase.narrative.exception_util import NarrativeException
+from biokbase.narrative.exception_util import JobException, NarrativeException
 from .util import ConfigTests, validate_job_state
 from .narrative_mock.mockcomm import MockComm
 from .narrative_mock.mockclients import get_mock_client, get_failing_mock_client
@@ -235,57 +235,59 @@ class JobCommTestCase(unittest.TestCase):
         self.assertEqual("Unable to cancel job", msg["data"]["content"]["error"])
 
     # ------------
-    # Retry a job
+    # Retry list of jobs
     # ------------
     @mock.patch(
         "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get", get_mock_client
     )
-    def test_retry_job_ok(self):
-        job_id = "5d64935cb215ad4128de94d9"
-        req = make_comm_msg("retry_job", job_id, True)
-        self.jc._retry_job(req)
+    def test_retry_jobs_ok(self):
+        job_id_list = ["5d64935cb215ad4128de94d9", None]
+        req = make_comm_msg("retry_job", job_id_list, True)
+        self.jc._retry_jobs(req)
         msg = self.jc._comm.last_message
         self.assertEqual(
-            {"job_id": "9d49ed8214da512bc53946d5"}, msg["data"]["content"]
+            {"job_id_list": ["9d49ed8214da512bc53946d5"]}, msg["data"]["content"]
         )
         self.assertEqual("new_job", msg["data"]["msg_type"])
 
-    def test_retry_job_no_job(self):
-        req = make_comm_msg("retry_job", None, True)
+    def test_retry_jobs_no_job(self):
+        job_id_list = [None, ""]
+        req = make_comm_msg("retry_job", job_id_list, True)
         with self.assertRaises(ValueError) as e:
-            self.jc._retry_job(req)
-        self.assertIn("Job id required to process retry_job request", str(e.exception))
+            self.jc._retry_jobs(req)
+        self.assertIn("No valid job ids", str(e.exception))
         msg = self.jc._comm.last_message
         self.assertEqual(
-            {"job_id": None, "source": "retry_job"}, msg["data"]["content"]
+            {"job_id_list": [], "source": "retry_job"}, msg["data"]["content"]
         )
         self.assertEqual("job_does_not_exist", msg["data"]["msg_type"])
 
-    def test_retry_job_bad_job(self):
-        job_id = "nope"
-        req = make_comm_msg("retry_job", job_id, True)
-        with self.assertRaises(ValueError) as e:
-            self.jc._retry_job(req)
-        self.assertIn(f"No job present with id {job_id}", str(e.exception))
+    def test_retry_jobs_bad_job(self):
+        job_id_list = ["5d64935cb215ad4128de94d9", "nope", "no"]
+        req = make_comm_msg("retry_job", job_id_list, True)
+        with self.assertRaises(JobException) as e:
+            self.jc._retry_jobs(req)
+        self.assertIn(f"No jobs present with ids: {job_id_list[1:]}", str(e.exception))
         msg = self.jc._comm.last_message
-        self.assertEqual(
-            {"job_id": job_id, "source": "retry_job"}, msg["data"]["content"]
-        )
         self.assertEqual("job_does_not_exist", msg["data"]["msg_type"])
+        self.assertEqual(
+            {"job_id_list": job_id_list[1:], "source": "retry_job"}, msg["data"]["content"]
+        )
 
     @mock.patch(
         "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get",
         get_failing_mock_client,
     )
-    def test_retry_job_failure(self):
-        job_id = "5d64935ab215ad4128de94d6"
-        req = make_comm_msg("retry_job", job_id, True)
+    def test_retry_jobs_failure(self):
+        job_id_list = ["5d64935ab215ad4128de94d6"]
+        req = make_comm_msg("retry_job", job_id_list, True)
         with self.assertRaises(NarrativeException) as e:
-            self.jc._retry_job(req)
-        self.assertIn("Job retry failed", str(e.exception))
+            self.jc._retry_jobs(req)
+        self.assertIn("Jobs retry failed", str(e.exception))
         msg = self.jc._comm.last_message
         self.assertEqual("job_comm_error", msg["data"]["msg_type"])
-        self.assertEqual("Unable to retry job", msg["data"]["content"]["error"])
+        self.assertEqual(job_id_list, msg["data"]["content"]["job_id_list"])
+        self.assertEqual("Unable to retry job(s)", msg["data"]["content"]["error"])
 
     # -----------------
     # Fetching job logs
@@ -487,23 +489,6 @@ class JobCommTestCase(unittest.TestCase):
         msg = self.jc._comm.last_message
         self.assertEqual(msg["data"]["msg_type"], "job_status")
 
-    def _check_rq_equal(self, rq0, rq1):
-        self.assertEqual(rq0.msg_id, rq1.msg_id)
-        self.assertEqual(rq0.rq_data, rq1.rq_data)
-        self.assertEqual(rq0.request, rq1.request)
-        self.assertEqual(rq0.job_id, rq1.job_id)
-
-    def test_split_by_job_id(self):
-        rq_msg = make_comm_msg("a_request", ["a", "b", "c"], False)
-        rqa1, rqb1, rqc1 = self.jc._split_request_by_job_id(rq_msg)
-        rqa0 = make_comm_msg("a_request", "a", True)
-        rqb0 = make_comm_msg("a_request", "b", True)
-        rqc0 = make_comm_msg("a_request", "c", True)
-        rqa1, rqb1, rqc1 = self.jc._split_request_by_job_id(rq_msg)
-        self._check_rq_equal(rqa0, rqa1)
-        self._check_rq_equal(rqb0, rqb1)
-        self._check_rq_equal(rqc0, rqc1)
-
 
 class JobRequestTestCase(unittest.TestCase):
     """
@@ -537,3 +522,59 @@ class JobRequestTestCase(unittest.TestCase):
             self.assertIn(
                 "Missing request type in job channel message!", str(e.exception)
             )
+
+    def _check_rq_equal(self, rq0, rq1):
+        self.assertEqual(rq0.msg_id, rq1.msg_id)
+        self.assertEqual(rq0.rq_data, rq1.rq_data)
+        self.assertEqual(rq0.request, rq1.request)
+        self.assertEqual(rq0.job_id, rq1.job_id)
+
+    def test_convert_to_using_job_id_list(self):
+        rq_msg = make_comm_msg("a_request", "a", False)
+        rq = JobRequest._convert_to_using_job_id_list(rq_msg)
+        self.assertEqual(rq.request, "a_request")
+        self.assertEqual(rq.job_id, None)
+        self.assertEqual(rq.job_id_list, ["a"])
+
+    def test_split_request_by_job_id(self):
+        rq_msg = make_comm_msg("a_request", ["a", "b", "c"], False)
+        rqa0 = make_comm_msg("a_request", "a", True)
+        rqb0 = make_comm_msg("a_request", "b", True)
+        rqc0 = make_comm_msg("a_request", "c", True)
+        rqa1, rqb1, rqc1 = JobRequest._split_request_by_job_id(rq_msg)
+        self._check_rq_equal(rqa0, rqa1)
+        self._check_rq_equal(rqb0, rqb1)
+        self._check_rq_equal(rqc0, rqc1)
+
+    def test_translate_require_job_id(self):
+        rq_msg = make_comm_msg("job_info", "a", False)
+        rqs = JobRequest.translate(rq_msg)
+        self.assertEqual(len(rqs), 1)
+        self.assertEqual(rqs[0].job_id, "a")
+        self.assertEqual(rqs[0].job_id_list, None)
+
+        rq_msg = make_comm_msg("job_info", ["a", "b"], False)
+        rqs = JobRequest.translate(rq_msg)
+        self.assertEqual(len(rqs), 2)
+        self.assertEqual(rqs[0].job_id, "a")
+        self.assertEqual(rqs[0].job_id_list, None)
+        self.assertEqual(rqs[1].job_id, "b")
+        self.assertEqual(rqs[1].job_id_list, None)
+
+    def test_translate_require_job_id_list(self):
+        rq_msg = make_comm_msg("retry_job", "a", False)
+        rqs = JobRequest.translate(rq_msg)
+        self.assertEqual(len(rqs), 1)
+        self.assertEqual(rqs[0].job_id, None)
+        self.assertEqual(rqs[0].job_id_list, ["a"])
+
+        rq_msg = make_comm_msg("retry_job", ["a", "b"], False)
+        rqs = JobRequest.translate(rq_msg)
+        self.assertEqual(len(rqs), 1)
+        self.assertEqual(rqs[0].job_id, None)
+        self.assertEqual(rqs[0].job_id_list, ["a", "b"])
+
+    def test_translate_doesnt_require_any_job_ids(self):
+        rq_msg = make_comm_msg("all_status", None, False)
+        rqs = JobRequest.translate(rq_msg)
+        self.assertEqual(len(rqs), 1)

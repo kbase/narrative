@@ -3,6 +3,12 @@ from biokbase.execution_engine2.baseclient import ServerError as EEServerError
 from biokbase.userandjobstate.baseclient import ServerError as UJSServerError
 
 
+class JobException(Exception):
+    def __init__(self, message, err_job_ids=None):
+        super().__init__(message)
+        self.err_job_ids = err_job_ids
+
+
 class NarrativeException(Exception):
     def __init__(self, code, message, name, source):
         self.code = code

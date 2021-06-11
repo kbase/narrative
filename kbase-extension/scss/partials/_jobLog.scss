@@ -2,18 +2,20 @@ $counter-name: code-list-counter;
 
 %line_container {
   @include fixed-width;
+
   counter-reset: $counter-name;
   list-style: none;
-  padding: 0;
   margin: 0;
+  padding: 0;
 }
 
 %line_text {
   @include fixed-width;
-  white-space: normal;
+
   counter-increment: $counter-name;
-  position: relative;
   padding-left: 5rem;
+  position: relative;
+  white-space: normal;
 }
 
 .kb-log {

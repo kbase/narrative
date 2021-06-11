@@ -47,19 +47,19 @@ CSS should go in /kbase-extension/static/kbase/css/kbaseNarrative.css
 }
 
 .celltoolbar {
-  height: auto;
-  padding-top: 0;
-  padding-bottom: 2px;
+  background: none;
   border: 0;
   border-left: 1px solid transparent;
-  background: none;
+  height: auto;
+  padding-bottom: 2px;
+  padding-top: 0;
 }
 
 div {
   &.input_area {
-    padding-top: 4px;
     border: 1px solid rgb(206 206 206);
     border-radius: 0;
+    padding-top: 4px;
   }
 
   &.output_subarea {
@@ -72,19 +72,19 @@ div {
   }
 
   &.cell {
-    padding: 0;
     border: 1px solid rgb(204 204 204);
     border-left-width: 5px;
-    margin: 8px 0;
     border-radius: 0;
+    margin: 8px 0;
+    padding: 0;
 
     &.selected {
-      padding-left: 0;
+      background: none;
       border: 1px solid rgb(75 184 86);
       border-left-width: 5px;
-      margin-left: 0;
-      background: none;
       box-shadow: 0 1px 2px rgb(170 170 170), 0 5px 5px rgb(170 170 170);
+      margin-left: 0;
+      padding-left: 0;
       transition: box-shadow 0.2s ease-in-out;
 
       &::before {
@@ -109,9 +109,9 @@ div {
 }
 
 .edit_mode div.cell.selected {
-  padding-left: 0;
-  border-left: 5px solid rgb(102 187 106);
   background: none;
+  border-left: 5px solid rgb(102 187 106);
+  padding-left: 0;
 }
 
 #notebook_name {
@@ -124,36 +124,36 @@ div {
 }
 
 #notebook-container {
-  position: fixed;
-  top: 70px;
-  right: 0;
   bottom: 0;
-  left: 380px;
-  overflow: auto;
-  width: auto;
-  min-width: 460px;
   box-shadow: none;
+  left: 380px;
+  min-width: 460px;
+  overflow: auto;
+  position: fixed;
+  right: 0;
+  top: 70px;
+  width: auto;
 
   &::after {
+    content: '';
     display: block;
     height: 100px;
-    content: '';
   }
 }
 
 .btn-toolbar {
-  padding-left: 0;
   margin-left: 0;
+  padding-left: 0;
 }
 
 .kb-narr-side-panel .btn-group .btn {
-  padding: 3px 4px;
   font-size: 16px;
+  padding: 3px 4px;
 }
 
 .btn-subtle {
-  margin: 0;
   color: rgb(136 136 136);
+  margin: 0;
 
   .fa {
     color: rgb(136 136 136);
@@ -189,9 +189,9 @@ div {
   }
 
   .prompt {
-    width: 75px;
-    padding-top: 0;
     color: use-color('silver');
+    padding-top: 0;
+    width: 75px;
   }
 
   .cell {
@@ -202,8 +202,8 @@ div {
   }
 
   .buttons .dropdown-menu {
-    overflow: visible !important;
     height: auto !important;
+    overflow: visible !important;
   }
 
   .btn.disabled .fa {
@@ -226,8 +226,8 @@ div {
 
   &.opened.rendered {
     &.kb-cell .rendered_html {
-      padding: 0;
       border: 0;
+      padding: 0;
     }
 
     &.selected.kb-cell {
@@ -342,7 +342,6 @@ div.code_cell {
   }
 }
 
-
 .panel-title {
   @include font-h4;
 }
@@ -352,21 +351,21 @@ div.code_cell {
   cursor: pointer;
 
   &::before {
-    display: inline-block;
-    width: 1.2em;
-    margin-right: 0.2em;
-    margin-left: 0;
     color: use-color('silver');
     content: '\f078 ';
+    display: inline-block;
     font: normal 400 90%/1 $typeface-font-awesome;
-    vertical-align: baseline;
+    margin-left: 0;
+    margin-right: 0.2em;
     text-align: center;
+    vertical-align: baseline;
+    width: 1.2em;
   }
 
   &.collapsed::before {
+    content: '\f054 ';
     margin-left: 0.1em;
     margin-right: 0.1em;
-    content: '\f054 ';
   }
 }
 
@@ -375,12 +374,12 @@ div.code_cell {
   cursor: pointer;
 
   &::after {
-    display: inline-block;
-    width: 1em;
     content: ' \f0d8';
+    display: inline-block;
     font: normal 400 130%/1 $typeface-font-awesome;
     text-align: right;
     vertical-align: baseline;
+    width: 1em;
   }
 }
 

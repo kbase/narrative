@@ -10,8 +10,8 @@
   // .kb-data-staging__container
   &__container {
     height: 604px;
-    padding: 10px;
     overflow-y: auto;
+    padding: 10px;
   }
 
   // https://www.figma.com/file/T30UN3QhWhhV5SpXiqY1ij/KBase-component-library?node-id=1%3A4
@@ -20,10 +20,11 @@
     @extend %kbase-button;
 
     @include button-variant(use_color('primary'), use_color('primary-lightest'), transparent);
-    position: relative;
-    top: -3px;
+
     letter-spacing: 0.7px;
     margin-left: 1rem;
+    position: relative;
+    top: -3px;
   }
 
   // .kb-data-staging__title

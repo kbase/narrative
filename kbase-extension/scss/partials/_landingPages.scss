@@ -21,9 +21,9 @@
 
 /* override bootstrap .wrapper */
 .wrapper {
-  width: 95%;
-  margin-right: auto;
   margin-left: auto;
+  margin-right: auto;
+  width: 95%;
 }
 
 #core-model {
@@ -53,20 +53,20 @@ table {
 /* mv */
 
 .search-query {
-  width: 100%;
   margin: 0 0 5px;
+  width: 100%;
 }
 
 .caret-up {
-  display: inline-block;
-  width: 0;
-  height: 0;
-  border-width: 0 4px 4px;
-  border-style: dotted solid solid;
   border-color: currentColor transparent rgb(255 255 255);
-  margin-left: 2px;
+  border-style: dotted solid solid;
+  border-width: 0 4px 4px;
   content: '';
+  display: inline-block;
+  height: 0;
+  margin-left: 2px;
   vertical-align: middle;
+  width: 0;
 }
 
 .scroll-pane {
@@ -102,10 +102,11 @@ table {
 }
 
 .selected-obj-alert {
+  margin-bottom: 5px;
+  padding-bottom: 10px;
+
   /* override */
   padding-top: 10px;
-  padding-bottom: 10px;
-  margin-bottom: 5px;
 }
 
 .heatmap-view {
@@ -138,8 +139,8 @@ table {
 }
 
 .modal-alert {
-  padding: 8px 15px;
   margin: 10px 15px 0;
+  padding: 8px 15px;
 }
 
 .modal-cover {
@@ -148,30 +149,30 @@ table {
 }
 
 .modal-cover-table {
-  position: static;
   display: table;
-  width: 100%;
   height: 100%;
+  position: static;
+  width: 100%;
 }
 
 .modal-cover-cell {
-  position: static;
   display: table-cell;
+  position: static;
   vertical-align: middle;
 }
 
 .modal-cover-box {
-  display: inline-block;
-  padding: 5px 15px;
-  margin: 10px;
   box-shadow: 7px 7px 5px rgb(136 136 136);
+  display: inline-block;
+  margin: 10px;
+  padding: 5px 15px;
 }
 
 .modal-cover-content {
-  padding: 5px;
-  border: 1px solid rgb(102 102 102);
   background: rgb(255 255 255);
+  border: 1px solid rgb(102 102 102);
   border-radius: 3px;
+  padding: 5px;
 }
 
 .obj-table .dataTables_length label {
@@ -179,8 +180,8 @@ table {
 }
 
 .dataTables_info {
-  margin: 0 10px 0 0;
   float: left;
+  margin: 0 10px 0 0;
 }
 
 .dataTables_length {
@@ -189,16 +190,16 @@ table {
 
 .ellipsis {
   display: inline-block;
-  overflow: hidden;
   max-width: 170px;
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .ws-descript {
   display: inline-block;
-  overflow: hidden;
   max-width: 400px;
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -206,11 +207,11 @@ table {
 /* custom checkboxes (prototyped) */
 
 .ncheck {
-  width: 15px;
-  height: 15px;
   border: 1px solid rgb(204 204 204);
-  margin-right: auto;
+  height: 15px;
   margin-left: auto;
+  margin-right: auto;
+  width: 15px;
 
   &:hover {
     border: 1px solid rgb(68 68 68);
@@ -218,10 +219,10 @@ table {
 }
 
 .ncheck-btn {
-  width: 15px;
-  height: 15px;
   border: 1px solid rgb(136 136 136);
+  height: 15px;
   margin: 4px 0 4px -1px;
+  width: 15px;
 
   &:hover {
     border: 1px solid rgb(68 68 68);
@@ -268,8 +269,8 @@ table {
 #narrative-nav,
 .recent-narratives,
 .recent-projects {
-  padding: 0;
   margin: 0;
+  padding: 0;
 }
 
 .group-item-expander {
@@ -303,9 +304,9 @@ table {
 }
 
 .FixedHeader_Header {
+  background: rgb(255 255 255);
   height: 44px;
   margin: -6px 0 0;
-  background: rgb(255 255 255);
 }
 
 .narrative-sidebar li {
@@ -337,20 +338,20 @@ table {
 }
 
 .active .btn-narr {
-  padding-right: 20px;
-  padding-left: 20px;
-  border: 1px solid rgb(66 139 202);
   background-color: rgb(187 232 249);
+  border: 1px solid rgb(66 139 202);
+  padding-left: 20px;
+  padding-right: 20px;
   text-align: left;
 }
 
 .btn-narr {
-  padding-right: 20px;
-  padding-left: 20px;
-  border: 1px solid rgb(219 219 219);
   background-color: rgb(242 242 242);
+  border: 1px solid rgb(219 219 219);
   color: rgb(109 168 207);
   font: 14px $typeface-display-legacy;
+  padding-left: 20px;
+  padding-right: 20px;
   text-align: left;
 }
 
@@ -358,9 +359,9 @@ table {
   top: 70px;
 
   li {
-    margin-bottom: 10px;
     font-family: $typeface-display-legacy;
     list-style: none;
+    margin-bottom: 10px;
     text-align: left;
   }
 
@@ -382,10 +383,10 @@ table {
       &.active {
         &:hover,
         > a {
-          height: 50px;
-          box-sizing: border-box;
           border-bottom: 4px solid rgb(66 139 202);
+          box-sizing: border-box;
           color: rgb(42 100 150) !important;
+          height: 50px;
         }
       }
     }
@@ -398,13 +399,13 @@ table {
 
 #wrap {
   height: auto;
+
+  /* Negative indent footer by its height */
+  margin: 0 auto -58px;
   min-height: 100%;
 
   /* Pad bottom by footer height */
   padding: 0 0 80px;
-
-  /* Negative indent footer by its height */
-  margin: 0 auto -58px;
 }
 
 /* for the footer */
@@ -420,10 +421,10 @@ table {
       padding: 7px 5px 5px 1px;
 
       &::after {
-        padding-left: 10px;
         color: rgb(187 187 187);
         content: '\2022';
         font-size: 10px;
+        padding-left: 10px;
       }
 
       &:last-child::after,
@@ -439,14 +440,14 @@ table {
   }
 
   .disclaimer {
-    position: fixed;
-    bottom: 0;
-    display: block;
-    width: 100%;
     background-color: rgb(169 68 66);
+    bottom: 0;
     color: rgb(255 255 255);
+    display: block;
     font-weight: 700;
+    position: fixed;
     text-align: center;
+    width: 100%;
   }
 }
 

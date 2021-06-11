@@ -63,31 +63,31 @@ $outline-offset: 1px;
 
   &__img {
     &--image {
-      max-width: $icon-size-image;
-      max-height: $icon-size-image;
       margin: $icon-padding;
+      max-height: $icon-size-image;
+      max-width: $icon-size-image;
     }
   }
 
   // For shifting over logos that are stacked on top of each other
   &__outline--l1 {
-    margin-top: $outline-offset;
     margin-left: $outline-offset;
+    margin-top: $outline-offset;
   }
 
   &__stack--l1 {
-    margin-top: $top-shift;
     margin-left: $left-shift;
+    margin-top: $top-shift;
   }
 
   &__outline--l2 {
-    margin-top: $outline-offset + $top-shift;
     margin-left: $outline-offset + $left-shift;
+    margin-top: $outline-offset + $top-shift;
   }
 
   &__stack--l2 {
-    margin-top: 2*$top-shift;
     margin-left: 2*$left-shift;
+    margin-top: 2*$top-shift;
   }
 
   &__outline--l1,
@@ -97,16 +97,16 @@ $outline-offset: 1px;
 }
 
 .kb-data-list-logo {
-  display: inline-block;
-  width: 40px;
-  height: 40px;
-  padding-top: 8px;
-  border: 0 solid rgb(85 85 85);
   background-color: rgb(96 125 139);
+  border: 0 solid rgb(85 85 85);
   border-radius: 50%;
   color: rgb(255 255 255);
+  display: inline-block;
   font-size: 24px;
   font-weight: 700;
+  height: 40px;
+  padding-top: 8px;
   text-align: center;
   text-shadow: -1px 0 rgb(119 119 119), 0 1px rgb(119 119 119), 1px 0 rgb(119 119 119), 0 -1px rgb(119 119 119);
+  width: 40px;
 }

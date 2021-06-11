@@ -1,52 +1,52 @@
 .kb-report-view {
-    &__warning {
-        &__count {
-            margin: 5px;
-        }
-
-        &__container {
-            max-height: 100px;
-            overflow-y: auto;
-            margin: 0 5px 5px 10px;
-        }
-
-        &__text {
-            margin: 0 5px 5px 10px;
-        }
+  &__warning {
+    &__count {
+      margin: 5px;
     }
 
-    &__summary {
-        width: '100%';
-        font-family: Monaco,monospace;
-        font-size: '9pt';
-        color: '#555';
-        white-space: 'pre-wrap';
-        overflow: 'auto';
-        height: 'auto';
-        max-height: '500px';
+    &__container {
+      margin: 0 5px 5px 10px;
+      max-height: 100px;
+      overflow-y: auto;
     }
 
-    &__download-iframe {
-        display: none;
+    &__text {
+      margin: 0 5px 5px 10px;
     }
+  }
 
-    &__download_button {
-        cursor: pointer;
-    }
+  &__summary {
+    @include fixed-width;
 
-    &__report_iframe {
-        display: 'block';
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        height: 'auto';
-    }
+    color: use_color('base-dark');
+    height: auto;
+    max-height: 500px;
+    overflow: auto;
+    white-space: pre-wrap;
+    width: 100%;
+  }
 
-    &__report_button {
-        margin: 4px 4px 8px 0;
-    }
+  &__download-iframe {
+    display: none;
+  }
+
+  &__download_button {
+    cursor: pointer;
+  }
+
+  &__report_iframe {
+    display: block;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+  }
+
+  &__report_button {
+    margin: 4px 4px 8px 0;
+  }
 }
 
 .kb-output-widget__object_link {
-    cursor: pointer;
+  cursor: pointer;
 }

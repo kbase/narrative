@@ -9,20 +9,20 @@ $default-icon-size: 56px;
   &__container {
     align-items: flex-start;
     display: flex;
-    justify-content: space-between;
     height: $default-icon-size;
+    justify-content: space-between;
   }
 
   // .kb-cell-toolbar__app_icon
   &__app_icon {
-    width: $default-icon-size;
-    height: $default-icon-size;
-    padding: 0;
-    margin-right: 4px;
-    font-size: 14px;
-    line-height: $default-icon-size;
-    text-align: center;
     flex: none;
+    font-size: 14px;
+    height: $default-icon-size;
+    line-height: $default-icon-size;
+    margin-right: 4px;
+    padding: 0;
+    text-align: center;
+    width: $default-icon-size;
   }
 
   // .kb-cell-toolbar__title-container
@@ -38,21 +38,21 @@ $default-icon-size: 56px;
 
   // .kb-cell-toolbar__title
   &__title {
-    text-overflow: ellipsis;
-    height: 20px;
-    min-width: 0;
-    margin-top: 8px;
     color: use_color('primary-vivid');
     font: normal 700 18px/20px $typeface-page-text;
+    height: 20px;
+    margin-top: 8px;
+    min-width: 0;
+    text-overflow: ellipsis;
   }
 
   // .kb-cell-toolbar__subtitle
   &__subtitle {
-    text-overflow: ellipsis;
-    height: 20px;
-    min-width: 0;
     color: use_color('neutral');
     font: normal 400 14px/20px $typeface-page-text;
+    height: 20px;
+    min-width: 0;
+    text-overflow: ellipsis;
   }
 
   // .kb-cell-toolbar__buttons-container

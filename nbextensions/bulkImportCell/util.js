@@ -24,7 +24,7 @@ define([], () => {
         //     paramValues = model.getItem(['params', fileType, PARAM_TYPE]),
         //     filePathIds = model.getItem(['app', 'fileParamIds', fileType]),
         //     filePathValues = model.getItem(['params', fileType, FILE_PATH_TYPE]);
-            // spec = specs[typesToFiles[selectedFileType].appId];
+        // spec = specs[typesToFiles[selectedFileType].appId];
 
         // must have at least one file row of file paths to be complete
         if (filePathValues.length === 0) {
@@ -59,19 +59,17 @@ define([], () => {
                 specs[model.getItem(['inputs', fileType, 'appId'])]
             );
         });
-        return Promise.all(evalPromises)
-            .then((evalResults) => {
-                const readyState = {};
-                evalResults.forEach((result, idx) => {
-                    readyState[fileTypes[idx]] = result;
-                });
-                return readyState;
+        return Promise.all(evalPromises).then((evalResults) => {
+            const readyState = {};
+            evalResults.forEach((result, idx) => {
+                readyState[fileTypes[idx]] = result;
             });
+            return readyState;
+        });
     }
 
     return {
         evaluateAppConfig,
-        evaluateConfigReadyState
+        evaluateConfigReadyState,
     };
-
 });

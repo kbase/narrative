@@ -23,7 +23,7 @@ def make_comm_msg(
         job_id_key = "job_id"
     msg = {
         "msg_id": "some_id",
-        "content": {"data": {"request_type": msg_type, job_id_key: job_id_like}}
+        "content": {"data": {"request_type": msg_type, job_id_key: job_id_like}},
     }
     if content is not None:
         msg["content"]["data"].update(content)
@@ -136,7 +136,8 @@ class JobCommTestCase(unittest.TestCase):
         self.assertIn(f"No job present with id {job_id}", str(e.exception))
         msg = self.jc._comm.last_message
         self.assertEqual(
-            {"state": {"job_id": job_id, "status": "does_not_exist"}}, msg["data"]["content"]
+            {"state": {"job_id": job_id, "status": "does_not_exist"}},
+            msg["data"]["content"],
         )
         self.assertEqual("job_status", msg["data"]["msg_type"])
 
@@ -271,7 +272,8 @@ class JobCommTestCase(unittest.TestCase):
         msg = self.jc._comm.last_message
         self.assertEqual("job_does_not_exist", msg["data"]["msg_type"])
         self.assertEqual(
-            {"job_id_list": job_id_list[1:], "source": "retry_job"}, msg["data"]["content"]
+            {"job_id_list": job_id_list[1:], "source": "retry_job"},
+            msg["data"]["content"],
         )
 
     @mock.patch(

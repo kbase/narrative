@@ -45,12 +45,15 @@ class JobRequest:
 
     # request types either require a job_id, a job_id_list, or neither
     REQUIRE_JOB_ID = [
-        "job_info", "job_status", "start_job_update", "stop_job_update",
-        "cancel_job", "job_logs", "job_logs_latest",
+        "job_info",
+        "job_status",
+        "start_job_update",
+        "stop_job_update",
+        "cancel_job",
+        "job_logs",
+        "job_logs_latest",
     ]
-    REQUIRE_JOB_ID_LIST = [
-        "retry_job"
-    ]
+    REQUIRE_JOB_ID_LIST = ["retry_job"]
 
     def __init__(self, rq: dict):
         self.msg_id = rq.get("msg_id")  # might be useful later?
@@ -297,7 +300,7 @@ class JobComm:
             self.send_error_message("job_does_not_exist", req)
             self.send_comm_message(
                 "job_status",
-                {"state": {"job_id": req.job_id, "status": "does_not_exist"}}
+                {"state": {"job_id": req.job_id, "status": "does_not_exist"}},
             )
             raise
 
@@ -365,13 +368,15 @@ class JobComm:
             self.send_comm_message("jobs_retried", retry_results)
             self.send_comm_message(
                 "new_job",
-                {"job_id_list": [job["retry_id"] for job in retry_results if job["retry_id"]]}
+                {
+                    "job_id_list": [
+                        job["retry_id"] for job in retry_results if job["retry_id"]
+                    ]
+                },
             )
         except JobException as e:
             self.send_error_message(
-                "job_does_not_exist",
-                req,
-                {"job_id_list": e.err_job_ids}
+                "job_does_not_exist", req, {"job_id_list": e.err_job_ids}
             )
             raise
         except NarrativeException as e:
@@ -383,7 +388,7 @@ class JobComm:
                     "message": getattr(e, "message", "Unknown reason"),
                     "code": getattr(e, "code", -1),
                     "name": getattr(e, "name", type(e).__name__),
-                }
+                },
             )
             raise
 
@@ -441,7 +446,9 @@ class JobComm:
         """
         requests = JobRequest.translate(msg)
         for request in requests:
-            kblogging.log_event(self._log, "handle_comm_message", {"msg": request.request})
+            kblogging.log_event(
+                self._log, "handle_comm_message", {"msg": request.request}
+            )
             if request.request in self._msg_map:
                 self._msg_map[request.request](request)
             else:

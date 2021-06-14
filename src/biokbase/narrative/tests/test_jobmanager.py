@@ -93,13 +93,15 @@ class JobManagerTest(unittest.TestCase):
 
     def test_list_jobs_twice(self):
         # with no jobs
-        with mock.patch.object(self.jm, '_running_jobs', {}):
-            expected = 'No running jobs!'
+        with mock.patch.object(self.jm, "_running_jobs", {}):
+            expected = "No running jobs!"
             self.assertEqual(self.jm.list_jobs(), expected)
             self.assertEqual(self.jm.list_jobs(), expected)
 
         # with some jobs
-        with mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client):
+        with mock.patch(
+            "biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client
+        ):
             jobs_html_0 = self.jm.list_jobs()
             jobs_html_1 = self.jm.list_jobs()
             self.assertEqual(jobs_html_0.data, jobs_html_1.data)
@@ -120,8 +122,7 @@ class JobManagerTest(unittest.TestCase):
         job_id = "5d64935cb215ad4128de94d9"
         retry_results = self.jm.retry_jobs([job_id])
         self.assertEqual(
-            retry_results,
-            [{"job_id": job_id, "retry_id": "9d49ed8214da512bc53946d5"}]
+            retry_results, [{"job_id": job_id, "retry_id": "9d49ed8214da512bc53946d5"}]
         )
 
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)

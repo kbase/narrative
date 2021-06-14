@@ -7,7 +7,8 @@ define([
     './fileTypePanel',
     'common/cellComponents/paramsWidget',
     'common/cellComponents/filePathWidget',
-], (Promise, Config, Runtime, html, UI, FileTypePanel, ParamsWidget, FilePathWidget) => {
+    '../util'
+], (Promise, Config, Runtime, html, UI, FileTypePanel, ParamsWidget, FilePathWidget, Util) => {
     'use strict';
 
     /**
@@ -151,7 +152,7 @@ define([
          *   - selected {String} the selected file type
          *   - completed
          */
-        function getFileTypeState(initialize=false) {
+        function getFileTypeState() {
             const fileTypeCompleted = {};
             const fileTypeState = model.getItem('state.params', {});
             for (const [fileType, status] of Object.entries(fileTypeState)) {
@@ -365,7 +366,10 @@ define([
                 if (isError) {
                     return 'error';
                 }
-                return evaluateAppConfig();
+                const paramValues = model.getItem(['params', selectedFileType, PARAM_TYPE]),
+                    filePathValues = model.getItem(['params', selectedFileType, FILE_PATH_TYPE]),
+                    spec = specs[typesToFiles[selectedFileType].appId];
+                return Util.evaluateAppConfig(paramValues, filePathValues, spec);
             }).then((state) => {
                 const currentState = model.getItem(['state', 'params', selectedFileType]);
                 if (currentState !== state) {
@@ -382,43 +386,6 @@ define([
                         paramsReady,
                     });
                 }
-            });
-        }
-
-        /**
-         * This evaluates the state of the app configuration. If it's ready to go, then we can
-         * build the Python code and prep the app for launch. If not, then we shouldn't, and,
-         * in fact, should clear the Python code if there's any there.
-         * @returns a Promise that resolves into either 'complete' or 'incomplete' strings,
-         * based on the config state.
-         */
-        function evaluateAppConfig() {
-            /* 2 parts.
-             * 1 - eval the set of parameters using something in the spec module.
-             * 2 - eval the array of file inputs and outputs.
-             * If both are up to snuff, we're good.
-             */
-            const otherParamIds = model.getItem(['app', 'otherParamIds', selectedFileType]),
-                paramValues = model.getItem(['params', selectedFileType, PARAM_TYPE]),
-                filePathIds = model.getItem(['app', 'fileParamIds', selectedFileType]),
-                filePathValues = model.getItem(['params', selectedFileType, FILE_PATH_TYPE]),
-                spec = specs[typesToFiles[selectedFileType].appId];
-
-            // must have at least one file row of file paths to be complete
-            if (filePathValues.length === 0) {
-                return Promise.resolve('incomplete');
-            }
-            const filePathValidations = filePathValues.map((filePathRow) => {
-                return spec.validateParams(filePathIds, filePathRow);
-            });
-            return Promise.all([
-                spec.validateParams(otherParamIds, paramValues),
-                ...filePathValidations,
-            ]).then((results) => {
-                const isValid = results.every((result) => {
-                    return Object.values(result).every((param) => param.isValid);
-                });
-                return isValid ? 'complete' : 'incomplete';
             });
         }
 

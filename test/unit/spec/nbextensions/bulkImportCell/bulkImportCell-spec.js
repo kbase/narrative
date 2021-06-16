@@ -272,6 +272,26 @@ define([
             });
         });
 
+        fit('Should start up in "editingComplete" state when initialized with proper data', async () => {
+            const cell = Mocks.buildMockCell('code');
+            BulkImportCell.make({
+                cell,
+                importData: fakeInputs,
+                specs: fakeSpecs,
+                initialize: true,
+            });
+            const runButton = cell.element[0].querySelector(
+                '.kb-rcp__action-button-container .-run'
+            );
+            await TestUtil.waitForElementState(runButton, () => {
+                return (
+                    !runButton.classList.contains('hidden') &&
+                    !runButton.classList.contains('disabled')
+                );
+            });
+            expect(cell.metadata.kbase.bulkImportCell.state.state).toBe('editingComplete');
+        });
+
         ['launching', 'inProgress', 'inProgressResultsAvailable'].forEach((testCase) => {
             it(`should cancel the ${testCase} state and return to a previous state`, () => {
                 // init cell with the test case state and jobs (they're all run-related)

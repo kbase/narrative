@@ -14,7 +14,7 @@ define([], () => {
      * @param {Object} spec - the post-processed Spec object
      * @returns
      */
-    function evaluateAppConfig(paramValues, filePathValues, spec) {
+    function evaluateAppConfig(paramIds, paramValues, filePathIds, filePathValues, spec) {
         /* 2 parts.
          * 1 - eval the set of parameters using something in the spec module.
          * 2 - eval the array of file inputs and outputs.
@@ -30,11 +30,11 @@ define([], () => {
         if (filePathValues.length === 0) {
             return Promise.resolve('incomplete');
         }
-        const filePathIds = Object.keys(filePathValues[0]);
+        // const filePathIds = Object.keys(filePathValues[0]);
         const filePathValidations = filePathValues.map((filePathRow) => {
             return spec.validateParams(filePathIds, filePathRow);
         });
-        const paramIds = Object.keys(paramValues);
+        // const paramIds = Object.keys(paramValues);
         return Promise.all([
             spec.validateParams(paramIds, paramValues),
             ...filePathValidations,
@@ -53,8 +53,12 @@ define([], () => {
     function evaluateConfigReadyState(model, specs) {
         const fileTypes = Object.keys(model.getItem(['inputs']));
         const evalPromises = fileTypes.map((fileType) => {
+            console.log(fileType);
+            console.log(model.getItem(['inputs', fileType, 'appId']));
             return evaluateAppConfig(
+                model.getItem(['app', 'otherParamIds', fileType]),
                 model.getItem(['params', fileType, 'params']),
+                model.getItem(['app', 'fileParamIds', fileType]),
                 model.getItem(['params', fileType, 'filePaths']),
                 specs[model.getItem(['inputs', fileType, 'appId'])]
             );

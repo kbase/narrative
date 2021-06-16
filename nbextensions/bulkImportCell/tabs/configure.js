@@ -366,10 +366,18 @@ define([
                 if (isError) {
                     return 'error';
                 }
-                const paramValues = model.getItem(['params', selectedFileType, PARAM_TYPE]),
+                const paramIds = model.getItem(['app', 'otherParamIds', selectedFileType]),
+                    paramValues = model.getItem(['params', selectedFileType, PARAM_TYPE]),
+                    filePathIds = model.getItem(['app', 'fileParamIds', selectedFileType]),
                     filePathValues = model.getItem(['params', selectedFileType, FILE_PATH_TYPE]),
                     spec = specs[typesToFiles[selectedFileType].appId];
-                return Util.evaluateAppConfig(paramValues, filePathValues, spec);
+                return Util.evaluateAppConfig(
+                    paramIds,
+                    paramValues,
+                    filePathIds,
+                    filePathValues,
+                    spec
+                );
             }).then((state) => {
                 const currentState = model.getItem(['state', 'params', selectedFileType]);
                 if (currentState !== state) {

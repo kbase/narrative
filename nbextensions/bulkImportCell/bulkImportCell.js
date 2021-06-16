@@ -490,6 +490,7 @@ define([
                 }
             }
             const uiState = cellReady ? 'editingComplete' : 'editingIncomplete';
+            console.log('setting uiState', uiState);
             updateState(uiState);
             if (cellReady) {
                 buildPythonCode();
@@ -612,6 +613,9 @@ define([
                     const curReadyState = curState.params;
                     const updatedReadyState = !SimpleUtil.isEqual(appReadyState, curReadyState);
 
+                    console.log(updatedReadyState);
+                    console.log('new ready state', appReadyState);
+                    console.log('old ready state', curReadyState);
                     if (updatedReadyState) {
                         model.setItem(['state', 'params'], appReadyState);
                     }

@@ -36,7 +36,6 @@ define(['common/runtime', 'widgets/appWidgets2/input/selectInput'], (Runtime, Se
         };
     }
 
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('Select Input tests', () => {
         beforeEach(() => {
             runtime = Runtime.make();

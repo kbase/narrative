@@ -1,7 +1,6 @@
 define(['widgets/appWidgets2/input/checkboxInput', 'common/runtime'], (CheckboxInput, Runtime) => {
     'use strict';
 
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('Test checkbox data input widget', () => {
         let testConfig = {},
             runtime,

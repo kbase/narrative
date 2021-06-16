@@ -7,7 +7,7 @@ module.exports = function (config) {
         client: {
             jasmine: {
                 failFast: false,
-                DEFAULT_TIMEOUT_INTERVAL: 20000,
+                timeoutInterval: 20000,
                 failSpecWithNoExpectations: true,
             },
             requireJsShowNoTimestampsError: '^(?!.*(^/narrative|test/))',
@@ -52,7 +52,6 @@ module.exports = function (config) {
             { pattern: 'kbase-extension/static/narrative_paths.js', nocache: true },
             { pattern: 'kbase-extension/static/**/*.js', included: false },
             { pattern: 'nbextensions/**/*.js', included: false },
-            { pattern: 'nbextensions/**/*.json', included: false },
             // static resources
             { pattern: 'kbase-extension/kbase_templates/*.html', included: false, nocache: true },
             { pattern: 'kbase-extension/static/**/*.css', nocache: true },

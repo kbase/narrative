@@ -26,8 +26,6 @@ define([
         };
     }
 
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
-
     describe('TaxonomyRefInput module', () => {
         it('Should exist', () => {
             expect(TaxonomyRefInput).toBeDefined();

@@ -28,7 +28,6 @@ define(['common/runtime', 'widgets/appWidgets2/input/toggleButtonInput'], (
     // as near as I can tell, this input widget doesn't get used.
     // I can't prove that, though, yet.
     // But for now, skipping this test suite.
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     xdescribe('ToggleButtonInput tests', () => {
         beforeEach(() => {
             runtime = Runtime.make();

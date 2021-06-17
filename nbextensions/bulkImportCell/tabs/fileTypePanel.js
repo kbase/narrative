@@ -6,8 +6,8 @@ define(['bluebird', 'common/ui', 'common/html', 'common/events'], (Promise, UI, 
         button = html.tag('button'),
         baseCss = 'kb-bulk-import-configure__filetype_panel',
         fileTypeIcon = `${baseCss}__filetype_icon`,
-        completeIcon = ['fa-check', `${fileTypeIcon}_complete`],
-        incompleteIcon = ['fa-exclamation', `${fileTypeIcon}_incomplete`];
+        completeIcon = ['fa-check', `${fileTypeIcon}--complete`],
+        incompleteIcon = ['fa-exclamation', `${fileTypeIcon}--incomplete`];
 
     /**
      * This displays a vertical list of "fileTypes" that can be selected on and

@@ -123,13 +123,13 @@ $tab-widget-padding: 4px;
           width: 3rem;
           text-align: center;
 
-          // .kb-bulk-import__filetype_panel__filetype_icon_complete
-          &_complete {
+          // .kb-bulk-import__filetype_panel__filetype_icon--complete
+          &--complete {
             color: use_color('green');
           }
 
-          // .kb-bulk-import__filetype_panel__filetype_icon_incomplete
-          &_incomplete {
+          // .kb-bulk-import__filetype_panel__filetype_icon--incomplete
+          &--incomplete {
             color: use_color('red');
           }
         }

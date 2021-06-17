@@ -13,6 +13,18 @@
     align-items: center;
     display: flex;
     font: normal 400 14px/18px $typeface-page-text;
+    // border-bottom: 1px solid use_color('base-lighter');
+    padding-bottom: 0.5rem;
+    padding: 0 0.5rem;
+
+    &:last-child {
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    &:nth-child(2n) {
+      background-color: use_color('base-lightest');
+    }
   }
 
   &__list_item::before {

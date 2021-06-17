@@ -136,7 +136,7 @@ define([
                 fileTypes: fileTypesDisplay,
                 toggleAction: toggleFileType,
             });
-            const state = getFileTypeState(true);
+            const state = getFileTypeState();
 
             return fileTypePanel.start({
                 node,
@@ -146,8 +146,6 @@ define([
 
         /**
          *
-         * @param {Boolean} initialize if truthy, then we get all file type states from the
-         *   parameters in the model.
          * @returns {Object} with keys:
          *   - selected {String} the selected file type
          *   - completed

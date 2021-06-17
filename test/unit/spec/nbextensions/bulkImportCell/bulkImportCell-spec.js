@@ -16,7 +16,8 @@ define([
             },
         },
         fakeSpecs = {
-            someApp: TestAppObj.app.specs['kb_uploadmethods/import_fastq_sra_as_reads_from_staging'],
+            someApp:
+                TestAppObj.app.specs['kb_uploadmethods/import_fastq_sra_as_reads_from_staging'],
         },
         runtime = Runtime.make();
 

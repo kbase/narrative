@@ -1,5 +1,5 @@
 define([
-    '../../../../../../narrative/nbextensions/bulkImportCell/tabs/fileTypePanel',
+    '/narrative/nbextensions/bulkImportCell/tabs/fileTypePanel',
     'common/runtime',
     'bluebird',
 ], (FileTypePanel, Runtime, Promise) => {

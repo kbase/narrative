@@ -16,7 +16,7 @@ define([
             },
         },
         fakeSpecs = {
-            someApp: TestAppSpec,
+            someApp: TestAppObj.app.specs['kb_uploadmethods/import_fastq_sra_as_reads_from_staging'],
         },
         runtime = Runtime.make();
 
@@ -272,9 +272,10 @@ define([
             });
         });
 
-        fit('Should start up in "editingComplete" state when initialized with proper data', async () => {
+        it('Should start up in "editingComplete" state when initialized with proper data', async () => {
             const cell = Mocks.buildMockCell('code');
-            BulkImportCell.make({
+            Jupyter.notebook = Mocks.buildMockNotebook();
+            const cellWidget = BulkImportCell.make({
                 cell,
                 importData: fakeInputs,
                 specs: fakeSpecs,
@@ -283,13 +284,18 @@ define([
             const runButton = cell.element[0].querySelector(
                 '.kb-rcp__action-button-container .-run'
             );
+            const resetButton = cell.element[0].querySelector(
+                '.kb-rcp__action-button-container .-reset'
+            );
             await TestUtil.waitForElementState(runButton, () => {
                 return (
                     !runButton.classList.contains('hidden') &&
-                    !runButton.classList.contains('disabled')
+                    !runButton.classList.contains('disabled') &&
+                    resetButton.classList.contains('hidden')
                 );
             });
             expect(cell.metadata.kbase.bulkImportCell.state.state).toBe('editingComplete');
+            // cellWidget.deleteCell();
         });
 
         ['launching', 'inProgress', 'inProgressResultsAvailable'].forEach((testCase) => {

@@ -20,21 +20,14 @@ define([], () => {
          * 2 - eval the array of file inputs and outputs.
          * If both are up to snuff, we're good.
          */
-        // const otherParamIds = model.getItem(['app', 'otherParamIds', fileType]),
-        //     paramValues = model.getItem(['params', fileType, PARAM_TYPE]),
-        //     filePathIds = model.getItem(['app', 'fileParamIds', fileType]),
-        //     filePathValues = model.getItem(['params', fileType, FILE_PATH_TYPE]);
-        // spec = specs[typesToFiles[selectedFileType].appId];
 
         // must have at least one file row of file paths to be complete
         if (filePathValues.length === 0) {
             return Promise.resolve('incomplete');
         }
-        // const filePathIds = Object.keys(filePathValues[0]);
         const filePathValidations = filePathValues.map((filePathRow) => {
             return spec.validateParams(filePathIds, filePathRow);
         });
-        // const paramIds = Object.keys(paramValues);
         return Promise.all([
             spec.validateParams(paramIds, paramValues),
             ...filePathValidations,
@@ -53,8 +46,6 @@ define([], () => {
     function evaluateConfigReadyState(model, specs) {
         const fileTypes = Object.keys(model.getItem(['inputs']));
         const evalPromises = fileTypes.map((fileType) => {
-            console.log(fileType);
-            console.log(model.getItem(['inputs', fileType, 'appId']));
             return evaluateAppConfig(
                 model.getItem(['app', 'otherParamIds', fileType]),
                 model.getItem(['params', fileType, 'params']),

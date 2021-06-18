@@ -366,7 +366,11 @@ define([
                 spyOn(Jupyter.narrative, 'addAndPopulateApp');
                 spyOn(Jupyter.narrative, 'hideOverlay');
                 stagingViewer.initImportApp(fileType, fileName);
-                expect(Jupyter.narrative.addAndPopulateApp).toHaveBeenCalledWith(appId, tag, inputs);
+                expect(Jupyter.narrative.addAndPopulateApp).toHaveBeenCalledWith(
+                    appId,
+                    tag,
+                    inputs
+                );
                 expect(Jupyter.narrative.hideOverlay).toHaveBeenCalled();
             });
 
@@ -397,7 +401,11 @@ define([
                 spyOn(Jupyter.narrative, 'hideOverlay');
                 await stagingViewer.setPath('//' + subDir);
                 stagingViewer.initImportApp(fileType, fileName);
-                expect(Jupyter.narrative.addAndPopulateApp).toHaveBeenCalledWith(appId, tag, inputs);
+                expect(Jupyter.narrative.addAndPopulateApp).toHaveBeenCalledWith(
+                    appId,
+                    tag,
+                    inputs
+                );
                 expect(Jupyter.narrative.hideOverlay).toHaveBeenCalled();
             });
 

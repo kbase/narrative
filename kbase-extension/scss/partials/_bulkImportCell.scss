@@ -119,8 +119,19 @@ $tab-widget-padding: 4px;
 
         // .kb-bulk-import__filetype_panel__filetype_icon
         &_icon {
-          color: $filetype-icon-color;
           padding: 2px 8px 0;
+          width: 3rem;
+          text-align: center;
+
+          // .kb-bulk-import__filetype_panel__filetype_icon--complete
+          &--complete {
+            color: use_color('green');
+          }
+
+          // .kb-bulk-import__filetype_panel__filetype_icon--incomplete
+          &--incomplete {
+            color: use_color('red');
+          }
         }
 
         // .kb-bulk-import__filetype_panel__filetype_label

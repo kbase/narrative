@@ -951,13 +951,16 @@ define([
             // get all of the selected checkbox file names and import type
             $(`input.${cssBaseClass}-body__checkbox-input:checked`).each(function () {
                 const importType = $(this).attr('data-type');
-                const importFile = $(this).attr('data-file-name');
+                let importFile = $(this).attr('data-file-name');
                 if (stagingAreaViewer.bulkImportTypes.includes(importType)) {
                     if (!(importType in bulkMapping)) {
                         bulkMapping[importType] = {
                             appId: stagingAreaViewer.uploaders.app_info[importType].app_id,
                             files: [],
                         };
+                    }
+                    if (stagingAreaViewer.subpath) {
+                        importFile = stagingAreaViewer.subpath + '/' + importFile;
                     }
                     bulkMapping[importType].files.push(importFile);
                 } else {

@@ -5,7 +5,7 @@
     list-style-position: outside;
     list-style-type: none;
     padding: 0;
-    width: 100%;
+    margin-left: -1.5rem;
   }
 
   // .kb-file-path__list_item
@@ -13,9 +13,8 @@
     align-items: center;
     display: flex;
     font: normal 400 14px/18px $typeface-page-text;
-    // border-bottom: 1px solid use_color('base-lighter');
     padding-bottom: 0.5rem;
-    padding: 0 0.5rem;
+    padding: 0 1.5rem;
 
     &:last-child {
       padding-bottom: 0;

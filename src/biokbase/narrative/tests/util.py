@@ -80,6 +80,7 @@ class ConfigTests(object):
         else:
             return os.path.join(self._path_prefix, filename)
 
+
 def fetch_narrative(nar_id, auth_token, url=ci_ws, file_name=None):
     """
     Fetches a Narrative object with the given reference id (of the form ##/##).

@@ -15,12 +15,13 @@ EXCLUDED_JOB_STATE_FIELDS = ["authstrat", "job_input", "condor_job_ads"]
 
 
 class Job(object):
-    job_id = None
     app_id = None
     app_version = None
     cell_id = None
-    run_id = None
     inputs = None
+    job_id = None
+    parent_job_id = None
+    run_id = None
     token_id = None
     _job_logs = list()
     _last_state = None
@@ -31,28 +32,30 @@ class Job(object):
         app_id,
         inputs,
         owner,
-        tag="release",
         app_version=None,
         cell_id=None,
-        run_id=None,
-        token_id=None,
         meta=dict(),
+        parent_job_id=None,
+        run_id=None,
+        tag="release",
+        token_id=None,
     ):
         """
         Initializes a new Job with a given id, app id, and app app_version.
         The app_id and app_version should both align with what's available in
         the Narrative Method Store service.
         """
-        self.job_id = job_id
         self.app_id = app_id
         self.app_version = app_version
-        self.tag = tag
         self.cell_id = cell_id
-        self.run_id = run_id
         self.inputs = inputs
-        self.owner = owner
-        self.token_id = token_id
+        self.job_id = job_id
         self.meta = meta
+        self.owner = owner
+        self.parent_job_id = parent_job_id
+        self.run_id = run_id
+        self.tag = tag
+        self.token_id = token_id
 
     @classmethod
     def from_state(
@@ -61,11 +64,12 @@ class Job(object):
         job_info,
         owner,
         app_id,
-        tag="release",
         cell_id=None,
-        run_id=None,
-        token_id=None,
         meta=dict(),
+        parent_job_id=None,
+        run_id=None,
+        tag="release",
+        token_id=None,
     ):
         """
         Parameters:
@@ -82,10 +86,11 @@ class Job(object):
         app_id - string
             Used in place of job_info.method. This is the actual method spec that was used to
             start the job. Can be None, but Bad Things might happen.
+        cell_id - the cell associated with the job (optional)
+        parent_job_id - the ID of the parent batch container (batch jobs only)
+        run_id - the front-end id associated with the job (optional)
         tag - string
             The Tag (release, beta, dev) used to start the job.
-        cell_id - the cell associated with the job (optional)
-        run_id - the front-end id associated with the job (optional)
         token_id - the id of the authentication token used to start the job (optional)
         """
         return cls(
@@ -93,12 +98,13 @@ class Job(object):
             app_id,
             job_info.get("params", {}),
             owner,
-            tag=tag,
             app_version=job_info.get("service_ver", None),
             cell_id=cell_id,
-            run_id=run_id,
-            token_id=token_id,
             meta=meta,
+            parent_job_id=parent_job_id,
+            run_id=run_id,
+            tag=tag,
+            token_id=token_id,
         )
 
     @classmethod
@@ -121,7 +127,6 @@ class Job(object):
         try:
             state = self.state()
             print(f"Status: {state['status']}")
-            # inputs = map_inputs_from_state(state, spec)
             print("Inputs:\n------")
             pprint(self.inputs)
         except BaseException:
@@ -170,9 +175,8 @@ class Job(object):
                 {"job_id": self.job_id, "exclude_fields": EXCLUDED_JOB_STATE_FIELDS}
             )
             state["job_output"] = state.get("job_output", {})
-            state["cell_id"] = self.cell_id
-            state["run_id"] = self.run_id
-            state["token_id"] = self.token_id
+            for arg in ["cell_id", "parent_job_id", "run_id", "token_id"]:
+                state[arg] = getattr(self, arg)
             self._last_state = state
             return dict(state)
         except Exception as e:

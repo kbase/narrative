@@ -39,7 +39,7 @@ def skipUnlessToken():
 
 
 def str_to_ref(s):
-    """ Takes a ref string, returns a NarrativeRef object """
+    """Takes a ref string, returns a NarrativeRef object"""
     vals = s.split("/")
     ref = {"wsid": vals[0], "objid": vals[1]}
     if len(vals) == 3:
@@ -56,7 +56,7 @@ class NarrIOTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        config = util.TestConfig()
+        config = util.ConfigTests()
 
         self.test_user = config.get("users", "test_user")
         self.private_user = config.get("users", "private_user")
@@ -316,11 +316,11 @@ class NarrIOTestCase(unittest.TestCase):
         self.assertTrue(
             result[1] == self.private_nar["ws"] and result[2] == self.private_nar["obj"]
         )
-        self.assertEquals(result[0]["metadata"]["is_temporary"], "false")
+        self.assertEqual(result[0]["metadata"]["is_temporary"], "false")
 
         ws = clients.get("workspace")
         ws_info = ws.get_workspace_info({"id": result[1]})
-        self.assertEquals(ws_info[8]["searchtags"], "narrative")
+        self.assertEqual(ws_info[8]["searchtags"], "narrative")
         self.logout()
 
     def test_write_narrative_valid_anon(self):

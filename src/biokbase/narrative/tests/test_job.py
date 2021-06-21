@@ -1,7 +1,7 @@
 import unittest
 import mock
 from biokbase.narrative.jobs.job import Job
-from .util import TestConfig
+from .util import ConfigTests
 from .narrative_mock.mockclients import get_mock_client
 from contextlib import contextmanager
 from io import StringIO
@@ -19,66 +19,85 @@ def capture_stdout():
         sys.stdout, sys.stderr = old_out, old_err
 
 
-config = TestConfig()
+config = ConfigTests()
 test_jobs = config.load_json_file(config.get("jobs", "ee2_job_info_file"))
 
 
 class JobTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        # info = test_jobs["job_info"][0]
         info = next(iter(test_jobs.values()))
 
-        # cls.job_id = info[0]
         cls.job_id = info["job_id"]
-        # param_info = test_jobs["job_param_info"][cls.job_id]
         param_info = info["job_input"]
+
         cls.app_id = param_info["app_id"]
-        cls.app_tag = param_info.get("narrative_cell_info", {}).get("tag", "dev")
         cls.app_version = param_info.get("service_ver", "0.0.1")
         cls.cell_id = param_info.get("narrative_cell_info", {}).get("cell_id")
-        cls.run_id = param_info.get("narrative_cell_info", {}).get("run_id")
-        cls.inputs = param_info["params"]
-        cls.owner = info["user"]
-        cls.token_id = "temp_token"
         cls.inputs = None
+        cls.meta = dict()
+        cls.owner = info["user"]
+        cls.parent_job_id = "parent_job"
+        cls.run_id = param_info.get("narrative_cell_info", {}).get("run_id")
+        cls.tag = param_info.get("narrative_cell_info", {}).get("tag", "dev")
+        cls.token_id = "temp_token"
 
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
-    def _mocked_job(
-        self, with_version=True, with_cell_id=True, with_run_id=True, with_token_id=True
-    ):
-        kwargs = dict()
-        if with_version:
-            kwargs["app_version"] = self.app_version
-        if with_cell_id:
-            kwargs["cell_id"] = self.cell_id
-        if with_run_id:
-            kwargs["run_id"] = self.run_id
-        if with_token_id:
-            kwargs["token_id"] = self.token_id
+    def _mocked_job(self, job_attrs=[]):
+        job_kwargs = {}
 
-        job = Job(
-            self.job_id,
-            self.app_id,
-            self.inputs,
-            self.owner,
-            tag=self.app_tag,
-            **kwargs
-        )
+        for arg in [
+            "app_version",
+            "cell_id",
+            "parent_job_id",
+            "run_id",
+            "tag",
+            "token_id",
+        ]:
+            if not len(job_attrs) or "no_" + arg not in job_attrs:
+                job_kwargs[arg] = getattr(self, arg)
+
+        job = Job(self.job_id, self.app_id, self.inputs, self.owner, **job_kwargs)
 
         return job
 
     def test_job_init(self):
         job = self._mocked_job()
-        self.assertEqual(job.job_id, self.job_id)
-        self.assertEqual(job.app_id, self.app_id)
-        self.assertEqual(job.inputs, self.inputs)
-        self.assertEqual(job.owner, self.owner)
-        self.assertEqual(job.tag, self.app_tag)
-        self.assertEqual(job.app_version, self.app_version)
-        self.assertEqual(job.cell_id, self.cell_id)
-        self.assertEqual(job.run_id, self.run_id)
-        self.assertEqual(job.token_id, self.token_id)
+
+        for attr in [
+            "job_id",
+            "app_id",
+            "inputs",
+            "owner",
+            "app_version",
+            "cell_id",
+            "meta",
+            "parent_job_id",
+            "run_id",
+            "tag",
+            "token_id",
+        ]:
+            self.assertEqual(getattr(job, attr), getattr(self, attr))
+
+    def test_job_init_defaults(self):
+        job = self._mocked_job(
+            [
+                "no_app_version",
+                "no_cell_id",
+                "no_parent_job_id",
+                "no_run_id",
+                "no_tag",
+                "no_token_id",
+            ]
+        )
+
+        for attr in ["job_id", "app_id", "inputs", "owner", "meta"]:
+            self.assertEqual(getattr(job, attr), getattr(self, attr))
+
+        for attr in ["app_version", "cell_id", "parent_job_id", "run_id", "token_id"]:
+            self.assertEqual(getattr(job, attr), None)
+
+        self.assertEqual(job.tag, "release")
 
     def test_job_from_state(self):
         job_info = {"params": self.inputs, "service_ver": self.app_version}
@@ -87,20 +106,44 @@ class JobTest(unittest.TestCase):
             job_info,
             self.owner,
             self.app_id,
-            tag=self.app_tag,
+            tag=self.tag,
             cell_id=self.cell_id,
             run_id=self.run_id,
             token_id=self.token_id,
+            parent_job_id=self.parent_job_id,
         )
-        self.assertEqual(job.job_id, self.job_id)
-        self.assertEqual(job.app_id, self.app_id)
-        self.assertEqual(job.inputs, self.inputs)
-        self.assertEqual(job.owner, self.owner)
-        self.assertEqual(job.tag, self.app_tag)
-        self.assertEqual(job.app_version, self.app_version)
-        self.assertEqual(job.cell_id, self.cell_id)
-        self.assertEqual(job.run_id, self.run_id)
-        self.assertEqual(job.token_id, self.token_id)
+
+        for attr in [
+            "job_id",
+            "app_id",
+            "inputs",
+            "owner",
+            "app_version",
+            "cell_id",
+            "meta",
+            "parent_job_id",
+            "run_id",
+            "token_id",
+            "tag",
+        ]:
+            self.assertEqual(getattr(job, attr), getattr(self, attr))
+
+    def test_job_from_state_defaults(self):
+        job_info = {"params": self.inputs, "service_ver": self.app_version}
+        job = Job.from_state(
+            "another_job",
+            job_info,
+            self.owner,
+            self.app_id,
+        )
+        for attr in ["app_id", "inputs", "owner", "app_version", "meta"]:
+            self.assertEqual(getattr(job, attr), getattr(self, attr))
+
+        for attr in ["cell_id", "parent_job_id", "run_id", "token_id"]:
+            self.assertEqual(getattr(job, attr), None)
+
+        self.assertEqual(job.job_id, "another_job")
+        self.assertEqual(job.tag, "release")
 
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def test_job_info(self):
@@ -139,6 +182,8 @@ class JobTest(unittest.TestCase):
         self.assertEqual(state["job_id"], job.job_id)
         self.assertIn("status", state)
         self.assertIn("updated", state)
+        for arg in ["cell_id", "parent_job_id", "run_id", "token_id"]:
+            self.assertEqual(state[arg], getattr(self, arg))
         self.assertNotIn("job_input", state)
 
         # to do - add a test to only fetch from _last_state if it's populated and in a final state

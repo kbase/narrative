@@ -5,8 +5,9 @@ define(['bluebird', 'common/ui', 'common/html', 'common/events'], (Promise, UI, 
         span = html.tag('span'),
         button = html.tag('button'),
         baseCss = 'kb-bulk-import-configure__filetype_panel',
-        completeIcon = 'fa-check-circle',
-        incompleteIcon = 'fa-circle-thin';
+        fileTypeIcon = `${baseCss}__filetype_icon`,
+        completeIcon = ['fa-check', `${fileTypeIcon}--complete`],
+        incompleteIcon = ['fa-exclamation', `${fileTypeIcon}--incomplete`];
 
     /**
      * This displays a vertical list of "fileTypes" that can be selected on and
@@ -112,7 +113,7 @@ define(['bluebird', 'common/ui', 'common/html', 'common/events'], (Promise, UI, 
                         },
                         [
                             div({
-                                class: `${baseCss}__filetype_icon fa ${incompleteIcon}`,
+                                class: `${fileTypeIcon} fa ${incompleteIcon.join(' ')}`,
                                 dataElement: 'icon',
                             }),
                             div(
@@ -155,9 +156,9 @@ define(['bluebird', 'common/ui', 'common/html', 'common/events'], (Promise, UI, 
                 if (state.selected in fileTypes) {
                     ui.getElement(key).classList.remove(selected);
                 }
-                ui.getElement(`${key}.icon`).classList.remove(completeIcon, incompleteIcon);
+                ui.getElement(`${key}.icon`).classList.remove(...completeIcon, ...incompleteIcon);
                 const icon = state.completed[key] ? completeIcon : incompleteIcon;
-                ui.getElement(`${key}.icon`).classList.add(icon);
+                ui.getElement(`${key}.icon`).classList.add(...icon);
             });
             // if the "selected" file type is real, select it
             if (state.selected in fileTypes) {

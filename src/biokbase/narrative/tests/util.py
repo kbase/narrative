@@ -37,7 +37,7 @@ def test_logger(name):
     return logging.getLogger("kbtest." + name)
 
 
-class TestConfig(object):
+class ConfigTests(object):
     def __init__(self):
         self._path_prefix = os.path.join(
             os.environ["NARRATIVE_DIR"], "src", "biokbase", "narrative", "tests"

@@ -5,15 +5,15 @@ import unittest
 from unittest import mock
 import biokbase.narrative.jobs.jobmanager
 from biokbase.narrative.jobs.job import Job
-from .util import TestConfig
+from .util import ConfigTests
 import os
 from IPython.display import HTML
 from .narrative_mock.mockclients import get_mock_client, get_failing_mock_client
-from biokbase.narrative.exception_util import NarrativeException
+from biokbase.narrative.exception_util import JobException, NarrativeException
 
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
-config = TestConfig()
+config = ConfigTests()
 job_info = config.load_json_file(config.get("jobs", "ee2_job_info_file"))
 
 
@@ -93,13 +93,15 @@ class JobManagerTest(unittest.TestCase):
 
     def test_list_jobs_twice(self):
         # with no jobs
-        with mock.patch.object(self.jm, '_running_jobs', {}):
-            expected = 'No running jobs!'
+        with mock.patch.object(self.jm, "_running_jobs", {}):
+            expected = "No running jobs!"
             self.assertEqual(self.jm.list_jobs(), expected)
             self.assertEqual(self.jm.list_jobs(), expected)
 
         # with some jobs
-        with mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client):
+        with mock.patch(
+            "biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client
+        ):
             jobs_html_0 = self.jm.list_jobs()
             jobs_html_1 = self.jm.list_jobs()
             self.assertEqual(jobs_html_0.data, jobs_html_1.data)
@@ -118,18 +120,17 @@ class JobManagerTest(unittest.TestCase):
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def test_retry_job_good(self):
         job_id = "5d64935cb215ad4128de94d9"
-        retry_results = self.jm.retry_job(job_id)
+        retry_results = self.jm.retry_jobs([job_id])
         self.assertEqual(
-            retry_results,
-            {"job_id": job_id, "retry_id": "9d49ed8214da512bc53946d5"}
+            retry_results, [{"job_id": job_id, "retry_id": "9d49ed8214da512bc53946d5"}]
         )
 
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def test_retry_job_bad(self):
-        with self.assertRaises(ValueError):
-            self.jm.retry_job(None)
-        with self.assertRaises(ValueError):
-            self.jm.retry_job("nope")
+        with self.assertRaises(JobException):
+            self.jm.retry_jobs([None])
+        with self.assertRaises(JobException):
+            self.jm.retry_jobs(["nope"])
 
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def test_lookup_all_job_states(self):

@@ -3,9 +3,10 @@
 
   &__table {
     @include tabular-text;
+
     padding: 0;
-    width: 100%;
     table-layout: fixed;
+    width: 100%;
 
     // .kb-job-status__table_body
     &_body {
@@ -44,10 +45,10 @@
         .sorting::after,
         .sorting_asc::after,
         .sorting_desc::after {
-          left: 5px !important;
           bottom: 0 !important;
-          position: relative !important;
           display: inline-block !important;
+          left: 5px !important;
+          position: relative !important;
         }
       }
 
@@ -120,6 +121,7 @@
   // .kb-job-status__param_list
   &__param_list {
     @include body-text;
+
     list-style-type: none;
     margin: 1rem 0;
     padding: 0;
@@ -154,10 +156,10 @@
     // .kb-job-status__cell_summary--${status}
     &__cell_summary--#{$key} {
       color: use-color($key);
-      font-weight: 700;
       font-size: 16px;
-      text-transform: capitalize;
+      font-weight: 700;
       margin: 0 0.5rem;
+      text-transform: capitalize;
     }
   }
 }

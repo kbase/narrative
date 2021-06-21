@@ -11,13 +11,13 @@
     .sorting::before,
     .sorting_asc::before,
     .sorting_desc::before {
-      position: relative;
-      top: 1px;
-      right: 4px;
-      display: inline-block;
       content: '\e150';
+      display: inline-block;
       font-family: $typeface-glyphicons;
       opacity: 0.2;
+      position: relative;
+      right: 4px;
+      top: 1px;
     }
 
     .sorting_asc::before {
@@ -43,8 +43,8 @@
 
       // .kb-staging-table-header__file
       &__file {
-        width: 4rem;
         padding-right: 0;
+        width: 4rem;
 
         // Special positioning for folder sort icon as there is no title
         &.sorting::before,
@@ -87,6 +87,7 @@
         @extend %kbase-button-sm;
 
         @include button-size(0.2rem, 0.2rem, 12px, 12px, 0);
+
         background: transparent;
       }
 
@@ -96,6 +97,7 @@
 
         @include button-variant(use_color('white'), use_color('primary'), transparent);
         @include button-size(0.5rem, 0.5rem, 12px, 12px, 0);
+
         margin-left: 0.5rem;
       }
 
@@ -128,10 +130,10 @@
 
     // kb-staging-table-body__select_container
     &__select_container {
-        text-align: left;
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
+      align-items: center;
+      display: flex;
+      justify-content: flex-end;
+      text-align: left;
     }
 
     // style for Import As dropdown container
@@ -139,27 +141,27 @@
     // otherwise it will get overriden by datatables when changing the sort order
     // it gets set directly on the element via inline css so we have to use important to override
     .select2 {
-      width: 19rem !important;
       margin: 4px 0;
+      width: 19rem !important;
     }
 
     // style for Import As dropdown container text
     // .kb-staging-table-body .kb-staging-table-body__import-dropdown
     .kb-staging-table-body__import-dropdown {
-      height: 38px;
-      display: flex;
       align-items: center;
-      box-sizing: border-box;
-      border: 1px solid use_color('error-dark');
       background: use_color('white');
+      border: 1px solid use_color('error-dark');
       border-radius: 4px;
+      box-sizing: border-box;
+      display: flex;
+      height: 38px;
 
       // style for Import As dropdown container text
       .select2-selection {
         // .kb-staging-table-body .kb-staging-table-body__import-dropdown .select2-selection__rendered
         &__rendered {
-          flex: 1 1 auto;
           color: use_color('ink');
+          flex: 1 1 auto;
           font-size: 14px;
           line-height: 20px;
           padding: 8px 20px 8px 8px;
@@ -216,25 +218,25 @@
     &__def_list {
       display: flex;
       flex-wrap: wrap;
-      width: 100%;
       margin: 1rem;
       padding: 0;
+      width: 100%;
     }
 
     // .kb-staging-table-file-metadata__term
     &__term {
-      padding-top: 0.5rem;
       font-weight: 700;
+      padding-top: 0.5rem;
       text-align: right;
       width: 9rem;
     }
 
     // .kb-staging-table-file-metadata__def
     &__def {
+      margin-left: 0;
+      padding-left: 1rem;
       padding-top: 0.5rem;
       width: calc(100% - 9rem);
-      padding-left: 1rem;
-      margin-left: 0;
     }
 
     &__list {
@@ -245,16 +247,16 @@
     &__file_lines {
       @include code-block;
 
-      overflow: scroll;
       max-height: 200px;
+      overflow: scroll;
       white-space: pre;
     }
   }
 
   &__notice {
-    padding: 1rem;
     background-color: use_color('base-lightest');
     font: normal 700 16px/20px $typeface-page-text;
+    padding: 1rem;
     text-align: center;
   }
 
@@ -267,15 +269,15 @@
       @include button-variant(use_color('white'), use_color('primary'), transparent);
       @include button-size($padding-large-vertical, $padding-large-horizontal, $font-size-base, $line-height-large, $btn-border-radius-large);
 
+      bottom: -50px;
       position: absolute;
       right: 10px;
-      bottom: -50px;
       text-transform: none;
 
       &[disabled] {
-        opacity: 1.0;
         background-color: use_color('info');
         cursor: not-allowed;
+        opacity: 1;
 
         &:active,
         &:hover,
@@ -295,13 +297,13 @@
       box-shadow: 2px 4px 6px rgb(0 0 0 / 0.15);
 
       .tooltip-inner {
-        display: flex;
-        width: 20rem;
-        height: 6rem;
         align-items: center;
         background: use_color('white');
         color: use_color('black');
+        display: flex;
         font: normal 400 14px/16px $typeface-page-text;
+        height: 6rem;
+        width: 20rem;
       }
     }
   }

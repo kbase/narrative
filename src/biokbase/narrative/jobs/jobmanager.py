@@ -7,8 +7,9 @@ from IPython.display import HTML
 from jinja2 import Template
 from datetime import datetime, timezone, timedelta
 from biokbase.narrative.app_util import system_variable
-from biokbase.narrative.exception_util import transform_job_exception
+from biokbase.narrative.exception_util import JobException, transform_job_exception
 import copy
+from typing import List
 
 """
 KBase Job Manager
@@ -85,6 +86,7 @@ class JobManager(object):
                 run_id=job_meta.get("run_id", None),
                 token_id=job_meta.get("token_id", None),
                 meta=job_meta,
+                parent_job_id=job_input.get("parent_job_id", None),
             )
             self._running_jobs[job_id] = {
                 "refresh": 1
@@ -119,6 +121,7 @@ class JobManager(object):
                     run_id=job_meta.get("run_id", None),
                     token_id=job_meta.get("token_id", None),
                     meta=job_meta,
+                    parent_job_id=job_info.get("parent_job_id", None),
                 )
 
                 # Note that when jobs for this narrative are initially loaded,
@@ -602,6 +605,9 @@ class JobManager(object):
         if not parent_job_id and job_id not in self._running_jobs:
             raise ValueError(f"No job present with id {job_id}")
 
+        if job_id in self._completed_job_states:
+            return
+
         try:
             cancel_status = clients.get("execution_engine2").check_job_canceled(
                 {"job_id": job_id}
@@ -630,15 +636,20 @@ class JobManager(object):
                 self._running_jobs[job_id]["refresh"] = is_refreshing
                 del self._running_jobs[job_id]["canceling"]
 
-    def retry_job(self, job_id: str):
-        if job_id is None:
-            raise ValueError("Job id required for retrying")
-        if job_id not in self._running_jobs:
-            raise ValueError(f"No job present with id {job_id}")
+    def retry_jobs(self, job_id_list: List[str]) -> List[dict]:
+        err_job_ids = []
+        for job_id in job_id_list:
+            if job_id is None or job_id not in self._running_jobs:
+                err_job_ids.append(job_id)
+        if len(err_job_ids) > 0:
+            # Raise exception while passing missing/bad job ids
+            raise JobException(
+                f"No jobs present with ids: {err_job_ids}", err_job_ids=err_job_ids
+            )
 
         try:
-            retry_results = clients.get("execution_engine2").retry_job(
-                {"job_id": job_id}
+            retry_results = clients.get("execution_engine2").retry_jobs(
+                {"job_ids": job_id_list}
             )
         except Exception as e:
             raise transform_job_exception(e)
@@ -651,7 +662,7 @@ class JobManager(object):
             raise ValueError(f"No job present with id {job_id}")
         if job_id in self._completed_job_states:
             return self._completed_job_states[job_id]
-        job = self.get_job(job_id)
+        job = self._running_jobs[job_id]["job"]
         state = self._construct_job_status(job, job.state())
         if state.get("status") == "completed":
             self._completed_job_states[job_id] = state

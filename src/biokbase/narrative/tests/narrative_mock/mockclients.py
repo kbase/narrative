@@ -1,4 +1,4 @@
-from ..util import TestConfig
+from ..util import ConfigTests
 from biokbase.workspace.baseclient import ServerError
 
 
@@ -34,7 +34,7 @@ class MockClients:
     def __init__(self, token=None):
         if token is not None:
             assert isinstance(token, str)
-        self.config = TestConfig()
+        self.config = ConfigTests()
         self.job_info = self.config.load_json_file(
             self.config.get("jobs", "job_info_file")
         )
@@ -205,10 +205,7 @@ class MockClients:
 
     def run_job_batch(self, batch_job_inputs, batch_params):
         child_job_ids = [self.test_job_id for i in range(len(batch_job_inputs))]
-        return {
-            "parent_job_id": self.test_job_id,
-            "child_job_ids": child_job_ids
-        }
+        return {"parent_job_id": self.test_job_id, "child_job_ids": child_job_ids}
 
     def cancel_job(self, job_id):
         return "done"
@@ -216,6 +213,13 @@ class MockClients:
     def retry_job(self, params):
         job_id = params["job_id"]
         return {"job_id": job_id, "retry_id": job_id[::-1]}
+
+    def retry_jobs(self, params):
+        job_ids = params["job_ids"]
+        results = list()
+        for job_id in job_ids:
+            results.append({"job_id": job_id, "retry_id": job_id[::-1]})
+        return results
 
     def check_job_canceled(self, params):
         return {"finished": 0, "canceled": 0, "job_id": params.get("job_id")}
@@ -459,6 +463,9 @@ class FailingMockClient:
 
     def retry_job(self, params):
         raise ServerError("JSONRPCError", -32000, "Job retry failed")
+
+    def retry_jobs(self, params):
+        raise ServerError("JSONRPCError", -32000, "Jobs retry failed")
 
     def check_job_canceled(self, params):
         raise ServerError("JSONRPCError", 1, "Can't cancel job")

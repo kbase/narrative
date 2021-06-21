@@ -13,12 +13,7 @@
     align-items: center;
     display: flex;
     font: normal 400 14px/18px $typeface-page-text;
-    padding-bottom: 0.5rem;
     padding: 0 1.5rem;
-
-    &:last-child {
-      padding-bottom: 0;
-    }
 
     &:nth-child(2n) {
       background-color: use_color('base-lightest');

@@ -1,6 +1,8 @@
 from ..util import ConfigTests
 from biokbase.workspace.baseclient import ServerError
 
+RANDOM_DATE = "2018-08-10T16:47:36+0000"
+RANDOM_TYPE = "ModuleA.TypeA-1.0"
 
 class MockClients:
     """
@@ -208,7 +210,7 @@ class MockClients:
         return {"parent_job_id": self.test_job_id, "child_job_ids": child_job_ids}
 
     def cancel_job(self, job_id):
-        return "done"
+        return {}
 
     def retry_job(self, params):
         job_id = params["job_id"]
@@ -314,8 +316,8 @@ class MockClients:
                     "object_info": [
                         1,
                         "obj1",
-                        "ModuleA.TypeA-1.0",
-                        "2018-08-10T16:47:36+0000",
+                        RANDOM_TYPE,
+                        RANDOM_DATE,
                         2,
                         user_id,
                         ws_id,
@@ -329,8 +331,8 @@ class MockClients:
                     "object_info": [
                         7,
                         "obj7",
-                        "ModuleA.TypeA-1.0",
-                        "2018-08-10T16:47:36+0000",
+                        RANDOM_TYPE,
+                        RANDOM_DATE,
                         2,
                         user_id,
                         ws_id,
@@ -344,8 +346,8 @@ class MockClients:
                     "object_info": [
                         8,
                         "obj8",
-                        "ModuleA.TypeA-1.0",
-                        "2018-08-10T16:47:36+0000",
+                        RANDOM_TYPE,
+                        RANDOM_DATE,
                         2,
                         user_id,
                         ws_id,
@@ -360,7 +362,7 @@ class MockClients:
                         9,
                         "obj9",
                         "ModuleB.TypeB-1.0",
-                        "2018-08-10T16:47:36+0000",
+                        RANDOM_DATE,
                         3,
                         user_id,
                         ws_id,
@@ -375,7 +377,7 @@ class MockClients:
                         3,
                         "obj3",
                         "ModuleC.TypeC-1.0",
-                        "2018-08-10T16:47:36+0000",
+                        RANDOM_DATE,
                         4,
                         user_id,
                         ws_id,
@@ -390,7 +392,7 @@ class MockClients:
                         4,
                         "obj4",
                         "ModuleD.TypeD-1.0",
-                        "2018-08-10T16:47:36+0000",
+                        RANDOM_DATE,
                         5,
                         user_id,
                         ws_id,
@@ -406,7 +408,7 @@ class MockClients:
                         5,
                         "obj5",
                         "Module5.Type5-1.0",
-                        "2018-08-10T16:47:36+0000",
+                        RANDOM_DATE,
                         6,
                         user_id,
                         ws_id,

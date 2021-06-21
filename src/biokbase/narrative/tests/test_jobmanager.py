@@ -16,6 +16,14 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 config = ConfigTests()
 job_info = config.load_json_file(config.get("jobs", "ee2_job_info_file"))
 
+# job_info contains jobs in the following states
+JOB_COMPLETED = '5d64935ab215ad4128de94d6'
+JOB_CREATED = '5d64935cb215ad4128de94d7'
+JOB_RUNNING = '5d64935cb215ad4128de94d8'
+JOB_TERMINATED = '5d64935cb215ad4128de94d9'
+JOB_NOT_FOUND = 'job_not_found'
+
+no_id_err_str = 'No job id\(s\) supplied'
 
 @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
 def phony_job():
@@ -38,13 +46,18 @@ class JobManagerTest(unittest.TestCase):
     @classmethod
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def setUpClass(cls):
-        cls.jm = biokbase.narrative.jobs.jobmanager.JobManager()
         cls.job_ids = list(job_info.keys())
         os.environ["KB_WORKSPACE_ID"] = config.get("jobs", "job_test_wsname")
+        cls.maxDiff = None
 
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
-    def setUp(self):
+    def setUp(self) -> None:
+        self.jm = biokbase.narrative.jobs.jobmanager.JobManager()
         self.jm.initialize_jobs()
+
+    def tearDown(self) -> None:
+        self.jm._running_jobs = {}
+        self.jm._completed_job_states = {}
 
     def validate_status_message(self, msg):
         core_keys = set(["widget_info", "owner", "state", "spec"])
@@ -67,13 +80,96 @@ class JobManagerTest(unittest.TestCase):
             return False
         return True
 
+    @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
+    def test_initialise_jobs(self):
+        self.tearDown()
+
+        # all jobs have been removed from the JobManager by tearDown
+        self.jm = biokbase.narrative.jobs.jobmanager.JobManager()
+        self.assertEqual(
+            self.jm._running_jobs,
+            {}
+        )
+        self.assertEqual(
+            self.jm._completed_job_states,
+            {}
+        )
+
+        # redo the initialise to make sure it worked correctly
+        self.jm.initialize_jobs()
+        self.assertEqual(
+            {JOB_COMPLETED, JOB_TERMINATED},
+            set(self.jm._completed_job_states.keys())
+        )
+        self.assertEqual(
+            set(self.job_ids),
+            set(self.jm._running_jobs.keys())
+        )
+
+    def test__check_job_list_fail(self):
+        with self.assertRaisesRegex(ValueError, no_id_err_str):
+            self.jm._check_job_list()
+
+        with self.assertRaisesRegex(ValueError, no_id_err_str):
+            self.jm._check_job_list([])
+
+        with self.assertRaisesRegex(ValueError, no_id_err_str):
+            self.jm._check_job_list(['', '', None])
+
+    def test__check_job_list(self):
+        """ job list checker """
+
+        job_a = self.job_ids[0]
+        job_b = self.job_ids[1]
+        job_c = 'job_c'
+        job_d = 'job_d'
+        self.assertEqual(
+            self.jm._check_job_list([job_c]),
+            {
+                "error": [job_c],
+                "job_id_list": [],
+            },
+        )
+
+        result = self.jm._check_job_list([job_c, None, '', job_c, job_c, None, job_d])
+        self.assertEqual(
+            {
+                "error": list(sorted(result["error"])),
+                "job_id_list": [],
+            },
+            {
+                "error": [job_c, job_d],
+                "job_id_list": [],
+            },
+        )
+
+        self.assertEqual(
+            self.jm._check_job_list([job_c, None, '', None, job_a]),
+            {
+                "error": [job_c],
+                "job_id_list": [job_a],
+            },
+        )
+
+        result = self.jm._check_job_list([None, job_a, None, '', None, job_b])
+        self.assertEqual(
+            {
+                "error": [],
+                "job_id_list": list(sorted(result["job_id_list"]))
+            },
+            {
+                "error": [],
+                "job_id_list": [job_a, job_b],
+            },
+        )
+
     def test_get_job_good(self):
         job_id = self.job_ids[0]
         job = self.jm.get_job(job_id)
         self.assertEqual(job_id, job.job_id)
 
     def test_get_job_bad(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, "No job present with id not_a_job_id"):
             self.jm.get_job("not_a_job_id")
 
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
@@ -81,7 +177,6 @@ class JobManagerTest(unittest.TestCase):
         jobs_html = self.jm.list_jobs()
         self.assertIsInstance(jobs_html, HTML)
         html = jobs_html.data
-        print(html)
         self.assertIn("<td>5d64935ab215ad4128de94d6</td>", html)
         self.assertIn("<td>NarrativeTest/test_editor</td>", html)
         self.assertIn("<td>2019-08-26 ", html)

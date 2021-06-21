@@ -1,7 +1,5 @@
 import biokbase.narrative.clients as clients
 from .job import Job
-
-# from ipykernel.comm import Comm
 from biokbase.narrative.common import kblogging
 from IPython.display import HTML
 from jinja2 import Template
@@ -25,7 +23,7 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 __version__ = "0.0.1"
 
 TERMINAL_STATES = ["completed", "terminated", "error"]
-EXCLUDED_JOB_STATE_FIELDS = ["authstrat", "job_input", "condor_job_ads"]
+EXCLUDED_JOB_STATE_FIELDS = ["authstrat", "condor_job_ads", "job_input", "scheduler_type", "scheduler_id"]
 
 
 class JobManager(object):
@@ -55,8 +53,8 @@ class JobManager(object):
         This is expected to be run by a running Narrative, and naturally linked to a workspace.
         So it does the following steps.
         1. app_util.system_variable('workspace_id')
-        2. get list of jobs with that ws id from UJS (also gets tag, cell_id, run_id)
-        3. initialize the Job objects by running NJS.get_job_params (also gets app_id)
+        2. get list of jobs with that ws id from ee2 (also gets tag, cell_id, run_id)
+        3. initialize the Job objects and add them to the running jobs list
         4. start the status lookup loop.
         """
         ws_id = system_variable("workspace_id")
@@ -88,12 +86,15 @@ class JobManager(object):
                 meta=job_meta,
                 parent_job_id=job_input.get("parent_job_id", None),
             )
+            refresh_state = 1 if status not in TERMINAL_STATES else 0
             self._running_jobs[job_id] = {
-                "refresh": 1
-                if status not in ["completed", "errored", "terminated"]
-                else 0,
+                "refresh": refresh_state,
                 "job": job,
             }
+            # if the job is in a terminal state, add it to the _completed_job_states index
+            if not refresh_state:
+                revised_state = self._construct_job_status(self.get_job(job_id), job_state)
+                self._completed_job_states[job_id] = revised_state
 
     def _create_jobs(self, job_ids):
         """
@@ -129,6 +130,24 @@ class JobManager(object):
                 # updates via the start_job_update message, the refresh flag will
                 # be set to True.
                 self._running_jobs[job_id] = {"refresh": 0, "job": job}
+
+    def _check_job_list(self, job_id_list: List[str] = []):
+        cleaned_jobs = set([job_id for job_id in job_id_list if job_id is not None and job_id != ''])
+
+        if not len(cleaned_jobs):
+            raise ValueError("No job id(s) supplied")
+
+        results = {
+            "error": [],
+            "job_id_list": [],
+        }
+        for job_id in cleaned_jobs:
+            if job_id not in self._running_jobs:
+                results["error"].append(job_id)
+            else:
+                results["job_id_list"].append(job_id)
+
+        return results
 
     def list_jobs(self):
         """
@@ -238,7 +257,14 @@ class JobManager(object):
 
     def _construct_job_status(self, job: Job, state: dict) -> dict:
         """
-        Creates a Job status dictionary with structure:
+        Creates a job state dictionary from a Job object (optional) and a dictionary
+
+        :param job: a Job object
+        :param state: dict, expected to be in the format that comes straight from the
+            Execution Engine 2 service
+
+        :return: dict, with structure
+
         {
             owner: string (username, who started the job),
             spec: app spec (optional)
@@ -265,9 +291,6 @@ class JobManager(object):
                 error_code: optional - int
             }
         }
-        :param job: a Job object
-        :param state: dict, expected to be in the format that comes straight from the
-            Execution Engine 2 service
         """
         widget_info = None
         app_spec = {}
@@ -520,9 +543,8 @@ class JobManager(object):
 
     def register_new_job(self, job: Job) -> None:
         """
-        Registers a new Job with the manager - should only be invoked when a new Job gets
-        started. This stores the Job locally and pushes it over the comm channel to the
-        Narrative where it gets serialized.
+        Registers a new Job with the manager and stores the job locally.
+        This should only be invoked when a new Job gets started.
 
         Parameters:
         -----------
@@ -600,7 +622,7 @@ class JobManager(object):
         If either of those steps fail, a NarrativeException is raised.
         """
 
-        if job_id is None:
+        if job_id is None or job_id == '':
             raise ValueError("Job id required for cancellation!")
         if not parent_job_id and job_id not in self._running_jobs:
             raise ValueError(f"No job present with id {job_id}")

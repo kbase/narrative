@@ -276,7 +276,7 @@ define([
         it('Should start up in "editingComplete" state when initialized with proper data', async () => {
             const cell = Mocks.buildMockCell('code');
             Jupyter.notebook = Mocks.buildMockNotebook();
-            const cellWidget = BulkImportCell.make({
+            BulkImportCell.make({
                 cell,
                 importData: fakeInputs,
                 specs: fakeSpecs,
@@ -296,7 +296,6 @@ define([
                 );
             });
             expect(cell.metadata.kbase.bulkImportCell.state.state).toBe('editingComplete');
-            // cellWidget.deleteCell();
         });
 
         ['launching', 'inProgress', 'inProgressResultsAvailable'].forEach((testCase) => {

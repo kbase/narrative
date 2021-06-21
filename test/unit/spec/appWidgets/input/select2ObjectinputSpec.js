@@ -94,8 +94,6 @@ define([
         );
     }
 
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
-
     describe('Select 2 Object Input tests', () => {
         let bus, testConfig, container, widget;
         const required = false,

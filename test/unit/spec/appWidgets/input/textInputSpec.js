@@ -29,7 +29,6 @@ define(['common/runtime', 'widgets/appWidgets2/input/textInput'], (Runtime, Text
         });
     }
 
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('The Text Input widget', () => {
         let bus, widget, container;
         beforeEach(() => {

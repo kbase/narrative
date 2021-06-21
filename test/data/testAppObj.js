@@ -198,7 +198,7 @@ define(['./jobsData', 'common/jobs'], (JobsData, Jobs) => {
                             },
                             field_type: 'dynamic_dropdown',
                             id: 'fastq_fwd_staging_file_name',
-                            optional: 1,
+                            optional: 0,
                             short_hint:
                                 'Short read file containing a paired end library in FASTA/FASTQ format',
                             ui_class: 'parameter',
@@ -485,7 +485,7 @@ define(['./jobsData', 'common/jobs'], (JobsData, Jobs) => {
             fastq_reads: {
                 filePaths: [
                     {
-                        fastq_fwd_staging_file_name: '',
+                        fastq_fwd_staging_file_name: 'some_sra_file.sra',
                         fastq_rev_staging_file_name: '',
                         name: 'KBase_object_details_22020-10-14T232042188.json_reads',
                     },

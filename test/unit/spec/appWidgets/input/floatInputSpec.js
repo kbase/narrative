@@ -1,7 +1,6 @@
 define(['widgets/appWidgets2/input/floatInput', 'common/runtime'], (FloatInput, Runtime) => {
     'use strict';
 
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('Test float data input widget', () => {
         let testConfig = {},
             runtime,

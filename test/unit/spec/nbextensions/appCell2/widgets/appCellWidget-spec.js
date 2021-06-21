@@ -74,7 +74,6 @@ define([
         },
     };
 
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     // Can only test the public functions...
     describe('The appCell widget', () => {
         beforeEach(() => {

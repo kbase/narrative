@@ -33,7 +33,6 @@ define(['common/runtime', 'widgets/appWidgets2/input/textareaInput'], (Runtime, 
         });
     }
 
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('Textarea Input tests', () => {
         let widget, bus, container;
         beforeEach(() => {

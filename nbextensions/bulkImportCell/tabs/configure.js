@@ -377,21 +377,18 @@ define([
                     spec
                 );
             }).then((state) => {
-                const currentState = model.getItem(['state', 'params', selectedFileType]);
-                if (currentState !== state) {
-                    model.setItem(['state', 'params', selectedFileType], state);
-                    const fileTypeState = getFileTypeState();
-                    fileTypePanel.updateState(fileTypeState);
-                    const paramsReady = Object.values(fileTypeState.completed).reduce(
-                        (prev, cur) => {
-                            return cur && prev;
-                        },
-                        true
-                    );
-                    cellBus.emit('update-param-state', {
-                        paramsReady,
-                    });
-                }
+                model.setItem(['state', 'params', selectedFileType], state);
+                const fileTypeState = getFileTypeState();
+                fileTypePanel.updateState(fileTypeState);
+                const paramsReady = Object.values(fileTypeState.completed).reduce(
+                    (prev, cur) => {
+                        return cur && prev;
+                    },
+                    true
+                );
+                cellBus.emit('update-param-state', {
+                    paramsReady,
+                });
             });
         }
 

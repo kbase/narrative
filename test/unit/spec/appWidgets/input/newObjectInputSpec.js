@@ -64,7 +64,6 @@ define([
         };
     }
 
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('New Object Input tests', () => {
         let bus, testConfig, runtime, container;
         beforeEach(() => {

@@ -1,7 +1,6 @@
 define(['widgets/appWidgets2/input/intInput', 'common/runtime'], (IntInput, Runtime) => {
     'use strict';
 
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('Test int data input widget', () => {
         let testConfig = {},
             runtime,

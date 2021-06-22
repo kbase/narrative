@@ -78,7 +78,7 @@ class AppManagerTestCase(unittest.TestCase):
                         "read_orientation_outward": "0",
                         "sequencing_tech": "Illumina",
                         "single_genome": 1,
-                    }
+                    },
                 ],
             },
             {
@@ -220,7 +220,9 @@ class AppManagerTestCase(unittest.TestCase):
                 cell_id=cell_id,
             )
         )
-        self._verify_comm_success(c.return_value.send_comm_message, False, cell_id=cell_id)
+        self._verify_comm_success(
+            c.return_value.send_comm_message, False, cell_id=cell_id
+        )
 
     @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
     def test_run_app_bad_id(self, c):
@@ -319,7 +321,9 @@ class AppManagerTestCase(unittest.TestCase):
                 cell_id=cell_id,
             )
         )
-        self._verify_comm_success(c.return_value.send_comm_message, False, cell_id=cell_id)
+        self._verify_comm_success(
+            c.return_value.send_comm_message, False, cell_id=cell_id
+        )
 
     @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
     def test_run_app_batch_bad_id(self, c):
@@ -409,36 +413,39 @@ class AppManagerTestCase(unittest.TestCase):
     def test_run_local_app_fail_cases(self, auth, c):
         comm_mock = MagicMock()
         c.return_value.send_comm_message = comm_mock
-        cases = [{
-            "inputs": {
-                "args": [self.bad_app_id, {}],
-                "kwargs": {}
+        cases = [
+            {
+                "inputs": {"args": [self.bad_app_id, {}], "kwargs": {}},
+                "expected_error": f'Unknown app id "{self.bad_app_id}" tagged as "release"',
             },
-            "expected_error": f'Unknown app id "{self.bad_app_id}" tagged as "release"',
-        }, {
-            "inputs": {
-                "args": [self.test_viewer_app_id, {}],
-                "kwargs": {"tag": "dev"}
+            {
+                "inputs": {
+                    "args": [self.test_viewer_app_id, {}],
+                    "kwargs": {"tag": "dev"},
+                },
+                "expected_error": "Missing required parameters",
             },
-            "expected_error": "Missing required parameters"
-        }, {
-            "inputs": {
-                "args": [self.good_app_id, {}],
-                "kwargs": {"tag": self.bad_tag}
+            {
+                "inputs": {
+                    "args": [self.good_app_id, {}],
+                    "kwargs": {"tag": self.bad_tag},
+                },
+                "expected_error": f"Can't find tag {self.bad_tag} - allowed tags are release, beta, dev",
             },
-            "expected_error": f"Can't find tag {self.bad_tag} - allowed tags are release, beta, dev"
-        }, {
-            "inputs": {
-                "args": [self.good_app_id, {}],
-                "kwargs": {"tag": "dev", "version": "1.0.0"}
+            {
+                "inputs": {
+                    "args": [self.good_app_id, {}],
+                    "kwargs": {"tag": "dev", "version": "1.0.0"},
+                },
+                "expected_error": "Semantic versions only apply to released app modules.",
             },
-            "expected_error": "Semantic versions only apply to released app modules.",
-        }]
+        ]
         for test_case in cases:
             inputs = test_case["inputs"]
 
             def run_func():
                 return self.am.run_local_app(*inputs["args"], **inputs["kwargs"])
+
             comm_mock.reset_mock()
             self.run_app_expect_error(
                 comm_mock,
@@ -484,8 +491,18 @@ class AppManagerTestCase(unittest.TestCase):
         # test with / w/o run_id
         # should return None, fire a couple of messages
         for run_id in run_ids:
-            self.assertIsNone(self.am.run_app_bulk(self.bulk_run_good_inputs, cell_id=cell_id, run_id=run_id))
-            self._verify_comm_success(c.return_value.send_comm_message, True, num_jobs=4, cell_id=cell_id, run_id=run_id)
+            self.assertIsNone(
+                self.am.run_app_bulk(
+                    self.bulk_run_good_inputs, cell_id=cell_id, run_id=run_id
+                )
+            )
+            self._verify_comm_success(
+                c.return_value.send_comm_message,
+                True,
+                num_jobs=4,
+                cell_id=cell_id,
+                run_id=run_id,
+            )
             comm_mock.reset_mock()
 
     @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
@@ -504,56 +521,58 @@ class AppManagerTestCase(unittest.TestCase):
     @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
     @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
     def test_run_app_bulk_bad_inputs(self, c):
-        no_info_error = "app_info must be a list with at least one set of app information"
+        no_info_error = (
+            "app_info must be a list with at least one set of app information"
+        )
         missing_key_error = "app info must contain keys app_id, tag, params"
         bad_id_error = "an app_id must be of the format module_name/app_name"
         bad_params_error = "params must be a list of dicts of app parameters"
         bad_tag_error = "tag must be one of release, beta, dev, not "
         bad_version_error = "an app version must be a string, not "
 
-        app_info_cases = [{  # tests for bad app_id keys, malformed or not strings
-            "key": "app_id",
-            "bad_values": ["module.app", "moduleapp", None],
-            "error": bad_id_error
-        }, {  # tests for bad params structure - empty list or not a list
-            "key": "params",
-            "bad_values": [{}, "nope", None, []],
-            "error": bad_params_error
-        }, {  # tests for bad tag key
-            "key": "tag",
-            "bad_values": [None, "bad", {}, []],
-            "error": bad_tag_error
-        }, {  # tests for bad version key
-            "key": "version",
-            "bad_values": [None, 123, {}, []],
-            "error": bad_version_error
-        }]
+        app_info_cases = [
+            {  # tests for bad app_id keys, malformed or not strings
+                "key": "app_id",
+                "bad_values": ["module.app", "moduleapp", None],
+                "error": bad_id_error,
+            },
+            {  # tests for bad params structure - empty list or not a list
+                "key": "params",
+                "bad_values": [{}, "nope", None, []],
+                "error": bad_params_error,
+            },
+            {  # tests for bad tag key
+                "key": "tag",
+                "bad_values": [None, "bad", {}, []],
+                "error": bad_tag_error,
+            },
+            {  # tests for bad version key
+                "key": "version",
+                "bad_values": [None, 123, {}, []],
+                "error": bad_version_error,
+            },
+        ]
         cases = list()
         for bad in [None, [], {}]:
-            cases.append({
-                "arg": bad,
-                "expected_error": no_info_error
-            })
+            cases.append({"arg": bad, "expected_error": no_info_error})
         for bad_key in ["app_id", "tag", "params"]:
             app_info = copy.deepcopy(self.bulk_run_good_inputs)
             del app_info[0][bad_key]
-            cases.append({
-                "arg": app_info,
-                "expected_error": missing_key_error
-            })
+            cases.append({"arg": app_info, "expected_error": missing_key_error})
         for app_info_case in app_info_cases:
             for bad_value in app_info_case["bad_values"]:
                 app_info = copy.deepcopy(self.bulk_run_good_inputs)
                 app_info[0][app_info_case["key"]] = bad_value
-                cases.append({
-                    "arg": app_info,
-                    "expected_error": app_info_case["error"]
-                })
+                cases.append(
+                    {"arg": app_info, "expected_error": app_info_case["error"]}
+                )
         comm_mock = MagicMock()
         c.return_value.send_comm_message = comm_mock
         for test_case in cases:
+
             def run_func():
                 return self.am.run_app_bulk(test_case["arg"])
+
             comm_mock.reset_mock()
             self.run_app_expect_error(
                 comm_mock,
@@ -572,7 +591,7 @@ class AppManagerTestCase(unittest.TestCase):
             comm_mock,
             lambda: self.am.run_app_bulk(self.bulk_run_good_inputs),
             "run_app_bulk",
-            'Unable to retrieve system variable: "workspace_id"'
+            'Unable to retrieve system variable: "workspace_id"',
         )
 
     ############# End tests for run_app_bulk #############
@@ -862,7 +881,9 @@ class AppManagerTestCase(unittest.TestCase):
             expected_values=expected_values,
         )
 
-    def _verify_comm_success(self, comm_mock, is_batch, num_jobs=1, cell_id=None, run_id=None) -> None:
+    def _verify_comm_success(
+        self, comm_mock, is_batch, num_jobs=1, cell_id=None, run_id=None
+    ) -> None:
         expected_messages = ["run_status"]
         expected_keys = [
             ["event", "event_at", "cell_id", "run_id"],

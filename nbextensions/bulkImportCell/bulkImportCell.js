@@ -10,7 +10,9 @@ define([
     'common/runtime',
     'common/spec',
     'common/ui',
+    'common/unodep',
     'common/utils',
+    './util',
     'common/pythonInterop',
     'base/js/namespace',
     'kb_service/client/workspace',
@@ -35,7 +37,9 @@ define([
     Runtime,
     Spec,
     UI,
+    SimpleUtil,
     Utils,
+    BulkImportUtil,
     PythonInterop,
     Jupyter,
     Workspace,
@@ -191,25 +195,23 @@ define([
             tabWidget = null; // the widget currently in view
         // widgets this cell owns
         let cellTabs, controlPanel, jobManager;
+        const specs = {};
 
         if (options.initialize) {
-            initialize(options.specs);
+            initialize(options.specs); // fills out the specs object
+        } else {
+            // this gets called as part of initialize if we're doing the initialize step
+            setupAppSpecs(Utils.getMeta(cell, 'bulkImportCell', 'app').specs);
         }
 
         const model = Props.make({
-                data: Utils.getMeta(cell, 'bulkImportCell'),
-                onUpdate: function (props) {
-                    Utils.setMeta(cell, 'bulkImportCell', props.getRawObject());
-                },
-            }),
-            // These are the processed Spec object with proper layout order, etc.
-            specs = {};
+            data: Utils.getMeta(cell, 'bulkImportCell'),
+            onUpdate: function (props) {
+                Utils.setMeta(cell, 'bulkImportCell', props.getRawObject());
+            },
+        });
         // gets updated in total later by updateState
         let state = getInitialState();
-
-        for (const [appId, appSpec] of Object.entries(model.getItem('app.specs'))) {
-            specs[appId] = Spec.make({ appSpec });
-        }
 
         setupCell();
 
@@ -263,6 +265,12 @@ define([
             return [fileParamIds, nonFileParamIds];
         }
 
+        function setupAppSpecs(appSpecs) {
+            for (const [appId, appSpec] of Object.entries(appSpecs)) {
+                specs[appId] = Spec.make({ appSpec });
+            }
+        }
+
         /**
          * Does the initial pass on newly created cells to initialize its metadata and get it
          * set up for a new life as a Bulk Import Cell.
@@ -293,6 +301,7 @@ define([
                 fileParamIds = {},
                 otherParamIds = {},
                 initialParamStates = {};
+            setupAppSpecs(appSpecs);
             /* Initialize the parameters set.
              * Get the app spec and split the set of parameters into filePaths and params.
              * Each input file (typesToFiles[fileType].files) gets its own set of filePath
@@ -300,7 +309,8 @@ define([
              * TODO: figure a good way to initialize these with one file use per param file row.
              */
             Object.keys(typesToFiles).forEach((fileType) => {
-                const spec = appSpecs[typesToFiles[fileType].appId];
+                const appId = typesToFiles[fileType].appId;
+                const spec = appSpecs[appId];
                 initialParams[fileType] = {
                     filePaths: [],
                     params: {},
@@ -315,10 +325,9 @@ define([
                         }, {});
                     }
                 );
-                spec.parameters.forEach((param) => {
-                    if (otherParamIds[fileType].includes(param.id)) {
-                        initialParams[fileType].params[param.id] = param.default_values[0];
-                    }
+                const defaultSpecModel = specs[appId].makeDefaultedModel();
+                otherParamIds[fileType].forEach((paramId) => {
+                    initialParams[fileType].params[paramId] = defaultSpecModel[paramId];
                 });
             });
             const meta = {
@@ -571,37 +580,54 @@ define([
             const meta = cell.metadata;
             meta.kbase.attributes.lastLoaded = new Date().toUTCString();
             cell.metadata = meta;
-            render().then(() => {
-                // add in the control panel so we can update the job status in the cell header
-                jobManager.addHandler('modelUpdate', {
-                    controlPanel: (jobManagerContext) => {
-                        // Update the execMessage panel with details of the active jobs
-                        controlPanel.setExecMessage(
-                            Jobs.createCombinedJobState(
+            render()
+                .then(() => {
+                    // add in the control panel so we can update the job status in the cell header
+                    jobManager.addHandler('modelUpdate', {
+                        controlPanel: (jobManagerContext) => {
+                            // Update the execMessage panel with details of the active jobs
+                            controlPanel.setExecMessage(
+                                Jobs.createCombinedJobState(
+                                    jobManagerContext.model.getItem('exec.jobs.byStatus')
+                                )
+                            );
+                        },
+                        fsmState: (jobManagerContext) => {
+                            const fsmState = Jobs.getFsmStateFromJobs(
                                 jobManagerContext.model.getItem('exec.jobs.byStatus')
-                            )
-                        );
-                    },
-                    fsmState: (jobManagerContext) => {
-                        const fsmState = Jobs.getFsmStateFromJobs(
-                            jobManagerContext.model.getItem('exec.jobs.byStatus')
-                        );
-                        if (fsmState) {
-                            updateState(fsmState);
-                        }
-                    },
+                            );
+                            if (fsmState) {
+                                updateState(fsmState);
+                            }
+                        },
+                    });
+
+                    // TODO: assess cell state, update job info if required
+                    // jobManager.restorefromSaved()
+
+                    return BulkImportUtil.evaluateConfigReadyState(model, specs);
+                })
+                .then((appReadyState) => {
+                    const curState = model.getItem('state');
+                    const curReadyState = curState.params;
+                    const updatedReadyState = !SimpleUtil.isEqual(appReadyState, curReadyState);
+
+                    if (updatedReadyState) {
+                        model.setItem(['state', 'params'], appReadyState);
+                    }
+                    if (
+                        updatedReadyState &&
+                        ['editingComplete', 'editingIncomplete'].includes(curState.state)
+                    ) {
+                        updateEditingState();
+                    } else {
+                        updateState();
+                    }
+                    cell.renderMinMax();
+                    // // force toolbar refresh
+                    // // eslint-disable-next-line no-self-assign
+                    runTab(state.tab.selected);
                 });
-
-                // TODO: assess cell state, update job info if required
-                // jobManager.restorefromSaved()
-
-                cell.renderMinMax();
-                // force toolbar refresh
-                // eslint-disable-next-line no-self-assign
-                cell.metadata = cell.metadata;
-                updateState();
-                runTab(state.tab.selected);
-            });
         }
 
         function getWorkspaceClient() {
@@ -768,6 +794,7 @@ define([
          */
         function deleteCell() {
             busEventManager.removeAll();
+            stopWidget();
             const cellIndex = Jupyter.notebook.find_cell_index(cell);
             Jupyter.notebook.delete_cell(cellIndex);
         }

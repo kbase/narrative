@@ -380,12 +380,9 @@ define([
                 model.setItem(['state', 'params', selectedFileType], state);
                 const fileTypeState = getFileTypeState();
                 fileTypePanel.updateState(fileTypeState);
-                const paramsReady = Object.values(fileTypeState.completed).reduce(
-                    (prev, cur) => {
-                        return cur && prev;
-                    },
-                    true
-                );
+                const paramsReady = Object.values(fileTypeState.completed).reduce((prev, cur) => {
+                    return cur && prev;
+                }, true);
                 cellBus.emit('update-param-state', {
                     paramsReady,
                 });

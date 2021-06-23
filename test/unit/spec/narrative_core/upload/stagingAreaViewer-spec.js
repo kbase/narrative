@@ -6,7 +6,7 @@ define([
 ], ($, StagingAreaViewer, Jupyter) => {
     'use strict';
 
-    fdescribe('The staging area viewer widget', () => {
+    describe('The staging area viewer widget', () => {
         let stagingViewer, container, $container, $parentNode;
         const startingPath = '/',
             updatePathFn = () => {},

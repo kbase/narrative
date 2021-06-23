@@ -948,7 +948,6 @@ define([
              */
             const bulkMapping = {};
             // get all of the selected checkbox file names and import type
-            // console.log(stagingAreaViewer.$elem.find(`input.${cssBaseClass}-body__checkbox-input:checked`));
             $(
                 stagingAreaViewer.$elem[0].querySelectorAll(
                     `input.${cssBaseClass}-body__checkbox-input:checked`

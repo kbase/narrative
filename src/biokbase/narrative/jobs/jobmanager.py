@@ -631,7 +631,7 @@ class JobManager(object):
         except Exception as e:
             raise transform_job_exception(e)
 
-    def cancel_job(self, job_id: str, parent_job_id: str = None) -> None:
+    def cancel_job(self, job_id: str, parent_job_id: str = None) -> bool:
         """
         Cancels a running job, placing it in a canceled state.
         Does NOT delete the job.
@@ -640,15 +640,49 @@ class JobManager(object):
         then attempts to cancel it.
         If either of those steps fail, a NarrativeException is raised.
         """
+        checked_jobs = self._check_job_list([job_id])
 
-        if job_id is None or job_id == "":
-            raise ValueError("Job id required for cancellation!")
-        if not parent_job_id and job_id not in self._running_jobs:
+        if len(checked_jobs["error"]):
             raise ValueError(f"No job present with id {job_id}")
 
+        # otherwise, our job ID is fine
         if job_id in self._completed_job_states:
-            return
+            return True
 
+        if not self._check_job_terminated(job_id):
+            return self._cancel_job(job_id, parent_job_id)
+
+        return True
+
+    def cancel_jobs(
+        self, job_id_list: List[str] = [], parent_job_id: str = None
+    ) -> None:
+        """
+        Cancel a list of jobs
+
+        Results are returned as a dict of job status objects keyed by job id
+
+        :param job_id_list: list of strs
+        :return job_states: dict with keys job IDs and values job state objects
+
+        """
+        checked_jobs = self._check_job_list(job_id_list)
+
+        for job_id in checked_jobs["job_id_list"]:
+            if (
+                job_id not in self._completed_job_states
+                and not self._check_job_terminated(job_id)
+            ):
+                self._cancel_job(job_id)
+
+        job_states = self._construct_job_status_set(checked_jobs["job_id_list"])
+
+        for job_id in checked_jobs["error"]:
+            job_states[job_id] = {"job_id": job_id, "status": "does_not_exist"}
+
+        return job_states
+
+    def _check_job_terminated(self, job_id: str) -> bool:
         try:
             cancel_status = clients.get("execution_engine2").check_job_canceled(
                 {"job_id": job_id}
@@ -658,16 +692,20 @@ class JobManager(object):
                 or cancel_status.get("canceled", 0) == 1
             ):
                 # It's already finished, don't try to cancel it again.
-                return
+                return True
+            return False
+
         except Exception as e:
             raise transform_job_exception(e)
 
+    def _cancel_job(self, job_id: str, parent_job_id: str = None) -> None:
         # Stop updating the job status while we try to cancel.
         # Set the job to a special state of 'canceling' while we're doing the cancel
         if not parent_job_id:
             is_refreshing = self._running_jobs[job_id].get("refresh", 0)
             self._running_jobs[job_id]["refresh"] = 0
             self._running_jobs[job_id]["canceling"] = True
+
         try:
             clients.get("execution_engine2").cancel_job({"job_id": job_id})
         except Exception as e:

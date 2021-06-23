@@ -225,7 +225,12 @@ class MockClients:
         return results
 
     def check_job_canceled(self, params):
-        return {"finished": 0, "canceled": 0, "job_id": params.get("job_id")}
+        job_id = params.get("job_id")
+        # JOB_RUNNING from test_jobmanager.py
+        if job_id == "5d64935cb215ad4128de94d8":
+            return {"finished": 1, "canceled": 0, "job_id": job_id}
+
+        return {"finished": 0, "canceled": 0, "job_id": job_id}
 
     def get_job_params(self, job_id):
         return self.ee2_job_info.get(job_id, {}).get("job_input", {})
@@ -493,3 +498,28 @@ class MockStagingHelper:
             "omg/this/is/a/long/path/to/a/file",
             "filterme",
         ]
+
+
+class assert_obj_method_called(object):
+    def __init__(self, obj, method, call_status=True):
+        self.obj = obj
+        self.method = method
+        self.call_status = call_status
+
+    def called(self, *args, **kwargs):
+        self.method_called = True
+        self.orig_method(*args, **kwargs)
+
+    def __enter__(self):
+        self.orig_method = getattr(self.obj, self.method)
+        setattr(self.obj, self.method, self.called)
+        self.method_called = False
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        assert getattr(self.obj, self.method) == self.called, "method %s was modified during assertMethodIsCalled" % self.method
+
+        setattr(self.obj, self.method, self.orig_method)
+
+        # If an exception was thrown within the block, we've already failed.
+        if traceback is None:
+            assert self.method_called is self.call_status, "method %s of %s was not %s" % (self.method, self.obj, self.call_status)

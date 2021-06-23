@@ -6,7 +6,7 @@ define([
 ], ($, StagingAreaViewer, Jupyter) => {
     'use strict';
 
-    describe('The staging area viewer widget', () => {
+    fdescribe('The staging area viewer widget', () => {
         let stagingViewer, container, $container, $parentNode;
         const startingPath = '/',
             updatePathFn = () => {},
@@ -70,6 +70,7 @@ define([
                 showDataOverlay: () => {},
                 addAndPopulateApp: () => {},
                 hideOverlay: () => {},
+                insertBulkImportCell: () => {},
             };
             $parentNode = $('<div id="stagingAreaDivParent">');
             container = document.createElement('div');
@@ -415,6 +416,41 @@ define([
                 stagingViewer.initImportApp('some_unknown_type', 'foobar.txt');
                 expect(Jupyter.narrative.addAndPopulateApp).not.toHaveBeenCalled();
                 expect(Jupyter.narrative.hideOverlay).not.toHaveBeenCalled();
+            });
+        });
+
+        describe('Should initialize a bulk import cell', () => {
+            const fileName = 'fake_sra_reads.sra',
+                appId = 'kb_uploadmethods/import_sra_as_reads_from_staging',
+                importType = 'sra_reads';
+
+            it('Should initialize an bulk import cell with the expected inputs', async () => {
+                await stagingViewer.render();
+
+                //find the fake sra reads one specifically
+                const selectDropdown = $container
+                    .find(`[data-download='${fileName}']`)
+                    .siblings('select');
+
+                selectDropdown.val('sra_reads').trigger('change').trigger('select2:select');
+
+                //check the checkbox
+                $container.find('input.kb-staging-table-body__checkbox-input:enabled').click();
+
+                const button = container.querySelector('.kb-staging-table-import__button');
+                expect(button.disabled).toBeFalse();
+
+                const inputs = {};
+                inputs[importType] = {
+                    appId,
+                    files: [fileName],
+                };
+
+                spyOn(Jupyter.narrative, 'insertBulkImportCell');
+                spyOn(Jupyter.narrative, 'hideOverlay');
+                $(button).click();
+                expect(Jupyter.narrative.insertBulkImportCell).toHaveBeenCalledWith(inputs);
+                expect(Jupyter.narrative.hideOverlay).toHaveBeenCalled();
             });
         });
     });

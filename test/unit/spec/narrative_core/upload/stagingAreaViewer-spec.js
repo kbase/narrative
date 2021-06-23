@@ -6,10 +6,10 @@ define([
 ], ($, StagingAreaViewer, Jupyter) => {
     'use strict';
 
-    describe('The staging area viewer widget', () => {
+    fdescribe('The staging area viewer widget', () => {
         let stagingViewer, container, $container, $parentNode;
         const startingPath = '/',
-            updatePathFn = () => {},
+            updatePathFn = null, //() => {},
             fakeUser = 'notAUser';
 
         beforeEach(() => {
@@ -420,37 +420,57 @@ define([
         });
 
         describe('Should initialize a bulk import cell', () => {
-            const fileName = 'fake_sra_reads.sra',
-                appId = 'kb_uploadmethods/import_sra_as_reads_from_staging',
+            const appId = 'kb_uploadmethods/import_sra_as_reads_from_staging',
                 importType = 'sra_reads';
 
-            it('Should initialize an bulk import cell with the expected inputs', async () => {
-                await stagingViewer.render();
+            [
+                {
+                    subdir: null,
+                    filename: 'fake_sra_reads.sra',
+                },
+                {
+                    subdir: 'test_folder',
+                    filename: 'file_list.txt',
+                },
+            ].forEach((testCase) => {
+                it('Should initialize a bulk import cell with the expected inputs', async () => {
+                    await stagingViewer.render();
+                    if (testCase.subdir) {
+                        stagingViewer.$elem.find(`button[data-name="${testCase.subdir}"]`).click();
+                        await stagingViewer.render();
+                    }
 
-                //find the fake sra reads one specifically
-                const selectDropdown = $container
-                    .find(`[data-download='${fileName}']`)
-                    .siblings('select');
+                    //find the fake sra reads one specifically
+                    const selectDropdown = $container
+                        .find(`[data-download='${testCase.filename}']`)
+                        .siblings('select');
 
-                selectDropdown.val('sra_reads').trigger('change').trigger('select2:select');
+                    selectDropdown.val('sra_reads').trigger('change').trigger('select2:select');
 
-                //check the checkbox
-                $container.find('input.kb-staging-table-body__checkbox-input:enabled').click();
+                    //check the checkbox
+                    $container.find('input.kb-staging-table-body__checkbox-input:enabled').click();
 
-                const button = container.querySelector('.kb-staging-table-import__button');
-                expect(button.disabled).toBeFalse();
+                    const button = container.querySelector('.kb-staging-table-import__button');
+                    expect(button.disabled).toBeFalse();
 
-                const inputs = {};
-                inputs[importType] = {
-                    appId,
-                    files: [fileName],
-                };
+                    const expectedInputs = {};
+                    let expectedFilename = testCase.filename;
+                    if (testCase.subdir) {
+                        expectedFilename = testCase.subdir + '/' + expectedFilename;
+                    }
+                    expectedInputs[importType] = {
+                        appId,
+                        files: [expectedFilename],
+                    };
 
-                spyOn(Jupyter.narrative, 'insertBulkImportCell');
-                spyOn(Jupyter.narrative, 'hideOverlay');
-                $(button).click();
-                expect(Jupyter.narrative.insertBulkImportCell).toHaveBeenCalledWith(inputs);
-                expect(Jupyter.narrative.hideOverlay).toHaveBeenCalled();
+                    spyOn(Jupyter.narrative, 'insertBulkImportCell');
+                    spyOn(Jupyter.narrative, 'hideOverlay');
+                    $(button).click();
+                    expect(Jupyter.narrative.insertBulkImportCell).toHaveBeenCalledWith(
+                        expectedInputs
+                    );
+                    expect(Jupyter.narrative.hideOverlay).toHaveBeenCalled();
+                });
             });
         });
     });

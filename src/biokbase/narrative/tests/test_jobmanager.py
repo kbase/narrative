@@ -13,6 +13,7 @@ from .narrative_mock.mockclients import (
     get_mock_client,
     get_failing_mock_client,
     assert_obj_method_called,
+    MockClients,
 )
 from biokbase.narrative.exception_util import JobException, NarrativeException
 
@@ -280,7 +281,7 @@ class JobManagerTest(unittest.TestCase):
         self.assertNotIn(JOB_RUNNING, self.jm._completed_job_states)
 
         with mock.patch.object(
-            biokbase.narrative.tests.narrative_mock.mockclients.MockClients,
+            MockClients,
             "check_job_canceled",
             mock.Mock(return_value={"finished": 1, "canceled": 0}),
         ) as mock_check_job_canceled:
@@ -297,7 +298,7 @@ class JobManagerTest(unittest.TestCase):
             self.assertNotIn(job_id, self.jm._completed_job_states)
 
         with mock.patch.object(
-            biokbase.narrative.tests.narrative_mock.mockclients.MockClients,
+            MockClients,
             "check_job_canceled",
             mock.Mock(return_value={"finished": 1, "canceled": 0}),
         ) as mock_check_job_canceled:
@@ -311,9 +312,6 @@ class JobManagerTest(unittest.TestCase):
                 ],
                 any_order=True,
             )
-
-            print({"got": canceled_jobs})
-            print({"expected": self.job_states})
 
             self.assertEqual(canceled_jobs, self.job_states)
 
@@ -336,11 +334,11 @@ class JobManagerTest(unittest.TestCase):
         # patch MockClients.check_job_canceled to respond that neither job has finished or been canceled
         # patch MockClients.cancel_job so we can test the input
         with mock.patch.object(
-            biokbase.narrative.tests.narrative_mock.mockclients.MockClients,
+            MockClients,
             "check_job_canceled",
             mock.Mock(return_value={"finished": 0, "canceled": 0}),
         ) as mock_check_job_canceled, mock.patch.object(
-            biokbase.narrative.tests.narrative_mock.mockclients.MockClients,
+            MockClients,
             "cancel_job",
             mock.Mock(return_value={}, side_effect=check_state),
         ) as mock_cancel_job:
@@ -384,7 +382,7 @@ class JobManagerTest(unittest.TestCase):
         # check_job_canceled responds that JOB_RUNNING has been canceled and JOB_CREATED has not
         # patch MockClients.cancel_job so we can test the input
         with mock.patch.object(
-            biokbase.narrative.tests.narrative_mock.mockclients.MockClients,
+            MockClients,
             "cancel_job",
             mock.Mock(return_value={}, side_effect=check_state),
         ) as mock_cancel_job:

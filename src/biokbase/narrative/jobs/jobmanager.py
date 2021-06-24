@@ -22,7 +22,8 @@ instance in its current state.
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 __version__ = "0.0.1"
 
-TERMINAL_STATES = ["completed", "terminated", "error"]
+COMPLETED_STATUS = "completed"
+TERMINAL_STATES = [COMPLETED_STATUS, "terminated", "error"]
 EXCLUDED_JOB_STATE_FIELDS = [
     "authstrat",
     "condor_job_ads",
@@ -53,6 +54,26 @@ class JobManager(object):
             JobManager.__instance = object.__new__(cls)
         return JobManager.__instance
 
+    def _create_job_from_state(self, job_id, job_state):
+        """
+        Makes a Job object from a job_id and job_state data
+        """
+        job_info = job_state.get("job_input", {})
+        job_meta = job_info.get("narrative_cell_info", {})
+
+        return Job.from_state(
+            job_id,  # the id
+            job_info,  # params, etc.
+            job_state.get("user"),  # owner id
+            app_id=job_info.get("app_id", job_info.get("method")),
+            tag=job_meta.get("tag", "release"),
+            cell_id=job_meta.get("cell_id", None),
+            run_id=job_meta.get("run_id", None),
+            token_id=job_meta.get("token_id", None),
+            meta=job_meta,
+            parent_job_id=job_info.get("parent_job_id", None),
+        )
+
     def initialize_jobs(self):
         """
         Initializes this JobManager.
@@ -78,21 +99,8 @@ class JobManager(object):
             raise new_e
 
         for job_id, job_state in job_states.items():
-            job_input = job_state.get("job_input", {})
-            job_meta = job_input.get("narrative_cell_info", {})
+            job = self._create_job_from_state(job_id, job_state)
             status = job_state.get("status")
-            job = Job.from_state(
-                job_id,
-                job_input,
-                job_state.get("user"),
-                app_id=job_input.get("app_id"),
-                tag=job_meta.get("tag", "release"),
-                cell_id=job_meta.get("cell_id", None),
-                run_id=job_meta.get("run_id", None),
-                token_id=job_meta.get("token_id", None),
-                meta=job_meta,
-                parent_job_id=job_input.get("parent_job_id", None),
-            )
             refresh_state = 1 if status not in TERMINAL_STATES else 0
             self._running_jobs[job_id] = {
                 "refresh": refresh_state,
@@ -108,9 +116,7 @@ class JobManager(object):
     def _create_jobs(self, job_ids):
         """
         TODO: error handling
-        Makes a bunch of Job objects from job_ids.
-        Initially used to make Child jobs from some parent, but will eventually be adapted to all jobs on startup.
-        Just slaps them all into _running_jobs
+        Given a list of job IDs, creates job objects for them and populates the _running_jobs dictionary
         """
         job_states = clients.get("execution_engine2").check_jobs(
             {"job_ids": job_ids, "return_list": 0}
@@ -118,21 +124,7 @@ class JobManager(object):
         for job_id in job_ids:
             if job_id in job_ids and job_id not in self._running_jobs:
                 job_state = job_states.get(job_id, {})
-                user = job_state.get("user")
-                job_info = job_state.get("job_input", {})
-                job_meta = job_info.get("narrative_cell_info", {})
-                job = Job.from_state(
-                    job_id,  # the id
-                    job_info,  # params, etc.
-                    user,  # owner id
-                    app_id=job_info.get("app_id", job_info.get("method")),
-                    tag=job_meta.get("tag", "release"),
-                    cell_id=job_meta.get("cell_id", None),
-                    run_id=job_meta.get("run_id", None),
-                    token_id=job_meta.get("token_id", None),
-                    meta=job_meta,
-                    parent_job_id=job_info.get("parent_job_id", None),
-                )
+                job = self._create_job_from_state(job_id, job_state)
 
                 # Note that when jobs for this narrative are initially loaded,
                 # they are set to not be refreshed. Rather, if a client requests
@@ -394,9 +386,9 @@ class JobManager(object):
             "listener_count": self._running_jobs[job.job_id]["refresh"],
         }
 
-    def _child_job_states(self, sub_job_list, app_id, app_tag):
+    def _child_job_states(self, child_job_list, app_id, app_tag):
         """
-        Fetches state for all jobs in the list. These are expected to be child jobs, with no actual Job object associated.
+        Fetches state for all jobs in the list. These are expected to be child jobs, with no Job object associated.
         So if they're done, we need to do the output mapping out of band.
         But the check_jobs call with params will return the app id. So that helps.
 
@@ -404,23 +396,23 @@ class JobManager(object):
         app_tag = one of "release", "beta", "dev"
         (the above two aren't stored with the subjob metadata, and won't until we back some more on KBParallel - I want to
         lobby for pushing toward just starting everything up at once from here and letting HTCondor deal with allocation)
-        sub_job_list = list of ids of jobs to look up
+        child_job_list = list of ids of jobs to look up
         """
-        if not sub_job_list:
+        if not child_job_list:
             return []
 
-        sub_job_list = sorted(sub_job_list)
+        child_job_list = sorted(child_job_list)
 
         job_states = clients.get("execution_engine2").check_jobs(
             {
-                "job_ids": sub_job_list,
+                "job_ids": child_job_list,
                 "exclude_fields": EXCLUDED_JOB_STATE_FIELDS,
                 "return_list": 0,
             }
         )
         child_job_states = list()
 
-        for job_id in sub_job_list:
+        for job_id in child_job_list:
             job_state = job_states.get(job_id, {})
             params = job_state.get("job_input", {}).get("params", [])
             # if it's error, get the error.
@@ -431,7 +423,7 @@ class JobManager(object):
                 continue
             # if it's done, get the output mapping.
             state = job_state.get("status")
-            if state == "completed":
+            if state == COMPLETED_STATUS:
                 try:
                     widget_info = Job.map_viewer_params(state, params, app_id, app_tag)
                 except ValueError:
@@ -743,7 +735,7 @@ class JobManager(object):
             return self._completed_job_states[job_id]
         job = self._running_jobs[job_id]["job"]
         state = self._construct_job_status(job, job.state())
-        if state.get("status") == "completed":
+        if state.get("status") == COMPLETED_STATUS:
             self._completed_job_states[job_id] = state
         return state
 

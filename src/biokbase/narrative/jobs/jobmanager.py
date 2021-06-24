@@ -23,7 +23,13 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 __version__ = "0.0.1"
 
 TERMINAL_STATES = ["completed", "terminated", "error"]
-EXCLUDED_JOB_STATE_FIELDS = ["authstrat", "condor_job_ads", "job_input", "scheduler_type", "scheduler_id"]
+EXCLUDED_JOB_STATE_FIELDS = [
+    "authstrat",
+    "condor_job_ads",
+    "job_input",
+    "scheduler_type",
+    "scheduler_id",
+]
 
 
 class JobManager(object):
@@ -37,7 +43,7 @@ class JobManager(object):
 
     # keys = job_id, values = { refresh = T/F, job = Job object }
     _running_jobs = dict()
-    # keys = job_id, values = state from either Job object or NJS (these are identical)
+    # keys = job_id, values = state from either Job object or ee2 (these are identical)
     _completed_job_states = dict()
 
     _log = kblogging.get_logger(__name__)
@@ -65,6 +71,7 @@ class JobManager(object):
                 {"workspace_id": ws_id, "return_list": 0}
             )
             self._running_jobs = dict()
+            self._completed_job_states = dict()
         except Exception as e:
             kblogging.log_event(self._log, "init_error", {"err": str(e)})
             new_e = transform_job_exception(e)
@@ -93,7 +100,9 @@ class JobManager(object):
             }
             # if the job is in a terminal state, add it to the _completed_job_states index
             if not refresh_state:
-                revised_state = self._construct_job_status(self.get_job(job_id), job_state)
+                revised_state = self._construct_job_status(
+                    self.get_job(job_id), job_state
+                )
                 self._completed_job_states[job_id] = revised_state
 
     def _create_jobs(self, job_ids):
@@ -132,20 +141,30 @@ class JobManager(object):
                 self._running_jobs[job_id] = {"refresh": 0, "job": job}
 
     def _check_job_list(self, job_id_list: List[str] = []):
-        cleaned_jobs = set([job_id for job_id in job_id_list if job_id is not None and job_id != ''])
+        """
+        Deduplicates the input job list, maintaining insertion order
+        Any jobs not present in self._running_jobs are added to an error list
 
-        if not len(cleaned_jobs):
-            raise ValueError("No job id(s) supplied")
-
+        :param job_id_list: a list of job IDs
+        :return results: dict with keys "job_id_list", containing valid IDs,
+        and "error" for jobs that the narrative backend does not know about
+        """
+        seen = {}
         results = {
             "error": [],
             "job_id_list": [],
         }
-        for job_id in cleaned_jobs:
-            if job_id not in self._running_jobs:
-                results["error"].append(job_id)
-            else:
-                results["job_id_list"].append(job_id)
+
+        for job_id in job_id_list:
+            if job_id is not None and job_id != "" and job_id not in seen:
+                seen[job_id] = True
+                if job_id in self._running_jobs:
+                    results["job_id_list"].append(job_id)
+                else:
+                    results["error"].append(job_id)
+
+        if not len(results["job_id_list"]) and not len(results["error"]):
+            raise ValueError("No job id(s) supplied")
 
         return results
 
@@ -622,7 +641,7 @@ class JobManager(object):
         If either of those steps fail, a NarrativeException is raised.
         """
 
-        if job_id is None or job_id == '':
+        if job_id is None or job_id == "":
             raise ValueError("Job id required for cancellation!")
         if not parent_job_id and job_id not in self._running_jobs:
             raise ValueError(f"No job present with id {job_id}")
@@ -644,7 +663,7 @@ class JobManager(object):
             raise transform_job_exception(e)
 
         # Stop updating the job status while we try to cancel.
-        # Also, set it to have a special state of 'canceling' while we're doing the cancel
+        # Set the job to a special state of 'canceling' while we're doing the cancel
         if not parent_job_id:
             is_refreshing = self._running_jobs[job_id].get("refresh", 0)
             self._running_jobs[job_id]["refresh"] = 0

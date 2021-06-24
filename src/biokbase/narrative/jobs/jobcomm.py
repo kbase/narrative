@@ -6,6 +6,8 @@ import biokbase.narrative.jobs.jobmanager as jobmanager
 from biokbase.narrative.exception_util import JobException, NarrativeException
 from biokbase.narrative.common import kblogging
 
+UNKNOWN_REASON = "Unknown reason"
+
 
 class JobRequest:
     """
@@ -211,7 +213,7 @@ class JobComm:
             except Exception as e:
                 error = {
                     "error": "Unable to get initial jobs list",
-                    "message": getattr(e, "message", "Unknown reason"),
+                    "message": getattr(e, "message", UNKNOWN_REASON),
                     "code": getattr(e, "code", -1),
                     "source": getattr(e, "source", "jobmanager"),
                     "name": getattr(e, "name", type(e).__name__),
@@ -343,7 +345,7 @@ class JobComm:
                 req,
                 {
                     "error": "Unable to cancel job",
-                    "message": getattr(e, "message", "Unknown reason"),
+                    "message": getattr(e, "message", UNKNOWN_REASON),
                     "code": getattr(e, "code", -1),
                     "name": getattr(e, "name", type(e).__name__),
                 },
@@ -385,7 +387,7 @@ class JobComm:
                 req,
                 {
                     "error": "Unable to retry job(s)",
-                    "message": getattr(e, "message", "Unknown reason"),
+                    "message": getattr(e, "message", UNKNOWN_REASON),
                     "code": getattr(e, "code", -1),
                     "name": getattr(e, "name", type(e).__name__),
                 },
@@ -426,7 +428,7 @@ class JobComm:
                 req,
                 {
                     "error": "Unable to retrieve job logs",
-                    "message": getattr(e, "message", "Unknown reason"),
+                    "message": getattr(e, "message", UNKNOWN_REASON),
                     "code": getattr(e, "code", -1),
                     "name": getattr(e, "name", type(e).__name__),
                 },

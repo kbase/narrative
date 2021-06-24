@@ -2,6 +2,7 @@
 Tests for job management
 """
 import unittest
+import copy
 from unittest import mock
 import biokbase.narrative.jobs.jobmanager
 from biokbase.narrative.jobs.job import Job
@@ -15,15 +16,16 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 config = ConfigTests()
 job_info = config.load_json_file(config.get("jobs", "ee2_job_info_file"))
-
 # job_info contains jobs in the following states
-JOB_COMPLETED = '5d64935ab215ad4128de94d6'
-JOB_CREATED = '5d64935cb215ad4128de94d7'
-JOB_RUNNING = '5d64935cb215ad4128de94d8'
-JOB_TERMINATED = '5d64935cb215ad4128de94d9'
-JOB_NOT_FOUND = 'job_not_found'
+JOB_COMPLETED = "5d64935ab215ad4128de94d6"
+JOB_CREATED = "5d64935cb215ad4128de94d7"
+JOB_RUNNING = "5d64935cb215ad4128de94d8"
+JOB_TERMINATED = "5d64935cb215ad4128de94d9"
+JOB_NOT_FOUND = "job_not_found"
 
-no_id_err_str = 'No job id\(s\) supplied'
+no_id_err_str = "No job id\(s\) supplied"
+job_states_to_generate = [JOB_CREATED, JOB_RUNNING]
+
 
 @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
 def phony_job():
@@ -42,6 +44,15 @@ def create_jm_message(r_type, job_id=None, data={}):
     return {"content": {"data": data}}
 
 
+def get_job_state(job_id, exclude_fields=None):
+    info = copy.deepcopy(job_info.get(job_id, {}))
+    if exclude_fields:
+        for f in exclude_fields:
+            if f in info:
+                del info[f]
+    return info
+
+
 class JobManagerTest(unittest.TestCase):
     @classmethod
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
@@ -49,15 +60,39 @@ class JobManagerTest(unittest.TestCase):
         cls.job_ids = list(job_info.keys())
         os.environ["KB_WORKSPACE_ID"] = config.get("jobs", "job_test_wsname")
         cls.maxDiff = None
+        cls.job_states = {}
+        cls.job_states_inited = False
+
+    def create_job_states(self):
+        # generate full job state objects
+        for job_id in job_states_to_generate:
+            job_object = copy.deepcopy(self.jm._running_jobs[job_id]["job"])
+            state = get_job_state(
+                job_id, biokbase.narrative.jobs.jobmanager.EXCLUDED_JOB_STATE_FIELDS
+            )
+            state.update(
+                {
+                    "child_jobs": [],
+                    "cell_id": job_object.cell_id,
+                    "run_id": job_object.cell_id,
+                    # "run_id": job_object.run_id,
+                }
+            )
+
+            self.job_states[job_id] = {
+                "state": state,
+                "spec": {},
+                "widget_info": None,
+                "owner": job_object.owner,
+                "listener_count": self.jm._running_jobs[job_object.job_id]["refresh"],
+            }
 
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def setUp(self) -> None:
         self.jm = biokbase.narrative.jobs.jobmanager.JobManager()
         self.jm.initialize_jobs()
-
-    def tearDown(self) -> None:
-        self.jm._running_jobs = {}
-        self.jm._completed_job_states = {}
+        if self.job_states == {}:
+            self.create_job_states()
 
     def validate_status_message(self, msg):
         core_keys = set(["widget_info", "owner", "state", "spec"])
@@ -82,29 +117,20 @@ class JobManagerTest(unittest.TestCase):
 
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def test_initialise_jobs(self):
-        self.tearDown()
+        # all jobs have been removed from the JobManager
+        self.jm._running_jobs = {}
+        self.jm._completed_job_states = {}
 
-        # all jobs have been removed from the JobManager by tearDown
         self.jm = biokbase.narrative.jobs.jobmanager.JobManager()
-        self.assertEqual(
-            self.jm._running_jobs,
-            {}
-        )
-        self.assertEqual(
-            self.jm._completed_job_states,
-            {}
-        )
+        self.assertEqual(self.jm._running_jobs, {})
+        self.assertEqual(self.jm._completed_job_states, {})
 
         # redo the initialise to make sure it worked correctly
         self.jm.initialize_jobs()
         self.assertEqual(
-            {JOB_COMPLETED, JOB_TERMINATED},
-            set(self.jm._completed_job_states.keys())
+            {JOB_COMPLETED, JOB_TERMINATED}, set(self.jm._completed_job_states.keys())
         )
-        self.assertEqual(
-            set(self.job_ids),
-            set(self.jm._running_jobs.keys())
-        )
+        self.assertEqual(set(self.job_ids), set(self.jm._running_jobs.keys()))
 
     def test__check_job_list_fail(self):
         with self.assertRaisesRegex(ValueError, no_id_err_str):
@@ -114,15 +140,15 @@ class JobManagerTest(unittest.TestCase):
             self.jm._check_job_list([])
 
         with self.assertRaisesRegex(ValueError, no_id_err_str):
-            self.jm._check_job_list(['', '', None])
+            self.jm._check_job_list(["", "", None])
 
     def test__check_job_list(self):
-        """ job list checker """
+        """job list checker"""
 
-        job_a = self.job_ids[0]
-        job_b = self.job_ids[1]
-        job_c = 'job_c'
-        job_d = 'job_d'
+        job_a = JOB_CREATED
+        job_b = JOB_COMPLETED
+        job_c = "job_c"
+        job_d = "job_d"
         self.assertEqual(
             self.jm._check_job_list([job_c]),
             {
@@ -131,12 +157,8 @@ class JobManagerTest(unittest.TestCase):
             },
         )
 
-        result = self.jm._check_job_list([job_c, None, '', job_c, job_c, None, job_d])
         self.assertEqual(
-            {
-                "error": list(sorted(result["error"])),
-                "job_id_list": [],
-            },
+            self.jm._check_job_list([job_c, None, "", job_c, job_c, None, job_d]),
             {
                 "error": [job_c, job_d],
                 "job_id_list": [],
@@ -144,19 +166,15 @@ class JobManagerTest(unittest.TestCase):
         )
 
         self.assertEqual(
-            self.jm._check_job_list([job_c, None, '', None, job_a]),
+            self.jm._check_job_list([job_c, None, "", None, job_a, job_a, job_a]),
             {
                 "error": [job_c],
                 "job_id_list": [job_a],
             },
         )
 
-        result = self.jm._check_job_list([None, job_a, None, '', None, job_b])
         self.assertEqual(
-            {
-                "error": [],
-                "job_id_list": list(sorted(result["job_id_list"]))
-            },
+            self.jm._check_job_list([None, job_a, None, "", None, job_b]),
             {
                 "error": [],
                 "job_id_list": [job_a, job_b],

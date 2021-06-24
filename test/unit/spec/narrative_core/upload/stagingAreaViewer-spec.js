@@ -6,10 +6,10 @@ define([
 ], ($, StagingAreaViewer, Jupyter) => {
     'use strict';
 
-    describe('The staging area viewer widget', () => {
+    fdescribe('The staging area viewer widget', () => {
         let stagingViewer, container, $container, $parentNode;
         const startingPath = '/',
-            updatePathFn = () => {},
+            updatePathFn = null, //() => {},
             fakeUser = 'notAUser';
 
         beforeEach(() => {
@@ -70,6 +70,7 @@ define([
                 showDataOverlay: () => {},
                 addAndPopulateApp: () => {},
                 hideOverlay: () => {},
+                insertBulkImportCell: () => {},
             };
             $parentNode = $('<div id="stagingAreaDivParent">');
             container = document.createElement('div');
@@ -219,31 +220,6 @@ define([
             expect(stagingViewer.updatePathFn).toHaveBeenCalledTimes(1);
         });
 
-        it('Should initialize an import app with the expected inputs', () => {
-            const fileType = 'fastq_reads_interleaved',
-                fileName = 'foobar.txt',
-                appId = 'kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging',
-                tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag,
-                inputs = {
-                    fastq_fwd_staging_file_name: fileName,
-                    name: fileName + '_reads',
-                    import_type: 'FASTQ/FASTA',
-                };
-            spyOn(Jupyter.narrative, 'addAndPopulateApp');
-            spyOn(Jupyter.narrative, 'hideOverlay');
-            stagingViewer.initImportApp(fileType, fileName);
-            expect(Jupyter.narrative.addAndPopulateApp).toHaveBeenCalledWith(appId, tag, inputs);
-            expect(Jupyter.narrative.hideOverlay).toHaveBeenCalled();
-        });
-
-        it('Should NOT initialize an import app with an unknown type', () => {
-            spyOn(Jupyter.narrative, 'addAndPopulateApp');
-            spyOn(Jupyter.narrative, 'hideOverlay');
-            stagingViewer.initImportApp('some_unknown_type', 'foobar.txt');
-            expect(Jupyter.narrative.addAndPopulateApp).not.toHaveBeenCalled();
-            expect(Jupyter.narrative.hideOverlay).not.toHaveBeenCalled();
-        });
-
         it('Creates a downloader iframe when requested', () => {
             stagingViewer.downloadFile('some_url');
             const dlNode = document.getElementById('hiddenDownloader');
@@ -296,7 +272,7 @@ define([
             expect(select2.html()).toContain('SRA Reads');
         });
 
-        it('should render checboxes for the file table', async () => {
+        it('should render checkboxes for the file table', async () => {
             await stagingViewer.render();
 
             //initially the checkboxes are rendered disabled until a user selects a type
@@ -368,6 +344,134 @@ define([
 
             const button = container.querySelector('.kb-staging-table-import__button');
             expect(button.disabled).toBeFalse();
+        });
+
+        describe('Should initialize an import app', () => {
+            let tag;
+
+            beforeEach(() => {
+                tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag;
+            });
+
+            const fileType = 'fastq_reads_interleaved',
+                fileName = 'foobar.txt',
+                appId = 'kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging',
+                importType = 'FASTQ/FASTA';
+
+            it('Should initialize an import app with the expected inputs', () => {
+                const inputs = {
+                    fastq_fwd_staging_file_name: fileName,
+                    name: fileName + '_reads',
+                    import_type: importType,
+                };
+                spyOn(Jupyter.narrative, 'addAndPopulateApp');
+                spyOn(Jupyter.narrative, 'hideOverlay');
+                stagingViewer.initImportApp(fileType, fileName);
+                expect(Jupyter.narrative.addAndPopulateApp).toHaveBeenCalledWith(
+                    appId,
+                    tag,
+                    inputs
+                );
+                expect(Jupyter.narrative.hideOverlay).toHaveBeenCalled();
+            });
+
+            it('Should initialize an import app with files in subdirectories', async () => {
+                const subDir = 'a_subdirectory',
+                    inputs = {
+                        fastq_fwd_staging_file_name: subDir + '/' + fileName,
+                        name: fileName + '_reads',
+                        import_type: 'FASTQ/FASTA',
+                    };
+                jasmine.Ajax.stubRequest(/.*\/staging_service\/list\/a_subdirectory?/).andReturn({
+                    status: 200,
+                    statusText: 'success',
+                    contentType: 'text/plain',
+                    responseHeaders: '',
+                    responseText: JSON.stringify([
+                        {
+                            name: fileName,
+                            path: fakeUser + '/' + subDir + '/' + fileName,
+                            mtime: 1532738637555,
+                            size: 49233,
+                            source: 'KBase upload',
+                            mappings: [],
+                        },
+                    ]),
+                });
+                spyOn(Jupyter.narrative, 'addAndPopulateApp');
+                spyOn(Jupyter.narrative, 'hideOverlay');
+                await stagingViewer.setPath('//' + subDir);
+                stagingViewer.initImportApp(fileType, fileName);
+                expect(Jupyter.narrative.addAndPopulateApp).toHaveBeenCalledWith(
+                    appId,
+                    tag,
+                    inputs
+                );
+                expect(Jupyter.narrative.hideOverlay).toHaveBeenCalled();
+            });
+
+            it('Should NOT initialize an import app with an unknown type', () => {
+                spyOn(Jupyter.narrative, 'addAndPopulateApp');
+                spyOn(Jupyter.narrative, 'hideOverlay');
+                stagingViewer.initImportApp('some_unknown_type', 'foobar.txt');
+                expect(Jupyter.narrative.addAndPopulateApp).not.toHaveBeenCalled();
+                expect(Jupyter.narrative.hideOverlay).not.toHaveBeenCalled();
+            });
+        });
+
+        describe('Should initialize a bulk import cell', () => {
+            const appId = 'kb_uploadmethods/import_sra_as_reads_from_staging',
+                importType = 'sra_reads';
+
+            [
+                {
+                    subdir: null,
+                    filename: 'fake_sra_reads.sra',
+                },
+                {
+                    subdir: 'test_folder',
+                    filename: 'file_list.txt',
+                },
+            ].forEach((testCase) => {
+                it('Should initialize a bulk import cell with the expected inputs', async () => {
+                    await stagingViewer.render();
+                    if (testCase.subdir) {
+                        stagingViewer.$elem.find(`button[data-name="${testCase.subdir}"]`).click();
+                        await stagingViewer.render();
+                    }
+
+                    //find the fake sra reads one specifically
+                    const selectDropdown = $container
+                        .find(`[data-download='${testCase.filename}']`)
+                        .siblings('select');
+
+                    selectDropdown.val('sra_reads').trigger('change').trigger('select2:select');
+
+                    //check the checkbox
+                    $container.find('input.kb-staging-table-body__checkbox-input:enabled').click();
+
+                    const button = container.querySelector('.kb-staging-table-import__button');
+                    expect(button.disabled).toBeFalse();
+
+                    const expectedInputs = {};
+                    let expectedFilename = testCase.filename;
+                    if (testCase.subdir) {
+                        expectedFilename = testCase.subdir + '/' + expectedFilename;
+                    }
+                    expectedInputs[importType] = {
+                        appId,
+                        files: [expectedFilename],
+                    };
+
+                    spyOn(Jupyter.narrative, 'insertBulkImportCell');
+                    spyOn(Jupyter.narrative, 'hideOverlay');
+                    $(button).click();
+                    expect(Jupyter.narrative.insertBulkImportCell).toHaveBeenCalledWith(
+                        expectedInputs
+                    );
+                    expect(Jupyter.narrative.hideOverlay).toHaveBeenCalled();
+                });
+            });
         });
     });
 

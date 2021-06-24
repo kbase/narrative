@@ -936,7 +936,6 @@ define([
          */
         initBulkImport: function () {
             const stagingAreaViewer = this;
-
             /*
              * We're building up a structure like this to send to the
              * bulk import cell initializer:
@@ -949,15 +948,22 @@ define([
              */
             const bulkMapping = {};
             // get all of the selected checkbox file names and import type
-            $(`input.${cssBaseClass}-body__checkbox-input:checked`).each(function () {
+            $(
+                stagingAreaViewer.$elem[0].querySelectorAll(
+                    `input.${cssBaseClass}-body__checkbox-input:checked`
+                )
+            ).each(function () {
                 const importType = $(this).attr('data-type');
-                const importFile = $(this).attr('data-file-name');
+                let importFile = $(this).attr('data-file-name');
                 if (stagingAreaViewer.bulkImportTypes.includes(importType)) {
                     if (!(importType in bulkMapping)) {
                         bulkMapping[importType] = {
                             appId: stagingAreaViewer.uploaders.app_info[importType].app_id,
                             files: [],
                         };
+                    }
+                    if (stagingAreaViewer.subpath) {
+                        importFile = stagingAreaViewer.subpath + '/' + importFile;
                     }
                     bulkMapping[importType].files.push(importFile);
                 } else {

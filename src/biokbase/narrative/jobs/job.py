@@ -1,3 +1,4 @@
+from typing import Dict
 import biokbase.narrative.clients as clients
 from .specmanager import SpecManager
 from biokbase.narrative.app_util import map_inputs_from_job, map_outputs_from_state
@@ -11,16 +12,26 @@ KBase job class
 """
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
-EXCLUDED_JOB_STATE_FIELDS = ["authstrat", "job_input", "condor_job_ads"]
+COMPLETED_STATUS = "completed"
+TERMINAL_STATES = [COMPLETED_STATUS, "terminated", "error"]
 
+EXCLUDED_JOB_STATE_FIELDS = [
+    "authstrat",
+    "condor_job_ads",
+    "job_input",
+    "scheduler_type",
+    "scheduler_id",
+]
+
+EXTRA_JOB_STATE_FIELDS = ["batch_id", "cell_id", "run_id", "token_id"]
 
 class Job(object):
     app_id = None
     app_version = None
+    batch_id = None
     cell_id = None
     inputs = None
     job_id = None
-    parent_job_id = None
     run_id = None
     token_id = None
     _job_logs = list()
@@ -33,9 +44,10 @@ class Job(object):
         inputs,
         owner,
         app_version=None,
+        batch_id=None,
         cell_id=None,
-        meta=dict(),
-        parent_job_id=None,
+        ee2_state=None,
+        meta=None,
         run_id=None,
         tag="release",
         token_id=None,
@@ -45,72 +57,55 @@ class Job(object):
         The app_id and app_version should both align with what's available in
         the Narrative Method Store service.
         """
+        if app_version is None and inputs is not None:
+            app_version = inputs.get("service_ver")
+
         self.app_id = app_id
         self.app_version = app_version
+        self.batch_id = batch_id
         self.cell_id = cell_id
         self.inputs = inputs
         self.job_id = job_id
-        self.meta = meta
+        self.meta = meta if meta else dict()
         self.owner = owner
-        self.parent_job_id = parent_job_id
         self.run_id = run_id
         self.tag = tag
         self.token_id = token_id
+        if ee2_state:
+            ee2_state["job_output"] = ee2_state.get("job_output", {})
+            for arg in EXTRA_JOB_STATE_FIELDS:
+                ee2_state[arg] = getattr(self, arg)
+            self._last_state = ee2_state
 
     @classmethod
-    def from_state(
-        cls,
-        job_id,
-        job_info,
-        owner,
-        app_id,
-        cell_id=None,
-        meta=dict(),
-        parent_job_id=None,
-        run_id=None,
-        tag="release",
-        token_id=None,
-    ):
+    def from_state(cls, job_state):
         """
         Parameters:
         -----------
-        job_id - string
-            The job's unique identifier as returned at job start time.
-        job_info - dict
-            The job information returned from njs.get_job_params, just the first
-            element of that list (not the extra list with URLs). Should have the following keys:
-            'params': The set of parameters sent to that job.
-            'service_ver': The version of the service that was run.
-        owner - string
-            The owner of the job (username of person who started it)
-        app_id - string
-            Used in place of job_info.method. This is the actual method spec that was used to
-            start the job. Can be None, but Bad Things might happen.
-        cell_id - the cell associated with the job (optional)
-        parent_job_id - the ID of the parent batch container (batch jobs only)
-        run_id - the front-end id associated with the job (optional)
-        tag - string
-            The Tag (release, beta, dev) used to start the job.
-        token_id - the id of the authentication token used to start the job (optional)
+        job_state - dict
+            the job information returned from ee2.check_job
         """
+        job_info = job_state.get("job_input", {})
+        job_meta = job_info.get("narrative_cell_info", {})
         return cls(
-            job_id,
-            app_id,
-            job_info.get("params", {}),
-            owner,
+            job_state.get("job_id"), # job_id
+            job_info.get("app_id", job_info.get("method")), # app_id
+            job_info.get("params", {}), # inputs
+            job_state.get("user"), # owner
             app_version=job_info.get("service_ver", None),
-            cell_id=cell_id,
-            meta=meta,
-            parent_job_id=parent_job_id,
-            run_id=run_id,
-            tag=tag,
-            token_id=token_id,
+            batch_id=job_state.get("batch_id", None),
+            cell_id=job_meta.get("cell_id", None),
+            ee2_state=job_state,
+            meta=job_meta,
+            run_id=job_meta.get("run_id", None),
+            tag=job_meta.get("tag", "release"),
+            token_id=job_meta.get("token_id", None),
         )
 
     @classmethod
     def map_viewer_params(cls, job_state, job_inputs, app_id, app_tag):
         # get app spec.
-        if job_state is None or job_state.get("status", "") != "completed":
+        if job_state is None or job_state.get("status", "") != COMPLETED_STATUS:
             return None
 
         spec = SpecManager().get_spec(app_id, app_tag)
@@ -144,7 +139,7 @@ class Job(object):
         if that's None, then it makes a call to njs.
 
         If no exception is raised, this only returns the list of parameters, NOT the whole
-        object fetched from NJS.get_job_params
+        object fetched from ee2.get_job_params
         """
         if self.inputs is not None:
             return self.inputs
@@ -164,18 +159,14 @@ class Job(object):
         Queries the job service to see the status of the current job.
         Returns a <something> stating its status. (string? enum type? different traitlet?)
         """
-        if self._last_state is not None and self._last_state.get("status") in [
-            "completed",
-            "terminated",
-            "error",
-        ]:
+        if self._last_state is not None and self._last_state.get("status") in TERMINAL_STATES:
             return self._last_state
         try:
             state = clients.get("execution_engine2").check_job(
                 {"job_id": self.job_id, "exclude_fields": EXCLUDED_JOB_STATE_FIELDS}
             )
             state["job_output"] = state.get("job_output", {})
-            for arg in ["cell_id", "parent_job_id", "run_id", "token_id"]:
+            for arg in EXTRA_JOB_STATE_FIELDS:
                 state[arg] = getattr(self, arg)
             self._last_state = state
             return dict(state)
@@ -191,7 +182,7 @@ class Job(object):
 
         if state is None:
             state = self.state()
-        if state["status"] == "completed" and "job_output" in state:
+        if state["status"] == COMPLETED_STATUS and "job_output" in state:
             (output_widget, widget_params) = self._get_output_info(state)
             return WidgetManager().show_output_widget(
                 output_widget, widget_params, tag=self.tag
@@ -203,7 +194,7 @@ class Job(object):
         """
         Maps job state 'result' onto the inputs for a viewer.
         """
-        if state is None or state["status"] != "completed":
+        if state is None or state["status"] != COMPLETED_STATUS:
             return None
         (output_widget, widget_params) = self._get_output_info(state)
         return {"name": output_widget, "tag": self.tag, "params": widget_params}
@@ -268,7 +259,7 @@ class Job(object):
         False if its running/queued.
         """
         status = self.status()
-        return status.lower() in ["completed", "terminated", "error"]
+        return status.lower() in TERMINAL_STATES
 
     def __repr__(self):
         return "KBase Narrative Job - " + str(self.job_id)
@@ -285,7 +276,7 @@ class Job(object):
         try:
             state = self.state()
             spec = self.app_spec()
-            if state.get("status", "") == "completed":
+            if state.get("status", "") == COMPLETED_STATUS:
                 (output_widget, widget_params) = self._get_output_info(state)
                 output_widget_info = {"name": output_widget, "params": widget_params}
 

@@ -1,9 +1,9 @@
 from ..util import ConfigTests
 from biokbase.workspace.baseclient import ServerError
+from biokbase.narrative.jobs.appmanager import BATCH_ID_KEY
 
 RANDOM_DATE = "2018-08-10T16:47:36+0000"
 RANDOM_TYPE = "ModuleA.TypeA-1.0"
-
 
 class MockClients:
     """
@@ -208,7 +208,7 @@ class MockClients:
 
     def run_job_batch(self, batch_job_inputs, batch_params):
         child_job_ids = [self.test_job_id for i in range(len(batch_job_inputs))]
-        return {"parent_job_id": self.test_job_id, "child_job_ids": child_job_ids}
+        return {BATCH_ID_KEY: self.test_job_id, "child_job_ids": child_job_ids}
 
     def cancel_job(self, job_id):
         return {}

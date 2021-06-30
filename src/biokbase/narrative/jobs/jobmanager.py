@@ -1,5 +1,5 @@
 import biokbase.narrative.clients as clients
-from .job import Job
+from .job import Job, COMPLETED_STATUS, TERMINAL_STATES, EXCLUDED_JOB_STATE_FIELDS
 from biokbase.narrative.common import kblogging
 from IPython.display import HTML
 from jinja2 import Template
@@ -22,16 +22,6 @@ instance in its current state.
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 __version__ = "0.0.1"
 
-COMPLETED_STATUS = "completed"
-TERMINAL_STATES = [COMPLETED_STATUS, "terminated", "error"]
-EXCLUDED_JOB_STATE_FIELDS = [
-    "authstrat",
-    "condor_job_ads",
-    "job_input",
-    "scheduler_type",
-    "scheduler_id",
-]
-
 
 class JobManager(object):
     """
@@ -53,26 +43,6 @@ class JobManager(object):
         if JobManager.__instance is None:
             JobManager.__instance = object.__new__(cls)
         return JobManager.__instance
-
-    def _create_job_from_state(self, job_id, job_state):
-        """
-        Makes a Job object from a job_id and job_state data
-        """
-        job_info = job_state.get("job_input", {})
-        job_meta = job_info.get("narrative_cell_info", {})
-
-        return Job.from_state(
-            job_id,  # the id
-            job_info,  # params, etc.
-            job_state.get("user"),  # owner id
-            app_id=job_info.get("app_id", job_info.get("method")),
-            tag=job_meta.get("tag", "release"),
-            cell_id=job_meta.get("cell_id", None),
-            run_id=job_meta.get("run_id", None),
-            token_id=job_meta.get("token_id", None),
-            meta=job_meta,
-            parent_job_id=job_info.get("parent_job_id", None),
-        )
 
     def initialize_jobs(self):
         """
@@ -99,7 +69,7 @@ class JobManager(object):
             raise new_e
 
         for job_id, job_state in job_states.items():
-            job = self._create_job_from_state(job_id, job_state)
+            job = Job.from_state(job_state)
             status = job_state.get("status")
             refresh_state = 1 if status not in TERMINAL_STATES else 0
             self._running_jobs[job_id] = {
@@ -124,8 +94,7 @@ class JobManager(object):
         for job_id in job_ids:
             if job_id in job_ids and job_id not in self._running_jobs:
                 job_state = job_states.get(job_id, {})
-                job = self._create_job_from_state(job_id, job_state)
-
+                job = Job.from_state(job_state)
                 # Note that when jobs for this narrative are initially loaded,
                 # they are set to not be refreshed. Rather, if a client requests
                 # updates via the start_job_update message, the refresh flag will
@@ -286,12 +255,13 @@ class JobManager(object):
                 created: epoch ms,
                 updated: epoch ms,
                 queued: optional - epoch ms,
-                finished: optional - epoc ms,
+                finished: optional - epoch ms,
                 terminated_code: optional - int,
-                tag: string (release, beta, dev),
+                batch_id: optional - parent job ID for run_job_batch jobs
+                cell_id: string,
                 parent_job_id: optional - string or null,
                 run_id: string,
-                cell_id: string,
+                tag: string (release, beta, dev),
                 errormsg: optional - string,
                 error (optional): {
                     code: int,
@@ -342,6 +312,7 @@ class JobManager(object):
                 job_id=job.job_id,
             )
 
+        # check for a "finished" timestamp
         if state.get("finished"):
             try:
                 widget_info = job.get_viewer_params(state)
@@ -367,6 +338,7 @@ class JobManager(object):
 
         state.update(
             {
+                # this is the wrong tag, so child_jobs always gets set to []
                 "child_jobs": self._child_job_states(
                     state.get("sub_jobs", []),
                     job.meta.get("batch_app"),
@@ -646,9 +618,7 @@ class JobManager(object):
 
         return True
 
-    def cancel_jobs(
-        self, job_id_list: List[str] = [], parent_job_id: str = None
-    ) -> None:
+    def cancel_jobs(self, job_id_list: List[str] = []):
         """
         Cancel a list of jobs
 

@@ -1,7 +1,7 @@
 """
 Tests for the app manager.
 """
-from biokbase.narrative.jobs.appmanager import AppManager
+from biokbase.narrative.jobs.appmanager import AppManager, BATCH_ID_KEY
 import biokbase.narrative.jobs.specmanager as specmanager
 import biokbase.narrative.app_util as app_util
 from biokbase.narrative.jobs.job import Job
@@ -17,6 +17,7 @@ import io
 import copy
 from .util import ConfigTests
 
+SEMANTIC_VER_ERROR = "Semantic versions only apply to released app modules."
 
 def mock_agent_token(*args, **kwargs):
     return dict({"user": "testuser", "id": "12345", "token": "abcde"})
@@ -264,7 +265,7 @@ class AppManagerTestCase(unittest.TestCase):
             c.return_value.send_comm_message,
             run_func,
             "run_app",
-            "Semantic versions only apply to released app modules.",
+            SEMANTIC_VER_ERROR,
         )
 
     # Running an app with missing inputs is now allowed. The app can
@@ -367,7 +368,7 @@ class AppManagerTestCase(unittest.TestCase):
             c.return_value.send_comm_message,
             run_func,
             "run_app_batch",
-            "Semantic versions only apply to released app modules.",
+            SEMANTIC_VER_ERROR,
         )
 
     # Running an app with missing inputs is now allowed. The app can
@@ -437,7 +438,7 @@ class AppManagerTestCase(unittest.TestCase):
                     "args": [self.good_app_id, {}],
                     "kwargs": {"tag": "dev", "version": "1.0.0"},
                 },
-                "expected_error": "Semantic versions only apply to released app modules.",
+                "expected_error": SEMANTIC_VER_ERROR,
             },
         ]
         for test_case in cases:
@@ -469,12 +470,17 @@ class AppManagerTestCase(unittest.TestCase):
         new_jobs = self.am.run_app_bulk(self.bulk_run_good_inputs)
         self.assertIsInstance(new_jobs, dict)
         self.assertIn("parent_job", new_jobs)
-        self.assertIsInstance(new_jobs["parent_job"], Job)
         self.assertIn("child_jobs", new_jobs)
+
+        self.assertTrue(new_jobs["parent_job"])
+        self.assertIsInstance(new_jobs["parent_job"], Job)
+        self.assertEqual(new_jobs["parent_job"].job_id, new_jobs["parent_job"].batch_id)
+
         self.assertIsInstance(new_jobs["child_jobs"], list)
         self.assertEqual(len(new_jobs["child_jobs"]), 3)
         for child in new_jobs["child_jobs"]:
             self.assertIsInstance(child, Job)
+            self.assertEqual(new_jobs["parent_job"].job_id, child.batch_id)
         self._verify_comm_success(c.return_value.send_comm_message, True, num_jobs=4)
 
     @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
@@ -897,9 +903,9 @@ class AppManagerTestCase(unittest.TestCase):
             },
         ]
         if is_batch:
-            expected_keys[0].append("parent_job_id")
+            expected_keys[0].append(BATCH_ID_KEY)
             expected_keys[0].append("child_job_ids")
-            expected_values[0]["parent_job_id"] = self.test_job_id
+            expected_values[0][BATCH_ID_KEY] = self.test_job_id
         else:
             expected_keys[0].append("job_id")
             expected_values[0]["job_id"] = self.test_job_id

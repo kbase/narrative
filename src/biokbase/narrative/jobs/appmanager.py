@@ -31,6 +31,7 @@ A module for managing apps, specs, requirements, and for starting jobs.
 """
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
+BATCH_ID_KEY = "parent_job_id"
 
 def _app_error_wrapper(app_func: Callable) -> any:
     """
@@ -291,12 +292,12 @@ class AppManager(object):
             batch_app_id,
             batch_params,
             system_variable("user_id"),
-            tag=batch_method_tag,
             app_version=batch_method_ver,
             cell_id=cell_id,
-            run_id=run_id,
-            token_id=agent_token["id"],
             meta=job_meta,
+            run_id=run_id,
+            tag=batch_method_tag,
+            token_id=agent_token["id"],
         )
 
         self._send_comm_message(
@@ -391,10 +392,10 @@ class AppManager(object):
             app_id,
             job_runner_inputs["params"],
             system_variable("user_id"),
-            tag=tag,
             app_version=job_runner_inputs["service_ver"],
             cell_id=cell_id,
             run_id=run_id,
+            tag=tag,
             token_id=agent_token["id"],
         )
 
@@ -541,7 +542,7 @@ class AppManager(object):
                 "event_at": datetime.datetime.utcnow().isoformat() + "Z",
                 "cell_id": cell_id,
                 "run_id": run_id,
-                "parent_job_id": batch_submission["parent_job_id"],
+                BATCH_ID_KEY: batch_submission[BATCH_ID_KEY],
                 "child_job_ids": batch_submission["child_job_ids"],
             },
         )
@@ -556,17 +557,22 @@ class AppManager(object):
                     job_info["app_id"],
                     job_info["params"],
                     user_id,
-                    tag=job_info["meta"].get("tag"),
                     app_version=job_info["service_ver"],
+                    batch_id=batch_submission[BATCH_ID_KEY],
                     cell_id=cell_id,
                     run_id=run_id,
+                    tag=job_info["meta"].get("tag"),
                     token_id=agent_token["id"],
                 )
             )
 
         # TODO make something more reasonable / complete for a parent job
         parent_job = Job(
-            batch_submission["parent_job_id"], "bulk_app_submission", {}, user_id
+            batch_submission[BATCH_ID_KEY],
+            "bulk_app_submission",
+            {},
+            user_id,
+            batch_id=batch_submission[BATCH_ID_KEY],
         )
 
         # TODO make a tighter design in the job manager for submitting a family of jobs
@@ -925,13 +931,12 @@ class AppManager(object):
         self._send_comm_message(message_id, {"address": address, "message": message})
 
     def _get_validated_app_spec(self, app_id, tag, is_long, version=None):
-        if version is not None and tag != "release":
-            if re.match(r"\d+\.\d+\.\d+", version) is not None:
-                raise ValueError(
-                    "Semantic versions only apply to released app modules. "
-                    + "You can use a Git commit hash instead to specify a "
-                    + "version."
-                )
+        if version is not None and tag != "release" and re.match(r"\d+\.\d+\.\d+", version) is not None:
+            raise ValueError(
+                "Semantic versions only apply to released app modules. "
+                + "You can use a Git commit hash instead to specify a "
+                + "version."
+            )
         self.spec_manager.check_app(app_id, tag, raise_exception=True)
         # Get the spec & params
         spec = self.spec_manager.get_spec(app_id, tag)

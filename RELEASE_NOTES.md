@@ -8,6 +8,26 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
 - SCT-3602 - refseq public data tool now searches by lineage as well; for all public data tools: automatically focus the search input; fix paging bug.
 - No ticket - migrate from `nosetests` to `pytest` for testing the Python stack.
+- Python dependency updates
+  - pillow 8.2.0 -> 8.3.0
+  - plotly 4.14.3 -> 5.1.0
+  - pytest 6.2.3. -> 6.2.4
+  - pytest-cov 2.11.1 -> 2.12.1
+- Javascript dependency updates
+  - @wdio/browserstack-service 7.7.3 -> 7.7.4
+  - @wdio/cli 7.7.3 -> 7.7.4
+  - @wdio/local-runner 7.7.3 -> 7.7.4
+  - @wdio/mocha-framework 7.7.3 -> 7.7.4
+  - @wdio/selenium-standalone-service 7.7.3 -> 7.7.4
+  - chromedriver 91.0.0 -> 91.0.1
+  - eslint 7.28.0 -> 7.29.0
+  - husky 6.0.0 -> 7.0.0
+  - karma 6.3.3. -> 6.3.4
+  - puppeteer 10.0.0 -> 10.1.0
+  - selenium-standalone 6.23.0 -> 7.1.0
+  - terser 5.7.0 -> 5.7.1
+  - wdio-chromedriver-service 7.1.0 -> 7.1.1
+  - webdriverio 7.7.3 -> 7.7.4
 
 ### Version 4.4.0
 -   No ticket: boatloads of code cleanup and fixes to the unit and internal testing

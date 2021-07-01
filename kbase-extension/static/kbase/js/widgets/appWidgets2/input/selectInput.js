@@ -1,15 +1,16 @@
 define([
+    'jquery',
     'bluebird',
     'kb_common/html',
-    'common/events',
     'common/ui',
     'common/runtime',
     '../validators/text',
     '../inputUtils',
 
+    'select2',
     'bootstrap',
     'css!font-awesome',
-], (Promise, html, Events, UI, Runtime, Validation, inputUtils) => {
+], ($, Promise, html, UI, Runtime, Validation, inputUtils) => {
     'use strict';
 
     // Constants
@@ -19,21 +20,17 @@ define([
         option = t('option');
 
     function factory(config) {
-        let spec = config.parameterSpec,
+        const spec = config.parameterSpec,
             runtime = Runtime.make(),
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(config.channelName),
-            parent,
-            ui,
-            container,
             model = {
-                availableValues: null,
-                value: null,
+                availableValues: spec.data.constraints.options,
+                availableValuesMap: {},
+                value: config.initialValue,
             };
+        let parent, ui, container;
 
-        model.availableValues = spec.data.constraints.options;
-
-        model.availableValuesMap = {};
         model.availableValues.forEach((item, index) => {
             item.index = index;
             model.availableValuesMap[item.value] = item;
@@ -41,15 +38,9 @@ define([
 
         function getControlValue() {
             const control = ui.getElement('input-container.input'),
-                selected = control.selectedOptions;
+                selected = $(control).val();
 
-            if (selected.length === 0) {
-                return spec.data.nullValue;
-            }
-
-            // we are modeling a single string value, so we always just get the
-            // first selected element, which is all there should be!
-            return selected.item(0).value;
+            return selected;
         }
 
         // VALIDATION
@@ -75,103 +66,77 @@ define([
         // DOM EVENTS
 
         function handleChanged() {
-            return {
-                type: 'change',
-                handler: function () {
-                    importControlValue()
-                        .then((value) => {
-                            model.value = value;
-                            channel.emit('changed', {
-                                newValue: value,
+            importControlValue()
+                .then((value) => {
+                    model.value = value;
+                    channel.emit('changed', {
+                        newValue: value,
+                    });
+                    return validate(value);
+                })
+                .then((result) => {
+                    if (result.isValid) {
+                        if (config.showOwnMessages) {
+                            ui.setContent('input-container.message', '');
+                        }
+                    } else if (result.diagnosis === 'required-missing') {
+                        // nothing??
+                    } else {
+                        if (config.showOwnMessages) {
+                            // show error message -- new!
+                            const message = inputUtils.buildMessageAlert({
+                                title: 'ERROR',
+                                type: 'danger',
+                                id: result.messageId,
+                                message: result.errorMessage,
                             });
-                            return validate(value);
-                        })
-                        .then((result) => {
-                            if (result.isValid) {
-                                if (config.showOwnMessages) {
-                                    ui.setContent('input-container.message', '');
-                                }
-                            } else if (result.diagnosis === 'required-missing') {
-                                // nothing??
-                            } else {
-                                if (config.showOwnMessages) {
-                                    // show error message -- new!
-                                    const message = inputUtils.buildMessageAlert({
-                                        title: 'ERROR',
-                                        type: 'danger',
-                                        id: result.messageId,
-                                        message: result.errorMessage,
-                                    });
-                                    ui.setContent('input-container.message', message.content);
-                                    message.events.attachEvents();
-                                }
-                            }
-                            channel.emit('validation', result);
-                        })
-                        .catch((err) => {
-                            channel.emit('validation', {
-                                isValid: false,
-                                diagnosis: 'invalid',
-                                errorMessage: err.message,
-                            });
-                        });
-                },
-            };
+                            ui.setContent('input-container.message', message.content);
+                            message.events.attachEvents();
+                        }
+                    }
+                    channel.emit('validation', result);
+                })
+                .catch((err) => {
+                    channel.emit('validation', {
+                        isValid: false,
+                        diagnosis: 'invalid',
+                        errorMessage: err.message,
+                    });
+                });
         }
 
-        function makeInputControl(events) {
-            let selected,
-                selectOptions = model.availableValues.map((item) => {
-                    selected = false;
-                    if (item.value === model.value) {
-                        selected = true;
-                    }
-
-                    return option(
-                        {
-                            value: item.value,
-                            selected: selected,
-                        },
-                        item.display
-                    );
-                });
+        function makeInputControl() {
+            const selectOptions = model.availableValues.map((item) => {
+                const attribs = {
+                    value: item.value,
+                };
+                if (item.value === model.value) {
+                    attribs.selected = true;
+                }
+                return option(attribs, item.display);
+            });
 
             // CONTROL
             return select(
                 {
-                    id: events.addEvents({ events: [handleChanged()] }),
                     class: 'form-control',
                     dataElement: 'input',
                 },
-                [option({ value: '' }, '')].concat(selectOptions)
+                selectOptions
             );
         }
 
-        function syncModelToControl() {
-            // assuming the model has been modified...
-            const control = ui.getElement('input-container.input');
-            // loop through the options, selecting the one with the value.
-            // unselect
-            if (control.selectedIndex >= 0) {
-                control.options.item(control.selectedIndex).selected = false;
-            }
-            const selectedItem = model.availableValuesMap[model.value];
-            if (selectedItem) {
-                control.options.item(selectedItem.index + 1).selected = true;
-            }
-        }
+        // function syncModelToControl() {
+        //     $(ui.getElement('input-container.input')).val(model.value).trigger('change');
+        // }
 
-        function layout(events) {
-            const content = div(
+        function layout() {
+            return div(
                 {
                     dataElement: 'main-panel',
                 },
-                [div({ dataElement: 'input-container' }, makeInputControl(events))]
+                [div({ dataElement: 'input-container' }, makeInputControl())]
             );
-            return {
-                content: content,
-                events: events,
-            };
         }
 
         function setModelValue(value) {
@@ -188,15 +153,26 @@ define([
 
         function start(arg) {
             return Promise.try(() => {
+                setModelValue(config.initialValue);
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
-                const events = Events.make({ node: container }),
-                    theLayout = layout(events);
-
-                container.innerHTML = theLayout.content;
-                events.attachEvents();
+                container.innerHTML = layout();
+                $(ui.getElement('input-container.input'))
+                    .select2({
+                        allowClear: true,
+                        placeholder: {
+                            id: 'select an option',
+                        },
+                        width: '100%',
+                    })
+                    .on('change', () => {
+                        handleChanged();
+                    })
+                    .on('select2:clear', () => {
+                        handleChanged();
+                    });
 
                 channel.on('reset-to-defaults', () => {
                     resetModelValue();
@@ -204,11 +180,9 @@ define([
                 channel.on('update', (message) => {
                     setModelValue(message.value);
                 });
-                // bus.emit('sync');
 
-                setModelValue(config.initialValue);
                 autoValidate();
-                syncModelToControl();
+                // syncModelToControl();
             });
         }
 

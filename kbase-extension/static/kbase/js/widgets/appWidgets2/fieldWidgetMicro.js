@@ -357,8 +357,7 @@ define([
                                 return div({ class: 'col-md-3' }, [
                                     label(
                                         {
-                                            class:
-                                                'xcontrol-label kb-app-parameter-name control-label',
+                                            class: 'kb-app-parameter-name control-label',
                                             title: infoTipText,
                                             style: { cursor: 'help' },
                                             id: events.addEvent({

@@ -40,7 +40,7 @@
         "prettier": "2.2.1",
         "puppeteer": "10.0.0",
         "requirejs": "2.3.6",
-        "selenium-standalone": "6.23.0",
+        "selenium-standalone": "7.1.0",
         "selenium-webdriver": "3.6.0",
         "string.prototype.endswith": "1.0.0",
         "string.prototype.startswith": "1.0.0",

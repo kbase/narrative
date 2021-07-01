@@ -26,15 +26,9 @@ define([
             channel = busConnection.channel(config.channelName),
             model = {
                 availableValues: spec.data.constraints.options,
-                availableValuesMap: {},
                 value: config.initialValue,
             };
         let parent, ui, container;
-
-        model.availableValues.forEach((item, index) => {
-            item.index = index;
-            model.availableValuesMap[item.value] = item;
-        });
 
         function getControlValue() {
             const control = ui.getElement('input-container.input'),
@@ -126,10 +120,6 @@ define([
             );
         }
 
-        // function syncModelToControl() {
-        //     $(ui.getElement('input-container.input')).val(model.value).trigger('change');
-        // }
-
         function layout() {
             return div(
                 {
@@ -182,7 +172,6 @@ define([
                 });
 
                 autoValidate();
-                // syncModelToControl();
             });
         }
 
@@ -196,8 +185,8 @@ define([
         }
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

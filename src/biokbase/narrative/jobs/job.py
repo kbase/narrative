@@ -1,6 +1,8 @@
 import biokbase.narrative.clients as clients
 from .specmanager import SpecManager
 from biokbase.narrative.app_util import map_inputs_from_job, map_outputs_from_state
+from biokbase.narrative.exception_util import transform_job_exception
+import copy
 import json
 import uuid
 from jinja2 import Template
@@ -12,7 +14,7 @@ KBase job class
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 COMPLETED_STATUS = "completed"
-TERMINAL_STATES = [COMPLETED_STATUS, "terminated", "error"]
+TERMINAL_STATUSES = [COMPLETED_STATUS, "terminated", "error"]
 
 EXCLUDED_JOB_STATE_FIELDS = [
     "authstrat",
@@ -107,7 +109,7 @@ class Job(object):
     @classmethod
     def from_state(cls, job_state):
         """
-        Parameters:
+        Variables:
         -----------
         job_state - dict
             the job information returned from ee2.check_job
@@ -152,9 +154,6 @@ class Job(object):
     def app_spec(self):
         return SpecManager().get_spec(self.app_id, self.tag)
 
-    def status(self):
-        return self.state().get("status", "unknown")
-
     def parameters(self):
         """
         Returns the parameters used to start the job. Job tries to use its params field, but
@@ -192,7 +191,7 @@ class Job(object):
         # batch parent jobs with where all children have status "completed" are in a terminal state
         # otherwise, child jobs may be retried
         self.terminal_state = (
-            True if state.get("status", "unknown") in TERMINAL_STATES else False
+            True if state.get("status", "unknown") in TERMINAL_STATUSES else False
         )
 
         if self._last_state is None:
@@ -223,8 +222,7 @@ class Job(object):
 
     def state(self):
         """
-        Queries the job service to see the status of the current job.
-        Returns a <something> stating its status. (string? enum type? different traitlet?)
+        Queries the job service to see the state of the current job.
         """
 
         if self.terminal_state:
@@ -239,6 +237,78 @@ class Job(object):
 
         except Exception as e:
             raise Exception(f"Unable to fetch info for job {self.job_id} - {e}")
+
+    def revised_state(self, state=None) -> dict:
+        """
+        :param state: can be queried individually from ee2/cache with self.state(),
+            but sometimes want it to be queried in bulk from ee2 upstream
+        :return: dict, with structure
+
+        {
+            owner: string (username, who started the job),
+            spec: app spec (optional)
+            widget_info: (if not finished, None, else...) job.get_viewer_params result
+            state: {
+                job_id: string,
+                status: string,
+                created: epoch ms,
+                updated: epoch ms,
+                queued: optional - epoch ms,
+                finished: optional - epoc ms,
+                terminated_code: optional - int,
+                tag: string (release, beta, dev),
+                parent_job_id: optional - string or null,
+                run_id: string,
+                cell_id: string,
+                errormsg: optional - string,
+                error (optional): {
+                    code: int,
+                    name: string,
+                    message: string (should be for the user to read),
+                    error: string, (likely a stacktrace)
+                },
+                error_code: optional - int
+            }
+        }
+        """
+        if not state:
+            state = self.state()
+        else:
+            state = self._augment_ee2_state(state)  # diff: adds extra fields
+
+        widget_info = None
+        app_spec = {}
+
+        if state.get("finished"):
+            try:
+                widget_info = self.get_viewer_params(state)
+            except Exception as e:
+                # Can't get viewer params
+                new_e = transform_job_exception(e)
+                state.update(
+                    {
+                        "status": "error",
+                        "errormsg": "Unable to build output viewer parameters!",
+                        "error": {
+                            "code": getattr(new_e, "code", -1),
+                            "source": getattr(new_e, "source", "JobManager"),
+                            "name": "App Error",
+                            "message": "Unable to build output viewer parameters",
+                            "error": "Unable to generate App output viewer!\nThe App appears to have completed successfully,\nbut we cannot construct its output viewer.\nPlease contact the developer of this App for assistance.",
+                        },
+                    }
+                )
+
+        state["child_jobs"] = []
+        if "batch_size" in self.meta:
+            state.update({"batch_size": self.meta["batch_size"]})
+        job_state = {
+            "state": state,
+            "spec": app_spec,
+            "widget_info": widget_info,
+            "owner": self.owner,
+        }
+        return job_state
 
     def show_output_widget(self, state=None):
         """
@@ -326,7 +396,7 @@ class Job(object):
         False if its running/queued.
         """
         status = self.status()
-        return status.lower() in TERMINAL_STATES
+        return status.lower() in TERMINAL_STATUSES
 
     def __repr__(self):
         return "KBase Narrative Job - " + str(self.job_id)
@@ -369,3 +439,82 @@ class Job(object):
         """
 
         return {attr: getattr(self, attr) for attr in [*ALL_JOB_ATTRS, "_last_state"]}
+
+    # def _create_error_state(
+    #     self,
+    #     error: str,
+    #     error_msg: str,
+    #     code: int,
+    # ) -> dict:
+    #     """
+    #     Creates an error state to return if
+    #     1. the state is missing or unretrievable
+    #     2. Job is none
+    #     This creates the whole state dictionary to return, as described in
+    #     _construct_cache_job_state.
+    #     :param error: the full, detailed error (not necessarily human-readable, maybe a stacktrace)
+    #     :param error_msg: a shortened error string, meant to be human-readable
+    #     :param code: int, an error code
+    #     """
+    #     return {
+    #         "status": "error",
+    #         "error": {
+    #             "code": code,
+    #             "name": "Job Error",
+    #             "message": error_msg,
+    #             "error": error,
+    #         },
+    #         "errormsg": error_msg,
+    #         "error_code": code,
+    #         "job_id": self.job_id,
+    #         "cell_id": self.cell_id,
+    #         "run_id": self.run_id,
+    #         "created": 0,
+    #         "updated": 0,
+    #     }
+
+    # def _child_states(self, sub_job_list):
+    #     """
+    #     Fetches state for all jobs in the list. These are expected to be child jobs, with no actual Job object associated.
+    #     So if they're done, we need to do the output mapping out of band.
+    #     But the check_jobs call with params will return the app id. So that helps.
+    #     app_id = the id of the app that all the child jobs are running (format: module/method, like "MEGAHIT/run_megahit")
+    #     app_tag = one of "release", "beta", "dev"
+    #     (the above two aren't stored with the subjob metadata, and won't until we back some more on KBParallel - I want to
+    #     lobby for pushing toward just starting everything up at once from here and letting HTCondor deal with allocation)
+    #     sub_job_list = list of ids of jobs to look up
+    #     """
+
+    #     # TODO
+    #     # THIS IS A DRAFT METHOD
+    #     # NEEDS TO BE RUN/VERIFIED
+
+    #     if not sub_job_list:
+    #         return []
+    #     sub_job_list = sorted(sub_job_list)
+    #     app_id = self.meta.get("batch_app")
+    #     app_tag = self.meta.get("batch_tag")
+
+    #     states = clients.get("execution_engine2").check_jobs(
+    #         {
+    #             "job_ids": sub_job_list,
+    #             "exclude_fields": EXCLUDED_JOB_STATE_FIELDS,
+    #             "return_list": 0,
+    #         }
+    #     )
+
+    #     for job_id in sub_job_list:
+    #         state = states.get(job_id, {})
+    #         params = state.get("job_input", {}).get("params", [])
+    #         # if it's error, get the error.
+    #         if state.get("errormsg"):
+    #             continue
+    #         # if it's done, get the output mapping.
+    #         if state.get("status") == COMPLETED_STATUS:
+    #             try:
+    #                 widget_info = Job.map_viewer_params(state, params, app_id, app_tag)
+    #             except ValueError:
+    #                 widget_info = {}
+    #             state.update({"widget_info": widget_info})
+    #         states.append(state)
+    #     return states

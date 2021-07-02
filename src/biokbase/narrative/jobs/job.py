@@ -25,13 +25,28 @@ EXCLUDED_JOB_STATE_FIELDS = [
 
 EXTRA_JOB_STATE_FIELDS = ["batch_id", "cell_id", "run_id", "token_id"]
 
+ALL_JOB_ATTRS = [
+    "app_id",
+    "app_version",
+    "batch_id",
+    "cell_id",
+    "params",
+    "job_id",
+    "meta",
+    "owner",
+    "run_id",
+    "tag",
+    "token_id",
+]
+
+
 class Job(object):
     app_id = None
     app_version = None
     batch_id = None
     cell_id = None
-    inputs = None
     job_id = None
+    params = None
     run_id = None
     token_id = None
     _job_logs = list()
@@ -41,7 +56,7 @@ class Job(object):
         self,
         job_id,
         app_id,
-        inputs,
+        params,
         owner,
         app_version=None,
         batch_id=None,
@@ -57,25 +72,19 @@ class Job(object):
         The app_id and app_version should both align with what's available in
         the Narrative Method Store service.
         """
-        if app_version is None and inputs is not None:
-            app_version = inputs.get("service_ver")
 
         self.app_id = app_id
         self.app_version = app_version
         self.batch_id = batch_id
         self.cell_id = cell_id
-        self.inputs = inputs
         self.job_id = job_id
         self.meta = meta if meta else dict()
         self.owner = owner
+        self.params = params
         self.run_id = run_id
         self.tag = tag
         self.token_id = token_id
-        if ee2_state:
-            ee2_state["job_output"] = ee2_state.get("job_output", {})
-            for arg in EXTRA_JOB_STATE_FIELDS:
-                ee2_state[arg] = getattr(self, arg)
-            self._last_state = ee2_state
+        self._cache_state(ee2_state)
 
     @classmethod
     def from_state(cls, job_state):
@@ -85,14 +94,14 @@ class Job(object):
         job_state - dict
             the job information returned from ee2.check_job
         """
-        job_info = job_state.get("job_input", {})
-        job_meta = job_info.get("narrative_cell_info", {})
+        job_input = job_state.get("job_input", {})
+        job_meta = job_input.get("narrative_cell_info", {})
         return cls(
-            job_state.get("job_id"), # job_id
-            job_info.get("app_id", job_info.get("method")), # app_id
-            job_info.get("params", {}), # inputs
-            job_state.get("user"), # owner
-            app_version=job_info.get("service_ver", None),
+            job_state.get("job_id"),  # job_id
+            job_input.get("app_id", job_input.get("method")),  # app_id
+            job_input.get("params", {}),  # params
+            job_state.get("user"),  # owner
+            app_version=job_input.get("service_ver", None),
             batch_id=job_state.get("batch_id", None),
             cell_id=job_meta.get("cell_id", None),
             ee2_state=job_state,
@@ -102,6 +111,7 @@ class Job(object):
             token_id=job_meta.get("token_id", None),
         )
 
+    # can be removed -- unused
     @classmethod
     def map_viewer_params(cls, job_state, job_inputs, app_id, app_tag):
         # get app spec.
@@ -123,7 +133,7 @@ class Job(object):
             state = self.state()
             print(f"Status: {state['status']}")
             print("Inputs:\n------")
-            pprint(self.inputs)
+            pprint(self.params)
         except BaseException:
             print("Unable to retrieve current running state!")
 
@@ -135,41 +145,58 @@ class Job(object):
 
     def parameters(self):
         """
-        Returns the parameters used to start the job. Job tries to use its inputs field, but
+        Returns the parameters used to start the job. Job tries to use its params field, but
         if that's None, then it makes a call to njs.
 
         If no exception is raised, this only returns the list of parameters, NOT the whole
         object fetched from ee2.get_job_params
         """
-        if self.inputs is not None:
-            return self.inputs
+        if self.params is not None:
+            return self.params
         else:
             try:
-                self.inputs = clients.get("execution_engine2").get_job_params(
+                self.params = clients.get("execution_engine2").get_job_params(
                     self.job_id
                 )["params"]
-                return self.inputs
+                return self.params
             except Exception as e:
                 raise Exception(
                     f"Unable to fetch parameters for job {self.job_id} - {e}"
                 )
+
+    def _cache_state(self, state):
+        if state and state.get("status") in TERMINAL_STATES:
+            self._last_state = state
+
+    def _augment_ee2_state(self, state):
+        output_state = {key: value for key, value in state.items()}
+        for field in EXCLUDED_JOB_STATE_FIELDS:
+            if field in output_state:
+                del output_state[field]
+        if "job_output" not in output_state:
+            output_state["job_output"] = {}
+        for arg in EXTRA_JOB_STATE_FIELDS:
+            output_state[arg] = getattr(self, arg)
+        return dict(output_state)
 
     def state(self):
         """
         Queries the job service to see the status of the current job.
         Returns a <something> stating its status. (string? enum type? different traitlet?)
         """
-        if self._last_state is not None and self._last_state.get("status") in TERMINAL_STATES:
-            return self._last_state
+        if (
+            self._last_state is not None
+            and self._last_state.get("status") in TERMINAL_STATES
+        ):
+            return self._augment_ee2_state(self._last_state)
+
         try:
             state = clients.get("execution_engine2").check_job(
                 {"job_id": self.job_id, "exclude_fields": EXCLUDED_JOB_STATE_FIELDS}
             )
-            state["job_output"] = state.get("job_output", {})
-            for arg in EXTRA_JOB_STATE_FIELDS:
-                state[arg] = getattr(self, arg)
-            self._last_state = state
-            return dict(state)
+            self._cache_state(state)
+            return self._augment_ee2_state(state)
+
         except Exception as e:
             raise Exception(f"Unable to fetch info for job {self.job_id} - {e}")
 
@@ -295,3 +322,10 @@ class Job(object):
             info=json.dumps(info),
             output_widget_info=json.dumps(output_widget_info),
         )
+
+    def dump(self):
+        """
+        Display job info without having to iterate through the attributes
+        """
+
+        return {attr: getattr(self, attr) for attr in [*ALL_JOB_ATTRS, "_last_state"]}

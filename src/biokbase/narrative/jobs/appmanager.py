@@ -33,6 +33,14 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 BATCH_ID_KEY = "parent_job_id"
 
+BATCH_APP = {
+    "APP_ID": "kb_BatchApp/run_batch",
+    "METHOD": "kb_BatchApp.run_batch",
+    "TAG": "dev",
+    "VERSION": "dev",
+}
+
+
 def _app_error_wrapper(app_func: Callable) -> any:
     """
     This is a decorator meant to wrap any of the `run_app*` methods here.
@@ -179,10 +187,6 @@ class AppManager(object):
     ):
         if params is None:
             params = list()
-        batch_method = "kb_BatchApp.run_batch"
-        batch_app_id = "kb_BatchApp/run_batch"
-        batch_method_ver = "dev"
-        batch_method_tag = "dev"
         ws_id = strict_system_variable("workspace_id")
         spec = self._get_validated_app_spec(app_id, tag, True, version=version)
 
@@ -219,7 +223,7 @@ class AppManager(object):
         # This is what calls the function in the back end - Module.method
         # This isn't the same as the app spec id.
         job_meta = {
-            "tag": batch_method_tag,
+            "tag": BATCH_APP["TAG"],
             "batch_app": app_id,
             "batch_tag": tag,
             "batch_size": len(params),
@@ -254,10 +258,10 @@ class AppManager(object):
         # This is the input set for NJSW.run_job. Now we need the workspace id
         # and whatever fits in the metadata.
         job_runner_inputs = {
-            "method": batch_method,
-            "service_ver": batch_method_ver,
+            "method": BATCH_APP["METHOD"],
+            "service_ver": BATCH_APP["VERSION"],
             "params": batch_params,
-            "app_id": batch_app_id,
+            "app_id": BATCH_APP["APP_ID"],
             "wsid": ws_id,
             "meta": job_meta,
         }
@@ -271,7 +275,7 @@ class AppManager(object):
         # Log that we're trying to run a job...
         log_info = {
             "app_id": app_id,
-            "tag": batch_method_tag,
+            "tag": BATCH_APP["TAG"],
             "version": service_ver,
             "username": system_variable("user_id"),
             "wsid": ws_id,
@@ -289,14 +293,14 @@ class AppManager(object):
 
         new_job = Job(
             job_id,
-            batch_app_id,
+            BATCH_APP["APP_ID"],
             batch_params,
             system_variable("user_id"),
-            app_version=batch_method_ver,
+            app_version=BATCH_APP["VERSION"],
             cell_id=cell_id,
             meta=job_meta,
             run_id=run_id,
-            tag=batch_method_tag,
+            tag=BATCH_APP["TAG"],
             token_id=agent_token["id"],
         )
 
@@ -334,7 +338,7 @@ class AppManager(object):
         -----------
         app_id - should be from the app spec, e.g. 'build_a_metabolic_model'
                     or 'MegaHit/run_megahit'.
-        params - this is hte dictionary of parameters to tbe used with the app.
+        params - this is the dictionary of parameters to tbe used with the app.
                  They can be found by using the app_usage function. If any
                  non-optional apps are missing, a ValueError will be raised.
         tag - optional, one of [release|beta|dev] (default=release)
@@ -555,7 +559,7 @@ class AppManager(object):
                 Job(
                     child_job_id,
                     job_info["app_id"],
-                    job_info["params"],
+                    job_info["params"][0],
                     user_id,
                     app_version=job_info["service_ver"],
                     batch_id=batch_submission[BATCH_ID_KEY],
@@ -931,7 +935,11 @@ class AppManager(object):
         self._send_comm_message(message_id, {"address": address, "message": message})
 
     def _get_validated_app_spec(self, app_id, tag, is_long, version=None):
-        if version is not None and tag != "release" and re.match(r"\d+\.\d+\.\d+", version) is not None:
+        if (
+            version is not None
+            and tag != "release"
+            and re.match(r"\d+\.\d+\.\d+", version) is not None
+        ):
             raise ValueError(
                 "Semantic versions only apply to released app modules. "
                 + "You can use a Git commit hash instead to specify a "

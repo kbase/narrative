@@ -1,18 +1,44 @@
 {
-    "5d64935ab215ad4128de94d6":
-    {
+    "5d64935ab215ad4128de94d6": {
         "job_id": "5d64935ab215ad4128de94d6",
         "user": "fake_test_user",
         "authstrat": "kbaseworkspace",
         "wsid": "9999",
         "status": "completed",
-        "updated": 1566860088000,
+        "updated": 1566860098000,
         "created": 1566860088000,
-        "job_input": {"wsid": 123, "method": "method", "requested_release": "requested_release", "params": [{"k_list": [], "k_max": null, "output_contigset_name": "MEGAHIT.contigs"}], "service_ver": "04a6fbf889a4e82a84a227e2d4770fae3fdd9f74", "app_id": "NarrativeTest/test_editor", "source_ws_objects": [], "narrative_cell_info": {"cell_id": "9329ac6c-604c-42a9-aca2-a15dba6278ce", "tag": "dev", "run_id": "6546971e-757a-4a26-8439-325497c6d842"}},
-        "job_output": {"version": "1.1", "result": [{"new_number": 200}], "id": "5d7024304446f0da4ac7eac4"}
+        "finished": 1566860098000,
+        "job_input": {
+            "wsid": 123,
+            "method": "method",
+            "requested_release": "requested_release",
+            "params": [
+                {
+                    "k_list": [],
+                    "k_max": null,
+                    "output_contigset_name": "MEGAHIT.contigs"
+                }
+            ],
+            "service_ver": "04a6fbf889a4e82a84a227e2d4770fae3fdd9f74",
+            "app_id": "NarrativeTest/test_editor",
+            "source_ws_objects": [],
+            "narrative_cell_info": {
+                "cell_id": "9329ac6c-604c-42a9-aca2-a15dba6278ce",
+                "tag": "dev",
+                "run_id": "6546971e-757a-4a26-8439-325497c6d842"
+            }
+        },
+        "job_output": {
+            "version": "1.1",
+            "result": [
+                {
+                    "new_number": 200
+                }
+            ],
+            "id": "5d7024304446f0da4ac7eac4"
+        }
     },
-    "5d64935cb215ad4128de94d7":
-    {
+    "5d64935cb215ad4128de94d7": {
         "job_id": "5d64935cb215ad4128de94d7",
         "user": "tgu2",
         "authstrat": "kbaseworkspace",
@@ -20,10 +46,31 @@
         "status": "created",
         "updated": 1572462965487,
         "created": 1572462971988,
-        "job_input": {"wsid": 9999, "method": "MEGAHIT.run_megahit", "params": [{"k_list": [], "k_max": null, "output_contigset_name": "MEGAHIT.contigs"}], "service_ver": "2.2.1", "app_id": "MEGAHIT/run_megahit", "source_ws_objects": ["a/b/c", "e/d"], "parent_job_id": "9998", "narrative_cell_info": {"cell_id": "9329ac6c-604c-42a9-aca2-a15dba6278ce", "tag": "dev", "run_id": "6546971e-757a-4a26-8439-325497c6d842"}}
+        "job_input": {
+            "wsid": 9999,
+            "method": "MADE_UP_APP.job_created",
+            "params": [
+                {
+                    "k_list": [],
+                    "k_max": null,
+                    "output_contigset_name": "MEGAHIT.contigs"
+                }
+            ],
+            "service_ver": "1.2.3",
+            "app_id": "MADE_UP_APP/job_created",
+            "source_ws_objects": [
+                "a/b/c",
+                "e/d"
+            ],
+            "parent_job_id": "9998",
+            "narrative_cell_info": {
+                "cell_id": "9329ac6c-604c-42a9-aca2-a15dba6278ce",
+                "tag": "dev",
+                "run_id": "6546971e-757a-4a26-8439-325497c6d842"
+            }
+        }
     },
-    "5d64935cb215ad4128de94d8":
-    {
+    "5d64935cb215ad4128de94d8": {
         "job_id": "5d64935cb215ad4128de94d8",
         "user": "wjriehl",
         "authstrat": "kbaseworkspace",
@@ -31,10 +78,32 @@
         "status": "running",
         "updated": 1572462965490,
         "created": 1572462971990,
-        "job_input": {"wsid": 9999, "method": "MEGAHIT.run_megahit", "params": [{"k_list": [], "k_max": null, "output_contigset_name": "MEGAHIT.contigs"}], "service_ver": "2.2.1", "app_id": "MEGAHIT/run_megahit", "source_ws_objects": ["a/b/c", "e/d"], "parent_job_id": null, "narrative_cell_info": {"cell_id": "9329ac6c-604c-42a9-aca2-a15dba6278cf", "tag": "dev", "run_id": "6546971e-757a-4a26-8439-325497c6d843"}}
+        "running": 1572462965490,
+        "job_input": {
+            "wsid": 9999,
+            "method": "MADE_UP_APP.job_running",
+            "params": [
+                {
+                    "k_list": [],
+                    "k_max": null,
+                    "output_contigset_name": "MEGAHIT.contigs"
+                }
+            ],
+            "service_ver": "2.0.0",
+            "app_id": "MADE_UP_APP/job_running",
+            "source_ws_objects": [
+                "a/b/c",
+                "e/d"
+            ],
+            "parent_job_id": null,
+            "narrative_cell_info": {
+                "cell_id": "9329ac6c-604c-42a9-aca2-a15dba6278cf",
+                "tag": "dev",
+                "run_id": "6546971e-757a-4a26-8439-325497c6d843"
+            }
+        }
     },
-    "5d64935cb215ad4128de94d9":
-    {
+    "5d64935cb215ad4128de94d9": {
         "job_id": "5d64935cb215ad4128de94d9",
         "user": "fake_test_user",
         "authstrat": "kbaseworkspace",
@@ -42,6 +111,29 @@
         "status": "terminated",
         "updated": 1572462965495,
         "created": 1572462971995,
-        "job_input": {"wsid": 9999, "method": "MEGAHIT.run_megahit", "params": [{"k_list": [], "k_max": null, "output_contigset_name": "MEGAHIT.contigs"}], "service_ver": "2.2.1", "app_id": "MEGAHIT/run_megahit", "source_ws_objects": ["a/b/c", "e/d"], "parent_job_id": null, "narrative_cell_info": {"cell_id": "9329ac6c-604c-42a9-aca2-a15dba6278cf", "tag": "dev", "run_id": "6546971e-757a-4a26-8439-325497c6d843"}}
+        "finished": 1572462965495,
+        "job_input": {
+            "wsid": 9999,
+            "method": "MADE_UP_APP.job_terminated",
+            "params": [
+                {
+                    "k_list": [],
+                    "k_max": null,
+                    "output_contigset_name": "MEGAHIT.contigs"
+                }
+            ],
+            "service_ver": "4.0.0",
+            "app_id": "MADE_UP_APP/job_terminated",
+            "source_ws_objects": [
+                "a/b/c",
+                "e/d"
+            ],
+            "parent_job_id": null,
+            "narrative_cell_info": {
+                "cell_id": "9329ac6c-604c-42a9-aca2-a15dba6278cf",
+                "tag": "dev",
+                "run_id": "6546971e-757a-4a26-8439-325497c6d843"
+            }
+        }
     }
 }

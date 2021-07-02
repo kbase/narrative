@@ -187,5 +187,52 @@ define(['common/runtime', 'widgets/appWidgets2/input/selectInput'], (Runtime, Se
                 });
             });
         });
+
+        it('Should take a list of disabledValues on startup', () => {
+            const config = Object.assign({}, testConfig, {disabledValues: ['carrot']});
+            const widget = SelectInput.make(config);
+
+            return widget
+                .start({ node: container })
+                .then(() => {
+                    // verify it's there.
+                    const inputElem = container.querySelector('select[data-element="input"]');
+                    const carrotItem = inputElem.querySelector('option[value="carrot"]');
+                    expect(carrotItem.hasAttribute('disabled')).toBeTrue();
+                    const bananaItem = inputElem.querySelector('option[value="banana"]');
+                    expect(bananaItem.hasAttribute('disabled')).toBeFalse();
+                });
+        });
+
+        xit('Should obey a message to disable selection options', () => {
+
+        });
+
+        xit('Should obey a message to enable selection options', () => {
+
+        });
+
+        it('Should take a set of options that override the options from the parameter spec', () => {
+            const values = [{
+                display: 'Dirigible',
+                value: 'dirigible'
+            }, {
+                display: 'Elephant',
+                value: 'elephant'
+            }, {
+                display: 'Frittata',
+                value: 'frittata'
+            }];
+            const config = Object.assign({}, testConfig, {availableValues: values, initialValue: 'elephant'});
+            const widget = SelectInput.make(config);
+            return widget.start({ node: container }).then(() => {
+                const inputElem = container.querySelector('select[data-element="input"]');
+                expect(inputElem.value).toEqual('elephant');
+                expect(inputElem.childElementCount).toBe(3);
+                for (const child of inputElem.children) {
+                    expect(['dirigible', 'elephant', 'frittata'].includes(child.value)).toBeTrue();
+                }
+            });
+        });
     });
 });

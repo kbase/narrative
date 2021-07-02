@@ -19,16 +19,34 @@ define([
         select = t('select'),
         option = t('option');
 
+    /**
+     *
+     * @param {object} config has fields:
+     *  - parameterSpec - object - the spec object with parameter info as built by the Spec object
+     *  - availableValues - optional Array of objects - if given, this supercedes the list of values given in the parameterSpec.
+     *      as in the parameterSpec.data.constraints.options, each should be an object with structure:
+     *      {
+     *        display: string - the string to display as an option
+     *        value: string - the value to set when selected
+     *      }
+     *  - initialValue - string - the value that should be selected when started
+     *  - disabledValues - array - the values that should be disabled at start (if initialValue is here, it's ignored)
+     *  - channelName - string - the bus channel to use
+     *  - showOwnMessages - boolean - if true, this widget shows its own messages (better description to come)
+     * @returns
+     */
     function factory(config) {
         const spec = config.parameterSpec,
             runtime = Runtime.make(),
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(config.channelName),
             model = {
-                availableValues: spec.data.constraints.options,
+                availableValues: config.availableValues || spec.data.constraints.options,
                 value: config.initialValue,
+                disabledValues: new Set(config.disabledValues || []),
             };
         let parent, ui, container;
+        model.availableValuesSet = new Set(model.availableValues.map(valueObj => valueObj.value));
 
         function getControlValue() {
             const control = ui.getElement('input-container.input'),
@@ -62,7 +80,7 @@ define([
         function handleChanged() {
             importControlValue()
                 .then((value) => {
-                    model.value = value;
+                    setModelValue(value);
                     channel.emit('changed', {
                         newValue: value,
                     });
@@ -107,6 +125,9 @@ define([
                 if (item.value === model.value) {
                     attribs.selected = true;
                 }
+                else if (model.disabledValues.has(item.value)) {
+                    attribs.disabled = true;
+                }
                 return option(attribs, item.display);
             });
 
@@ -130,20 +151,37 @@ define([
         }
 
         function setModelValue(value) {
-            if (model.value !== value) {
+            const oldValue = model.value;
+            if (oldValue !== value) {
                 model.value = value;
             }
+            setValuesEnabled([value], true);
+            setValuesEnabled([oldValue], !model.disabledValues.has(oldValue))
         }
 
         function resetModelValue() {
             setModelValue(spec.data.defaultValue);
         }
 
+        function setValuesEnabled(values, enabled) {
+            const control = ui.getElement('input-container.input');
+            values.forEach((value) => {
+                if (value !== model.value && model.availableValuesSet.has(value)) {
+                    const option = control.querySelector(`option[value="${value}"]`);
+                    if (enabled) {
+                        option.removeAttribute('disabled');
+                    }
+                    else {
+                        option.setAttribute('disabled', true);
+                    }
+                }
+            });
+        }
+
         // LIFECYCLE API
 
         function start(arg) {
             return Promise.try(() => {
-                setModelValue(config.initialValue);
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
@@ -167,8 +205,17 @@ define([
                 channel.on('reset-to-defaults', () => {
                     resetModelValue();
                 });
+
                 channel.on('update', (message) => {
                     setModelValue(message.value);
+                });
+
+                channel.on('disable-values', (message) => {
+                    setValuesEnabled(message.values, false);
+                });
+
+                channel.on('enable-values', (message) => {
+                    setValuesEnabled(message.values, true);
                 });
 
                 autoValidate();

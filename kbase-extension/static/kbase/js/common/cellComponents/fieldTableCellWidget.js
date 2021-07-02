@@ -22,7 +22,7 @@ define([
         let places, parent, container, inputControl;
 
         try {
-            const controlConfig = Object.assign({}, config, {bus, channelName: bus.channelName});
+            const controlConfig = Object.assign({}, config, { bus, channelName: bus.channelName });
             inputControl = inputControlFactory.make(controlConfig);
         } catch (ex) {
             console.error('Error creating input control', ex);

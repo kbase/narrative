@@ -46,7 +46,7 @@ define([
                 disabledValues: new Set(config.disabledValues || []),
             };
         let parent, ui, container;
-        model.availableValuesSet = new Set(model.availableValues.map(valueObj => valueObj.value));
+        model.availableValuesSet = new Set(model.availableValues.map((valueObj) => valueObj.value));
 
         function getControlValue() {
             const control = ui.getElement('input-container.input'),
@@ -124,8 +124,7 @@ define([
                 };
                 if (item.value === model.value) {
                     attribs.selected = true;
-                }
-                else if (model.disabledValues.has(item.value)) {
+                } else if (model.disabledValues.has(item.value)) {
                     attribs.disabled = true;
                 }
                 return option(attribs, item.display);
@@ -156,7 +155,7 @@ define([
                 model.value = value;
             }
             setValuesEnabled([value], true);
-            setValuesEnabled([oldValue], !model.disabledValues.has(oldValue))
+            setValuesEnabled([oldValue], !model.disabledValues.has(oldValue));
         }
 
         function resetModelValue() {
@@ -170,8 +169,7 @@ define([
                     const option = control.querySelector(`option[value="${value}"]`);
                     if (enabled) {
                         option.removeAttribute('disabled');
-                    }
-                    else {
+                    } else {
                         option.setAttribute('disabled', true);
                     }
                 }

@@ -22,6 +22,10 @@ instance in its current state.
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 __version__ = "0.0.1"
 
+JOB_INIT_EXCLUDED_JOB_STATE_FIELDS = [
+    f for f in EXCLUDED_JOB_STATE_FIELDS if f != "job_input"
+]
+
 
 class JobManager(object):
     """
@@ -59,7 +63,11 @@ class JobManager(object):
         kblogging.log_event(self._log, "JobManager.initialize_jobs", {"ws_id": ws_id})
         try:
             job_states = clients.get("execution_engine2").check_workspace_jobs(
-                {"workspace_id": ws_id, "return_list": 0}
+                {
+                    "workspace_id": ws_id,
+                    "return_list": 0,
+                    "exclude_fields": JOB_INIT_EXCLUDED_JOB_STATE_FIELDS,
+                }
             )
             self._running_jobs = dict()
             self._completed_job_states = dict()
@@ -89,7 +97,11 @@ class JobManager(object):
         Given a list of job IDs, creates job objects for them and populates the _running_jobs dictionary
         """
         job_states = clients.get("execution_engine2").check_jobs(
-            {"job_ids": job_ids, "return_list": 0}
+            {
+                "job_ids": job_ids,
+                "return_list": 0,
+                "exclude_fields": JOB_INIT_EXCLUDED_JOB_STATE_FIELDS,
+            }
         )
         for job_id in job_ids:
             if job_id in job_ids and job_id not in self._running_jobs:
@@ -344,7 +356,7 @@ class JobManager(object):
                     job.meta.get("batch_app"),
                     job.meta.get("batch_tag"),
                 ),
-                "run_id": job.cell_id,
+                "run_id": job.run_id,
                 "cell_id": job.cell_id,
             }
         )
@@ -358,6 +370,7 @@ class JobManager(object):
             "listener_count": self._running_jobs[job.job_id]["refresh"],
         }
 
+    # can be removed -- unused
     def _child_job_states(self, child_job_list, app_id, app_tag):
         """
         Fetches state for all jobs in the list. These are expected to be child jobs, with no Job object associated.
@@ -500,7 +513,7 @@ class JobManager(object):
             "app_id": job.app_id,
             "app_name": job.app_spec()["info"]["name"],
             "job_id": job_id,
-            "job_params": job.inputs,
+            "job_params": job.params,
         }
         return info
 

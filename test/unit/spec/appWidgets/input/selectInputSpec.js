@@ -64,10 +64,10 @@ define(['common/runtime', 'widgets/appWidgets2/input/selectInput'], (Runtime, Se
             });
         });
 
-        it('Should start and stop a widget', (done) => {
+        it('Should start and stop a widget', () => {
             const widget = SelectInput.make(testConfig);
 
-            widget
+            return widget
                 .start({ node: container })
                 .then(() => {
                     // verify it's there.
@@ -78,102 +78,113 @@ define(['common/runtime', 'widgets/appWidgets2/input/selectInput'], (Runtime, Se
                 .then(() => {
                     // verify it's gone.
                     expect(container.childElementCount).toBe(0);
-                    done();
                 });
         });
 
-        it('Should update value via bus', (done) => {
+        it('Should update value via bus', () => {
             //and reset model properly via bus', (done) => {
             // start with one value, change it, then reset.
             // check along the way.
-            bus.on('validation', (message) => {
-                expect(message.isValid).toBeTruthy();
-                done();
-            });
             const widget = SelectInput.make(testConfig);
-            widget.start({ node: container }).then(() => {
-                bus.emit('update', { value: 'banana' });
+            return widget.start({ node: container }).then(() => {
+                return new Promise((resolve) => {
+                    bus.on('validation', (message) => {
+                        expect(message.isValid).toBeTruthy();
+                        resolve();
+                    });
+                    bus.emit('update', { value: 'banana' });
+                });
             });
         });
 
-        it('Should reset to default via bus', (done) => {
-            bus.on('validation', (message) => {
-                expect(message.isValid).toBeTruthy();
-                done();
-            });
+        it('Should reset to default via bus', () => {
             const widget = SelectInput.make(testConfig);
-            widget.start({ node: container }).then(() => {
-                bus.emit('reset-to-defaults');
+            return widget.start({ node: container }).then(() => {
+                return new Promise((resolve) => {
+                    bus.on('validation', (message) => {
+                        expect(message.isValid).toBeTruthy();
+                        resolve();
+                    });
+                    bus.emit('reset-to-defaults');
+                });
             });
         });
 
-        it('Should respond to input change events with "changed"', (done) => {
+        it('Should respond to input change events with "changed"', () => {
             const widget = SelectInput.make(testConfig);
-            bus.on('changed', (message) => {
-                expect(message.newValue).toEqual('banana');
-                done();
-            });
-            widget.start({ node: container }).then(() => {
-                const inputElem = container.querySelector('select[data-element="input"]');
-                inputElem.selectedIndex = 2;
-                inputElem.dispatchEvent(new Event('change'));
+            return widget.start({ node: container }).then(() => {
+                return new Promise((resolve) => {
+                    bus.on('changed', (message) => {
+                        expect(message.newValue).toEqual('banana');
+                        resolve();
+                    });
+                    const inputElem = container.querySelector('select[data-element="input"]');
+                    inputElem.selectedIndex = 1;
+                    inputElem.dispatchEvent(new Event('change'));
+                });
             });
         });
 
-        it('Should respond to input change events with "validation"', (done) => {
+        it('Should respond to input change events with "validation"', () => {
             const widget = SelectInput.make(testConfig);
-            bus.on('validation', (message) => {
-                expect(message.isValid).toBeTruthy();
-                expect(message.errorMessage).toBeUndefined();
-                done();
-            });
-            widget.start({ node: container }).then(() => {
-                const inputElem = container.querySelector('select[data-element="input"]');
-                inputElem.selectedIndex = 1;
-                inputElem.dispatchEvent(new Event('change'));
+            return widget.start({ node: container }).then(() => {
+                return new Promise((resolve) => {
+                    bus.on('validation', (message) => {
+                        expect(message.isValid).toBeTruthy();
+                        expect(message.errorMessage).toBeUndefined();
+                        resolve();
+                    });
+                    const inputElem = container.querySelector('select[data-element="input"]');
+                    inputElem.selectedIndex = 1;
+                    inputElem.dispatchEvent(new Event('change'));
+                });
             });
         });
 
-        it('Should show message when configured', (done) => {
+        it('Should show message when configured', () => {
             testConfig.showOwnMessages = true;
             const widget = SelectInput.make(testConfig);
-            bus.on('validation', (message) => {
-                expect(message.isValid).toBeTruthy();
-                // ...detect something?
-                done();
-            });
-            widget.start({ node: container }).then(() => {
-                const inputElem = container.querySelector('select[data-element="input"]');
-                inputElem.value = 'banana';
-                inputElem.dispatchEvent(new Event('change'));
+            return widget.start({ node: container }).then(() => {
+                return new Promise((resolve) => {
+                    bus.on('validation', (message) => {
+                        expect(message.isValid).toBeTruthy();
+                        // ...detect something?
+                        resolve();
+                    });
+                    const inputElem = container.querySelector('select[data-element="input"]');
+                    inputElem.selectedIndex = 1;
+                    inputElem.dispatchEvent(new Event('change'));
+                });
             });
         });
 
-        it('Should return a diagnosis of required-missing if so', (done, fail) => {
+        it('Should return a diagnosis of required-missing if so', () => {
             bus = runtime.bus().makeChannelBus();
             testConfig = buildTestConfig(true, '', bus);
             const widget = SelectInput.make(testConfig);
-            let msgCount = 0,
-                okCount = 0;
-            bus.on('validation', (message) => {
-                msgCount++;
-                if (message.isValid) {
-                    okCount++;
-                }
-                if (msgCount === 2) {
-                    if (okCount > 1) {
-                        fail('too many ok messages');
-                    }
-                }
-                if (!message.isValid) {
-                    expect(message.diagnosis).toBe('required-missing');
-                    done();
-                }
-            });
-            widget.start({ node: container }).then(() => {
-                const inputElem = container.querySelector('select[data-element="input"]');
-                inputElem.selectedIndex = -1;
-                inputElem.dispatchEvent(new Event('change'));
+            return widget.start({ node: container }).then(() => {
+                return new Promise((resolve, reject) => {
+                    let msgCount = 0,
+                        okCount = 0;
+                    bus.on('validation', (message) => {
+                        msgCount++;
+                        if (message.isValid) {
+                            okCount++;
+                        }
+                        if (msgCount === 2) {
+                            if (okCount > 1) {
+                                reject('too many ok messages');
+                            }
+                        }
+                        if (!message.isValid) {
+                            expect(message.diagnosis).toBe('required-missing');
+                            resolve();
+                        }
+                    });
+                    const inputElem = container.querySelector('select[data-element="input"]');
+                    inputElem.selectedIndex = -1;
+                    inputElem.dispatchEvent(new Event('change'));
+                });
             });
         });
     });

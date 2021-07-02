@@ -377,8 +377,7 @@ define([
                         [
                             label(
                                 {
-                                    class:
-                                        'col-md-3 xcontrol-label kb-app-parameter-name control-label',
+                                    class: 'col-md-3 kb-app-parameter-name control-label',
                                 },
                                 [spec.label() || spec.id()]
                             ),

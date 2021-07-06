@@ -1,4 +1,3 @@
-from typing import Dict
 import biokbase.narrative.clients as clients
 from .specmanager import SpecManager
 from biokbase.narrative.app_util import map_inputs_from_job, map_outputs_from_state
@@ -43,6 +42,7 @@ JOB_DEFAULTS = {
 ALL_JOB_ATTRS = list(JOB_DEFAULTS.keys())
 ALL_JOB_ATTRS.append("job_id")
 
+
 class Job(object):
     app_id = None
     app_version = None
@@ -55,10 +55,7 @@ class Job(object):
     _job_logs = list()
     _last_state = None
 
-    def __init__(
-        self,
-        **kwargs
-    ):
+    def __init__(self, **kwargs):
         """
         Initializes a new Job with the attributes supplied in the kwargs.
         The app_id and app_version should both align with what's available in
@@ -79,9 +76,9 @@ class Job(object):
         ee2_state = kwargs.get("ee2_state", None)
         if not ee2_state:
             ee2_state = {
-                "batch_id": self.batch_id, # optional
-                "batch_job": self.batch_job, # optional
-                "child_jobs": self.child_jobs, # optional
+                "batch_id": self.batch_id,  # optional
+                "batch_job": self.batch_job,  # optional
+                "child_jobs": self.child_jobs,  # optional
                 "job_id": self.job_id,
                 "user": self.owner,
             }
@@ -181,7 +178,9 @@ class Job(object):
         if not state:
             return
 
-        self.terminal_state = True if state.get("status", "unknown") in TERMINAL_STATES else False
+        self.terminal_state = (
+            True if state.get("status", "unknown") in TERMINAL_STATES else False
+        )
 
         if self._last_state is None:
             self._last_state = state

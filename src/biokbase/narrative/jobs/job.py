@@ -25,20 +25,23 @@ EXCLUDED_JOB_STATE_FIELDS = [
 
 EXTRA_JOB_STATE_FIELDS = ["batch_id", "cell_id", "run_id", "token_id"]
 
-ALL_JOB_ATTRS = [
-    "app_id",
-    "app_version",
-    "batch_id",
-    "cell_id",
-    "params",
-    "job_id",
-    "meta",
-    "owner",
-    "run_id",
-    "tag",
-    "token_id",
-]
+JOB_DEFAULTS = {
+    "app_id": None,
+    "app_version": None,
+    "batch_id": None,
+    "batch_job": False,
+    "child_jobs": [],
+    "cell_id": None,
+    "params": None,
+    "meta": {},
+    "owner": None,
+    "run_id": None,
+    "tag": "release",
+    "token_id": None,
+}
 
+ALL_JOB_ATTRS = list(JOB_DEFAULTS.keys())
+ALL_JOB_ATTRS.append("job_id")
 
 class Job(object):
     app_id = None
@@ -54,37 +57,36 @@ class Job(object):
 
     def __init__(
         self,
-        job_id,
-        app_id,
-        params,
-        owner,
-        app_version=None,
-        batch_id=None,
-        cell_id=None,
-        ee2_state=None,
-        meta=None,
-        run_id=None,
-        tag="release",
-        token_id=None,
+        **kwargs
     ):
         """
-        Initializes a new Job with a given id, app id, and app app_version.
+        Initializes a new Job with the attributes supplied in the kwargs.
         The app_id and app_version should both align with what's available in
         the Narrative Method Store service.
         """
+        if kwargs.get("job_id", None) is None:
+            raise ValueError("Cannot create a job without a job ID!")
+        else:
+            self.job_id = kwargs.get("job_id")
 
-        self.app_id = app_id
-        self.app_version = app_version
-        self.batch_id = batch_id
-        self.cell_id = cell_id
-        self.job_id = job_id
-        self.meta = meta if meta else dict()
-        self.owner = owner
-        self.params = params
-        self.run_id = run_id
-        self.tag = tag
-        self.token_id = token_id
-        self._cache_state(ee2_state)
+        # parent job: set the batch_id
+        if kwargs.get("batch_job", False) is True:
+            kwargs["batch_id"] = self.job_id
+
+        for key, value in JOB_DEFAULTS.items():
+            setattr(self, key, kwargs.get(key, value))
+
+        ee2_state = kwargs.get("ee2_state", None)
+        if not ee2_state:
+            ee2_state = {
+                "batch_id": self.batch_id, # optional
+                "batch_job": self.batch_job, # optional
+                "child_jobs": self.child_jobs, # optional
+                "job_id": self.job_id,
+                "user": self.owner,
+            }
+
+        self.update_state(ee2_state)
 
     @classmethod
     def from_state(cls, job_state):
@@ -95,20 +97,22 @@ class Job(object):
             the job information returned from ee2.check_job
         """
         job_input = job_state.get("job_input", {})
-        job_meta = job_input.get("narrative_cell_info", {})
+        job_meta = job_input.get("narrative_cell_info", JOB_DEFAULTS["meta"])
         return cls(
-            job_state.get("job_id"),  # job_id
-            job_input.get("app_id", job_input.get("method")),  # app_id
-            job_input.get("params", {}),  # params
-            job_state.get("user"),  # owner
-            app_version=job_input.get("service_ver", None),
-            batch_id=job_state.get("batch_id", None),
-            cell_id=job_meta.get("cell_id", None),
+            app_id=job_input.get("app_id", JOB_DEFAULTS["app_id"]),
+            app_version=job_input.get("service_ver", JOB_DEFAULTS["app_version"]),
+            batch_id=job_state.get("batch_id", JOB_DEFAULTS["batch_id"]),
+            batch_job=job_state.get("batch_job", JOB_DEFAULTS["batch_job"]),
+            cell_id=job_meta.get("cell_id", JOB_DEFAULTS["cell_id"]),
+            child_jobs=job_state.get("child_jobs", JOB_DEFAULTS["child_jobs"]),
             ee2_state=job_state,
+            job_id=job_state.get("job_id"),
             meta=job_meta,
-            run_id=job_meta.get("run_id", None),
-            tag=job_meta.get("tag", "release"),
-            token_id=job_meta.get("token_id", None),
+            owner=job_state.get("user", JOB_DEFAULTS["owner"]),
+            params=job_input.get("params", JOB_DEFAULTS["params"]),
+            run_id=job_meta.get("run_id", JOB_DEFAULTS["run_id"]),
+            tag=job_meta.get("tag", JOB_DEFAULTS["tag"]),
+            token_id=job_meta.get("token_id", JOB_DEFAULTS["token_id"]),
         )
 
     # can be removed -- unused
@@ -123,6 +127,12 @@ class Job(object):
             job_state, map_inputs_from_job(job_inputs, spec), spec
         )
         return {"name": output_widget, "tag": app_tag, "params": widget_params}
+
+    @property
+    def final_state(self):
+        if self.terminal_state is True:
+            return self._last_state
+        return None
 
     def info(self):
         spec = self.app_spec()
@@ -164,9 +174,26 @@ class Job(object):
                     f"Unable to fetch parameters for job {self.job_id} - {e}"
                 )
 
-    def _cache_state(self, state):
-        if state and state.get("status") in TERMINAL_STATES:
+    def update_state(self, state=None):
+        """
+        given a state data structure (as emitted by ee2), update the stored state in the job object
+        """
+        if not state:
+            return
+
+        self.terminal_state = True if state.get("status", "unknown") in TERMINAL_STATES else False
+
+        if self._last_state is None:
             self._last_state = state
+        else:
+            self._last_state.update(state)
+
+    def reset_state(self):
+        """
+        reset the internal job state by removing the stored state and resetting self.terminal_state
+        """
+        self._last_state = None
+        self.terminal_state = False
 
     def _augment_ee2_state(self, state):
         output_state = {key: value for key, value in state.items()}
@@ -184,17 +211,15 @@ class Job(object):
         Queries the job service to see the status of the current job.
         Returns a <something> stating its status. (string? enum type? different traitlet?)
         """
-        if (
-            self._last_state is not None
-            and self._last_state.get("status") in TERMINAL_STATES
-        ):
+
+        if self.terminal_state:
             return self._augment_ee2_state(self._last_state)
 
         try:
             state = clients.get("execution_engine2").check_job(
                 {"job_id": self.job_id, "exclude_fields": EXCLUDED_JOB_STATE_FIELDS}
             )
-            self._cache_state(state)
+            self.update_state(state)
             return self._augment_ee2_state(state)
 
         except Exception as e:

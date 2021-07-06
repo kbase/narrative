@@ -323,6 +323,8 @@ class JobManager(object):
                 run_id=job.run_id,
                 job_id=job.job_id,
             )
+        else:
+            job.update_state(state)
 
         # check for a "finished" timestamp
         if state.get("finished"):
@@ -362,6 +364,7 @@ class JobManager(object):
         )
         if "batch_size" in job.meta:
             state.update({"batch_size": job.meta["batch_size"]})
+
         return {
             "state": state,
             "spec": app_spec,

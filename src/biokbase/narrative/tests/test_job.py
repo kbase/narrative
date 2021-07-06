@@ -3,7 +3,7 @@ from src.biokbase.narrative.jobs.appmanager import BATCH_ID_KEY
 import unittest
 import mock
 import copy
-from biokbase.narrative.jobs.job import Job, EXTRA_JOB_STATE_FIELDS, ALL_JOB_ATTRS
+from biokbase.narrative.jobs.job import Job, EXTRA_JOB_STATE_FIELDS, ALL_JOB_ATTRS, JOB_DEFAULTS
 from .util import ConfigTests
 from .narrative_mock.mockclients import (
     get_mock_client,
@@ -30,21 +30,22 @@ def capture_stdout():
 config = ConfigTests()
 test_jobs = config.load_json_file(config.get("jobs", "ee2_job_info_file"))
 
-JOB_KWARGS = [
-    "app_version",
-    "batch_id",
-    "cell_id",
-    "run_id",
-    "tag",
-    "token_id",
-]
-
 # test_jobs contains jobs in the following states
 JOB_COMPLETED = "5d64935ab215ad4128de94d6"
 JOB_CREATED = "5d64935cb215ad4128de94d7"
 JOB_RUNNING = "5d64935cb215ad4128de94d8"
 JOB_TERMINATED = "5d64935cb215ad4128de94d9"
 
+JOB_KWARGS = [
+    "app_version",
+    "batch_id",
+    "batch_job",
+    "child_jobs",
+    "cell_id",
+    "run_id",
+    "tag",
+    "token_id",
+]
 
 def get_test_job(job_id):
     return copy.deepcopy(test_jobs[job_id])
@@ -67,7 +68,9 @@ def transform_job(job_data, transform_list=ALL_JOB_ATTRS):
         "app_id": job_input.get("app_id"),
         "app_version": job_input.get("service_ver", None),
         "batch_id": job_data.get("batch_id", None),
+        "batch_job": job_data.get("batch_job", False),
         "cell_id": job_input.get("narrative_cell_info", {}).get("cell_id", None),
+        "child_jobs": job_data.get("child_jobs", []),
         "job_id": job_data.get("job_id"),
         "meta": dict(),
         "owner": job_data["user"],
@@ -90,12 +93,8 @@ def create_job_from_ee2(job_id):
     """
     job_data = get_test_job(job_id)
     job_out = transform_job(job_data)
-    existing_args = []
-    for arg in ["job_id", "app_id", "params", "owner"]:
-        existing_args.append(job_out[arg])
-        del job_out[arg]
 
-    return Job(*existing_args, **job_out, ee2_state=get_test_job(job_id))
+    return Job(**job_out, ee2_state=get_test_job(job_id))
 
 
 def create_state_from_ee2(job_id):
@@ -130,23 +129,33 @@ class JobTest(unittest.TestCase):
         cls.app_id = job_input["app_id"]
         cls.app_version = job_input.get("service_ver", "0.0.1")
         cls.batch_id = None
+        cls.batch_job = False
+        cls.child_jobs = []
         cls.cell_id = job_input.get("narrative_cell_info", {}).get("cell_id")
         cls.meta = dict()
         cls.owner = job_state["user"]
-        cls.params = None
+        cls.params = job_input["params"]
         cls.run_id = job_input.get("narrative_cell_info", {}).get("run_id")
         cls.tag = job_input.get("narrative_cell_info", {}).get("tag", "dev")
         cls.token_id = "temp_token"
 
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def _mocked_job(self, job_attrs=[]):
-        job_kwargs = {}
+        '''
+        create a mock job; any fields included in job_attrs will be omitted from the job params
+        '''
+        job_args = {
+            "job_id": self.job_id,
+            "app_id": self.app_id,
+            "params": self.params,
+            "owner": self.owner,
+        }
 
         for arg in JOB_KWARGS:
             if not len(job_attrs) or arg not in job_attrs:
-                job_kwargs[arg] = getattr(self, arg)
+                job_args[arg] = getattr(self, arg)
 
-        job = Job(self.job_id, self.app_id, self.params, self.owner, **job_kwargs)
+        job = Job(**job_args)
 
         return job
 
@@ -160,6 +169,19 @@ class JobTest(unittest.TestCase):
     def check_state(self, job_id, job_state):
         expected = create_state_from_ee2(job_id)
         self.assertEqual(job_state, expected)
+
+    def test_job_init__id_only(self):
+        job = Job(job_id=JOB_COMPLETED)
+        for attr in ALL_JOB_ATTRS:
+            if attr == "job_id":
+                self.assertEqual(job.job_id, JOB_COMPLETED)
+            else:
+                self.assertEqual(getattr(job, attr), JOB_DEFAULTS[attr])
+
+    def test_job_init__error_no_job_id(self):
+
+        with self.assertRaisesRegexp(ValueError, "Cannot create a job without a job ID!"):
+            Job(params={}, app_id="this/that")
 
     def test_job_init(self):
         """
@@ -207,13 +229,13 @@ class JobTest(unittest.TestCase):
         ]
 
         batch_job = Job(
-            self.job_id,
-            app_id,
-            batch_params,
-            self.owner,
-            batch_method_ver,
+            app_id=app_id,
+            app_version=batch_method_ver,
             cell_id=self.cell_id,
+            job_id=self.job_id,
             meta=job_meta,
+            owner=self.owner,
+            params=batch_params,
             run_id=self.run_id,
             tag=batch_method_tag,
             token_id=self.token_id,
@@ -237,12 +259,12 @@ class JobTest(unittest.TestCase):
         job_runner_inputs = {"params": {}, "service_ver": "the best ever"}
 
         job = Job(
-            self.job_id,
-            self.app_id,
-            job_runner_inputs["params"],
-            self.owner,
+            app_id=self.app_id,
             app_version=job_runner_inputs["service_ver"],
             cell_id=self.cell_id,
+            job_id=self.job_id,
+            owner=self.owner,
+            params=job_runner_inputs["params"],
             run_id=self.run_id,
             tag=self.tag,
             token_id=self.token_id,
@@ -253,37 +275,6 @@ class JobTest(unittest.TestCase):
         }
 
         self.check_job_attrs(job, expected)
-
-    # def test_job_init__run_app_bulk__input(self):
-    #     """
-    #     test job initialisation as is done by run_app_bulk
-    #     """
-    #     batch_submission = {BATCH_ID_KEY: 'my_batch_id'}
-
-    #     # child job
-    #     child_job = Job(
-    #         child_job_id,
-    #         job_info["app_id"],
-    #         job_info["params"],
-    #         self.owner,
-    #         app_version=job_info["service_ver"],
-    #         batch_id=batch_submission[BATCH_ID_KEY],
-    #         cell_id=cell_id,
-    #         run_id=run_id,
-    #         tag=job_info["meta"].get("tag"),
-    #         token_id=self.token_id,
-    #     )
-
-    #     for attr in ALL_JOB_ATTRS:
-
-    #     # parent job
-    #     parent_job = Job(
-    #         batch_submission[BATCH_ID_KEY],
-    #         "bulk_app_submission",
-    #         {},
-    #         self.owner,
-    #         batch_id=batch_submission[BATCH_ID_KEY],
-    #     )
 
     def test_job_from_state(self):
         """
@@ -352,49 +343,54 @@ class JobTest(unittest.TestCase):
         self.check_job_attrs(job, expected)
 
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
-    def test_state__no_last_state__terminal(self):
+    def test_state__no_final_state__terminal(self):
         """
         test that a job outputs the correct state and that the update is cached
         """
         job = create_job_from_ee2(JOB_TERMINATED)
         # when the field is first populated, it will have all the ee2 data
-        self.assertEqual(job._last_state, get_test_job(JOB_TERMINATED))
+        self.assertEqual(job.final_state, get_test_job(JOB_TERMINATED))
 
         # get rid of the cached job state
-        job._last_state = None
-        self.assertIsNone(job._last_state)
+        job.reset_state()
+        self.assertFalse(job.terminal_state)
+        self.assertIsNone(job.final_state)
 
         state = job.state()
         self.assertEqual(state["status"], "terminated")
+        self.assertTrue(job.terminal_state)
         self.check_state(JOB_TERMINATED, state)
 
         # when the field is repopulated, the EXCLUDED_JOB_STATE_FIELDS filter
         # will be on
-        expected_last_state = get_test_job(JOB_TERMINATED)
+        expected_final_state = get_test_job(JOB_TERMINATED)
         for field in EXCLUDED_JOB_STATE_FIELDS:
-            if field in expected_last_state:
-                del expected_last_state[field]
-        self.assertEqual(job._last_state, expected_last_state)
+            if field in expected_final_state:
+                del expected_final_state[field]
+        self.assertEqual(job.final_state, expected_final_state)
 
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
-    def test_state__no_last_state__non_terminal(self):
+    def test_state__no_final_state__non_terminal(self):
         """
         test that a job outputs the correct state and that the update is not cached
         """
         job = create_job_from_ee2(JOB_CREATED)
-        self.assertIsNone(job._last_state)
+        self.assertFalse(job.terminal_state)
+        self.assertIsNone(job.final_state)
         state = job.state()
         self.check_state(JOB_CREATED, state)
-        self.assertIsNone(job._last_state)
+        self.assertFalse(job.terminal_state)
+        self.assertIsNone(job.final_state)
         self.assertEqual(state["status"], "created")
 
-    def test_state__last_state_exists__terminal(self):
+    def test_state__final_state_exists__terminal(self):
         """
         test that a completed job emits its state without calling check_job
         """
         job = create_job_from_ee2(JOB_COMPLETED)
-        self.assertIsNotNone(job._last_state)
-        self.assertEqual(job._last_state, get_test_job(JOB_COMPLETED))
+        self.assertTrue(job.terminal_state)
+        self.assertIsNotNone(job.final_state)
+        self.assertEqual(job.final_state, get_test_job(JOB_COMPLETED))
 
         with assert_obj_method_called(MockClients, "check_job", call_status=False):
             state = job.state()
@@ -407,7 +403,8 @@ class JobTest(unittest.TestCase):
         test that the correct exception is thrown if check_job cannot be called
         """
         job = create_job_from_ee2(JOB_CREATED)
-        self.assertIsNone(job._last_state)
+        self.assertFalse(job.terminal_state)
+        self.assertIsNone(job.final_state)
         with self.assertRaisesRegex(Exception, "Unable to fetch info for job"):
             job.state()
 
@@ -415,6 +412,8 @@ class JobTest(unittest.TestCase):
     def test_job_info(self):
         job = self._mocked_job()
         info_str = "App name (id): Test Editor (NarrativeTest/test_editor)\nVersion: 0.0.1\nStatus: completed\nInputs:\n------\n"
+        import json
+        print(json.dumps(job.dump(), indent=2, sort_keys=True))
         with capture_stdout() as (out, err):
             job.info()
             self.assertIn(info_str, out.getvalue().strip())
@@ -422,7 +421,7 @@ class JobTest(unittest.TestCase):
     def test_repr(self):
         job = self._mocked_job()
         job_str = job.__repr__()
-        self.assertIn(job.job_id, job_str)
+        self.assertRegex("KBase Narrative Job - " + job.job_id, job_str)
 
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def test_repr_js(self):
@@ -449,11 +448,18 @@ class JobTest(unittest.TestCase):
             job = create_job_from_ee2(job_id)
             self.assertEqual(job.is_finished(), is_finished[job_id])
 
+    @mock.patch("biokbase.narrative.widgetmanager.WidgetManager.show_output_widget")
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
-    def test_show_output_widget(self):
-        # TODO: Improve this test
-        job = self._mocked_job()
-        job.show_output_widget()
+    def test_show_output_widget(self, mock_method):
+        mock_method.return_value = True
+        job = Job.from_state(get_test_job(JOB_COMPLETED))
+        self.assertTrue(job.show_output_widget())
+        mock_method.assert_called_once()
+
+    @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
+    def test_show_output_widget__incomplete_state(self):
+        job = Job.from_state(get_test_job(JOB_CREATED))
+        self.assertRegexpMatches(job.show_output_widget(), "Job is incomplete! It has status 'created'")
 
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def test_log(self):
@@ -495,18 +501,47 @@ class JobTest(unittest.TestCase):
 
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def test_parameters(self):
-        # TODO: Improve this test
-        job = self._mocked_job()
+        '''
+        test that a job returns the correct parameters
+        '''
+        job_state = get_test_job(JOB_COMPLETED)
+        job_params = job_state.get("job_input", {}).get("params", None)
+        self.assertIsNotNone(job_params)
+        job = Job.from_state(job_state)
+        self.assertIsNotNone(job.params)
+
+        with assert_obj_method_called(MockClients, 'get_job_params', call_status=False):
+            params = job.parameters()
+            self.assertIsNotNone(params)
+            self.assertEqual(params, job_params)
+
+    @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
+    def test_parameters__param_fetch_ok(self):
+        '''
+        test that a job can successfully retrieve parameters from ee2
+        if they do not exist
+        '''
+        job_state = get_test_job(JOB_CREATED)
+        job_params = job_state.get("job_input", {}).get("params", None)
+        self.assertIsNotNone(job_params)
+
+        # delete the job params from the input
+        del job_state["job_input"]["params"]
+        job = Job.from_state(job_state)
+        self.assertEquals(job.params, JOB_DEFAULTS["params"])
+
         params = job.parameters()
-        self.assertIsNotNone(params)
+        self.assertEqual(params, job_params)
 
-        job.params = None
-        params2 = job.parameters()
-        self.assertIsNotNone(params2)
-        self.assertEqual(params, params2)
+    @mock.patch("biokbase.narrative.jobs.job.clients.get", get_failing_mock_client)
+    def test_parameters__param_fetch_fail(self):
+        '''
+        test failure to retrieve job params data
+        '''
+        job_state = get_test_job(JOB_TERMINATED)
+        del job_state["job_input"]["params"]
+        job = Job.from_state(job_state)
+        self.assertEquals(job.params, JOB_DEFAULTS["params"])
 
-        job.job_id = "not_a_job_id"
-        job.params = None
-        with self.assertRaises(Exception) as e:
+        with self.assertRaisesRegexp(Exception, "Unable to fetch parameters for job"):
             job.parameters()
-        self.assertIn("Unable to fetch parameters for job", str(e.exception))

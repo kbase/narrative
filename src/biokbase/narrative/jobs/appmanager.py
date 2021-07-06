@@ -297,11 +297,11 @@ class AppManager(object):
             cell_id=cell_id,
             job_id=job_id,
             meta=job_meta,
+            owner=system_variable("user_id"),
             params=batch_params,
             run_id=run_id,
             tag=BATCH_APP["TAG"],
             token_id=agent_token["id"],
-            user=system_variable("user_id"),
         )
 
         self._send_comm_message(
@@ -578,11 +578,11 @@ class AppManager(object):
                 "child_jobs": [job.job_id for job in child_jobs],
                 "job_id": batch_submission[BATCH_ID_KEY],
                 "job_input": {
-                    "app_id": "batch", # value given by ee2
+                    "app_id": "batch",  # value given by ee2
                     "method": "batch",
                     "narrative_cell_info": {},
-                    "service_ver": "batch", # value given by ee2
-                    "source_ws_objects": []
+                    "service_ver": "batch",  # value given by ee2
+                    "source_ws_objects": [],
                 },
                 "status": "created",
                 "user": user_id,

@@ -1,9 +1,13 @@
 from src.biokbase.narrative.jobs.job import EXCLUDED_JOB_STATE_FIELDS
-from src.biokbase.narrative.jobs.appmanager import BATCH_ID_KEY
 import unittest
 import mock
 import copy
-from biokbase.narrative.jobs.job import Job, EXTRA_JOB_STATE_FIELDS, ALL_JOB_ATTRS, JOB_DEFAULTS
+from biokbase.narrative.jobs.job import (
+    Job,
+    EXTRA_JOB_STATE_FIELDS,
+    ALL_JOB_ATTRS,
+    JOB_DEFAULTS,
+)
 from .util import ConfigTests
 from .narrative_mock.mockclients import (
     get_mock_client,
@@ -46,6 +50,7 @@ JOB_KWARGS = [
     "tag",
     "token_id",
 ]
+
 
 def get_test_job(job_id):
     return copy.deepcopy(test_jobs[job_id])
@@ -141,9 +146,9 @@ class JobTest(unittest.TestCase):
 
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def _mocked_job(self, job_attrs=[]):
-        '''
+        """
         create a mock job; any fields included in job_attrs will be omitted from the job params
-        '''
+        """
         job_args = {
             "job_id": self.job_id,
             "app_id": self.app_id,
@@ -180,7 +185,9 @@ class JobTest(unittest.TestCase):
 
     def test_job_init__error_no_job_id(self):
 
-        with self.assertRaisesRegexp(ValueError, "Cannot create a job without a job ID!"):
+        with self.assertRaisesRegexp(
+            ValueError, "Cannot create a job without a job ID!"
+        ):
             Job(params={}, app_id="this/that")
 
     def test_job_init(self):
@@ -413,6 +420,7 @@ class JobTest(unittest.TestCase):
         job = self._mocked_job()
         info_str = "App name (id): Test Editor (NarrativeTest/test_editor)\nVersion: 0.0.1\nStatus: completed\nInputs:\n------\n"
         import json
+
         print(json.dumps(job.dump(), indent=2, sort_keys=True))
         with capture_stdout() as (out, err):
             job.info()
@@ -459,7 +467,9 @@ class JobTest(unittest.TestCase):
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def test_show_output_widget__incomplete_state(self):
         job = Job.from_state(get_test_job(JOB_CREATED))
-        self.assertRegexpMatches(job.show_output_widget(), "Job is incomplete! It has status 'created'")
+        self.assertRegexpMatches(
+            job.show_output_widget(), "Job is incomplete! It has status 'created'"
+        )
 
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def test_log(self):
@@ -501,26 +511,26 @@ class JobTest(unittest.TestCase):
 
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def test_parameters(self):
-        '''
+        """
         test that a job returns the correct parameters
-        '''
+        """
         job_state = get_test_job(JOB_COMPLETED)
         job_params = job_state.get("job_input", {}).get("params", None)
         self.assertIsNotNone(job_params)
         job = Job.from_state(job_state)
         self.assertIsNotNone(job.params)
 
-        with assert_obj_method_called(MockClients, 'get_job_params', call_status=False):
+        with assert_obj_method_called(MockClients, "get_job_params", call_status=False):
             params = job.parameters()
             self.assertIsNotNone(params)
             self.assertEqual(params, job_params)
 
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def test_parameters__param_fetch_ok(self):
-        '''
+        """
         test that a job can successfully retrieve parameters from ee2
         if they do not exist
-        '''
+        """
         job_state = get_test_job(JOB_CREATED)
         job_params = job_state.get("job_input", {}).get("params", None)
         self.assertIsNotNone(job_params)
@@ -535,9 +545,9 @@ class JobTest(unittest.TestCase):
 
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_failing_mock_client)
     def test_parameters__param_fetch_fail(self):
-        '''
+        """
         test failure to retrieve job params data
-        '''
+        """
         job_state = get_test_job(JOB_TERMINATED)
         del job_state["job_input"]["params"]
         job = Job.from_state(job_state)

@@ -5,6 +5,7 @@ from biokbase.narrative.jobs.appmanager import BATCH_ID_KEY
 RANDOM_DATE = "2018-08-10T16:47:36+0000"
 RANDOM_TYPE = "ModuleA.TypeA-1.0"
 
+
 class MockClients:
     """
     Mock KBase service clients as needed for Narrative backend tests.

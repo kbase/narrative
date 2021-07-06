@@ -2,6 +2,7 @@ import biokbase.narrative.clients as clients
 from .specmanager import SpecManager
 from biokbase.narrative.app_util import map_inputs_from_job, map_outputs_from_state
 from biokbase.narrative.exception_util import transform_job_exception
+import copy
 import json
 import uuid
 from jinja2 import Template
@@ -22,7 +23,8 @@ EXCLUDED_JOB_STATE_FIELDS = [
     "scheduler_type",
     "scheduler_id",
 ]
-EXTRA_JOB_STATE_FIELDS = ["batch_id", "cell_id", "run_id", "token_id"]
+# EXTRA_JOB_STATE_FIELDS = ["batch_id", "cell_id", "run_id", "token_id"]
+EXTRA_JOB_STATE_FIELDS = ["cell_id", "parent_job_id", "run_id", "token_id"]
 
 
 class Job(object):
@@ -87,7 +89,8 @@ class Job(object):
         self.token_id = token_id
 
         if state:
-            self._augment_ee2_state(state)
+            state = self._exclude_from_ee2_state(state)
+            state = self._augment_ee2_state(state)
             self._cache_state(state)
 
     @classmethod
@@ -169,10 +172,19 @@ class Job(object):
                     f"Unable to fetch parameters for job {self.job_id} - {e}"
                 )
 
+    def _exclude_from_ee2_state(self, state):
+        state = copy.deepcopy(state)
+        for field in EXCLUDED_JOB_STATE_FIELDS:
+            if field in state:
+                del state[field]
+        return state
+
     def _augment_ee2_state(self, state):
+        state = copy.deepcopy(state)
         state["job_output"] = state.get("job_output", {})
         for arg in EXTRA_JOB_STATE_FIELDS:
             state[arg] = getattr(self, arg)
+        return state
 
     def _cache_state(self, state):
         if state.get("status") in TERMINAL_STATUSES:
@@ -185,14 +197,14 @@ class Job(object):
         Queries the job service to see the state of the current job.
         """
         if self._last_state is not None and self._last_state.get("status") in TERMINAL_STATUSES:
-            return self._last_state
+            return copy.deepcopy(self._last_state)
         try:
             state = clients.get("execution_engine2").check_job(
                 {"job_id": self.job_id, "exclude_fields": EXCLUDED_JOB_STATE_FIELDS}
             )
-            self._augment_ee2_state(state)
+            state = self._augment_ee2_state(state)
             self._cache_state(state)
-            return state
+            return copy.deepcopy(state)
         except Exception as e:
             raise Exception(f"Unable to fetch info for job {self.job_id} - {e}")
 
@@ -232,7 +244,7 @@ class Job(object):
         if not state:
             state = self.state()
         else:
-            self._augment_ee2_state(state)  # diff: adds extra fields
+            state = self._augment_ee2_state(state)  # diff: adds extra fields
 
         widget_info = None
         app_spec = {}
@@ -257,6 +269,7 @@ class Job(object):
                     }
                 )
 
+        state["child_jobs"] = []
         if "batch_size" in self.meta:
             state.update({"batch_size": self.meta["batch_size"]})
         job_state = {

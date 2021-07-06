@@ -394,7 +394,7 @@ class JobManager(object):
             raise ValueError(f"No job present with id {job_id}")
 
         # otherwise, our job ID is fine
-        if self.get_job(job_id).has_cached_state():
+        if self.get_job(job_id).has_state_cached():
             return True
 
         if not self._check_job_terminated(job_id):
@@ -418,7 +418,7 @@ class JobManager(object):
 
         for job_id in checked_jobs["job_id_list"]:
             if (
-                not self.get_job(job_id).has_cached_state()
+                not self.get_job(job_id).has_state_cached()
                 and not self._check_job_terminated(job_id)
             ):
                 self._cancel_job(job_id)
@@ -482,21 +482,16 @@ class JobManager(object):
             )
         except Exception as e:
             raise transform_job_exception(e)
-        # for each retry result, refresh the status of the retried and new jobs
+        # for each retry result, refresh the state of the retried and new jobs
         update_states = []
         for result in retry_results:
             update_states.append(result["job_id"])
+            self.get_job(result["job_id"]).clear_cache()
             if "retry_id" in result:
                 update_states.append(result["retry_id"])
-                # uncache
-                self.get_job(result["job_id"]).clear_cache()
-        # add to _running_jobs
-        retry_ids = [result["retry_id"] for result in retry_results]
         job_states = self._construct_job_state_set(update_states)
-        self._create_jobs(retry_ids, job_states)
         # fill in the job state details
         for result in retry_results:
-            result["job_id"] = job_states[result["job_id"]]
             if "retry_id" in result:
                 result["retry_id"] = job_states[result["retry_id"]]
         for job_id in checked_jobs["error"]:
@@ -504,6 +499,9 @@ class JobManager(object):
                 "job_id": {"job_id": job_id, "status": "does_not_exist"},
                 "error": "does_not_exist"
             })
+        # add to self._running_jobs index
+        retry_ids = [result["retry_id"] for result in retry_results]
+        self._create_jobs(retry_ids, job_states)
         return retry_results
 
     def get_job_state(self, job_id: str, parent_job_id: str = None) -> dict:
@@ -511,7 +509,7 @@ class JobManager(object):
             self._verify_job_parentage(parent_job_id, job_id)
         if job_id is None or job_id not in self._running_jobs:
             raise ValueError(f"No job present with id {job_id}")
-        state = self._running_jobs[job_id]["job"].state()
+        state = self._running_jobs[job_id]["job"].revised_state()
         return state
 
     def modify_job_refresh(

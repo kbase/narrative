@@ -292,16 +292,16 @@ class AppManager(object):
             raise transform_job_exception(e)
 
         new_job = Job(
-            job_id,
-            BATCH_APP["APP_ID"],
-            batch_params,
-            system_variable("user_id"),
+            app_id=BATCH_APP["APP_ID"],
             app_version=BATCH_APP["VERSION"],
             cell_id=cell_id,
+            job_id=job_id,
             meta=job_meta,
+            params=batch_params,
             run_id=run_id,
             tag=BATCH_APP["TAG"],
             token_id=agent_token["id"],
+            user=system_variable("user_id"),
         )
 
         self._send_comm_message(
@@ -392,12 +392,12 @@ class AppManager(object):
             raise transform_job_exception(e)
 
         new_job = Job(
-            job_id,
-            app_id,
-            job_runner_inputs["params"],
-            system_variable("user_id"),
+            app_id=app_id,
             app_version=job_runner_inputs["service_ver"],
             cell_id=cell_id,
+            job_id=job_id,
+            owner=system_variable("user_id"),
+            params=job_runner_inputs["params"],
             run_id=run_id,
             tag=tag,
             token_id=agent_token["id"],
@@ -557,13 +557,13 @@ class AppManager(object):
             job_info = batch_run_inputs[idx]
             child_jobs.append(
                 Job(
-                    child_job_id,
-                    job_info["app_id"],
-                    job_info["params"][0],
-                    user_id,
+                    app_id=job_info["app_id"],
                     app_version=job_info["service_ver"],
                     batch_id=batch_submission[BATCH_ID_KEY],
                     cell_id=cell_id,
+                    job_id=child_job_id,
+                    owner=user_id,
+                    params=job_info["params"][0],
                     run_id=run_id,
                     tag=job_info["meta"].get("tag"),
                     token_id=agent_token["id"],
@@ -571,12 +571,22 @@ class AppManager(object):
             )
 
         # TODO make something more reasonable / complete for a parent job
-        parent_job = Job(
-            batch_submission[BATCH_ID_KEY],
-            "bulk_app_submission",
-            {},
-            user_id,
-            batch_id=batch_submission[BATCH_ID_KEY],
+        parent_job = Job.from_state(
+            {
+                "batch_id": batch_submission[BATCH_ID_KEY],
+                "batch_job": True,
+                "child_jobs": [job.job_id for job in child_jobs],
+                "job_id": batch_submission[BATCH_ID_KEY],
+                "job_input": {
+                    "app_id": "batch", # value given by ee2
+                    "method": "batch",
+                    "narrative_cell_info": {},
+                    "service_ver": "batch", # value given by ee2
+                    "source_ws_objects": []
+                },
+                "status": "created",
+                "user": user_id,
+            }
         )
 
         # TODO make a tighter design in the job manager for submitting a family of jobs

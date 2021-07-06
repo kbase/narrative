@@ -4,7 +4,7 @@ Tests for the app manager.
 from biokbase.narrative.jobs.appmanager import AppManager, BATCH_ID_KEY, BATCH_APP
 import biokbase.narrative.jobs.specmanager as specmanager
 import biokbase.narrative.app_util as app_util
-from biokbase.narrative.jobs.job import Job, ALL_JOB_ATTRS
+from biokbase.narrative.jobs.job import Job, ALL_JOB_ATTRS, JOB_DEFAULTS
 from IPython.display import HTML, Javascript
 import unittest
 import mock
@@ -233,7 +233,6 @@ class AppManagerTestCase(unittest.TestCase):
             "app_id": self.test_app_id,
             "app_version": self.test_app_version,
             "job_id": self.test_job_id,
-            "meta": {},
             "params": [expected_params],
             "tag": self.test_tag,
             "token_id": TOKEN_ID,
@@ -243,7 +242,7 @@ class AppManagerTestCase(unittest.TestCase):
             if attr in expected:
                 self.assertEqual(getattr(new_job, attr), expected[attr])
             else:
-                self.assertIsNone(getattr(new_job, attr))
+                self.assertEqual(getattr(new_job, attr), JOB_DEFAULTS[attr])
 
         self._verify_comm_success(c.return_value.send_comm_message, False)
 
@@ -386,7 +385,7 @@ class AppManagerTestCase(unittest.TestCase):
             if attr in expected:
                 self.assertEqual(getattr(new_job, attr), expected[attr])
             else:
-                self.assertIsNone(getattr(new_job, attr))
+                self.assertEqual(getattr(new_job, attr), JOB_DEFAULTS[attr])
 
     @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
     @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
@@ -574,18 +573,19 @@ class AppManagerTestCase(unittest.TestCase):
 
         # expected parent job attrs
         expected = {
-            "app_id": "bulk_app_submission",
+            "app_id": "batch",
+            "app_version": "batch",
             "batch_id": parent_job.job_id,
+            "batch_job": True,
+            "child_jobs": ["new_job_id", "new_job_id", "new_job_id"],
             "job_id": parent_job.job_id,
-            "params": {},
-            "meta": {},
-            "tag": "release",
         }
+
         for attr in ALL_JOB_ATTRS:
             if attr in expected:
                 self.assertEqual(getattr(parent_job, attr), expected[attr])
             else:
-                self.assertEqual(getattr(parent_job, attr), None)
+                self.assertEqual(getattr(parent_job, attr), JOB_DEFAULTS[attr])
 
         self.assertIsInstance(new_jobs["child_jobs"], list)
         self.assertEqual(len(new_jobs["child_jobs"]), 3)
@@ -627,7 +627,7 @@ class AppManagerTestCase(unittest.TestCase):
                         getattr(child_job, attr), child_job_expected[ix][attr]
                     )
                 else:
-                    self.assertEqual(getattr(child_job, attr), None)
+                    self.assertEqual(getattr(child_job, attr), JOB_DEFAULTS[attr])
 
         self._verify_comm_success(c.return_value.send_comm_message, True, num_jobs=4)
 

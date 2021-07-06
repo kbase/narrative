@@ -1,4 +1,8 @@
-define(['common/runtime', 'widgets/appWidgets2/input/selectInput'], (Runtime, SelectInput) => {
+define(['common/runtime', 'widgets/appWidgets2/input/selectInput', 'testUtil'], (
+    Runtime,
+    SelectInput,
+    TestUtil
+) => {
     'use strict';
     let bus, testConfig, runtime, container;
     const required = false,
@@ -202,9 +206,60 @@ define(['common/runtime', 'widgets/appWidgets2/input/selectInput'], (Runtime, Se
             });
         });
 
-        xit('Should obey a message to disable selection options', () => {});
+        function checkItems(expectedStates, inputElem) {
+            Object.keys(expectedStates).forEach((item) => {
+                const elem = inputElem.querySelector(`option[value="${item}"]`);
+                expect(elem.hasAttribute('disabled')).toBe(expectedStates[item]);
+            });
+        }
 
-        xit('Should obey a message to enable selection options', () => {});
+        it('Should obey a message to disable selection options', async () => {
+            const widget = SelectInput.make(testConfig);
+
+            await widget.start({ node: container });
+            // verify it's there and the initial item states are all enabled (i.e. not disabled)
+            const itemsDisabled = {
+                apple: false,
+                banana: false,
+                carrot: false,
+            };
+            const inputElem = container.querySelector('select[data-element="input"]');
+            checkItems(itemsDisabled, inputElem);
+
+            const carrotItem = inputElem.querySelector('option[value="carrot"]');
+            await TestUtil.waitForElementChange(carrotItem, () => {
+                bus.emit('disable-values', {
+                    values: ['carrot'],
+                });
+            });
+            itemsDisabled.carrot = true;
+            checkItems(itemsDisabled, inputElem);
+        });
+
+        it('Should obey a message to enable selection options', async () => {
+            const config = Object.assign({}, testConfig, { disabledValues: ['carrot'] });
+            const widget = SelectInput.make(config);
+
+            await widget.start({ node: container });
+
+            const itemsDisabled = {
+                apple: false,
+                banana: false,
+                carrot: true,
+            };
+
+            const inputElem = container.querySelector('select[data-element="input"]');
+            checkItems(itemsDisabled, inputElem);
+
+            const carrotItem = inputElem.querySelector('option[value="carrot"]');
+            await TestUtil.waitForElementChange(carrotItem, () => {
+                bus.emit('enable-values', {
+                    values: ['carrot'],
+                });
+            });
+            itemsDisabled.carrot = false;
+            checkItems(itemsDisabled, inputElem);
+        });
 
         it('Should take a set of options that override the options from the parameter spec', () => {
             const values = [

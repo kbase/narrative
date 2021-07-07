@@ -253,20 +253,18 @@ class AppManager(object):
 
         # We're now almost ready to run the job. Last, we need an agent token.
         agent_token = self._get_agent_token(app_id)
-
         job_meta["token_id"] = agent_token["id"]
-        # This is the input set for NJSW.run_job. Now we need the workspace id
+
+        # This is the input set for ee2.run_job. Now we need the workspace id
         # and whatever fits in the metadata.
         job_runner_inputs = {
-            "method": BATCH_APP["METHOD"],
-            "service_ver": BATCH_APP["VERSION"],
-            "params": batch_params,
             "app_id": BATCH_APP["APP_ID"],
-            "wsid": ws_id,
             "meta": job_meta,
+            "method": BATCH_APP["METHOD"],
+            "params": batch_params,
+            "service_ver": BATCH_APP["VERSION"],
+            "wsid": ws_id,
         }
-        # if len(ws_input_refs) > 0:
-        #     job_runner_inputs['source_ws_objects'] = ws_input_refs
 
         # if we're doing a dry run, just return the inputs that we made.
         if dry_run:
@@ -295,13 +293,17 @@ class AppManager(object):
             app_id=BATCH_APP["APP_ID"],
             app_version=BATCH_APP["VERSION"],
             cell_id=cell_id,
+            extra_data={
+                # this data is not preserved in the ee2 record
+                "batch_app": app_id,
+                "batch_tag": tag,
+                "batch_size": len(params),
+            },
             job_id=job_id,
-            meta=job_meta,
             owner=system_variable("user_id"),
             params=batch_params,
             run_id=run_id,
             tag=BATCH_APP["TAG"],
-            token_id=agent_token["id"],
         )
 
         self._send_comm_message(
@@ -400,7 +402,6 @@ class AppManager(object):
             params=job_runner_inputs["params"],
             run_id=run_id,
             tag=tag,
-            token_id=agent_token["id"],
         )
 
         self._send_comm_message(
@@ -566,7 +567,6 @@ class AppManager(object):
                     params=job_info["params"][0],
                     run_id=run_id,
                     tag=job_info["meta"].get("tag"),
-                    token_id=agent_token["id"],
                 )
             )
 

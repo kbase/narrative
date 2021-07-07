@@ -22,7 +22,7 @@ EXCLUDED_JOB_STATE_FIELDS = [
     "scheduler_id",
 ]
 
-EXTRA_JOB_STATE_FIELDS = ["batch_id", "cell_id", "run_id", "token_id"]
+EXTRA_JOB_STATE_FIELDS = ["batch_id", "cell_id", "run_id"]
 
 JOB_DEFAULTS = {
     "app_id": None,
@@ -31,12 +31,11 @@ JOB_DEFAULTS = {
     "batch_job": False,
     "child_jobs": [],
     "cell_id": None,
+    "extra_data": None,
     "params": None,
-    "meta": {},
     "owner": None,
     "run_id": None,
     "tag": "release",
-    "token_id": None,
 }
 
 ALL_JOB_ATTRS = list(JOB_DEFAULTS.keys())
@@ -51,7 +50,6 @@ class Job(object):
     job_id = None
     params = None
     run_id = None
-    token_id = None
     _job_logs = list()
     _last_state = None
 
@@ -76,12 +74,12 @@ class Job(object):
         ee2_state = kwargs.get("ee2_state", None)
         if not ee2_state:
             ee2_state = {
-                "batch_id": self.batch_id,  # optional
-                "batch_job": self.batch_job,  # optional
-                "child_jobs": self.child_jobs,  # optional
                 "job_id": self.job_id,
-                "user": self.owner,
             }
+            # reconstruct the ee2 job state object
+            for key in ["batch_id", "batch_job", "child_jobs", "owner"]:
+                if key in kwargs:
+                    ee2_state[key] = kwargs[key]
 
         self.update_state(ee2_state)
 
@@ -94,22 +92,20 @@ class Job(object):
             the job information returned from ee2.check_job
         """
         job_input = job_state.get("job_input", {})
-        job_meta = job_input.get("narrative_cell_info", JOB_DEFAULTS["meta"])
+        narr_cell_info = job_input.get("narrative_cell_info", {})
         return cls(
             app_id=job_input.get("app_id", JOB_DEFAULTS["app_id"]),
             app_version=job_input.get("service_ver", JOB_DEFAULTS["app_version"]),
             batch_id=job_state.get("batch_id", JOB_DEFAULTS["batch_id"]),
             batch_job=job_state.get("batch_job", JOB_DEFAULTS["batch_job"]),
-            cell_id=job_meta.get("cell_id", JOB_DEFAULTS["cell_id"]),
+            cell_id=narr_cell_info.get("cell_id", JOB_DEFAULTS["cell_id"]),
             child_jobs=job_state.get("child_jobs", JOB_DEFAULTS["child_jobs"]),
             ee2_state=job_state,
             job_id=job_state.get("job_id"),
-            meta=job_meta,
             owner=job_state.get("user", JOB_DEFAULTS["owner"]),
             params=job_input.get("params", JOB_DEFAULTS["params"]),
-            run_id=job_meta.get("run_id", JOB_DEFAULTS["run_id"]),
-            tag=job_meta.get("tag", JOB_DEFAULTS["tag"]),
-            token_id=job_meta.get("token_id", JOB_DEFAULTS["token_id"]),
+            run_id=narr_cell_info.get("run_id", JOB_DEFAULTS["run_id"]),
+            tag=narr_cell_info.get("tag", JOB_DEFAULTS["tag"]),
         )
 
     # can be removed -- unused
@@ -175,9 +171,17 @@ class Job(object):
         """
         given a state data structure (as emitted by ee2), update the stored state in the job object
         """
-        if not state:
+        if not state or state == {}:
             return
 
+        if "job_id" in state and state["job_id"] != self.job_id:
+            raise ValueError(
+                f"Job ID mismatch in update_state: job ID: {self.job_id}; state ID: {state['job_id']}"
+            )
+
+        # TODO: add in a check for the case where this is a batch parent job
+        # batch parent jobs with where all children have status "completed" are in a terminal state
+        # otherwise, child jobs may be retried
         self.terminal_state = (
             True if state.get("status", "unknown") in TERMINAL_STATES else False
         )
@@ -185,7 +189,10 @@ class Job(object):
         if self._last_state is None:
             self._last_state = state
         else:
+            # TODO: implement batch job code updates here
             self._last_state.update(state)
+
+        return self._last_state
 
     def reset_state(self):
         """

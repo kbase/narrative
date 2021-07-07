@@ -235,7 +235,6 @@ class AppManagerTestCase(unittest.TestCase):
             "job_id": self.test_job_id,
             "params": [expected_params],
             "tag": self.test_tag,
-            "token_id": TOKEN_ID,
         }
 
         for attr in ALL_JOB_ATTRS:
@@ -333,6 +332,61 @@ class AppManagerTestCase(unittest.TestCase):
         "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
         side_effect=mock_agent_token,
     )
+    def test_run_app_batch__dry_run_good_inputs(self, auth, c):
+        c.return_value.send_comm_message = MagicMock()
+        params = [self.test_app_params, self.test_app_params]
+        job_runner_inputs = self.am.run_app_batch(
+            self.test_app_id,
+            params,
+            cell_id="abcdefghi",
+            run_id="the_final_countdown",
+            version=self.test_app_version,
+            tag=self.test_tag,
+            dry_run=True,
+        )
+
+        job_meta = {
+            "batch_app": self.test_app_id,
+            "batch_size": len(params),
+            "batch_tag": self.test_tag,
+            "cell_id": "abcdefghi",
+            "run_id": "the_final_countdown",
+            "tag": BATCH_APP["TAG"],
+            "token_id": TOKEN_ID,
+        }
+
+        expected = {
+            "app_id": BATCH_APP["APP_ID"],
+            "meta": job_meta,
+            "method": BATCH_APP["METHOD"],
+            "params": [
+                {
+                    "batch_params": [
+                        {
+                            "params": [self.expected_app_params],
+                            "source_ws_objects": [],
+                        }
+                        for _ in range(len(params))
+                    ],
+                    "meta": job_meta,
+                    "method_name": self.test_app_method_name,
+                    "module_name": self.test_app_module_name,
+                    "service_ver": self.test_app_version,
+                    "wsid": 12345,
+                }
+            ],
+            "service_ver": BATCH_APP["VERSION"],
+            "wsid": 12345,
+        }
+
+        self.assertEqual(job_runner_inputs, expected)
+
+    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
+    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(
+        "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
+        side_effect=mock_agent_token,
+    )
     def test_run_app_batch_good_inputs(self, auth, c):
         c.return_value.send_comm_message = MagicMock()
         params = [self.test_app_params, self.test_app_params]
@@ -343,42 +397,40 @@ class AppManagerTestCase(unittest.TestCase):
             tag=self.test_tag,
         )
         self.assertIsInstance(new_job, Job)
-        self.assertEqual(new_job.job_id, self.test_job_id)
-        self.assertEqual(new_job.app_id, self.batch_app_id)
-        self.assertEqual(new_job.tag, self.test_tag)
-        self.assertIsNone(new_job.cell_id)
         self._verify_comm_success(c.return_value.send_comm_message, False)
+
         job_meta = {
-            "tag": BATCH_APP["TAG"],
             "batch_app": self.test_app_id,
-            "batch_tag": self.test_tag,
             "batch_size": len(params),
-            "token_id": TOKEN_ID,
+            "batch_tag": self.test_tag,
         }
 
         expected = {
             "app_id": BATCH_APP["APP_ID"],
             "app_version": BATCH_APP["VERSION"],
             "job_id": self.test_job_id,
-            "meta": job_meta,
+            "extra_data": job_meta,
             "params": [
                 {
-                    "module_name": self.test_app_module_name,
-                    "method_name": self.test_app_method_name,
-                    "service_ver": self.test_app_version,
-                    "wsid": 12345,
-                    "meta": job_meta,
                     "batch_params": [
                         {
                             "params": [self.expected_app_params],
                             "source_ws_objects": [],
                         }
-                        for i in range(len(params))
+                        for _ in range(len(params))
                     ],
+                    "meta": {
+                        **job_meta,
+                        "tag": BATCH_APP["TAG"],
+                        "token_id": TOKEN_ID,
+                    },
+                    "method_name": self.test_app_method_name,
+                    "module_name": self.test_app_module_name,
+                    "service_ver": self.test_app_version,
+                    "wsid": 12345,
                 }
             ],
             "tag": BATCH_APP["TAG"],
-            "token_id": TOKEN_ID,
         }
 
         for attr in ALL_JOB_ATTRS:
@@ -597,10 +649,8 @@ class AppManagerTestCase(unittest.TestCase):
                 "app_version": test_input[0]["version"],
                 "batch_id": parent_job.batch_id,
                 "job_id": "new_job_id",
-                "meta": {},
                 "params": child_job_params[0],
                 "tag": test_input[0]["tag"],
-                "token_id": TOKEN_ID,
             },
             {},
             {
@@ -608,10 +658,8 @@ class AppManagerTestCase(unittest.TestCase):
                 "app_version": test_input[1]["version"],
                 "batch_id": parent_job.batch_id,
                 "job_id": "new_job_id",
-                "meta": {},
                 "params": child_job_params[2],
                 "tag": test_input[1]["tag"],
-                "token_id": TOKEN_ID,
             },
         ]
         child_job_expected[1] = copy.deepcopy(child_job_expected[0])

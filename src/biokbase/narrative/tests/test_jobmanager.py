@@ -32,7 +32,9 @@ no_id_err_str = "No job id\(s\) supplied"
 job_states_to_generate = [JOB_CREATED, JOB_RUNNING]
 
 
-def create_jm_message(r_type, job_id=None, data={}):
+def create_jm_message(r_type, job_id=None, data=None):
+    if data is None:
+        data = {}
     data["request_type"] = r_type
     data["job_id"] = job_id
     return {"content": {"data": data}}
@@ -64,17 +66,13 @@ class JobManagerTest(unittest.TestCase):
             state = get_job_state(
                 job_id, biokbase.narrative.jobs.jobmanager.EXCLUDED_JOB_STATE_FIELDS
             )
-            state.update(
-                {
-                    "child_jobs": [],
-                    "cell_id": job_object.cell_id,
-                    "run_id": job_object.run_id,
-                }
-            )
 
             self.job_states[job_id] = {
-                "state": state,
-                "spec": {},
+                "state": {
+                    **state,
+                    "cell_id": job_object.cell_id,
+                    "run_id": job_object.run_id,
+                },
                 "widget_info": None,
                 "owner": job_object.owner,
                 "listener_count": self.jm._running_jobs[job_object.job_id]["refresh"],
@@ -413,12 +411,28 @@ class JobManagerTest(unittest.TestCase):
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def test_lookup_all_job_states(self):
         states = self.jm.lookup_all_job_states()
-        self.assertEqual(len(states), 2)
         self.assertEqual({JOB_CREATED, JOB_RUNNING}, set(states.keys()))
+        self.assertEqual(
+            states,
+            {
+                JOB_CREATED: self.job_states[JOB_CREATED],
+                JOB_RUNNING: self.job_states[JOB_RUNNING],
+            },
+        )
 
+    @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
+    def test_lookup_all_job_states__ignore_refresh_flag(self):
         states = self.jm.lookup_all_job_states(ignore_refresh_flag=True)
-        self.assertEqual(len(states), 4)
         self.assertEqual(set(self.job_ids), set(states.keys()))
+        self.assertEqual(
+            states,
+            {
+                JOB_CREATED: self.job_states[JOB_CREATED],
+                JOB_RUNNING: self.job_states[JOB_RUNNING],
+                JOB_COMPLETED: self.jm._completed_job_states[JOB_COMPLETED],
+                JOB_TERMINATED: self.jm._completed_job_states[JOB_TERMINATED],
+            },
+        )
 
     # @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_mock_client)
     # def test_job_status_fetching(self):

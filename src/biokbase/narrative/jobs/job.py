@@ -58,6 +58,27 @@ class Job(object):
         Initializes a new Job with the attributes supplied in the kwargs.
         The app_id and app_version should both align with what's available in
         the Narrative Method Store service.
+
+        required args:
+        job_id (str): the ID of the job
+
+        optional args:
+        app_id (str): identifier for the app
+        app_version (str): service version string
+        batch_id (str): for batch jobs, the ID of the parent job
+        batch_job (bool): whether or not this is a batch job
+        child_jobs (list[str]): IDs of child jobs in a batch
+        cell_id (str): ID of the cell that initiated the job (if applicable)
+        extra_data (dict): currently only used by the legacy batch job interface;
+            format:
+                batch_app: ID of app being run,
+                batch_tag: app tag
+                batch_size: number of jobs being run
+        params (dict): input parameters
+        owner (str): the user who started the job
+        run_id (str): unique run ID for the job
+        tag (str): the application tag (dev/beta/release)
+
         """
         if kwargs.get("job_id", None) is None:
             raise ValueError("Cannot create a job without a job ID!")
@@ -90,6 +111,7 @@ class Job(object):
         -----------
         job_state - dict
             the job information returned from ee2.check_job
+
         """
         job_input = job_state.get("job_input", {})
         narr_cell_info = job_input.get("narrative_cell_info", {})
@@ -107,19 +129,6 @@ class Job(object):
             run_id=narr_cell_info.get("run_id", JOB_DEFAULTS["run_id"]),
             tag=narr_cell_info.get("tag", JOB_DEFAULTS["tag"]),
         )
-
-    # can be removed -- unused
-    @classmethod
-    def map_viewer_params(cls, job_state, job_inputs, app_id, app_tag):
-        # get app spec.
-        if job_state is None or job_state.get("status", "") != COMPLETED_STATUS:
-            return None
-
-        spec = SpecManager().get_spec(app_id, app_tag)
-        (output_widget, widget_params) = map_outputs_from_state(
-            job_state, map_inputs_from_job(job_inputs, spec), spec
-        )
-        return {"name": output_widget, "tag": app_tag, "params": widget_params}
 
     @property
     def final_state(self):

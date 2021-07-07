@@ -94,6 +94,8 @@ class JobManager(object):
             # be set to True.
             self._running_jobs[job_id] = {"refresh": 0, "job": job}
 
+        return job_states
+
     def _check_job_list(self, job_id_list: List[str] = []):
         """
         Deduplicates the input job list, maintaining insertion order
@@ -192,9 +194,10 @@ class JobManager(object):
             kblogging.log_event(self._log, "list_jobs.error", {"err": str(e)})
             raise
 
-    def _construct_job_state_set(self, job_ids: list) -> dict:
+    def _construct_job_state_set(self, job_ids: list, states: dict = None) -> dict:
         """
         Builds a set of job states for the list of job ids.
+        :param states: list, where each state is from EE2
         """
         # if cached, use 'em.
         # otherwise, lookup.
@@ -213,6 +216,9 @@ class JobManager(object):
             job = self.get_job(job_id)
             if job.has_state_cached():
                 job_states[job_id] = job.revised_state()
+            elif states and job_id in states:
+                state = states[job_id]
+                job_states[job_id] = job.revised_state(state)
             else:
                 jobs_to_lookup.append(job_id)
 
@@ -483,25 +489,27 @@ class JobManager(object):
         except Exception as e:
             raise transform_job_exception(e)
         # for each retry result, refresh the state of the retried and new jobs
-        update_states = []
-        for result in retry_results:
-            update_states.append(result["job_id"])
-            self.get_job(result["job_id"]).clear_cache()
-            if "retry_id" in result:
-                update_states.append(result["retry_id"])
-        job_states = self._construct_job_state_set(update_states)
+        orig_ids = [result["job_id"] for result in retry_results]
+        retry_ids = [result["retry_id"] for result in retry_results if "retry_id" in result]
+        for job_id in orig_ids:
+            self.get_job(job_id).clear_cache()
+        orig_states = self._construct_job_state_set(orig_ids)
+        retry_states = self._construct_job_state_set(
+            retry_ids,
+            self._create_jobs(retry_ids)  # add to self._running_jobs index
+        )
+        job_states = {**orig_states, **retry_states}
         # fill in the job state details
         for result in retry_results:
+            result["job_id"] = job_states[result["job_id"]]
             if "retry_id" in result:
                 result["retry_id"] = job_states[result["retry_id"]]
         for job_id in checked_jobs["error"]:
             retry_results.append({
-                "job_id": {"job_id": job_id, "status": "does_not_exist"},
+                "job_id": {"job_id": job_id, "status": "does_not_exist"},  # not the "revised state" unlike other items in retry_results?
                 "error": "does_not_exist"
             })
-        # add to self._running_jobs index
-        retry_ids = [result["retry_id"] for result in retry_results]
-        self._create_jobs(retry_ids, job_states)
+
         return retry_results
 
     def get_job_state(self, job_id: str, parent_job_id: str = None) -> dict:

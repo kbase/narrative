@@ -361,8 +361,8 @@ class JobManager(object):
                     # this is the wrong tag, so child_jobs always gets set to []
                     "child_jobs": self._child_job_states(
                         state.get("sub_jobs", []),
-                        job.extra_data.get("batch_app") or None,
-                        job.extra_data.get("batch_tag") or None,
+                        job.extra_data.get("batch_app", None),
+                        job.extra_data.get("batch_tag", None),
                     ),
                 }
             )
@@ -447,13 +447,6 @@ class JobManager(object):
                 job_states[job_id] = self._completed_job_states[job_id]
             else:
                 jobs_to_lookup.append(job_id)
-
-        print(
-            {
-                "to look up": jobs_to_lookup,
-                "done": job_states.keys(),
-            }
-        )
 
         fetched_states = dict()
         # Get the rest of states direct from EE2.

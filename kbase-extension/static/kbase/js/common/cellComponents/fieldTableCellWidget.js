@@ -22,19 +22,8 @@ define([
         let places, parent, container, inputControl;
 
         try {
-            inputControl = inputControlFactory.make({
-                bus: bus,
-                paramsChannelName: config.paramsChannelName,
-                channelName: bus.channelName,
-                initialValue: config.initialValue,
-                appSpec: config.appSpec,
-                parameterSpec: config.parameterSpec,
-                workspaceInfo: config.workspaceInfo,
-                workspaceId: config.workspaceId,
-                fieldSpec: config.fieldSpec,
-                referenceType: config.referenceType,
-                closeParameters: config.closeParameters,
-            });
+            const controlConfig = Object.assign({}, config, { bus, channelName: bus.channelName });
+            inputControl = inputControlFactory.make(controlConfig);
         } catch (ex) {
             console.error('Error creating input control', ex);
             inputControl = ErrorControlFactory.make({

@@ -425,21 +425,19 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
              * set up the job manager to handle a batch job
              *
              * @param {object} batchJob - with keys
-             *        {string} parent_job_id
+             *        {string} batch_id
              *        {array}  child_job_ids
              */
             initBatchJob(batchJob) {
-                const { parent_job_id, child_job_ids } = batchJob;
+                const { batch_id, child_job_ids } = batchJob;
 
                 if (
-                    !parent_job_id ||
+                    !batch_id ||
                     !child_job_ids ||
                     Object.prototype.toString.call(child_job_ids) !== '[object Array]' ||
                     !child_job_ids.length
                 ) {
-                    throw new Error(
-                        'Batch job must have a parent job ID and at least one child job ID'
-                    );
+                    throw new Error('Batch job must have a batch ID and at least one child job ID');
                 }
 
                 this.addListener('job-status', child_job_ids);
@@ -462,7 +460,7 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
 
                 // TODO: implement more complete handling for parent
                 this.model.setItem('exec.jobState', {
-                    job_id: parent_job_id,
+                    job_id: batch_id,
                     status: 'created',
                     created: 0,
                 });

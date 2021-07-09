@@ -191,7 +191,6 @@ define([
                 const translations = {
                     jobId: 'job_id',
                     jobIdList: 'job_id_list',
-                    parentJobId: 'parent_job_id',
                     pingId: 'ping_id',
                 };
 
@@ -488,7 +487,9 @@ define([
                 ],
             });
 
-            $modalBody.find('button#kb-job-err-report').click(() => {});
+            $modalBody.find('button#kb-job-err-report').click(() => {
+                // no action
+            });
             modal.getElement().on('hidden.bs.modal', () => {
                 modal.destroy();
             });

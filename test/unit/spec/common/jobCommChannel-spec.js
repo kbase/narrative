@@ -132,11 +132,10 @@ define(['common/jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUti
             },
             {
                 channel: 'request-job-status',
-                message: { jobId: 'someJob', parentJobId: 'someParent' },
+                message: { jobId: 'someJob' },
                 expected: {
                     request_type: 'job_status',
                     job_id: 'someJob',
-                    parent_job_id: 'someParent',
                 },
             },
             {
@@ -145,7 +144,6 @@ define(['common/jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUti
                 expected: {
                     request_type: 'start_job_update',
                     job_id: 'someJob',
-                    parent_job_id: 'someParent',
                 },
             },
             {
@@ -174,7 +172,6 @@ define(['common/jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUti
                 channel: 'request-job-log',
                 message: {
                     jobId: 'someJob',
-                    parentJobId: 'none',
                     options: {
                         first_line: 2000,
                         job_id: 'overridden!',
@@ -184,18 +181,16 @@ define(['common/jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUti
                 expected: {
                     request_type: 'job_logs',
                     job_id: 'overridden!',
-                    parent_job_id: 'none',
                     first_line: 2000,
                     latest: true,
                 },
             },
             {
                 channel: 'request-job-info',
-                message: { jobId: 'someJob', parentJobId: 'someParent' },
+                message: { jobId: 'someJob' },
                 expected: {
                     request_type: 'job_info',
                     job_id: 'someJob',
-                    parent_job_id: 'someParent',
                 },
             },
             {

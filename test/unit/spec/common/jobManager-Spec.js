@@ -745,18 +745,17 @@ define([
             const invalidInput = [
                 {},
                 { parent_job: 12345 },
-                { parent_job_id: 12345, child_jobs: [] },
-                { parent_job_id: 12345, child_job_ids: [] },
-                { parent_job_id: 12345, child_job_ids: {} },
+                { batch_job: 12345 },
+                { batch_id: 12345, child_jobs: [] },
+                { batch_id: 12345, child_job_ids: [] },
+                { batch_id: 12345, child_job_ids: {} },
             ];
 
             invalidInput.forEach((input) => {
                 it(`will not accept invalid input ${JSON.stringify(input)}`, function () {
                     expect(() => {
                         this.jobManagerInstance.initBatchJob(input);
-                    }).toThrowError(
-                        /Batch job must have a parent job ID and at least one child job ID/
-                    );
+                    }).toThrowError(/Batch job must have a batch ID and at least one child job ID/);
                 });
             });
 
@@ -772,7 +771,7 @@ define([
                         .sort()
                 );
                 this.jobManagerInstance.initBatchJob({
-                    parent_job_id: 'something',
+                    batch_id: 'something',
                     child_job_ids: childJobs,
                 });
                 expect(

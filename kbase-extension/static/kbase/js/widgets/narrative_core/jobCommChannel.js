@@ -62,7 +62,6 @@ define([
         CANCEL_JOB = 'cancel_job',
         RETRY_JOB = 'retry_job',
         JOB_LOGS = 'job_logs',
-        JOB_LOGS_LATEST = 'job_logs_latest',
         JOB_INFO = 'job_info',
         JOB = 'jobId',
         CELL = 'cell';
@@ -91,8 +90,6 @@ define([
 
         // Fetches job logs from kernel.
         'request-job-log': JOB_LOGS,
-        // Fetches most recent job logs from kernel.
-        'request-job-log-latest': JOB_LOGS_LATEST,
     };
 
     class JobCommChannel {
@@ -208,6 +205,7 @@ define([
                 if (message.options) {
                     msg = Object.assign({}, msg, message.options);
                 }
+
                 this.comm.send(msg);
                 this.debug(`sending comm message: ${COMM_NAME} ${msgType}`);
                 resolve();

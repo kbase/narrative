@@ -578,7 +578,6 @@ class JobManager(object):
     def get_job_logs(
         self,
         job_id: str,
-        parent_job_id: str = None,
         first_line: int = 0,
         num_lines: int = None,
         latest_only: bool = False,
@@ -586,10 +585,9 @@ class JobManager(object):
         """
         Raises a Value error if the job_id doesn't exist or is not present.
         :param job_id: str - the job id from the execution engine
-        :param parent_job_id: if the job is a child job, this is its parent (optional)
         :param first_line: int - the first line to be requested by the log. 0-indexed. If < 0,
             this will be set to 0
-        :param max_lines: int - the maximum number of lines to return.
+        :param num_lines: int - the maximum number of lines to return.
             if < 0, will be reset to 0.
             if None, then will not be considered, and just return all the lines.
         :param latest_only: bool - if True, will only return the most recent max_lines
@@ -613,7 +611,9 @@ class JobManager(object):
         try:
             if latest_only:
                 (max_lines, logs) = job.log()
-                if num_lines is not None and max_lines > num_lines:
+                if num_lines is None or max_lines <= num_lines:
+                    first_line = 0
+                else:
                     first_line = max_lines - num_lines
                     logs = logs[first_line:]
             else:

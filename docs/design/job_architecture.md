@@ -54,12 +54,7 @@ All the `request-job-*` requests take as arguments either a single job ID string
   * `options` - an object, with attributes:
     * `first_line` - the first line (0-indexed) to request
     * `num_lines` - the number of lines to request (will get back up to that many if there aren't more)
-
-`request-job-log-latest` - request the latest several job log lines
-  * `jobId` - a string, the job id OR
-  * `jobIdList` - an array of job IDs
-  * `options` - an object, with attributes:
-    * `num_lines` - the number of lines to request (will get back up to that many if there aren't more)
+    * `latest` -  true if requesting just the latest set of logs
 
 ### Usage Example
 The comm channel is used through the main Bus object that's instantiated through the global `Runtime` object. That needs to be included in the `define` statement for all AMD modules. The bus is then used with its `emit` function (you have the bus *emit* a message to its listeners), and any inputs are passed along with it.
@@ -241,13 +236,9 @@ These are organized by the `request_type` field, followed by the expected respon
 `job_logs` - request job log information, responds with `job_logs` for each job
 * `job_id` - string OR `job_id_list` - array of strings
 * `parent_job_id` - optional string
-* `first_line` - int >= 0,
+* `first_line` - int >= 0, ignored if `latest` is `true`
 * `num_lines` - int > 0
-
-`job_logs_latest` - request the latest set of lines from job logs, responds with `job_logs`
-* `job_id` - string OR `job_id_list` - array of strings
-* `parent_job_id` - optional string
-* `num_lines` - int > 0
+* `latest` - boolean, `true` if requesting just the latest logs
 
 `cancel_job` - cancel a job or list of jobs; responds with `job_canceled` for each job
 * `job_id` - string OR `job_id_list` - array of strings

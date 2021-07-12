@@ -58,9 +58,7 @@ def get_retry_job_state(orig_id, status="unmocked"):
 
 
 def get_dne_job_state(job_id):
-    # really, the ee2 state, not the revised state
-    # does not match other items of retry_results
-    return {"job_id": job_id, "status": "does_not_exist"}
+    return {"state": {"job_id": job_id, "status": "does_not_exist"}}
 
 
 def get_test_job_states():
@@ -136,13 +134,17 @@ class JobManagerTest(unittest.TestCase):
         self.jm = biokbase.narrative.jobs.jobmanager.JobManager()
 
         self.assertEqual(self.jm._running_jobs, {})
-        # self.assertEqual(self.jm._completed_job_states, {})
 
         # redo the initialise to make sure it worked correctly
         self.jm.initialize_jobs()
-        # self.assertEqual(
-        #     {JOB_COMPLETED, JOB_TERMINATED}, set(self.jm._completed_job_states.keys())
-        # )
+        terminal_ids = [
+            job_id for job_id, d in self.jm._running_jobs.items()
+            if d["job"].terminal_state
+        ]
+        self.assertCountEqual(
+            terminal_ids,
+            [JOB_COMPLETED, JOB_TERMINATED, JOB_ERROR]
+        )
         self.assertEqual(set(self.job_ids), set(self.jm._running_jobs.keys()))
 
     def test__check_job_list_fail(self):
@@ -253,8 +255,8 @@ class JobManagerTest(unittest.TestCase):
     def test_cancel_job__job_already_finished(self):
         self.assertEqual(test_jobs[JOB_COMPLETED]["status"], "completed")
         self.assertEqual(test_jobs[JOB_TERMINATED]["status"], "terminated")
-        # self.assertIn(JOB_COMPLETED, self.jm._completed_job_states)
-        # self.assertIn(JOB_TERMINATED, self.jm._completed_job_states)
+        self.assertTrue(self.jm.get_job(JOB_COMPLETED).terminal_state)
+        self.assertTrue(self.jm.get_job(JOB_TERMINATED).terminal_state)
 
         with mock.patch(
             "biokbase.narrative.jobs.jobmanager.JobManager._cancel_job"
@@ -286,7 +288,7 @@ class JobManagerTest(unittest.TestCase):
     def test_cancel_job__check_job_terminated_returns_true(self, mock_cancel_job):
         """cancel a single job where check_job_terminated returns true"""
         self.assertEqual(test_jobs[JOB_RUNNING]["status"], "running")
-        # self.assertNotIn(JOB_RUNNING, self.jm._completed_job_states)
+        self.assertFalse(self.jm.get_job(JOB_RUNNING).terminal_state)
 
         with mock.patch.object(
             MockClients,
@@ -302,8 +304,8 @@ class JobManagerTest(unittest.TestCase):
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def test_cancel_jobs__check_job_terminated_returns_true(self, mock_cancel_job):
         """cancel multiple jobs where all check_job_terminated calls return true"""
-        # for job_id in [JOB_RUNNING, JOB_CREATED]:
-        # self.assertNotIn(job_id, self.jm._completed_job_states)
+        for job_id in [JOB_RUNNING, JOB_CREATED]:
+            self.assertFalse(self.jm.get_job(job_id).terminal_state)
 
         with mock.patch.object(
             MockClients,
@@ -328,7 +330,7 @@ class JobManagerTest(unittest.TestCase):
     def test_cancel_job__run_ee2_cancel_job(self):
         """cancel a job that runs cancel_job on ee2"""
         self.assertIn(JOB_RUNNING, self.jm._running_jobs)
-        # self.assertNotIn(JOB_RUNNING, self.jm._completed_job_states)
+        self.assertFalse(self.jm.get_job(JOB_RUNNING).terminal_state)
         # set the job refresh to 1
         self.jm._running_jobs[JOB_RUNNING]["refresh"] = 1
 

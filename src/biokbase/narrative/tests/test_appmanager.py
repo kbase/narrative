@@ -1,10 +1,10 @@
 """
 Tests for the app manager.
 """
-from biokbase.narrative.jobs.appmanager import AppManager
+from biokbase.narrative.jobs.appmanager import AppManager, BATCH_ID_KEY, BATCH_APP
 import biokbase.narrative.jobs.specmanager as specmanager
 import biokbase.narrative.app_util as app_util
-from biokbase.narrative.jobs.job import Job
+from biokbase.narrative.jobs.job import Job, ALL_JOB_ATTRS, JOB_DEFAULTS
 from IPython.display import HTML, Javascript
 import unittest
 import mock
@@ -17,21 +17,36 @@ import io
 import copy
 from .util import ConfigTests
 
+SEMANTIC_VER_ERROR = "Semantic versions only apply to released app modules."
+TOKEN_ID = "12345"
+
 
 def mock_agent_token(*args, **kwargs):
-    return dict({"user": "testuser", "id": "12345", "token": "abcde"})
+    return dict({"user": "testuser", "id": TOKEN_ID, "token": "abcde"})
 
 
 class AppManagerTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         config = ConfigTests()
+        cls.maxDiff = None
         cls.am = AppManager()
         cls.good_app_id = config.get("app_tests", "good_app_id")
         cls.good_tag = config.get("app_tests", "good_app_tag")
         cls.bad_app_id = config.get("app_tests", "bad_app_id")
         cls.bad_tag = config.get("app_tests", "bad_app_tag")
         cls.test_app_id = config.get("app_tests", "test_app_id")
+        cls.test_app_version = (
+            "056582c691c4df190110b059600d2dc2a3a8b80a"  # where is this coming from?
+        )
+        cls.test_app_module_name = config.get("app_tests", "test_app_module_name")
+        cls.test_app_method_name = config.get("app_tests", "test_app_method_name")
+        cls.test_job_id = config.get("app_tests", "test_job_id")
+        cls.test_tag = config.get("app_tests", "test_app_tag")
+        cls.public_ws = config.get("app_tests", "public_ws_name")
+        cls.ws_id = int(config.get("app_tests", "public_ws_id"))
+        cls.app_input_ref = config.get("app_tests", "test_input_ref")
+        cls.batch_app_id = config.get("app_tests", "batch_app_id")
         cls.test_viewer_app_id = config.get("app_tests", "test_viewer_app_id")
         cls.test_app_params = {
             "read_library_names": ["rhodo.art.jgi.reads"],
@@ -41,12 +56,17 @@ class AppManagerTestCase(unittest.TestCase):
             "pipeline": "",
             "min_contig_len": None,
         }
-        cls.test_job_id = config.get("app_tests", "test_job_id")
-        cls.test_tag = config.get("app_tests", "test_app_tag")
-        cls.public_ws = config.get("app_tests", "public_ws_name")
-        cls.ws_id = int(config.get("app_tests", "public_ws_id"))
-        cls.app_input_ref = config.get("app_tests", "test_input_ref")
-        cls.batch_app_id = config.get("app_tests", "batch_app_id")
+
+        cls.expected_app_params = {
+            "read_library_refs": ["18836/5/1"],
+            "output_contigset_name": "rhodo_contigs",
+            "recipe": "auto",
+            "assembler": None,
+            "pipeline": None,
+            "min_contig_len": None,
+            "workspace_name": cls.public_ws,
+        }
+
         cls.bulk_run_good_inputs = [
             {
                 "app_id": "kb_uploadmethods/import_fastq_sra_as_reads_from_staging",
@@ -55,7 +75,7 @@ class AppManagerTestCase(unittest.TestCase):
                 "params": [
                     {
                         "fastq_fwd_staging_file_name": "file1.fastq",
-                        "fastq_rev_staging_file_name": "",
+                        "fastq_rev_staging_file_name": "file2.fastq",
                         "sra_staging_file_name": "",
                         "name": "reads_object_1",
                         "import_type": "FASTQ/FASTA",
@@ -68,7 +88,7 @@ class AppManagerTestCase(unittest.TestCase):
                     },
                     {
                         "fastq_fwd_staging_file_name": "file2.fastq",
-                        "fastq_rev_staging_file_name": "",
+                        "fastq_rev_staging_file_name": "file3.fastq",
                         "sra_staging_file_name": "",
                         "name": "reads_object_2",
                         "import_type": "FASTQ/FASTA",
@@ -87,13 +107,15 @@ class AppManagerTestCase(unittest.TestCase):
                 "version": "1.0.46",
                 "params": [
                     {
-                        "sra_staging_file_name": "reads.sra",
-                        "name": "sra_reads_object",
+                        "import_type": "SRA",
                         "insert_size_mean": 1,
                         "insert_size_std_dev": 1,
+                        "interleaved": "1",
+                        "name": "sra_reads_object",
                         "read_orientation_outward": "0",
                         "sequencing_tech": "Illumina",
                         "single_genome": "1",
+                        "sra_staging_file_name": "reads.sra",
                     }
                 ],
             },
@@ -197,10 +219,30 @@ class AppManagerTestCase(unittest.TestCase):
             self.test_app_id, self.test_app_params, tag=self.test_tag
         )
         self.assertIsInstance(new_job, Job)
-        self.assertEqual(new_job.job_id, self.test_job_id)
-        self.assertEqual(new_job.app_id, self.test_app_id)
-        self.assertEqual(new_job.tag, self.test_tag)
-        self.assertIsNone(new_job.cell_id)
+        expected_params = copy.deepcopy(self.test_app_params)
+        del expected_params["read_library_names"]
+        expected_params.update(
+            {
+                "read_library_refs": ["18836/5/1"],
+                "workspace_name": self.public_ws,
+                "assembler": None,
+                "pipeline": None,  # these get converted to None when params are checked
+            }
+        )
+        expected = {
+            "app_id": self.test_app_id,
+            "app_version": self.test_app_version,
+            "job_id": self.test_job_id,
+            "params": [expected_params],
+            "tag": self.test_tag,
+        }
+
+        for attr in ALL_JOB_ATTRS:
+            if attr in expected:
+                self.assertEqual(getattr(new_job, attr), expected[attr])
+            else:
+                self.assertEqual(getattr(new_job, attr), JOB_DEFAULTS[attr])
+
         self._verify_comm_success(c.return_value.send_comm_message, False)
 
     @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
@@ -264,7 +306,7 @@ class AppManagerTestCase(unittest.TestCase):
             c.return_value.send_comm_message,
             run_func,
             "run_app",
-            "Semantic versions only apply to released app modules.",
+            SEMANTIC_VER_ERROR,
         )
 
     # Running an app with missing inputs is now allowed. The app can
@@ -290,19 +332,112 @@ class AppManagerTestCase(unittest.TestCase):
         "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
         side_effect=mock_agent_token,
     )
+    def test_run_app_batch__dry_run_good_inputs(self, auth, c):
+        c.return_value.send_comm_message = MagicMock()
+        params = [self.test_app_params, self.test_app_params]
+        job_runner_inputs = self.am.run_app_batch(
+            self.test_app_id,
+            params,
+            cell_id="abcdefghi",
+            run_id="the_final_countdown",
+            version=self.test_app_version,
+            tag=self.test_tag,
+            dry_run=True,
+        )
+
+        job_meta = {
+            "batch_app": self.test_app_id,
+            "batch_size": len(params),
+            "batch_tag": self.test_tag,
+            "cell_id": "abcdefghi",
+            "run_id": "the_final_countdown",
+            "tag": BATCH_APP["TAG"],
+            "token_id": TOKEN_ID,
+        }
+
+        expected = {
+            "app_id": BATCH_APP["APP_ID"],
+            "meta": job_meta,
+            "method": BATCH_APP["METHOD"],
+            "params": [
+                {
+                    "batch_params": [
+                        {
+                            "params": [self.expected_app_params],
+                            "source_ws_objects": [],
+                        }
+                        for _ in range(len(params))
+                    ],
+                    "meta": job_meta,
+                    "method_name": self.test_app_method_name,
+                    "module_name": self.test_app_module_name,
+                    "service_ver": self.test_app_version,
+                    "wsid": 12345,
+                }
+            ],
+            "service_ver": BATCH_APP["VERSION"],
+            "wsid": 12345,
+        }
+
+        self.assertEqual(job_runner_inputs, expected)
+
+    @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
+    @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
+    @mock.patch(
+        "biokbase.narrative.jobs.appmanager.auth.get_agent_token",
+        side_effect=mock_agent_token,
+    )
     def test_run_app_batch_good_inputs(self, auth, c):
         c.return_value.send_comm_message = MagicMock()
+        params = [self.test_app_params, self.test_app_params]
         new_job = self.am.run_app_batch(
             self.test_app_id,
-            [self.test_app_params, self.test_app_params],
+            params,
+            version=self.test_app_version,
             tag=self.test_tag,
         )
         self.assertIsInstance(new_job, Job)
-        self.assertEqual(new_job.job_id, self.test_job_id)
-        self.assertEqual(new_job.app_id, self.batch_app_id)
-        self.assertEqual(new_job.tag, self.test_tag)
-        self.assertIsNone(new_job.cell_id)
         self._verify_comm_success(c.return_value.send_comm_message, False)
+
+        job_meta = {
+            "batch_app": self.test_app_id,
+            "batch_size": len(params),
+            "batch_tag": self.test_tag,
+        }
+
+        expected = {
+            "app_id": BATCH_APP["APP_ID"],
+            "app_version": BATCH_APP["VERSION"],
+            "job_id": self.test_job_id,
+            "extra_data": job_meta,
+            "params": [
+                {
+                    "batch_params": [
+                        {
+                            "params": [self.expected_app_params],
+                            "source_ws_objects": [],
+                        }
+                        for _ in range(len(params))
+                    ],
+                    "meta": {
+                        **job_meta,
+                        "tag": BATCH_APP["TAG"],
+                        "token_id": TOKEN_ID,
+                    },
+                    "method_name": self.test_app_method_name,
+                    "module_name": self.test_app_module_name,
+                    "service_ver": self.test_app_version,
+                    "wsid": 12345,
+                }
+            ],
+            "tag": BATCH_APP["TAG"],
+        }
+
+        for attr in ALL_JOB_ATTRS:
+            if attr in expected:
+                self.assertEqual(getattr(new_job, attr), expected[attr])
+            else:
+                self.assertEqual(getattr(new_job, attr), JOB_DEFAULTS[attr])
 
     @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
     @mock.patch("biokbase.narrative.jobs.appmanager.JobComm")
@@ -367,7 +502,7 @@ class AppManagerTestCase(unittest.TestCase):
             c.return_value.send_comm_message,
             run_func,
             "run_app_batch",
-            "Semantic versions only apply to released app modules.",
+            SEMANTIC_VER_ERROR,
         )
 
     # Running an app with missing inputs is now allowed. The app can
@@ -437,7 +572,7 @@ class AppManagerTestCase(unittest.TestCase):
                     "args": [self.good_app_id, {}],
                     "kwargs": {"tag": "dev", "version": "1.0.0"},
                 },
-                "expected_error": "Semantic versions only apply to released app modules.",
+                "expected_error": SEMANTIC_VER_ERROR,
             },
         ]
         for test_case in cases:
@@ -466,15 +601,82 @@ class AppManagerTestCase(unittest.TestCase):
     )
     def test_run_app_bulk_good_inputs(self, auth, c):
         c.return_value.send_comm_message = MagicMock()
-        new_jobs = self.am.run_app_bulk(self.bulk_run_good_inputs)
+        test_input = self.bulk_run_good_inputs
+
+        child_job_params = [
+            copy.deepcopy(test_input[0]["params"][0]),
+            copy.deepcopy(test_input[0]["params"][1]),
+            copy.deepcopy(test_input[1]["params"][0]),
+        ]
+        for param_set in child_job_params:
+            for key, value in param_set.items():
+                if value == "":
+                    param_set[key] = None
+            param_set["workspace_name"] = self.public_ws
+
+        new_jobs = self.am.run_app_bulk(test_input)
         self.assertIsInstance(new_jobs, dict)
         self.assertIn("parent_job", new_jobs)
-        self.assertIsInstance(new_jobs["parent_job"], Job)
         self.assertIn("child_jobs", new_jobs)
+        self.assertTrue(new_jobs["parent_job"])
+        parent_job = new_jobs["parent_job"]
+        self.assertIsInstance(parent_job, Job)
+        self.assertEqual(parent_job.job_id, new_jobs["parent_job"].batch_id)
+
+        # expected parent job attrs
+        expected = {
+            "app_id": "batch",
+            "app_version": "batch",
+            "batch_id": parent_job.job_id,
+            "batch_job": True,
+            "child_jobs": ["new_job_id", "new_job_id", "new_job_id"],
+            "job_id": parent_job.job_id,
+        }
+
+        for attr in ALL_JOB_ATTRS:
+            if attr in expected:
+                self.assertEqual(getattr(parent_job, attr), expected[attr])
+            else:
+                self.assertEqual(getattr(parent_job, attr), JOB_DEFAULTS[attr])
+
         self.assertIsInstance(new_jobs["child_jobs"], list)
         self.assertEqual(len(new_jobs["child_jobs"]), 3)
-        for child in new_jobs["child_jobs"]:
-            self.assertIsInstance(child, Job)
+
+        # expected attributes for child jobs
+        child_job_expected = [
+            {
+                "app_id": test_input[0]["app_id"],
+                "app_version": test_input[0]["version"],
+                "batch_id": parent_job.batch_id,
+                "job_id": "new_job_id",
+                "params": child_job_params[0],
+                "tag": test_input[0]["tag"],
+            },
+            {},
+            {
+                "app_id": test_input[1]["app_id"],
+                "app_version": test_input[1]["version"],
+                "batch_id": parent_job.batch_id,
+                "job_id": "new_job_id",
+                "params": child_job_params[2],
+                "tag": test_input[1]["tag"],
+            },
+        ]
+        child_job_expected[1] = copy.deepcopy(child_job_expected[0])
+        child_job_expected[1]["params"] = child_job_params[1]
+
+        ix = -1
+        for child_job in new_jobs["child_jobs"]:
+            ix += 1
+            self.assertIsInstance(child_job, Job)
+            for attr in ALL_JOB_ATTRS:
+                if attr in child_job_expected[ix]:
+                    self.assertEqual(
+                        getattr(child_job, attr), child_job_expected[ix][attr]
+                    )
+                else:
+                    self.assertEqual(getattr(child_job, attr), JOB_DEFAULTS[attr])
+
         self._verify_comm_success(c.return_value.send_comm_message, True, num_jobs=4)
 
     @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
@@ -897,9 +1099,9 @@ class AppManagerTestCase(unittest.TestCase):
             },
         ]
         if is_batch:
-            expected_keys[0].append("parent_job_id")
+            expected_keys[0].append(BATCH_ID_KEY)
             expected_keys[0].append("child_job_ids")
-            expected_values[0]["parent_job_id"] = self.test_job_id
+            expected_values[0][BATCH_ID_KEY] = self.test_job_id
         else:
             expected_keys[0].append("job_id")
             expected_values[0]["job_id"] = self.test_job_id

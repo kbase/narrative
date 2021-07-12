@@ -37,7 +37,7 @@ nb_server = None
 
 
 def run_narrative():
-    print(f'Starting local narrative on {JUPYTER_PORT}')
+    print(f"Starting local narrative on {JUPYTER_PORT}")
     nb_command = [
         "kbase-narrative",
         "--no-browser",
@@ -50,7 +50,10 @@ def run_narrative():
         nb_command[0] = "kbase-narrative"
 
     nb_server = subprocess.Popen(
-        nb_command, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, preexec_fn=os.setsid
+        nb_command,
+        stderr=subprocess.STDOUT,
+        stdout=subprocess.PIPE,
+        preexec_fn=os.setsid,
     )
 
     # wait for notebook server to start up
@@ -104,7 +107,7 @@ try:
             resp_unit = e.returncode
     if options.integration:
         env = os.environ.copy()
-        base_url = env.get('BASE_URL', None)
+        base_url = env.get("BASE_URL", None)
         if base_url is None:
             if nb_server is None:
                 nb_server = run_narrative()
@@ -121,7 +124,7 @@ try:
         except subprocess.CalledProcessError as e:
             resp_integration = e.returncode
 except Exception as e:
-    print(f'Error! {str(e)}')
+    print(f"Error! {str(e)}")
 finally:
     print("Done running tests.")
     if nb_server is not None:

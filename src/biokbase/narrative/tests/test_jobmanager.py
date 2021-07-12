@@ -20,8 +20,8 @@ from biokbase.narrative.exception_util import JobException, NarrativeException
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 config = ConfigTests()
-job_info = config.load_json_file(config.get("jobs", "ee2_job_info_file"))
-# job_info contains jobs in the following states
+test_jobs = config.load_json_file(config.get("jobs", "ee2_job_info_file"))
+# test_jobs contains jobs in the following states
 JOB_COMPLETED = "5d64935ab215ad4128de94d6"
 JOB_CREATED = "5d64935cb215ad4128de94d7"
 JOB_RUNNING = "5d64935cb215ad4128de94d8"
@@ -32,25 +32,16 @@ no_id_err_str = "No job id\(s\) supplied"
 job_states_to_generate = [JOB_CREATED, JOB_RUNNING]
 
 
-@mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
-def phony_job():
-    return Job.from_state(
-        "phony_job",
-        {"params": [], "service_ver": "0.0.0"},
-        "kbasetest",
-        "NarrativeTest/test_editor",
-        tag="dev",
-    )
-
-
-def create_jm_message(r_type, job_id=None, data={}):
+def create_jm_message(r_type, job_id=None, data=None):
+    if data is None:
+        data = {}
     data["request_type"] = r_type
     data["job_id"] = job_id
     return {"content": {"data": data}}
 
 
 def get_job_state(job_id, exclude_fields=None):
-    info = copy.deepcopy(job_info.get(job_id, {}))
+    info = copy.deepcopy(test_jobs.get(job_id, {}))
     if exclude_fields:
         for f in exclude_fields:
             if f in info:
@@ -62,7 +53,7 @@ class JobManagerTest(unittest.TestCase):
     @classmethod
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def setUpClass(cls):
-        cls.job_ids = list(job_info.keys())
+        cls.job_ids = list(test_jobs.keys())
         os.environ["KB_WORKSPACE_ID"] = config.get("jobs", "job_test_wsname")
         cls.maxDiff = None
         cls.job_states = {}
@@ -75,18 +66,13 @@ class JobManagerTest(unittest.TestCase):
             state = get_job_state(
                 job_id, biokbase.narrative.jobs.jobmanager.EXCLUDED_JOB_STATE_FIELDS
             )
-            state.update(
-                {
-                    "child_jobs": [],
-                    "cell_id": job_object.cell_id,
-                    "run_id": job_object.cell_id,
-                    # "run_id": job_object.run_id,
-                }
-            )
 
             self.job_states[job_id] = {
-                "state": state,
-                "spec": {},
+                "state": {
+                    **state,
+                    "cell_id": job_object.cell_id,
+                    "run_id": job_object.run_id,
+                },
                 "widget_info": None,
                 "owner": job_object.owner,
                 "listener_count": self.jm._running_jobs[job_object.job_id]["refresh"],
@@ -243,8 +229,8 @@ class JobManagerTest(unittest.TestCase):
             self.jm.cancel_jobs(["", "", None])
 
     def test_cancel_job__job_already_finished(self):
-        self.assertEqual(job_info[JOB_COMPLETED]["status"], "completed")
-        self.assertEqual(job_info[JOB_TERMINATED]["status"], "terminated")
+        self.assertEqual(test_jobs[JOB_COMPLETED]["status"], "completed")
+        self.assertEqual(test_jobs[JOB_TERMINATED]["status"], "terminated")
         self.assertIn(JOB_COMPLETED, self.jm._completed_job_states)
         self.assertIn(JOB_TERMINATED, self.jm._completed_job_states)
 
@@ -277,7 +263,7 @@ class JobManagerTest(unittest.TestCase):
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def test_cancel_job__check_job_terminated_returns_true(self, mock_cancel_job):
         """cancel a single job where check_job_terminated returns true"""
-        self.assertEqual(job_info[JOB_RUNNING]["status"], "running")
+        self.assertEqual(test_jobs[JOB_RUNNING]["status"], "running")
         self.assertNotIn(JOB_RUNNING, self.jm._completed_job_states)
 
         with mock.patch.object(
@@ -318,14 +304,10 @@ class JobManagerTest(unittest.TestCase):
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def test_cancel_job__run_ee2_cancel_job(self):
         """cancel a job that runs cancel_job on ee2"""
-        new_job = phony_job()
-        new_job.status = "running"
-        job_id = new_job.job_id
-        self.jm.register_new_job(new_job)
-        self.assertIn(job_id, self.jm._running_jobs)
-        self.assertNotIn(job_id, self.jm._completed_job_states)
+        self.assertIn(JOB_RUNNING, self.jm._running_jobs)
+        self.assertNotIn(JOB_RUNNING, self.jm._completed_job_states)
         # set the job refresh to 1
-        self.jm._running_jobs[job_id]["refresh"] = 1
+        self.jm._running_jobs[JOB_RUNNING]["refresh"] = 1
 
         def check_state(arg):
             self.assertEqual(self.jm._running_jobs[arg["job_id"]]["refresh"], 0)
@@ -342,11 +324,11 @@ class JobManagerTest(unittest.TestCase):
             "cancel_job",
             mock.Mock(return_value={}, side_effect=check_state),
         ) as mock_cancel_job:
-            self.jm.cancel_job(job_id)
-            mock_check_job_canceled.assert_called_once_with({"job_id": job_id})
-            mock_cancel_job.assert_called_once_with({"job_id": job_id})
-            self.assertNotIn("canceling", self.jm._running_jobs[job_id])
-            self.assertEqual(self.jm._running_jobs[job_id]["refresh"], 1)
+            self.jm.cancel_job(JOB_RUNNING)
+            mock_check_job_canceled.assert_called_once_with({"job_id": JOB_RUNNING})
+            mock_cancel_job.assert_called_once_with({"job_id": JOB_RUNNING})
+            self.assertNotIn("canceling", self.jm._running_jobs[JOB_RUNNING])
+            self.assertEqual(self.jm._running_jobs[JOB_RUNNING]["refresh"], 1)
 
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def test_cancel_jobs__run_ee2_cancel_job(self):
@@ -429,12 +411,28 @@ class JobManagerTest(unittest.TestCase):
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def test_lookup_all_job_states(self):
         states = self.jm.lookup_all_job_states()
-        self.assertEqual(len(states), 2)
         self.assertEqual({JOB_CREATED, JOB_RUNNING}, set(states.keys()))
+        self.assertEqual(
+            states,
+            {
+                JOB_CREATED: self.job_states[JOB_CREATED],
+                JOB_RUNNING: self.job_states[JOB_RUNNING],
+            },
+        )
 
+    @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
+    def test_lookup_all_job_states__ignore_refresh_flag(self):
         states = self.jm.lookup_all_job_states(ignore_refresh_flag=True)
-        self.assertEqual(len(states), 4)
         self.assertEqual(set(self.job_ids), set(states.keys()))
+        self.assertEqual(
+            states,
+            {
+                JOB_CREATED: self.job_states[JOB_CREATED],
+                JOB_RUNNING: self.job_states[JOB_RUNNING],
+                JOB_COMPLETED: self.jm._completed_job_states[JOB_COMPLETED],
+                JOB_TERMINATED: self.jm._completed_job_states[JOB_TERMINATED],
+            },
+        )
 
     # @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_mock_client)
     # def test_job_status_fetching(self):

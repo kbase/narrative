@@ -31,6 +31,15 @@ A module for managing apps, specs, requirements, and for starting jobs.
 """
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
+BATCH_ID_KEY = "parent_job_id"
+
+BATCH_APP = {
+    "APP_ID": "kb_BatchApp/run_batch",
+    "METHOD": "kb_BatchApp.run_batch",
+    "TAG": "dev",
+    "VERSION": "dev",
+}
+
 
 def _app_error_wrapper(app_func: Callable) -> any:
     """
@@ -178,10 +187,6 @@ class AppManager(object):
     ):
         if params is None:
             params = list()
-        batch_method = "kb_BatchApp.run_batch"
-        batch_app_id = "kb_BatchApp/run_batch"
-        batch_method_ver = "dev"
-        batch_method_tag = "dev"
         ws_id = strict_system_variable("workspace_id")
         spec = self._get_validated_app_spec(app_id, tag, True, version=version)
 
@@ -218,7 +223,7 @@ class AppManager(object):
         # This is what calls the function in the back end - Module.method
         # This isn't the same as the app spec id.
         job_meta = {
-            "tag": batch_method_tag,
+            "tag": BATCH_APP["TAG"],
             "batch_app": app_id,
             "batch_tag": tag,
             "batch_size": len(params),
@@ -248,20 +253,18 @@ class AppManager(object):
 
         # We're now almost ready to run the job. Last, we need an agent token.
         agent_token = self._get_agent_token(app_id)
-
         job_meta["token_id"] = agent_token["id"]
-        # This is the input set for NJSW.run_job. Now we need the workspace id
+
+        # This is the input set for ee2.run_job. Now we need the workspace id
         # and whatever fits in the metadata.
         job_runner_inputs = {
-            "method": batch_method,
-            "service_ver": batch_method_ver,
-            "params": batch_params,
-            "app_id": batch_app_id,
-            "wsid": ws_id,
+            "app_id": BATCH_APP["APP_ID"],
             "meta": job_meta,
+            "method": BATCH_APP["METHOD"],
+            "params": batch_params,
+            "service_ver": BATCH_APP["VERSION"],
+            "wsid": ws_id,
         }
-        # if len(ws_input_refs) > 0:
-        #     job_runner_inputs['source_ws_objects'] = ws_input_refs
 
         # if we're doing a dry run, just return the inputs that we made.
         if dry_run:
@@ -270,7 +273,7 @@ class AppManager(object):
         # Log that we're trying to run a job...
         log_info = {
             "app_id": app_id,
-            "tag": batch_method_tag,
+            "tag": BATCH_APP["TAG"],
             "version": service_ver,
             "username": system_variable("user_id"),
             "wsid": ws_id,
@@ -287,16 +290,20 @@ class AppManager(object):
             raise transform_job_exception(e)
 
         new_job = Job(
-            job_id,
-            batch_app_id,
-            batch_params,
-            system_variable("user_id"),
-            tag=batch_method_tag,
-            app_version=batch_method_ver,
+            app_id=BATCH_APP["APP_ID"],
+            app_version=BATCH_APP["VERSION"],
             cell_id=cell_id,
+            extra_data={
+                # this data is not preserved in the ee2 record
+                "batch_app": app_id,
+                "batch_tag": tag,
+                "batch_size": len(params),
+            },
+            job_id=job_id,
+            owner=system_variable("user_id"),
+            params=batch_params,
             run_id=run_id,
-            token_id=agent_token["id"],
-            meta=job_meta,
+            tag=BATCH_APP["TAG"],
         )
 
         self._send_comm_message(
@@ -333,7 +340,7 @@ class AppManager(object):
         -----------
         app_id - should be from the app spec, e.g. 'build_a_metabolic_model'
                     or 'MegaHit/run_megahit'.
-        params - this is hte dictionary of parameters to tbe used with the app.
+        params - this is the dictionary of parameters to tbe used with the app.
                  They can be found by using the app_usage function. If any
                  non-optional apps are missing, a ValueError will be raised.
         tag - optional, one of [release|beta|dev] (default=release)
@@ -387,15 +394,14 @@ class AppManager(object):
             raise transform_job_exception(e)
 
         new_job = Job(
-            job_id,
-            app_id,
-            job_runner_inputs["params"],
-            system_variable("user_id"),
-            tag=tag,
+            app_id=app_id,
             app_version=job_runner_inputs["service_ver"],
             cell_id=cell_id,
+            job_id=job_id,
+            owner=system_variable("user_id"),
+            params=job_runner_inputs["params"],
             run_id=run_id,
-            token_id=agent_token["id"],
+            tag=tag,
         )
 
         self._send_comm_message(
@@ -541,7 +547,7 @@ class AppManager(object):
                 "event_at": datetime.datetime.utcnow().isoformat() + "Z",
                 "cell_id": cell_id,
                 "run_id": run_id,
-                "parent_job_id": batch_submission["parent_job_id"],
+                BATCH_ID_KEY: batch_submission[BATCH_ID_KEY],
                 "child_job_ids": batch_submission["child_job_ids"],
             },
         )
@@ -552,21 +558,35 @@ class AppManager(object):
             job_info = batch_run_inputs[idx]
             child_jobs.append(
                 Job(
-                    child_job_id,
-                    job_info["app_id"],
-                    job_info["params"],
-                    user_id,
-                    tag=job_info["meta"].get("tag"),
+                    app_id=job_info["app_id"],
                     app_version=job_info["service_ver"],
+                    batch_id=batch_submission[BATCH_ID_KEY],
                     cell_id=cell_id,
+                    job_id=child_job_id,
+                    owner=user_id,
+                    params=job_info["params"][0],
                     run_id=run_id,
-                    token_id=agent_token["id"],
+                    tag=job_info["meta"].get("tag"),
                 )
             )
 
         # TODO make something more reasonable / complete for a parent job
-        parent_job = Job(
-            batch_submission["parent_job_id"], "bulk_app_submission", {}, user_id
+        parent_job = Job.from_state(
+            {
+                "batch_id": batch_submission[BATCH_ID_KEY],
+                "batch_job": True,
+                "child_jobs": [job.job_id for job in child_jobs],
+                "job_id": batch_submission[BATCH_ID_KEY],
+                "job_input": {
+                    "app_id": "batch",  # value given by ee2
+                    "method": "batch",
+                    "narrative_cell_info": {},
+                    "service_ver": "batch",  # value given by ee2
+                    "source_ws_objects": [],
+                },
+                "status": "created",
+                "user": user_id,
+            }
         )
 
         # TODO make a tighter design in the job manager for submitting a family of jobs
@@ -925,13 +945,16 @@ class AppManager(object):
         self._send_comm_message(message_id, {"address": address, "message": message})
 
     def _get_validated_app_spec(self, app_id, tag, is_long, version=None):
-        if version is not None and tag != "release":
-            if re.match(r"\d+\.\d+\.\d+", version) is not None:
-                raise ValueError(
-                    "Semantic versions only apply to released app modules. "
-                    + "You can use a Git commit hash instead to specify a "
-                    + "version."
-                )
+        if (
+            version is not None
+            and tag != "release"
+            and re.match(r"\d+\.\d+\.\d+", version) is not None
+        ):
+            raise ValueError(
+                "Semantic versions only apply to released app modules. "
+                + "You can use a Git commit hash instead to specify a "
+                + "version."
+            )
         self.spec_manager.check_app(app_id, tag, raise_exception=True)
         # Get the spec & params
         spec = self.spec_manager.get_spec(app_id, tag)

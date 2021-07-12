@@ -1,5 +1,6 @@
 from ..util import ConfigTests
 from biokbase.workspace.baseclient import ServerError
+from biokbase.narrative.jobs.appmanager import BATCH_ID_KEY
 
 RANDOM_DATE = "2018-08-10T16:47:36+0000"
 RANDOM_TYPE = "ModuleA.TypeA-1.0"
@@ -208,7 +209,7 @@ class MockClients:
 
     def run_job_batch(self, batch_job_inputs, batch_params):
         child_job_ids = [self.test_job_id for i in range(len(batch_job_inputs))]
-        return {"parent_job_id": self.test_job_id, "child_job_ids": child_job_ids}
+        return {BATCH_ID_KEY: self.test_job_id, "child_job_ids": child_job_ids}
 
     def cancel_job(self, job_id):
         return {}
@@ -516,10 +517,14 @@ class assert_obj_method_called(object):
         self.method_called = False
 
     def __exit__(self, exc_type, exc_value, traceback):
-        assert getattr(self.obj, self.method) == self.called, "method %s was modified during assertMethodIsCalled" % self.method
+        assert getattr(self.obj, self.method) == self.called, (
+            "method %s was modified during assertMethodIsCalled" % self.method
+        )
 
         setattr(self.obj, self.method, self.orig_method)
 
         # If an exception was thrown within the block, we've already failed.
         if traceback is None:
-            assert self.method_called is self.call_status, "method %s of %s was not %s" % (self.method, self.obj, self.call_status)
+            assert (
+                self.method_called is self.call_status
+            ), "method %s of %s was not %s" % (self.method, self.obj, self.call_status)

@@ -424,12 +424,17 @@ class JobManager(object):
         Returns
         [
             {
-                "job_id": {"job_id": job_id, "status": status, ...}},
-                "retry_id": {"job_id": job_id, "status": status, ...}}
+                "job_id": {"state": {"job_id": job_id, "status": status, ...} ...},
+                "retry_id": {"state": {"job_id": job_id, "status": status, ...} ...}
             },
             ...
+            {
+                "job_id": {"state": {"job_id": job_id, "status": "does_not_exist"}},
+                "error": "does_not_exist"
+            }
         ]
-        where the innermost dictionaries are job states from job._revised_state()
+        where the innermost dictionaries are job states from ee2 and are within the
+        job states from job.revised_state()
         """
         checked_jobs = self._check_job_list(job_id_list)
         try:
@@ -456,7 +461,7 @@ class JobManager(object):
                 result["retry_id"] = job_states[result["retry_id"]]
         for job_id in checked_jobs["error"]:
             retry_results.append({
-                "job_id": {"job_id": job_id, "status": "does_not_exist"},  # not the "revised state" unlike other items in retry_results?
+                "job_id": {"state": {"job_id": job_id, "status": "does_not_exist"}},
                 "error": "does_not_exist"
             })
 

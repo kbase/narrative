@@ -354,16 +354,6 @@ class JobComm:
         self._lookup_job_state(req)
 
     def _retry_jobs(self, req: JobRequest) -> None:
-        """
-        retry_results is formatted as:
-        [
-            {
-                "job_id": original_job_id,
-                "retry_id": new_job_id
-            },
-            ...
-        ]
-        """
         self._verify_job_id_list(req)
         try:
             retry_results = self._jm.retry_jobs(req.job_id_list)

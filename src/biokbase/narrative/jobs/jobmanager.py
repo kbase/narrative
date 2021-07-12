@@ -85,17 +85,19 @@ class JobManager(object):
     def _create_jobs(self, job_ids, job_states=None):
         """
         TODO: error handling
-        Given a list of job IDs, populates the _running_jobs dictionary
+        Given a list of job IDs, creates job objects for them and populates the _running_jobs dictionary
         """
         job_ids = [job_id for job_id in job_ids if job_id not in self._running_jobs]
         if not job_states:
             job_states = clients.get("execution_engine2").check_jobs(
-                {"job_ids": job_ids, "return_list": 0}
+                {
+                    "job_ids": job_ids,
+                    "exclude_fields": JOB_INIT_EXCLUDED_JOB_STATE_FIELDS,
+                }
             )
         for job_id in job_ids:
             job_state = job_states.get(job_id, {})
             job = Job.from_state(job_state)
-
             # Note that when jobs for this narrative are initially loaded,
             # they are set to not be refreshed. Rather, if a client requests
             # updates via the start_job_update message, the refresh flag will
@@ -205,7 +207,7 @@ class JobManager(object):
     def _construct_job_state_set(self, job_ids: list, states: dict = None) -> dict:
         """
         Builds a set of job states for the list of job ids.
-        :param states: list, where each state is from EE2
+        :param states: dict, where each value is a state is from EE2
         """
         # if cached, use 'em.
         # otherwise, lookup.
@@ -222,7 +224,7 @@ class JobManager(object):
         # These are already post-processed and ready to return.
         for job_id in job_ids:
             job = self.get_job(job_id)
-            if job.has_state_cached():
+            if job.terminal_state:
                 job_states[job_id] = job.revised_state()
             elif states and job_id in states:
                 state = states[job_id]
@@ -374,7 +376,7 @@ class JobManager(object):
             raise ValueError(f"No job present with id {job_id}")
 
         # otherwise, our job ID is fine
-        if self.get_job(job_id).has_state_cached():
+        if self.get_job(job_id).terminal_state:
             return True
 
         return self._cancel_job(job_id)
@@ -392,7 +394,7 @@ class JobManager(object):
         checked_jobs = self._check_job_list(job_id_list)
 
         for job_id in checked_jobs["job_id_list"]:
-            if not self.get_job(job_id).has_state_cached():
+            if not self.get_job(job_id).terminal_state:
                 self._cancel_job(job_id)
 
         job_states = self._construct_job_state_set(checked_jobs["job_id_list"])
@@ -440,7 +442,7 @@ class JobManager(object):
         orig_ids = [result["job_id"] for result in retry_results]
         retry_ids = [result["retry_id"] for result in retry_results if "retry_id" in result]
         for job_id in orig_ids:
-            self.get_job(job_id).clear_cache()
+            self.get_job(job_id).reset_state()
         orig_states = self._construct_job_state_set(orig_ids)
         retry_states = self._construct_job_state_set(
             retry_ids,

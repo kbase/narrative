@@ -109,7 +109,7 @@ class Job(object):
     @classmethod
     def from_state(cls, job_state):
         """
-        Variables:
+        Parameters:
         -----------
         job_state - dict
             the job information returned from ee2.check_job
@@ -210,7 +210,7 @@ class Job(object):
         self.terminal_state = False
 
     def _augment_ee2_state(self, state):
-        output_state = {key: value for key, value in state.items()}
+        output_state = copy.deepcopy(state)
         for field in EXCLUDED_JOB_STATE_FIELDS:
             if field in output_state:
                 del output_state[field]
@@ -218,7 +218,7 @@ class Job(object):
             output_state["job_output"] = {}
         for arg in EXTRA_JOB_STATE_FIELDS:
             output_state[arg] = getattr(self, arg)
-        return dict(output_state)
+        return output_state
 
     def state(self):
         """
@@ -274,11 +274,13 @@ class Job(object):
         if not state:
             state = self.state()
         else:
-            state = self._augment_ee2_state(state)  # diff: adds extra fields
+            state = self._augment_ee2_state(state)
+        state["child_jobs"] = []
+        batch_size = state.get("job_input", {}).get("narrative_cell_info", {}).get("batch_size")
+        if batch_size:
+            state["batch_size"] = batch_size
 
         widget_info = None
-        app_spec = {}
-
         if state.get("finished"):
             try:
                 widget_info = self.get_viewer_params(state)
@@ -299,12 +301,8 @@ class Job(object):
                     }
                 )
 
-        state["child_jobs"] = []
-        if "batch_size" in self.meta:
-            state.update({"batch_size": self.meta["batch_size"]})
         job_state = {
             "state": state,
-            "spec": app_spec,
             "widget_info": widget_info,
             "owner": self.owner,
         }
@@ -395,8 +393,7 @@ class Job(object):
         Returns True if the job is finished (in any state, including errors or canceled),
         False if its running/queued.
         """
-        status = self.status()
-        return status.lower() in TERMINAL_STATUSES
+        return self.state().get("status") in TERMINAL_STATUSES
 
     def __repr__(self):
         return "KBase Narrative Job - " + str(self.job_id)

@@ -58,14 +58,12 @@ def get_retry_job_state(orig_id, status="unmocked"):
         "state": {
             "job_id": orig_id[::-1],
             "status": status,
+            "batch_id": None,
             "job_output": {},
             "cell_id": None,
-            "parent_job_id": None,
             "run_id": None,
-            "token_id": None,
             "child_jobs": [],
         },
-        "spec": {},
         "widget_info": None,
         "owner": None,
     }
@@ -82,28 +80,24 @@ def get_test_job_states():
     job_states = {}
     for job_id in test_jobs.keys():
         state = copy.deepcopy(test_jobs[job_id])
-        job_info = state.get("job_input", {})
-        job_meta = job_info.get("narrative_cell_info", {})
+        job_input = state.get("job_input", {})
+        narr_cell_info = job_input.get("narrative_cell_info", {})
         state.update(
             {
-                "child_jobs": [],
-                "cell_id": job_meta.get("cell_id", None),
-                "run_id": job_meta.get("run_id", None),
-                # in accordance with Job._augment_ee2_state
-                # which originally modified the "state"
-                # but now also modifies the "revised state"
+                "batch_id": state.get("batch_id", None),
+                "cell_id": narr_cell_info.get("cell_id", None),
+                "run_id": narr_cell_info.get("run_id", None),
                 "job_output": state.get("job_output", {}),
-                "parent_job_id": job_info.get("parent_job_id", None),
-                "token_id": job_meta.get("token_id", None),  # secret??
+                "child_jobs": [],
             }
         )
+        widget_info = Job.from_state(state).get_viewer_params(state) if state.get("finished") else None
         for f in biokbase.narrative.jobs.job.EXCLUDED_JOB_STATE_FIELDS:
             if f in state:
                 del state[f]
         job_states[job_id] = {
             "state": state,
-            "spec": {},
-            "widget_info": None,
+            "widget_info": widget_info,
             "owner": state.get("user"),
         }
     return job_states
@@ -519,6 +513,19 @@ class JobManagerTest(unittest.TestCase):
         self.assertIn(retry_id, self.jm._running_jobs)
         self.assertIsNone(self.jm.get_job(job_id)._last_state)
 
+    @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
+    def test_retry_jobs__none_exist(self):
+        fake_id = "nope"
+        retry_results = self.jm.retry_jobs(["", "", None, fake_id])
+        exp = [
+            {
+                "job_id": get_dne_job_state(fake_id),
+                "error": "does_not_exist",
+            }
+        ]
+        self.assertEqual(exp, retry_results)
+        self.assertNotIn(fake_id, self.jm._running_jobs)
+
     def test_retry_jobs__bad_inputs(self):
         with self.assertRaisesRegex(ValueError, no_id_err_str):
             self.jm.retry_jobs([])
@@ -526,26 +533,6 @@ class JobManagerTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, no_id_err_str):
             self.jm.retry_jobs(["", "", None])
 
-    """
-    @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
-    def test_retry_job_good(self):
-        retry_results = self.jm.retry_jobs([JOB_TERMINATED])
-        self.assertEqual(
-            retry_results,
-            [{"job_id": JOB_TERMINATED, "retry_id": "9d49ed8214da512bc53946d5"}],
-        )
-
-    @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
-    def test_retry_jobs_bad(self):
-        with self.assertRaises(JobException):
-            self.jm.retry_jobs([None])
-
-        with self.assertRaises(JobException):
-            self.jm.retry_jobs(["nope"])
-
-        with self.assertRaises(JobException):
-            self.jm.retry_jobs(["", "nope"])
-    """
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def test_lookup_all_job_states(self):
         states = self.jm.lookup_all_job_states()
@@ -558,7 +545,6 @@ class JobManagerTest(unittest.TestCase):
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def test_lookup_all_job_states__ignore_refresh_flag(self):
         states = self.jm.lookup_all_job_states(ignore_refresh_flag=True)
-        self.assertEqual(len(states), 5)
         self.assertEqual(set(self.job_ids), set(states.keys()))
         expected = {}
         for job_id in self.job_ids:

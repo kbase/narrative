@@ -45,7 +45,7 @@ define([
                     },
                 ],
                 paramIds: ['actual_input_object', 'actual_output_object'],
-                availableFiles: ['file1', 'file2']
+                availableFiles: ['file1', 'file2'],
             };
             this.appSpec = Spec.make({
                 appSpec: TestSpec,

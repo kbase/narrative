@@ -1,11 +1,9 @@
-define([
-    'bluebird',
-    'common/html',
-    'common/ui',
-    'common/props',
-    'bootstrap',
-    'css!font-awesome',
-], (Promise, html, UI, Props) => {
+define(['bluebird', 'common/html', 'common/ui', 'common/props', 'bootstrap', 'css!font-awesome'], (
+    Promise,
+    html,
+    UI,
+    Props
+) => {
     'use strict';
 
     const t = html.tag,

@@ -175,7 +175,7 @@ define([
                 } else {
                     option.removeAttribute('disabled');
                 }
-            })
+            });
         }
 
         // LIFECYCLE API
@@ -194,7 +194,7 @@ define([
                         width: '100%',
                     })
                     .val(model.value)
-                    .trigger('change')  // this goes first so we don't trigger extra unnecessary bus messages
+                    .trigger('change') // this goes first so we don't trigger extra unnecessary bus messages
                     .on('change', () => {
                         handleChanged();
                     })

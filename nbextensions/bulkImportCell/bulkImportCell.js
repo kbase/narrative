@@ -326,17 +326,18 @@ define([
                             }, {});
                         }
                     );
-                }
-                else {
+                } else {
                     // for now, assume a single output object per row.
                     const numFilesPerRow = fileParamIds[fileType].length - 1;
                     const numRows = typesToFiles[fileType].files.length / numFilesPerRow;
                     initialParams[fileType].filePaths = [];
-                    for (let i=0; i<numRows; i++) {
-                        initialParams[fileType].filePaths.push(fileParamIds[fileType].reduce((nullParams, paramId) => {
-                            nullParams[paramId] = null;
-                            return nullParams;
-                        }, {}));
+                    for (let i = 0; i < numRows; i++) {
+                        initialParams[fileType].filePaths.push(
+                            fileParamIds[fileType].reduce((nullParams, paramId) => {
+                                nullParams[paramId] = null;
+                                return nullParams;
+                            }, {})
+                        );
                     }
                 }
                 const defaultSpecModel = specs[appId].makeDefaultedModel();

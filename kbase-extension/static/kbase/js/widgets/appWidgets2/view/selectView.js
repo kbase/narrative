@@ -1,11 +1,8 @@
-define([
-    'bluebird',
-    'common/html',
-    'common/ui',
-
-    'bootstrap',
-    'css!font-awesome',
-], (Promise, html, UI) => {
+define(['bluebird', 'common/html', 'common/ui', 'bootstrap', 'css!font-awesome'], (
+    Promise,
+    html,
+    UI
+) => {
     'use strict';
 
     // Constants
@@ -21,9 +18,7 @@ define([
                 availableValues: config.availableValues || spec.data.constraints.options || [],
                 value: config.initialValue || null,
             };
-        let parent,
-            ui,
-            container;
+        let parent, ui, container;
 
         function makeViewControl() {
             const selectOptions = model.availableValues.map((item) => {
@@ -53,7 +48,7 @@ define([
             const control = ui.getElement('input-control.input');
             [...control.querySelectorAll(`option`)].forEach((option) => {
                 option.removeAttribute('selected');
-            })
+            });
             control.querySelector(`option[value="${model.value}"]`).addAttribute('selected', true);
         }
 

@@ -130,13 +130,13 @@ define([
                 workspaceId,
                 referenceType: 'name',
                 paramsChannelName: paramsBus.channelName,
-                availableValues: availableFiles.map(filename => {
+                availableValues: availableFiles.map((filename) => {
                     return {
                         value: filename,
-                        display: filename
+                        display: filename,
                     };
                 }),
-                disabledValues: getAllSelectedFiles()
+                disabledValues: getAllSelectedFiles(),
             });
 
             /**
@@ -500,22 +500,20 @@ define([
          */
         function deleteRow(e, rowId) {
             const rowWidgets = Object.values(dataModel.rows[rowId].widgets);
-            return Promise.all(rowWidgets.map((widget) => widget.stop())).then(
-                () => {
-                    delete dataModel.rows[rowId];
-                    const rowIdx = dataModel.rowIdToIndex[rowId];
+            return Promise.all(rowWidgets.map((widget) => widget.stop())).then(() => {
+                delete dataModel.rows[rowId];
+                const rowIdx = dataModel.rowIdToIndex[rowId];
 
-                    dataModel.rowOrder.splice(rowIdx, 1);
-                    delete dataModel.rowIdToIndex[rowId];
-                    // redo the ordering
-                    dataModel.rowOrder.forEach((_rowId, idx) => {
-                        dataModel.rowIdToIndex[_rowId] = idx;
-                    });
-                    e.target.closest('li').remove();
-                    updateDisabledFileValues();
-                    syncDataModel();
-                }
-            );
+                dataModel.rowOrder.splice(rowIdx, 1);
+                delete dataModel.rowIdToIndex[rowId];
+                // redo the ordering
+                dataModel.rowOrder.forEach((_rowId, idx) => {
+                    dataModel.rowIdToIndex[_rowId] = idx;
+                });
+                e.target.closest('li').remove();
+                updateDisabledFileValues();
+                syncDataModel();
+            });
         }
 
         /**
@@ -624,8 +622,11 @@ define([
                     const paramSpec = arg.parameters.specs[id];
                     parameterSpecs.push(paramSpec);
                     defaultParams[id] = paramSpec.data.defaultValue;
-                    const isOutput = paramSpec.original.text_options && paramSpec.original.text_options.is_output_name === 1;
-                    if (!isOutput) {  // if it's not an "output", it's a file
+                    const isOutput =
+                        paramSpec.original.text_options &&
+                        paramSpec.original.text_options.is_output_name === 1;
+                    if (!isOutput) {
+                        // if it's not an "output", it's a file
                         fileParams.push(id);
                     }
                 }
@@ -637,17 +638,18 @@ define([
                 initialParams.map((paramRow) => {
                     return addRow(paramRow);
                 })
-            ).then(() => {
-                // once all rows are set up and we have the data model
-                // disable all relevant files from each input widget.
-                // TODO: set this up to disable files from each column (i.e. parameter id) instead
-                // TODO: set this widget up to link filetypes to parameter ids. Work also needed in
-                // bulkImportWidget.js and configure.js.
-                updateDisabledFileValues();
-
-            }).catch((error) => {
-                throw new Error(`Unable to start filePathWidget: ${error}`);
-            });
+            )
+                .then(() => {
+                    // once all rows are set up and we have the data model
+                    // disable all relevant files from each input widget.
+                    // TODO: set this up to disable files from each column (i.e. parameter id) instead
+                    // TODO: set this widget up to link filetypes to parameter ids. Work also needed in
+                    // bulkImportWidget.js and configure.js.
+                    updateDisabledFileValues();
+                })
+                .catch((error) => {
+                    throw new Error(`Unable to start filePathWidget: ${error}`);
+                });
         }
 
         /**
@@ -657,7 +659,7 @@ define([
         function updateDisabledFileValues() {
             const values = getAllSelectedFiles();
             getAllFileParameterWidgets().forEach((widget) => {
-                widget.bus.emit('set-disabled-values', {values});
+                widget.bus.emit('set-disabled-values', { values });
             });
         }
 

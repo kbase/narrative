@@ -53,7 +53,6 @@ class JobRequest:
         "stop_job_update",
         "cancel_job",
         "job_logs",
-        "job_logs_latest",
     ]
     REQUIRE_JOB_ID_LIST = ["retry_job"]
 
@@ -139,8 +138,7 @@ class JobComm:
     * start_job_update - tells the update loop to include a job when updating (requires a job_id)
     * stop_job_update - has the update loop not include a job when updating (requires a job_id)
     * cancel_job - cancels a running job, if it hasn't otherwise terminated (requires a job_id)
-    * job_logs - sends job logs back over the comm channel (requires a job id and first line)
-    * job_logs_latest - sends the most recent job logs over the comm channel (requires a job_id)
+    * job_logs - sends job logs back over the comm channel (requires a job id)
     """
 
     # An instance of this class. It's meant to be a singleton, so this just gets created and
@@ -181,7 +179,6 @@ class JobComm:
                 "cancel_job": self._cancel_job,
                 "retry_job": self._retry_jobs,
                 "job_logs": self._get_job_logs,
-                "job_logs_latest": self._get_job_logs,
             }
 
     def _verify_job_id(self, req: JobRequest) -> None:
@@ -401,7 +398,7 @@ class JobComm:
         self._verify_job_id(req)
         first_line = req.rq_data.get("first_line", 0)
         num_lines = req.rq_data.get("num_lines", None)
-        latest_only = req.request == "job_logs_latest"
+        latest_only = req.rq_data.get("latest", False)
         try:
             (first_line, max_lines, logs) = self._jm.get_job_logs(
                 req.job_id,

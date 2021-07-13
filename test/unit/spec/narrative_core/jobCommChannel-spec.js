@@ -162,25 +162,31 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUtil'], (
                 },
             },
             {
-                channel: 'request-job-log-latest',
-                message: { jobId: 'someJob', options: {} },
-                expected: { request_type: 'job_logs_latest', job_id: 'someJob' },
+                channel: 'request-job-log',
+                message: { jobId: 'someJob', options: { latest: true } },
+                expected: {
+                    request_type: 'job_logs',
+                    job_id: 'someJob',
+                    latest: true,
+                },
             },
             {
-                channel: 'request-job-log-latest',
+                channel: 'request-job-log',
                 message: {
                     jobId: 'someJob',
                     parentJobId: 'none',
                     options: {
                         first_line: 2000,
                         job_id: 'overridden!',
+                        latest: true,
                     },
                 },
                 expected: {
-                    request_type: 'job_logs_latest',
+                    request_type: 'job_logs',
                     job_id: 'overridden!',
                     parent_job_id: 'none',
                     first_line: 2000,
+                    latest: true,
                 },
             },
             {
@@ -499,10 +505,6 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUtil'], (
                 error: 'job-cancel-error',
             },
             job_logs: {
-                ok: 'job-logs',
-                error: 'job-log-deleted',
-            },
-            job_logs_latest: {
                 ok: 'job-logs',
                 error: 'job-log-deleted',
             },

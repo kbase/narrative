@@ -516,10 +516,14 @@ class assert_obj_method_called(object):
         self.method_called = False
 
     def __exit__(self, exc_type, exc_value, traceback):
-        assert getattr(self.obj, self.method) == self.called, "method %s was modified during assertMethodIsCalled" % self.method
+        assert getattr(self.obj, self.method) == self.called, (
+            "method %s was modified during assertMethodIsCalled" % self.method
+        )
 
         setattr(self.obj, self.method, self.orig_method)
 
         # If an exception was thrown within the block, we've already failed.
         if traceback is None:
-            assert self.method_called is self.call_status, "method %s of %s was not %s" % (self.method, self.obj, self.call_status)
+            assert (
+                self.method_called is self.call_status
+            ), "method %s of %s was not %s" % (self.method, self.obj, self.call_status)

@@ -45,11 +45,11 @@ define(['bluebird', 'common/html', 'common/ui', 'bootstrap', 'css!font-awesome']
 
         function syncModelToControl() {
             // assuming the model has been modified...
-            const control = ui.getElement('input-control.input');
+            const control = ui.getElement('input-container.input');
             [...control.querySelectorAll(`option`)].forEach((option) => {
                 option.removeAttribute('selected');
             });
-            control.querySelector(`option[value="${model.value}"]`).addAttribute('selected', true);
+            control.querySelector(`option[value="${model.value}"]`).setAttribute('selected', true);
         }
 
         function layout() {

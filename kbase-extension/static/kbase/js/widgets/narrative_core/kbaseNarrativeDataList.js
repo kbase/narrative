@@ -1940,7 +1940,7 @@ define([
                     this.writingLock = false;
                     this.refresh();
                 });
-            this.$searchDiv = $('<div>');
+            this.$searchDiv = $('<div data-testid="search-field">');
             this.bsSearch = new BootstrapSearch(this.$searchDiv, {
                 inputFunction: () => {
                     this.search();
@@ -2121,7 +2121,7 @@ define([
 
                     if (!match && info[10]) {
                         // match on metadata values
-                        for (const [metaKey, metaValue] of info[10].entries()) {
+                        for (const [metaKey, metaValue] of Object.entries(info[10])) {
                             // Omits enumerable properties not directly on this object,
                             // which in reality simply won't occur.
                             if (!Object.prototype.hasOwnProperty.call(info[10], metaKey)) {

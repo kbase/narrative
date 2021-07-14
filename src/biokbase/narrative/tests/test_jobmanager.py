@@ -236,21 +236,16 @@ class JobManagerTest(unittest.TestCase):
 
         with mock.patch(
             "biokbase.narrative.jobs.jobmanager.JobManager._cancel_job"
-        ) as mock_cancel_job, mock.patch(
-            "biokbase.narrative.jobs.jobmanager.JobManager._check_job_terminated"
-        ) as mock_check_term:
+        ) as mock_cancel_job:
             self.assertTrue(self.jm.cancel_job(JOB_COMPLETED))
             mock_cancel_job.assert_not_called()
-            mock_check_term.assert_not_called()
 
             self.assertTrue(self.jm.cancel_job(JOB_TERMINATED))
             mock_cancel_job.assert_not_called()
-            mock_check_term.assert_not_called()
 
             # multiple jobs
             canceled_jobs = self.jm.cancel_jobs([JOB_COMPLETED, JOB_TERMINATED])
             mock_cancel_job.assert_not_called()
-            mock_check_term.assert_not_called()
             self.assertEqual(
                 {
                     JOB_COMPLETED: self.jm._completed_job_states[JOB_COMPLETED],
@@ -258,48 +253,6 @@ class JobManagerTest(unittest.TestCase):
                 },
                 canceled_jobs,
             )
-
-    @mock.patch("biokbase.narrative.jobs.jobmanager.JobManager._cancel_job")
-    @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
-    def test_cancel_job__check_job_terminated_returns_true(self, mock_cancel_job):
-        """cancel a single job where check_job_terminated returns true"""
-        self.assertEqual(test_jobs[JOB_RUNNING]["status"], "running")
-        self.assertNotIn(JOB_RUNNING, self.jm._completed_job_states)
-
-        with mock.patch.object(
-            MockClients,
-            "check_job_canceled",
-            mock.Mock(return_value={"finished": 1, "canceled": 0}),
-        ) as mock_check_job_canceled:
-            # the check_job_canceled call returns output that says the job is finished
-            self.jm.cancel_job(JOB_RUNNING)
-            mock_cancel_job.assert_not_called()
-            mock_check_job_canceled.assert_called_once()
-
-    @mock.patch("biokbase.narrative.jobs.jobmanager.JobManager._cancel_job")
-    @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
-    def test_cancel_jobs__check_job_terminated_returns_true(self, mock_cancel_job):
-        """cancel multiple jobs where all check_job_terminated calls return true"""
-        for job_id in [JOB_RUNNING, JOB_CREATED]:
-            self.assertNotIn(job_id, self.jm._completed_job_states)
-
-        with mock.patch.object(
-            MockClients,
-            "check_job_canceled",
-            mock.Mock(return_value={"finished": 1, "canceled": 0}),
-        ) as mock_check_job_canceled:
-            # the check_job_canceled call returns output that says the job is finished
-            canceled_jobs = self.jm.cancel_jobs([JOB_RUNNING, JOB_CREATED, None, ""])
-            mock_cancel_job.assert_not_called()
-            mock_check_job_canceled.assert_has_calls(
-                [
-                    mock.call({"job_id": JOB_RUNNING}),
-                    mock.call({"job_id": JOB_CREATED}),
-                ],
-                any_order=True,
-            )
-
-            self.assertEqual(canceled_jobs, self.job_states)
 
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def test_cancel_job__run_ee2_cancel_job(self):
@@ -313,19 +266,13 @@ class JobManagerTest(unittest.TestCase):
             self.assertEqual(self.jm._running_jobs[arg["job_id"]]["refresh"], 0)
             self.assertEqual(self.jm._running_jobs[arg["job_id"]]["canceling"], True)
 
-        # patch MockClients.check_job_canceled to respond that neither job has finished or been canceled
         # patch MockClients.cancel_job so we can test the input
         with mock.patch.object(
-            MockClients,
-            "check_job_canceled",
-            mock.Mock(return_value={"finished": 0, "canceled": 0}),
-        ) as mock_check_job_canceled, mock.patch.object(
             MockClients,
             "cancel_job",
             mock.Mock(return_value={}, side_effect=check_state),
         ) as mock_cancel_job:
             self.jm.cancel_job(JOB_RUNNING)
-            mock_check_job_canceled.assert_called_once_with({"job_id": JOB_RUNNING})
             mock_cancel_job.assert_called_once_with({"job_id": JOB_RUNNING})
             self.assertNotIn("canceling", self.jm._running_jobs[JOB_RUNNING])
             self.assertEqual(self.jm._running_jobs[JOB_RUNNING]["refresh"], 1)
@@ -361,7 +308,6 @@ class JobManagerTest(unittest.TestCase):
             self.assertEqual(self.jm._running_jobs[arg["job_id"]]["refresh"], 0)
             self.assertEqual(self.jm._running_jobs[arg["job_id"]]["canceling"], True)
 
-        # check_job_canceled responds that JOB_RUNNING has been canceled and JOB_CREATED has not
         # patch MockClients.cancel_job so we can test the input
         with mock.patch.object(
             MockClients,

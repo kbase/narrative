@@ -225,14 +225,6 @@ class MockClients:
             results.append({"job_id": job_id, "retry_id": job_id[::-1]})
         return results
 
-    def check_job_canceled(self, params):
-        job_id = params.get("job_id")
-        # JOB_RUNNING from test_jobmanager.py
-        if job_id == "5d64935cb215ad4128de94d8":
-            return {"finished": 1, "canceled": 0, "job_id": job_id}
-
-        return {"finished": 0, "canceled": 0, "job_id": job_id}
-
     def get_job_params(self, job_id):
         return self.ee2_job_info.get(job_id, {}).get("job_input", {})
 

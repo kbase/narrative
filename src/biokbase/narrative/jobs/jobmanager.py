@@ -600,10 +600,7 @@ class JobManager(object):
         if job_id in self._completed_job_states:
             return True
 
-        if not self._check_job_terminated(job_id):
-            return self._cancel_job(job_id)
-
-        return True
+        return self._cancel_job(job_id)
 
     def cancel_jobs(self, job_id_list: List[str] = []):
         """
@@ -618,10 +615,7 @@ class JobManager(object):
         checked_jobs = self._check_job_list(job_id_list)
 
         for job_id in checked_jobs["job_id_list"]:
-            if (
-                job_id not in self._completed_job_states
-                and not self._check_job_terminated(job_id)
-            ):
+            if job_id not in self._completed_job_states:
                 self._cancel_job(job_id)
 
         job_states = self._construct_job_status_set(checked_jobs["job_id_list"])
@@ -630,22 +624,6 @@ class JobManager(object):
             job_states[job_id] = {"job_id": job_id, "status": "does_not_exist"}
 
         return job_states
-
-    def _check_job_terminated(self, job_id: str) -> bool:
-        try:
-            cancel_status = clients.get("execution_engine2").check_job_canceled(
-                {"job_id": job_id}
-            )
-            if (
-                cancel_status.get("finished", 0) == 1
-                or cancel_status.get("canceled", 0) == 1
-            ):
-                # It's already finished, don't try to cancel it again.
-                return True
-            return False
-
-        except Exception as e:
-            raise transform_job_exception(e)
 
     def _cancel_job(self, job_id: str) -> None:
         # Stop updating the job status while we try to cancel.

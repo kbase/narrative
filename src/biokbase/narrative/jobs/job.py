@@ -226,14 +226,13 @@ class Job(object):
         """
 
         if self.terminal_state:
-            return self._augment_ee2_state(self._last_state)
+            return self._last_state
 
         try:
             state = clients.get("execution_engine2").check_job(
                 {"job_id": self.job_id, "exclude_fields": EXCLUDED_JOB_STATE_FIELDS}
             )
-            self.update_state(state)
-            return self._augment_ee2_state(state)
+            return self.update_state(state)
 
         except Exception as e:
             raise Exception(f"Unable to fetch info for job {self.job_id} - {e}")
@@ -273,12 +272,11 @@ class Job(object):
         """
         if not state:
             state = self.state()
-        else:
-            state = self._augment_ee2_state(state)
-        state["child_jobs"] = []
-        batch_size = state.get("job_input", {}).get("narrative_cell_info", {}).get("batch_size")
-        if batch_size:
-            state["batch_size"] = batch_size
+
+        state = self._augment_ee2_state(state)
+
+        if "child_jobs" not in state:
+            state["child_jobs"] = []
 
         widget_info = None
         if state.get("finished"):
@@ -317,6 +315,8 @@ class Job(object):
 
         if state is None:
             state = self.state()
+
+        state = self._augment_ee2_state(state)
         if state["status"] == COMPLETED_STATUS and "job_output" in state:
             (output_widget, widget_params) = self._get_output_info(state)
             return WidgetManager().show_output_widget(
@@ -408,7 +408,7 @@ class Job(object):
         """
         output_widget_info = None
         try:
-            state = self.state()
+            state = self._augment_ee2_state(self.state())
             spec = self.app_spec()
             if state.get("status", "") == COMPLETED_STATUS:
                 (output_widget, widget_params) = self._get_output_info(state)

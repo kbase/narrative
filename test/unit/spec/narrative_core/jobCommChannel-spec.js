@@ -132,20 +132,18 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUtil'], (
             },
             {
                 channel: 'request-job-status',
-                message: { jobId: 'someJob', parentJobId: 'someParent' },
+                message: { jobId: 'someJob' },
                 expected: {
                     request_type: 'job_status',
                     job_id: 'someJob',
-                    parent_job_id: 'someParent',
                 },
             },
             {
                 channel: 'request-job-update',
-                message: { jobId: 'someJob', parentJobId: 'someParent' },
+                message: { jobId: 'someJob' },
                 expected: {
                     request_type: 'start_job_update',
                     job_id: 'someJob',
-                    parent_job_id: 'someParent',
                 },
             },
             {
@@ -170,7 +168,6 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUtil'], (
                 channel: 'request-job-log-latest',
                 message: {
                     jobId: 'someJob',
-                    parentJobId: 'none',
                     options: {
                         first_line: 2000,
                         job_id: 'overridden!',
@@ -179,17 +176,15 @@ define(['jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUtil'], (
                 expected: {
                     request_type: 'job_logs_latest',
                     job_id: 'overridden!',
-                    parent_job_id: 'none',
                     first_line: 2000,
                 },
             },
             {
                 channel: 'request-job-info',
-                message: { jobId: 'someJob', parentJobId: 'someParent' },
+                message: { jobId: 'someJob' },
                 expected: {
                     request_type: 'job_info',
                     job_id: 'someJob',
-                    parent_job_id: 'someParent',
                 },
             },
             {

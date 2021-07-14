@@ -31,7 +31,7 @@ A module for managing apps, specs, requirements, and for starting jobs.
 """
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
-BATCH_ID_KEY = "parent_job_id"
+BATCH_ID_KEY = "batch_id"
 
 BATCH_APP = {
     "APP_ID": "kb_BatchApp/run_batch",

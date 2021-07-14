@@ -204,7 +204,6 @@ define([
         });
 
         it('Should render with data, conduct a search, and show a resulting data card', async () => {
-            const start = Date.now();
             mockNarrativeServiceListObjects(OBJDATA);
             await dataListObj.refresh();
 

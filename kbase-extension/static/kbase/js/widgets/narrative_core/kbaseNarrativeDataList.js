@@ -2115,8 +2115,8 @@ define([
                     // [9] : int size // [10] : usermeta meta
 
                     orderedObject.inFilter = (() => {
-                        const objectTypeName = info[2].split(/[.-]/)[1];
                         const info = this.dataObjects[orderedObject.objId].info;
+                        const objectTypeName = info[2].split(/[.-]/)[1];
 
                         // if type is defined, then our sort must also filter by the type
                         if (type && type !== objectTypeName) {

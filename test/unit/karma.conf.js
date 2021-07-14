@@ -44,11 +44,7 @@ module.exports = function (config) {
             { pattern: 'test/unit/testUtil.js', nocache: true },
             { pattern: 'test/unit/mocks.js', nocache: true },
             { pattern: 'test/unit/test-main.js', nocache: true },
-            {
-                pattern: 'test/unit/spec/appWidgets/view/newObjectViewSpec.js',
-                included: false,
-            },
-            // { pattern: 'test/unit/spec/**/*.js', included: false, nocache: true },
+            { pattern: 'test/unit/spec/**/*.js', included: false, nocache: true },
             { pattern: 'test/testConfig.json', included: false, nocache: true },
             { pattern: 'test/*.tok', included: false, nocache: true },
             { pattern: 'test/data/**/*', included: false, nocache: true },

@@ -48,7 +48,7 @@ define([
      * and reject if it exceeds the provided timeout or default of 5s, or if the
      * function throws an exception.
      */
-    function waitFor(fun, timeout=5000) {
+    function waitFor(fun, timeout = 5000) {
         const interval = 100;
         let elapsed = 0;
         const started = Date.now();
@@ -71,9 +71,9 @@ define([
                 } catch (ex) {
                     reject(ex);
                 }
-            }
+            };
             tryIt();
-        })
+        });
     }
 
     const OBJDATA = [

@@ -89,7 +89,11 @@ def get_test_job_states():
                 "child_jobs": [],
             }
         )
-        widget_info = Job.from_state(state).get_viewer_params(state) if state.get("finished") else None
+        widget_info = (
+            Job.from_state(state).get_viewer_params(state)
+            if state.get("finished")
+            else None
+        )
         for f in biokbase.narrative.jobs.job.EXCLUDED_JOB_STATE_FIELDS:
             if f in state:
                 del state[f]
@@ -159,7 +163,8 @@ class JobManagerTest(unittest.TestCase):
         # redo the initialise to make sure it worked correctly
         self.jm.initialize_jobs()
         terminal_ids = [
-            job_id for job_id, d in self.jm._running_jobs.items()
+            job_id
+            for job_id, d in self.jm._running_jobs.items()
             if d["job"].terminal_state
         ]
         self.assertEqual(
@@ -398,10 +403,12 @@ class JobManagerTest(unittest.TestCase):
         self.assertTrue(len(retry_results) == 1)
         self.assertEqual(
             retry_results,
-            [{
-                "job_id": self.job_states[JOB_TERMINATED],
-                "retry_id": get_retry_job_state(JOB_TERMINATED)
-            }]
+            [
+                {
+                    "job_id": self.job_states[JOB_TERMINATED],
+                    "retry_id": get_retry_job_state(JOB_TERMINATED),
+                }
+            ],
         )
 
         self.assertIn(JOB_TERMINATED, self.jm._running_jobs)
@@ -417,10 +424,11 @@ class JobManagerTest(unittest.TestCase):
             {
                 "job_id": self.job_states[JOB_TERMINATED],
                 "retry_id": get_retry_job_state(JOB_TERMINATED),
-            }, {
+            },
+            {
                 "job_id": self.job_states[JOB_ERROR],
                 "retry_id": get_retry_job_state(JOB_ERROR),
-            }
+            },
         ]
         retry_ids = [result["retry_id"]["state"]["job_id"] for result in retry_results]
         self.assertEqual(exp, retry_results)
@@ -436,7 +444,7 @@ class JobManagerTest(unittest.TestCase):
         retry_id = JOB_TERMINATED[::-1]
         ee2_ret = [
             {"job_id": JOB_TERMINATED, "retry_id": JOB_TERMINATED[::-1]},
-            {"job_id": JOB_COMPLETED, "error": ERR_STR}
+            {"job_id": JOB_COMPLETED, "error": ERR_STR},
         ]
         with mock.patch.object(
             MockClients,
@@ -450,13 +458,15 @@ class JobManagerTest(unittest.TestCase):
             {
                 "job_id": self.job_states[JOB_TERMINATED],
                 "retry_id": get_retry_job_state(JOB_TERMINATED),
-            }, {
+            },
+            {
                 "job_id": self.job_states[JOB_COMPLETED],
                 "error": ERR_STR,
-            }, {
+            },
+            {
                 "job_id": get_dne_job_state(JOB_NOT_FOUND),
                 "error": "does_not_exist",
-            }
+            },
         ]
         self.assertEqual(exp, retry_results)
 
@@ -508,9 +518,7 @@ class JobManagerTest(unittest.TestCase):
             retry_results = self.jm.retry_jobs([job_id])
 
         self.assertTrue(len(retry_results) == 1)
-        exp = [
-            {"job_id": self.job_states[JOB_TERMINATED], "retry_id": retry_state}
-        ]
+        exp = [{"job_id": self.job_states[JOB_TERMINATED], "retry_id": retry_state}]
         self.assertEqual(exp, retry_results)
         self.assertIn(job_id, self.jm._running_jobs)
         self.assertIn(retry_id, self.jm._running_jobs)

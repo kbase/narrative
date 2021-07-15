@@ -194,6 +194,11 @@ class Job(object):
             True if state.get("status", "unknown") in TERMINAL_STATUSES else False
         )
 
+        # delete fields that we are not interested in
+        for field in EXCLUDED_JOB_STATE_FIELDS:
+            if field in state and field != "job_input":
+                del state[field]
+
         if self._last_state is None:
             self._last_state = state
         else:

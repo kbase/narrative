@@ -284,7 +284,7 @@ define([
                     errString.indexOf('java.lang.NullPointerException') > -1 &&
                     errString.indexOf('buildIndeces(KBaseFeatureValuesImpl.java:708)') > -1
                 ) {
-                    // this is a null pointer due to an unknown feature ID.  
+                    // this is a null pointer due to an unknown feature ID.
                     // TODO: handle this gracefully
                     errString = 'Feature IDs not found.<br><br>';
                     errString +=

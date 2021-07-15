@@ -130,7 +130,6 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
                             // Danger: this calls the internal api for bootstrap tabs; that is
                             // where the mysterious "activate" lives.
 
-
                             // Deactivates the currently active tab
                             $.fn.tab.Constructor.prototype.activate.call(
                                 $(this),
@@ -229,7 +228,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
             // Remove this tab from all of history.
             this.tabHistory = this.tabHistory.filter((tab) => {
                 return tab.tab !== tabName;
-            })
+            });
 
             const deleteTab = () => {
                 $tab.remove();
@@ -237,7 +236,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
 
                 delete this.data('tabs')[tabName];
                 delete this.data('nav')[tabName];
-            }
+            };
 
             if ($nav.hasClass('active')) {
                 if (this.tabHistory.length > 0) {
@@ -252,7 +251,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
                     deleteTab();
                 }
             } else {
-               deleteTab();
+                deleteTab();
             }
         },
 

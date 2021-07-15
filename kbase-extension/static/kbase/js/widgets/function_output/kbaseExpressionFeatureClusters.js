@@ -272,7 +272,7 @@ define([
                                     `genes, due to browser and network performance considerations.`;
                                 return `
                                         <button class="btn btn-default" disabled>
-                                            Explore Cluster<span class="caret"></span>
+                                            Explore Cluster <span class="caret" />
                                         </button>
                                         <span class="fa fa-exclamation-triangle text-warning" 
                                               style="margin-left: 1em;"
@@ -283,13 +283,10 @@ define([
                                            />
                                     `;
                             }
-                            return (
-                                '<button class="btn btn-default ' +
-                                pref +
-                                'action_button" rowIndex="' +
-                                rowIndex +
-                                '" >Explore Cluster  <span class="caret"></span></button>'
-                            );
+                            return `<button class="btn btn-default ${pref}action_button" 
+                                            data-rowindex="${rowIndex}">
+                                        Explore Cluster  <span class="caret" />
+                                    </button>`;
                         },
                         width: '15.5em',
                     },
@@ -397,7 +394,7 @@ define([
 
                         const $invokedOn = self.$menu.data('invokedOn');
                         const $selectedMenu = $(e.target);
-                        const rowIndex = $invokedOn[0].getAttribute('rowIndex');
+                        const rowIndex = $invokedOn.data('rowindex');
                         const methodInput = $selectedMenu[0].getAttribute('methodInput');
 
                         if (methodInput === 'build_feature_set') {

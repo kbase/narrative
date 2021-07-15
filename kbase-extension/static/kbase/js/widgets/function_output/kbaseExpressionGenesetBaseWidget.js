@@ -117,7 +117,7 @@ define([
                     );
                     return;
                 }
-                self.featureValues
+                return self.featureValues
                     .callFunc('get_submatrix_stat', [smParams])
                     .spread((data) => {
                         self.submatrixStat = data;
@@ -131,7 +131,7 @@ define([
 
             // if a feature set is defined, use it.
             if (self.options.featureset) {
-                self.ws
+                return self.ws
                     .callFunc('get_objects', [
                         [
                             {
@@ -163,7 +163,7 @@ define([
                         self.clientError(error);
                     });
             } else {
-                getSubmatrixStatsAndRender();
+                return getSubmatrixStatsAndRender();
             }
         },
         render: function () {
@@ -182,11 +182,13 @@ define([
             const self = this;
             const pref = this.pref;
 
-            const $overviewSwitch = $('<a/>').html('[Show/Hide Selected Features]');
+            const $overviewSwitch = $('<a/>')
+                .html('[Show/Hide Selected Features]')
+                .css('cursor', 'pointer');
             $containerDiv.append($overviewSwitch);
 
-            const $overvewContainer = $('<div hidden style="margin:1em 0 4em 0"/>');
-            $containerDiv.append($overvewContainer);
+            const $overviewContainer = $('<div hidden style="margin:1em 0 4em 0"/>');
+            $containerDiv.append($overviewContainer);
 
             const geneData = self.buildGenesTableData();
             const iDisplayLength = 10;
@@ -195,7 +197,7 @@ define([
                 style = 'fti';
             }
 
-            $overvewContainer.append(
+            $overviewContainer.append(
                 $(
                     '<table id="' +
                         pref +
@@ -207,7 +209,7 @@ define([
                     iDisplayLength: iDisplayLength,
                     aaData: geneData,
                     aoColumns: [
-                        { sTitle: 'Name', mData: 'id' },
+                        { sTitle: 'Name', mData: 'id', width: '10em' },
                         { sTitle: 'Function', mData: 'function' },
                         { sTitle: 'Min', mData: 'min' },
                         { sTitle: 'Max', mData: 'max' },
@@ -223,7 +225,7 @@ define([
             );
 
             $overviewSwitch.click(() => {
-                $overvewContainer.toggle();
+                $overviewContainer.toggle();
             });
         },
         buildGenesTableData: function () {
@@ -232,13 +234,12 @@ define([
             const stat = submatrixStat.row_set_stats;
             for (let i = 0; i < submatrixStat.row_descriptors.length; i++) {
                 const desc = submatrixStat.row_descriptors[i];
-
                 const gene_function = desc.properties['function'];
                 tableData.push({
                     index: desc.index,
                     id: desc.id,
-                    name: desc.name ? desc.name : ' ',
-                    function: gene_function ? gene_function : ' ',
+                    name: desc.name || '-',
+                    function: gene_function || '-',
                     min: stat.mins[i] ? stat.mins[i].toFixed(2) : null,
                     max: stat.maxs[i] ? stat.maxs[i].toFixed(2) : null,
                     avg: stat.avgs[i] ? stat.avgs[i].toFixed(2) : null,
@@ -283,7 +284,8 @@ define([
                     errString.indexOf('java.lang.NullPointerException') > -1 &&
                     errString.indexOf('buildIndeces(KBaseFeatureValuesImpl.java:708)') > -1
                 ) {
-                    // this is a null pointer due to an unknown feature ID.  TODO: handle this gracefully
+                    // this is a null pointer due to an unknown feature ID.  
+                    // TODO: handle this gracefully
                     errString = 'Feature IDs not found.<br><br>';
                     errString +=
                         'Currently all Features included in a FeatureSet must be present' +

@@ -445,13 +445,14 @@ class JobManager(object):
             raise transform_job_exception(e)
         # for each retry result, refresh the state of the retried and new jobs
         orig_ids = [result["job_id"] for result in retry_results]
-        retry_ids = [result["retry_id"] for result in retry_results if "retry_id" in result]
+        retry_ids = [
+            result["retry_id"] for result in retry_results if "retry_id" in result
+        ]
         for job_id in orig_ids:
             self.get_job(job_id).reset_state()
         orig_states = self._construct_job_state_set(orig_ids)
         retry_states = self._construct_job_state_set(
-            retry_ids,
-            self._create_jobs(retry_ids)  # add to self._running_jobs index
+            retry_ids, self._create_jobs(retry_ids)  # add to self._running_jobs index
         )
         job_states = {**orig_states, **retry_states}
         # fill in the job state details
@@ -460,10 +461,12 @@ class JobManager(object):
             if "retry_id" in result:
                 result["retry_id"] = job_states[result["retry_id"]]
         for job_id in checked_jobs["error"]:
-            retry_results.append({
-                "job_id": {"state": {"job_id": job_id, "status": "does_not_exist"}},
-                "error": "does_not_exist"
-            })
+            retry_results.append(
+                {
+                    "job_id": {"state": {"job_id": job_id, "status": "does_not_exist"}},
+                    "error": "does_not_exist",
+                }
+            )
 
         return retry_results
 

@@ -5,7 +5,8 @@
  * @public
  */
 
-const MAGIC_DOWNLOAD_NUMBER = 50;
+const MAX_GENES_FOR_INLINE_HEATMAP = 50;
+const MAX_GENES_FOR_HEATMAP = 200;
 
 define(['kbwidget', 'bootstrap', 'jquery', 'kbaseExpressionGenesetBaseWidget', 'kbaseHeatmap'], (
     KBWidget,
@@ -24,7 +25,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseExpressionGenesetBaseWidget', '
         maxRange: null,
         minRange: null,
 
-        // To be overriden to specify additional parameters
+        // To be overridden to specify additional parameters
         getSubmtrixParams: function () {
             const self = this;
 
@@ -71,7 +72,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseExpressionGenesetBaseWidget', '
             for (i = 0; i < rowDescriptors.length; i++) {
                 const row = [];
                 for (let j = 0; j < rowDescriptors.length; j++) {
-                    row.push(values[i][j].toFixed(3));
+                    row.push(values[i][j]);
                 }
                 data.push(row);
             }
@@ -97,8 +98,18 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseExpressionGenesetBaseWidget', '
             const $heatmapDiv = $(
                 "<div style = 'width : " + hmW + 'px; height : ' + hmH + "px'></div>"
             );
-            //            $containerDiv.append($heatmapDiv);
             $containerDiv.append("<div style = 'width : 5px; height : 5px'></div>");
+
+            if (rowIds.length > MAX_GENES_FOR_HEATMAP) {
+                $containerDiv.append(`
+                    <p style="font-style: italic;" class="text-warning">
+                      <span class="fa fa-exclamation-triangle" /> 
+                      The selected cluster has ${rowIds.length} genes. 
+                      Heatmaps cannot be generated for clusters with more than ${MAX_GENES_FOR_HEATMAP} genes, 
+                      for performance reasons.</p>
+                `);
+                return;
+            }
 
             // TODO: heatmap values out of range still scale color instead of just the max/min color
             new kbaseHeatmap($heatmapDiv, {
@@ -108,31 +119,42 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseExpressionGenesetBaseWidget', '
                 maxValue: self.maxRange,
             });
 
-            if (rowIds.length < MAGIC_DOWNLOAD_NUMBER) {
-                $containerDiv.append($heatmapDiv);
-            } else {
+            if (rowIds.length > MAX_GENES_FOR_INLINE_HEATMAP) {
+                $containerDiv.append(`
+                    <div class="alert alert-warning">
+                        <span class="fa fa-exclamation-triangle" /> 
+                        The selected cluster has ${rowIds.length} genes. 
+                        Heatmaps for clusters with more than ${MAX_GENES_FOR_INLINE_HEATMAP} genes are not displayed inline, 
+                        for performance reasons.
+                    </div>
+                `);
                 const $svg = $heatmapDiv.find('svg');
                 const $dummy = $.jqElem('div').append($svg);
 
                 $containerDiv.append(
-                    $.jqElem('button')
-                        .append('Please download the svg of this pairwise correlation')
-                        .addClass('btn btn-primary')
-                        .on('click', (e) => {
-                            const file = new Blob([$dummy.html()], { type: 'text' });
-                            const a = document.createElement('a'),
-                                url = URL.createObjectURL(file);
-                            a.href = url;
-                            a.download = 'pairwise.svg';
-                            document.body.appendChild(a);
-                            a.click();
-                            setTimeout(() => {
-                                document.body.removeChild(a);
-                                window.URL.revokeObjectURL(url);
-                            }, 0);
-                        })
+                    $.jqElem('p').append(
+                        $.jqElem('button')
+                            .append('Download the SVG image file for this pairwise correlation')
+                            .addClass('btn btn-primary')
+                            .on('click', (e) => {
+                                const file = new Blob([$dummy.html()], { type: 'text' });
+                                const a = document.createElement('a'),
+                                    url = URL.createObjectURL(file);
+                                a.href = url;
+                                a.download = 'pairwise.svg';
+                                document.body.appendChild(a);
+                                a.click();
+                                setTimeout(() => {
+                                    document.body.removeChild(a);
+                                    window.URL.revokeObjectURL(url);
+                                }, 0);
+                            })
+                    )
                 );
+                return;
             }
+
+            $containerDiv.append($heatmapDiv);
         },
     });
 });

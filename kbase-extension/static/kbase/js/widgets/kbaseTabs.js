@@ -172,8 +172,8 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
                                 .css('margin-left', '10px')
                                 .css('font-size', '10px')
                                 .css('margin-bottom', '3px')
+                                .css('outline', 'none')
                                 .css('border', '0')
-                                .tooltip()
                                 .bind(
                                     'click',
                                     $.proxy(function (e) {

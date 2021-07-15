@@ -38,6 +38,8 @@ define([
 ) => {
     'use strict';
 
+    const MAX_EXPLORE_CLUSTER_SIZE = 200;
+
     return KBWidget({
         name: 'kbaseExpressionFeatureClusters',
         parent: kbaseAuthenticatedWidget,
@@ -48,7 +50,7 @@ define([
             loadingImage: Config.get('loading_gif'),
         },
 
-        // Extracted data for vizualization
+        // Extracted data for visualization
         clusterSet: null,
         expMatrixRef: null,
         expMatrixName: null,
@@ -105,7 +107,6 @@ define([
             );
 
             // Note order of calls is important here; state is stored in the object.
-            // TODO
             this.ws
                 .callFunc('get_objects', [[clusterSetRef]])
                 .spread((data) => {
@@ -193,7 +194,7 @@ define([
 
             const tabWidget = new kbaseTabs(tabPane, { canDelete: true, tabs: [] });
             ///////////////////////////////////// Overview table ////////////////////////////////////////////
-            const tabOverview = $('<div/>');
+            const tabOverview = $('<div style="margin-top: 10px;"/>');
             tabWidget.addTab({
                 tab: 'Overview',
                 content: tabOverview,
@@ -224,7 +225,7 @@ define([
 
             ///////////////////////////////////// Clusters tab ////////////////////////////////////////////
 
-            const $tabClusters = $('<div/>');
+            const $tabClusters = $('<div style="margin-top: 10px;"/>');
             tabWidget.addTab({
                 tab: 'Clusters',
                 content: $tabClusters,
@@ -242,41 +243,63 @@ define([
                 }
             });
 
-            $(
+            const clusterTableData = self.buildClustersTableData();
+
+            const $clustersTable = $(
                 '<table id="' +
                     pref +
                     'clusters-table" \
                 class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">\
                 </table>'
-            )
-                .appendTo($tabClusters)
-                .dataTable({
-                    sDom: 'lftip',
-                    aaData: self.buildClustersTableData(),
-                    aoColumns: [
-                        { sTitle: 'Pos.', mData: 'pos' },
-                        { sTitle: 'Cluster', mData: 'clusterId' },
-                        { sTitle: 'Number of genes', mData: 'size' },
-                        { sTitle: 'Mean correlation', mData: 'meancor' },
-                        {
-                            sTitle: '',
-                            mData: 'rowIndex',
-                            mRender: function (rowIndex) {
-                                return (
-                                    '<button class="btn btn-default ' +
-                                    pref +
-                                    'action_button" rowIndex="' +
-                                    rowIndex +
-                                    '" >Explore Cluster  <span class="caret"></span></button>'
-                                );
-                            },
-                        },
-                    ],
-                    fnDrawCallback: events,
-                });
+            ).appendTo($tabClusters);
 
-            function events() {
+            $clustersTable.dataTable({
+                sDom: 'lftip',
+                aaData: clusterTableData,
+                aoColumns: [
+                    { sTitle: 'Pos.', mData: 'pos', width: '2em' },
+                    { sTitle: 'Cluster', mData: 'clusterId' },
+                    { sTitle: 'Number of genes', mData: 'size' },
+                    { sTitle: 'Mean correlation', mData: 'meancor' },
+                    {
+                        sTitle: '',
+                        mData: 'rowIndex',
+                        mRender: function (rowIndex, type, row) {
+                            if (row.size > MAX_EXPLORE_CLUSTER_SIZE) {
+                                const tooltip =
+                                    `This cluster contains <b>${row.size}</b> genes; the Explore Cluster ` +
+                                    `feature does not work for clusters with more than <b>${MAX_GENES_FOR_HEATMAP}</b> ` +
+                                    `genes, due to browser and network performance considerations.`;
+                                return `
+                                        <button class="btn btn-default" disabled>
+                                            Explore Cluster<span class="caret"></span>
+                                        </button>
+                                        <span class="fa fa-exclamation-triangle text-warning" 
+                                              style="margin-left: 1em;"
+                                              title="${tooltip}"
+                                              data-toggle="tooltip"
+                                              data-html="true"
+                                              data-placement="top"
+                                           />
+                                    `;
+                            }
+                            return (
+                                '<button class="btn btn-default ' +
+                                pref +
+                                'action_button" rowIndex="' +
+                                rowIndex +
+                                '" >Explore Cluster  <span class="caret"></span></button>'
+                            );
+                        },
+                        width: '15.5em',
+                    },
+                ],
+                fnDrawCallback: onDraw,
+            });
+
+            function onDraw() {
                 self.registerActionButtonClick(tabWidget);
+                $clustersTable.find('[data-toggle="tooltip"]').tooltip();
                 updateClusterLinks('clusters');
             }
 
@@ -289,7 +312,7 @@ define([
                         tabWidget.showTab(tabName);
                         return;
                     }
-                    const tabDiv = $('<div/>');
+                    const tabDiv = $('<div style="margin-top: 10px;"/>');
                     tabWidget.addTab({
                         tab: tabName,
                         content: tabDiv,
@@ -305,7 +328,7 @@ define([
             }
 
             ///////////////////////////////////// Features tab ////////////////////////////////////////////
-            const featureTabDiv = $('<div/>');
+            const featureTabDiv = $('<div style="margin-top: 10px;"/>');
             tabWidget.addTab({
                 tab: 'Features',
                 content: featureTabDiv,
@@ -419,7 +442,7 @@ define([
 
                             const geneIds = self.getClusterGeneIds(rowIndex);
 
-                            const $contentDiv = $('<div></div>');
+                            const $contentDiv = $('<div style="margin-top: 10px;" />');
 
                             tabWidget.addTab({
                                 tab: tabName,
@@ -465,16 +488,12 @@ define([
                 cluster = feature_clusters[i];
                 tableData.push({
                     pos: i,
-                    clusterId:
-                        "<a class='show-clusters_" +
-                        self.pref +
-                        "' data-pos='" +
-                        i +
-                        "'>cluster_" +
-                        i +
-                        '</a>',
+                    clusterId: `<a class="show-clusters_${self.pref}" data-pos="${i}" style="cursor: pointer;">cluster_${i}</a>`,
                     size: Object.keys(cluster.id_to_pos).length,
-                    meancor: cluster.meancor != null ? cluster.meancor.toFixed(3) : 'N/A',
+                    meancor:
+                        cluster.meancor == null || typeof cluster.meancor === 'undefined'
+                            ? 'N/A'
+                            : cluster.meancor.toFixed(3),
                     rowIndex: i,
                 });
             }
@@ -485,7 +504,7 @@ define([
         buildActionMenu: function ($container) {
             const $menu = $(
                 ' \
-                <ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none; list-style:none; margin:0" > \
+                <ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none; list-style:none; margin:0; padding-left: 0;" > \
                     <li><a tabindex="-1" href="#" methodInput="view_expression_profile">View expression profile</a></li> \
                     <li><a tabindex="-1" href="#" methodInput="view_expression_pairwise_correlation">View pairwise correlation</a></li> \
                     <li><a tabindex="-1" href="#" methodInput="view_expression_heatmap">View in sortable condition heatmap</a></li> \
@@ -552,9 +571,12 @@ define([
                     let func = '-';
                     const feature = id2features[fid];
                     if (feature) {
-                        if (feature.aliases && feature.aliases.length > 0)
+                        if (feature.aliases && feature.aliases.length > 0) {
                             aliases = feature.aliases.join(', ');
-                        type = feature.type;
+                        }
+                        if (feature.type) {
+                            type = feature.type;
+                        }
                         if (feature.function) {
                             func = feature.function;
                         }
@@ -563,34 +585,23 @@ define([
                         }
                     }
                     if (genomeRef) {
-                        fid =
-                            '<a href="/#dataview/' +
-                            genomeRef +
-                            '?sub=Feature&subid=' +
-                            fid +
-                            '" target="_blank">' +
-                            fid +
-                            '</a>';
+                        fid = `<a href="/#dataview/${genomeRef}?sub=Feature&subid=${fid}" target="_blank">${fid}</a>`;
                     }
                     tableData.push({
-                        fid: fid,
-                        cid:
-                            "<a class='show-clusters2_" +
-                            self.pref +
-                            "' data-pos='" +
-                            cluster_pos +
-                            "'>cluster_" +
-                            cluster_pos +
-                            '</a>',
-                        gid: gid,
+                        fid,
+                        cid: `<a class="show-clusters2_${self.pref}" data-pos="${cluster_pos}" style="cursor: pointer;">cluster_${cluster_pos}</a>`,
+                        gid,
                         ali: aliases,
-                        type: type,
-                        func: func,
+                        type,
+                        func,
                     });
                 }
+
             const columns = [];
-            columns.push({ sTitle: 'Feature ID', mData: 'fid' });
-            if (pos == null) columns.push({ sTitle: 'Cluster', mData: 'cid' });
+            columns.push({ sTitle: 'Feature ID', mData: 'fid', width: '7em' });
+            if (pos === null) {
+                columns.push({ sTitle: 'Cluster', mData: 'cid' });
+            }
             columns.push({ sTitle: 'Aliases', mData: 'ali' });
             columns.push({ sTitle: 'Genome', mData: 'gid' });
             columns.push({ sTitle: 'Type', mData: 'type' });
@@ -606,11 +617,10 @@ define([
         },
 
         buildFeatureId2FeatureHash: function () {
-            const self = this;
-            const features = self.features;
-            const id2features = {};
-            if (features) for (const i in features) id2features[features[i].id] = features[i];
-            return id2features;
+            return this.features.reduce((id2features, feature) => {
+                id2features[feature.id] = feature;
+                return id2features;
+            }, {});
         },
 
         makeRow: function (name, value) {

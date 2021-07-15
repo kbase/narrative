@@ -239,7 +239,6 @@ define([
             const delta = Math.max(this.options.xInset * ret[0], this.options.xInset * ret[1]);
             ret[0] -= delta;
             ret[1] += delta;
-            console.log('DXD', ret);
             return ret;
         },
 
@@ -268,7 +267,6 @@ define([
             const delta = Math.max(this.options.yInset * ret[0], this.options.yInset * ret[1]);
             ret[0] -= delta;
             ret[1] += delta;
-            console.log('DYD', ret);
             return ret;
         },
 
@@ -279,7 +277,6 @@ define([
 
             const bounds = this.chartBounds();
             const $line = this;
-            console.log('BOUNDS ', bounds);
             const lineMaker = d3.svg
                 .line()
                 .x((d) => {

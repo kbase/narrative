@@ -57,9 +57,9 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
             this.data('tabs', {});
             this.data('nav', {});
 
-            this.appendUI($(this.$elem));
-
             this.tabHistory = [];
+
+            this.appendUI($(this.$elem));
 
             return this;
         },

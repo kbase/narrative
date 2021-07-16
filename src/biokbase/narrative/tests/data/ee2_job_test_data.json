@@ -3,6 +3,9 @@
         "job_id": "5d64935ab215ad4128de94d6",
         "user": "fake_test_user",
         "authstrat": "kbaseworkspace",
+        "batch_id": null,
+        "batch_job": false,
+        "child_jobs": [],
         "wsid": 9999,
         "status": "completed",
         "updated": 1566860098000,
@@ -36,12 +39,17 @@
                 }
             ],
             "id": "5d7024304446f0da4ac7eac4"
-        }
+        },
+        "retry_ids": [],
+        "retry_parent": null
     },
     "5d64935cb215ad4128de94d7": {
         "job_id": "5d64935cb215ad4128de94d7",
         "user": "tgu2",
         "authstrat": "kbaseworkspace",
+        "batch_id": null,
+        "batch_job": false,
+        "child_jobs": [],
         "wsid": 9999,
         "status": "created",
         "updated": 1572462965487,
@@ -65,12 +73,17 @@
                 "tag": "dev",
                 "run_id": "6546971e-757a-4a26-8439-325497c6d842"
             }
-        }
+        },
+        "retry_ids": [],
+        "retry_parent": null
     },
     "5d64935cb215ad4128de94d8": {
         "job_id": "5d64935cb215ad4128de94d8",
         "user": "wjriehl",
         "authstrat": "kbaseworkspace",
+        "batch_id": null,
+        "batch_job": false,
+        "child_jobs": [],
         "wsid": 9999,
         "status": "running",
         "updated": 1572462965490,
@@ -95,12 +108,17 @@
                 "tag": "dev",
                 "run_id": "6546971e-757a-4a26-8439-325497c6d843"
             }
-        }
+        },
+        "retry_ids": [],
+        "retry_parent": null
     },
     "5d64935cb215ad4128de94d9": {
         "job_id": "5d64935cb215ad4128de94d9",
         "user": "fake_test_user",
         "authstrat": "kbaseworkspace",
+        "batch_id": null,
+        "batch_job": false,
+        "child_jobs": [],
         "wsid": 9999,
         "status": "terminated",
         "updated": 1572462965495,
@@ -125,12 +143,17 @@
                 "tag": "dev",
                 "run_id": "6546971e-757a-4a26-8439-325497c6d843"
             }
-        }
+        },
+        "retry_ids": [],
+        "retry_parent": null
     },
     "5d64935cb215ad4128de94e0": {
         "job_id": "5d64935cb215ad4128de94e0",
         "user": "fake_test_user",
         "authstrat": "kbaseworkspace",
+        "batch_id": null,
+        "batch_job": false,
+        "child_jobs": [],
         "wsid": 9999,
         "status": "error",
         "updated": 1572462965495,
@@ -157,7 +180,9 @@
                 "tag": "dev",
                 "run_id": "6546971e-757a-4a26-8439-325497c6d843"
             }
-        }
+        },
+        "retry_ids": [],
+        "retry_parent": null
     },
     "60e7112887b7e512a899c8f1": {
         "authstrat": "kbaseworkspace",

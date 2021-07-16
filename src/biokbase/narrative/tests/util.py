@@ -314,8 +314,8 @@ def validate_job_state(job_state: dict) -> None:
     """
     assert "state" in job_state, "state key missing"
     assert isinstance(job_state["state"], dict), "state is not a dict"
-    assert "owner" in job_state, "owner key missing"
-    assert isinstance(job_state["owner"], str), "owner is not a string"
+    assert "user" in job_state, "user key missing"
+    assert isinstance(job_state["user"], str), "user is not a string"
     state = job_state["state"]
     # list of tuples - first = key name, second = value type
     # details for other cases comes later. This is just the expected basic set of

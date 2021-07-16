@@ -289,7 +289,7 @@ class AppManager(object):
             kblogging.log_event(self._log, "run_batch_app_error", log_info)
             raise transform_job_exception(e)
 
-        new_job = Job(
+        new_job = Job.from_attributes(
             app_id=BATCH_APP["APP_ID"],
             app_version=BATCH_APP["VERSION"],
             cell_id=cell_id,
@@ -300,7 +300,7 @@ class AppManager(object):
                 "batch_size": len(params),
             },
             job_id=job_id,
-            owner=system_variable("user_id"),
+            user=system_variable("user_id"),
             params=batch_params,
             run_id=run_id,
             tag=BATCH_APP["TAG"],
@@ -393,12 +393,12 @@ class AppManager(object):
             kblogging.log_event(self._log, "run_app_error", log_info)
             raise transform_job_exception(e)
 
-        new_job = Job(
+        new_job = Job.from_attributes(
             app_id=app_id,
             app_version=job_runner_inputs["service_ver"],
             cell_id=cell_id,
             job_id=job_id,
-            owner=system_variable("user_id"),
+            user=system_variable("user_id"),
             params=job_runner_inputs["params"],
             run_id=run_id,
             tag=tag,
@@ -556,13 +556,13 @@ class AppManager(object):
         for idx, child_job_id in enumerate(batch_submission["child_job_ids"]):
             job_info = batch_run_inputs[idx]
             child_jobs.append(
-                Job(
+                Job.from_attributes(
                     app_id=job_info["app_id"],
                     app_version=job_info["service_ver"],
                     batch_id=batch_submission[BATCH_ID_KEY],
                     cell_id=cell_id,
                     job_id=child_job_id,
-                    owner=user_id,
+                    user=user_id,
                     params=job_info["params"][0],
                     run_id=run_id,
                     tag=job_info["meta"].get("tag"),
@@ -585,7 +585,8 @@ class AppManager(object):
                 },
                 "status": "created",
                 "user": user_id,
-            }
+            },
+            children=child_jobs
         )
 
         # TODO make a tighter design in the job manager for submitting a family of jobs

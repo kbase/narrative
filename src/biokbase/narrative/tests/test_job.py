@@ -5,8 +5,8 @@ import copy
 from biokbase.narrative.jobs.job import (
     Job,
     EXTRA_JOB_STATE_FIELDS,
-    ALL_JOB_ATTRS,
-    JOB_DEFAULTS,
+    JOB_ATTRS,
+    JOB_ATTR_DEFAULTS,
 )
 from .util import ConfigTests
 from .narrative_mock.mockclients import (
@@ -29,6 +29,11 @@ def capture_stdout():
         yield sys.stdout, sys.stderr
     finally:
         sys.stdout, sys.stderr = old_out, old_err
+
+
+def mock_job_state(self, force_refresh=False):
+    """Mock job.state() to avoid ee2 calls"""
+    return self._augment_ee2_state(self._last_state)
 
 
 config = ConfigTests()
@@ -55,7 +60,7 @@ def get_test_job(job_id):
     return copy.deepcopy(test_jobs[job_id])
 
 
-def transform_job(job_data, transform_list=ALL_JOB_ATTRS):
+def transform_job(job_data, transform_list=JOB_ATTRS):
     """
     transform job data into suitable input for creating a job object
 
@@ -63,7 +68,7 @@ def transform_job(job_data, transform_list=ALL_JOB_ATTRS):
 
     job_data        - raw job data, as emitted by ee2's check_job function
     transform_list  - attributes to generate from the raw data.
-                        defaults to using ALL_JOB_ATTRS
+                        defaults to using JOB_ATTRS
 
     """
 
@@ -77,10 +82,12 @@ def transform_job(job_data, transform_list=ALL_JOB_ATTRS):
         "child_jobs": job_data.get("child_jobs", []),
         "extra_data": None,
         "job_id": job_data.get("job_id"),
-        "owner": job_data["user"],
         "params": job_input.get("params", {}),
+        "retry_ids": job_data.get("retry_ids", []),
+        "retry_parent": job_data.get("retry_parent", None),
         "run_id": job_input.get("narrative_cell_info", {}).get("run_id", None),
         "tag": job_input.get("narrative_cell_info", {}).get("tag", "release"),
+        "user": job_data["user"],
     }
 
     job_out = {}
@@ -94,10 +101,25 @@ def create_job_from_ee2(job_id):
     """
     create a job object from raw job data
     """
-    job_data = get_test_job(job_id)
-    job_out = transform_job(job_data)
+    def flatten(din):
+        dout = {}
+        for k, v in din.items():
+            if isinstance(v, dict):
+                dout.update(flatten(v))
+            else:
+                dout[k] = v
+        return dout
 
-    return Job(**job_out, ee2_state=get_test_job(job_id))
+    job_data = get_test_job(job_id)
+    job_out = transform_job(
+        job_data,
+        # Restrict to what's in the test data so when you
+        # query the job's _last_state during tests,
+        # you won't get attr fields missing in test data
+        set(flatten(job_data).keys()) & set(JOB_ATTRS)
+    )
+
+    return Job.from_attributes(**job_out, ee2_state=get_test_job(job_id))
 
 
 def create_state_from_ee2(job_id):
@@ -136,8 +158,10 @@ class JobTest(unittest.TestCase):
         cls.child_jobs = []
         cls.cell_id = job_input.get("narrative_cell_info", {}).get("cell_id")
         cls.extra_data = None
-        cls.owner = job_state["user"]
+        cls.user = job_state["user"]
         cls.params = job_input["params"]
+        cls.retry_ids = job_state.get("retry_ids", [])
+        cls.retry_parent = job_state.get("retry_parent")
         cls.run_id = job_input.get("narrative_cell_info", {}).get("run_id")
         cls.tag = job_input.get("narrative_cell_info", {}).get("tag", "dev")
 
@@ -150,14 +174,14 @@ class JobTest(unittest.TestCase):
             "job_id": self.job_id,
             "app_id": self.app_id,
             "params": self.params,
-            "owner": self.owner,
+            "user": self.user,
         }
 
         for arg in JOB_KWARGS:
             if not len(job_attrs) or arg not in job_attrs:
                 job_args[arg] = getattr(self, arg)
 
-        job = Job(**job_args)
+        job = Job.from_attributes(**job_args)
 
         return job
 
@@ -166,30 +190,34 @@ class JobTest(unittest.TestCase):
         Check the attributes of a job against a dictionary of expected attributes
         If the expected attribute is not supplied, the defaults set on this test object are used
         """
-        for attr in ALL_JOB_ATTRS:
-            if attr in expected:
-                self.assertEqual(getattr(job, attr), expected[attr])
-            else:
-                self.assertEqual(getattr(job, attr), getattr(self, attr))
+        with mock.patch.object(Job, "state", autospec=True) as m:
+            m.side_effect = mock_job_state
+            for attr in JOB_ATTRS:
+                if attr in expected:
+                    self.assertEqual(getattr(job, attr), expected[attr])
+                else:
+                    self.assertEqual(getattr(job, attr), getattr(self, attr))
 
     def check_state(self, job_id, job_state):
         expected = create_state_from_ee2(job_id)
         self.assertEqual(job_state, expected)
 
     def test_job_init__id_only(self):
-        job = Job(job_id=JOB_COMPLETED)
-        for attr in ALL_JOB_ATTRS:
-            if attr == "job_id":
-                self.assertEqual(job.job_id, JOB_COMPLETED)
-            else:
-                self.assertEqual(getattr(job, attr), JOB_DEFAULTS[attr])
+        job = Job.from_attributes(job_id=JOB_COMPLETED)
+        with mock.patch.object(Job, "state", autospec=True) as m:
+            m.side_effect = mock_job_state
+            for attr in JOB_ATTRS:
+                if attr == "job_id":
+                    self.assertEqual(job.job_id, JOB_COMPLETED)
+                else:
+                    self.assertEqual(getattr(job, attr), JOB_ATTR_DEFAULTS[attr])
 
     def test_job_init__error_no_job_id(self):
 
         with self.assertRaisesRegexp(
             ValueError, "Cannot create a job without a job ID!"
         ):
-            Job(params={}, app_id="this/that")
+            Job.from_attributes(params={}, app_id="this/that")
 
     def test_job_init(self):
         """
@@ -237,13 +265,13 @@ class JobTest(unittest.TestCase):
             {"service_ver": batch_method_ver, "meta": job_meta, "batch_params": []}
         ]
 
-        batch_job = Job(
+        batch_job = Job.from_attributes(
             app_id=app_id,
             app_version=batch_method_ver,
             cell_id=self.cell_id,
             job_id=self.job_id,
             extra_data=extra_data,
-            owner=self.owner,
+            user=self.user,
             params=batch_params,
             run_id=self.run_id,
             tag=batch_method_tag,
@@ -266,12 +294,12 @@ class JobTest(unittest.TestCase):
         """
         job_runner_inputs = {"params": {}, "service_ver": "the best ever"}
 
-        job = Job(
+        job = Job.from_attributes(
             app_id=self.app_id,
             app_version=job_runner_inputs["service_ver"],
             cell_id=self.cell_id,
             job_id=self.job_id,
-            owner=self.owner,
+            user=self.user,
             params=job_runner_inputs["params"],
             run_id=self.run_id,
             tag=self.tag,
@@ -300,7 +328,7 @@ class JobTest(unittest.TestCase):
             .get("cell_id", None),
             "_last_state": test_job,
             "extra_data": None,
-            "owner": test_job.get("user", None),
+            "user": test_job.get("user", None),
             "params": test_job.get("job_input", {}).get("params", {}),
             "run_id": test_job.get("job_input", {})
             .get("narrative_cell_info", {})
@@ -324,7 +352,7 @@ class JobTest(unittest.TestCase):
             }
         ]
         test_job = {
-            "user": self.owner,
+            "user": self.user,
             "job_input": {
                 "params": params,
                 "service_ver": self.app_version,
@@ -334,12 +362,12 @@ class JobTest(unittest.TestCase):
         }
 
         expected = {
-            "batch_id": JOB_DEFAULTS["batch_id"],
-            "cell_id": JOB_DEFAULTS["cell_id"],
-            "extra_data": JOB_DEFAULTS["extra_data"],
+            "batch_id": JOB_ATTR_DEFAULTS["batch_id"],
+            "cell_id": JOB_ATTR_DEFAULTS["cell_id"],
+            "extra_data": JOB_ATTR_DEFAULTS["extra_data"],
             "params": params,
-            "run_id": JOB_DEFAULTS["run_id"],
-            "tag": JOB_DEFAULTS["tag"],
+            "run_id": JOB_ATTR_DEFAULTS["run_id"],
+            "tag": JOB_ATTR_DEFAULTS["tag"],
         }
 
         job = Job.from_state(test_job)
@@ -355,13 +383,13 @@ class JobTest(unittest.TestCase):
         self.assertEqual(job.final_state, get_test_job(JOB_TERMINATED))
 
         # get rid of the cached job state
-        job.reset_state()
-        self.assertFalse(job.terminal_state)
+        job.clear_state()
+        self.assertFalse(job.was_terminal)
         self.assertIsNone(job.final_state)
 
         state = job.state()
         self.assertEqual(state["status"], "terminated")
-        self.assertTrue(job.terminal_state)
+        self.assertTrue(job.was_terminal)
         self.check_state(JOB_TERMINATED, state)
 
         # when the field is repopulated, the EXCLUDED_JOB_STATE_FIELDS filter
@@ -378,11 +406,11 @@ class JobTest(unittest.TestCase):
         test that a job outputs the correct state and that the update is not cached
         """
         job = create_job_from_ee2(JOB_CREATED)
-        self.assertFalse(job.terminal_state)
+        self.assertFalse(job.was_terminal)
         self.assertIsNone(job.final_state)
         state = job.state()
         self.check_state(JOB_CREATED, state)
-        self.assertFalse(job.terminal_state)
+        self.assertFalse(job.was_terminal)
         self.assertIsNone(job.final_state)
         self.assertEqual(state["status"], "created")
 
@@ -391,7 +419,7 @@ class JobTest(unittest.TestCase):
         test that a completed job emits its state without calling check_job
         """
         job = create_job_from_ee2(JOB_COMPLETED)
-        self.assertTrue(job.terminal_state)
+        self.assertTrue(job.was_terminal)
         self.assertIsNotNone(job.final_state)
         self.assertEqual(job.final_state, get_test_job(JOB_COMPLETED))
 
@@ -406,7 +434,7 @@ class JobTest(unittest.TestCase):
         test that the correct exception is thrown if check_job cannot be called
         """
         job = create_job_from_ee2(JOB_CREATED)
-        self.assertFalse(job.terminal_state)
+        self.assertFalse(job.was_terminal)
         self.assertIsNone(job.final_state)
         with self.assertRaisesRegex(Exception, "Unable to fetch info for job"):
             job.state()
@@ -416,11 +444,8 @@ class JobTest(unittest.TestCase):
         test that without a state object supplied, the job state is unchanged
         """
         job = create_job_from_ee2(JOB_CREATED)
-        job.reset_state()
-        self.assertFalse(job.terminal_state)
-        self.assertIsNone(job._last_state)
-        job.update_state()
-        self.assertFalse(job.terminal_state)
+        job.clear_state()
+        self.assertFalse(job.was_terminal)
         self.assertIsNone(job._last_state)
 
     def test_job_update__invalid_job_id(self):
@@ -431,8 +456,8 @@ class JobTest(unittest.TestCase):
         self.assertEqual(job._last_state, get_test_job(JOB_RUNNING))
 
         # try to update it with the job state from a different job
-        with self.assertRaisesRegexp(ValueError, "Job ID mismatch in update_state"):
-            job.update_state(get_test_job(JOB_COMPLETED))
+        with self.assertRaisesRegexp(ValueError, "Job ID mismatch in set_state"):
+            job.set_state(get_test_job(JOB_COMPLETED))
 
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def test_job_info(self):
@@ -557,7 +582,7 @@ class JobTest(unittest.TestCase):
         # delete the job params from the input
         del job_state["job_input"]["params"]
         job = Job.from_state(job_state)
-        self.assertEquals(job.params, JOB_DEFAULTS["params"])
+        self.assertEquals(job.params, JOB_ATTR_DEFAULTS["params"])
 
         params = job.parameters()
         self.assertEqual(params, job_params)
@@ -570,7 +595,7 @@ class JobTest(unittest.TestCase):
         job_state = get_test_job(JOB_TERMINATED)
         del job_state["job_input"]["params"]
         job = Job.from_state(job_state)
-        self.assertEquals(job.params, JOB_DEFAULTS["params"])
+        self.assertEquals(job.params, JOB_ATTR_DEFAULTS["params"])
 
         with self.assertRaisesRegexp(Exception, "Unable to fetch parameters for job"):
             job.parameters()

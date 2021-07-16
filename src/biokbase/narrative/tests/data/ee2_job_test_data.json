@@ -36,7 +36,12 @@
                 }
             ],
             "id": "5d7024304446f0da4ac7eac4"
-        }
+        },
+        "batch_id": null,
+        "batch_job": false,
+        "child_jobs": [],
+        "retry_ids": [],
+        "retry_parent": null
     },
     "5d64935cb215ad4128de94d7": {
         "job_id": "5d64935cb215ad4128de94d7",

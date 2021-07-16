@@ -152,7 +152,7 @@ class JobManager(object):
                     state["created"] / 1000.0
                 ).strftime("%Y-%m-%d %H:%M:%S")
                 state["run_time"] = "Not started"
-                state["owner"] = job.owner
+                state["owner"] = job.user
                 state["app_id"] = job.app_id
                 exec_start = state.get("running", None)
 
@@ -190,7 +190,7 @@ class JobManager(object):
                     <td>{{ j.job_id|e }}</td>
                     <td>{{ j.app_id|e }}</td>
                     <td>{{ j.created|e }}</td>
-                    <td>{{ j.owner|e }}</td>
+                    <td>{{ j.user|e }}</td>
                     <td>{{ j.status|e }}</td>
                     <td>{{ j.run_time|e }}</td>
                     <td>{% if j.finish_time %}{{ j.finish_time|e }}{% else %}Incomplete{% endif %}</td>
@@ -224,7 +224,7 @@ class JobManager(object):
         # These are already post-processed and ready to return.
         for job_id in job_ids:
             job = self.get_job(job_id)
-            if job.terminal_state:
+            if job.was_terminal:
                 job_states[job_id] = job.revised_state()
             elif states and job_id in states:
                 state = states[job_id]
@@ -376,7 +376,7 @@ class JobManager(object):
             raise ValueError(f"No job present with id {job_id}")
 
         # otherwise, our job ID is fine
-        if self.get_job(job_id).terminal_state:
+        if self.get_job(job_id).was_terminal:
             return True
 
         if not self._check_job_terminated(job_id):
@@ -398,7 +398,7 @@ class JobManager(object):
 
         for job_id in checked_jobs["job_id_list"]:
             if (
-                not self.get_job(job_id).terminal_state
+                not self.get_job(job_id).was_terminal
                 and not self._check_job_terminated(job_id)
             ):
                 self._cancel_job(job_id)
@@ -469,7 +469,7 @@ class JobManager(object):
         orig_ids = [result["job_id"] for result in retry_results]
         retry_ids = [result["retry_id"] for result in retry_results if "retry_id" in result]
         for job_id in orig_ids:
-            self.get_job(job_id).reset_state()
+            self.get_job(job_id).clear_state()
         orig_states = self._construct_job_state_set(orig_ids)
         retry_states = self._construct_job_state_set(
             retry_ids,

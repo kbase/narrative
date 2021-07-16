@@ -334,8 +334,8 @@ def validate_job_state(state: dict) -> None:
     ]
     assert "state" in state, "state key missing"
     assert isinstance(state["state"], dict), "state is not a dict"
-    assert "owner" in state, "owner key missing"
-    assert isinstance(state["owner"], str), "owner is not a string"
+    assert "user" in state, "user key missing"
+    assert isinstance(state["user"], str), "user is not a string"
     for k in expected_state_keys:
         assert k[0] in state["state"], f"{k[0]} key is missing from state"
         assert isinstance(state["state"][k[0]], k[1]), f"{k[0]} is not a {k[1]}"

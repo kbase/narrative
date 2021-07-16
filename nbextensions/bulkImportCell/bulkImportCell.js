@@ -317,14 +317,29 @@ define([
                 };
                 initialParamStates[fileType] = 'incomplete';
                 [fileParamIds[fileType], otherParamIds[fileType]] = filterFileParameters(spec);
-                initialParams[fileType].filePaths = typesToFiles[fileType].files.map(
-                    (inputFile) => {
-                        return fileParamIds[fileType].reduce((fileParams, paramId) => {
-                            fileParams[paramId] = inputFile;
-                            return fileParams;
-                        }, {});
+                if (fileParamIds[fileType].length < 3) {
+                    initialParams[fileType].filePaths = typesToFiles[fileType].files.map(
+                        (inputFile) => {
+                            return fileParamIds[fileType].reduce((fileParams, paramId) => {
+                                fileParams[paramId] = inputFile;
+                                return fileParams;
+                            }, {});
+                        }
+                    );
+                } else {
+                    // for now, assume a single output object per row.
+                    const numFilesPerRow = fileParamIds[fileType].length - 1;
+                    const numRows = typesToFiles[fileType].files.length / numFilesPerRow;
+                    initialParams[fileType].filePaths = [];
+                    for (let i = 0; i < numRows; i++) {
+                        initialParams[fileType].filePaths.push(
+                            fileParamIds[fileType].reduce((nullParams, paramId) => {
+                                nullParams[paramId] = null;
+                                return nullParams;
+                            }, {})
+                        );
                     }
-                );
+                }
                 const defaultSpecModel = specs[appId].makeDefaultedModel();
                 otherParamIds[fileType].forEach((paramId) => {
                     initialParams[fileType].params[paramId] = defaultSpecModel[paramId];

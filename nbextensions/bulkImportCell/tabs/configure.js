@@ -256,6 +256,7 @@ define([
                 workspaceId: runtime.workspaceId(),
                 paramIds: model.getItem(['app', 'fileParamIds', selectedFileType]),
                 initialParams: model.getItem(['params', selectedFileType, FILE_PATH_TYPE]),
+                availableFiles: model.getItem(['inputs', selectedFileType, 'files']),
                 viewOnly,
             });
 

@@ -86,9 +86,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/selectInput', 'testUtil'], 
         });
 
         it('Should update value via bus', () => {
-            //and reset model properly via bus', (done) => {
-            // start with one value, change it, then reset.
-            // check along the way.
+            // select one value then update it.
             const widget = SelectInput.make(testConfig);
             return widget.start({ node: container }).then(() => {
                 return new Promise((resolve) => {
@@ -228,36 +226,11 @@ define(['common/runtime', 'widgets/appWidgets2/input/selectInput', 'testUtil'], 
 
             const carrotItem = inputElem.querySelector('option[value="carrot"]');
             await TestUtil.waitForElementChange(carrotItem, () => {
-                bus.emit('disable-values', {
+                bus.emit('set-disabled-values', {
                     values: ['carrot'],
                 });
             });
             itemsDisabled.carrot = true;
-            checkItems(itemsDisabled, inputElem);
-        });
-
-        it('Should obey a message to enable selection options', async () => {
-            const config = Object.assign({}, testConfig, { disabledValues: ['carrot'] });
-            const widget = SelectInput.make(config);
-
-            await widget.start({ node: container });
-
-            const itemsDisabled = {
-                apple: false,
-                banana: false,
-                carrot: true,
-            };
-
-            const inputElem = container.querySelector('select[data-element="input"]');
-            checkItems(itemsDisabled, inputElem);
-
-            const carrotItem = inputElem.querySelector('option[value="carrot"]');
-            await TestUtil.waitForElementChange(carrotItem, () => {
-                bus.emit('enable-values', {
-                    values: ['carrot'],
-                });
-            });
-            itemsDisabled.carrot = false;
             checkItems(itemsDisabled, inputElem);
         });
 

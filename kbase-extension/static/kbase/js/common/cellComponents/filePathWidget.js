@@ -29,6 +29,7 @@ define([
      *  - workspaceId - the id of the workspace we should use for searching for objects
      *  - initialParams - Array of objects. Each item represents a row of parameter values.
      *    So each item has an object with parameter id -> value
+     *  - availableFiles - Array of strings, one for each file that should be available here.
      *  - viewOnly - boolean, if true start with the view version of input widgets
      * @returns
      */
@@ -40,6 +41,7 @@ define([
             // created and owns it
             paramsBus = config.bus,
             model = Props.make(),
+            availableFiles = config.availableFiles,
             /**
              * Internal data model
              * The data model / view model is a structure that maintains the overall internal
@@ -72,7 +74,7 @@ define([
              *   updates
              * rows: a map from the unique rowId to an object containing two keys:
              *   - values: a set of key-value-pairs, parameter id -> parameter value
-             *   - widgets: an array of all widgets running on that row
+             *   - widgets: a set of key-value-pairs, parameter id -> widget
              *
              * example:
              * {
@@ -83,17 +85,23 @@ define([
              *   },
              *   rows: {
              *     rowA: {
-             *       widgets: [Object[], Object[]],
+             *       widgets: {
+             *         param1: Object[],
+             *         param2: Object[]
+             *       },
              *       values: {
              *         param1: 'value1',
-             *         param2: 'value2
+             *         param2: 'value2'
              *       }
              *     },
              *     rowB: {
-             *       widgets: [Object[], Object[]],
+             *       widgets: {
+             *         param1: Object[],
+             *         param2: Object[]
+             *       },
              *       values: {
              *         param1: 'value3',
-             *         param2: 'value4
+             *         param2: 'value4'
              *       }
              *     }
              *   }
@@ -117,16 +125,23 @@ define([
                 showHint: true,
                 useRowHighight: true,
                 initialValue: value,
-                appSpec: appSpec,
-                parameterSpec: parameterSpec,
-                workspaceId: workspaceId,
+                appSpec,
+                parameterSpec,
+                workspaceId,
                 referenceType: 'name',
                 paramsChannelName: paramsBus.channelName,
+                availableValues: availableFiles.map((filename) => {
+                    return {
+                        value: filename,
+                        display: filename,
+                    };
+                }),
+                disabledValues: getAllSelectedFiles(),
             });
 
             /**
              * We only expect file input and object output parameters here. These are either the
-             * dynamic dropdown widget (for file lookups) or the newObjectInput widget for the
+             * selectInput widget (for file lookups) or the newObjectInput widget for the
              * object outputs. Bus messages that get listened to here reflect that - specialized
              * messages like "sync-params" are only used by a few inputs, none of which are
              * expected here.
@@ -137,6 +152,7 @@ define([
             // params bus.
             fieldWidget.bus.on('changed', (message) => {
                 dataModel.rows[rowId].values[parameterSpec.id] = message.newValue;
+                updateDisabledFileValues();
                 paramsBus.emit('parameter-changed', {
                     parameter: parameterSpec.id,
                     newValue: message.newValue,
@@ -361,7 +377,7 @@ define([
         function attachEvents() {
             bus.on('reset-to-defaults', () => {
                 Object.values(dataModel.rows).forEach((row) => {
-                    row.widgets.forEach((widget) => {
+                    Object.values(row.widgets).forEach((widget) => {
                         widget.bus.emit('reset-to-defaults');
                     });
                 });
@@ -372,7 +388,7 @@ define([
                 // each registered widget.
 
                 Object.values(dataModel.rows).forEach((row) => {
-                    row.widgets.forEach((widget) => {
+                    Object.values(row.widgets).forEach((widget) => {
                         widget.bus.emit('workspace-changed');
                     });
                 });
@@ -400,9 +416,7 @@ define([
             const layout = orderedParams
                 .map((parameterId) => {
                     const id = html.genId();
-                    view[parameterId] = {
-                        id: id,
-                    };
+                    view[parameterId] = { id };
 
                     return tag('div')({
                         class: `${cssBaseClass}__row_cell--file-path_id`,
@@ -415,8 +429,8 @@ define([
             return {
                 content: layout,
                 layout: orderedParams,
-                view: view,
-                paramMap: paramMap,
+                view,
+                paramMap,
             };
         }
 
@@ -428,7 +442,7 @@ define([
          * @param {object} filePathParams - the object holding all file path param specs
          * @param {string} parameterId - the parameter id from the app spec
          * @param {any} parameterValue - the initial value of the parameter
-         * @returns the created and started widget
+         * @returns the created and started widget, linked to its parameterId in a tiny object
          */
         function createFilePathWidget(rowId, appSpec, filePathParams, parameterId, parameterValue) {
             const spec = filePathParams.paramMap[parameterId];
@@ -437,6 +451,11 @@ define([
             if (viewOnly) {
                 controlPromise = paramResolver.loadViewControl(spec);
             } else {
+                // patch to turn dynamic_dropdowns (the usual file widget) to regular dropdowns (which get set
+                // to enabled / disabled)
+                if (spec.ui.control === 'dynamic_dropdown') {
+                    spec.ui.control = 'dropdown';
+                }
                 controlPromise = paramResolver.loadInputControl(spec);
             }
             return controlPromise
@@ -448,7 +467,9 @@ define([
                     });
                 })
                 .then(() => {
-                    return widget;
+                    const retValue = {};
+                    retValue[parameterId] = widget;
+                    return retValue;
                 })
                 .catch((ex) => {
                     console.error(`Error making input field widget: ${ex}`);
@@ -478,21 +499,21 @@ define([
          * @returns a promise that resolves when the steps are done.
          */
         function deleteRow(e, rowId) {
-            return Promise.all(dataModel.rows[rowId].widgets.map((widget) => widget.stop())).then(
-                () => {
-                    delete dataModel.rows[rowId];
-                    const rowIdx = dataModel.rowIdToIndex[rowId];
+            const rowWidgets = Object.values(dataModel.rows[rowId].widgets);
+            return Promise.all(rowWidgets.map((widget) => widget.stop())).then(() => {
+                delete dataModel.rows[rowId];
+                const rowIdx = dataModel.rowIdToIndex[rowId];
 
-                    dataModel.rowOrder.splice(rowIdx, 1);
-                    delete dataModel.rowIdToIndex[rowId];
-                    // redo the ordering
-                    dataModel.rowOrder.forEach((_rowId, idx) => {
-                        dataModel.rowIdToIndex[_rowId] = idx;
-                    });
-                    e.target.closest('li').remove();
-                    syncDataModel();
-                }
-            );
+                dataModel.rowOrder.splice(rowIdx, 1);
+                delete dataModel.rowIdToIndex[rowId];
+                // redo the ordering
+                dataModel.rowOrder.forEach((_rowId, idx) => {
+                    dataModel.rowIdToIndex[_rowId] = idx;
+                });
+                e.target.closest('li').remove();
+                updateDisabledFileValues();
+                syncDataModel();
+            });
         }
 
         /**
@@ -564,7 +585,7 @@ define([
                 })
             ).then((widgets) => {
                 // dataModel.rows[rowId] was already created by addRow
-                dataModel.rows[rowId].widgets = widgets;
+                dataModel.rows[rowId].widgets = Object.assign({}, ...widgets);
                 rowEvents.attachEvents(filePathRow);
             });
         }
@@ -595,28 +616,106 @@ define([
             // get the parameter specs in the right order.
             const parameterSpecs = [];
             const defaultParams = {};
+            const fileParams = [];
             arg.parameters.layout.forEach((id) => {
                 if (paramIds.includes(id)) {
                     const paramSpec = arg.parameters.specs[id];
                     parameterSpecs.push(paramSpec);
                     defaultParams[id] = paramSpec.data.defaultValue;
+                    const isOutput =
+                        paramSpec.original.text_options &&
+                        paramSpec.original.text_options.is_output_name === 1;
+                    if (!isOutput) {
+                        // if it's not an "output", it's a file
+                        fileParams.push(id);
+                    }
                 }
             });
+            model.setItem('fileParamIds', fileParams);
             model.setItem('parameterSpecs', parameterSpecs);
             model.setItem('defaultParams', defaultParams);
             return Promise.all(
                 initialParams.map((paramRow) => {
                     return addRow(paramRow);
                 })
-            ).catch((error) => {
-                throw new Error(`Unable to start filePathWidget: ${error}`);
+            )
+                .then(() => {
+                    // once all rows are set up and we have the data model
+                    // disable all relevant files from each input widget.
+                    // TODO: set this up to disable files from each column (i.e. parameter id) instead
+                    // TODO: set this widget up to link filetypes to parameter ids. Work also needed in
+                    // bulkImportWidget.js and configure.js.
+                    updateDisabledFileValues();
+                })
+                .catch((error) => {
+                    throw new Error(`Unable to start filePathWidget: ${error}`);
+                });
+        }
+
+        /**
+         * Gets all the selected files and tells all file input widgets to make those disabled.
+         * So the user can only select one file from the list.
+         */
+        function updateDisabledFileValues() {
+            const values = getAllSelectedFiles();
+            getAllFileParameterWidgets().forEach((widget) => {
+                widget.bus.emit('set-disabled-values', { values });
+            });
+        }
+
+        /**
+         * Goes through all current rows and builds an array of all values for the given parameter.
+         * @param {string} paramId
+         */
+        function getParameterValues(paramId) {
+            return getAllRowElements(paramId, 'values');
+        }
+
+        /**
+         * Returns the list of all selected files among all file input widgets.
+         * This filters out any null values.
+         * @returns an array of strings
+         */
+        function getAllSelectedFiles() {
+            return model.getItem('fileParamIds').reduce((acc, paramId) => {
+                return acc.concat(getParameterValues(paramId).filter((value) => value !== null));
+            }, []);
+        }
+
+        /**
+         * Returns all widgets used for file parameters.
+         * @returns an array of widgets
+         */
+        function getAllFileParameterWidgets() {
+            return model.getItem('fileParamIds').reduce((acc, paramId) => {
+                return acc.concat(getParameterWidgets(paramId));
+            }, []);
+        }
+
+        /**
+         * Returns an array of all widgets for a given parameter id, extracted from each row.
+         * @param {string} paramId
+         */
+        function getParameterWidgets(paramId) {
+            return getAllRowElements(paramId, 'widgets');
+        }
+
+        /**
+         * Returns either widgets or values for one parameter id as an Array of elements extracted from all rows.
+         * @param {string} paramId the parameter to get the element for
+         * @param {string} element one of 'values', 'widgets'
+         * @returns
+         */
+        function getAllRowElements(paramId, element) {
+            return Object.values(dataModel.rows).map((row) => {
+                return row[element][paramId];
             });
         }
 
         function stop() {
             // Stop all widgets. Note this is an array of arrays of promises.
             const widgetStopProms = Object.values(dataModel.rows).map((row) => {
-                return row.widgets.map((widget) => {
+                return Object.values(row.widgets).map((widget) => {
                     return widget.stop();
                 });
             });
@@ -630,9 +729,9 @@ define([
         }
 
         return {
-            start: start,
-            stop: stop,
-            bus: bus,
+            start,
+            stop,
+            bus,
         };
     }
 

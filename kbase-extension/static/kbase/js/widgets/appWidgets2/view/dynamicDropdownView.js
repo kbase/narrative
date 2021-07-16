@@ -1,11 +1,9 @@
-define([
-    'bluebird',
-    'kb_common/html',
-    'common/ui',
-    'common/props',
-    'bootstrap',
-    'css!font-awesome',
-], (Promise, html, UI, Props) => {
+define(['bluebird', 'common/html', 'common/ui', 'common/props', 'bootstrap', 'css!font-awesome'], (
+    Promise,
+    html,
+    UI,
+    Props
+) => {
     'use strict';
 
     const t = html.tag,
@@ -24,10 +22,6 @@ define([
             });
         let parent, container, ui;
 
-        // INIT
-
-        setModelValue(config.initialValue);
-
         // CONTROL
 
         function setControlValue(newValue) {
@@ -44,10 +38,12 @@ define([
                 return;
             }
             model.setItem('value', value);
+            syncModelToControl();
         }
 
         function resetModelValue() {
             setModelValue(spec.data.defaultValue);
+            syncModelToControl();
         }
 
         // sync the dom to the model.
@@ -78,18 +74,6 @@ define([
             );
         }
 
-        // EVENT HANDLERS
-
-        /*
-            Focus the input control.
-        */
-        function doFocus() {
-            const node = ui.getElement('input-container.input');
-            if (node) {
-                node.focus();
-            }
-        }
-
         // LIFECYCLE API
 
         function start(arg) {
@@ -99,13 +83,14 @@ define([
                 ui = UI.make({ node: container });
 
                 container.innerHTML = render();
+                setModelValue(config.initialValue);
                 syncModelToControl();
 
                 bus.on('reset-to-defaults', () => {
                     resetModelValue();
                 });
-                bus.on('focus', () => {
-                    doFocus();
+                bus.on('update', (message) => {
+                    setModelValue(message.value);
                 });
             });
         }

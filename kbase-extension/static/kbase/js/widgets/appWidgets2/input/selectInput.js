@@ -41,7 +41,7 @@ define([
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(config.channelName),
             model = {
-                availableValues: config.availableValues || spec.data.constraints.options,
+                availableValues: config.availableValues || spec.data.constraints.options || [],
                 value: config.initialValue,
                 disabledValues: new Set(config.disabledValues || []),
             };
@@ -122,9 +122,7 @@ define([
                 const attribs = {
                     value: item.value,
                 };
-                if (item.value === model.value) {
-                    attribs.selected = true;
-                } else if (model.disabledValues.has(item.value)) {
+                if (model.disabledValues.has(item.value)) {
                     attribs.disabled = true;
                 }
                 return option(attribs, item.display);
@@ -154,24 +152,28 @@ define([
             if (oldValue !== value) {
                 model.value = value;
             }
-            setValuesEnabled([value], true);
-            setValuesEnabled([oldValue], !model.disabledValues.has(oldValue));
+            setDisabledValuesFromModel();
         }
 
         function resetModelValue() {
             setModelValue(spec.data.defaultValue);
         }
 
-        function setValuesEnabled(values, enabled) {
+        /**
+         * Sets which options should be disabled based on the set of values currently
+         * in the model.disabledValues set.
+         *
+         * Any options not in that set are enabled, all others set disabled. This doesn't
+         * include the currently selected option, which is always enabled.
+         */
+        function setDisabledValuesFromModel() {
             const control = ui.getElement('input-container.input');
-            values.forEach((value) => {
-                if (value !== model.value && model.availableValuesSet.has(value)) {
-                    const option = control.querySelector(`option[value="${value}"]`);
-                    if (enabled) {
-                        option.removeAttribute('disabled');
-                    } else {
-                        option.setAttribute('disabled', true);
-                    }
+            model.availableValuesSet.forEach((value) => {
+                const option = control.querySelector(`option[value="${value}"]`);
+                if (model.disabledValues.has(value) && value !== model.value) {
+                    option.setAttribute('disabled', true);
+                } else {
+                    option.removeAttribute('disabled');
                 }
             });
         }
@@ -188,11 +190,11 @@ define([
                 $(ui.getElement('input-container.input'))
                     .select2({
                         allowClear: true,
-                        placeholder: {
-                            id: 'select an option',
-                        },
+                        placeholder: 'select an option',
                         width: '100%',
                     })
+                    .val(model.value)
+                    .trigger('change') // this goes first so we don't trigger extra unnecessary bus messages
                     .on('change', () => {
                         handleChanged();
                     })
@@ -208,12 +210,11 @@ define([
                     setModelValue(message.value);
                 });
 
-                channel.on('disable-values', (message) => {
-                    setValuesEnabled(message.values, false);
-                });
-
-                channel.on('enable-values', (message) => {
-                    setValuesEnabled(message.values, true);
+                // this replaces the disabledValues set in the model
+                // and updates the view to match
+                channel.on('set-disabled-values', (message) => {
+                    model.disabledValues = new Set(message.values);
+                    setDisabledValuesFromModel();
                 });
 
                 autoValidate();

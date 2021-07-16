@@ -82,7 +82,7 @@ define([
 
         describe('evaluateAppConfig tests', () => {
             // happy path tests with >= 1 file path sets
-            [1, 2, 5 /* 3, sir */].forEach((fileCount) => {
+            [1, 2, 5].forEach((fileCount) => {
                 it(`should return "complete" with ${fileCount} file paths in a ready state`, async () => {
                     // Array interpolation cleverness from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from
                     const files = Array.from({ length: fileCount }, (v, x) => `file${x + 1}`);

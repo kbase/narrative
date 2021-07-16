@@ -46,6 +46,19 @@ class JobManager(object):
             JobManager.__instance = object.__new__(cls)
         return JobManager.__instance
 
+    def _reorder_parents_children(self, states: dict) -> dict:
+        ordering = []
+        for job_id, state in states.items():
+            if state.get("batch_job"):
+                ordering.append(job_id)
+            else:
+                ordering.insert(0, job_id)
+        states = {
+            job_id: states[job_id] for job_id in ordering
+        }
+
+        return states
+
     def initialize_jobs(self):
         """
         Initializes this JobManager.
@@ -67,15 +80,27 @@ class JobManager(object):
                     "exclude_fields": JOB_INIT_EXCLUDED_JOB_STATE_FIELDS,
                 }
             )
-            self._running_jobs = dict()
         except Exception as e:
             kblogging.log_event(self._log, "init_error", {"err": str(e)})
             new_e = transform_job_exception(e)
             raise new_e
 
+        self._running_jobs = dict()
+        job_states = self._reorder_parents_children(job_states)
+
         for job_state in job_states.values():
+            child_jobs = []
+            if job_state.get("batch_job"):
+                child_jobs = [
+                    self.get_job(child_id)
+                    for child_id in job_state.get("child_jobs", [])
+                ]
+
             self.register_new_job(
-                job=Job.from_state(job_state),
+                job=Job.from_state(
+                    job_state,
+                    children=child_jobs
+                ),
                 refresh=int(job_state.get("status") not in TERMINAL_STATUSES)
             )
 
@@ -150,7 +175,7 @@ class JobManager(object):
                     state["created"] / 1000.0
                 ).strftime("%Y-%m-%d %H:%M:%S")
                 state["run_time"] = "Not started"
-                state["owner"] = job.owner
+                state["owner"] = job.user
                 state["app_id"] = job.app_id
                 exec_start = state.get("running", None)
 
@@ -188,7 +213,7 @@ class JobManager(object):
                     <td>{{ j.job_id|e }}</td>
                     <td>{{ j.app_id|e }}</td>
                     <td>{{ j.created|e }}</td>
-                    <td>{{ j.owner|e }}</td>
+                    <td>{{ j.user|e }}</td>
                     <td>{{ j.status|e }}</td>
                     <td>{{ j.run_time|e }}</td>
                     <td>{% if j.finish_time %}{{ j.finish_time|e }}{% else %}Incomplete{% endif %}</td>
@@ -222,7 +247,7 @@ class JobManager(object):
         # These are already post-processed and ready to return.
         for job_id in job_ids:
             job = self.get_job(job_id)
-            if job.terminal_state:
+            if job.was_terminal:
                 job_states[job_id] = job.output_state()
             elif states and job_id in states:
                 state = states[job_id]
@@ -376,7 +401,7 @@ class JobManager(object):
             raise ValueError(f"No job present with id {job_id}")
 
         # otherwise, our job ID is fine
-        if self.get_job(job_id).terminal_state:
+        if self.get_job(job_id).was_terminal:
             return True
 
         return self._cancel_job(job_id)
@@ -394,7 +419,7 @@ class JobManager(object):
         checked_jobs = self._check_job_list(job_id_list)
 
         for job_id in checked_jobs["job_id_list"]:
-            if not self.get_job(job_id).terminal_state:
+            if not self.get_job(job_id).was_terminal:
                 self._cancel_job(job_id)
 
         job_states = self._construct_job_state_set(checked_jobs["job_id_list"])

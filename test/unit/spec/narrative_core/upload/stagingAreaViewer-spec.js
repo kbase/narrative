@@ -318,6 +318,8 @@ define([
             expect(headerCheckbox.attr('aria-label')).toContain(
                 'Select to import all files checkbox'
             );
+
+            expect(tableCheckbox.prop('checked')).toBeTruthy();
         });
 
         it('should render the import selected button', async () => {
@@ -338,12 +340,12 @@ define([
                 .siblings('select');
 
             selectDropdown.val('sra_reads').trigger('change').trigger('select2:select');
+            const importButton = container.querySelector('.kb-staging-table-import__button');
+            expect(importButton.disabled).toBeFalse();
 
             //check the checkbox
             $container.find('input.kb-staging-table-body__checkbox-input:enabled').click();
-
-            const button = container.querySelector('.kb-staging-table-import__button');
-            expect(button.disabled).toBeFalse();
+            expect(importButton.disabled).toBeTrue();
         });
 
         describe('Should initialize an import app', () => {
@@ -445,10 +447,8 @@ define([
                         .find(`[data-download='${testCase.filename}']`)
                         .siblings('select');
 
+                    //this auto-checks the checkbox
                     selectDropdown.val('sra_reads').trigger('change').trigger('select2:select');
-
-                    //check the checkbox
-                    $container.find('input.kb-staging-table-body__checkbox-input:enabled').click();
 
                     const button = container.querySelector('.kb-staging-table-import__button');
                     expect(button.disabled).toBeFalse();

@@ -570,17 +570,19 @@ define([
                                 });
                         });
 
-                    //find the element
+                    // find the element
                     const importDropdown = $('td:eq(5)', row).find('select');
 
-                    /*
-                        when a user selects a data type from the import as dropdown
-                        enable the checkbox for that row (so user can import)
-                        make sure the "select all" checkbox is also enabled
-
-                        accepts dataType: string (the identifier of what the data type is e.g. sra_reads)
-                    */
-                    function enableCheckboxes(dataType) {
+                    /**
+                     * When a data type is selected from the "Import As..." dropdown,
+                     * enable the checkbox for that row (so user can import).
+                     * Make sure the "select all" checkbox is also enabled.
+                     *
+                     * @param {string} dataType the identifier of what the data type is, e.g.: sra_reads
+                     * @param {boolean} check if true, checks the now-enabled checkbox. Should generally only
+                     *  be true if this is called from a user selection event.
+                     */
+                    function enableCheckboxes(dataType, check) {
                         $('td:eq(5)', row)
                             .find('.select2-selection')
                             .addClass(`${cssBaseClass}-body__import-type-selected`);
@@ -597,6 +599,13 @@ define([
                         $('#staging_table_select_all')
                             .prop('disabled', false)
                             .attr('aria-label', 'Select to import all files checkbox');
+
+                        if (check) {
+                            $('td:eq(0)', row)
+                                .find(`.${cssBaseClass}-body__checkbox-input`)
+                                .prop('checked', true);
+                            stagingAreaViewer.enableImportButton();
+                        }
                     }
 
                     const storedFileData = stagingAreaViewer.selectedFileTypes[rowFileName];
@@ -644,7 +653,7 @@ define([
                         rowFileData.dataType = dataType;
                         stagingAreaViewer.selectedFileTypes[rowFileName] = rowFileData;
 
-                        enableCheckboxes(dataType);
+                        enableCheckboxes(dataType, true);
                     });
 
                     $('td:eq(5)', row)

@@ -3,7 +3,7 @@
         "job_id": "5d64935ab215ad4128de94d6",
         "user": "fake_test_user",
         "authstrat": "kbaseworkspace",
-        "wsid": "9999",
+        "wsid": 9999,
         "status": "completed",
         "updated": 1566860098000,
         "created": 1566860088000,
@@ -42,7 +42,7 @@
         "job_id": "5d64935cb215ad4128de94d7",
         "user": "tgu2",
         "authstrat": "kbaseworkspace",
-        "wsid": "9999",
+        "wsid": 9999,
         "status": "created",
         "updated": 1572462965487,
         "created": 1572462971988,
@@ -58,10 +58,7 @@
             ],
             "service_ver": "1.2.3",
             "app_id": "MADE_UP_APP/job_created",
-            "source_ws_objects": [
-                "a/b/c",
-                "e/d"
-            ],
+            "source_ws_objects": ["a/b/c", "e/d"],
             "parent_job_id": "9998",
             "narrative_cell_info": {
                 "cell_id": "9329ac6c-604c-42a9-aca2-a15dba6278ce",
@@ -74,7 +71,7 @@
         "job_id": "5d64935cb215ad4128de94d8",
         "user": "wjriehl",
         "authstrat": "kbaseworkspace",
-        "wsid": "9999",
+        "wsid": 9999,
         "status": "running",
         "updated": 1572462965490,
         "created": 1572462971990,
@@ -91,10 +88,7 @@
             ],
             "service_ver": "2.0.0",
             "app_id": "MADE_UP_APP/job_running",
-            "source_ws_objects": [
-                "a/b/c",
-                "e/d"
-            ],
+            "source_ws_objects": ["a/b/c", "e/d"],
             "parent_job_id": null,
             "narrative_cell_info": {
                 "cell_id": "9329ac6c-604c-42a9-aca2-a15dba6278cf",
@@ -107,7 +101,7 @@
         "job_id": "5d64935cb215ad4128de94d9",
         "user": "fake_test_user",
         "authstrat": "kbaseworkspace",
-        "wsid": "9999",
+        "wsid": 9999,
         "status": "terminated",
         "updated": 1572462965495,
         "created": 1572462971995,
@@ -124,10 +118,7 @@
             ],
             "service_ver": "4.0.0",
             "app_id": "MADE_UP_APP/job_terminated",
-            "source_ws_objects": [
-                "a/b/c",
-                "e/d"
-            ],
+            "source_ws_objects": ["a/b/c", "e/d"],
             "parent_job_id": null,
             "narrative_cell_info": {
                 "cell_id": "9329ac6c-604c-42a9-aca2-a15dba6278cf",
@@ -135,5 +126,401 @@
                 "run_id": "6546971e-757a-4a26-8439-325497c6d843"
             }
         }
+    },
+    "60e7112887b7e512a899c8f1": {
+        "authstrat": "kbaseworkspace",
+        "batch_job": true,
+        "child_jobs": [
+            "60e7112887b7e512a899c8f2",
+            "60e7112887b7e512a899c8f3",
+            "60e7112887b7e512a899c8f4",
+            "60e7112887b7e512a899c8f5",
+            "60e71159fce9347f2adeaac6",
+            "60e7165f3e91121969554d82",
+            "60e717d78ac80701062efe63"
+        ],
+        "created": 1625755944000,
+        "job_id": "60e7112887b7e512a899c8f1",
+        "job_input": {
+            "app_id": "batch",
+            "method": "batch",
+            "narrative_cell_info": {},
+            "service_ver": "batch",
+            "source_ws_objects": []
+        },
+        "retry_count": 0,
+        "retry_ids": [],
+        "retry_saved_toggle": false,
+        "status": "created",
+        "updated": 1625755944607,
+        "user": "alien_test_user",
+        "wsid": 10538
+    },
+    "60e7112887b7e512a899c8f2": {
+        "authstrat": "kbaseworkspace",
+        "batch_id": "60e7112887b7e512a899c8f1",
+        "batch_job": false,
+        "child_jobs": [],
+        "created": 1625755944000,
+        "finished": 1625756074922,
+        "job_id": "60e7112887b7e512a899c8f2",
+        "job_input": {
+            "app_id": "kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging",
+            "method": "kb_uploadmethods.import_reads_from_staging",
+            "narrative_cell_info": {
+                "cell_id": "58356bf5-2e81-441a-b1ee-01b38eddefb0",
+                "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
+                "tag": "release",
+                "token_id": "a3b8f5c6-ccfc-4b17-9c78-7d182eb914be"
+            },
+            "params": [
+                {
+                    "fastq_fwd_staging_file_name": "small.forward.fq",
+                    "import_type": "FASTQ/FASTA",
+                    "insert_size_mean": null,
+                    "insert_size_std_dev": null,
+                    "interleaved": "1",
+                    "name": "small.forward.fq",
+                    "read_orientation_outward": 0,
+                    "sequencing_tech": "Illumina",
+                    "single_genome": 1,
+                    "workspace_name": "ialarmedalien:narrative_1623776017922"
+                }
+            ],
+            "parent_job_id": "60e7112887b7e512a899c8f1",
+            "service_ver": "72eab31ed0b068fbe659973256c36aa40786964b",
+            "source_ws_objects": [],
+            "wsid": 10538
+        },
+        "job_output": {
+            "id": "60e7112887b7e512a899c8f2",
+            "result": [
+                {
+                    "obj_ref": "62425/2/12",
+                    "report_name": "kb_sra_upload_report_af468a02-4278-40af-9536-0bdef1f050db",
+                    "report_ref": "62425/18/1"
+                }
+            ],
+            "version": "1.1"
+        },
+        "queued": 1625755944353,
+        "retry_count": 0,
+        "retry_ids": [],
+        "retry_saved_toggle": false,
+        "running": 1625755954453,
+        "status": "completed",
+        "updated": 1625756075071,
+        "user": "alien_test_user",
+        "wsid": 10538
+    },
+    "60e7112887b7e512a899c8f3": {
+        "authstrat": "kbaseworkspace",
+        "batch_id": "60e7112887b7e512a899c8f1",
+        "batch_job": false,
+        "child_jobs": [],
+        "created": 1625755944000,
+        "finished": 1625755985250,
+        "job_id": "60e7112887b7e512a899c8f3",
+        "job_input": {
+            "app_id": "kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging",
+            "method": "kb_uploadmethods.import_reads_from_staging",
+            "narrative_cell_info": {
+                "cell_id": "58356bf5-2e81-441a-b1ee-01b38eddefb0",
+                "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
+                "tag": "release",
+                "token_id": "a3b8f5c6-ccfc-4b17-9c78-7d182eb914be"
+            },
+            "params": [
+                {
+                    "fastq_fwd_staging_file_name": "small.reverse.fq",
+                    "import_type": "FASTQ/FASTA",
+                    "insert_size_mean": null,
+                    "insert_size_std_dev": null,
+                    "interleaved": "1",
+                    "name": "small.reverse.fq",
+                    "read_orientation_outward": 0,
+                    "sequencing_tech": "Illumina",
+                    "single_genome": 1,
+                    "workspace_name": "ialarmedalien:narrative_1623776017922"
+                }
+            ],
+            "parent_job_id": "60e7112887b7e512a899c8f1",
+            "service_ver": "72eab31ed0b068fbe659973256c36aa40786964b",
+            "source_ws_objects": [],
+            "wsid": 10538
+        },
+        "queued": 1625755944442,
+        "retry_count": 0,
+        "retry_ids": [],
+        "retry_saved_toggle": false,
+        "running": 1625755952599,
+        "status": "terminated",
+        "terminated_code": 0,
+        "updated": 1625755985250,
+        "user": "alien_test_user",
+        "wsid": 10538
+    },
+    "60e7112887b7e512a899c8f4": {
+        "authstrat": "kbaseworkspace",
+        "batch_id": "60e7112887b7e512a899c8f1",
+        "batch_job": false,
+        "child_jobs": [],
+        "created": 1625755944000,
+        "finished": 1625755977130,
+        "job_id": "60e7112887b7e512a899c8f4",
+        "job_input": {
+            "app_id": "kb_uploadmethods/import_fastq_noninterleaved_as_reads_from_staging",
+            "method": "kb_uploadmethods.import_reads_from_staging",
+            "narrative_cell_info": {
+                "cell_id": "58356bf5-2e81-441a-b1ee-01b38eddefb0",
+                "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
+                "tag": "release",
+                "token_id": "a3b8f5c6-ccfc-4b17-9c78-7d182eb914be"
+            },
+            "params": [
+                {
+                    "fastq_fwd_staging_file_name": "small.forward.fq",
+                    "fastq_rev_staging_file_name": "small.reverse.fq",
+                    "import_type": "FASTQ/FASTA",
+                    "insert_size_mean": null,
+                    "insert_size_std_dev": null,
+                    "interleaved": "0",
+                    "name": "jupyter_nbconvert_config.py",
+                    "read_orientation_outward": 0,
+                    "sequencing_tech": "Illumina",
+                    "single_genome": 1,
+                    "workspace_name": "ialarmedalien:narrative_1623776017922"
+                }
+            ],
+            "parent_job_id": "60e7112887b7e512a899c8f1",
+            "service_ver": "72eab31ed0b068fbe659973256c36aa40786964b",
+            "source_ws_objects": [],
+            "wsid": 10538
+        },
+        "queued": 1625755944519,
+        "retry_count": 2,
+        "retry_ids": ["60e71159fce9347f2adeaac6", "60e7165f3e91121969554d82"],
+        "retry_saved_toggle": false,
+        "running": 1625755952563,
+        "status": "terminated",
+        "terminated_code": 0,
+        "updated": 1625755977130,
+        "user": "alien_test_user",
+        "wsid": 10538
+    },
+    "60e7112887b7e512a899c8f5": {
+        "authstrat": "kbaseworkspace",
+        "batch_id": "60e7112887b7e512a899c8f1",
+        "batch_job": false,
+        "child_jobs": [],
+        "created": 1625755944000,
+        "error": {
+            "code": -32000,
+            "error": "Traceback (most recent call last):\n  File \"/kb/module/bin/../lib/kb_uploadmethods/kb_uploadmethodsServer.py\", line 101, in _call_method\n    result = method(ctx, *params)\n  File \"/kb/module/lib/kb_uploadmethods/kb_uploadmethodsImpl.py\", line 914, in import_reads_from_staging\n    returnVal = importer.import_reads_from_staging(params)\n  File \"/kb/module/lib/kb_uploadmethods/Utils/ImportReadsUtil.py\", line 75, in import_reads_from_staging\n    return self._run_sra_importer(params)\n  File \"/kb/module/lib/kb_uploadmethods/Utils/ImportReadsUtil.py\", line 51, in _run_sra_importer\n    return_val = self.sra_importer.import_sra_from_staging(sra_importer_params)\n  File \"/kb/module/lib/kb_uploadmethods/Utils/ImportSRAUtil.py\", line 184, in import_sra_from_staging\n    download_staging_file_params).get('copy_file_path')\n  File \"/kb/module/lib/installed_clients/DataFileUtilClient.py\", line 484, in download_staging_file\n    [params], self._service_ver, context)\n  File \"/kb/module/lib/installed_clients/baseclient.py\", line 253, in run_job\n    job_state = self._check_job(mod, job_id)\n  File \"/kb/module/lib/installed_clients/baseclient.py\", line 220, in _check_job\n    return self._call(self.url, service + '._check_job', [job_id])\n  File \"/kb/module/lib/installed_clients/baseclient.py\", line 187, in _call\n    raise ServerError(**err['error'])\ninstalled_clients.baseclient.ServerError: Server error: -32000. (2, 'No such file or directory')\nTraceback (most recent call last):\n  File \"/kb/module/bin/../lib/DataFileUtil/DataFileUtilServer.py\", line 101, in _call_method\n    result = method(ctx, *params)\n  File \"/kb/module/lib/DataFileUtil/DataFileUtilImpl.py\", line 1488, in download_staging_file\n    shutil.copy2(staging_file_path, self.tmp)\n  File \"/miniconda/lib/python3.6/shutil.py\", line 257, in copy2\n    copyfile(src, dst, follow_symlinks=follow_symlinks)\n  File \"/miniconda/lib/python3.6/shutil.py\", line 120, in copyfile\n    with open(src, 'rb') as fsrc:\nFileNotFoundError: [Errno 2] No such file or directory: '/data/bulk/ialarmedalien/jupyter_console_config.py'\n\n",
+            "message": "\"(2, 'No such file or directory')\"",
+            "name": "Server error"
+        },
+        "error_code": 1,
+        "errormsg": "Job output contains an error",
+        "finished": 1625755962015,
+        "job_id": "60e7112887b7e512a899c8f5",
+        "job_input": {
+            "app_id": "kb_uploadmethods/import_sra_as_reads_from_staging",
+            "method": "kb_uploadmethods.import_reads_from_staging",
+            "narrative_cell_info": {
+                "cell_id": "58356bf5-2e81-441a-b1ee-01b38eddefb0",
+                "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
+                "tag": "release",
+                "token_id": "a3b8f5c6-ccfc-4b17-9c78-7d182eb914be"
+            },
+            "params": [
+                {
+                    "import_type": "SRA",
+                    "insert_size_mean": null,
+                    "insert_size_std_dev": null,
+                    "interleaved": "1",
+                    "name": "jupyter_console_config.py",
+                    "read_orientation_outward": 0,
+                    "sequencing_tech": "Illumina",
+                    "single_genome": 1,
+                    "sra_staging_file_name": "jupyter_console_config.py",
+                    "workspace_name": "ialarmedalien:narrative_1623776017922"
+                }
+            ],
+            "parent_job_id": "60e7112887b7e512a899c8f1",
+            "service_ver": "72eab31ed0b068fbe659973256c36aa40786964b",
+            "source_ws_objects": [],
+            "wsid": 10538
+        },
+        "queued": 1625755944590,
+        "retry_count": 1,
+        "retry_ids": ["60e717d78ac80701062efe63"],
+        "retry_saved_toggle": false,
+        "running": 1625755952628,
+        "status": "error",
+        "updated": 1625755962079,
+        "user": "alien_test_user",
+        "wsid": 10538
+    },
+    "60e71159fce9347f2adeaac6": {
+        "authstrat": "kbaseworkspace",
+        "batch_id": "60e7112887b7e512a899c8f1",
+        "batch_job": false,
+        "child_jobs": [],
+        "created": 1625755993000,
+        "finished": 1625756123416,
+        "job_id": "60e71159fce9347f2adeaac6",
+        "job_input": {
+            "app_id": "kb_uploadmethods/import_fastq_noninterleaved_as_reads_from_staging",
+            "method": "kb_uploadmethods.import_reads_from_staging",
+            "narrative_cell_info": {
+                "cell_id": "58356bf5-2e81-441a-b1ee-01b38eddefb0",
+                "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
+                "tag": "release",
+                "token_id": "a3b8f5c6-ccfc-4b17-9c78-7d182eb914be"
+            },
+            "params": [
+                {
+                    "fastq_fwd_staging_file_name": "small.forward.fq",
+                    "fastq_rev_staging_file_name": "small.reverse.fq",
+                    "import_type": "FASTQ/FASTA",
+                    "insert_size_mean": null,
+                    "insert_size_std_dev": null,
+                    "interleaved": "0",
+                    "name": "jupyter_nbconvert_config.py",
+                    "read_orientation_outward": 0,
+                    "sequencing_tech": "Illumina",
+                    "single_genome": 1,
+                    "workspace_name": "ialarmedalien:narrative_1623776017922"
+                }
+            ],
+            "parent_job_id": "60e7112887b7e512a899c8f1",
+            "service_ver": "72eab31ed0b068fbe659973256c36aa40786964b",
+            "source_ws_objects": [],
+            "wsid": 10538
+        },
+        "job_output": {
+            "id": "60e71159fce9347f2adeaac6",
+            "result": [
+                {
+                    "obj_ref": "62425/17/1",
+                    "report_name": "kb_sra_upload_report_4ffc6219-0260-4f1d-8b4d-5083e0595150",
+                    "report_ref": "62425/19/1"
+                }
+            ],
+            "version": "1.1"
+        },
+        "queued": 1625755993355,
+        "retry_count": 0,
+        "retry_ids": [],
+        "retry_parent": "60e7112887b7e512a899c8f4",
+        "retry_saved_toggle": true,
+        "running": 1625756004391,
+        "status": "completed",
+        "updated": 1625756123553,
+        "user": "alien_test_user",
+        "wsid": 10538
+    },
+    "60e7165f3e91121969554d82": {
+        "authstrat": "kbaseworkspace",
+        "batch_id": "60e7112887b7e512a899c8f1",
+        "batch_job": false,
+        "child_jobs": [],
+        "created": 1625757279000,
+        "job_id": "60e7165f3e91121969554d82",
+        "job_input": {
+            "app_id": "kb_uploadmethods/import_fastq_noninterleaved_as_reads_from_staging",
+            "method": "kb_uploadmethods.import_reads_from_staging",
+            "narrative_cell_info": {
+                "cell_id": "58356bf5-2e81-441a-b1ee-01b38eddefb0",
+                "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
+                "tag": "release",
+                "token_id": "a3b8f5c6-ccfc-4b17-9c78-7d182eb914be"
+            },
+            "params": [
+                {
+                    "fastq_fwd_staging_file_name": "small.forward.fq",
+                    "fastq_rev_staging_file_name": "small.reverse.fq",
+                    "import_type": "FASTQ/FASTA",
+                    "insert_size_mean": null,
+                    "insert_size_std_dev": null,
+                    "interleaved": "0",
+                    "name": "jupyter_nbconvert_config.py",
+                    "read_orientation_outward": 0,
+                    "sequencing_tech": "Illumina",
+                    "single_genome": 1,
+                    "workspace_name": "ialarmedalien:narrative_1623776017922"
+                }
+            ],
+            "parent_job_id": "60e7112887b7e512a899c8f1",
+            "service_ver": "72eab31ed0b068fbe659973256c36aa40786964b",
+            "source_ws_objects": [],
+            "wsid": 10538
+        },
+        "queued": 1625757279744,
+        "retry_count": 0,
+        "retry_ids": [],
+        "retry_parent": "60e7112887b7e512a899c8f4",
+        "retry_saved_toggle": true,
+        "running": 1625757285899,
+        "status": "running",
+        "updated": 1625757405384,
+        "user": "alien_test_user",
+        "wsid": 10538
+    },
+    "60e717d78ac80701062efe63": {
+        "authstrat": "kbaseworkspace",
+        "batch_id": "60e7112887b7e512a899c8f1",
+        "batch_job": false,
+        "child_jobs": [],
+        "created": 1625757655000,
+        "error": {
+            "code": -32000,
+            "error": "Traceback (most recent call last):\n  File \"/kb/module/bin/../lib/kb_uploadmethods/kb_uploadmethodsServer.py\", line 101, in _call_method\n    result = method(ctx, *params)\n  File \"/kb/module/lib/kb_uploadmethods/kb_uploadmethodsImpl.py\", line 914, in import_reads_from_staging\n    returnVal = importer.import_reads_from_staging(params)\n  File \"/kb/module/lib/kb_uploadmethods/Utils/ImportReadsUtil.py\", line 75, in import_reads_from_staging\n    return self._run_sra_importer(params)\n  File \"/kb/module/lib/kb_uploadmethods/Utils/ImportReadsUtil.py\", line 51, in _run_sra_importer\n    return_val = self.sra_importer.import_sra_from_staging(sra_importer_params)\n  File \"/kb/module/lib/kb_uploadmethods/Utils/ImportSRAUtil.py\", line 187, in import_sra_from_staging\n    fastq_file_path = self._sra_to_fastq(scratch_sra_file_path, params)\n  File \"/kb/module/lib/kb_uploadmethods/Utils/ImportSRAUtil.py\", line 63, in _sra_to_fastq\n    self._run_command(command)\n  File \"/kb/module/lib/kb_uploadmethods/Utils/ImportSRAUtil.py\", line 44, in _run_command\n    raise ValueError(error_msg)\nValueError: Error running command:\n/kb/deployment/bin/fastq-dump --split-3 -T -O /kb/module/work/tmp/import_SRA_35a3b5a4-75c6-415c-ab60-f8daed1a8e2e/500f1795-87eb-4280-a312-29972cc95157 /kb/module/work/tmp/cab0dd1d-6730-40ce-8aac-4c63a1ef9d82/jupyter_console_config.py\nExit Code: 3\nOutput:\nb''\n",
+            "message": "\"Error running command:\\n/kb/deployment/bin/fastq-dump --split-3 -T -O /kb/module/work/tmp/import_SRA_35a3b5a4-75c6-415c-ab60-f8daed1a8e2e/500f1795-87eb-4280-a312-29972cc95157 /kb/module/work/tmp/cab0dd1d-6730-40ce-8aac-4c63a1ef9d82/jupyter_console_config.py\\nExit Code: 3\\nOutput:\\nb''\"",
+            "name": "Server error"
+        },
+        "error_code": 1,
+        "errormsg": "Job output contains an error",
+        "finished": 1625757676688,
+        "job_id": "60e717d78ac80701062efe63",
+        "job_input": {
+            "app_id": "kb_uploadmethods/import_sra_as_reads_from_staging",
+            "method": "kb_uploadmethods.import_reads_from_staging",
+            "narrative_cell_info": {
+                "cell_id": "58356bf5-2e81-441a-b1ee-01b38eddefb0",
+                "run_id": "5465d5ac-8113-4454-837b-5401c6780682",
+                "tag": "release",
+                "token_id": "a3b8f5c6-ccfc-4b17-9c78-7d182eb914be"
+            },
+            "params": [
+                {
+                    "import_type": "SRA",
+                    "insert_size_mean": null,
+                    "insert_size_std_dev": null,
+                    "interleaved": "1",
+                    "name": "jupyter_console_config.py",
+                    "read_orientation_outward": 0,
+                    "sequencing_tech": "Illumina",
+                    "single_genome": 1,
+                    "sra_staging_file_name": "jupyter_console_config.py",
+                    "workspace_name": "ialarmedalien:narrative_1623776017922"
+                }
+            ],
+            "parent_job_id": "60e7112887b7e512a899c8f1",
+            "service_ver": "72eab31ed0b068fbe659973256c36aa40786964b",
+            "source_ws_objects": [],
+            "wsid": 10538
+        },
+        "queued": 1625757655956,
+        "retry_count": 0,
+        "retry_ids": [],
+        "retry_parent": "60e7112887b7e512a899c8f5",
+        "retry_saved_toggle": true,
+        "running": 1625757662469,
+        "status": "error",
+        "updated": 1625757676740,
+        "user": "alien_test_user",
+        "wsid": 10538
     }
 }

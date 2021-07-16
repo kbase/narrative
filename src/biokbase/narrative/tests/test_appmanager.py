@@ -1105,7 +1105,7 @@ class AppManagerTestCase(unittest.TestCase):
         else:
             expected_keys[0].append("job_id")
             expected_values[0]["job_id"] = self.test_job_id
-        for i in range(num_jobs):
+        for _ in range(num_jobs):
             expected_messages.append("new_job")
             expected_keys.append(["job_id"])
             expected_values.append({"job_id": self.test_job_id})

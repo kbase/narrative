@@ -7,6 +7,23 @@ from unittest import mock
 import biokbase.narrative.jobs.jobmanager
 from biokbase.narrative.jobs.job import Job
 from .util import ConfigTests
+from .test_job import (
+    JOB_COMPLETED,
+    JOB_CREATED,
+    JOB_RUNNING,
+    JOB_TERMINATED,
+    BATCH_PARENT,
+    BATCH_COMPLETED,
+    BATCH_TERMINATED,
+    BATCH_TERMINATED_RETRIED,
+    BATCH_ERROR_RETRIED,
+    BATCH_RETRY_COMPLETED,
+    BATCH_RETRY_RUNNING,
+    BATCH_RETRY_ERROR,
+    ALL_JOBS,
+    FINISHED_JOBS,
+    ACTIVE_JOBS,
+)
 import os
 from IPython.display import HTML
 from .narrative_mock.mockclients import (
@@ -21,15 +38,9 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 config = ConfigTests()
 test_jobs = config.load_json_file(config.get("jobs", "ee2_job_info_file"))
-# test_jobs contains jobs in the following states
-JOB_COMPLETED = "5d64935ab215ad4128de94d6"
-JOB_CREATED = "5d64935cb215ad4128de94d7"
-JOB_RUNNING = "5d64935cb215ad4128de94d8"
-JOB_TERMINATED = "5d64935cb215ad4128de94d9"
 JOB_NOT_FOUND = "job_not_found"
 
 no_id_err_str = "No job id\(s\) supplied"
-job_states_to_generate = [JOB_CREATED, JOB_RUNNING]
 
 
 def create_jm_message(r_type, job_id=None, data=None):
@@ -61,7 +72,7 @@ class JobManagerTest(unittest.TestCase):
 
     def create_job_states(self):
         # generate full job state objects
-        for job_id in job_states_to_generate:
+        for job_id in ACTIVE_JOBS:
             job_object = copy.deepcopy(self.jm._running_jobs[job_id]["job"])
             state = get_job_state(
                 job_id, biokbase.narrative.jobs.jobmanager.EXCLUDED_JOB_STATE_FIELDS
@@ -106,6 +117,15 @@ class JobManagerTest(unittest.TestCase):
             return False
         return True
 
+    @mock.patch(
+        "biokbase.narrative.jobs.jobmanager.clients.get", get_failing_mock_client
+    )
+    def test_initialize_jobs_ee2_fail(self):
+        # init jobs should fail. specifically, ee2.check_workspace_jobs should error.
+        with self.assertRaises(NarrativeException) as e:
+            self.jm.initialize_jobs()
+        self.assertIn("Job lookup failed", str(e.exception))
+
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def test_initialise_jobs(self):
         # all jobs have been removed from the JobManager
@@ -118,9 +138,7 @@ class JobManagerTest(unittest.TestCase):
 
         # redo the initialise to make sure it worked correctly
         self.jm.initialize_jobs()
-        self.assertEqual(
-            {JOB_COMPLETED, JOB_TERMINATED}, set(self.jm._completed_job_states.keys())
-        )
+        self.assertEqual(set(FINISHED_JOBS), set(self.jm._completed_job_states.keys()))
         self.assertEqual(set(self.job_ids), set(self.jm._running_jobs.keys()))
 
     def test__check_job_list_fail(self):
@@ -357,28 +375,24 @@ class JobManagerTest(unittest.TestCase):
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def test_lookup_all_job_states(self):
         states = self.jm.lookup_all_job_states()
-        self.assertEqual({JOB_CREATED, JOB_RUNNING}, set(states.keys()))
+        self.assertEqual(set(ACTIVE_JOBS), set(states.keys()))
         self.assertEqual(
             states,
-            {
-                JOB_CREATED: self.job_states[JOB_CREATED],
-                JOB_RUNNING: self.job_states[JOB_RUNNING],
-            },
+            {id: self.job_states[id] for id in ACTIVE_JOBS},
         )
 
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def test_lookup_all_job_states__ignore_refresh_flag(self):
         states = self.jm.lookup_all_job_states(ignore_refresh_flag=True)
         self.assertEqual(set(self.job_ids), set(states.keys()))
-        self.assertEqual(
-            states,
-            {
-                JOB_CREATED: self.job_states[JOB_CREATED],
-                JOB_RUNNING: self.job_states[JOB_RUNNING],
-                JOB_COMPLETED: self.jm._completed_job_states[JOB_COMPLETED],
-                JOB_TERMINATED: self.jm._completed_job_states[JOB_TERMINATED],
-            },
-        )
+        expected = {}
+        for job_id in self.job_ids:
+            if job_id in ACTIVE_JOBS:
+                expected[job_id] = self.job_states[job_id]
+            else:
+                expected[job_id] = self.jm._completed_job_states[job_id]
+
+        self.assertEqual(states, expected)
 
     # @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_mock_client)
     # def test_job_status_fetching(self):
@@ -431,15 +445,6 @@ class JobManagerTest(unittest.TestCase):
     #     msg = self.jm._comm.last_message
     #     self.assertTrue(self.jm._running_jobs[phony_id]['refresh'] == 0)
     #     self.assertIsNone(msg)
-
-    @mock.patch(
-        "biokbase.narrative.jobs.jobmanager.clients.get", get_failing_mock_client
-    )
-    def test_initialize_jobs_ee2_fail(self):
-        # init jobs should fail. specifically, ee2.check_workspace_jobs should error.
-        with self.assertRaises(NarrativeException) as e:
-            self.jm.initialize_jobs()
-        self.assertIn("Job lookup failed", str(e.exception))
 
 
 if __name__ == "__main__":

@@ -9,14 +9,26 @@ from biokbase.narrative.exception_util import JobException, NarrativeException
 from .util import ConfigTests, validate_job_state
 from .narrative_mock.mockcomm import MockComm
 from .narrative_mock.mockclients import get_mock_client, get_failing_mock_client
+from .test_job import (
+    JOB_COMPLETED,
+    JOB_CREATED,
+    JOB_RUNNING,
+    JOB_TERMINATED,
+    BATCH_PARENT,
+    BATCH_COMPLETED,
+    BATCH_TERMINATED,
+    BATCH_TERMINATED_RETRIED,
+    BATCH_ERROR_RETRIED,
+    BATCH_RETRY_COMPLETED,
+    BATCH_RETRY_RUNNING,
+    BATCH_RETRY_ERROR,
+    ALL_JOBS,
+    FINISHED_JOBS,
+    ACTIVE_JOBS,
+)
 
 config = ConfigTests()
-job_info = config.load_json_file(config.get("jobs", "ee2_job_info_file"))
-# job_info contains jobs in the following states
-JOB_COMPLETED = "5d64935ab215ad4128de94d6"
-JOB_CREATED = "5d64935cb215ad4128de94d7"
-JOB_RUNNING = "5d64935cb215ad4128de94d8"
-JOB_TERMINATED = "5d64935cb215ad4128de94d9"
+test_jobs = config.load_json_file(config.get("jobs", "ee2_job_info_file"))
 JOB_NOT_FOUND = "job_not_found"
 
 
@@ -47,7 +59,7 @@ class JobCommTestCase(unittest.TestCase):
     )
     def setUpClass(cls):
         cls.jm = biokbase.narrative.jobs.jobmanager.JobManager()
-        cls.job_ids = list(job_info.keys())
+        cls.job_ids = list(test_jobs.keys())
         os.environ["KB_WORKSPACE_ID"] = config.get("jobs", "job_test_wsname")
 
         cls.jc = biokbase.narrative.jobs.jobcomm.JobComm()
@@ -102,6 +114,7 @@ class JobCommTestCase(unittest.TestCase):
         self.assertEqual(states, msg["data"]["content"])
         self.assertEqual("job_status_all", msg["data"]["msg_type"])
         self.assertIsInstance(states, dict)
+        self.assertEqual(set(states.keys()), set(ALL_JOBS))
         for job_id in states:
             self.assertIsInstance(job_id, str)
             validate_job_state(states[job_id])

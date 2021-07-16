@@ -1,10 +1,10 @@
-define([
-    'bluebird',
-    'common/runtime',
-    'common/ui',
-    'common/html',
-    './jobStateListRow',
-], (Promise, Runtime, UI, html, JobStateListRow) => {
+define(['bluebird', 'common/runtime', 'common/ui', 'common/html', './jobStateListRow'], (
+    Promise,
+    Runtime,
+    UI,
+    html,
+    JobStateListRow
+) => {
     'use strict';
 
     const t = html.tag,
@@ -19,9 +19,7 @@ define([
         const runtime = Runtime.make(),
             widgets = {},
             model = config.model;
-        let container,
-            parentJobId,
-            parentListener;
+        let container, parentJobId, parentListener;
 
         function createTableRow(id) {
             const tableEl = container.getElementsByTagName('tbody')[0];

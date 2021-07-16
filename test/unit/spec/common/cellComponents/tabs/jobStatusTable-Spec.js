@@ -1,17 +1,17 @@
 define([
     'jquery',
     'bluebird',
-    'common/cellComponents/tabs/jobStatus/jobStateList',
+    'common/cellComponents/tabs/jobStatus/jobStatusTable',
     'common/jobs',
     'common/jobManager',
     'common/props',
     'common/runtime',
     'testUtil',
     '/test/data/jobsData',
-], ($, Promise, JobStateList, Jobs, JobManager, Props, Runtime, TestUtil, JobsData) => {
+], ($, Promise, JobStatusTable, Jobs, JobManager, Props, Runtime, TestUtil, JobsData) => {
     'use strict';
 
-    const cssBaseClass = JobStateList.cssBaseClass;
+    const cssBaseClass = JobStatusTable.cssBaseClass;
     const jobArray = JobsData.allJobs;
     const model = makeModel(jobArray);
     const bus = Runtime.make().bus();
@@ -27,7 +27,7 @@ define([
     }
 
     function createInstance(config = {}) {
-        return JobStateList.make(
+        return JobStatusTable.make(
             Object.assign(
                 {},
                 {
@@ -57,7 +57,7 @@ define([
      * @param {object} context - jasmine `this` context
      * @param {object} job to put in the job state list
      */
-    async function createJobStateListWithContext(context, job) {
+    async function createJobStatusTableWithContext(context, job) {
         context.jobId = job.job_id;
         context.job = job;
         context.bus = Runtime.make().bus();
@@ -67,12 +67,12 @@ define([
             model: context.model,
             bus: context.bus,
         });
-        context.jobStateListInstance = await createStartedInstance(context.container, {
+        context.jobStatusTableInstance = await createStartedInstance(context.container, {
             jobManager: context.jobManager,
             toggleTab: context.toggleTab || null,
         }).then(() => {
             context.row = context.container.querySelector('tbody tr');
-            return context.jobStateListInstance;
+            return context.jobStatusTableInstance;
         });
     }
 
@@ -175,45 +175,45 @@ define([
 
     describe('The job state list module', () => {
         it('loads', () => {
-            expect(JobStateList).not.toBe(null);
+            expect(JobStatusTable).not.toBe(null);
         });
 
         it('has expected functions', () => {
-            expect(JobStateList.make).toEqual(jasmine.any(Function));
+            expect(JobStatusTable.make).toEqual(jasmine.any(Function));
         });
 
         it('has a cssBaseClass variable', () => {
-            expect(JobStateList.cssBaseClass).toEqual(jasmine.any(String));
-            expect(JobStateList.cssBaseClass).toContain('kb-job-status');
+            expect(JobStatusTable.cssBaseClass).toEqual(jasmine.any(String));
+            expect(JobStatusTable.cssBaseClass).toContain('kb-job-status');
         });
     });
 
     describe('the job state list', () => {
-        let container, jobStateListInstance;
+        let container, jobStatusTableInstance;
         describe('The job state list instance', () => {
             beforeEach(function () {
                 container = document.createElement('div');
-                this.jobStateListInstance = createInstance();
+                this.jobStatusTableInstance = createInstance();
             });
 
             afterEach(() => {
                 container.remove();
             });
             it('has a make function that returns an object', function () {
-                expect(this.jobStateListInstance).not.toBe(null);
-                expect(this.jobStateListInstance).toEqual(jasmine.any(Object));
+                expect(this.jobStatusTableInstance).not.toBe(null);
+                expect(this.jobStatusTableInstance).toEqual(jasmine.any(Object));
             });
 
             it('has the required methods', function () {
                 ['start', 'stop'].forEach((fn) => {
-                    expect(this.jobStateListInstance[fn]).toBeDefined();
-                    expect(this.jobStateListInstance[fn]).toEqual(jasmine.any(Function));
+                    expect(this.jobStatusTableInstance[fn]).toBeDefined();
+                    expect(this.jobStatusTableInstance[fn]).toEqual(jasmine.any(Function));
                 }, this);
             });
 
             it('should start, and populate a node', async function () {
                 expect(container.children.length).toBe(0);
-                await this.jobStateListInstance.start({
+                await this.jobStatusTableInstance.start({
                     node: container,
                 });
                 expect(container.children.length).toBeGreaterThan(0);
@@ -224,11 +224,11 @@ define([
             describe('structure and content', () => {
                 beforeAll(async function () {
                     container = document.createElement('div');
-                    this.jobStateListInstance = await createStartedInstance(container);
+                    this.jobStatusTableInstance = await createStartedInstance(container);
                 });
 
                 afterAll(async function () {
-                    await this.jobStateListInstance.stop();
+                    await this.jobStatusTableInstance.stop();
                     container.remove();
                 });
 
@@ -282,14 +282,14 @@ define([
                             model: this.model,
                             bus: Runtime.make().bus(),
                         });
-                        this.jobStateListInstance = await createStartedInstance(container, {
+                        this.jobStatusTableInstance = await createStartedInstance(container, {
                             jobManager: this.jobManager,
                         });
                         this.row = container.querySelector('tbody tr');
                     });
 
                     afterEach(async function () {
-                        await this.jobStateListInstance.stop();
+                        await this.jobStatusTableInstance.stop();
                         container.remove();
                     });
 
@@ -300,12 +300,12 @@ define([
             describe('job state list row selection', () => {
                 beforeEach(async function () {
                     container = document.createElement('div');
-                    jobStateListInstance = await createStartedInstance(container);
-                    this.jobStateListInstance = jobStateListInstance;
+                    jobStatusTableInstance = await createStartedInstance(container);
+                    this.jobStatusTableInstance = jobStatusTableInstance;
                 });
 
                 afterEach(async () => {
-                    await jobStateListInstance.stop();
+                    await jobStatusTableInstance.stop();
                     container.remove();
                 });
 
@@ -413,7 +413,7 @@ define([
                             console.warn('running toggle tab!');
                         };
 
-                        await createJobStateListWithContext(
+                        await createJobStatusTableWithContext(
                             this,
                             JSON.parse(
                                 JSON.stringify(JobsData.jobsById['job-finished-with-success'])
@@ -439,7 +439,7 @@ define([
                 Object.keys(cancelRetryArgs).forEach((action) => {
                     describe(`${action} button`, () => {
                         it('clicking should trigger a job action', async function () {
-                            await createJobStateListWithContext(
+                            await createJobStatusTableWithContext(
                                 this,
                                 JSON.parse(
                                     JSON.stringify(JobsData.jobsById[cancelRetryArgs[action]])
@@ -469,7 +469,7 @@ define([
 
         describe('can update', () => {
             beforeEach(async function () {
-                await createJobStateListWithContext(this, {
+                await createJobStatusTableWithContext(this, {
                     job_id: 'job_update_test',
                     status: 'created',
                     created: 0,

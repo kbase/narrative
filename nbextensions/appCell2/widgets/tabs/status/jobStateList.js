@@ -1,21 +1,14 @@
-define([
-    'bluebird',
-    'common/runtime',
-    'common/ui',
-    'common/format',
-    'kb_common/html',
-    './jobStateListRow',
-], (Promise, Runtime, UI, format, html, JobStateListRow) => {
+define(['bluebird', 'common/runtime', 'common/ui', 'common/html', './jobStateListRow'], (
+    Promise,
+    Runtime,
+    UI,
+    html,
+    JobStateListRow
+) => {
     'use strict';
 
     const t = html.tag,
-        div = t('div'),
-        p = t('p'),
-        span = t('span'),
         table = t('table'),
-        tr = t('tr'),
-        td = t('td'),
-        th = t('th'),
         tbody = t('tbody');
 
     function renderTable() {
@@ -23,21 +16,17 @@ define([
     }
 
     function factory(config) {
-        let container,
-            ui,
-            listeners = [],
-            runtime = Runtime.make(),
+        const runtime = Runtime.make(),
             widgets = {},
-            model = config.model,
-            parentJobId,
-            parentListener;
+            model = config.model;
+        let container, parentJobId, parentListener;
 
         function createTableRow(id) {
-            const table = container.getElementsByTagName('tbody')[0];
+            const tableEl = container.getElementsByTagName('tbody')[0];
             const newRow = document.createElement('tr');
             newRow.setAttribute('data-element-job-id', id);
             newRow.classList.add('job-info');
-            table.appendChild(newRow);
+            tableEl.appendChild(newRow);
             return newRow;
         }
 
@@ -45,7 +34,7 @@ define([
             return Promise.try(() => {
                 container = arg.node;
                 container.classList.add('batch-mode-list');
-                ui = UI.make({ node: container });
+                UI.make({ node: container });
                 container.innerHTML = renderTable();
                 parentJobId = arg.parentJobId;
 
@@ -119,15 +108,15 @@ define([
                 jobId: jobId,
                 initialState: initialState,
                 isParentJob: isParentJob ? true : false,
-                clickFunction: function (jobRow, jobId, isParentJob) {
+                clickFunction: function (jobRow, _jobId, _isParentJob) {
                     Array.from(container.getElementsByClassName('job-selected')).forEach((elem) => {
                         elem.classList.remove('job-selected');
                     });
-                    if (jobId) {
+                    if (_jobId) {
                         jobRow.classList.add('job-selected');
                         clickFunction({
-                            jobId: jobId,
-                            isParentJob: isParentJob,
+                            jobId: _jobId,
+                            isParentJob: _isParentJob,
                             jobIndex: jobIndex,
                         });
                     }

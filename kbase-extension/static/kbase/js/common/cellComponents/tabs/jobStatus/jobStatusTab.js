@@ -1,4 +1,4 @@
-define(['bluebird', 'common/html', './jobStateList'], (Promise, html, JobStateList) => {
+define(['bluebird', 'common/html', './jobStatusTable'], (Promise, html, JobStatusTable) => {
     'use strict';
 
     const t = html.tag,
@@ -6,7 +6,7 @@ define(['bluebird', 'common/html', './jobStateList'], (Promise, html, JobStateLi
         dataElementName = 'kb-job-list-wrapper';
 
     function factory(config) {
-        let container, jobStateListWidget;
+        let container, jobStatusTableWidget;
 
         function renderLayout() {
             return div({
@@ -28,9 +28,9 @@ define(['bluebird', 'common/html', './jobStateList'], (Promise, html, JobStateLi
                 container.classList.add('kb-job__tab_container');
                 container.innerHTML = renderLayout();
 
-                jobStateListWidget = JobStateList.make(config);
+                jobStatusTableWidget = JobStatusTable.make(config);
                 return Promise.try(() => {
-                    jobStateListWidget.start({
+                    jobStatusTableWidget.start({
                         node: container.querySelector(`[data-element="${dataElementName}"]`),
                     });
                 });
@@ -39,8 +39,8 @@ define(['bluebird', 'common/html', './jobStateList'], (Promise, html, JobStateLi
 
         function stop() {
             container.innerHTML = '';
-            if (jobStateListWidget) {
-                return jobStateListWidget.stop();
+            if (jobStatusTableWidget) {
+                return jobStatusTableWidget.stop();
             }
             return Promise.resolve();
         }

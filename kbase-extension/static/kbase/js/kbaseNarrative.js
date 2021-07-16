@@ -13,7 +13,7 @@ define([
     'bluebird',
     'handlebars',
     'narrativeConfig',
-    'jobCommChannel',
+    'common/jobCommChannel',
     'kbaseNarrativeSidePanel',
     'kbaseNarrativeOutputCell',
     'kbaseNarrativeWorkspace',
@@ -149,8 +149,6 @@ define([
             node: document.querySelector('#kb-loading-blocker'),
             timeout: 20000,
         });
-
-        //Jupyter.keyboard_manager.disable();
         return this;
     };
 
@@ -1207,8 +1205,7 @@ define([
                 allSpecs[spec.info.id] = spec;
                 return allSpecs;
             }, {});
-            const cell = this.insertAndSelectCellBelow('code', null, cellData);
-            return cell;
+            return this.insertAndSelectCellBelow('code', null, cellData);
         });
     };
 

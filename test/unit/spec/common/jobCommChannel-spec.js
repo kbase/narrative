@@ -1,4 +1,4 @@
-define(['jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUtil'], (
+define(['common/jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUtil'], (
     JobCommChannel,
     Jupyter,
     Runtime,

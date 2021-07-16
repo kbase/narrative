@@ -346,7 +346,6 @@ define([
             //check the checkbox
             $container.find('input.kb-staging-table-body__checkbox-input:enabled').click();
             expect(importButton.disabled).toBeTrue();
-
         });
 
         describe('Should initialize an import app', () => {

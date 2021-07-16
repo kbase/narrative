@@ -6,6 +6,8 @@ import biokbase.narrative.jobs.jobmanager as jobmanager
 from biokbase.narrative.exception_util import JobException, NarrativeException
 from biokbase.narrative.common import kblogging
 
+UNKNOWN_REASON = "Unknown reason"
+
 
 class JobRequest:
     """
@@ -51,7 +53,6 @@ class JobRequest:
         "stop_job_update",
         "cancel_job",
         "job_logs",
-        "job_logs_latest",
     ]
     REQUIRE_JOB_ID_LIST = ["retry_job"]
 
@@ -137,8 +138,7 @@ class JobComm:
     * start_job_update - tells the update loop to include a job when updating (requires a job_id)
     * stop_job_update - has the update loop not include a job when updating (requires a job_id)
     * cancel_job - cancels a running job, if it hasn't otherwise terminated (requires a job_id)
-    * job_logs - sends job logs back over the comm channel (requires a job id and first line)
-    * job_logs_latest - sends the most recent job logs over the comm channel (requires a job_id)
+    * job_logs - sends job logs back over the comm channel (requires a job id)
     """
 
     # An instance of this class. It's meant to be a singleton, so this just gets created and
@@ -179,7 +179,6 @@ class JobComm:
                 "cancel_job": self._cancel_job,
                 "retry_job": self._retry_jobs,
                 "job_logs": self._get_job_logs,
-                "job_logs_latest": self._get_job_logs,
             }
 
     def _verify_job_id(self, req: JobRequest) -> None:
@@ -211,7 +210,7 @@ class JobComm:
             except Exception as e:
                 error = {
                     "error": "Unable to get initial jobs list",
-                    "message": getattr(e, "message", "Unknown reason"),
+                    "message": getattr(e, "message", UNKNOWN_REASON),
                     "code": getattr(e, "code", -1),
                     "source": getattr(e, "source", "jobmanager"),
                     "name": getattr(e, "name", type(e).__name__),
@@ -343,7 +342,7 @@ class JobComm:
                 req,
                 {
                     "error": "Unable to cancel job",
-                    "message": getattr(e, "message", "Unknown reason"),
+                    "message": getattr(e, "message", UNKNOWN_REASON),
                     "code": getattr(e, "code", -1),
                     "name": getattr(e, "name", type(e).__name__),
                 },
@@ -385,7 +384,7 @@ class JobComm:
                 req,
                 {
                     "error": "Unable to retry job(s)",
-                    "message": getattr(e, "message", "Unknown reason"),
+                    "message": getattr(e, "message", UNKNOWN_REASON),
                     "code": getattr(e, "code", -1),
                     "name": getattr(e, "name", type(e).__name__),
                 },
@@ -399,7 +398,7 @@ class JobComm:
         self._verify_job_id(req)
         first_line = req.rq_data.get("first_line", 0)
         num_lines = req.rq_data.get("num_lines", None)
-        latest_only = req.request == "job_logs_latest"
+        latest_only = req.rq_data.get("latest", False)
         try:
             (first_line, max_lines, logs) = self._jm.get_job_logs(
                 req.job_id,
@@ -426,7 +425,7 @@ class JobComm:
                 req,
                 {
                     "error": "Unable to retrieve job logs",
-                    "message": getattr(e, "message", "Unknown reason"),
+                    "message": getattr(e, "message", UNKNOWN_REASON),
                     "code": getattr(e, "code", -1),
                     "name": getattr(e, "name", type(e).__name__),
                 },

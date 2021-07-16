@@ -1,6 +1,9 @@
 from ..util import ConfigTests
 from biokbase.workspace.baseclient import ServerError
 
+RANDOM_DATE = "2018-08-10T16:47:36+0000"
+RANDOM_TYPE = "ModuleA.TypeA-1.0"
+
 
 class MockClients:
     """
@@ -208,7 +211,7 @@ class MockClients:
         return {"parent_job_id": self.test_job_id, "child_job_ids": child_job_ids}
 
     def cancel_job(self, job_id):
-        return "done"
+        return {}
 
     def retry_job(self, params):
         job_id = params["job_id"]
@@ -222,7 +225,12 @@ class MockClients:
         return results
 
     def check_job_canceled(self, params):
-        return {"finished": 0, "canceled": 0, "job_id": params.get("job_id")}
+        job_id = params.get("job_id")
+        # JOB_RUNNING from test_jobmanager.py
+        if job_id == "5d64935cb215ad4128de94d8":
+            return {"finished": 1, "canceled": 0, "job_id": job_id}
+
+        return {"finished": 0, "canceled": 0, "job_id": job_id}
 
     def get_job_params(self, job_id):
         return self.ee2_job_info.get(job_id, {}).get("job_input", {})
@@ -314,8 +322,8 @@ class MockClients:
                     "object_info": [
                         1,
                         "obj1",
-                        "ModuleA.TypeA-1.0",
-                        "2018-08-10T16:47:36+0000",
+                        RANDOM_TYPE,
+                        RANDOM_DATE,
                         2,
                         user_id,
                         ws_id,
@@ -329,8 +337,8 @@ class MockClients:
                     "object_info": [
                         7,
                         "obj7",
-                        "ModuleA.TypeA-1.0",
-                        "2018-08-10T16:47:36+0000",
+                        RANDOM_TYPE,
+                        RANDOM_DATE,
                         2,
                         user_id,
                         ws_id,
@@ -344,8 +352,8 @@ class MockClients:
                     "object_info": [
                         8,
                         "obj8",
-                        "ModuleA.TypeA-1.0",
-                        "2018-08-10T16:47:36+0000",
+                        RANDOM_TYPE,
+                        RANDOM_DATE,
                         2,
                         user_id,
                         ws_id,
@@ -360,7 +368,7 @@ class MockClients:
                         9,
                         "obj9",
                         "ModuleB.TypeB-1.0",
-                        "2018-08-10T16:47:36+0000",
+                        RANDOM_DATE,
                         3,
                         user_id,
                         ws_id,
@@ -375,7 +383,7 @@ class MockClients:
                         3,
                         "obj3",
                         "ModuleC.TypeC-1.0",
-                        "2018-08-10T16:47:36+0000",
+                        RANDOM_DATE,
                         4,
                         user_id,
                         ws_id,
@@ -390,7 +398,7 @@ class MockClients:
                         4,
                         "obj4",
                         "ModuleD.TypeD-1.0",
-                        "2018-08-10T16:47:36+0000",
+                        RANDOM_DATE,
                         5,
                         user_id,
                         ws_id,
@@ -406,7 +414,7 @@ class MockClients:
                         5,
                         "obj5",
                         "Module5.Type5-1.0",
-                        "2018-08-10T16:47:36+0000",
+                        RANDOM_DATE,
                         6,
                         user_id,
                         ws_id,
@@ -490,3 +498,32 @@ class MockStagingHelper:
             "omg/this/is/a/long/path/to/a/file",
             "filterme",
         ]
+
+
+class assert_obj_method_called(object):
+    def __init__(self, obj, method, call_status=True):
+        self.obj = obj
+        self.method = method
+        self.call_status = call_status
+
+    def called(self, *args, **kwargs):
+        self.method_called = True
+        self.orig_method(*args, **kwargs)
+
+    def __enter__(self):
+        self.orig_method = getattr(self.obj, self.method)
+        setattr(self.obj, self.method, self.called)
+        self.method_called = False
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        assert getattr(self.obj, self.method) == self.called, (
+            "method %s was modified during assertMethodIsCalled" % self.method
+        )
+
+        setattr(self.obj, self.method, self.orig_method)
+
+        # If an exception was thrown within the block, we've already failed.
+        if traceback is None:
+            assert (
+                self.method_called is self.call_status
+            ), "method %s of %s was not %s" % (self.method, self.obj, self.call_status)

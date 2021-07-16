@@ -578,8 +578,8 @@ define([
                 });
 
                 return new Promise((resolve) => {
-                    this.runtimeBus.on('request-job-log-latest', (msg) => {
-                        expect(msg).toEqual({ jobId: jobId, options: {} });
+                    this.runtimeBus.on('request-job-log', (msg) => {
+                        expect(msg).toEqual({ jobId: jobId, options: { latest: true } });
                         const logUpdate = logs[acc];
                         acc += 1;
                         // set up the mutation observer to watch for UI spinner changes
@@ -621,8 +621,8 @@ define([
                 });
 
                 // this is called when the state is 'running'
-                this.runtimeBus.on('request-job-log-latest', (msg) => {
-                    expect(msg).toEqual({ jobId: jobId, options: {} });
+                this.runtimeBus.on('request-job-log', (msg) => {
+                    expect(msg).toEqual({ jobId: jobId, options: { latest: true } });
                     this.runtimeBus.send(...formatMessage(jobId, 'log-deleted'));
                 });
 

@@ -321,7 +321,7 @@ define([
 
             stagingAreaViewer.$elem.append($fileTable);
 
-            const fullDataTable = stagingAreaViewer.$elem.find('table').dataTable({
+            stagingAreaViewer.fullDataTable = stagingAreaViewer.$elem.find('table').DataTable({
                 language: {
                     emptyTable: emptyMsg,
                 },
@@ -603,7 +603,8 @@ define([
                         if (check) {
                             $('td:eq(0)', row)
                                 .find(`.${cssBaseClass}-body__checkbox-input`)
-                                .prop('checked', true);
+                                .prop('checked', true)
+                                .attr('aria-checked', true);
                             stagingAreaViewer.enableImportButton();
                         }
                     }
@@ -957,13 +958,15 @@ define([
              */
             const bulkMapping = {};
             // get all of the selected checkbox file names and import type
-            $(
-                stagingAreaViewer.$elem[0].querySelectorAll(
-                    `input.${cssBaseClass}-body__checkbox-input:checked`
-                )
-            ).each(function () {
-                const importType = $(this).attr('data-type');
-                let importFile = $(this).attr('data-file-name');
+
+            const checkedBoxSelector = `input.${cssBaseClass}-body__checkbox-input:checked`;
+            const selectedRows = stagingAreaViewer.fullDataTable.rows((idx, data, node) => {
+                return !!node.querySelector(checkedBoxSelector);
+            });
+            selectedRows.nodes().each((rowNode) => {
+                const dataElem = rowNode.querySelector(checkedBoxSelector);
+                const importType = $(dataElem).attr('data-type');
+                let importFile = $(dataElem).attr('data-file-name');
                 if (stagingAreaViewer.bulkImportTypes.includes(importType)) {
                     if (!(importType in bulkMapping)) {
                         bulkMapping[importType] = {

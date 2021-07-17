@@ -12,6 +12,7 @@ from .test_job import (
     JOB_CREATED,
     JOB_RUNNING,
     JOB_TERMINATED,
+    JOB_ERROR,
     BATCH_PARENT,
     BATCH_COMPLETED,
     BATCH_TERMINATED,
@@ -38,7 +39,8 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 config = ConfigTests()
 test_jobs = config.load_json_file(config.get("jobs", "ee2_job_info_file"))
-JOB_ERROR = "5d64935cb215ad4128de94e0"
+test_specs = config.load_json_file(config.get("specs", "app_specs_file"))
+
 JOB_NOT_FOUND = "job_not_found"
 
 TERMINAL_IDS = [
@@ -85,17 +87,19 @@ def get_test_job_states():
     job_states = {}
     for job_id in test_jobs.keys():
         state = copy.deepcopy(test_jobs[job_id])
-        job_input = state.get("job_input", {})
-        narr_cell_info = job_input.get("narrative_cell_info", {})
+        narr_cell_info = state.get("job_input", {}).get("narrative_cell_info", {})
         state.update(
             {
-                "batch_id": state.get("batch_id", None),
+                "batch_id": state.get("batch_id", job_id if state.get("batch_job", False) else None),
                 "cell_id": narr_cell_info.get("cell_id", None),
                 "run_id": narr_cell_info.get("run_id", None),
                 "job_output": state.get("job_output", {}),
-                "child_jobs": [],
+                "child_jobs": state.get("child_jobs", []),
             }
         )
+
+        # TODO: mock the call to the SpecManager
+        # see test_job.py for examples
         widget_info = (
             Job.from_state(state).get_viewer_params(state)
             if state.get("finished")
@@ -109,6 +113,7 @@ def get_test_job_states():
             "widget_info": widget_info,
             "owner": state.get("user"),
         }
+
     return job_states
 
 

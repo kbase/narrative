@@ -73,36 +73,33 @@ class JobManager(object):
             new_e = transform_job_exception(e)
             raise new_e
 
-        for job_id, job_state in job_states.items():
-            job = Job.from_state(job_state)
-            status = job_state.get("status")
-            refresh_state = 1 if status not in TERMINAL_STATUSES else 0
-            self._running_jobs[job_id] = {
-                "refresh": refresh_state,
-                "job": job,
-            }
+        for job_state in job_states.values():
+            self.register_new_job(
+                job=Job.from_state(job_state),
+                refresh=int(job_state.get("status") not in TERMINAL_STATUSES)
+            )
 
-    def _create_jobs(self, job_ids, job_states=None):
+    def _create_jobs(self, job_ids) -> dict:
         """
         TODO: error handling
         Given a list of job IDs, creates job objects for them and populates the _running_jobs dictionary
         """
         job_ids = [job_id for job_id in job_ids if job_id not in self._running_jobs]
-        if not job_states:
-            job_states = clients.get("execution_engine2").check_jobs(
-                {
-                    "job_ids": job_ids,
-                    "exclude_fields": JOB_INIT_EXCLUDED_JOB_STATE_FIELDS,
-                }
-            )
-        for job_id in job_ids:
-            job_state = job_states.get(job_id, {})
-            job = Job.from_state(job_state)
+        job_states = clients.get("execution_engine2").check_jobs(
+            {
+                "job_ids": job_ids,
+                "exclude_fields": JOB_INIT_EXCLUDED_JOB_STATE_FIELDS,
+            }
+        )
+        for job_state in job_states.values():
             # Note that when jobs for this narrative are initially loaded,
             # they are set to not be refreshed. Rather, if a client requests
             # updates via the start_job_update message, the refresh flag will
             # be set to True.
-            self._running_jobs[job_id] = {"refresh": 0, "job": job}
+            self.register_new_job(
+                job=Job.from_state(job_state),
+                refresh=0
+            )
 
         return job_states
 
@@ -225,10 +222,10 @@ class JobManager(object):
         for job_id in job_ids:
             job = self.get_job(job_id)
             if job.terminal_state:
-                job_states[job_id] = job.revised_state()
+                job_states[job_id] = job.output_state()
             elif states and job_id in states:
                 state = states[job_id]
-                job_states[job_id] = job.revised_state(state)
+                job_states[job_id] = job.output_state(state)
             else:
                 jobs_to_lookup.append(job_id)
 
@@ -249,7 +246,7 @@ class JobManager(object):
                 )
 
         for job_id, state in fetched_states.items():
-            job_states[job_id] = self.get_job(job_id).revised_state(state)
+            job_states[job_id] = self.get_job(job_id).output_state(state)
         return job_states
 
     def lookup_job_info(self, job_id):
@@ -292,7 +289,7 @@ class JobManager(object):
         else:
             return dict()
 
-    def register_new_job(self, job: Job) -> None:
+    def register_new_job(self, job: Job, refresh: int = 0) -> None:
         """
         Registers a new Job with the manager and stores the job locally.
         This should only be invoked when a new Job gets started.
@@ -303,7 +300,7 @@ class JobManager(object):
             The new Job that was started.
         """
         kblogging.log_event(self._log, "register_new_job", {"job_id": job.job_id})
-        self._running_jobs[job.job_id] = {"job": job, "refresh": 0}
+        self._running_jobs[job.job_id] = {"job": job, "refresh": refresh}
 
     def get_job(self, job_id):
         """
@@ -434,7 +431,7 @@ class JobManager(object):
             }
         ]
         where the innermost dictionaries are job states from ee2 and are within the
-        job states from job.revised_state()
+        job states from job.output_state()
         """
         checked_jobs = self._check_job_list(job_id_list)
         try:
@@ -448,8 +445,6 @@ class JobManager(object):
         retry_ids = [
             result["retry_id"] for result in retry_results if "retry_id" in result
         ]
-        for job_id in orig_ids:
-            self.get_job(job_id).reset_state()
         orig_states = self._construct_job_state_set(orig_ids)
         retry_states = self._construct_job_state_set(
             retry_ids, self._create_jobs(retry_ids)  # add to self._running_jobs index
@@ -473,7 +468,7 @@ class JobManager(object):
     def get_job_state(self, job_id: str) -> dict:
         if job_id is None or job_id not in self._running_jobs:
             raise ValueError(f"No job present with id {job_id}")
-        state = self._running_jobs[job_id]["job"].revised_state()
+        state = self._running_jobs[job_id]["job"].output_state()
         return state
 
     def modify_job_refresh(self, job_id: str, update_adjust: int) -> None:

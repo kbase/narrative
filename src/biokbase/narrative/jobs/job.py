@@ -179,7 +179,7 @@ class Job(object):
         """
         given a state data structure (as emitted by ee2), update the stored state in the job object
         """
-        if not state or state == {}:
+        if not state:
             return
 
         if "job_id" in state and state["job_id"] != self.job_id:
@@ -242,7 +242,7 @@ class Job(object):
         except Exception as e:
             raise Exception(f"Unable to fetch info for job {self.job_id} - {e}")
 
-    def revised_state(self, state=None) -> dict:
+    def output_state(self, state=None) -> dict:
         """
         :param state: can be queried individually from ee2/cache with self.state(),
             but sometimes want it to be queried in bulk from ee2 upstream
@@ -277,6 +277,15 @@ class Job(object):
         """
         if not state:
             state = self.state()
+        else:
+            state = self.update_state(state)
+
+        if state is None:
+            return self._create_error_state(
+                "Unable to find current job state. Please try again later, or contact KBase.",
+                "Unable to return job state",
+                -1
+            )
 
         state = self._augment_ee2_state(state)
 
@@ -299,7 +308,7 @@ class Job(object):
                             "source": getattr(new_e, "source", "JobManager"),
                             "name": "App Error",
                             "message": "Unable to build output viewer parameters",
-                            "error": "Unable to generate App output viewer!\nThe App appears to have completed successfully,\nbut we cannot construct its output viewer.\nPlease contact the developer of this App for assistance.",
+                            "error": "Unable to generate App output viewer!\nThe App appears to have completed successfully,\nbut we cannot construct its output viewer.\nPlease contact https://kbase.us/support for assistance.",
                         },
                     }
                 )
@@ -442,81 +451,35 @@ class Job(object):
 
         return {attr: getattr(self, attr) for attr in [*ALL_JOB_ATTRS, "_last_state"]}
 
-    # def _create_error_state(
-    #     self,
-    #     error: str,
-    #     error_msg: str,
-    #     code: int,
-    # ) -> dict:
-    #     """
-    #     Creates an error state to return if
-    #     1. the state is missing or unretrievable
-    #     2. Job is none
-    #     This creates the whole state dictionary to return, as described in
-    #     _construct_cache_job_state.
-    #     :param error: the full, detailed error (not necessarily human-readable, maybe a stacktrace)
-    #     :param error_msg: a shortened error string, meant to be human-readable
-    #     :param code: int, an error code
-    #     """
-    #     return {
-    #         "status": "error",
-    #         "error": {
-    #             "code": code,
-    #             "name": "Job Error",
-    #             "message": error_msg,
-    #             "error": error,
-    #         },
-    #         "errormsg": error_msg,
-    #         "error_code": code,
-    #         "job_id": self.job_id,
-    #         "cell_id": self.cell_id,
-    #         "run_id": self.run_id,
-    #         "created": 0,
-    #         "updated": 0,
-    #     }
-
-    # def _child_states(self, sub_job_list):
-    #     """
-    #     Fetches state for all jobs in the list. These are expected to be child jobs, with no actual Job object associated.
-    #     So if they're done, we need to do the output mapping out of band.
-    #     But the check_jobs call with params will return the app id. So that helps.
-    #     app_id = the id of the app that all the child jobs are running (format: module/method, like "MEGAHIT/run_megahit")
-    #     app_tag = one of "release", "beta", "dev"
-    #     (the above two aren't stored with the subjob metadata, and won't until we back some more on KBParallel - I want to
-    #     lobby for pushing toward just starting everything up at once from here and letting HTCondor deal with allocation)
-    #     sub_job_list = list of ids of jobs to look up
-    #     """
-
-    #     # TODO
-    #     # THIS IS A DRAFT METHOD
-    #     # NEEDS TO BE RUN/VERIFIED
-
-    #     if not sub_job_list:
-    #         return []
-    #     sub_job_list = sorted(sub_job_list)
-    #     app_id = self.meta.get("batch_app")
-    #     app_tag = self.meta.get("batch_tag")
-
-    #     states = clients.get("execution_engine2").check_jobs(
-    #         {
-    #             "job_ids": sub_job_list,
-    #             "exclude_fields": EXCLUDED_JOB_STATE_FIELDS,
-    #             "return_list": 0,
-    #         }
-    #     )
-
-    #     for job_id in sub_job_list:
-    #         state = states.get(job_id, {})
-    #         params = state.get("job_input", {}).get("params", [])
-    #         # if it's error, get the error.
-    #         if state.get("errormsg"):
-    #             continue
-    #         # if it's done, get the output mapping.
-    #         if state.get("status") == COMPLETED_STATUS:
-    #             try:
-    #                 widget_info = Job.map_viewer_params(state, params, app_id, app_tag)
-    #             except ValueError:
-    #                 widget_info = {}
-    #             state.update({"widget_info": widget_info})
-    #         states.append(state)
-    #     return states
+    def _create_error_state(
+        self,
+        error: str,
+        error_msg: str,
+        code: int,
+    ) -> dict:
+        """
+        Creates an error state to return if
+        1. the state is missing or unretrievable
+        2. Job is none
+        This creates the whole state dictionary to return, as described in
+        _construct_cache_job_state.
+        :param error: the full, detailed error (not necessarily human-readable, maybe a stacktrace)
+        :param error_msg: a shortened error string, meant to be human-readable
+        :param code: int, an error code
+        """
+        return {
+            "status": "error",
+            "error": {
+                "code": code,
+                "name": "Job Error",
+                "message": error_msg,
+                "error": error,
+            },
+            "errormsg": error_msg,
+            "error_code": code,
+            "job_id": self.job_id,
+            "cell_id": self.cell_id,
+            "run_id": self.run_id,
+            "created": 0,
+            "updated": 0,
+        }

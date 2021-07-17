@@ -131,7 +131,7 @@
         "job_id": "5d64935cb215ad4128de94e0",
         "user": "fake_test_user",
         "authstrat": "kbaseworkspace",
-        "wsid": "9999",
+        "wsid": 9999,
         "status": "error",
         "updated": 1572462965495,
         "created": 1572462971995,

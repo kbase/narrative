@@ -448,6 +448,32 @@ class JobTest(unittest.TestCase):
         with self.assertRaisesRegex(Exception, "Unable to fetch info for job"):
             job.state()
 
+    def test_state__returns_none(self):
+        def mock_state(self, state=None):
+            return None
+
+        job = create_job_from_ee2(JOB_CREATED)
+        expected = {
+            "status": "error",
+            "error": {
+                "code": -1,
+                "name": "Job Error",
+                "message": "Unable to return job state",
+                "error": "Unable to find current job state. Please try again later, or contact KBase.",
+            },
+            "errormsg": "Unable to return job state",
+            "error_code": -1,
+            "job_id": job.job_id,
+            "cell_id": job.cell_id,
+            "run_id": job.run_id,
+            "created": 0,
+            "updated": 0,
+        }
+
+        with mock.patch.object(Job, "state", mock_state):
+            state = job.output_state()
+        self.assertEqual(expected, state)
+
     def test_job_update__no_state(self):
         """
         test that without a state object supplied, the job state is unchanged

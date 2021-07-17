@@ -41,6 +41,13 @@ test_jobs = config.load_json_file(config.get("jobs", "ee2_job_info_file"))
 JOB_ERROR = "5d64935cb215ad4128de94e0"
 JOB_NOT_FOUND = "job_not_found"
 
+TERMINAL_IDS = [
+    JOB_COMPLETED, JOB_TERMINATED, JOB_ERROR
+]
+NON_TERMINAL_IDS = [
+    JOB_CREATED, JOB_RUNNING
+]
+
 no_id_err_str = r"No job id\(s\) supplied"
 ERR_STR = "Some error occurred"
 
@@ -173,6 +180,11 @@ class JobManagerTest(unittest.TestCase):
             # set(JOB_COMPLETED, JOB_TERMINATED, JOB_ERROR)
         )
         self.assertEqual(set(self.job_ids), set(self.jm._running_jobs.keys()))
+
+        for job_id in TERMINAL_IDS:
+            self.assertFalse(self.jm._running_jobs[job_id]["refresh"])
+        for job_id in NON_TERMINAL_IDS:
+            self.assertTrue(self.jm._running_jobs[job_id]["refresh"])
 
     def test__check_job_list_fail(self):
         with self.assertRaisesRegex(ValueError, no_id_err_str):
@@ -386,41 +398,54 @@ class JobManagerTest(unittest.TestCase):
         with assert_obj_method_called(self.jm, "cancel_jobs", False):
             self.jm.cancel_job(JOB_COMPLETED)
 
+    def _check_retry_jobs(
+        self,
+        expected,
+        retry_results,
+    ):
+        self.assertEqual(expected, retry_results)
+
+        orig_ids = [
+            result["job_id"]["state"]["job_id"]
+            for result in retry_results
+            if "error" not in result
+        ]
+        retry_ids = [
+            result["retry_id"]["state"]["job_id"]
+            for result in retry_results
+            if "error" not in result
+        ]
+        dne_ids = [
+            result["job_id"]["state"]["job_id"]
+            for result in retry_results
+            if result["job_id"]["state"]["status"] == "does_not_exist"
+        ]
+
+        for job_id in orig_ids + retry_ids:
+            job = self.jm.get_job(job_id)
+            self.assertIn(job_id, self.jm._running_jobs)
+            self.assertIsNotNone(job._last_state)
+
+        for job_id in dne_ids:
+            self.assertNotIn(job_id, self.jm._running_jobs)
+
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def test_retry_jobs__success(self):
         job_ids = [JOB_TERMINATED]
+        expected = [
+            {
+                "job_id": self.job_states[JOB_TERMINATED],
+                "retry_id": get_retry_job_state(JOB_TERMINATED),
+            }
+        ]
+
         retry_results = self.jm.retry_jobs(job_ids)
-
-        orig_state = retry_results[0]["job_id"]
-        retry_state = retry_results[0]["retry_id"]
-        orig_id = orig_state["state"]["job_id"]
-        retry_id = retry_state["state"]["job_id"]
-
-        self.assertEqual(orig_id, JOB_TERMINATED)
-        self.assertEqual(retry_id, JOB_TERMINATED[::-1])
-        self.assertEqual(orig_state, self.job_states[JOB_TERMINATED])
-        self.assertEqual(retry_state, get_retry_job_state(JOB_TERMINATED))
-        self.assertTrue(len(retry_results) == 1)
-        self.assertEqual(
-            retry_results,
-            [
-                {
-                    "job_id": self.job_states[JOB_TERMINATED],
-                    "retry_id": get_retry_job_state(JOB_TERMINATED),
-                }
-            ],
-        )
-
-        self.assertIn(JOB_TERMINATED, self.jm._running_jobs)
-        self.assertIn(retry_id, self.jm._running_jobs)
-
-        self.assertIsNone(self.jm.get_job(orig_id)._last_state)
+        self._check_retry_jobs(expected, retry_results)
 
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def test_retry_jobs__multi_success(self):
         job_ids = [JOB_TERMINATED, JOB_ERROR]
-        retry_results = self.jm.retry_jobs(job_ids)
-        exp = [
+        expected = [
             {
                 "job_id": self.job_states[JOB_TERMINATED],
                 "retry_id": get_retry_job_state(JOB_TERMINATED),
@@ -430,31 +455,14 @@ class JobManagerTest(unittest.TestCase):
                 "retry_id": get_retry_job_state(JOB_ERROR),
             },
         ]
-        retry_ids = [result["retry_id"]["state"]["job_id"] for result in retry_results]
-        self.assertEqual(exp, retry_results)
-        for job_id in job_ids:
-            self.assertIn(job_id, self.jm._running_jobs)
-            self.assertIsNone(self.jm.get_job(job_id)._last_state)
-        for job_id in retry_ids:
-            self.assertIn(job_id, self.jm._running_jobs)
+
+        retry_results = self.jm.retry_jobs(job_ids)
+        self._check_retry_jobs(expected, retry_results)
 
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def test_retry_jobs__success_error_dne(self):
         job_ids = [JOB_NOT_FOUND, JOB_TERMINATED, JOB_COMPLETED]
-        retry_id = JOB_TERMINATED[::-1]
-        ee2_ret = [
-            {"job_id": JOB_TERMINATED, "retry_id": JOB_TERMINATED[::-1]},
-            {"job_id": JOB_COMPLETED, "error": ERR_STR},
-        ]
-        with mock.patch.object(
-            MockClients,
-            "retry_jobs",
-            mock.Mock(return_value=ee2_ret),
-        ):
-            retry_results = self.jm.retry_jobs(job_ids)
-
-        self.assertTrue(len(retry_results) == 3)
-        exp = [
+        expected = [
             {
                 "job_id": self.job_states[JOB_TERMINATED],
                 "retry_id": get_retry_job_state(JOB_TERMINATED),
@@ -468,16 +476,29 @@ class JobManagerTest(unittest.TestCase):
                 "error": "does_not_exist",
             },
         ]
-        self.assertEqual(exp, retry_results)
 
-        for job_id in job_ids[1:]:
-            self.assertIn(job_id, self.jm._running_jobs)
-            self.assertIsNone(self.jm.get_job(job_id)._last_state)
-        self.assertIn(retry_id, self.jm._running_jobs)
+        ee2_ret = [
+            {"job_id": JOB_TERMINATED, "retry_id": JOB_TERMINATED[::-1]},
+            {"job_id": JOB_COMPLETED, "error": ERR_STR},
+        ]
+        with mock.patch.object(
+            MockClients,
+            "retry_jobs",
+            mock.Mock(return_value=ee2_ret),
+        ):
+            retry_results = self.jm.retry_jobs(job_ids)
+
+        self._check_retry_jobs(expected, retry_results)
 
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def test_retry_jobs__all_error(self):
         job_ids = [JOB_TERMINATED, JOB_CREATED, JOB_RUNNING]
+        expected = [
+            {"job_id": self.job_states[JOB_TERMINATED], "error": ERR_STR},
+            {"job_id": self.job_states[JOB_CREATED], "error": ERR_STR},
+            {"job_id": self.job_states[JOB_RUNNING], "error": ERR_STR},
+        ]
+
         ee2_ret = [
             {"job_id": JOB_TERMINATED, "error": ERR_STR},
             {"job_id": JOB_CREATED, "error": ERR_STR},
@@ -490,24 +511,21 @@ class JobManagerTest(unittest.TestCase):
         ):
             retry_results = self.jm.retry_jobs(job_ids)
 
-        self.assertTrue(len(retry_results) == 3)
-        exp = [
-            {"job_id": self.job_states[JOB_TERMINATED], "error": ERR_STR},
-            {"job_id": self.job_states[JOB_CREATED], "error": ERR_STR},
-            {"job_id": self.job_states[JOB_RUNNING], "error": ERR_STR},
-        ]
-        self.assertEqual(exp, retry_results)
-
-        for job_id in job_ids:
-            self.assertIn(job_id, self.jm._running_jobs)
-            self.assertIsNone(self.jm.get_job(job_id)._last_state)
+        self._check_retry_jobs(expected, retry_results)
 
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def test_retry_jobs__retry_already_terminal(self):
         job_id = JOB_TERMINATED
         retry_id = JOB_TERMINATED[::-1]
         retry_status = "error"
-        retry_state = get_retry_job_state(JOB_TERMINATED, status=retry_status)
+
+        expected = [
+            {
+                "job_id": self.job_states[JOB_TERMINATED],
+                "retry_id": get_retry_job_state(JOB_TERMINATED, status=retry_status)
+            }
+        ]
+
         test_jobs_ = copy.deepcopy(test_jobs)
         test_jobs_[retry_id] = {"job_id": retry_id, "status": retry_status}
         with mock.patch.object(
@@ -517,25 +535,21 @@ class JobManagerTest(unittest.TestCase):
         ):
             retry_results = self.jm.retry_jobs([job_id])
 
-        self.assertTrue(len(retry_results) == 1)
-        exp = [{"job_id": self.job_states[JOB_TERMINATED], "retry_id": retry_state}]
-        self.assertEqual(exp, retry_results)
-        self.assertIn(job_id, self.jm._running_jobs)
-        self.assertIn(retry_id, self.jm._running_jobs)
-        self.assertIsNone(self.jm.get_job(job_id)._last_state)
+        self._check_retry_jobs(expected, retry_results)
 
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def test_retry_jobs__none_exist(self):
-        fake_id = "nope"
-        retry_results = self.jm.retry_jobs(["", "", None, fake_id])
-        exp = [
+        dne_id = "nope"
+        job_ids = ["", "", None, dne_id]
+        expected = [
             {
-                "job_id": get_dne_job_state(fake_id),
+                "job_id": get_dne_job_state(dne_id),
                 "error": "does_not_exist",
             }
         ]
-        self.assertEqual(exp, retry_results)
-        self.assertNotIn(fake_id, self.jm._running_jobs)
+
+        retry_results = self.jm.retry_jobs(job_ids)
+        self._check_retry_jobs(expected, retry_results)
 
     def test_retry_jobs__bad_inputs(self):
         with self.assertRaisesRegex(ValueError, no_id_err_str):
@@ -557,14 +571,10 @@ class JobManagerTest(unittest.TestCase):
     def test_lookup_all_job_states__ignore_refresh_flag(self):
         states = self.jm.lookup_all_job_states(ignore_refresh_flag=True)
         self.assertEqual(set(self.job_ids), set(states.keys()))
-        expected = {}
-        for job_id in self.job_ids:
-            if job_id in ACTIVE_JOBS:
-                expected[job_id] = self.job_states[job_id]
-            else:
-                expected[job_id] = self.jm.job_states[job_id]
-
-        self.assertEqual(states, expected)
+        self.assertEqual(
+            states,
+            self.job_states
+        )
 
     # @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_mock_client)
     # def test_job_status_fetching(self):

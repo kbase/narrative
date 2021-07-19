@@ -426,6 +426,10 @@ class JobManager(object):
                 "job_id": {"state": {"job_id": job_id, "status": status, ...} ...},
                 "retry_id": {"state": {"job_id": job_id, "status": status, ...} ...}
             },
+            {
+                "job_id": {"state": {"job_id": job_id, "status": status, ...} ...},
+                "error": "..."
+            }
             ...
             {
                 "job_id": {"state": {"job_id": job_id, "status": "does_not_exist"}},

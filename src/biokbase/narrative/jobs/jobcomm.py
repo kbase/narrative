@@ -3,7 +3,7 @@ import threading
 from typing import List
 from ipykernel.comm import Comm
 import biokbase.narrative.jobs.jobmanager as jobmanager
-from biokbase.narrative.exception_util import JobException, NarrativeException
+from biokbase.narrative.exception_util import NarrativeException
 from biokbase.narrative.common import kblogging
 
 UNKNOWN_REASON = "Unknown reason"
@@ -359,15 +359,10 @@ class JobComm:
                 "new_job",
                 {
                     "job_id_list": [
-                        job["retry_id"] for job in retry_results if job["retry_id"]
+                        result["retry_id"]["state"]["job_id"] for result in retry_results if "retry_id" in result
                     ]
                 },
             )
-        except JobException as e:
-            self.send_error_message(
-                "job_does_not_exist", req, {"job_id_list": e.err_job_ids}
-            )
-            raise
         except NarrativeException as e:
             self.send_error_message(
                 "job_comm_error",

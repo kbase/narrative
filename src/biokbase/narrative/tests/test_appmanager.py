@@ -716,8 +716,17 @@ class AppManagerTestCase(unittest.TestCase):
     def test_run_app_bulk_dry_run(self, auth, c):
         mock_comm = MagicMock()
         c.return_value.send_comm_message = mock_comm
-        new_job = self.am.run_app_bulk(self.bulk_run_good_inputs, dry_run=True)
-        self.assertIsInstance(new_job, dict)
+        dry_run_results = self.am.run_app_bulk(self.bulk_run_good_inputs, dry_run=True)
+        self.assertIsInstance(dry_run_results, dict)
+        for key in ["batch_run_params", "batch_params"]:
+            self.assertIn(key, dry_run_results)
+        expected_batch_run_keys = set(
+            ["method", "service_ver", "params", "app_id", "meta"]
+        )
+        # expect only the above keys in each batch run params (note the missing wsid key)
+        for param_set in dry_run_results["batch_run_params"]:
+            self.assertTrue(expected_batch_run_keys == set(param_set.keys()))
+        self.assertTrue(set(["wsid"]) == set(dry_run_results["batch_params"].keys()))
         self.assertEqual(mock_comm.call_count, 0)
 
     @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)

@@ -1,9 +1,9 @@
 define([
     'common/cellComponents/tabs/jobStatus/jobStatusTab',
-    'common/cellComponents/tabs/jobStatus/jobStateList',
+    'common/cellComponents/tabs/jobStatus/jobStatusTable',
     'common/props',
     '/test/data/testAppObj',
-], (JobStatusTab, JobStateList, Props, TestAppObject) => {
+], (JobStatusTab, JobStatusTable, Props, TestAppObject) => {
     'use strict';
 
     const model = Props.make({
@@ -27,8 +27,8 @@ define([
         let container;
         beforeEach(function () {
             container = document.createElement('div');
-            this.stateList = jasmine.createSpyObj('jobStateListInstance', ['start', 'stop']);
-            spyOn(JobStateList, 'make').and.callFake(() => {
+            this.stateList = jasmine.createSpyObj('jobStatusTableInstance', ['start', 'stop']);
+            spyOn(JobStatusTable, 'make').and.callFake(() => {
                 return this.stateList;
             });
 
@@ -64,7 +64,7 @@ define([
             const [firstChild] = container.childNodes;
             expect(firstChild).toHaveClass('kb-job__container');
             expect(firstChild.getAttribute('data-element')).toEqual('kb-job-list-wrapper');
-            expect(JobStateList.make).toHaveBeenCalled();
+            expect(JobStatusTable.make).toHaveBeenCalled();
             expect(this.stateList.start).toHaveBeenCalledTimes(1);
             const callArgs = this.stateList.start.calls.allArgs();
             expect(callArgs[0].length).toEqual(1);
@@ -78,7 +78,7 @@ define([
 
             await this.jobStatusTabInstance.start({ node: container });
             expect(container).toHaveClass(jobTabContainerClass);
-            expect(JobStateList.make).toHaveBeenCalled();
+            expect(JobStatusTable.make).toHaveBeenCalled();
             expect(this.stateList.start).toHaveBeenCalled();
 
             await this.jobStatusTabInstance.stop();

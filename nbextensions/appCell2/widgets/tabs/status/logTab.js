@@ -7,10 +7,9 @@ define([
     'common/ui',
     'common/runtime',
     'util/jobLogViewer',
-    'util/jobStateViewer',
     './jobStateList',
     './jobInputParams',
-], (Promise, html, UI, Runtime, JobLogViewer, JobStateViewer, JobStateList, JobInputParams) => {
+], (Promise, html, UI, Runtime, JobLogViewer, JobStateList, JobInputParams) => {
     'use strict';
 
     const t = html.tag,

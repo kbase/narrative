@@ -1582,7 +1582,7 @@ define([
             });
             jobListeners.push(ev);
 
-            runtime.bus().emit('request-job-update', {
+            runtime.bus().emit('request-job-updates-start', {
                 jobId: jobId,
             });
         }
@@ -1595,7 +1595,7 @@ define([
 
             const jobId = model.getItem('exec.jobState.job_id');
             if (jobId) {
-                runtime.bus().emit('request-job-completion', {
+                runtime.bus().emit('request-job-updates-stop', {
                     jobId: jobId,
                 });
             }

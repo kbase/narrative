@@ -109,14 +109,14 @@ define([
     }
 
     /**
-     * create a job state list instance
+     * create a job status table instance
      *
      * the config should be an object with a property 'jobManager', which executes
      * the job actions available as part of the job status table, and 'toggleTab',
      * a function used to view the results of finished jobs.
      *
      * @param {object} config
-     * @returns jobStateList instance
+     * @returns jobStatusTable instance
      */
     function factory(config) {
         const widgetsById = {},
@@ -124,7 +124,7 @@ define([
             { jobManager, toggleTab } = config;
 
         if (!jobManager.model || !jobManager.model.getItem('exec.jobs.byId')) {
-            throw new Error('Cannot start JobStateList without a jobs object in the config');
+            throw new Error('Cannot start JobStatusTable without a jobs object in the config');
         }
 
         let container, dropdownWidget, dataTable;
@@ -335,7 +335,7 @@ define([
 
             if (paramsRequired.length) {
                 jobManager.addListener('job-info', paramsRequired, {
-                    jobStateList_info: handleJobInfo,
+                    jobStatusTable_info: handleJobInfo,
                 });
                 bus.emit('request-job-info', {
                     jobIdList: paramsRequired,
@@ -344,10 +344,10 @@ define([
 
             // TODO: add listeners when the bulk import cell is initialised
             jobManager.addListener('job-status', jobIdList, {
-                jobStateList_status: handleJobStatus,
+                jobStatusTable_status: handleJobStatus,
             });
             jobManager.addListener('job-does-not-exist', jobIdList, {
-                jobStateList_dne: handleJobDoesNotExist,
+                jobStatusTable_dne: handleJobDoesNotExist,
             });
         }
 
@@ -432,7 +432,7 @@ define([
          * @param {object} args  -- with key
          *      node:     DOM node to attach to
          *
-         * @returns {Promise} started JobStateList widget
+         * @returns {Promise} started JobStatusTable widget
          */
         function start(args) {
             const requiredArgs = ['node'];
@@ -442,7 +442,7 @@ define([
 
             const indexedJobs = jobManager.model.getItem('exec.jobs.byId');
             if (!indexedJobs || !Object.keys(indexedJobs).length) {
-                throw new Error('Must provide at least one job to show the job state list');
+                throw new Error('Must provide at least one job to show the job status table');
             }
             const jobs = Object.values(indexedJobs);
 
@@ -491,9 +491,9 @@ define([
             Object.values(widgetsById).map((widget) => widget.stop());
             jobManager.removeHandler('modelUpdate', 'table');
             jobManager.removeHandler('modelUpdate', 'dropdown');
-            jobManager.removeHandler('job-info', 'jobStateList_info');
-            jobManager.removeHandler('job-status', 'jobStateList_status');
-            jobManager.removeHandler('job-does-not-exist', 'jobStateList_dne');
+            jobManager.removeHandler('job-info', 'jobStatusTable_info');
+            jobManager.removeHandler('job-status', 'jobStatusTable_status');
+            jobManager.removeHandler('job-does-not-exist', 'jobStatusTable_dne');
 
             return dropdownWidget.stop();
         }

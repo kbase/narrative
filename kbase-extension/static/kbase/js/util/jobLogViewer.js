@@ -1278,7 +1278,7 @@ define([
         }
 
         function startJobStatusUpdates() {
-            bus.emit('request-job-update', {
+            bus.emit('request-job-updates-start', {
                 jobId: jobId,
             });
             listeningForJob = true;

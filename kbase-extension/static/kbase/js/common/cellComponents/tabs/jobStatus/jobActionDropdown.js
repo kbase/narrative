@@ -189,7 +189,7 @@ define([
          * @param {object} args  -- with keys
          *      node:       DOM node to attach to
          *
-         * @returns {Promise} started JobStateList widget
+         * @returns {Promise} started JobActionDropdown widget
          */
         function start(args) {
             return Promise.try(() => {

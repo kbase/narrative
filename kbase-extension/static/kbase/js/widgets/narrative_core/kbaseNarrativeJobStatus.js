@@ -509,7 +509,7 @@ define([
                 case 'completed':
                     if (this.requestedUpdates) {
                         this.requestedUpdates = false;
-                        this.channel.emit('request-job-completion', {
+                        this.channel.emit('request-job-updates-stop', {
                             jobId: this.jobId,
                         });
                     }

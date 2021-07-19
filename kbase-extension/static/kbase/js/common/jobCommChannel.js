@@ -76,9 +76,9 @@ define([
 
         // Requests job status updates for this job via the job channel, and also
         // ensures that job polling is running.
-        'request-job-update': START_JOB_UPDATE,
+        'request-job-updates-start': START_JOB_UPDATE,
         // Tells kernel to stop including a job in the lookup loop.
-        'request-job-completion': STOP_JOB_UPDATE,
+        'request-job-updates-stop': STOP_JOB_UPDATE,
 
         // cancels the job
         'request-job-cancellation': CANCEL_JOB,
@@ -270,13 +270,6 @@ define([
                     break;
 
                 // JOB messages
-                case 'job_canceled':
-                    this.sendBusMessage(JOB, msgData.job_id, 'job-canceled', {
-                        jobId: msgData.job_id,
-                        via: 'job_canceled',
-                    });
-                    break;
-
                 case 'job_comm_error':
                     console.error('Error from job comm:', msg);
                     if (!msgData) {
@@ -306,7 +299,7 @@ define([
                             });
                             break;
                         case 'job_retried':
-                            this.sendBusMessage(JOB, jobId, 'job-retried', {
+                            this.sendBusMessage(JOB, jobId, 'job-retry-response', {
                                 jobId: jobId,
                                 error: msgData.message,
                             });

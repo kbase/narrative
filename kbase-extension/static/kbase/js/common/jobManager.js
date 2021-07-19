@@ -9,7 +9,7 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
         'job-info',
         'job-log-deleted',
         'job-logs',
-        'job-retried',
+        'job-retry-response',
         'job-status',
         'result',
         'run-status',
@@ -22,7 +22,7 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
         },
         retry: {
             command: 'request-job-retry',
-            listener: 'job-retried',
+            listener: 'job-retry-response',
         },
     };
 
@@ -456,7 +456,7 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
                 );
 
                 // request updates on the child jobs
-                this.bus.emit('request-job-update', {
+                this.bus.emit('request-job-updates-start', {
                     jobIdList: child_job_ids,
                 });
 

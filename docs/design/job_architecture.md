@@ -24,12 +24,12 @@ All the `request-job-*` requests take as arguments either a single job ID string
   * `jobIdList` - an array of job IDs
   * `parentJobId` - (optional) a string, the id of the requested job's "parent" job
 
-`request-job-update` - request the status for a job or jobs, but start an update cycle so that it's continually requested.
+`request-job-updates-start` - request the status for a job or jobs, but start an update cycle so that it's continually requested.
   * `jobId` - a string, the job id OR
   * `jobIdList` - an array of job IDs
   * `parentJobId` - (optional) a string, the id of the requested job's "parent" job
 
-`request-job-completion` - signal that the front end doesn't need any more updates for the specified job(s), so stop sending them for each loop cycle. Doesn't actually end the job, only requests for updates.
+`request-job-updates-stop` - signal that the front end doesn't need any more updates for the specified job(s), so stop sending them for each loop cycle. Doesn't actually end the job, only requests for updates.
   * `jobId` - a string, the job id OR
   * `jobIdList` - an array of job IDs
   * `parentJobId` - (optional) a string, the id of the requested job's "parent" job

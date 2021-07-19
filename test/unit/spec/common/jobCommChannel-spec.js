@@ -140,7 +140,7 @@ define(['common/jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUti
                 },
             },
             {
-                channel: 'request-job-update',
+                channel: 'request-job-updates-start',
                 message: { jobId: 'someJob', parentJobId: 'someParent' },
                 expected: {
                     request_type: 'start_job_update',
@@ -149,7 +149,7 @@ define(['common/jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUti
                 },
             },
             {
-                channel: 'request-job-completion',
+                channel: 'request-job-updates-stop',
                 message: { jobId: 'someJob' },
                 expected: { request_type: 'stop_job_update', job_id: 'someJob' },
             },
@@ -400,28 +400,6 @@ define(['common/jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUti
                     channel: { jobId: jobId },
                     key: { type: 'job-info' },
                 });
-            });
-        });
-
-        it('Should send job_canceled message to the bus', () => {
-            const jobId = 'foo-canceled',
-                msg = makeCommMsg('job_canceled', {
-                    job_id: jobId,
-                });
-            const comm = new JobCommChannel();
-            spyOn(testBus, 'send');
-            return comm.initCommChannel().then(() => {
-                comm.handleCommMessages(msg);
-                expect(testBus.send).toHaveBeenCalledWith(
-                    {
-                        jobId: jobId,
-                        via: 'job_canceled',
-                    },
-                    {
-                        channel: { jobId: jobId },
-                        key: { type: 'job-canceled' },
-                    }
-                );
             });
         });
 

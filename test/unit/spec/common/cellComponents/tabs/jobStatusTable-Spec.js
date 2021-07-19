@@ -52,10 +52,10 @@ define([
     }
 
     /**
-     * Create a started job state list instance and populate the context
+     * Create a started job status table instance and populate the context
      *
      * @param {object} context - jasmine `this` context
-     * @param {object} job to put in the job state list
+     * @param {object} job to put in the job status table
      */
     async function createJobStatusTableWithContext(context, job) {
         context.jobId = job.job_id;
@@ -173,7 +173,7 @@ define([
         );
     }
 
-    describe('The job state list module', () => {
+    describe('The job status table module', () => {
         it('loads', () => {
             expect(JobStatusTable).not.toBe(null);
         });
@@ -188,9 +188,9 @@ define([
         });
     });
 
-    describe('the job state list', () => {
+    describe('the job status table', () => {
         let container, jobStatusTableInstance;
-        describe('The job state list instance', () => {
+        describe('The job status table instance', () => {
             beforeEach(function () {
                 container = document.createElement('div');
                 this.jobStatusTableInstance = createInstance();
@@ -220,7 +220,7 @@ define([
             });
         });
 
-        describe('the started job state list instance', () => {
+        describe('the started job status table instance', () => {
             describe('structure and content', () => {
                 beforeAll(async function () {
                     container = document.createElement('div');
@@ -273,7 +273,7 @@ define([
 
             // make sure that the row contents are correct
             JobsData.allJobs.forEach((job) => {
-                describe(`the job state list initial row structure and content for "${job.job_id}"`, () => {
+                describe(`the job status table initial row structure and content for "${job.job_id}"`, () => {
                     beforeEach(async function () {
                         container = document.createElement('div');
                         this.job = job;
@@ -297,7 +297,7 @@ define([
                 });
             });
 
-            describe('job state list row selection', () => {
+            describe('job status table row selection', () => {
                 beforeEach(async function () {
                     container = document.createElement('div');
                     jobStatusTableInstance = await createStartedInstance(container);

@@ -109,7 +109,7 @@ define([
     }
 
     /**
-     * create a job state list instance
+     * create a job status table instance
      *
      * the config should be an object with a property 'jobManager', which executes
      * the job actions available as part of the job status table, and 'toggleTab',
@@ -442,7 +442,7 @@ define([
 
             const indexedJobs = jobManager.model.getItem('exec.jobs.byId');
             if (!indexedJobs || !Object.keys(indexedJobs).length) {
-                throw new Error('Must provide at least one job to show the job state list');
+                throw new Error('Must provide at least one job to show the job status table');
             }
             const jobs = Object.values(indexedJobs);
 

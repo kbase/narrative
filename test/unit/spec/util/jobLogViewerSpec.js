@@ -567,7 +567,7 @@ define([
                     this.runtimeBus.send(...formatStatusMessage(jobState));
                 });
 
-                this.runtimeBus.on('request-job-update', (msg) => {
+                this.runtimeBus.on('request-job-updates-start', (msg) => {
                     expect(msg).toEqual({ jobId: jobId });
                     this.runtimeBus.send(...formatStatusMessage(jobState));
                 });
@@ -615,7 +615,7 @@ define([
                     this.runtimeBus.send(...formatStatusMessage(jobState));
                 });
 
-                this.runtimeBus.on('request-job-update', (msg) => {
+                this.runtimeBus.on('request-job-updates-start', (msg) => {
                     expect(msg).toEqual({ jobId: jobId });
                     this.runtimeBus.send(...formatStatusMessage(jobState));
                 });

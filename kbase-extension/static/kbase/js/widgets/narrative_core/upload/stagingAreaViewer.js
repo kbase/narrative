@@ -712,7 +712,7 @@ define([
                 const selectAllChecked = event.target.checked;
 
                 //get all of the rows in the data table
-                const nodes = fullDataTable.fnGetNodes();
+                const nodes = stagingAreaViewer.fullDataTable.fnGetNodes();
 
                 $(`input.${cssBaseClass}-body__checkbox-input:enabled`, nodes)
                     .prop('checked', selectAllChecked)

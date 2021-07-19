@@ -499,7 +499,6 @@ class AppManager(object):
                         version=version,
                         cell_id=cell_id,
                         run_id=run_id,
-                        ws_id=ws_id,
                     )
                 )
             log_app_info.append(
@@ -716,9 +715,10 @@ class AppManager(object):
             "service_ver": service_ver,
             "params": input_vals,
             "app_id": app_id,
-            "wsid": ws_id,
             "meta": job_meta,
         }
+        if ws_id is not None:
+            job_runner_inputs["wsid"] = ws_id
         if len(ws_input_refs) > 0:
             job_runner_inputs["source_ws_objects"] = ws_input_refs
 

@@ -5,7 +5,7 @@ import os
 import biokbase.narrative.jobs.jobcomm
 import biokbase.narrative.jobs.jobmanager
 from biokbase.narrative.jobs.jobcomm import JobRequest
-from biokbase.narrative.exception_util import JobException, NarrativeException
+from biokbase.narrative.exception_util import NarrativeException
 from .util import ConfigTests, validate_job_state
 from .narrative_mock.mockcomm import MockComm
 from .narrative_mock.mockclients import get_mock_client, get_failing_mock_client
@@ -14,6 +14,7 @@ from .test_job import (
     JOB_CREATED,
     JOB_RUNNING,
     JOB_TERMINATED,
+    JOB_ERROR,
     BATCH_PARENT,
     BATCH_COMPLETED,
     BATCH_TERMINATED,
@@ -260,13 +261,26 @@ class JobCommTestCase(unittest.TestCase):
     @mock.patch(
         "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get", get_mock_client
     )
-    def test_retry_jobs_ok(self):
-        job_id_list = ["5d64935cb215ad4128de94d9", None]
+    def test_retry_jobs_1_ok(self):
+        job_id_list = [JOB_TERMINATED]
         req = make_comm_msg("retry_job", job_id_list, True)
         self.jc._retry_jobs(req)
         msg = self.jc._comm.last_message
         self.assertEqual(
-            {"job_id_list": ["9d49ed8214da512bc53946d5"]}, msg["data"]["content"]
+            {"job_id_list": [JOB_TERMINATED[::-1]]}, msg["data"]["content"]
+        )
+        self.assertEqual("new_job", msg["data"]["msg_type"])
+
+    @mock.patch(
+        "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get", get_mock_client
+    )
+    def test_retry_jobs_2_ok(self):
+        job_id_list = [JOB_TERMINATED, JOB_ERROR, None]
+        req = make_comm_msg("retry_job", job_id_list, True)
+        self.jc._retry_jobs(req)
+        msg = self.jc._comm.last_message
+        self.assertEqual(
+            {"job_id_list": [JOB_TERMINATED[::-1], JOB_ERROR[::-1]]}, msg["data"]["content"]
         )
         self.assertEqual("new_job", msg["data"]["msg_type"])
 
@@ -282,25 +296,38 @@ class JobCommTestCase(unittest.TestCase):
         )
         self.assertEqual("job_does_not_exist", msg["data"]["msg_type"])
 
-    def test_retry_jobs_bad_job(self):
-        job_id_list = ["5d64935cb215ad4128de94d9", "nope", "no"]
+    @mock.patch(
+        "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get", get_mock_client
+    )
+    def test_retry_jobs_some_bad_jobs(self):
+        job_id_list = [JOB_TERMINATED, "nope", "no"]
         req = make_comm_msg("retry_job", job_id_list, True)
-        with self.assertRaises(JobException) as e:
-            self.jc._retry_jobs(req)
-        self.assertIn(f"No jobs present with ids: {job_id_list[1:]}", str(e.exception))
+        self.jc._retry_jobs(req)
         msg = self.jc._comm.last_message
-        self.assertEqual("job_does_not_exist", msg["data"]["msg_type"])
         self.assertEqual(
-            {"job_id_list": job_id_list[1:], "source": "retry_job"},
-            msg["data"]["content"],
+            {"job_id_list": [JOB_TERMINATED[::-1]]}, msg["data"]["content"]
         )
+        self.assertEqual("new_job", msg["data"]["msg_type"])
+
+    @mock.patch(
+        "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get", get_mock_client
+    )
+    def test_retry_jobs_all_bad_jobs(self):
+        job_id_list = ["nope", "no"]
+        req = make_comm_msg("retry_job", job_id_list, True)
+        self.jc._retry_jobs(req)
+        msg = self.jc._comm.last_message
+        self.assertEqual(
+            {"job_id_list": []}, msg["data"]["content"]
+        )
+        self.assertEqual("new_job", msg["data"]["msg_type"])
 
     @mock.patch(
         "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get",
         get_failing_mock_client,
     )
     def test_retry_jobs_failure(self):
-        job_id_list = [JOB_COMPLETED]
+        job_id_list = [JOB_COMPLETED, JOB_CREATED, JOB_TERMINATED]
         req = make_comm_msg("retry_job", job_id_list, True)
         with self.assertRaises(NarrativeException) as e:
             self.jc._retry_jobs(req)

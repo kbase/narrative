@@ -1,6 +1,7 @@
 from ..util import ConfigTests
 from biokbase.workspace.baseclient import ServerError
 from biokbase.narrative.jobs.appmanager import BATCH_ID_KEY
+import copy
 
 RANDOM_DATE = "2018-08-10T16:47:36+0000"
 RANDOM_TYPE = "ModuleA.TypeA-1.0"
@@ -34,18 +35,22 @@ class MockClients:
     Will likely be removed (or modified, at least), when a minified KBase deploy becomes available.
     Then we don't need to mock as much.
     """
+    config = ConfigTests()
+    _ee2_job_info = config.load_json_file(
+        config.get("jobs", "ee2_job_info_file")
+    )
 
     def __init__(self, token=None):
         if token is not None:
             assert isinstance(token, str)
-        self.config = ConfigTests()
         self.job_info = self.config.load_json_file(
             self.config.get("jobs", "job_info_file")
         )
-        self.ee2_job_info = self.config.load_json_file(
-            self.config.get("jobs", "ee2_job_info_file")
-        )
         self.test_job_id = self.config.get("app_tests", "test_job_id")
+
+    @property
+    def ee2_job_info(self):
+        return copy.deepcopy(self._ee2_job_info)
 
     # ----- User and Job State functions -----
 
@@ -232,7 +237,7 @@ class MockClients:
         job_id = params.get("job_id")
         if not job_id:
             return {}
-        info = self.ee2_job_info.get(job_id, {})
+        info = self.ee2_job_info.get(job_id, {"job_id": job_id, "status": "unmocked"})
         if "exclude_fields" in params:
             for f in params["exclude_fields"]:
                 if f in info:

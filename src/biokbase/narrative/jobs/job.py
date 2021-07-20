@@ -1,6 +1,8 @@
 import biokbase.narrative.clients as clients
 from .specmanager import SpecManager
 from biokbase.narrative.app_util import map_inputs_from_job, map_outputs_from_state
+from biokbase.narrative.exception_util import transform_job_exception
+import copy
 import json
 import uuid
 from jinja2 import Template
@@ -12,7 +14,7 @@ KBase job class
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 COMPLETED_STATUS = "completed"
-TERMINAL_STATES = [COMPLETED_STATUS, "terminated", "error"]
+TERMINAL_STATUSES = [COMPLETED_STATUS, "terminated", "error"]
 
 EXCLUDED_JOB_STATE_FIELDS = [
     "authstrat",
@@ -152,9 +154,6 @@ class Job(object):
     def app_spec(self):
         return SpecManager().get_spec(self.app_id, self.tag)
 
-    def status(self):
-        return self.state().get("status", "unknown")
-
     def parameters(self):
         """
         Returns the parameters used to start the job. Job tries to use its params field, but
@@ -180,7 +179,7 @@ class Job(object):
         """
         given a state data structure (as emitted by ee2), update the stored state in the job object
         """
-        if not state or state == {}:
+        if not state:
             return
 
         if "job_id" in state and state["job_id"] != self.job_id:
@@ -192,8 +191,13 @@ class Job(object):
         # batch parent jobs with where all children have status "completed" are in a terminal state
         # otherwise, child jobs may be retried
         self.terminal_state = (
-            True if state.get("status", "unknown") in TERMINAL_STATES else False
+            True if state.get("status", "unknown") in TERMINAL_STATUSES else False
         )
+
+        # delete fields that we are not interested in
+        for field in EXCLUDED_JOB_STATE_FIELDS:
+            if field in state and field != "job_input":
+                del state[field]
 
         if self._last_state is None:
             self._last_state = state
@@ -211,7 +215,7 @@ class Job(object):
         self.terminal_state = False
 
     def _augment_ee2_state(self, state):
-        output_state = {key: value for key, value in state.items()}
+        output_state = copy.deepcopy(state)
         for field in EXCLUDED_JOB_STATE_FIELDS:
             if field in output_state:
                 del output_state[field]
@@ -219,26 +223,102 @@ class Job(object):
             output_state["job_output"] = {}
         for arg in EXTRA_JOB_STATE_FIELDS:
             output_state[arg] = getattr(self, arg)
-        return dict(output_state)
+        return output_state
 
     def state(self):
         """
-        Queries the job service to see the status of the current job.
-        Returns a <something> stating its status. (string? enum type? different traitlet?)
+        Queries the job service to see the state of the current job.
         """
 
         if self.terminal_state:
-            return self._augment_ee2_state(self._last_state)
+            return self._last_state
 
         try:
             state = clients.get("execution_engine2").check_job(
                 {"job_id": self.job_id, "exclude_fields": EXCLUDED_JOB_STATE_FIELDS}
             )
-            self.update_state(state)
-            return self._augment_ee2_state(state)
+            return self.update_state(state)
 
         except Exception as e:
             raise Exception(f"Unable to fetch info for job {self.job_id} - {e}")
+
+    def output_state(self, state=None) -> dict:
+        """
+        :param state: can be queried individually from ee2/cache with self.state(),
+            but sometimes want it to be queried in bulk from ee2 upstream
+        :return: dict, with structure
+
+        {
+            owner: string (username, who started the job),
+            spec: app spec (optional)
+            widget_info: (if not finished, None, else...) job.get_viewer_params result
+            state: {
+                job_id: string,
+                status: string,
+                created: epoch ms,
+                updated: epoch ms,
+                queued: optional - epoch ms,
+                finished: optional - epoc ms,
+                terminated_code: optional - int,
+                tag: string (release, beta, dev),
+                parent_job_id: optional - string or null,
+                run_id: string,
+                cell_id: string,
+                errormsg: optional - string,
+                error (optional): {
+                    code: int,
+                    name: string,
+                    message: string (should be for the user to read),
+                    error: string, (likely a stacktrace)
+                },
+                error_code: optional - int
+            }
+        }
+        """
+        if not state:
+            state = self.state()
+        else:
+            state = self.update_state(state)
+
+        if state is None:
+            return self._create_error_state(
+                "Unable to find current job state. Please try again later, or contact KBase.",
+                "Unable to return job state",
+                -1
+            )
+
+        state = self._augment_ee2_state(state)
+
+        if "child_jobs" not in state:
+            state["child_jobs"] = []
+
+        widget_info = None
+        if state.get("finished"):
+            try:
+                widget_info = self.get_viewer_params(state)
+            except Exception as e:
+                # Can't get viewer params
+                new_e = transform_job_exception(e)
+                state.update(
+                    {
+                        "status": "error",
+                        "errormsg": "Unable to build output viewer parameters!",
+                        "error": {
+                            "code": getattr(new_e, "code", -1),
+                            "source": getattr(new_e, "source", "JobManager"),
+                            "name": "App Error",
+                            "message": "Unable to build output viewer parameters",
+                            "error": "Unable to generate App output viewer!\nThe App appears to have completed successfully,\nbut we cannot construct its output viewer.\nPlease contact https://kbase.us/support for assistance.",
+                        },
+                    }
+                )
+
+        job_state = {
+            "state": state,
+            "widget_info": widget_info,
+            "owner": self.owner,
+        }
+        return job_state
 
     def show_output_widget(self, state=None):
         """
@@ -249,6 +329,8 @@ class Job(object):
 
         if state is None:
             state = self.state()
+
+        state = self._augment_ee2_state(state)
         if state["status"] == COMPLETED_STATUS and "job_output" in state:
             (output_widget, widget_params) = self._get_output_info(state)
             return WidgetManager().show_output_widget(
@@ -325,8 +407,7 @@ class Job(object):
         Returns True if the job is finished (in any state, including errors or canceled),
         False if its running/queued.
         """
-        status = self.status()
-        return status.lower() in TERMINAL_STATES
+        return self.state().get("status") in TERMINAL_STATUSES
 
     def __repr__(self):
         return "KBase Narrative Job - " + str(self.job_id)
@@ -341,7 +422,7 @@ class Job(object):
         """
         output_widget_info = None
         try:
-            state = self.state()
+            state = self._augment_ee2_state(self.state())
             spec = self.app_spec()
             if state.get("status", "") == COMPLETED_STATUS:
                 (output_widget, widget_params) = self._get_output_info(state)
@@ -369,3 +450,36 @@ class Job(object):
         """
 
         return {attr: getattr(self, attr) for attr in [*ALL_JOB_ATTRS, "_last_state"]}
+
+    def _create_error_state(
+        self,
+        error: str,
+        error_msg: str,
+        code: int,
+    ) -> dict:
+        """
+        Creates an error state to return if
+        1. the state is missing or unretrievable
+        2. Job is none
+        This creates the whole state dictionary to return, as described in
+        _construct_cache_job_state.
+        :param error: the full, detailed error (not necessarily human-readable, maybe a stacktrace)
+        :param error_msg: a shortened error string, meant to be human-readable
+        :param code: int, an error code
+        """
+        return {
+            "status": "error",
+            "error": {
+                "code": code,
+                "name": "Job Error",
+                "message": error_msg,
+                "error": error,
+            },
+            "errormsg": error_msg,
+            "error_code": code,
+            "job_id": self.job_id,
+            "cell_id": self.cell_id,
+            "run_id": self.run_id,
+            "created": 0,
+            "updated": 0,
+        }

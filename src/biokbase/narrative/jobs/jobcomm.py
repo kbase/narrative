@@ -3,7 +3,7 @@ import threading
 from typing import List
 from ipykernel.comm import Comm
 import biokbase.narrative.jobs.jobmanager as jobmanager
-from biokbase.narrative.exception_util import JobException, NarrativeException
+from biokbase.narrative.exception_util import NarrativeException
 from biokbase.narrative.common import kblogging
 
 UNKNOWN_REASON = "Unknown reason"
@@ -354,16 +354,6 @@ class JobComm:
         self._lookup_job_state(req)
 
     def _retry_jobs(self, req: JobRequest) -> None:
-        """
-        retry_results is formatted as:
-        [
-            {
-                "job_id": original_job_id,
-                "retry_id": new_job_id
-            },
-            ...
-        ]
-        """
         self._verify_job_id_list(req)
         try:
             retry_results = self._jm.retry_jobs(req.job_id_list)
@@ -372,15 +362,10 @@ class JobComm:
                 "new_job",
                 {
                     "job_id_list": [
-                        job["retry_id"] for job in retry_results if job["retry_id"]
+                        result["retry_id"]["state"]["job_id"] for result in retry_results if "retry_id" in result
                     ]
                 },
             )
-        except JobException as e:
-            self.send_error_message(
-                "job_does_not_exist", req, {"job_id_list": e.err_job_ids}
-            )
-            raise
         except NarrativeException as e:
             self.send_error_message(
                 "job_comm_error",

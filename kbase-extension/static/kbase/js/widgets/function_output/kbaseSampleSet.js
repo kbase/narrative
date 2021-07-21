@@ -1,32 +1,235 @@
 /*
-Sebastian Le Bras - April 2020
+Sebastian Le Bras, David Lyon - April 2020
 */
 define([
     'kbwidget',
-    'bootstrap',
     'jquery',
-    'kbase-client-api',
-    'widgets/dynamicTable',
     'kbaseAuthenticatedWidget',
     'kbaseTabs',
-    'kbase-generic-client-api',
     'narrativeConfig',
-    'bluebird',
-], (
-    KBWidget,
-    bootstrap,
-    $,
-    kbase_client_api,
-    DynamicTable,
-    kbaseAuthenticatedWidget,
-    kbaseTabs,
-    GenericClient,
-    Config,
-    Promise
-) => {
+    'widgets/common/loadingMessage',
+    'widgets/common/errorMessage',
+    'jsonrpc/1.1/ServiceClient',
+    'json!config/samples/groups.json',
+    'json!config/samples/schemas.json',
+
+    // For effect.
+    'css!styles/ScrollingTable.css',
+    'css!styles/BootstrapOverrides.css',
+], (KBWidget, $, kbaseAuthenticatedWidget, kbaseTabs, Config, LoadingMessage, ErrorMessage, ServiceClient, groups, schemas) => {
     'use strict';
 
-    return KBWidget({
+    const SERVICE_TIMEOUT = 60000;
+    const EMPTY_CHAR = '∅';
+    
+    function formatFieldName(fieldName) {
+        return fieldName.split('_').join(' ');
+    }
+
+    class SampleSet {
+        constructor({ workspaceURL, sampleServiceURL, token, timeout, groups, schemas, ref }) {
+            this.workspaceURL = workspaceURL;
+            this.sampleServiceURL = sampleServiceURL;
+            this.token = token;
+            this.timeout = timeout;
+            this.groups = groups;
+            this.schemas = schemas;
+            this.schemaDB = schemas.reduce((db, schema) => {
+                db[schema.kbase.sample.key] = schema;
+                return db;
+            }, {});
+            this.ref = ref;
+        }
+
+        async load() {
+            const workspace = new ServiceClient({
+                url: this.workspaceURL,
+                module: 'Workspace',
+                token: this.token,
+                timeout: this.timeout,
+                strict: false,
+            });
+
+            const sampleService = new ServiceClient({
+                url: this.sampleServiceURL,
+                module: 'SampleService',
+                token: this.token,
+                timeout: this.timeout,
+                strict: false,
+            });
+            const {
+                data: [sampleSet],
+            } = await workspace.callFunc('get_objects2', {
+                params: {
+                    objects: [
+                        {
+                            ref: this.ref,
+                        },
+                    ],
+                },
+            });
+            this.sampleSet = sampleSet;
+
+            const samplesToFetch = sampleSet.data.samples.map(({ id, version }) => {
+                return { id, version };
+            });
+
+            // Now get all the samples.
+            this.samples = await sampleService.callFunc('get_samples', {
+                params: {
+                    samples: samplesToFetch,
+                },
+            });
+
+            this.samplesMap = this.samples.reduce((samplesMap, sample) => {
+                samplesMap[`${sample.id}/${sample.version}`] = sample;
+                return samplesMap;
+            }, {});
+
+            this.getHeaders();
+        }
+
+        formatField(value, schema) {
+            if (!schema) {
+                return $(`<span>`).text(String(value)).attr('title', String(value));
+            }
+            switch (schema.type) {
+                case 'string':
+                    switch (schema.format) {
+                        case 'url':
+                            return $(`<a href="${value}" target="_blank">`)
+                                .text(value)
+                                .attr('title', value);
+                        case 'ontology-term':
+                            return $(
+                                `<a href="/#ontology/term/${schema.namespace}/${encodeURIComponent(
+                                    value
+                                )}" target="_blank">`
+                            )
+                                .text(value)
+                                .attr('title', value);
+                        default:
+                            return $(`<span>`).text(value).attr('title', value);
+                    }
+                case 'number':
+                    if ('formatting' in schema.kbase) {
+                        return $(`<span>`)
+                            .text(Intl.NumberFormat('en-US', schema.kbase.formatting).format(value))
+                            .attr('title', value);
+                    }
+                    return $(`<span>`).text(String(value)).attr('title', String(value));
+
+                default:
+                    return $(`<span>`).text(String(value)).attr('title', String(value));
+            }
+        }
+
+        getHeaders() {
+            const controlledFields = new Set();
+            const userFields = new Set();
+
+            this.samples.forEach((sample) => {
+                Object.keys(sample.node_tree[0].meta_controlled).forEach((fieldKey) => {
+                    controlledFields.add(fieldKey);
+                });
+            });
+
+            this.samples.forEach((sample) => {
+                Object.keys(sample.node_tree[0].meta_user).forEach((fieldKey) => {
+                    if (fieldKey in controlledFields) {
+                        console.warn(
+                            `User field ${fieldKey} also present in controlled fields; skipped`
+                        );
+                        return;
+                    }
+                    userFields.add(fieldKey);
+                });
+            });
+
+            // TODO: use grouping to order the fields.
+
+            const controlledFieldMap = Array.from(controlledFields).reduce((m, field) => {
+                m[field] = field;
+                return m;
+            }, {});
+
+            const columnGroups = [];
+            const headerFields = [];
+            for (const group of this.groups) {
+                const groupFields = [];
+                for (const field of group.fields) {
+                    if (field in controlledFieldMap) {
+                        groupFields.push(field);
+                        const schema = this.schemaDB[field];
+
+                        headerFields.push({
+                            id: field,
+                            title: schema.title,
+                            isSortable: true,
+                            type: 'controlled',
+                            group: group.title,
+                            schema,
+                        });
+                    }
+                }
+                if (groupFields.length > 0) {
+                    columnGroups.push({
+                        name: group.name,
+                        title: group.title,
+                        columnCount: groupFields.length,
+                    });
+                }
+            }
+
+            if (userFields.size > 0) {
+                columnGroups.push({
+                    name: 'user',
+                    title: 'User',
+                    columnCount: userFields.size,
+                });
+                for (const field of Array.from(userFields)) {
+                    headerFields.push({
+                        id: field,
+                        title: formatFieldName(field),
+                        isSortable: true,
+                        type: 'user',
+                        group: 'User',
+                    });
+                }
+            }
+
+            this.columnGroups = columnGroups;
+            this.headerFields = headerFields;
+        }
+
+        toTable() {
+            return this.samples.map((sample) => {
+                const controlled = sample.node_tree[0].meta_controlled;
+                const user = sample.node_tree[0].meta_user;
+                const row = this.headerFields.map(({ id, type }) => {
+                    // NB: id is the field key.
+                    if (type === 'controlled') {
+                        return controlled[id] ? controlled[id].value : EMPTY_CHAR;
+                    } else if (type === 'user') {
+                        return user[id] ? user[id].value : EMPTY_CHAR;
+                    } else {
+                        return EMPTY_CHAR;
+                    }
+                });
+                return {
+                    row,
+                    info: {
+                        id: sample.id,
+                        version: sample.version,
+                        nodeId: sample.node_tree[0].id,
+                        name: sample.name,
+                    },
+                };
+            });
+        }
+    }
+
+    const kbaseSampleSetView = KBWidget({
         name: 'kbaseSampleSetView',
         parent: kbaseAuthenticatedWidget,
         version: '1.0.0',
@@ -38,252 +241,210 @@ define([
         init: function (options) {
             this._super(options);
 
-            // var self = this;
             this.obj_ref = this.options.upas.id;
-            this.link_ref = this.obj_ref;
 
-            if (options._obj_info) {
-                this.ss_info = options._obj_info;
-                this.obj_ref =
-                    this.ss_info['ws_id'] +
-                    '/' +
-                    this.ss_info['id'] +
-                    '/' +
-                    this.ss_info['version'];
-                this.link_ref =
-                    this.ss_info['ws_id'] +
-                    '/' +
-                    this.ss_info['name'] +
-                    '/' +
-                    this.ss_info['version'];
-            }
-
-            this.client = new GenericClient(Config.url('service_wizard'), {
+            this.model = new SampleSet({
+                workspaceURL: Config.url('workspace'),
+                sampleServiceURL: Config.url('sample_service'),
                 token: this.authToken(),
+                timeout: SERVICE_TIMEOUT,
+                groups,
+                schemas,
+                ref: this.options.upas.id,
             });
-            this.ws = new Workspace(Config.url('workspace'), { token: this.authToken() });
 
-            this.$elem.append(
-                $('<div>')
-                    .attr('align', 'center')
-                    .append($('<i class="fa fa-spinner fa-spin fa-2x">'))
-            );
-
-            // 1) get stats, and show the panel
-            const basicInfoCalls = [];
-            basicInfoCalls.push(
-                Promise.resolve(this.ws.get_objects2({ objects: [{ ref: this.obj_ref }] })).then(
-                    (obj) => {
-                        this.ss_obj_data = obj['data'][0]['data'];
-                        this.ss_obj_info = obj['data'][0]['info'];
-                        this.link_ref =
-                            this.ss_obj_info[6] +
-                            '/' +
-                            this.ss_obj_info[0] +
-                            '/' +
-                            this.ss_obj_info[4];
-                    }
-                )
-            );
-
-            Promise.all(basicInfoCalls)
-                .then(() => {
-                    this.renderBasicTable();
-                })
-                .catch((err) => {
-                    console.error('an error occurred! ' + err);
-                    this.$elem.empty();
-                    this.$elem.append(
-                        'An unexpected error occured: \nPlease contact KBase <a href="https://www.kbase.us/support/">here<a>'
-                    );
-                });
+            // Render
+            this.render();
 
             return this;
         },
 
-        renderBasicTable: function () {
-            const self = this;
-            const $container = this.$elem;
-            $container.empty();
+        loggedInCallback: function () {
+            this.render();
+        },
 
-            const $tabPane = $('<div>');
-            $container.append($tabPane);
+        render: function () {
+            this.$elem.empty();
 
-            // Build the overview table
-            const $overviewTable = $(
-                '<table class="table table-striped table-bordered table-hover" style="margin-left: auto; margin-right: auto;"/>'
-            );
-
-            function get_table_row(key, value) {
-                return $('<tr>').append($('<td>').append(key)).append($('<td>').append(value));
-            }
-
-            $overviewTable.append(
-                get_table_row(
-                    'KBase Object Name',
-                    '<a href="/#dataview/' +
-                        self.link_ref +
-                        '" target="_blank">' +
-                        self.ss_obj_info[1] +
-                        '</a>'
-                )
-            );
-            // leave out version for now, because that is not passed into data widgets
-            //'<a href="/#dataview/'+self.link_ref + '" target="_blank">' + self.ss_obj_info[1] + ' (v'+self.ss_obj_info[4]+')'+'</a>' ));
-            $overviewTable.append(get_table_row('Saved by', String(self.ss_obj_info[5])));
-            $overviewTable.append(
-                get_table_row('Number of Samples', self.ss_obj_data['samples'].length)
-            );
-            $overviewTable.append(get_table_row('Description', self.ss_obj_data['description']));
-
-            self.metadata_headers = [
-                {
-                    id: 'sample_version',
-                    text: 'version',
-                    isSortable: true,
-                },
-            ]; // version not in metadata, but included in visualization.
-            // get the metadata_keys
-            self.client
-                .sync_call('SampleService.get_sample', [
-                    {
-                        id: self.ss_obj_data['samples'][0]['id'],
-                    },
-                ])
-                .then((sample) => {
-                    if (
-                        sample.length > 0 &&
-                        'node_tree' in sample[0] &&
-                        sample[0]['node_tree'].length > 0
-                    ) {
-                        const node_tree = sample[0]['node_tree'][0];
-                        Object.keys(node_tree['meta_controlled'])
-                            .concat(Object.keys(node_tree['meta_user']))
-                            .forEach((metakey) => {
-                                self.metadata_headers.push({
-                                    id: metakey.split(' ').join('_'),
-                                    text: metakey,
-                                    isSortable: true,
-                                });
-                            });
-                    } else {
-                        console.error(
-                            'Error: Could not load the first sample for metadata headers: ' + err
-                        );
-                    }
-                });
-            // Build the tabs
-            const $tabs = new kbaseTabs($tabPane, {
+            const $summaryTab = $('<div>').css('margin-top', '10px');
+            const $samplesTab = $('<div>').css('margin-top', '10px');
+            const $tabPane = $('<div>').appendTo(this.$elem);
+            new kbaseTabs($tabPane, {
                 tabPosition: 'top',
-                canDelete: false, //whether or not the tab can be removed.
+                canDelete: false,
                 tabs: [
                     {
-                        tab: 'Summary', //name of the tab
-                        content: $('<div>').css('margin-top', '15px').append($overviewTable),
+                        tab: 'Summary',
+                        content: $summaryTab,
                         show: true,
                     },
                     {
                         tab: 'Samples',
-                        showContentCallback: function () {
-                            return self.addSamplesList();
-                        },
+                        content: $samplesTab,
                     },
                 ],
             });
+
+            $summaryTab.append(LoadingMessage('Loading SampleSet and Samples... '));
+            $samplesTab.append(LoadingMessage('Loading SampleSet and Samples... '));
+            this.model
+                .load()
+                .then(() => {
+                    this.renderSummary($summaryTab);
+                    this.renderSamples($samplesTab);
+                })
+                .catch((err) => {
+                    this.renderError(this.$elem, err);
+                });
         },
 
-        addSamplesList: function () {
-            const self = this;
-            const $content = $('<div>');
-            new DynamicTable($content, {
-                headers: [
-                    {
-                        id: 'name',
-                        text: 'Sample Name',
-                        isSortable: true,
-                    },
-                    {
-                        id: 'sample_id',
-                        text: 'Sample ID',
-                        isSortable: false,
-                    },
-                ].concat(self.metadata_headers),
-                searchPlaceholder: 'Search samples',
-                updateFunction: function (pageNum, query, sortColId, sortColDir) {
-                    const rows = [];
-                    const sample_slice = self.ss_obj_data['samples'].slice(
-                        pageNum * self.options.pageLimit,
-                        (pageNum + 1) * self.options.pageLimit
-                    );
-                    const sample_queries = [];
-                    const sample_data = [];
-                    sample_slice.forEach((sample_info) => {
-                        const sample_query_params = {
-                            id: sample_info['id'],
-                        };
-                        if ('version' in sample_info) {
-                            sample_query_params['version'] = sample_info['version'];
-                        }
-                        sample_queries.push(
-                            Promise.resolve(
-                                self.client.sync_call('SampleService.get_sample', [
-                                    sample_query_params,
-                                ])
-                            ).then((sample) => {
-                                const samp_data = {};
-                                samp_data['version'] = String(sample[0]['version']);
-                                for (let i = 0; i < sample[0]['node_tree'].length; i++) {
-                                    for (const meta_key in sample[0]['node_tree'][i][
-                                        'meta_controlled'
-                                    ]) {
-                                        samp_data[meta_key] = self.unpack_metadata_to_string(
-                                            sample[0]['node_tree'][i]['meta_controlled'][meta_key]
-                                        );
-                                    }
-                                    for (const meta_key in sample[0]['node_tree'][i]['meta_user']) {
-                                        samp_data[meta_key] = self.unpack_metadata_to_string(
-                                            sample[0]['node_tree'][i]['meta_user'][meta_key]
-                                        );
-                                    }
-                                }
-                                sample_data.push(samp_data);
-                            })
-                        );
-                        const row = [sample_info['name'], sample_info['id']];
-                        rows.push(row);
-                    });
-                    return Promise.all(sample_queries).then(() => {
-                        for (let j = 0; j < rows.length; j++) {
-                            const row = rows[j];
-                            for (const meta_idx in self.metadata_headers) {
-                                const meta_header = self.metadata_headers[meta_idx];
-                                let row_str = self.options.default_blank_value;
-                                if (meta_header.text in sample_data[j]) {
-                                    row_str = sample_data[j][meta_header.text];
-                                }
-                                row.push(row_str);
-                            }
-                            rows[j] = row;
-                        }
-                        return {
-                            rows: rows,
-                            start: pageNum * self.options.pageLimit,
-                            query: query,
-                            total: self.ss_obj_data['samples'].length,
-                        };
-                    });
-                },
-                style: { 'margin-top': '5px' },
-            });
-            return $content;
+        renderError: function ($container, err) {
+            $container.html(ErrorMessage(err));
         },
 
-        unpack_metadata_to_string: function (metadata) {
-            let metastr = String(metadata['value']);
-            if ('units' in metadata) {
-                metastr += ' ' + String(metadata['units']);
+        renderDataviewLink: function (objectInfo) {
+            const [
+                objectId,
+                objectName,
+                ,
+                ,
+                version,
+                ,
+                workspaceId,
+            ] = objectInfo;
+
+            return $('<a>')
+                .attr('href', `/#dataview/${workspaceId}/${objectId}/${version}`)
+                .attr('target', '_blank')
+                .text(objectName);
+        },
+
+        renderPeopleLink: function (objectInfo) {
+            const [
+                ,
+                ,
+                ,
+                ,
+                ,
+                savedBy,
+                ,
+            ] = objectInfo;
+
+            return $('<a>')
+                .attr('href', `/#people/${savedBy}`)
+                .attr('target', '_blank')
+                .text(savedBy);
+        },
+
+        renderSummary: function ($container) {
+            $container.empty();
+
+            // Build table
+            const $overviewTable = $('<table role="table">')
+                .addClass('table table-bordered table-hover OverrideRenderedHTML');
+
+            const $tbody = $('<tbody role="rowgroup">').appendTo($overviewTable);
+            $tbody.append(
+                $('<tr role="row">').append(
+                    $('<th role="cell">').text('KBase Object Name'),
+                    $('<td role="cell">').html(this.renderDataviewLink(this.model.sampleSet.info))
+                ),
+                $('<tr role="row">').append(
+                    $('<th role="cell">').text('Saved by'),
+                    $('<td role="cell">').html(this.renderPeopleLink(this.model.sampleSet.info))
+                ),
+                $('<tr role="row">').append(
+                    $('<th role="cell">').text('Number of Samples'),
+                    $('<td role="cell">').text(Intl.NumberFormat('en-US', {useGrouping: true}).format(this.model.samples.length))
+                ),
+                $('<tr role="row">').append(
+                    $('<th role="cell">').text('Description'),
+                    $('<td role="cell">').text(this.model.sampleSet.data.description)
+                )
+            )
+
+            // Attach table to the container
+            $container.append($overviewTable);
+        },
+
+        renderTable: function ($container) {
+            const table = this.model.toTable();
+    
+            // create table
+            const $table = $('<table class="ScrollingTable" role="table">');
+            $container.append($table);
+
+            // create thead
+            const $thead = $('<thead role="rowgroup">');
+            $table.append($thead);
+
+            // create column group header
+            const $columnGroupRow = $('<tr role="row">');
+            $thead.append($columnGroupRow);
+            for (const columnGroup of this.model.columnGroups) {
+                $columnGroupRow.append(
+                    $(`<th role="cell" colspan="${columnGroup.columnCount}">`).text(columnGroup.title)
+                );
             }
-            return metastr;
+
+            // create column header
+            const $headerRow = $('<tr role="row">');
+            $thead.append($headerRow);
+            for (const header of this.model.headerFields) {
+                $headerRow.append($('<th role="cell">').append($('<div class="-content">').text(header.title)));
+            }
+
+            // create units header
+            const $unitsHeaderRow = $('<tr style="font-style: italic;" role="row">');
+            $thead.append($unitsHeaderRow);
+            for (const header of this.model.headerFields) {
+                const unit = () => {
+                    if (header.schema) {
+                        return header.schema.kbase.unit;
+                    } else {
+                        return '';
+                    }
+                };
+                $unitsHeaderRow.append(
+                    $('<th role="cell">').append(
+                        $('<div class="-content">').text(unit)
+                    )
+                );
+            }
+
+            // create tbody
+            const $tbody = $('<tbody role="rowgroup">');
+            $table.append($tbody);
+
+            // for each row
+            for (const [, { row, info }] of table.entries()) {
+                const $row = $('<tr role="row">').dblclick(() => {
+                    const url = `${window.location.origin}/#samples/view/${info.id}/${info.version}`;
+                    window.open(url, '_blank');
+                });
+                $tbody.append($row);
+                for (const [index] of this.model.headerFields.entries()) {
+                    const value = row[index];
+                    const $field = $('<div class="-content">').append(
+                        this.model.formatField(value, this.model.headerFields[index].schema)
+                    );
+                    $row.append($('<td role="cell">').append($field));
+                }
+            }
+
+            return $table;
+        },
+
+        renderSamples: function ($container) {
+            $container.empty();
+
+            // Build and attach to container
+            const $tableDiv = $('<div style="overflow: auto; max-height: 40em;" />');
+            $container.append($tableDiv);
+
+            this.renderTable($tableDiv);
         },
     });
+
+    return kbaseSampleSetView;
 });

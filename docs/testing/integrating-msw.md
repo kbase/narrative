@@ -1,6 +1,6 @@
 # Testing with Mock Service Worker (MSW)
 
-Unit testing is challenging with components or widgets which depend upon integration network api code which fetches data.
+Unit testing is challenging with components or widgets which depend upon integrated network api code which fetches data.
 
 One approach is api mocking, in which api code is temporarily supplanted with testing code which, rather than conduct the intended action, simply returns some canned set of data.
 
@@ -53,7 +53,135 @@ The reason to map `mockServiceWorker.js` is that `msw.js` will load and start th
 
 A utility, `mswUtils.js`, provides tools to use `msw` within tests.
 
-Support consists of  
+### Define mocks
+
+Within a unit test file, typically named `X-spec.js`, service mocks are defined as plain functions which return an async function which itself invokes the mock service.
+
+Below is an example (would not work as is, but close):
+
+```javascript
+function myServiceHandler() {
+        // Note request may be async (does not need to be).
+        // A handler will probably load data asynchronously, so this
+        // usage will probably be the most common.
+        return async (req) => {
+            // The request has been processed 
+            const method = req.body.method;
+            const [params] = req.body.params;
+            switch (method) {
+                case 'MyModule.myFunc':
+                    // Note usage of params -- this is the jsonrpc request params.
+                    if (params.myParam === 'foo') {
+                        // Will probably need to load some test data; e.g. using
+                        // `require` to load json.
+                        const data = await someLoadingFunction(params);
+                        const result = { foo: data };
+                        return {
+                            // Always this value for JSON-RPC 1.1
+                            version: '1.1',
+                            // Note reflection of the request id in the response.
+                            // To be fully compliant, this should be optional.
+                            id: req.body.id,
+                            // Note result wrapped in an array, to comply with KBase
+                            // json-rpc usage.
+                            result: [result],
+                        };
+                    } else {
+                        // There may be myriad other error conditions, with specific
+                        // codes.
+                        return {
+                            version: '1.1',
+                            id: req.body.id,
+                            error: {
+                                code: 100,
+                                message: 'I wanted a foo!',
+                            },
+                        };
+                    }
+                default:
+                    // This is a standard error response for method not defined.
+                    // We don't really want this triggered in tests, unless this
+                    // is what we are testing.
+                    return {
+                        version: '1.1',
+                        id: req.body.id,
+                        error: {
+                            code: -32601,
+                            message: 'Method not found',
+                        },
+                    };
+            }
+        };
+    }
+```
+
+### Use `beforeAll` and `afterAll` to control mock lifecycle
+
+E.g., taken from working tests:
+
+```javascript
+        let mock = null;
+        beforeAll(async () => {
+            mock = new MockWorker();
+            await mock.start();
+            mock.useJSONResponder(WORKSPACE_URL, workspaceHandler());
+            mock.useJSONResponder(SAMPLE_SERVICE_URL, sampleServiceHandler());
+        });
+
+        afterAll(async () => {
+            if (mock) {
+                await mock.stop();
+                mock.reset();
+            }
+        });
+
+```
+
+Note that the handlers are provided as defined above, and a url must also be provided. In this case, the urls are taken from the test configuration, so will match what the tests naturally use (as long as they also use the test configuration), and what nested code will use (code not controlled by the tests, which nevertheless uses the global config.)
+
+```javascript
+    const WORKSPACE_URL = Config.url('workspace'); // 'https://ci.kbase.us/services/ws';
+    const SAMPLE_SERVICE_URL = Config.url('sample_service'); // 'https://ci.kbase.us/services/sampleservice';
+```
+
+### Use the APIs as normal
+
+There are no other msw-specific tasks. You can simply use the apis that have been mocked, and they will just work, as long as the data used in tests matches the mocked data.
+
+E.g. here is a very simple test which ensures that a call to a mocked workspace method works (basically):
+
+```javascript
+it('should be able to fetch a SampleSet object via the workspace client', async () => {
+    const wsClient = new ServiceClient({
+        url: WORKSPACE_URL,
+        module: 'Workspace',
+        token: 'token',
+        timeout: 2000,
+    });
+
+    const objects = await wsClient.callFunc('get_objects2', {
+        params: {
+            objects: [
+                {
+                    ref: '53116/17/1',
+                },
+            ],
+        },
+    });
+
+    expect(objects).toBeDefined();
+});
+```
+
+Note that in this test, the workspace url is the same value used to set up the mocks, ensuring that the mock is invoked.
+
+### Testing Scenarios
+
+The usage examples above are cover normal usage with some error conditions. However, we can also exploit msw to simulate other api usage scenarios, including slow connections, timeouts, network failures, and a variety of server and json-rpc core errors. With help from utilities, we could make this type of testing fairly easy and reliable, which will help us make make our code more resiliant.
+
+Test data is another concern. In my usage I've taken actual service responses from CI and canned them into JSON files located next to the tests. The service request handlers are responsible for loading this data on demand, based on the request parameters. This is fairly easy to do using `requirejs` support for loading json.
+
+To support more advanced testing scenarios, involving authentication, search, etc., handlers and code handling would need to be more complex.
 
 ## Files involved
 
@@ -72,5 +200,8 @@ Usage of this library is very new. There are some rough edeges. It isn't integra
 ## TODO
 
 - Write a guide to creating mocks and using them in `msw`.
+- Make handler utils and wrapper for creating fully compliant JSON-RPC 1.1 and 2.0 handlers (they currently aren't).
+- Make handler utils and wrapper for REST services.
+- Create basic service handlers, at least as examples, if not re-usable, for all core services.
 
 

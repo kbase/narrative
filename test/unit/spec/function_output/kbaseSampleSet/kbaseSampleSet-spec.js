@@ -257,7 +257,9 @@ define([
         });
 
         it('should render a SampleSet', async () => {
-            const $sampleSetView = new KBaseSampleSetView($('<div>'), { upas: { id: '53116/17/1' } }).$elem;
+            const $sampleSetView = new KBaseSampleSetView($('<div>'), {
+                upas: { id: '53116/17/1' },
+            }).$elem;
 
             function findDescription() {
                 return tryFor(() => {

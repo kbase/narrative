@@ -258,6 +258,7 @@ define([
 
         it('should render a SampleSet', async () => {
             const $div = $('<div>');
+
             new KBaseSampleSetView($div, { upas: { id: '53116/17/1' } });
 
             function findDescription() {

@@ -100,6 +100,7 @@ define([
             const $summaryTab = $('<div>').css('margin-top', '10px');
             const $samplesTab = $('<div>').css('margin-top', '10px');
             const $tabPane = $('<div>').appendTo(this.$elem);
+
             new kbaseTabs($tabPane, {
                 tabPosition: 'top',
                 canDelete: false,

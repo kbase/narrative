@@ -32,33 +32,33 @@ define([
             return $(`<span>`).text(String(value)).attr('title', String(value));
         }
         switch (schema.type) {
-        case 'string':
-            switch (schema.format) {
-            case 'url':
-                return $(`<a href="${value}" target="_blank">`)
-                    .text(value)
-                    .attr('title', value);
-            case 'ontology-term':
-                return $(
-                    `<a href="/#ontology/term/${schema.namespace}/${encodeURIComponent(
-                        value
-                    )}" target="_blank">`
-                )
-                    .text(value)
-                    .attr('title', value);
-            default:
-                return $(`<span>`).text(value).attr('title', value);
-            }
-        case 'number':
-            if ('formatting' in schema.kbase) {
-                return $(`<span>`)
-                    .text(Intl.NumberFormat('en-US', schema.kbase.formatting).format(value))
-                    .attr('title', value);
-            }
-            return $(`<span>`).text(String(value)).attr('title', String(value));
+            case 'string':
+                switch (schema.format) {
+                    case 'url':
+                        return $(`<a href="${value}" target="_blank">`)
+                            .text(value)
+                            .attr('title', value);
+                    case 'ontology-term':
+                        return $(
+                            `<a href="/#ontology/term/${schema.namespace}/${encodeURIComponent(
+                                value
+                            )}" target="_blank">`
+                        )
+                            .text(value)
+                            .attr('title', value);
+                    default:
+                        return $(`<span>`).text(value).attr('title', value);
+                }
+            case 'number':
+                if ('formatting' in schema.kbase) {
+                    return $(`<span>`)
+                        .text(Intl.NumberFormat('en-US', schema.kbase.formatting).format(value))
+                        .attr('title', value);
+                }
+                return $(`<span>`).text(String(value)).attr('title', String(value));
 
-        default:
-            return $(`<span>`).text(String(value)).attr('title', String(value));
+            default:
+                return $(`<span>`).text(String(value)).attr('title', String(value));
         }
     }
 

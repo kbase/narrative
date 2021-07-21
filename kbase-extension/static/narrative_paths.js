@@ -61,7 +61,7 @@ require.config({
         util: 'kbase/js/util',
         jsonrpc: 'kbase/js/jsonrpc',
         config: 'kbase/config',
-        css: 'kbase/css',
+        styles: 'kbase/css',
         narrative_core: 'kbase/js/widgets/narrative_core',
         configPath: 'kbase',
         narrativeViewers: 'kbase/js/widgets/narrative_core/narrativeViewers',
@@ -308,7 +308,7 @@ require.config({
         kbaseAttributeMapping: 'kbase/js/widgets/function_output/kbaseAttributeMapping',
         kbaseConditionSetViewer: 'kbase/js/widgets/function_output/kbaseAttributeMapping',
         kbaseFeatureSet: 'kbase/js/widgets/function_output/kbaseFeatureSet',
-        kbaseSampleSetView: 'kbase/js/widgets/function_output/kbaseSampleSet',
+        kbaseSampleSetView: 'kbase/js/widgets/function_output/samples/kbaseSampleSet',
 
         kbaseExpressionMatrix: 'kbase/js/widgets/function_output/kbaseExpressionMatrix',
         kbaseExpressionGenesetBaseWidget:

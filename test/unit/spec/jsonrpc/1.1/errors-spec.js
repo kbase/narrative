@@ -15,7 +15,7 @@ define(['jsonrpc/1.1/errors'], (errors) => {
         it('should be constructable without crashing', () => {
             // this should crash, fix it!
             const error = new JSONRPCError('Test Message', {
-                url: 'http://foo.boo.com',
+                url: 'https://foo.boo.com',
                 method: 'method',
                 params: { param1: 'value1' },
                 originalMessage: 'original message',
@@ -26,7 +26,7 @@ define(['jsonrpc/1.1/errors'], (errors) => {
         it('a JSONRPCError instance should be able to produce a JSON-compatible simple object', () => {
             // this should crash, fix it!
             const error = new JSONRPCError('Test Message', {
-                url: 'http://foo.boo.com',
+                url: 'https://foo.boo.com',
                 method: 'method',
                 params: { param1: 'value1' },
                 originalMessage: 'original message',
@@ -43,7 +43,7 @@ define(['jsonrpc/1.1/errors'], (errors) => {
         it('should be able to construct a general JSONRPCRequestError', () => {
             // this should crash, fix it!
             const error = new JSONRPCRequestError('Test Message', {
-                url: 'http://foo.boo.com',
+                url: 'https://foo.boo.com',
                 method: 'method',
                 params: { param1: 'value1' },
                 originalMessage: 'original message',
@@ -57,7 +57,7 @@ define(['jsonrpc/1.1/errors'], (errors) => {
         it('should be able to construct a JSONRPCTimeoutError', () => {
             // this should crash, fix it!
             const error = new JSONRPCTimeoutError('Test Message', {
-                url: 'http://foo.boo.com',
+                url: 'https://foo.boo.com',
                 method: 'method',
                 params: { param1: 'value1' },
                 originalMessage: 'original message',
@@ -71,7 +71,7 @@ define(['jsonrpc/1.1/errors'], (errors) => {
         it('a JSONRPCTimeoutError instance should be able to produce a JSON-compatible simple object', () => {
             // this should crash, fix it!
             const error = new JSONRPCTimeoutError('Test Message', {
-                url: 'http://foo.boo.com',
+                url: 'https://foo.boo.com',
                 method: 'method',
                 params: { param1: 'value1' },
                 originalMessage: 'original message',
@@ -90,7 +90,7 @@ define(['jsonrpc/1.1/errors'], (errors) => {
         it('should be able to construct a JSONRPCResponseError', () => {
             // this should crash, fix it!
             const error = new JSONRPCResponseError('Test Message', {
-                url: 'http://foo.boo.com',
+                url: 'https://foo.boo.com',
                 method: 'method',
                 params: { param1: 'value1' },
                 originalMessage: 'original message',
@@ -103,7 +103,7 @@ define(['jsonrpc/1.1/errors'], (errors) => {
         it('a JSONRPCResponseError instance should be able to produce a JSON-compatible simple object', () => {
             // this should crash, fix it!
             const error = new JSONRPCResponseError('Test Message', {
-                url: 'http://foo.boo.com',
+                url: 'https://foo.boo.com',
                 method: 'method',
                 params: { param1: 'value1' },
                 originalMessage: 'original message',
@@ -121,7 +121,7 @@ define(['jsonrpc/1.1/errors'], (errors) => {
         it('should be able to construct a JSONRPCMethodError', () => {
             // this should crash, fix it!
             const error = new JSONRPCMethodError('Test Message', {
-                url: 'http://foo.boo.com',
+                url: 'https://foo.boo.com',
                 method: 'method',
                 params: { param1: 'value1' },
                 originalMessage: 'original message',
@@ -140,7 +140,7 @@ define(['jsonrpc/1.1/errors'], (errors) => {
         it('a JSONRPCMethodError instance should be able to produce a JSON-compatible simple object', () => {
             // this should crash, fix it!
             const error = new JSONRPCMethodError('Test Message', {
-                url: 'http://foo.boo.com',
+                url: 'https://foo.boo.com',
                 method: 'method',
                 params: { param1: 'value1' },
                 originalMessage: 'original message',
@@ -168,6 +168,7 @@ define(['jsonrpc/1.1/errors'], (errors) => {
         it('should throw if constructed without a url', () => {
             // this should crash, fix it!
             function noURL() {
+                // NOSONAR this is intentional, to trigger a constructor error (or not!)
                 new JSONRPCError('Test Message', {
                     method: 'method',
                     params: { param1: 'value1' },
@@ -180,8 +181,9 @@ define(['jsonrpc/1.1/errors'], (errors) => {
         it('should throw if constructed without a method', () => {
             // this should crash, fix it!
             function noURL() {
+                // NOSONAR this is intentional, to trigger a constructor error (or not!)
                 new JSONRPCError('Test Message', {
-                    url: 'http://foo.boo.com',
+                    url: 'https://foo.boo.com',
                     params: { param1: 'value1' },
                     originalMessage: 'original message',
                 });
@@ -192,8 +194,9 @@ define(['jsonrpc/1.1/errors'], (errors) => {
         it('should throw if constructed without a "timeout" parameter', () => {
             // this should crash, fix it!
             function noURL() {
+                // NOSONAR this is intentional, to trigger a constructor error (or not!)
                 new JSONRPCTimeoutError('Test Message', {
-                    url: 'http://foo.boo.com',
+                    url: 'https://foo.boo.com',
                     method: 'method',
                     params: { param1: 'value1' },
                     originalMessage: 'original message',
@@ -206,8 +209,9 @@ define(['jsonrpc/1.1/errors'], (errors) => {
         it('should throw if constructed without an "elapsed" parameter', () => {
             // this should crash, fix it!
             function noElapsed() {
+                // NOSONAR this is intentional, to trigger a constructor error (or not!)
                 new JSONRPCTimeoutError('Test Message', {
-                    url: 'http://foo.boo.com',
+                    url: 'https://foo.boo.com',
                     method: 'method',
                     params: { param1: 'value1' },
                     originalMessage: 'original message',
@@ -220,8 +224,9 @@ define(['jsonrpc/1.1/errors'], (errors) => {
         it('should throw if constructed without an "statusCode" parameter', () => {
             // this should crash, fix it!
             function noStatusCode() {
+                // NOSONAR this is intentional, to trigger a constructor error (or not!)
                 new JSONRPCResponseError('Test Message', {
-                    url: 'http://foo.boo.com',
+                    url: 'https://foo.boo.com',
                     method: 'method',
                     params: { param1: 'value1' },
                     originalMessage: 'original message',
@@ -233,8 +238,9 @@ define(['jsonrpc/1.1/errors'], (errors) => {
         it('should throw if constructed without an "error" parameter', () => {
             // this should crash, fix it!
             function noError() {
+                // NOSONAR this is intentional, to trigger a constructor error (or not!)
                 new JSONRPCMethodError('Test Message', {
-                    url: 'http://foo.boo.com',
+                    url: 'https://foo.boo.com',
                     method: 'method',
                     params: { param1: 'value1' },
                     originalMessage: 'original message',
@@ -247,8 +253,9 @@ define(['jsonrpc/1.1/errors'], (errors) => {
         it('should throw if constructed with a bad "error" parameter', () => {
             // this should crash, fix it!
             function noError() {
+                // NOSONAR this is intentional, to trigger a constructor error (or not!)
                 new JSONRPCMethodError('Test Message', {
-                    url: 'http://foo.boo.com',
+                    url: 'https://foo.boo.com',
                     method: 'method',
                     params: { param1: 'value1' },
                     originalMessage: 'original message',
@@ -262,7 +269,7 @@ define(['jsonrpc/1.1/errors'], (errors) => {
         it('should throw if constructed with properties missing from the "error" parameter', () => {
             // this should crash, fix it!
             const params = {
-                url: 'http://foo.boo.com',
+                url: 'https://foo.boo.com',
                 method: 'method',
                 params: { param1: 'value1' },
                 originalMessage: 'original message',

@@ -31,7 +31,6 @@ define(['uuid', './errors'], (Uuid, errors) => {
             let status = 'none';
             const controller = new AbortController();
             let timeout = window.setTimeout(() => {
-                // console.warn(`Timed out after ${after}ms`);
                 timeout = null;
                 status = 'timedout';
                 controller.abort();
@@ -174,7 +173,6 @@ define(['uuid', './errors'], (Uuid, errors) => {
             try {
                 jsonrpcResponse = JSON.parse(textResponse);
             } catch (ex) {
-                // console.error('[JSON-RPC_1-1: Error parsing response', ex, textResponse, url);
                 throw new JSONRPCResponseError('Error parsing response', {
                     method,
                     params,

@@ -17,7 +17,6 @@ table.ScrollingTable > thead > tr {
 
 /* Body rows */
 
-
 table.ScrollingTable > tbody > tr {
     cursor: pointer;
 }
@@ -52,7 +51,6 @@ table.ScrollingTable div.-content {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-
 
 /* 
     Required to reset the cell styles; Jupyter's rendered_html otherwise stomps all

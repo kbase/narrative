@@ -1,13 +1,12 @@
 table.OverrideRenderedHTML.table tr:not(:hover) td {
     background-color: white;
 }
- 
+
 table.OverrideRenderedHTML.table tr:not(:hover) th {
-    background-color: rgba(247, 247, 247, 1);;
+    background-color: rgba(247, 247, 247, 1);
 }
 
 table.OverrideRenderedHTML.table th {
     color: rgba(100, 100, 100, 1);
     text-align: left;
 }
-

@@ -241,7 +241,7 @@ define(['jsonrpc/1.1/errors'], (errors) => {
                     method: 'method',
                     params: { param1: 'value1' },
                     originalMessage: 'original message',
-                    statusCode: 200, 
+                    statusCode: 200,
                 });
             }
             expect(noError).toThrow();

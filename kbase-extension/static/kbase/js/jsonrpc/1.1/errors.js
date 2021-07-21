@@ -123,23 +123,32 @@ define([], () => {
             });
             if (missingKeys.length > 0) {
                 throw new Error(
-                    `the "error" property requires the fields "${requiredKeys.join(', ')}", yet "${missingKeys.join(', ')}" are missing`
+                    `the "error" property requires the fields "${requiredKeys.join(
+                        ', '
+                    )}", yet "${missingKeys.join(', ')}" are missing`
                 );
             }
 
-            const keyTypes = [['name', ['string']], ['message', ['string']], ['code', ['number']], ['error', ['object', 'string', 'number']]];
+            const keyTypes = [
+                ['name', ['string']],
+                ['message', ['string']],
+                ['code', ['number']],
+                ['error', ['object', 'string', 'number']],
+            ];
             for (const [key, type] of keyTypes) {
                 if (typeof error[key] === 'undefined') {
                     continue;
                 }
                 if (!type.includes(typeof error[key])) {
                     throw new Error(
-                        `the "${key}" property of "error" should be of type "${type.join(', ')}" but is "${typeof error[key]}"`
-                    )
+                        `the "${key}" property of "error" should be of type "${type.join(
+                            ', '
+                        )}" but is "${typeof error[key]}"`
+                    );
                 }
             }
 
-            // The "error" is usually a trace of some sort (stacktrace, backtrace, etc.), which is 
+            // The "error" is usually a trace of some sort (stacktrace, backtrace, etc.), which is
             // composed of text lines. Splitting it saves the work for downstream consumers.
             if (typeof error.error === 'string') {
                 error.error = error.error.split('\n');

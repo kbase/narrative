@@ -57,7 +57,7 @@ define(['jquery', 'jsonrpc/1.1/errors'], ($, errors) => {
     /**
      * Given a string, returns a jquery object wrapping an html tag which contains the
      * string set, safely, via text().
-     * 
+     *
      * @param {string} text A string to render inside the given tag
      * @param {string} tag The html tag name used to wrap the provided text; defaults to 'div'
      * @returns JQuery object

@@ -168,7 +168,6 @@ define(['jsonrpc/1.1/errors'], (errors) => {
         it('should throw if constructed without a url', () => {
             // this should crash, fix it!
             function noURL() {
-                // NOSONAR this is intentional, to trigger a constructor error (or not!)
                 new JSONRPCError('Test Message', {
                     method: 'method',
                     params: { param1: 'value1' },
@@ -181,7 +180,6 @@ define(['jsonrpc/1.1/errors'], (errors) => {
         it('should throw if constructed without a method', () => {
             // this should crash, fix it!
             function noURL() {
-                // NOSONAR this is intentional, to trigger a constructor error (or not!)
                 new JSONRPCError('Test Message', {
                     url: 'https://foo.boo.com',
                     params: { param1: 'value1' },
@@ -194,7 +192,6 @@ define(['jsonrpc/1.1/errors'], (errors) => {
         it('should throw if constructed without a "timeout" parameter', () => {
             // this should crash, fix it!
             function noURL() {
-                // NOSONAR this is intentional, to trigger a constructor error (or not!)
                 new JSONRPCTimeoutError('Test Message', {
                     url: 'https://foo.boo.com',
                     method: 'method',
@@ -209,7 +206,6 @@ define(['jsonrpc/1.1/errors'], (errors) => {
         it('should throw if constructed without an "elapsed" parameter', () => {
             // this should crash, fix it!
             function noElapsed() {
-                // NOSONAR this is intentional, to trigger a constructor error (or not!)
                 new JSONRPCTimeoutError('Test Message', {
                     url: 'https://foo.boo.com',
                     method: 'method',
@@ -224,7 +220,6 @@ define(['jsonrpc/1.1/errors'], (errors) => {
         it('should throw if constructed without an "statusCode" parameter', () => {
             // this should crash, fix it!
             function noStatusCode() {
-                // NOSONAR this is intentional, to trigger a constructor error (or not!)
                 new JSONRPCResponseError('Test Message', {
                     url: 'https://foo.boo.com',
                     method: 'method',
@@ -238,7 +233,6 @@ define(['jsonrpc/1.1/errors'], (errors) => {
         it('should throw if constructed without an "error" parameter', () => {
             // this should crash, fix it!
             function noError() {
-                // NOSONAR this is intentional, to trigger a constructor error (or not!)
                 new JSONRPCMethodError('Test Message', {
                     url: 'https://foo.boo.com',
                     method: 'method',
@@ -253,7 +247,6 @@ define(['jsonrpc/1.1/errors'], (errors) => {
         it('should throw if constructed with a bad "error" parameter', () => {
             // this should crash, fix it!
             function noError() {
-                // NOSONAR this is intentional, to trigger a constructor error (or not!)
                 new JSONRPCMethodError('Test Message', {
                     url: 'https://foo.boo.com',
                     method: 'method',

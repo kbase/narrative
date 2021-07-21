@@ -3,6 +3,10 @@ define(['msw'], (msw) => {
 
     const { setupWorker, rest } = msw;
 
+    const MSW_FUDGE_FACTOR = 100;
+    const TRY_LOOP_INTERVAL = 100;
+    const DEFAULT_TRY_LOOP_TIMEOUT = 5000;
+
     /**
      * Returns a promise which resolves when the given duration, in milliseconds,
      * elapses.
@@ -28,8 +32,8 @@ define(['msw'], (msw) => {
      * @returns {Promise} - A promise resolved
      */
 
-    async function tryFor(fun, duration = 5000) {
-        const interval = 100;
+    async function tryFor(fun, duration = DEFAULT_TRY_LOOP_TIMEOUT) {
+        const interval = TRY_LOOP_INTERVAL;
         const started = Date.now();
 
         for (;;) {
@@ -58,7 +62,7 @@ define(['msw'], (msw) => {
             quiet: true,
         });
         // TODO: the promise above is resolving before the listener is ready.
-        await waitFor(100);
+        await waitFor(MSW_FUDGE_FACTOR);
         return worker;
     }
 
@@ -75,7 +79,7 @@ define(['msw'], (msw) => {
             quiet: true,
         });
         // TODO: the promise above is resolving before the listener is ready.
-        await waitFor(100);
+        await waitFor(MSW_FUDGE_FACTOR);
         return worker;
     }
 
@@ -123,7 +127,7 @@ define(['msw'], (msw) => {
                 onUnhandledRequest: this.onUnhandledRequest,
             });
             // TODO: the promise above is resolving before the listener is ready.
-            await waitFor(0);
+            await waitFor(MSW_FUDGE_FACTOR);
             return this;
         }
 

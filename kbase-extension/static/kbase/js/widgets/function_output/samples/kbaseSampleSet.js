@@ -12,8 +12,7 @@ define([
     'widgets/function_output/samples/SampleSet',
 
     // For effect.
-    'css!styles/ScrollingTable.css',
-    'css!styles/BootstrapOverrides.css',
+    'css!widgets/function_output/samples/KBaseSampleSet.css',
 ], (
     KBWidget,
     $,
@@ -33,33 +32,33 @@ define([
             return $(`<span>`).text(String(value)).attr('title', String(value));
         }
         switch (schema.type) {
-            case 'string':
-                switch (schema.format) {
-                    case 'url':
-                        return $(`<a href="${value}" target="_blank">`)
-                            .text(value)
-                            .attr('title', value);
-                    case 'ontology-term':
-                        return $(
-                            `<a href="/#ontology/term/${schema.namespace}/${encodeURIComponent(
-                                value
-                            )}" target="_blank">`
-                        )
-                            .text(value)
-                            .attr('title', value);
-                    default:
-                        return $(`<span>`).text(value).attr('title', value);
-                }
-            case 'number':
-                if ('formatting' in schema.kbase) {
-                    return $(`<span>`)
-                        .text(Intl.NumberFormat('en-US', schema.kbase.formatting).format(value))
-                        .attr('title', value);
-                }
-                return $(`<span>`).text(String(value)).attr('title', String(value));
-
+        case 'string':
+            switch (schema.format) {
+            case 'url':
+                return $(`<a href="${value}" target="_blank">`)
+                    .text(value)
+                    .attr('title', value);
+            case 'ontology-term':
+                return $(
+                    `<a href="/#ontology/term/${schema.namespace}/${encodeURIComponent(
+                        value
+                    )}" target="_blank">`
+                )
+                    .text(value)
+                    .attr('title', value);
             default:
-                return $(`<span>`).text(String(value)).attr('title', String(value));
+                return $(`<span>`).text(value).attr('title', value);
+            }
+        case 'number':
+            if ('formatting' in schema.kbase) {
+                return $(`<span>`)
+                    .text(Intl.NumberFormat('en-US', schema.kbase.formatting).format(value))
+                    .attr('title', value);
+            }
+            return $(`<span>`).text(String(value)).attr('title', String(value));
+
+        default:
+            return $(`<span>`).text(String(value)).attr('title', String(value));
         }
     }
 
@@ -157,7 +156,7 @@ define([
 
             // Build table
             const $overviewTable = $('<table role="table">').addClass(
-                'table table-bordered table-hover OverrideRenderedHTML'
+                'table table-bordered table-hover SummaryTable'
             );
 
             const $tbody = $('<tbody role="rowgroup">').appendTo($overviewTable);
@@ -192,7 +191,7 @@ define([
             const table = this.model.toTable();
 
             // create table
-            const $table = $('<table class="ScrollingTable" role="table">');
+            const $table = $('<table class="SampleSetTable" role="table">');
             $container.append($table);
 
             // create thead
@@ -239,7 +238,7 @@ define([
             const $tbody = $('<tbody role="rowgroup">');
             $table.append($tbody);
 
-            // for each row
+            // for each data table row, create an html table row.
             for (const [, { row, info }] of table.entries()) {
                 const $row = $('<tr role="row">').dblclick(() => {
                     const url = `${window.location.origin}/#samples/view/${info.id}/${info.version}`;
@@ -261,7 +260,6 @@ define([
         renderSamples: function ($container) {
             $container.empty();
 
-            // Build and attach to container
             const $tableDiv = $('<div style="overflow: auto; max-height: 40em;" />');
             $container.append($tableDiv);
 

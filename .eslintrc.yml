@@ -4,10 +4,10 @@ env:
   es6: true
   node: true
 extends:
-  - 'eslint:recommended'
+  - "eslint:recommended"
   - prettier
 parserOptions:
-    ecmaVersion: 2018
+  ecmaVersion: 2018
 root: true
 rules:
   strict:
@@ -16,8 +16,8 @@ rules:
   no-console:
     - error
     - allow:
-      - warn
-      - error
+        - warn
+        - error
   require-await:
     - error
   no-confusing-arrow:
@@ -40,3 +40,6 @@ rules:
     - warn
   prefer-spread:
     - warn
+  indent:
+    - error
+    - 4

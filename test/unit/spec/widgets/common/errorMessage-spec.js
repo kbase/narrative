@@ -36,7 +36,7 @@ define(['widgets/common/errorMessage', 'jsonrpc/1.1/errors'], (errorMessage, err
                 method: 'my method',
                 params: {
                     param1: 'value1',
-                    param2: [1, 2, true, false, null]
+                    param2: [1, 2, true, false, null],
                 },
                 url: 'https://ci.kbase.us/services/MyModule',
                 originalMessage: 'My original message',
@@ -68,8 +68,8 @@ define(['widgets/common/errorMessage', 'jsonrpc/1.1/errors'], (errorMessage, err
                 toJSON() {
                     return {
                         foo: 'bar',
-                        fizz: 'buzz'
-                    }
+                        fizz: 'buzz',
+                    };
                 }
             }
             const errorThing = new BadError('My message');
@@ -86,8 +86,8 @@ define(['widgets/common/errorMessage', 'jsonrpc/1.1/errors'], (errorMessage, err
                 toJSON() {
                     return {
                         foo: 'bar',
-                        fizz: undefined
-                    }
+                        fizz: undefined,
+                    };
                 }
             }
             const errorThing = new BadError('My message');
@@ -114,11 +114,10 @@ define(['widgets/common/errorMessage', 'jsonrpc/1.1/errors'], (errorMessage, err
             expectFooterMessage($testDiv);
         });
 
-
         it('should display a message for plain object', () => {
             const errorThing = {
                 message: 'My message',
-                foo: 'bar'
+                foo: 'bar',
             };
             const $testDiv = errorMessage(errorThing);
             expect($testDiv).toBeDefined();
@@ -129,7 +128,7 @@ define(['widgets/common/errorMessage', 'jsonrpc/1.1/errors'], (errorMessage, err
 
         it('should display a message for plain object without a message property', () => {
             const errorThing = {
-                foo: 'bar'
+                foo: 'bar',
             };
             const $testDiv = errorMessage(errorThing);
             expect($testDiv).toBeDefined();
@@ -146,8 +145,8 @@ define(['widgets/common/errorMessage', 'jsonrpc/1.1/errors'], (errorMessage, err
             const errorThings = [
                 [new Set(), 'Unknown error: [object Set]'],
                 [new Map(), 'Unknown error: [object Map]'],
-                [new Obj(), 'Unknown error: I am an Obj']
-            ]
+                [new Obj(), 'Unknown error: I am an Obj'],
+            ];
             for (const [thing, thingString] of errorThings) {
                 const $testDiv = errorMessage(thing);
                 expect($testDiv).toBeDefined();
@@ -155,7 +154,6 @@ define(['widgets/common/errorMessage', 'jsonrpc/1.1/errors'], (errorMessage, err
                 expectFooterMessage($testDiv);
             }
         });
-
 
         it('should display "Unknown error" for an unknown object without a message property or toString', () => {
             class ErrorThing {
@@ -172,6 +170,5 @@ define(['widgets/common/errorMessage', 'jsonrpc/1.1/errors'], (errorMessage, err
                 expectFooterMessage($testDiv);
             }
         });
-
     });
 });

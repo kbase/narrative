@@ -34,9 +34,9 @@ requirejs.config({
         bluebird: 'ext_components/bluebird/js/browser/bluebird.min',
         jed: 'components/jed/jed',
         custom: 'kbase/custom',
-        // Note that this is only provided in the testing amd module configuration; 
+        // Note that this is only provided in the testing amd module configuration;
         // Mock Service Worker (MSW) is not active in the actual Narrative web app.
-        msw: 'ext_modules/msw/index'
+        msw: 'ext_modules/msw/index',
     },
     map: {
         '*': {

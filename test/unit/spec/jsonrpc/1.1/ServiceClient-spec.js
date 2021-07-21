@@ -27,9 +27,9 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/ServiceClient'], (mswUtils, ServiceC
                         version: '1.1',
                         id: req.body.id,
                         error: {
-                            message: 'Authorization required'
-                        }
-                    }
+                            message: 'Authorization required',
+                        },
+                    };
                 }
                 return {
                     version: '1.1',
@@ -46,14 +46,14 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/ServiceClient'], (mswUtils, ServiceC
                 url,
                 module: 'Module',
                 timeout: 1000,
-                token: 'token'
+                token: 'token',
             };
             // worker.printHandlers();
             const params = {
                 param1: 'value',
             };
             const client = new ServiceClient(constructorParams);
-            const result = await client.callFunc('function', {params});
+            const result = await client.callFunc('function', { params });
             expect(result).toEqual({ bar: 'foo' });
             await listener.stop();
         });
@@ -85,7 +85,7 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/ServiceClient'], (mswUtils, ServiceC
                 param1: 'value',
             };
             const client = new ServiceClient(constructorParams);
-            const result = await client.callFunc('function', {params});
+            const result = await client.callFunc('function', { params });
             expect(result).toEqual({ bar: 'foo' });
             await listener.stop();
         });
@@ -146,7 +146,7 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/ServiceClient'], (mswUtils, ServiceC
             const shouldThrow = () => {
                 return client.callFunc('function');
             };
-            
+
             await expectAsync(shouldThrow()).toBeRejected();
             await listener.stop();
         });
@@ -164,7 +164,6 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/ServiceClient'], (mswUtils, ServiceC
             }
             expect(noURL).toThrow();
         });
-
 
         // construct without module
         it('making a client without a "module" constructor param should throw an error', () => {
@@ -214,12 +213,11 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/ServiceClient'], (mswUtils, ServiceC
 
             const client = new ServiceClient(constructorParams);
             const shouldTimeout = () => {
-                return  client.callFunc('function');
+                return client.callFunc('function');
             };
-            
+
             await expectAsync(shouldTimeout()).toBeRejected();
             await listener.stop();
-
         });
 
         it('aborting before timeout should trigger an exception', async () => {
@@ -236,7 +234,6 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/ServiceClient'], (mswUtils, ServiceC
                 };
             });
 
-
             const constructorParams = {
                 url,
                 module: 'Module',
@@ -249,7 +246,7 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/ServiceClient'], (mswUtils, ServiceC
                 cancel();
                 return responsePromise;
             };
-            
+
             await expectAsync(shouldAbort()).toBeRejected();
             await listener.stop();
         });

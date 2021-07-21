@@ -14,15 +14,19 @@ define([], () => {
             this.name = 'JSONRPCError';
 
             if (typeof url === 'undefined') {
-                throw new Error('the "url" property is required in the second constructor argument');
+                throw new Error(
+                    'the "url" property is required in the second constructor argument'
+                );
             }
             this.url = url;
 
             if (typeof method === 'undefined') {
-                throw new Error('the "method" property is required in the second constructor argument');
+                throw new Error(
+                    'the "method" property is required in the second constructor argument'
+                );
             }
             this.method = method;
-           
+
             // Optional
             this.params = params;
             this.originalMessage = originalMessage;
@@ -50,12 +54,16 @@ define([], () => {
         constructor(message, { method, params, url, originalMessage, timeout, elapsed }) {
             super(message, { method, params, url, originalMessage });
             if (typeof timeout === 'undefined') {
-                throw new Error('the "timeout" property is required in the second constructor argument');
+                throw new Error(
+                    'the "timeout" property is required in the second constructor argument'
+                );
             }
             this.timeout = timeout;
 
             if (typeof elapsed === 'undefined') {
-                throw new Error('the "elapsed" property is required in the second constructor argument');
+                throw new Error(
+                    'the "elapsed" property is required in the second constructor argument'
+                );
             }
             this.elapsed = elapsed;
         }
@@ -77,10 +85,12 @@ define([], () => {
         constructor(message, { method, params, url, originalMessage, statusCode }) {
             super(message, { method, params, url, originalMessage });
             if (typeof statusCode === 'undefined') {
-                throw new Error('the "statusCode" property is required in the second constructor argument');
+                throw new Error(
+                    'the "statusCode" property is required in the second constructor argument'
+                );
             }
             this.statusCode = statusCode;
-            
+
             this.name = 'JSONRPCResponseError';
         }
         toJSON() {
@@ -99,16 +109,22 @@ define([], () => {
             super(message, { method, params, url, statusCode, originalMessage });
 
             if (typeof error === 'undefined') {
-                throw new Error('the "error" property is required in the second constructor argument');
+                throw new Error(
+                    'the "error" property is required in the second constructor argument'
+                );
             }
             if (typeof error !== 'object' && error.constructor !== {}.constructor) {
                 throw new Error('the "error" property is must be a plain object');
             }
             const requiredKeys = ['name', 'message', 'code', 'error'];
-            if (requiredKeys.some((key) => {
-                return !(key in error);
-            })) {
-                throw new Error(`the "error" property requires the fields "${requiredKeys.join(', ')}"`);
+            if (
+                requiredKeys.some((key) => {
+                    return !(key in error);
+                })
+            ) {
+                throw new Error(
+                    `the "error" property requires the fields "${requiredKeys.join(', ')}"`
+                );
             }
             this.error = error;
             this.name = 'JSONRPCMethodError';

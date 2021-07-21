@@ -73,7 +73,9 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
                 .addClass('tab-content')
                 .attr('id', 'tabs-content')
                 .css('height', this.tabsHeight());
-            const $nav = $('<ul role="tablist"></ul>').addClass('nav nav-tabs').attr('id', 'tabs-nav');
+            const $nav = $('<ul role="tablist"></ul>')
+                .addClass('nav nav-tabs')
+                .attr('id', 'tabs-nav');
             $block.append($nav).append($tabs);
             /*if (this.options.tabPosition == 'top') {
                 $block.addClass('tabs-above');
@@ -213,8 +215,8 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
             this.data('tabs-content').append($tab);
             this.data('tabs-nav').append($nav);
 
-            const tabCount = this.data('tabs').length
-           
+            const tabCount = this.data('tabs').length;
+
             if (tab.show || tabCount == 1) {
                 this.showTab(tab.tab);
             }

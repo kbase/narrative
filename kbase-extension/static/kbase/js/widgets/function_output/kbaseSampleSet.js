@@ -16,12 +16,23 @@ define([
     // For effect.
     'css!styles/ScrollingTable.css',
     'css!styles/BootstrapOverrides.css',
-], (KBWidget, $, kbaseAuthenticatedWidget, kbaseTabs, Config, LoadingMessage, ErrorMessage, ServiceClient, groups, schemas) => {
+], (
+    KBWidget,
+    $,
+    kbaseAuthenticatedWidget,
+    kbaseTabs,
+    Config,
+    LoadingMessage,
+    ErrorMessage,
+    ServiceClient,
+    groups,
+    schemas
+) => {
     'use strict';
 
     const SERVICE_TIMEOUT = 60000;
     const EMPTY_CHAR = '∅';
-    
+
     function formatFieldName(fieldName) {
         return fieldName.split('_').join(' ');
     }
@@ -303,15 +314,7 @@ define([
         },
 
         renderDataviewLink: function (objectInfo) {
-            const [
-                objectId,
-                objectName,
-                ,
-                ,
-                version,
-                ,
-                workspaceId,
-            ] = objectInfo;
+            const [objectId, objectName, , , version, , workspaceId] = objectInfo;
 
             return $('<a>')
                 .attr('href', `/#dataview/${workspaceId}/${objectId}/${version}`)
@@ -320,15 +323,7 @@ define([
         },
 
         renderPeopleLink: function (objectInfo) {
-            const [
-                ,
-                ,
-                ,
-                ,
-                ,
-                savedBy,
-                ,
-            ] = objectInfo;
+            const [, , , , , savedBy, ,] = objectInfo;
 
             return $('<a>')
                 .attr('href', `/#people/${savedBy}`)
@@ -340,8 +335,9 @@ define([
             $container.empty();
 
             // Build table
-            const $overviewTable = $('<table role="table">')
-                .addClass('table table-bordered table-hover OverrideRenderedHTML');
+            const $overviewTable = $('<table role="table">').addClass(
+                'table table-bordered table-hover OverrideRenderedHTML'
+            );
 
             const $tbody = $('<tbody role="rowgroup">').appendTo($overviewTable);
             $tbody.append(
@@ -355,13 +351,17 @@ define([
                 ),
                 $('<tr role="row">').append(
                     $('<th role="cell">').text('Number of Samples'),
-                    $('<td role="cell">').text(Intl.NumberFormat('en-US', {useGrouping: true}).format(this.model.samples.length))
+                    $('<td role="cell">').text(
+                        Intl.NumberFormat('en-US', { useGrouping: true }).format(
+                            this.model.samples.length
+                        )
+                    )
                 ),
                 $('<tr role="row">').append(
                     $('<th role="cell">').text('Description'),
                     $('<td role="cell">').text(this.model.sampleSet.data.description)
                 )
-            )
+            );
 
             // Attach table to the container
             $container.append($overviewTable);
@@ -369,7 +369,7 @@ define([
 
         renderTable: function ($container) {
             const table = this.model.toTable();
-    
+
             // create table
             const $table = $('<table class="ScrollingTable" role="table">');
             $container.append($table);
@@ -383,7 +383,9 @@ define([
             $thead.append($columnGroupRow);
             for (const columnGroup of this.model.columnGroups) {
                 $columnGroupRow.append(
-                    $(`<th role="cell" colspan="${columnGroup.columnCount}">`).text(columnGroup.title)
+                    $(`<th role="cell" colspan="${columnGroup.columnCount}">`).text(
+                        columnGroup.title
+                    )
                 );
             }
 
@@ -391,7 +393,9 @@ define([
             const $headerRow = $('<tr role="row">');
             $thead.append($headerRow);
             for (const header of this.model.headerFields) {
-                $headerRow.append($('<th role="cell">').append($('<div class="-content">').text(header.title)));
+                $headerRow.append(
+                    $('<th role="cell">').append($('<div class="-content">').text(header.title))
+                );
             }
 
             // create units header
@@ -406,9 +410,7 @@ define([
                     }
                 };
                 $unitsHeaderRow.append(
-                    $('<th role="cell">').append(
-                        $('<div class="-content">').text(unit)
-                    )
+                    $('<th role="cell">').append($('<div class="-content">').text(unit))
                 );
             }
 

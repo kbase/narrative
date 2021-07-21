@@ -1,4 +1,8 @@
-define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'], (mswUtils, jsonrpc, errors) => {
+define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'], (
+    mswUtils,
+    jsonrpc,
+    errors
+) => {
     'use strict';
 
     const { setupListener, setupTextListener, waitFor } = mswUtils;
@@ -378,7 +382,7 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
                         name: 'JSONRPCError',
                         code: 123,
                         message: 'Error message',
-                        error: 'some stack trace'
+                        error: 'some stack trace',
                     },
                 };
             });

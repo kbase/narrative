@@ -130,7 +130,7 @@ module.exports = function (config) {
             '/test/': '/base/test/',
             // This ensures that the msw api (msw.js) can find mockServerWorker.js service
             // worker library at the canonical location.
-            '/mockServiceWorker.js': '/narrative/static/ext_modules/msw/mockServiceWorker.js'
+            '/mockServiceWorker.js': '/narrative/static/ext_modules/msw/mockServiceWorker.js',
         },
         concurrency: Infinity,
     });

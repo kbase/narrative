@@ -6,11 +6,10 @@ define(['jsonrpc/1.1/errors'], (errors) => {
         JSONRPCRequestError,
         JSONRPCTimeoutError,
         JSONRPCResponseError,
-        JSONRPCMethodError
+        JSONRPCMethodError,
     } = errors;
 
     describe('The JSONR-RPC 1.1 errors', () => {
-
         // JSONRPCError
 
         it('should be constructable without crashing', () => {
@@ -18,8 +17,8 @@ define(['jsonrpc/1.1/errors'], (errors) => {
             const error = new JSONRPCError('Test Message', {
                 url: 'http://foo.boo.com',
                 method: 'method',
-                params: {param1: 'value1'},
-                originalMessage: 'original message'
+                params: { param1: 'value1' },
+                originalMessage: 'original message',
             });
             expect(error).toBeDefined();
         });
@@ -29,8 +28,8 @@ define(['jsonrpc/1.1/errors'], (errors) => {
             const error = new JSONRPCError('Test Message', {
                 url: 'http://foo.boo.com',
                 method: 'method',
-                params: {param1: 'value1'},
-                originalMessage: 'original message'
+                params: { param1: 'value1' },
+                originalMessage: 'original message',
             });
             const json = error.toJSON();
             expect(json).toBeDefined();
@@ -46,8 +45,8 @@ define(['jsonrpc/1.1/errors'], (errors) => {
             const error = new JSONRPCRequestError('Test Message', {
                 url: 'http://foo.boo.com',
                 method: 'method',
-                params: {param1: 'value1'},
-                originalMessage: 'original message'
+                params: { param1: 'value1' },
+                originalMessage: 'original message',
             });
             expect(error).toBeDefined();
             expect(error.name).toEqual('JSONRPCRequestError');
@@ -60,10 +59,10 @@ define(['jsonrpc/1.1/errors'], (errors) => {
             const error = new JSONRPCTimeoutError('Test Message', {
                 url: 'http://foo.boo.com',
                 method: 'method',
-                params: {param1: 'value1'},
+                params: { param1: 'value1' },
                 originalMessage: 'original message',
                 timeout: 1,
-                elapsed: 2
+                elapsed: 2,
             });
             expect(error).toBeDefined();
             expect(error.name).toEqual('JSONRPCRequestError');
@@ -74,10 +73,10 @@ define(['jsonrpc/1.1/errors'], (errors) => {
             const error = new JSONRPCTimeoutError('Test Message', {
                 url: 'http://foo.boo.com',
                 method: 'method',
-                params: {param1: 'value1'},
+                params: { param1: 'value1' },
                 originalMessage: 'original message',
                 timeout: 1,
-                elapsed: 2
+                elapsed: 2,
             });
             const json = error.toJSON();
             expect(json).toBeDefined();
@@ -93,9 +92,9 @@ define(['jsonrpc/1.1/errors'], (errors) => {
             const error = new JSONRPCResponseError('Test Message', {
                 url: 'http://foo.boo.com',
                 method: 'method',
-                params: {param1: 'value1'},
+                params: { param1: 'value1' },
                 originalMessage: 'original message',
-                statusCode: 200
+                statusCode: 200,
             });
             expect(error).toBeDefined();
             expect(error.name).toEqual('JSONRPCResponseError');
@@ -106,9 +105,9 @@ define(['jsonrpc/1.1/errors'], (errors) => {
             const error = new JSONRPCResponseError('Test Message', {
                 url: 'http://foo.boo.com',
                 method: 'method',
-                params: {param1: 'value1'},
+                params: { param1: 'value1' },
                 originalMessage: 'original message',
-                statusCode: 200
+                statusCode: 200,
             });
             const json = error.toJSON();
             expect(json).toBeDefined();
@@ -117,22 +116,22 @@ define(['jsonrpc/1.1/errors'], (errors) => {
             }
         });
 
-         // JSONRPCMethodError
+        // JSONRPCMethodError
 
-         it('should be able to construct a JSONRPCMethodError', () => {
+        it('should be able to construct a JSONRPCMethodError', () => {
             // this should crash, fix it!
             const error = new JSONRPCMethodError('Test Message', {
                 url: 'http://foo.boo.com',
                 method: 'method',
-                params: {param1: 'value1'},
+                params: { param1: 'value1' },
                 originalMessage: 'original message',
                 statusCode: 200,
                 error: {
                     name: 'JSONRPCError',
                     message: 'service error',
                     code: 123,
-                    error: 'an error string'
-                }
+                    error: 'an error string',
+                },
             });
             expect(error).toBeDefined();
             expect(error.name).toEqual('JSONRPCMethodError');
@@ -143,15 +142,15 @@ define(['jsonrpc/1.1/errors'], (errors) => {
             const error = new JSONRPCMethodError('Test Message', {
                 url: 'http://foo.boo.com',
                 method: 'method',
-                params: {param1: 'value1'},
+                params: { param1: 'value1' },
                 originalMessage: 'original message',
                 statusCode: 200,
                 error: {
                     name: 'JSONRPCError',
                     message: 'service error',
                     code: 123,
-                    error: 'an error string'
-                }
+                    error: 'an error string',
+                },
             });
             const json = error.toJSON();
             expect(json).toBeDefined();
@@ -163,7 +162,6 @@ define(['jsonrpc/1.1/errors'], (errors) => {
             }
         });
 
-
         // Errors
 
         // Construction errors
@@ -172,8 +170,8 @@ define(['jsonrpc/1.1/errors'], (errors) => {
             function noURL() {
                 new JSONRPCError('Test Message', {
                     method: 'method',
-                    params: {param1: 'value1'},
-                    originalMessage: 'original message'
+                    params: { param1: 'value1' },
+                    originalMessage: 'original message',
                 });
             }
             expect(noURL).toThrow();
@@ -184,8 +182,8 @@ define(['jsonrpc/1.1/errors'], (errors) => {
             function noURL() {
                 new JSONRPCError('Test Message', {
                     url: 'http://foo.boo.com',
-                    params: {param1: 'value1'},
-                    originalMessage: 'original message'
+                    params: { param1: 'value1' },
+                    originalMessage: 'original message',
                 });
             }
             expect(noURL).toThrow();
@@ -197,9 +195,9 @@ define(['jsonrpc/1.1/errors'], (errors) => {
                 new JSONRPCTimeoutError('Test Message', {
                     url: 'http://foo.boo.com',
                     method: 'method',
-                    params: {param1: 'value1'},
+                    params: { param1: 'value1' },
                     originalMessage: 'original message',
-                    elapsed: 2
+                    elapsed: 2,
                 });
             }
             expect(noURL).toThrow();
@@ -211,9 +209,9 @@ define(['jsonrpc/1.1/errors'], (errors) => {
                 new JSONRPCTimeoutError('Test Message', {
                     url: 'http://foo.boo.com',
                     method: 'method',
-                    params: {param1: 'value1'},
+                    params: { param1: 'value1' },
                     originalMessage: 'original message',
-                    timeout: 1
+                    timeout: 1,
                 });
             }
             expect(noElapsed).toThrow();
@@ -225,8 +223,8 @@ define(['jsonrpc/1.1/errors'], (errors) => {
                 new JSONRPCResponseError('Test Message', {
                     url: 'http://foo.boo.com',
                     method: 'method',
-                    params: {param1: 'value1'},
-                    originalMessage: 'original message'
+                    params: { param1: 'value1' },
+                    originalMessage: 'original message',
                 });
             }
             expect(noStatusCode).toThrow();
@@ -238,9 +236,9 @@ define(['jsonrpc/1.1/errors'], (errors) => {
                 new JSONRPCMethodError('Test Message', {
                     url: 'http://foo.boo.com',
                     method: 'method',
-                    params: {param1: 'value1'},
+                    params: { param1: 'value1' },
                     originalMessage: 'original message',
-                    statusCode: 200
+                    statusCode: 200,
                 });
             }
             expect(noError).toThrow();
@@ -252,10 +250,10 @@ define(['jsonrpc/1.1/errors'], (errors) => {
                 new JSONRPCMethodError('Test Message', {
                     url: 'http://foo.boo.com',
                     method: 'method',
-                    params: {param1: 'value1'},
+                    params: { param1: 'value1' },
                     originalMessage: 'original message',
                     statusCode: 200,
-                    error: false
+                    error: false,
                 });
             }
             expect(noError).toThrow();
@@ -266,15 +264,15 @@ define(['jsonrpc/1.1/errors'], (errors) => {
             const params = {
                 url: 'http://foo.boo.com',
                 method: 'method',
-                params: {param1: 'value1'},
+                params: { param1: 'value1' },
                 originalMessage: 'original message',
-                statusCode: 200
+                statusCode: 200,
             };
             const error = {
                 name: 'JSONRPCError',
                 message: 'service error',
                 code: 123,
-                error: 'an error string'
+                error: 'an error string',
             };
             const keys = Object.keys(error);
 
@@ -285,15 +283,11 @@ define(['jsonrpc/1.1/errors'], (errors) => {
                     delete newError[removeKey];
                     newParams.error = newError;
                     new JSONRPCMethodError('Test Message', newParams);
-                }
+                };
             }
             for (const key of keys) {
                 expect(errorMissingKey(key)).toThrow();
             }
-            
         });
-
     });
-
-
 });

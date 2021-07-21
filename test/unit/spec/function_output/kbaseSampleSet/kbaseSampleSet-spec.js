@@ -16,7 +16,7 @@ define([
     /** The SampleSet viewer requires access to:
      *   - Workspace
      *   - Sample Service
-     * 
+     *
      * So We need to mock a set of data which captures all of this. This data was captured
      * from live data in CI using the `kbaseuitest` account.
      *
@@ -80,6 +80,7 @@ define([
                             version: '1.1',
                             id: req.body.id,
                             error: {
+                                code: 100,
                                 message: ex.message,
                             },
                         };
@@ -89,7 +90,8 @@ define([
                         version: '1.1',
                         id: req.body.id,
                         error: {
-                            message: 'Method not defined',
+                            code: -32601,
+                            message: 'Method not found',
                         },
                     };
             }
@@ -140,6 +142,7 @@ define([
                             version: '1.1',
                             id: req.body.id,
                             error: {
+                                code: 100,
                                 message: ex.message,
                             },
                         };
@@ -149,7 +152,8 @@ define([
                         version: '1.1',
                         id: req.body.id,
                         error: {
-                            message: 'Method not defined',
+                            code: -32601,
+                            message: 'Method not found',
                         },
                     };
             }

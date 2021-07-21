@@ -43,6 +43,7 @@ module.exports = function (config) {
             'test/unit/mocks.js',
             'test/unit/test-main.js',
             { pattern: 'test/unit/spec/**/*.js', included: false },
+            { pattern: 'test/unit/spec/**/*.json', included: false },
             { pattern: 'test/testConfig.json', included: false, nocache: true },
             { pattern: 'test/*.tok', included: false, nocache: true },
             { pattern: 'test/data/**/*', included: false },
@@ -127,6 +128,9 @@ module.exports = function (config) {
             '/narrative/static/bidi': 'http://localhost:32323/narrative/static/bidi',
             '/static/kbase/config': '/base/kbase-extension/static/kbase/config',
             '/test/': '/base/test/',
+            // This ensures that the msw api (msw.js) can find mockServerWorker.js service
+            // worker library at the canonical location.
+            '/mockServiceWorker.js': '/narrative/static/ext_modules/msw/mockServiceWorker.js'
         },
         concurrency: Infinity,
     });

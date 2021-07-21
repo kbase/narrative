@@ -160,7 +160,7 @@ define([
         };
     }
 
-    fdescribe('The kbaseSampleSet viewer widget', () => {
+    describe('The kbaseSampleSet viewer widget', () => {
         let mock = null;
         beforeAll(async () => {
             mock = new MockWorker();

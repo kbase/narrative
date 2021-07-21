@@ -6,8 +6,8 @@ define(['msw'], (msw) => {
     /**
      * Returns a promise which resolves when the given duration, in milliseconds,
      * elapses.
-     * 
-     * @param {int} duration 
+     *
+     * @param {int} duration
      * @returns {Promise<void>}
      */
     function waitFor(duration) {
@@ -18,17 +18,17 @@ define(['msw'], (msw) => {
         });
     }
 
-     /**
+    /**
      * Returns a promise which will resolve when the provided function returns true,
      * and reject if it exceeds the provided timeout or default of 5s, or if the
      * function throws an exception.
-     * 
+     *
      * @param {Function} fun - A function to "try"; returns [true, value] if the "try" succeeds, [false] otherwise
      * @param {int} timeout - The timeout, in milliseconds, after which trying without success will faile
-     * @returns {Promise} - A promise resolved 
+     * @returns {Promise} - A promise resolved
      */
 
-      async function tryFor(fun, duration = 5000) {
+    async function tryFor(fun, duration = 5000) {
         const interval = 100;
         const started = Date.now();
 
@@ -92,7 +92,7 @@ define(['msw'], (msw) => {
                 if (response) {
                     return res(ctx.json(response));
                 }
-            })
+            });
             this.handlers.push(handler);
         }
 
@@ -102,7 +102,7 @@ define(['msw'], (msw) => {
                 if (response) {
                     return res(ctx.text(response));
                 }
-            })
+            });
             this.handlers.push(handler);
         }
 
@@ -110,7 +110,7 @@ define(['msw'], (msw) => {
             this.worker = setupWorker(...this.handlers);
             await this.worker.start({
                 quiet: true,
-                onUnhandledRequest: this.onUnhandledRequest
+                onUnhandledRequest: this.onUnhandledRequest,
             });
             // TODO: the promise above is resolving before the listener is ready.
             await waitFor(100);
@@ -175,4 +175,4 @@ define(['msw'], (msw) => {
         expectCell,
         findTabContent,
     };
-})
+});

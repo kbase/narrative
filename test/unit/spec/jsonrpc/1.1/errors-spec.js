@@ -130,11 +130,14 @@ define(['jsonrpc/1.1/errors'], (errors) => {
                     name: 'JSONRPCError',
                     message: 'service error',
                     code: 123,
-                    error: 'an error string',
+                    error: 'an error trace\nwith multiple\nlines',
                 },
             });
             expect(error).toBeDefined();
             expect(error.name).toEqual('JSONRPCMethodError');
+            expect(error.message).toEqual('Test Message');
+            expect(error.error.error).toBeInstanceOf(Array);
+            expect(error.error.error.length).toEqual(3);
         });
 
         it('a JSONRPCMethodError instance should be able to produce a JSON-compatible simple object', () => {
@@ -238,7 +241,7 @@ define(['jsonrpc/1.1/errors'], (errors) => {
                     method: 'method',
                     params: { param1: 'value1' },
                     originalMessage: 'original message',
-                    statusCode: 200,
+                    statusCode: 200, 
                 });
             }
             expect(noError).toThrow();
@@ -274,19 +277,24 @@ define(['jsonrpc/1.1/errors'], (errors) => {
                 code: 123,
                 error: 'an error string',
             };
-            const keys = Object.keys(error);
+            const requiredKeys = ['name', 'code', 'message'];
+            const optionalKeys = ['error'];
 
-            function errorMissingKey(removeKey) {
+            function removeErrorKey(keyToRemove) {
                 return () => {
                     const newParams = Object.assign({}, params);
-                    const newError = Object.assign({}, keys);
-                    delete newError[removeKey];
+                    const newError = Object.assign({}, error);
+                    delete newError[keyToRemove];
                     newParams.error = newError;
                     new JSONRPCMethodError('Test Message', newParams);
                 };
             }
-            for (const key of keys) {
-                expect(errorMissingKey(key)).toThrow();
+            for (const key of requiredKeys) {
+                expect(removeErrorKey(key)).toThrow();
+            }
+
+            for (const key of optionalKeys) {
+                expect(removeErrorKey(key)).not.toThrow();
             }
         });
     });

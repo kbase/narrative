@@ -54,6 +54,14 @@ define(['jquery', 'jsonrpc/1.1/errors'], ($, errors) => {
         }
     }
 
+    /**
+     * Given a string, returns a jquery object wrapping an html tag which contains the
+     * string set, safely, via text().
+     * 
+     * @param {string} text A string to render inside the given tag
+     * @param {string} tag The html tag name used to wrap the provided text; defaults to 'div'
+     * @returns JQuery object
+     */
     function $textIn(text, tag = 'div') {
         return $(document.createElement(tag)).text(text);
     }
@@ -63,7 +71,7 @@ define(['jquery', 'jsonrpc/1.1/errors'], ($, errors) => {
             return $textIn(err);
         }
 
-        // This may be a kbase service error, which are somewhat uniform.
+        // This may be a KBase service error, which are somewhat uniform.
         // We display some common fields at top, and then dump the
         // entire error info as nested tables.
         if (err instanceof errors.JSONRPCError) {
@@ -103,7 +111,6 @@ define(['jquery', 'jsonrpc/1.1/errors'], ($, errors) => {
                     .append(renderJSON(err.toJSON()));
             }
             return $textIn(err.message);
-            // TODO: render local trace.
         }
 
         // Some other object

@@ -116,17 +116,36 @@ define([], () => {
             if (typeof error !== 'object' && error.constructor !== {}.constructor) {
                 throw new Error('the "error" property is must be a plain object');
             }
-            const requiredKeys = ['name', 'message', 'code', 'error'];
-            if (
-                requiredKeys.some((key) => {
-                    return !(key in error);
-                })
-            ) {
+
+            const requiredKeys = ['name', 'code', 'message'];
+            const missingKeys = requiredKeys.filter((key) => {
+                return !(key in error);
+            });
+            if (missingKeys.length > 0) {
                 throw new Error(
-                    `the "error" property requires the fields "${requiredKeys.join(', ')}"`
+                    `the "error" property requires the fields "${requiredKeys.join(', ')}", yet "${missingKeys.join(', ')}" are missing`
                 );
             }
-            this.error = error;
+
+            const keyTypes = [['name', ['string']], ['message', ['string']], ['code', ['number']], ['error', ['object', 'string', 'number']]];
+            for (const [key, type] of keyTypes) {
+                if (typeof error[key] === 'undefined') {
+                    continue;
+                }
+                if (!type.includes(typeof error[key])) {
+                    throw new Error(
+                        `the "${key}" property of "error" should be of type "${type.join(', ')}" but is "${typeof error[key]}"`
+                    )
+                }
+            }
+
+            // The "error" is usually a trace of some sort (stacktrace, backtrace, etc.), which is 
+            // composed of text lines. Splitting it saves the work for downstream consumers.
+            if (typeof error.error === 'string') {
+                error.error = error.error.split('\n');
+                this.error = error;
+            }
+
             this.name = 'JSONRPCMethodError';
         }
         toJSON() {

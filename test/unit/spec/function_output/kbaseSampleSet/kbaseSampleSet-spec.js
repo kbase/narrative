@@ -160,7 +160,7 @@ define([
         };
     }
 
-    describe('The kbaseSampleSet viewer widget', () => {
+    fdescribe('The kbaseSampleSet viewer widget', () => {
         let mock = null;
         beforeAll(async () => {
             mock = new MockWorker();
@@ -257,13 +257,11 @@ define([
         });
 
         it('should render a SampleSet', async () => {
-            const $div = $('<div>');
-
-            new KBaseSampleSetView($div, { upas: { id: '53116/17/1' } });
+            const $sampleSetView = new KBaseSampleSetView($('<div>'), { upas: { id: '53116/17/1' } }).$elem;
 
             function findDescription() {
                 return tryFor(() => {
-                    const textToMatch = $div.html();
+                    const textToMatch = $sampleSetView.html();
                     const result = /whondrs 8 samples two user columns/.test(textToMatch);
                     return Promise.resolve([result, result]);
                 }, 3000);
@@ -272,11 +270,11 @@ define([
             await expectAsync(findDescription()).toBeResolvedTo(true);
 
             // Inspect the rows of the summary table.
-            const $summaryTab = await findTab($div, 'Summary');
+            const $summaryTab = await findTab($sampleSetView, 'Summary');
             expect($summaryTab).toBeDefined();
             $summaryTab.click();
 
-            const $summaryTabContent = await findTabContent($div, 1);
+            const $summaryTabContent = await findTabContent($sampleSetView, 1);
             expect($summaryTabContent).toBeDefined();
 
             expectCell($summaryTabContent, 1, 1, 1, 'KBase Object Name');
@@ -299,11 +297,11 @@ define([
             });
 
             // Inspect the rows of the samples table.
-            const $samplesTab = await findTab($div, 'Samples');
+            const $samplesTab = await findTab($sampleSetView, 'Samples');
             expect($samplesTab).toBeDefined();
             $samplesTab.click();
 
-            const $samplesTabContent = await findTabContent($div, 2);
+            const $samplesTabContent = await findTabContent($sampleSetView, 2);
             expect($samplesTabContent).toBeDefined();
 
             // Tests first sample in the set.

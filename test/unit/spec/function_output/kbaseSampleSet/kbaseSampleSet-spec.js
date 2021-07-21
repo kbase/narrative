@@ -16,12 +16,19 @@ define([
     /** The SampleSet viewer requires access to:
      *   - Workspace
      *   - Sample Service
-     *   - User Profile Service
+     * 
      * So We need to mock a set of data which captures all of this. This data was captured
-     * from live data in CI.
+     * from live data in CI using the `kbaseuitest` account.
      *
      * The viewer uses the newer JSON-RPC 1.1 client, which uses fetch, so the Mock Service Worker (MSW)
      * library is used
+     */
+
+    /**
+     * Wraps a requirejs `require` in a Promise.
+     *
+     * @param {string} modulePath - a module "path" to load
+     * @returns {Promise} A promise which will resolve to the requested module, or a rejection with an error value.
      */
     function pRequire(modulePath) {
         return new Promise((resolve, reject) => {
@@ -37,6 +44,13 @@ define([
         });
     }
 
+    /**
+     * An `msw` handler for the sample service. It handles the methods implemented within the switch statement,
+     * using data available in the local `data` directory.
+     *
+     * @returns {Promise} A promise which resolves to the jsonrpc response for the requested method;
+     *                    or an error response.
+     */
     function sampleServiceHandler() {
         const handleGetSamples = async (params, id) => {
             // just handle ref for now.
@@ -82,6 +96,13 @@ define([
         };
     }
 
+    /**
+     * An `msw` handler for the workspace. It handles the methods implemented within the switch statement,
+     * using data available in the local `data` directory.
+     *
+     * @returns {Promise} A promise which resolves to the jsonrpc response for the requested method;
+     *                    or an error response.
+     */
     function workspaceHandler() {
         const handleGetObjects2 = async (params, id) => {
             // just handle ref for now.
@@ -136,14 +157,24 @@ define([
     }
 
     describe('The kbaseSampleSet viewer widget', () => {
-        it('should be able to fetch a SampleSet object via the workspace client', async () => {
-            const mock = new MockWorker();
-            const url = WORKSPACE_URL;
-            mock.addJSONResponder(url, workspaceHandler());
+        let mock = null;
+        beforeAll(async () => {
+            mock = new MockWorker();
             await mock.start();
+            mock.useJSONResponder(WORKSPACE_URL, workspaceHandler());
+            mock.useJSONResponder(SAMPLE_SERVICE_URL, sampleServiceHandler());
+        });
 
+        afterAll(async () => {
+            if (mock) {
+                await mock.stop();
+                mock.reset();
+            }
+        });
+
+        it('should be able to fetch a SampleSet object via the workspace client', async () => {
             const wsClient = new ServiceClient({
-                url,
+                url: WORKSPACE_URL,
                 module: 'Workspace',
                 token: 'token',
                 timeout: 2000,
@@ -160,18 +191,11 @@ define([
             });
 
             expect(objects).toBeDefined();
-
-            await mock.stop();
         });
 
         it('should fetch samples via the SampleService', async () => {
-            const mock = new MockWorker();
-            const url = SAMPLE_SERVICE_URL;
-            mock.addJSONResponder(url, sampleServiceHandler());
-            await mock.start();
-
             const sampleServiceClient = new ServiceClient({
-                url,
+                url: SAMPLE_SERVICE_URL,
                 module: 'SampleService',
                 token: 'token',
                 timeout: 2000,
@@ -189,16 +213,9 @@ define([
             });
 
             expect(samples).toBeDefined();
-
-            await mock.stop();
         });
 
         it('should fetch a SampleSet and all Samples', async () => {
-            const mock = new MockWorker();
-            mock.addJSONResponder(WORKSPACE_URL, workspaceHandler());
-            mock.addJSONResponder(SAMPLE_SERVICE_URL, sampleServiceHandler());
-            await mock.start();
-
             const wsClient = new ServiceClient({
                 url: WORKSPACE_URL,
                 module: 'Workspace',
@@ -233,16 +250,9 @@ define([
             });
 
             expect(samples).toBeDefined();
-
-            await mock.stop();
         });
 
         it('should render a SampleSet', async () => {
-            const mock = new MockWorker();
-            mock.addJSONResponder(WORKSPACE_URL, workspaceHandler());
-            mock.addJSONResponder(SAMPLE_SERVICE_URL, sampleServiceHandler());
-            await mock.start();
-
             const $div = $('<div>');
             new KBaseSampleSetView($div, { upas: { id: '53116/17/1' } });
 
@@ -332,8 +342,6 @@ define([
             ].forEach((text, rowIndex) => {
                 expectCell($samplesTabContent, 2, rowIndex + 1, 2, text);
             });
-
-            await mock.stop();
         });
     });
 });

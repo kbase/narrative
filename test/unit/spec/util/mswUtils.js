@@ -96,6 +96,16 @@ define(['msw'], (msw) => {
             this.handlers.push(handler);
         }
 
+        useJSONResponder(url, responder) {
+            const handler = rest.post(url, async (req, res, ctx) => {
+                const response = await responder(req);
+                if (response) {
+                    return res(ctx.json(response));
+                }
+            });
+            this.worker.use(handler);
+        }
+
         addTextResponder(url, responder) {
             const handler = rest.post(url, async (req, res, ctx) => {
                 const response = await responder(req);
@@ -119,6 +129,10 @@ define(['msw'], (msw) => {
 
         stop() {
             return this.worker.stop();
+        }
+
+        reset() {
+            return this.worker.resetHandlers();
         }
     }
 

@@ -2,11 +2,7 @@ define([
     'jsonrpc/1.1/ServiceClient',
     'json!config/samples/groups.json',
     'json!config/samples/schemas.json',
-], (
-    ServiceClient,
-    sampleGroups,
-    sampleSchemas
-) => {
+], (ServiceClient, sampleGroups, sampleSchemas) => {
     'use strict';
 
     const EMPTY_CHAR = '∅';

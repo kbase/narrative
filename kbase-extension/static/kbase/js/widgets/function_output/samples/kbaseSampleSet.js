@@ -62,7 +62,7 @@ define([
                 return $(`<span>`).text(String(value)).attr('title', String(value));
         }
     }
-   
+
     return KBWidget({
         name: 'kbaseSampleSetView',
         parent: kbaseAuthenticatedWidget,

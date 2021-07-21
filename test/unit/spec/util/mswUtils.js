@@ -123,7 +123,7 @@ define(['msw'], (msw) => {
                 onUnhandledRequest: this.onUnhandledRequest,
             });
             // TODO: the promise above is resolving before the listener is ready.
-            await waitFor(100);
+            await waitFor(0);
             return this;
         }
 

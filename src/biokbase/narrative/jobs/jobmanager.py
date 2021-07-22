@@ -449,16 +449,16 @@ class JobManager(object):
         Returns
         [
             {
-                "job_id": {"state": {"job_id": job_id, "status": status, ...} ...},
-                "retry_id": {"state": {"job_id": job_id, "status": status, ...} ...}
+                "job": {"state": {"job_id": job_id, "status": status, ...} ...},
+                "retry": {"state": {"job_id": job_id, "status": status, ...} ...}
             },
             {
-                "job_id": {"state": {"job_id": job_id, "status": status, ...} ...},
+                "job": {"state": {"job_id": job_id, "status": status, ...} ...},
                 "error": "..."
             }
             ...
             {
-                "job_id": {"state": {"job_id": job_id, "status": "does_not_exist"}},
+                "job": {"state": {"job_id": job_id, "status": "does_not_exist"}},
                 "error": "does_not_exist"
             }
         ]
@@ -484,13 +484,15 @@ class JobManager(object):
         job_states = {**orig_states, **retry_states}
         # fill in the job state details
         for result in retry_results:
-            result["job_id"] = job_states[result["job_id"]]
+            result["job"] = job_states[result["job_id"]]
+            del result["job_id"]
             if "retry_id" in result:
-                result["retry_id"] = job_states[result["retry_id"]]
+                result["retry"] = job_states[result["retry_id"]]
+                del result["retry_id"]
         for job_id in checked_jobs["error"]:
             retry_results.append(
                 {
-                    "job_id": {"state": {"job_id": job_id, "status": "does_not_exist"}},
+                    "job": {"state": {"job_id": job_id, "status": "does_not_exist"}},
                     "error": "does_not_exist",
                 }
             )

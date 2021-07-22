@@ -408,19 +408,19 @@ class JobManagerTest(unittest.TestCase):
         self.assertEqual(expected, retry_results)
 
         orig_ids = [
-            result["job_id"]["state"]["job_id"]
+            result["job"]["state"]["job_id"]
             for result in retry_results
             if "error" not in result
         ]
         retry_ids = [
-            result["retry_id"]["state"]["job_id"]
+            result["retry"]["state"]["job_id"]
             for result in retry_results
             if "error" not in result
         ]
         dne_ids = [
-            result["job_id"]["state"]["job_id"]
+            result["job"]["state"]["job_id"]
             for result in retry_results
-            if result["job_id"]["state"]["status"] == "does_not_exist"
+            if result["job"]["state"]["status"] == "does_not_exist"
         ]
 
         for job_id in orig_ids + retry_ids:
@@ -436,8 +436,8 @@ class JobManagerTest(unittest.TestCase):
         job_ids = [JOB_TERMINATED]
         expected = [
             {
-                "job_id": self.job_states[JOB_TERMINATED],
-                "retry_id": get_retry_job_state(JOB_TERMINATED),
+                "job": self.job_states[JOB_TERMINATED],
+                "retry": get_retry_job_state(JOB_TERMINATED),
             }
         ]
 
@@ -449,12 +449,12 @@ class JobManagerTest(unittest.TestCase):
         job_ids = [JOB_TERMINATED, JOB_ERROR]
         expected = [
             {
-                "job_id": self.job_states[JOB_TERMINATED],
-                "retry_id": get_retry_job_state(JOB_TERMINATED),
+                "job": self.job_states[JOB_TERMINATED],
+                "retry": get_retry_job_state(JOB_TERMINATED),
             },
             {
-                "job_id": self.job_states[JOB_ERROR],
-                "retry_id": get_retry_job_state(JOB_ERROR),
+                "job": self.job_states[JOB_ERROR],
+                "retry": get_retry_job_state(JOB_ERROR),
             },
         ]
 
@@ -466,15 +466,15 @@ class JobManagerTest(unittest.TestCase):
         job_ids = [JOB_NOT_FOUND, JOB_TERMINATED, JOB_COMPLETED]
         expected = [
             {
-                "job_id": self.job_states[JOB_TERMINATED],
-                "retry_id": get_retry_job_state(JOB_TERMINATED),
+                "job": self.job_states[JOB_TERMINATED],
+                "retry": get_retry_job_state(JOB_TERMINATED),
             },
             {
-                "job_id": self.job_states[JOB_COMPLETED],
+                "job": self.job_states[JOB_COMPLETED],
                 "error": ERR_STR,
             },
             {
-                "job_id": get_dne_job_state(JOB_NOT_FOUND),
+                "job": get_dne_job_state(JOB_NOT_FOUND),
                 "error": "does_not_exist",
             },
         ]
@@ -496,9 +496,9 @@ class JobManagerTest(unittest.TestCase):
     def test_retry_jobs__all_error(self):
         job_ids = [JOB_TERMINATED, JOB_CREATED, JOB_RUNNING]
         expected = [
-            {"job_id": self.job_states[JOB_TERMINATED], "error": ERR_STR},
-            {"job_id": self.job_states[JOB_CREATED], "error": ERR_STR},
-            {"job_id": self.job_states[JOB_RUNNING], "error": ERR_STR},
+            {"job": self.job_states[JOB_TERMINATED], "error": ERR_STR},
+            {"job": self.job_states[JOB_CREATED], "error": ERR_STR},
+            {"job": self.job_states[JOB_RUNNING], "error": ERR_STR},
         ]
 
         ee2_ret = [
@@ -523,8 +523,8 @@ class JobManagerTest(unittest.TestCase):
 
         expected = [
             {
-                "job_id": self.job_states[JOB_TERMINATED],
-                "retry_id": get_retry_job_state(JOB_TERMINATED, status=retry_status)
+                "job": self.job_states[JOB_TERMINATED],
+                "retry": get_retry_job_state(JOB_TERMINATED, status=retry_status)
             }
         ]
 
@@ -545,7 +545,7 @@ class JobManagerTest(unittest.TestCase):
         job_ids = ["", "", None, dne_id]
         expected = [
             {
-                "job_id": get_dne_job_state(dne_id),
+                "job": get_dne_job_state(dne_id),
                 "error": "does_not_exist",
             }
         ]

@@ -359,7 +359,9 @@ class JobComm:
                 "new_job",
                 {
                     "job_id_list": [
-                        result["retry"]["state"]["job_id"] for result in retry_results if "retry" in result
+                        result["retry"]["state"]["job_id"]
+                        for result in retry_results
+                        if "retry" in result
                     ]
                 },
             )

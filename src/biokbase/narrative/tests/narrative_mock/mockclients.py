@@ -35,10 +35,9 @@ class MockClients:
     Will likely be removed (or modified, at least), when a minified KBase deploy becomes available.
     Then we don't need to mock as much.
     """
+
     config = ConfigTests()
-    _ee2_job_info = config.load_json_file(
-        config.get("jobs", "ee2_job_info_file")
-    )
+    _ee2_job_info = config.load_json_file(config.get("jobs", "ee2_job_info_file"))
 
     def __init__(self, token=None):
         if token is not None:

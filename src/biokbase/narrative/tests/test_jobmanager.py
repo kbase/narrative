@@ -43,12 +43,8 @@ test_specs = config.load_json_file(config.get("specs", "app_specs_file"))
 
 JOB_NOT_FOUND = "job_not_found"
 
-TERMINAL_IDS = [
-    JOB_COMPLETED, JOB_TERMINATED, JOB_ERROR
-]
-NON_TERMINAL_IDS = [
-    JOB_CREATED, JOB_RUNNING
-]
+TERMINAL_IDS = [JOB_COMPLETED, JOB_TERMINATED, JOB_ERROR]
+NON_TERMINAL_IDS = [JOB_CREATED, JOB_RUNNING]
 
 no_id_err_str = r"No job id\(s\) supplied"
 ERR_STR = "Some error occurred"
@@ -90,7 +86,9 @@ def get_test_job_states():
         narr_cell_info = state.get("job_input", {}).get("narrative_cell_info", {})
         state.update(
             {
-                "batch_id": state.get("batch_id", job_id if state.get("batch_job", False) else None),
+                "batch_id": state.get(
+                    "batch_id", job_id if state.get("batch_job", False) else None
+                ),
                 "cell_id": narr_cell_info.get("cell_id", None),
                 "run_id": narr_cell_info.get("run_id", None),
                 "job_output": state.get("job_output", {}),
@@ -524,7 +522,7 @@ class JobManagerTest(unittest.TestCase):
         expected = [
             {
                 "job": self.job_states[JOB_TERMINATED],
-                "retry": get_retry_job_state(JOB_TERMINATED, status=retry_status)
+                "retry": get_retry_job_state(JOB_TERMINATED, status=retry_status),
             }
         ]
 
@@ -573,10 +571,7 @@ class JobManagerTest(unittest.TestCase):
     def test_lookup_all_job_states__ignore_refresh_flag(self):
         states = self.jm.lookup_all_job_states(ignore_refresh_flag=True)
         self.assertEqual(set(self.job_ids), set(states.keys()))
-        self.assertEqual(
-            states,
-            self.job_states
-        )
+        self.assertEqual(states, self.job_states)
 
     # @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_mock_client)
     # def test_job_status_fetching(self):

@@ -698,11 +698,9 @@ class JobTest(unittest.TestCase):
         parent_state = create_state_from_ee2(BATCH_PARENT)
         with self.assertRaisesRegex(
             ValueError,
-            "Job with `batch_job=True` must be instantiated with child job instances"
+            "Job with `batch_job=True` must be instantiated with child job instances",
         ):
-            Job.from_state(
-                parent_state
-            )
+            Job.from_state(parent_state)
 
         child_jobs = [create_job_from_ee2(job_id) for job_id in BATCH_CHILDREN][1:]
         with self.assertRaisesRegex(ValueError, "Child job id mismatch"):

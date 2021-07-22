@@ -280,7 +280,8 @@ class JobCommTestCase(unittest.TestCase):
         self.jc._retry_jobs(req)
         msg = self.jc._comm.last_message
         self.assertEqual(
-            {"job_id_list": [JOB_TERMINATED[::-1], JOB_ERROR[::-1]]}, msg["data"]["content"]
+            {"job_id_list": [JOB_TERMINATED[::-1], JOB_ERROR[::-1]]},
+            msg["data"]["content"],
         )
         self.assertEqual("new_job", msg["data"]["msg_type"])
 
@@ -317,9 +318,7 @@ class JobCommTestCase(unittest.TestCase):
         req = make_comm_msg("retry_job", job_id_list, True)
         self.jc._retry_jobs(req)
         msg = self.jc._comm.last_message
-        self.assertEqual(
-            {"job_id_list": []}, msg["data"]["content"]
-        )
+        self.assertEqual({"job_id_list": []}, msg["data"]["content"])
         self.assertEqual("new_job", msg["data"]["msg_type"])
 
     @mock.patch(

@@ -586,7 +586,7 @@ class AppManager(object):
                 "status": "created",
                 "user": user_id,
             },
-            children=child_jobs
+            children=child_jobs,
         )
 
         # TODO make a tighter design in the job manager for submitting a family of jobs

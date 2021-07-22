@@ -60,9 +60,7 @@ STATE_ATTRS = list(set(JOB_ATTRS) - set(JOB_INPUT_ATTRS) - set(NARR_CELL_INFO_AT
 
 
 def _attr_to_ee2(attr):
-    mapping = {
-        "app_version": "service_ver"
-    }
+    mapping = {"app_version": "service_ver"}
     if attr in mapping:
         return mapping[attr]
     else:
@@ -88,9 +86,7 @@ class Job(object):
             state_child_ids = ee2_state.get("child_jobs", [])
             inst_child_ids = [job.job_id for job in children]
             if sorted(state_child_ids) != sorted(inst_child_ids):
-                raise ValueError(
-                    "Child job id mismatch"
-                )
+                raise ValueError("Child job id mismatch")
 
         self._const_state = ee2_state
         self._last_state = ee2_state
@@ -141,25 +137,37 @@ class Job(object):
         narr_cell_info = job_input.get("narrative_cell_info", {})
 
         narr_cell_info.update(
-            {key: kwargs[key] for key in NARR_CELL_INFO_ATTRS if key in kwargs and key not in narr_cell_info}
+            {
+                key: kwargs[key]
+                for key in NARR_CELL_INFO_ATTRS
+                if key in kwargs and key not in narr_cell_info
+            }
         )
         job_input.update(
             {
-                **{_attr_to_ee2(key): kwargs[key] for key in JOB_INPUT_ATTRS if key in kwargs and key not in job_input},
+                **{
+                    _attr_to_ee2(key): kwargs[key]
+                    for key in JOB_INPUT_ATTRS
+                    if key in kwargs and key not in job_input
+                },
                 "narrative_cell_info": narr_cell_info,
             }
         )
         ee2_state.update(
             {
-                **{key: kwargs[key] for key in STATE_ATTRS if key in kwargs and key not in ee2_state},
-                "job_input": job_input
+                **{
+                    key: kwargs[key]
+                    for key in STATE_ATTRS
+                    if key in kwargs and key not in ee2_state
+                },
+                "job_input": job_input,
             }
         )
 
         return cls(
             ee2_state=ee2_state,
             extra_data=kwargs.get("extra_data"),
-            children=kwargs.get("children")
+            children=kwargs.get("children"),
         )
 
     def __getattr__(self, name):
@@ -167,21 +175,42 @@ class Job(object):
         Map expected job attributes to paths in stored ee2 state
         """
         attr = dict(
-            app_id=lambda: self._const_state.get("job_input", {}).get("app_id", JOB_ATTR_DEFAULTS["app_id"]),
-            app_version=lambda: self._const_state.get("job_input", {}).get("service_ver", JOB_ATTR_DEFAULTS["app_version"]),
-            batch_id=lambda: (
-                self.job_id if self.batch_job else
-                self._const_state.get("batch_id", JOB_ATTR_DEFAULTS["batch_id"])
+            app_id=lambda: self._const_state.get("job_input", {}).get(
+                "app_id", JOB_ATTR_DEFAULTS["app_id"]
             ),
-            batch_job=lambda: self._const_state.get("batch_job", JOB_ATTR_DEFAULTS["batch_job"]),
-            cell_id=lambda: self._const_state.get("job_input", {}).get("narrative_cell_info", {}).get("cell_id", JOB_ATTR_DEFAULTS["cell_id"]),
-            child_jobs=lambda: self.state().get("child_jobs", JOB_ATTR_DEFAULTS["child_jobs"]),
+            app_version=lambda: self._const_state.get("job_input", {}).get(
+                "service_ver", JOB_ATTR_DEFAULTS["app_version"]
+            ),
+            batch_id=lambda: (
+                self.job_id
+                if self.batch_job
+                else self._const_state.get("batch_id", JOB_ATTR_DEFAULTS["batch_id"])
+            ),
+            batch_job=lambda: self._const_state.get(
+                "batch_job", JOB_ATTR_DEFAULTS["batch_job"]
+            ),
+            cell_id=lambda: self._const_state.get("job_input", {})
+            .get("narrative_cell_info", {})
+            .get("cell_id", JOB_ATTR_DEFAULTS["cell_id"]),
+            child_jobs=lambda: self.state().get(
+                "child_jobs", JOB_ATTR_DEFAULTS["child_jobs"]
+            ),
             job_id=lambda: self._const_state.get("job_id"),
-            params=lambda: self._const_state.get("job_input", {}).get("params", JOB_ATTR_DEFAULTS["params"]),
-            retry_ids=lambda: self.state().get("retry_ids", JOB_ATTR_DEFAULTS["retry_ids"]),
-            retry_parent=lambda: self._const_state.get("retry_parent", JOB_ATTR_DEFAULTS["retry_parent"]),
-            run_id=lambda: self._const_state.get("job_input", {}).get("narrative_cell_info", {}).get("run_id", JOB_ATTR_DEFAULTS["run_id"]),
-            tag=lambda: self._const_state.get("job_input", {}).get("narrative_cell_info", {}).get("tag", JOB_ATTR_DEFAULTS["tag"]),
+            params=lambda: self._const_state.get("job_input", {}).get(
+                "params", JOB_ATTR_DEFAULTS["params"]
+            ),
+            retry_ids=lambda: self.state().get(
+                "retry_ids", JOB_ATTR_DEFAULTS["retry_ids"]
+            ),
+            retry_parent=lambda: self._const_state.get(
+                "retry_parent", JOB_ATTR_DEFAULTS["retry_parent"]
+            ),
+            run_id=lambda: self._const_state.get("job_input", {})
+            .get("narrative_cell_info", {})
+            .get("run_id", JOB_ATTR_DEFAULTS["run_id"]),
+            tag=lambda: self._const_state.get("job_input", {})
+            .get("narrative_cell_info", {})
+            .get("tag", JOB_ATTR_DEFAULTS["tag"]),
             user=lambda: self._const_state.get("user", JOB_ATTR_DEFAULTS["user"]),
         )
 
@@ -198,7 +227,9 @@ class Job(object):
             self._const_state["job_input"][name] = value
         elif name in NARR_CELL_INFO_ATTRS:
             self._const_state["job_input"] = self._const_state.get("job_input", {})
-            self._const_state["job_input"]["narrative_cell_info"] = self._const_state["job_input"].get("narrative_cell_info", {})
+            self._const_state["job_input"]["narrative_cell_info"] = self._const_state[
+                "job_input"
+            ].get("narrative_cell_info", {})
             self._const_state["job_input"]["narrative_cell_info"] = value
         else:
             object.__setattr__(self, name, value)
@@ -213,14 +244,16 @@ class Job(object):
         # otherwise, child jobs may be retried
         if self._const_state.get("batch_job"):
             for child_job in self.children:
-                if child_job._last_state and child_job._last_state.get("status") != COMPLETED_STATUS:
+                if (
+                    child_job._last_state
+                    and child_job._last_state.get("status") != COMPLETED_STATUS
+                ):
                     return False
             return True
 
         else:
             return (
-                self._last_state
-                and self._last_state.get("status") in TERMINAL_STATUSES
+                self._last_state and self._last_state.get("status") in TERMINAL_STATUSES
             )
 
     @property
@@ -371,7 +404,7 @@ class Job(object):
             return self._create_error_state(
                 "Unable to find current job state. Please try again later, or contact KBase.",
                 "Unable to return job state",
-                -1
+                -1,
             )
 
         state = self._augment_ee2_state(state)

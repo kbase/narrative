@@ -36,7 +36,7 @@ class JobManager(object):
 
     __instance = None
 
-    # keys = job_id, values = { refresh = T/F, job = Job object }
+    # keys = job_id, values = { refresh = 1/0, job = Job object }
     _running_jobs = dict()
 
     _log = kblogging.get_logger(__name__)
@@ -53,9 +53,7 @@ class JobManager(object):
                 ordering.append(job_id)
             else:
                 ordering.insert(0, job_id)
-        states = {
-            job_id: states[job_id] for job_id in ordering
-        }
+        states = {job_id: states[job_id] for job_id in ordering}
 
         return states
 
@@ -97,11 +95,8 @@ class JobManager(object):
                 ]
 
             self.register_new_job(
-                job=Job.from_state(
-                    job_state,
-                    children=child_jobs
-                ),
-                refresh=int(job_state.get("status") not in TERMINAL_STATUSES)
+                job=Job.from_state(job_state, children=child_jobs),
+                refresh=int(job_state.get("status") not in TERMINAL_STATUSES),
             )
 
     def _create_jobs(self, job_ids) -> dict:
@@ -118,14 +113,8 @@ class JobManager(object):
             }
         )
         for job_state in job_states.values():
-            # Note that when jobs for this narrative are initially loaded,
-            # they are set to not be refreshed. Rather, if a client requests
-            # updates via the start_job_update message, the refresh flag will
-            # be set to True.
-            self.register_new_job(
-                job=Job.from_state(job_state),
-                refresh=0
-            )
+            # set new jobs to be automatically refreshed
+            self.register_new_job(job=Job.from_state(job_state), refresh=1)
 
         return job_states
 

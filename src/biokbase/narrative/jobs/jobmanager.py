@@ -89,6 +89,7 @@ class JobManager(object):
             {
                 "job_ids": job_ids,
                 "exclude_fields": JOB_INIT_EXCLUDED_JOB_STATE_FIELDS,
+                "return_list": 0,
             }
         )
         for job_state in job_states.values():

@@ -240,7 +240,7 @@ These are organized by the `request_type` field, followed by the expected respon
 * `num_lines` - int > 0
 * `latest` - boolean, `true` if requesting just the latest logs
 
-`cancel_job` - cancel a job or list of jobs; responds with `job_canceled` for each job
+`cancel_job` - cancel a job or list of jobs; responds with `job_statuses`
 * `job_id` - string OR `job_id_list` - array of strings
 * `parent_job_id` - optional string
 
@@ -339,6 +339,20 @@ The current job state. This one is probably most common.
   * `user` - string, username of user who submitted the job
 
 **bus** - `job-status`
+
+## `job_statuses`
+The current job states for some jobs. The format is the same as for `job_status_all`.
+
+**content**
+```json
+{
+  "job_id_1": { ...contents... },
+  "job_id_2": { ...contents... }
+}
+```
+Where the inner objects' format is the BE Output State described in the Data Structures section.
+
+**bus** - TODO
 
 ### `job_logs`
 Includes log statement information for a given job.
@@ -468,6 +482,7 @@ These steps take place whenever the user loads a narrative, or when the kernel i
 
 ## Data Structures
 ### Job state
+#### EE2 State
 In kernel, as retrieved from EE2.check_job
 (described by example)
 ```json
@@ -507,10 +522,15 @@ In kernel, as retrieved from EE2.check_job
         }
     },
     "job_id": "5e67d5e395d1f00a7cf4ea21",
-    "created": 1583863267000
+    "created": 1583863267000,
+    "batch_id": null,
+    "batch_job": false,
+    "child_jobs": [],
+    "retry_ids": [],
+    "retry_parent": null
 }
 ```
-
+#### BE Output State
 As sent to browser, includes cell info and run info
 ```
 {
@@ -537,6 +557,12 @@ As sent to browser, includes cell info and run info
           error: string, (likely a stacktrace)
         },
         error_code: optional - int
+        created: 1583863267000,
+        batch_id: str,
+        batch_job: bool,
+        child_jobs: array,
+        retry_ids: array,
+        retry_parent: str
     }
 }
 ```

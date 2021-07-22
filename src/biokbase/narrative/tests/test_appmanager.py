@@ -31,6 +31,7 @@ class AppManagerTestCase(unittest.TestCase):
         config = ConfigTests()
         cls.maxDiff = None
         cls.am = AppManager()
+        cls.am.reload()  # class uses non-mocked data
         cls.good_app_id = config.get("app_tests", "good_app_id")
         cls.good_tag = config.get("app_tests", "good_app_tag")
         cls.bad_app_id = config.get("app_tests", "bad_app_id")

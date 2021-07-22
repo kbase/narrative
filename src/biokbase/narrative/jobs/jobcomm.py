@@ -19,6 +19,8 @@ class JobRequest:
             'comm_id': <some string>,
             'data': {
                 'request_type': effectively, the function requested.
+                'job_id': optional
+                'job_id_list': optional
             }
         }
     }
@@ -51,10 +53,9 @@ class JobRequest:
         "job_status",
         "start_job_update",
         "stop_job_update",
-        "cancel_job",
         "job_logs",
     ]
-    REQUIRE_JOB_ID_LIST = ["retry_job"]
+    REQUIRE_JOB_ID_LIST = ["retry_job", "cancel_job"]
 
     def __init__(self, rq: dict):
         self.msg_id = rq.get("msg_id")  # might be useful later?
@@ -176,7 +177,7 @@ class JobComm:
                 "stop_update_loop": self.stop_job_status_loop,
                 "start_job_update": self._modify_job_update,
                 "stop_job_update": self._modify_job_update,
-                "cancel_job": self._cancel_job,
+                "cancel_job": self._cancel_jobs,
                 "retry_job": self._retry_jobs,
                 "job_logs": self._get_job_logs,
             }
@@ -321,21 +322,18 @@ class JobComm:
         if update_adjust == 1:
             self.start_job_status_loop()
 
-    def _cancel_job(self, req: JobRequest) -> None:
+    def _cancel_jobs(self, req: JobRequest) -> None:
         """
-        This cancels a running job. If the job has already been canceled, then nothing is
-        done.
-        If the job doesn't exist (or the job id in the request is None), this raises a ValueError.
+        This cancels a running job.
+        If there are no valid jobs, this raises a ValueError.
         If there's an error while attempting to cancel, this raises a NarrativeError.
         In the end, after a successful cancel, this finishes up by fetching and returning the
         job state with the new status.
         """
-        self._verify_job_id(req)
+        self._verify_job_id_list(req)
         try:
-            self._jm.cancel_job(req.job_id)
-        except ValueError:
-            self.send_error_message("job_does_not_exist", req)
-            raise
+            cancel_results = self._jm.cancel_jobs(req.job_id_list)
+            self.send_comm_message("job_statuses", cancel_results)
         except NarrativeException as e:
             self.send_error_message(
                 "job_comm_error",
@@ -348,7 +346,6 @@ class JobComm:
                 },
             )
             raise
-        self._lookup_job_state(req)
 
     def _retry_jobs(self, req: JobRequest) -> None:
         self._verify_job_id_list(req)

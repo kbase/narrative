@@ -74,7 +74,7 @@ class JobManager(object):
             job_states = clients.get("execution_engine2").check_workspace_jobs(
                 {
                     "workspace_id": ws_id,
-                    "return_list": 0,
+                    "return_list": 0,  # do not remove
                     "exclude_fields": JOB_INIT_EXCLUDED_JOB_STATE_FIELDS,
                 }
             )
@@ -375,29 +375,12 @@ class JobManager(object):
         except Exception as e:
             raise transform_job_exception(e)
 
-    def cancel_job(self, job_id: str) -> bool:
+    def cancel_jobs(self, job_id_list: List[str] = []) -> dict:
         """
-        Cancels a running job, placing it in a canceled state.
-        Does NOT delete the job.
-        if the job_id is None or not found in this Narrative, a ValueError is raised.
-        This then checks the job to see if it is already canceled/finished,
-        then attempts to cancel it.
-        If either of those steps fail, a NarrativeException is raised.
-        """
-        checked_jobs = self._check_job_list([job_id])
-
-        if len(checked_jobs["error"]):
-            raise ValueError(f"No job present with id {job_id}")
-
-        # otherwise, our job ID is fine
-        if self.get_job(job_id).was_terminal:
-            return True
-
-        return self._cancel_job(job_id)
-
-    def cancel_jobs(self, job_id_list: List[str] = []):
-        """
-        Cancel a list of jobs
+        Cancel a list of running jobs, placing them in a canceled state
+        Does NOT delete the jobs.
+        If the job_ids are not present or are not found in the Narrative,
+        a ValueError is raised.
 
         Results are returned as a dict of job status objects keyed by job id
 
@@ -414,7 +397,7 @@ class JobManager(object):
         job_states = self._construct_job_state_set(checked_jobs["job_id_list"])
 
         for job_id in checked_jobs["error"]:
-            job_states[job_id] = {"job_id": job_id, "status": "does_not_exist"}
+            job_states[job_id] = {"state": {"job_id": job_id, "status": "does_not_exist"}}
 
         return job_states
 

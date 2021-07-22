@@ -76,7 +76,112 @@ define(['uuid', './errors'], (Uuid, errors) => {
             this.timeoutMonitor = null;
         }
 
-        async request({ method, params, options = {} }) {
+        makeRPCRequest(method, params) {
+            const rpc = {
+                version: '1.1',
+                id: new Uuid(4).format(),
+                method,
+            };
+            if (typeof params !== 'undefined') {
+                rpc.params = params;
+            }
+            return rpc;
+        }
+
+        async handleRPCResponse(url, rpc, response) {
+            let jsonrpcResponse;
+            const textResponse = await response.text();
+            const { method, params } = rpc;
+            try {
+                jsonrpcResponse = JSON.parse(textResponse);
+            } catch (ex) {
+                throw new JSONRPCResponseError('Error parsing response', {
+                    method,
+                    // because params may be undefined.
+                    params: params,
+                    url,
+                    statusCode: response.status,
+                    originalMessage: ex.message,
+                });
+            }
+
+            if (this.strict) {
+                if (typeof jsonrpcResponse.id === 'undefined' || jsonrpcResponse.id === null) {
+                    // The id will be missing or null for parse errors, and may be missing for an invalid request */
+                    if (
+                        !(
+                            jsonrpcResponse.error &&
+                            [-32700, -32600].includes(jsonrpcResponse.error.code)
+                        )
+                    ) {
+                        throw new JSONRPCResponseError(
+                            `Id in response "${jsonrpcResponse.id}" does not match id in request "${rpc.id}"`,
+                            { method, params, url }
+                        );
+                    }
+                }
+                if (jsonrpcResponse.id !== rpc.id) {
+                    throw new JSONRPCResponseError(
+                        `Id in response "${jsonrpcResponse.id}" does not match id in request "${rpc.id}"`,
+                        { method, params, url }
+                    );
+                }
+                if (typeof jsonrpcResponse.version === 'undefined') {
+                    throw new JSONRPCResponseError('"version" property missing in response', {
+                        method,
+                        params,
+                        url,
+                    });
+                }
+                if (jsonrpcResponse.version !== '1.1') {
+                    throw new JSONRPCResponseError(
+                        `"version" property is "${jsonrpcResponse.version}" not "1.1" as required`,
+                        { method, params, url }
+                    );
+                }
+            }
+
+            // The state of the response can either be result, or error.
+
+            if (typeof jsonrpcResponse.result !== 'undefined') {
+                if (typeof jsonrpcResponse.error !== 'undefined') {
+                    throw new JSONRPCResponseError(
+                        'only one of "result" or "error" property may be provided in the response',
+                        {
+                            method,
+                            params,
+                            url,
+                            statusCode: response.status,
+                        }
+                    );
+                }
+                // Normal result response.
+                return jsonrpcResponse.result;
+            }
+
+            // Below here, everything throws
+
+            if (typeof jsonrpcResponse.error !== 'undefined') {
+                throw new JSONRPCMethodError('Error from server or method', {
+                    method,
+                    params,
+                    url,
+                    originalMessage: jsonrpcResponse.error.message,
+                    statusCode: response.status,
+                    error: jsonrpcResponse.error,
+                });
+            }
+
+            throw new JSONRPCResponseError('"result" or "error" property required in response', {
+                method,
+                params,
+                url,
+                statusCode: response.status,
+            });
+        }
+
+        async request({ method, params, options }) {
+            options = options || {};
             // API Usage error, not JSONRPC Error.
             if (typeof method === 'undefined') {
                 throw new TypeError('The "method" is required');
@@ -85,14 +190,8 @@ define(['uuid', './errors'], (Uuid, errors) => {
 
             const timeout = options.timeout || this.timeout;
 
-            const rpc = {
-                method,
-                version: '1.1',
-                id: new Uuid(4).format(),
-            };
-            if (typeof params !== 'undefined') {
-                rpc.params = params;
-            }
+            const rpc = this.makeRPCRequest(method, params);
+
             const headers = {
                 'Content-Type': 'application/json',
             };
@@ -168,93 +267,9 @@ define(['uuid', './errors'], (Uuid, errors) => {
                 timeoutMonitor.cancel();
             }
 
-            let jsonrpcResponse;
-            const textResponse = await response.text();
-            try {
-                jsonrpcResponse = JSON.parse(textResponse);
-            } catch (ex) {
-                throw new JSONRPCResponseError('Error parsing response', {
-                    method,
-                    params,
-                    url,
-                    statusCode: response.status,
-                    originalMessage: ex.message,
-                });
-            }
-
-            if (this.strict) {
-                if (typeof jsonrpcResponse.id === 'undefined' || jsonrpcResponse.id === null) {
-                    // The id will be missing or null for parse errors, and may be missing for an invalid request */
-                    if (
-                        !(
-                            jsonrpcResponse.error &&
-                            [-32700, -32600].includes(jsonrpcResponse.error.code)
-                        )
-                    ) {
-                        throw new JSONRPCResponseError(
-                            `Id in response "${jsonrpcResponse.id}" does not match id in request "${rpc.id}"`,
-                            { method, params, url }
-                        );
-                    }
-                }
-                if (jsonrpcResponse.id !== rpc.id) {
-                    throw new JSONRPCResponseError(
-                        `Id in response "${jsonrpcResponse.id}" does not match id in request "${rpc.id}"`,
-                        { method, params, url }
-                    );
-                }
-                if (typeof jsonrpcResponse.version === 'undefined') {
-                    throw new JSONRPCResponseError('"version" property missing in response', {
-                        method,
-                        params,
-                        url,
-                    });
-                }
-                if (jsonrpcResponse.version !== '1.1') {
-                    throw new JSONRPCResponseError(
-                        `"version" property is "${jsonrpcResponse.version}" not "1.1" as required`,
-                        { method, params, url }
-                    );
-                }
-            }
-
-            // THe state of the response can either be result, or error.
-
-            if (typeof jsonrpcResponse.result !== 'undefined') {
-                if (typeof jsonrpcResponse.error !== 'undefined') {
-                    throw new JSONRPCResponseError(
-                        'only one of "result" or "error" property may be provided in the response',
-                        {
-                            method,
-                            params,
-                            url,
-                            statusCode: response.status,
-                        }
-                    );
-                }
-                // Normal result response.
-                return jsonrpcResponse.result;
-            }
-
-            if (typeof jsonrpcResponse.error !== 'undefined') {
-                throw new JSONRPCMethodError('Error from server or method', {
-                    method,
-                    params,
-                    url,
-                    originalMessage: jsonrpcResponse.error.message,
-                    statusCode: response.status,
-                    error: jsonrpcResponse.error,
-                });
-            }
-
-            throw new JSONRPCResponseError('"result" or "error" property required in response', {
-                method,
-                params,
-                url,
-                statusCode: response.status,
-            });
+            return this.handleRPCResponse(url, rpc, response);
         }
     }
 
-    return { JSONRPCClient };
+    return JSONRPCClient;
 });

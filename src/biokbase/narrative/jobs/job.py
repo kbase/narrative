@@ -133,7 +133,7 @@ class Job(object):
         user (str): the user who started the job
         run_id (str): unique run ID for the job
         tag (str): the application tag (dev/beta/release)
-
+        children (list): applies to batch parent jobs, Job instances of this Job's child jobs
         """
         # reconstruct the ee2 job state object
         ee2_state = kwargs.get("ee2_state", {})

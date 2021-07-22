@@ -1,12 +1,13 @@
 define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'], (
     mswUtils,
-    jsonrpc,
+    JSONRPCClient,
     errors
 ) => {
     'use strict';
 
     const { setupListener, setupTextListener, waitFor } = mswUtils;
-    const { JSONRPCClient } = jsonrpc;
+    const URL = '/services/Module';
+    const REQUEST_TIMEOUT = 1000;
 
     describe('The JSONRPCClient', () => {
         it('should be able to construct a minimal client', () => {
@@ -14,7 +15,7 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
             const client = new JSONRPCClient({
                 url: 'foo',
                 module: 'bar',
-                timeout: 1000,
+                timeout: REQUEST_TIMEOUT,
             });
             expect(client).toBeDefined();
         });
@@ -23,9 +24,7 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
         // that KBase uses ordinarily (which is more complex, so we leave
         // for later tests.)
         it('should be able to make a request and get a response', async () => {
-            const url = '/services/Module';
-
-            const listener = await setupListener(url, (req) => {
+            const listener = await setupListener(URL, (req) => {
                 return {
                     version: '1.1',
                     id: req.body.id,
@@ -36,8 +35,8 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
             });
 
             const constructorParams = {
-                url,
-                timeout: 1000,
+                url: URL,
+                timeout: REQUEST_TIMEOUT,
             };
             // worker.printHandlers();
             const params = [
@@ -56,8 +55,6 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
 
         // More complex, KBase-style with all possible param types.
         it('should be able to perform a a KBase-style request', async () => {
-            const url = '/services/Module';
-
             const params = [
                 {
                     param1: 'value1',
@@ -74,7 +71,7 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
                 },
             ];
 
-            const worker = await setupListener(url, (req) => {
+            const worker = await setupListener(URL, (req) => {
                 return {
                     version: '1.1',
                     id: req.body.id,
@@ -83,8 +80,8 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
             });
 
             const constructorParams = {
-                url,
-                timeout: 1000,
+                url: URL,
+                timeout: REQUEST_TIMEOUT,
             };
             // worker.printHandlers();
             const client = new JSONRPCClient(constructorParams);
@@ -94,9 +91,7 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
         });
 
         it('should be able to make a request with no params', async () => {
-            const url = '/services/Module';
-
-            const listener = await setupListener(url, (req) => {
+            const listener = await setupListener(URL, (req) => {
                 return {
                     version: '1.1',
                     id: req.body.id,
@@ -107,8 +102,8 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
             });
 
             const constructorParams = {
-                url,
-                timeout: 1000,
+                url: URL,
+                timeout: REQUEST_TIMEOUT,
             };
             const client = new JSONRPCClient(constructorParams);
             const result = await client.request({ method: 'function' });
@@ -117,9 +112,7 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
         });
 
         it('should be able to make a request with authorization', async () => {
-            const url = '/services/Module';
-
-            const listener = await setupListener(url, (req) => {
+            const listener = await setupListener(URL, (req) => {
                 if (req.headers.get('authorization') !== 'token') {
                     return {
                         version: '1.1',
@@ -139,8 +132,8 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
             });
 
             const constructorParams = {
-                url,
-                timeout: 1000,
+                url: URL,
+                timeout: REQUEST_TIMEOUT,
                 authorization: 'token',
             };
             const client = new JSONRPCClient(constructorParams);
@@ -156,25 +149,25 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
         it('making a client without a "timeout" constructor param should throw an error', () => {
             function noTimeout() {
                 return new JSONRPCClient({
-                    url: 'https://mock.kbase.us/services/Module/function',
+                    url: URL,
                 });
             }
+
             expect(noTimeout).toThrow();
         });
 
         it('making a client without a "url" constructor param should throw an error', () => {
             function noURL() {
                 return new JSONRPCClient({
-                    timeout: 1000,
+                    timeout: REQUEST_TIMEOUT,
                 });
             }
+
             expect(noURL).toThrow();
         });
 
         it('making a request without a method should throw', async () => {
-            const url = '/services/Module';
-
-            const listener = await setupListener(url, (req) => {
+            const listener = await setupListener(URL, (req) => {
                 return {
                     version: '1.1',
                     id: req.body.id,
@@ -185,22 +178,22 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
             });
 
             const constructorParams = {
-                url,
-                timeout: 1000,
+                url: URL,
+                timeout: REQUEST_TIMEOUT,
             };
             const client = new JSONRPCClient(constructorParams);
+
             function noMethod() {
                 return client.request({});
             }
+
             await expectAsync(noMethod()).toBeRejected();
             await listener.stop();
         });
 
         // Timeout
         it('a timeout should trigger an exception', async () => {
-            const url = '/services/Module';
-
-            const listener = await setupListener(url, async (req) => {
+            const listener = await setupListener(URL, async (req) => {
                 await waitFor(2000);
                 return {
                     version: '1.1',
@@ -212,21 +205,21 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
             });
 
             const constructorParams = {
-                url,
-                timeout: 1000,
+                url: URL,
+                timeout: REQUEST_TIMEOUT,
             };
             const client = new JSONRPCClient(constructorParams);
+
             function shouldTimeout() {
                 return client.request({ method: 'function' });
             }
+
             await expectAsync(shouldTimeout()).toBeRejected();
             await listener.stop();
         });
 
         it('aborting before timeout should trigger an exception', async () => {
-            const url = '/services/Module';
-
-            const listener = await setupListener(url, async (req) => {
+            const listener = await setupListener(URL, async (req) => {
                 await waitFor(2000);
                 return {
                     version: '1.1',
@@ -238,44 +231,44 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
             });
 
             const constructorParams = {
-                url,
-                timeout: 1000,
+                url: URL,
+                timeout: REQUEST_TIMEOUT,
             };
             const client = new JSONRPCClient(constructorParams);
+
             function shouldAbort() {
                 const responsePromise = client.request({ method: 'function' });
                 client.cancelPending();
                 return responsePromise;
             }
+
             await expectAsync(shouldAbort()).toBeRejected();
             await listener.stop();
         });
 
         it('returning non-json response should throw', async () => {
-            const url = '/services/Module';
-
-            const listener = await setupTextListener(url, () => {
+            const listener = await setupTextListener(URL, () => {
                 return 'foobar';
             });
 
             const constructorParams = {
-                url,
-                timeout: 1000,
+                url: URL,
+                timeout: REQUEST_TIMEOUT,
             };
             const client = new JSONRPCClient(constructorParams);
+
             function shouldAbort() {
                 return client.request({ method: 'function' }).catch((err) => {
                     throw err;
                 });
             }
+
             await expectAsync(shouldAbort()).toBeRejected();
             await listener.stop();
         });
 
         it('no id in response in strict mode should throw', async () => {
-            const url = '/services/Module';
-
-            const listener = await setupListener(url, () => {
+            const listener = await setupListener(URL, () => {
                 return {
                     version: '1.1',
                     result: {
@@ -285,21 +278,21 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
             });
 
             const constructorParams = {
-                url,
-                timeout: 1000,
+                url: URL,
+                timeout: REQUEST_TIMEOUT,
             };
             const client = new JSONRPCClient(constructorParams);
+
             function noMethod() {
                 return client.request({ method: 'foo' });
             }
+
             await expectAsync(noMethod()).toBeRejected();
             await listener.stop();
         });
 
         it('mismatching id in response in strict mode should throw', async () => {
-            const url = '/services/Module';
-
-            const listener = await setupListener(url, () => {
+            const listener = await setupListener(URL, () => {
                 return {
                     version: '1.1',
                     id: 'abc',
@@ -310,21 +303,21 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
             });
 
             const constructorParams = {
-                url,
-                timeout: 1000,
+                url: URL,
+                timeout: REQUEST_TIMEOUT,
             };
             const client = new JSONRPCClient(constructorParams);
+
             function noMethod() {
                 return client.request({ method: 'foo' });
             }
+
             await expectAsync(noMethod()).toBeRejected();
             await listener.stop();
         });
 
         it('no version in the response should throw', async () => {
-            const url = '/services/Module';
-
-            const listener = await setupListener(url, (req) => {
+            const listener = await setupListener(URL, (req) => {
                 return {
                     id: req.body.id,
                     result: {
@@ -334,21 +327,21 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
             });
 
             const constructorParams = {
-                url,
-                timeout: 1000,
+                url: URL,
+                timeout: REQUEST_TIMEOUT,
             };
             const client = new JSONRPCClient(constructorParams);
+
             function noMethod() {
                 return client.request({ method: 'foo' });
             }
+
             await expectAsync(noMethod()).toBeRejected();
             await listener.stop();
         });
 
         it('a version other than "1.1" in the response should throw', async () => {
-            const url = '/services/Module';
-
-            const listener = await setupListener(url, (req) => {
+            const listener = await setupListener(URL, (req) => {
                 return {
                     version: '1.0',
                     id: req.body.id,
@@ -359,22 +352,22 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
             });
 
             const constructorParams = {
-                url,
-                timeout: 1000,
+                url: URL,
+                timeout: REQUEST_TIMEOUT,
             };
             const client = new JSONRPCClient(constructorParams);
+
             function noMethod() {
                 return client.request({ method: 'foo' });
             }
+
             await expectAsync(noMethod()).toBeRejected();
             await listener.stop();
         });
 
         // Actual JSON RPC error conditions.
         it('method returning an error should throw', async () => {
-            const url = '/services/Module';
-
-            const listener = await setupListener(url, (req) => {
+            const listener = await setupListener(URL, (req) => {
                 return {
                     version: '1.1',
                     id: req.body.id,
@@ -388,8 +381,8 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
             });
 
             const constructorParams = {
-                url,
-                timeout: 1000,
+                url: URL,
+                timeout: REQUEST_TIMEOUT,
             };
             const client = new JSONRPCClient(constructorParams);
 
@@ -401,11 +394,7 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
                         if (ex.error.message !== 'Error message') {
                             return false;
                         }
-                        if (ex.error.code !== 123) {
-                            return false;
-                        }
-
-                        return true;
+                        return ex.error.code === 123;
                     }
                 }
                 return false;
@@ -417,9 +406,7 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
         });
 
         it('neither a result or a error should throw', async () => {
-            const url = '/services/Module';
-
-            const listener = await setupListener(url, (req) => {
+            const listener = await setupListener(URL, (req) => {
                 return {
                     version: '1.1',
                     id: req.body.id,
@@ -427,13 +414,15 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
             });
 
             const constructorParams = {
-                url,
-                timeout: 1000,
+                url: URL,
+                timeout: REQUEST_TIMEOUT,
             };
             const client = new JSONRPCClient(constructorParams);
+
             function noResultOrError() {
                 return client.request({ method: 'foo' });
             }
+
             await expectAsync(noResultOrError()).toBeRejectedWithError(
                 errors.JSONRPCResponseError,
                 '"result" or "error" property required in response'
@@ -441,10 +430,8 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
             await listener.stop();
         });
 
-        it('both a result and a error should throw', async () => {
-            const url = '/services/Module';
-
-            const listener = await setupListener(url, (req) => {
+        it('both a result and an error should throw', async () => {
+            const listener = await setupListener(URL, (req) => {
                 return {
                     version: '1.1',
                     id: req.body.id,
@@ -454,13 +441,15 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
             });
 
             const constructorParams = {
-                url,
-                timeout: 1000,
+                url: URL,
+                timeout: REQUEST_TIMEOUT,
             };
             const client = new JSONRPCClient(constructorParams);
+
             function noResultOrError() {
                 return client.request({ method: 'foo' });
             }
+
             await expectAsync(noResultOrError()).toBeRejectedWithError(
                 errors.JSONRPCResponseError,
                 'only one of "result" or "error" property may be provided in the response'

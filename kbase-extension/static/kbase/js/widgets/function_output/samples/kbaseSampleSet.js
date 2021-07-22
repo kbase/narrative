@@ -35,14 +35,14 @@ define([
             case 'string':
                 switch (schema.format) {
                     case 'url':
-                        return $(`<a href="${value}" target="_blank">`)
+                        return $(`<a href='${value}' target='_blank'>`)
                             .text(value)
                             .attr('title', value);
                     case 'ontology-term':
                         return $(
-                            `<a href="/#ontology/term/${schema.namespace}/${encodeURIComponent(
+                            `<a href='/#ontology/term/${schema.namespace}/${encodeURIComponent(
                                 value
-                            )}" target="_blank">`
+                            )}' target='_blank'>`
                         )
                             .text(value)
                             .attr('title', value);
@@ -144,7 +144,7 @@ define([
         },
 
         renderPeopleLink: function (objectInfo) {
-            const [, , , , , savedBy, ,] = objectInfo;
+            const [, , , , , savedBy] = objectInfo;
 
             return $('<a>')
                 .attr('href', `/#people/${savedBy}`)
@@ -204,7 +204,7 @@ define([
             $thead.append($columnGroupRow);
             for (const columnGroup of this.model.columnGroups) {
                 $columnGroupRow.append(
-                    $(`<th role="cell" colspan="${columnGroup.columnCount}">`).text(
+                    $(`<th role='cell' colspan='${columnGroup.columnCount}'>`).text(
                         columnGroup.title
                     )
                 );

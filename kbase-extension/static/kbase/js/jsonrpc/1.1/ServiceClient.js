@@ -1,8 +1,5 @@
-/*jslint white:true,browser:true,jsnomen:true*/
-define(['./JSONRPCClient'], (jsonRpc) => {
+define(['./JSONRPCClient'], (JSONRPCClient) => {
     'use strict';
-
-    const { JSONRPCClient } = jsonRpc;
 
     class ServiceClient {
         constructor({ url, module, timeout, token, strict }) {
@@ -79,5 +76,6 @@ define(['./JSONRPCClient'], (jsonRpc) => {
             return request;
         }
     }
+
     return ServiceClient;
 });

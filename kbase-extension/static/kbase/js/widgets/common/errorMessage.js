@@ -1,5 +1,6 @@
 define(['jquery', 'jsonrpc/1.1/errors'], ($, errors) => {
     'use strict';
+
     /**
      *
      *  message - canonical message
@@ -71,6 +72,10 @@ define(['jquery', 'jsonrpc/1.1/errors'], ($, errors) => {
             return $textIn(err);
         }
 
+        function $renderRow(label, value) {
+            return $('<tr>').append($('<th>').text(label)).append($('<td>').text(value));
+        }
+
         // This may be a KBase service error, which are somewhat uniform.
         // We display some common fields at top, and then dump the
         // entire error info as nested tables.
@@ -82,21 +87,9 @@ define(['jquery', 'jsonrpc/1.1/errors'], ($, errors) => {
                         .addClass('table')
                         .append(
                             $('<tbody>')
-                                .append(
-                                    $('<tr>')
-                                        .append($('<th>').text('module'))
-                                        .append($('<td>').text(err.module))
-                                )
-                                .append(
-                                    $('<tr>')
-                                        .append($('<th>').text('method'))
-                                        .append($('<td>').text(err.method))
-                                )
-                                .append(
-                                    $('<tr>')
-                                        .append($('<th>').text('code'))
-                                        .append($('<td>').text(err.code))
-                                )
+                                .append($renderRow('module', err.module))
+                                .append($renderRow('method', err.method))
+                                .append($renderRow('code', err.code))
                         )
                 )
                 .append($('<div>').text('Details'))
@@ -145,6 +138,7 @@ define(['jquery', 'jsonrpc/1.1/errors'], ($, errors) => {
         // to handle.
         return $textIn('Unknown error');
     }
+
     function $renderContactInfo() {
         return $('<div>')
             .css('margin-top', '20px')

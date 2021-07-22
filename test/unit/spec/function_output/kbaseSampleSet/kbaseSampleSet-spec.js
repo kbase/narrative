@@ -55,8 +55,8 @@ define([
         const handleGetSamples = async (params, id) => {
             // just handle ref for now.
             const samples = await Promise.all(
-                params.samples.map(({ id, version }) => {
-                    const fileName = `sample_${id}_${version}.json`;
+                params.samples.map(({ id: sampleId, version }) => {
+                    const fileName = `sample_${sampleId}_${version}.json`;
                     return pRequire(`json!./data/${fileName}`);
                 })
             );

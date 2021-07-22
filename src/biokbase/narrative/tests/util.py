@@ -306,44 +306,63 @@ def find_free_port() -> int:
         return s.getsockname()[1]
 
 
-def validate_job_state(state: dict) -> None:
+def validate_job_state(job_state: dict) -> None:
     """
     Validates the structure and entries in a job state as returned by the JobManager.
     If any keys are missing, or extra keys exist, or values are weird, then this
     raises an AssertionError.
     """
+    assert "state" in job_state, "state key missing"
+    assert isinstance(job_state["state"], dict), "state is not a dict"
+    assert "user" in job_state, "user key missing"
+    assert isinstance(job_state["user"], str), "user is not a string"
+    state = job_state["state"]
     # list of tuples - first = key name, second = value type
     # details for other cases comes later. This is just the expected basic set of
     # keys for EVERY job, once it's been created in EE2.
-    expected_state_keys = [
-        ("job_id", str),
-        ("status", str),
-        ("created", int),
-        ("updated", int),
-        ("run_id", str),
-        ("cell_id", str),
-    ]
-    optional_state_keys = [
-        ("queued", int),
-        ("finished", int),
-        ("terminated_code", int),
-        ("parent_job_id", str),
-        ("errormsg", str),
-        ("error", dict),
-        ("error_code", int),
-    ]
-    assert "state" in state, "state key missing"
-    assert isinstance(state["state"], dict), "state is not a dict"
-    assert "owner" in state, "owner key missing"
-    assert isinstance(state["owner"], str), "owner is not a string"
-    for k in expected_state_keys:
-        assert k[0] in state["state"], f"{k[0]} key is missing from state"
-        assert isinstance(state["state"][k[0]], k[1]), f"{k[0]} is not a {k[1]}"
-    for k in optional_state_keys:
-        if k in state["state"]:
-            assert isinstance(
-                state["state"][k[0]], (k[1], None)
-            ), f"Optional key {k[0]} is present and not {k[1]} or None"
+
+    NoneType = type(None)
+    state_keys = {
+        "required": {
+            "job_id": str,
+            "status": str,
+            "created": int,
+            "updated": int,
+            "run_id": (NoneType, str),
+            "cell_id": (NoneType, str),
+        },
+        "optional": {
+            "batch_id": (NoneType, str),
+            "batch_job": bool,
+            "child_jobs": list,
+            "error": dict,
+            "errormsg": str,
+            "error_code": int,
+            "finished": int,
+            "parent_job_id": (NoneType, str),
+            "queued": int,
+            "retry_count": int,
+            "retry_ids": list,
+            "retry_saved_toggle": bool,
+            "running": int,
+            "terminated_code": int,
+            "user": str,
+            "wsid": int,
+        },
+    }
+
+    for requiredness in ["required", "optional"]:
+        for attr, type_list in state_keys[requiredness].items():
+            if requiredness == "required":
+                assert (
+                    attr in state
+                ), f"attribute {attr} ({requiredness}) is missing from state"
+            if attr in state:
+                assert isinstance(
+                    state[attr], type_list
+                ), f"{state[attr]} does not match type(s) {type_list}: " + json.dumps(
+                    state[attr]
+                )
 
 
 if __name__ == "__main__":

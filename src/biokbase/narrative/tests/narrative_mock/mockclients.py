@@ -1,5 +1,7 @@
 from ..util import ConfigTests
 from biokbase.workspace.baseclient import ServerError
+from biokbase.narrative.jobs.appmanager import BATCH_ID_KEY
+import copy
 
 RANDOM_DATE = "2018-08-10T16:47:36+0000"
 RANDOM_TYPE = "ModuleA.TypeA-1.0"
@@ -33,18 +35,22 @@ class MockClients:
     Will likely be removed (or modified, at least), when a minified KBase deploy becomes available.
     Then we don't need to mock as much.
     """
+    config = ConfigTests()
+    _ee2_job_info = config.load_json_file(
+        config.get("jobs", "ee2_job_info_file")
+    )
 
     def __init__(self, token=None):
         if token is not None:
             assert isinstance(token, str)
-        self.config = ConfigTests()
         self.job_info = self.config.load_json_file(
             self.config.get("jobs", "job_info_file")
         )
-        self.ee2_job_info = self.config.load_json_file(
-            self.config.get("jobs", "ee2_job_info_file")
-        )
         self.test_job_id = self.config.get("app_tests", "test_job_id")
+
+    @property
+    def ee2_job_info(self):
+        return copy.deepcopy(self._ee2_job_info)
 
     # ----- User and Job State functions -----
 
@@ -208,7 +214,7 @@ class MockClients:
 
     def run_job_batch(self, batch_job_inputs, batch_params):
         child_job_ids = [self.test_job_id for i in range(len(batch_job_inputs))]
-        return {"parent_job_id": self.test_job_id, "child_job_ids": child_job_ids}
+        return {BATCH_ID_KEY: self.test_job_id, "child_job_ids": child_job_ids}
 
     def cancel_job(self, job_id):
         return {}
@@ -224,14 +230,6 @@ class MockClients:
             results.append({"job_id": job_id, "retry_id": job_id[::-1]})
         return results
 
-    def check_job_canceled(self, params):
-        job_id = params.get("job_id")
-        # JOB_RUNNING from test_jobmanager.py
-        if job_id == "5d64935cb215ad4128de94d8":
-            return {"finished": 1, "canceled": 0, "job_id": job_id}
-
-        return {"finished": 0, "canceled": 0, "job_id": job_id}
-
     def get_job_params(self, job_id):
         return self.ee2_job_info.get(job_id, {}).get("job_input", {})
 
@@ -239,7 +237,7 @@ class MockClients:
         job_id = params.get("job_id")
         if not job_id:
             return {}
-        info = self.ee2_job_info.get(job_id, {})
+        info = self.ee2_job_info.get(job_id, {"job_id": job_id, "status": "unmocked"})
         if "exclude_fields" in params:
             for f in params["exclude_fields"]:
                 if f in info:

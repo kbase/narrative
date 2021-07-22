@@ -6,8 +6,7 @@ define([
     'testUtil',
     '/test/data/testAppObj',
     'common/ui',
-    'json!/test/data/NarrativeTest.test_input_params.spec.json',
-], (BulkImportCell, Jupyter, Runtime, Mocks, TestUtil, TestAppObj, UI, TestAppSpec) => {
+], (BulkImportCell, Jupyter, Runtime, Mocks, TestUtil, TestAppObj, UI) => {
     'use strict';
     const fakeInputs = {
             dataType: {
@@ -183,7 +182,7 @@ define([
             {
                 msgEvent: 'launched_job_batch',
                 msgData: {
-                    parent_job_id: 'bar',
+                    batch_id: 'bar',
                     child_job_ids: ['foo'],
                 },
                 updatedState: 'inProgress',

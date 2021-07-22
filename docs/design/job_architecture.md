@@ -315,7 +315,7 @@ The set of all job states for all running jobs, or at least the set that should 
 ```
   * `state` - the job state (see the **Data Structures** section below for details
   * `widget_info` - the parameters to send to output widgets, only available for a completed job
-  * `owner` - string, username of user who submitted the job
+  * `user` - string, username of user who submitted the job
 
 **bus** - a series of `job-status` or `job-deleted` messages
 
@@ -336,7 +336,7 @@ The current job state. This one is probably most common.
 **content**
   * `state` - see **Data Structures** below for details (it's big and shouldn't be repeated all over this document). Non-existent jobs have the status `does_not_exist`
   * `widget_info` - the parameters to send to output widgets, only available for a completed job
-  * `owner` - string, username of user who submitted the job
+  * `user` - string, username of user who submitted the job
 
 **bus** - `job-status`
 
@@ -355,19 +355,31 @@ Includes log statement information for a given job.
 **bus** `job-logs`
 
 ### `jobs_retried`
-Sent when one or more jobs is retried
+Sent when one or more jobs are retried
 
-**content** An array of objects, each containing the below keys, e.g.:
+**content** An array of objects, e.g.:
 ```json
-{
-  [
-    { "job_id": "0", "retry_id": "1" },
-    { "job_id": "2", "retry_id": "3" }
-  ]
-}
+[
+  {
+      "job": {"state": {"job_id": job_id, "status": status, ...} ...},
+      "retry": {"state": {"job_id": job_id, "status": status, ...} ...}
+  },
+  {
+      "job": {"state": {"job_id": job_id, "status": status, ...} ...},
+      "error": "..."
+  },
+  ...
+  {
+      "job": {"state": {"job_id": job_id, "status": "does_not_exist"}},
+      "error": "does_not_exist"
+  }
+]
 ```
-  * `job_id` - string, the job id of the retried job
-  * `retry_id` - string, the job id of the job that was launched
+Where the dict values corresponding to "job" or "retry" are the same data structures as for `job_status`
+Outer keys:
+  * `job` - string, the job id of the retried job
+  * `retry` - string, the job id of the job that was launched
+  * `error` - string, appears if there was an error when trying to retry the job
 
 ### `new_job`
 Sent when a new job is launched and serialized. This just triggers a save/checkpoint on the frontend - no other bus message is sent
@@ -502,7 +514,7 @@ In kernel, as retrieved from EE2.check_job
 As sent to browser, includes cell info and run info
 ```
 {
-    owner: string (username, who started the job),
+    user: string (username, who started the job),
     spec: app spec (optional)
     widget_info: (if not finished, None, else...) job.get_viewer_params result
     state: {

@@ -54,6 +54,9 @@ define(['./JSONRPCClient'], (JSONRPCClient) => {
                     options,
                 })
                 .then((response) => {
+                    if (!Array.isArray(response)) {
+                        throw new Error(`response is not an array`);
+                    }
                     const [unwrapped] = response;
                     return unwrapped;
                 });

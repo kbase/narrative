@@ -28,10 +28,9 @@ define(['msw'], (msw) => {
      * function throws an exception.
      *
      * @param {Function} fun - A function to "try"; returns [true, value] if the "try" succeeds, [false] otherwise
-     * @param {int} timeout - The timeout, in milliseconds, after which trying without success will faile
+     * @param {number} duration - The timeout, in milliseconds, after which trying without success will fail
      * @returns {Promise} - A promise resolved
      */
-
     async function tryFor(fun, duration = DEFAULT_TRY_LOOP_TIMEOUT) {
         const interval = TRY_LOOP_INTERVAL;
         const started = Date.now();
@@ -49,56 +48,15 @@ define(['msw'], (msw) => {
         }
     }
 
-    async function setupListener(url, respond) {
-        const worker = setupWorker(
-            rest.post(url, async (req, res, ctx) => {
-                const response = await respond(req);
-                if (response) {
-                    return res(ctx.json(response));
-                }
-            })
-        );
-        await worker.start({
-            quiet: true,
-        });
-        // TODO: the promise above is resolving before the listener is ready.
-        await waitFor(MSW_FUDGE_FACTOR);
-        return worker;
-    }
-
-    async function setupTextListener(url, respond) {
-        const worker = setupWorker(
-            rest.post(url, async (req, res, ctx) => {
-                const response = await respond(req);
-                if (response) {
-                    return res(ctx.text(response));
-                }
-            })
-        );
-        await worker.start({
-            quiet: true,
-        });
-        // TODO: the promise above is resolving before the listener is ready.
-        await waitFor(MSW_FUDGE_FACTOR);
-        return worker;
-    }
-
     class MockWorker {
         constructor(options = {}) {
-            this.handlers = [];
             this.worker = null;
             this.onUnhandledRequest = options.onUnhandledRequest || 'bypass';
         }
 
-        addJSONResponder(url, responder) {
-            const handler = rest.post(url, async (req, res, ctx) => {
-                const response = await responder(req);
-                if (response) {
-                    return res(ctx.json(response));
-                }
-            });
-            this.handlers.push(handler);
-        }
+        // The "use" methods will be add responders at "runtime", and must be used after the
+        // worker has started. They can be removed using resetHandlers. These are the preferred
+        // way to use msw in tests.
 
         useJSONResponder(url, responder) {
             const handler = rest.post(url, async (req, res, ctx) => {
@@ -110,18 +68,18 @@ define(['msw'], (msw) => {
             this.worker.use(handler);
         }
 
-        addTextResponder(url, responder) {
+        useTextResponder(url, responder) {
             const handler = rest.post(url, async (req, res, ctx) => {
                 const response = await responder(req);
                 if (response) {
                     return res(ctx.text(response));
                 }
             });
-            this.handlers.push(handler);
+            this.worker.use(handler);
         }
 
         async start() {
-            this.worker = setupWorker(...this.handlers);
+            this.worker = setupWorker();
             await this.worker.start({
                 quiet: true,
                 onUnhandledRequest: this.onUnhandledRequest,
@@ -137,6 +95,11 @@ define(['msw'], (msw) => {
 
         reset() {
             return this.worker.resetHandlers();
+        }
+
+        done() {
+            this.stop();
+            this.reset();
         }
     }
 
@@ -186,8 +149,6 @@ define(['msw'], (msw) => {
     return {
         waitFor,
         tryFor,
-        setupListener,
-        setupTextListener,
         MockWorker,
         findTab,
         expectCell,

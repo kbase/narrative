@@ -89,9 +89,11 @@ define(['uuid', './errors'], (Uuid, errors) => {
         }
 
         async handleRPCResponse(url, rpc, response) {
-            let jsonrpcResponse;
-            const textResponse = await response.text();
             const { method, params } = rpc;
+
+            const textResponse = await response.text();
+
+            let jsonrpcResponse;
             try {
                 jsonrpcResponse = JSON.parse(textResponse);
             } catch (ex) {

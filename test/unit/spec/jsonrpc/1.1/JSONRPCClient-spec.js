@@ -1,22 +1,17 @@
-define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'], (
+define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors', './helpers'], (
     mswUtils,
     JSONRPCClient,
-    errors
+    errors,
+    helpers
 ) => {
     'use strict';
-
-    const { setupListener, setupTextListener, waitFor } = mswUtils;
-    const URL = '/services/Module';
-    const REQUEST_TIMEOUT = 1000;
+    const { MockWorker, waitFor } = mswUtils;
+    const { makeJSONRPCClient, makeResponse, makeBadResponse, makeErrorResponse, URL } = helpers;
 
     describe('The JSONRPCClient', () => {
         it('should be able to construct a minimal client', () => {
             // this should crash, fix it!
-            const client = new JSONRPCClient({
-                url: 'foo',
-                module: 'bar',
-                timeout: REQUEST_TIMEOUT,
-            });
+            const client = makeJSONRPCClient();
             expect(client).toBeDefined();
         });
 
@@ -24,33 +19,22 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
         // that KBase uses ordinarily (which is more complex, so we leave
         // for later tests.)
         it('should be able to make a request and get a response', async () => {
-            const listener = await setupListener(URL, (req) => {
-                return {
-                    version: '1.1',
-                    id: req.body.id,
-                    result: {
-                        bar: 'foo',
-                    },
-                };
+            const mock = await new MockWorker().start();
+            mock.useJSONResponder(URL, (req) => {
+                return makeResponse(req);
             });
-
-            const constructorParams = {
-                url: URL,
-                timeout: REQUEST_TIMEOUT,
-            };
-            // worker.printHandlers();
             const params = [
                 {
                     param1: 'value',
                 },
             ];
-            const client = new JSONRPCClient(constructorParams);
+            const client = makeJSONRPCClient();
             const result = await client.request({
                 method: 'function',
                 params,
             });
             expect(result).toEqual({ bar: 'foo' });
-            await listener.stop();
+            mock.done();
         });
 
         // More complex, KBase-style with all possible param types.
@@ -71,86 +55,54 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
                 },
             ];
 
-            const worker = await setupListener(URL, (req) => {
-                return {
-                    version: '1.1',
-                    id: req.body.id,
-                    result: rpcResult,
-                };
+            const mock = await new MockWorker().start();
+            mock.useJSONResponder(URL, (req) => {
+                return makeResponse(req, rpcResult);
             });
 
-            const constructorParams = {
-                url: URL,
-                timeout: REQUEST_TIMEOUT,
-            };
-            // worker.printHandlers();
-            const client = new JSONRPCClient(constructorParams);
+            const client = makeJSONRPCClient();
             const result = await client.request({ method: 'function', params });
             expect(result).toEqual(rpcResult);
-            await worker.stop();
+            mock.done();
         });
 
         it('should be able to make a request with no params', async () => {
-            const listener = await setupListener(URL, (req) => {
-                return {
-                    version: '1.1',
-                    id: req.body.id,
-                    result: {
-                        bar: 'foo',
-                    },
-                };
+            const mock = await new MockWorker().start();
+            mock.useJSONResponder(URL, (req) => {
+                return makeResponse(req);
             });
 
-            const constructorParams = {
-                url: URL,
-                timeout: REQUEST_TIMEOUT,
-            };
-            const client = new JSONRPCClient(constructorParams);
+            const client = makeJSONRPCClient();
             const result = await client.request({ method: 'function' });
             expect(result).toEqual({ bar: 'foo' });
-            await listener.stop();
+            mock.done();
         });
 
         it('should be able to make a request with authorization', async () => {
-            const listener = await setupListener(URL, (req) => {
+            const mock = await new MockWorker().start();
+            mock.useJSONResponder(URL, (req) => {
                 if (req.headers.get('authorization') !== 'token') {
-                    return {
-                        version: '1.1',
-                        id: req.body.id,
-                        error: {
-                            message: 'No authorization',
-                        },
-                    };
+                    return makeErrorResponse(req, {
+                        code: 100,
+                        message: 'No authorization',
+                    });
                 }
-                return {
-                    version: '1.1',
-                    id: req.body.id,
-                    result: {
-                        bar: 'foo',
-                    },
-                };
+                return makeResponse(req);
             });
 
-            const constructorParams = {
-                url: URL,
-                timeout: REQUEST_TIMEOUT,
-                authorization: 'token',
-            };
-            const client = new JSONRPCClient(constructorParams);
+            const client = makeJSONRPCClient([['authorization', 'token']]);
             const result = await client.request({
                 method: 'function',
             });
             expect(result).toEqual({ bar: 'foo' });
-            await listener.stop();
+            mock.done();
         });
 
         // // Handle errors
 
         it('making a client without a "timeout" constructor param should throw an error', () => {
             function noTimeout() {
-                return new JSONRPCClient({
-                    url: URL,
-                });
+                return makeJSONRPCClient(['timeout']);
             }
 
             expect(noTimeout).toThrow();
@@ -158,83 +110,54 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
 
         it('making a client without a "url" constructor param should throw an error', () => {
             function noURL() {
-                return new JSONRPCClient({
-                    timeout: REQUEST_TIMEOUT,
-                });
+                return makeJSONRPCClient(['url']);
             }
 
             expect(noURL).toThrow();
         });
 
         it('making a request without a method should throw', async () => {
-            const listener = await setupListener(URL, (req) => {
-                return {
-                    version: '1.1',
-                    id: req.body.id,
-                    result: {
-                        bar: 'foo',
-                    },
-                };
+            const mock = await new MockWorker().start();
+            mock.useJSONResponder(URL, (req) => {
+                return makeResponse(req);
             });
 
-            const constructorParams = {
-                url: URL,
-                timeout: REQUEST_TIMEOUT,
-            };
-            const client = new JSONRPCClient(constructorParams);
+            const client = makeJSONRPCClient();
 
             function noMethod() {
                 return client.request({});
             }
 
             await expectAsync(noMethod()).toBeRejected();
-            await listener.stop();
+            mock.done();
         });
 
         // Timeout
         it('a timeout should trigger an exception', async () => {
-            const listener = await setupListener(URL, async (req) => {
+            const mock = await new MockWorker().start();
+            mock.useJSONResponder(URL, async (req) => {
                 await waitFor(2000);
-                return {
-                    version: '1.1',
-                    id: req.body.id,
-                    result: {
-                        bar: 'foo',
-                    },
-                };
+                return makeResponse(req);
             });
 
-            const constructorParams = {
-                url: URL,
-                timeout: REQUEST_TIMEOUT,
-            };
-            const client = new JSONRPCClient(constructorParams);
+            const client = makeJSONRPCClient();
 
             function shouldTimeout() {
                 return client.request({ method: 'function' });
             }
 
             await expectAsync(shouldTimeout()).toBeRejected();
-            await listener.stop();
+            mock.done();
         });
 
         it('aborting before timeout should trigger an exception', async () => {
-            const listener = await setupListener(URL, async (req) => {
+            const mock = await new MockWorker().start();
+            mock.useJSONResponder(URL, async (req) => {
                 await waitFor(2000);
-                return {
-                    version: '1.1',
-                    id: req.body.id,
-                    result: {
-                        bar: 'foo',
-                    },
-                };
+                return makeResponse(req);
             });
 
-            const constructorParams = {
-                url: URL,
-                timeout: REQUEST_TIMEOUT,
-            };
-            const client = new JSONRPCClient(constructorParams);
+            const client = makeJSONRPCClient();
 
             function shouldAbort() {
                 const responsePromise = client.request({ method: 'function' });
@@ -243,19 +166,16 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
             }
 
             await expectAsync(shouldAbort()).toBeRejected();
-            await listener.stop();
+            mock.done();
         });
 
         it('returning non-json response should throw', async () => {
-            const listener = await setupTextListener(URL, () => {
+            const mock = await new MockWorker().start();
+            mock.useTextResponder(URL, () => {
                 return 'foobar';
             });
 
-            const constructorParams = {
-                url: URL,
-                timeout: REQUEST_TIMEOUT,
-            };
-            const client = new JSONRPCClient(constructorParams);
+            const client = makeJSONRPCClient();
 
             function shouldAbort() {
                 return client.request({ method: 'function' }).catch((err) => {
@@ -264,127 +184,86 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
             }
 
             await expectAsync(shouldAbort()).toBeRejected();
-            await listener.stop();
+            mock.done();
         });
 
         it('no id in response in strict mode should throw', async () => {
-            const listener = await setupListener(URL, () => {
-                return {
-                    version: '1.1',
-                    result: {
-                        bar: 'foo',
-                    },
-                };
+            const mock = await new MockWorker().start();
+            mock.useJSONResponder(URL, (req) => {
+                return makeBadResponse(req, { replace: ['id'] });
             });
 
-            const constructorParams = {
-                url: URL,
-                timeout: REQUEST_TIMEOUT,
-            };
-            const client = new JSONRPCClient(constructorParams);
+            const client = makeJSONRPCClient();
 
             function noMethod() {
                 return client.request({ method: 'foo' });
             }
 
             await expectAsync(noMethod()).toBeRejected();
-            await listener.stop();
+            mock.done();
         });
 
         it('mismatching id in response in strict mode should throw', async () => {
-            const listener = await setupListener(URL, () => {
-                return {
-                    version: '1.1',
-                    id: 'abc',
-                    result: {
-                        bar: 'foo',
-                    },
-                };
+            const mock = await new MockWorker().start();
+            mock.useJSONResponder(URL, (req) => {
+                return makeBadResponse(req, { replace: [['id', 'abc']] });
             });
 
-            const constructorParams = {
-                url: URL,
-                timeout: REQUEST_TIMEOUT,
-            };
-            const client = new JSONRPCClient(constructorParams);
+            const client = makeJSONRPCClient();
 
             function noMethod() {
                 return client.request({ method: 'foo' });
             }
 
             await expectAsync(noMethod()).toBeRejected();
-            await listener.stop();
+            mock.done();
         });
 
         it('no version in the response should throw', async () => {
-            const listener = await setupListener(URL, (req) => {
-                return {
-                    id: req.body.id,
-                    result: {
-                        bar: 'foo',
-                    },
-                };
+            const mock = await new MockWorker().start();
+            mock.useJSONResponder(URL, (req) => {
+                return makeBadResponse(req, { replace: ['version'] });
             });
 
-            const constructorParams = {
-                url: URL,
-                timeout: REQUEST_TIMEOUT,
-            };
-            const client = new JSONRPCClient(constructorParams);
+            const client = makeJSONRPCClient();
 
             function noMethod() {
                 return client.request({ method: 'foo' });
             }
 
             await expectAsync(noMethod()).toBeRejected();
-            await listener.stop();
+            mock.done();
         });
 
         it('a version other than "1.1" in the response should throw', async () => {
-            const listener = await setupListener(URL, (req) => {
-                return {
-                    version: '1.0',
-                    id: req.body.id,
-                    result: {
-                        bar: 'foo',
-                    },
-                };
+            const mock = await new MockWorker().start();
+            mock.useJSONResponder(URL, (req) => {
+                return makeBadResponse(req, { replace: [['version', '1.0']] });
             });
 
-            const constructorParams = {
-                url: URL,
-                timeout: REQUEST_TIMEOUT,
-            };
-            const client = new JSONRPCClient(constructorParams);
+            const client = makeJSONRPCClient();
 
             function noMethod() {
                 return client.request({ method: 'foo' });
             }
 
             await expectAsync(noMethod()).toBeRejected();
-            await listener.stop();
+            mock.done();
         });
 
         // Actual JSON RPC error conditions.
         it('method returning an error should throw', async () => {
-            const listener = await setupListener(URL, (req) => {
-                return {
-                    version: '1.1',
-                    id: req.body.id,
-                    error: {
-                        name: 'JSONRPCError',
-                        code: 123,
-                        message: 'Error message',
-                        error: 'some stack trace',
-                    },
-                };
+            const mock = await new MockWorker().start();
+            mock.useJSONResponder(URL, (req) => {
+                return makeErrorResponse(req, {
+                    name: 'JSONRPCError',
+                    code: 123,
+                    message: 'Error message',
+                    error: 'some stack trace',
+                });
             });
 
-            const constructorParams = {
-                url: URL,
-                timeout: REQUEST_TIMEOUT,
-            };
-            const client = new JSONRPCClient(constructorParams);
+            const client = makeJSONRPCClient();
 
             async function returnsError() {
                 try {
@@ -402,22 +281,16 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
 
             await expectAsync(returnsError()).toBeResolvedTo(true);
 
-            await listener.stop();
+            mock.done();
         });
 
         it('neither a result or a error should throw', async () => {
-            const listener = await setupListener(URL, (req) => {
-                return {
-                    version: '1.1',
-                    id: req.body.id,
-                };
+            const mock = await new MockWorker().start();
+            mock.useJSONResponder(URL, (req) => {
+                return makeBadResponse(req, { replace: ['result'] });
             });
 
-            const constructorParams = {
-                url: URL,
-                timeout: REQUEST_TIMEOUT,
-            };
-            const client = new JSONRPCClient(constructorParams);
+            const client = makeJSONRPCClient();
 
             function noResultOrError() {
                 return client.request({ method: 'foo' });
@@ -427,24 +300,16 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
                 errors.JSONRPCResponseError,
                 '"result" or "error" property required in response'
             );
-            await listener.stop();
+            mock.done();
         });
 
         it('both a result and an error should throw', async () => {
-            const listener = await setupListener(URL, (req) => {
-                return {
-                    version: '1.1',
-                    id: req.body.id,
-                    result: 'foo',
-                    error: 'bar',
-                };
+            const mock = await new MockWorker().start();
+            mock.useJSONResponder(URL, (req) => {
+                return makeBadResponse(req, { replace: [['error', 'foo']] });
             });
 
-            const constructorParams = {
-                url: URL,
-                timeout: REQUEST_TIMEOUT,
-            };
-            const client = new JSONRPCClient(constructorParams);
+            const client = makeJSONRPCClient();
 
             function noResultOrError() {
                 return client.request({ method: 'foo' });
@@ -454,7 +319,7 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
                 errors.JSONRPCResponseError,
                 'only one of "result" or "error" property may be provided in the response'
             );
-            await listener.stop();
+            mock.done();
         });
     });
 });

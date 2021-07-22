@@ -75,9 +75,22 @@ class Job(object):
     _last_state = None  # for changing attributes
 
     def __init__(self, ee2_state, extra_data=None, children=None):
-        self._verify_job_id(ee2_state.get("job_id"))
+        # verify job_id
+        if ee2_state.get("job_id") is None:
+            raise ValueError("Cannot create a job without a job ID!")
+
+        # verify parent-children relationship
         if ee2_state.get("batch_job") is True:
-            self._verify_children(ee2_state, children)
+            if children is None or len(children) == 0:
+                raise ValueError(
+                    "Job with `batch_job=True` must be instantiated with child job instances"
+                )
+            state_child_ids = ee2_state.get("child_jobs", [])
+            inst_child_ids = [job.job_id for job in children]
+            if sorted(state_child_ids) != sorted(inst_child_ids):
+                raise ValueError(
+                    "Child job id mismatch"
+                )
 
         self._const_state = ee2_state
         self._last_state = ee2_state
@@ -517,24 +530,6 @@ class Job(object):
             info=json.dumps(info),
             output_widget_info=json.dumps(output_widget_info),
         )
-
-    @staticmethod
-    def _verify_job_id(job_id: str) -> None:
-        if job_id is None:
-            raise ValueError("Cannot create a job without a job ID!")
-
-    @staticmethod
-    def _verify_children(ee2_state, children: List["Job"]) -> None:
-        if children is None or len(children) == 0:
-            raise ValueError(
-                "Job with `batch_job=True` must be instantiated with child job instances"
-            )
-        state_child_ids = ee2_state.get("child_jobs", [])
-        inst_child_ids = [job.job_id for job in children]
-        if sorted(state_child_ids) != sorted(inst_child_ids):
-            raise ValueError(
-                "Child job id mismatch"
-            )
 
     def dump(self):
         """

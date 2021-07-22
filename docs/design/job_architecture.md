@@ -370,24 +370,25 @@ Sent when one or more jobs are retried
 ```json
 [
   {
-      "job_id": {"state": {"job_id": job_id, "status": status, ...} ...},
-      "retry_id": {"state": {"job_id": job_id, "status": status, ...} ...}
+      "job": {"state": {"job_id": job_id, "status": status, ...} ...},
+      "retry": {"state": {"job_id": job_id, "status": status, ...} ...}
   },
   {
-      "job_id": {"state": {"job_id": job_id, "status": status, ...} ...},
+      "job": {"state": {"job_id": job_id, "status": status, ...} ...},
       "error": "..."
   },
   ...
   {
-      "job_id": {"state": {"job_id": job_id, "status": "does_not_exist"}},
+      "job": {"state": {"job_id": job_id, "status": "does_not_exist"}},
       "error": "does_not_exist"
   }
 ]
 ```
-Where the dict values corresponding to "job_id" or "retry_id" are the same data structures as for `job_status`
+Where the dict values corresponding to "job" or "retry" are the same data structures as for `job_status`
 Outer keys:
-  * `job_id` - string, the job id of the retried job
-  * `retry_id` - string, the job id of the job that was launched
+  * `job` - string, the job id of the retried job
+  * `retry` - string, the job id of the job that was launched
+  * `error` - string, appears if there was an error when trying to retry the job
 
 ### `new_job`
 Sent when a new job is launched and serialized. This just triggers a save/checkpoint on the frontend - no other bus message is sent

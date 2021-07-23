@@ -50,8 +50,6 @@ define([
         },
         // Prefix for all div ids
         pref: null,
-        // KBaseFeatureValue client
-        featureValueClient: null,
         // Matrix set stat
         submatrixStat: null,
         init: function (options) {

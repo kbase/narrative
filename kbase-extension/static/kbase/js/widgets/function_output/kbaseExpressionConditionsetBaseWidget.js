@@ -17,13 +17,11 @@ define([
     'narrativeConfig',
     'kbwidget',
     'kbaseAuthenticatedWidget',
-    'kbaseTabs',
     'kb_common/jsonRpc/dynamicServiceClient',
     // For effect
     'bootstrap',
     'jquery-dataTables',
-    'kbaseFeatureValues-client-api',
-], ($, Config, KBWidget, kbaseAuthenticatedWidget, kbaseTabs, DynamicServiceClient) => {
+], ($, Config, KBWidget, kbaseAuthenticatedWidget, DynamicServiceClient) => {
     'use strict';
 
     return KBWidget({
@@ -41,9 +39,6 @@ define([
 
         // Prefix for all div ids
         pref: null,
-
-        // KBaseFeatureValue client
-        featureValueClient: null,
 
         // Matrix set stat
         submatrixStat: null,

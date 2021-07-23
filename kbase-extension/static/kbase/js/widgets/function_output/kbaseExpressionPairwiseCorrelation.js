@@ -8,13 +8,15 @@
 const MAX_GENES_FOR_INLINE_HEATMAP = 50;
 const MAX_GENES_FOR_HEATMAP = 200;
 
-define(['kbwidget', 'bootstrap', 'jquery', 'kbaseExpressionGenesetBaseWidget', 'kbaseHeatmap'], (
-    KBWidget,
-    bootstrap,
-    $,
-    kbaseExpressionGenesetBaseWidget,
-    kbaseHeatmap
-) => {
+define([
+    'kbwidget',
+    'jquery',
+    'kbaseExpressionGenesetBaseWidget',
+    'kbaseHeatmap',
+
+    /* for effect */
+    'bootstrap',
+], (KBWidget, $, kbaseExpressionGenesetBaseWidget, kbaseHeatmap) => {
     'use strict';
 
     return KBWidget({
@@ -26,7 +28,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseExpressionGenesetBaseWidget', '
         minRange: null,
 
         // To be overridden to specify additional parameters
-        getSubmtrixParams: function () {
+        getSubmatrixParams: function () {
             const self = this;
 
             let features = [];
@@ -136,7 +138,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseExpressionGenesetBaseWidget', '
                         $.jqElem('button')
                             .append('Download the SVG image file for this pairwise correlation')
                             .addClass('btn btn-primary')
-                            .on('click', (e) => {
+                            .on('click', () => {
                                 const file = new Blob([$dummy.html()], { type: 'text' });
                                 const a = document.createElement('a'),
                                     url = URL.createObjectURL(file);

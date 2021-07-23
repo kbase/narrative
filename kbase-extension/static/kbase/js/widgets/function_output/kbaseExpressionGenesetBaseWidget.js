@@ -2,7 +2,7 @@
  * Base class for viewers visualizaing expression of a set of genes from various aspects
  *
  * The descendant classes should override:
- * 1. getSubmtrixParams - to set params for get_submatrix_stat method from the KBaseFeatureValues service
+ * 1. getSubmatrixParams - to set params for get_submatrix_stat method from the KBaseFeatureValues service
  * 2. buildWidget - to create a custom visuzualization
  *
  *
@@ -14,25 +14,26 @@
 
 define([
     'kbwidget',
-    'bootstrap',
     'jquery',
     'kbaseAuthenticatedWidget',
-    'kbaseTabs',
     'narrativeConfig',
     'kb_common/jsonRpc/dynamicServiceClient',
     'kb_common/jsonRpc/genericClient',
+    'widgets/common/errorView',
+
     // Loaded for effect
     'jquery-dataTables',
     'kbaseFeatureValues-client-api',
+    'bootstrap',
+    'kbaseTabs',
 ], (
     KBWidget,
-    bootstrap,
     $,
     kbaseAuthenticatedWidget,
-    kbaseTabs,
     Config,
     DynamicServiceClient,
-    ServiceClient
+    ServiceClient,
+    $ErrorView
 ) => {
     'use strict';
 
@@ -89,8 +90,8 @@ define([
             this.options.geneIds =
                 'VNG0001H,VNG0002G,VNG0003C,VNG0006G,VNG0013C,VNG0014C,VNG0361C,VNG0518H,VNG0868H,VNG0289H,VNG0852C';
         },
-        // To be overriden to specify additional parameters
-        getSubmtrixParams: function () {
+        // To be overridden to specify additional parameters
+        getSubmatrixParams: function () {
             const self = this;
             self.setTestParameters();
             let features = [];
@@ -108,24 +109,24 @@ define([
             self.loading(true);
 
             function getSubmatrixStatsAndRender() {
-                const smParams = self.getSubmtrixParams();
+                const smParams = self.getSubmatrixParams();
 
                 // some parameter checking
                 if (!smParams.row_ids || smParams.row_ids.length === 0) {
-                    self.clientError(
+                    self.renderError(
                         'No Features or FeatureSet selected.  Please include at least one Feature from the data.'
                     );
                     return;
                 }
                 return self.featureValues
                     .callFunc('get_submatrix_stat', [smParams])
-                    .spread((data) => {
+                    .then(([data]) => {
                         self.submatrixStat = data;
                         self.render();
                         self.loading(false);
                     })
                     .catch((error) => {
-                        self.clientError(error);
+                        self.renderError(error);
                     });
             }
 
@@ -146,7 +147,9 @@ define([
                         }
 
                         for (const fid in fs.elements) {
-                            if (fs.elements.hasOwnProperty(fid)) {
+                            // this always comes from an rpc call, which is
+                            // always a plain object ({}.constructor).
+                            if (Object.prototype.hasOwnPrototype.call(fs.elements, fid)) {
                                 if (self.options.geneIds) {
                                     self.options.geneIds += ',';
                                 }
@@ -160,7 +163,7 @@ define([
                         getSubmatrixStatsAndRender();
                     })
                     .catch((error) => {
-                        self.clientError(error);
+                        self.renderError(error);
                     });
             } else {
                 return getSubmatrixStatsAndRender();
@@ -272,40 +275,46 @@ define([
             this.$messagePane.hide();
             this.$messagePane.empty();
         },
-        clientError: function (error) {
+        renderError: function (error) {
             this.loading(false);
-            let errString = 'Unknown error.';
-            console.error(error);
-            if (typeof error === 'string') errString = error;
-            else if (error.error && error.error.message) errString = error.error.message;
-            else if (error.error && error.error.error && typeof error.error.error === 'string') {
-                errString = error.error.error;
-                if (
-                    errString.indexOf('java.lang.NullPointerException') > -1 &&
-                    errString.indexOf('buildIndeces(KBaseFeatureValuesImpl.java:708)') > -1
-                ) {
-                    // this is a null pointer due to an unknown feature ID.
-                    // TODO: handle this gracefully
-                    errString = 'Feature IDs not found.<br><br>';
-                    errString +=
-                        'Currently all Features included in a FeatureSet must be present' +
-                        ' in the Expression Data Matrix.  Please rebuild the FeatureSet ' +
-                        'so that it only includes these features.  This is a known issue ' +
-                        'and will be fixed shortly.';
-                }
-            }
-
-            const $errorDiv = $('<div>')
-                .addClass('alert alert-danger')
-                .append('<b>Error:</b>')
-                .append('<br>' + errString);
             this.$elem.empty();
-            this.$elem.append($errorDiv);
+            this.$elem.html($ErrorView(error));
         },
+
+        // clientError: function (error) {
+        //     this.loading(false);
+        //     let errString = 'Unknown error.';
+        //     console.error(error);
+        //     if (typeof error === 'string') errString = error;
+        //     else if (error.error && error.error.message) errString = error.error.message;
+        //     else if (error.error && error.error.error && typeof error.error.error === 'string') {
+        //         errString = error.error.error;
+        //         if (
+        //             errString.indexOf('java.lang.NullPointerException') > -1 &&
+        //             errString.indexOf('buildIndeces(KBaseFeatureValuesImpl.java:708)') > -1
+        //         ) {
+        //             // this is a null pointer due to an unknown feature ID.
+        //             // TODO: handle this gracefully
+        //             errString = 'Feature IDs not found.<br><br>';
+        //             errString +=
+        //                 'Currently all Features included in a FeatureSet must be present' +
+        //                 ' in the Expression Data Matrix.  Please rebuild the FeatureSet ' +
+        //                 'so that it only includes these features.  This is a known issue ' +
+        //                 'and will be fixed shortly.';
+        //         }
+        //     }
+        //
+        //     const $errorDiv = $('<div>')
+        //         .addClass('alert alert-danger')
+        //         .append('<b>Error:</b>')
+        //         .append('<br>' + errString);
+        //     this.$elem.empty();
+        //     this.$elem.append($errorDiv);
+        // },
         uuid: function () {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
                 const r = (Math.random() * 16) | 0,
-                    v = c == 'x' ? r : (r & 0x3) | 0x8;
+                    v = c === 'x' ? r : (r & 0x3) | 0x8;
                 return v.toString(16);
             });
         },

@@ -38,6 +38,8 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
     $,
     kbaseDeletePrompt
 ) => {
+    'use strict';
+
     return KBWidget({
         name: 'kbaseTabs',
 
@@ -74,7 +76,9 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
                 .addClass('tab-content')
                 .attr('id', 'tabs-content')
                 .css('height', this.tabsHeight());
-            const $nav = $('<ul></ul>').addClass('nav nav-tabs').attr('id', 'tabs-nav');
+            const $nav = $('<ul role="tablist"></ul>')
+                .addClass('nav nav-tabs')
+                .attr('id', 'tabs-nav');
             $block.append($nav).append($tabs);
 
             this._rewireIds($block, this);
@@ -96,7 +100,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
                 tab.canDelete = this.options.canDelete;
             }
 
-            const $tab = $('<div></div>').addClass('tab-pane fade');
+            const $tab = $('<div role="tabpanel"></div>').addClass('tab-pane fade');
 
             $tab.hasContent = false;
             if (tab.content) {
@@ -112,7 +116,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
 
             const $that = this;
 
-            const $nav = $('<li></li>')
+            const $nav = $('<li role="tab"></li>')
                 .css('white-space', 'nowrap')
                 .append(
                     $('<a></a>')
@@ -142,7 +146,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
                                 $(this),
                                 $tab,
                                 $tab.parent(),
-                                function () {
+                                () => {
                                     $that.tabHistory.push(tab);
                                     $tab.trigger({
                                         type: 'shown',
@@ -199,10 +203,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
             this.data('tabs-content').append($tab);
             this.data('tabs-nav').append($nav);
 
-            let tabCount = 0;
-            for (t in this.data('tabs')) {
-                tabCount++;
-            }
+            const tabCount = this.data('tabs').length;
             if (tab.show || tabCount == 1) {
                 this.showTab(tab.tab);
             }
@@ -269,14 +270,8 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
                     $prompt.closePrompt();
                 }
 
-                if (this.shouldDeleteTab(tabName)) {
-                    this.removeTab(tabName);
-                }
+                this.removeTab(tabName);
             }, this);
-        },
-
-        shouldDeleteTab: function (tabName) {
-            return 1;
         },
 
         activeTab: function () {

@@ -2116,8 +2116,6 @@ define([
                     const info = this.dataObjects[orderedObject.objId].info;
                     const objectTypeName = info[2].split(/[.-]/)[1];
                     orderedObject.inFilter = (() => {
-                        const objectTypeName = info[2].split(/[.-]/)[1];
-
                         // if type is defined, then our sort must also filter by the type
                         if (type && type !== objectTypeName) {
                             return false; // no match if we are not the selected type!

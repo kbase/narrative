@@ -6,31 +6,30 @@
 
 define([
     'jquery',
-    'knhx',
     'base/js/namespace',
     'kbwidget',
     'narrativeConfig',
     'util/string',
     'kbaseAuthenticatedWidget',
     'kbaseTabs',
-    'kbaseTreechart',
     'kbaseExpressionSparkline',
     'kbaseExpressionHeatmap',
     'kbaseExpressionPairwiseCorrelation',
     'kb_common/jsonRpc/genericClient',
+
     // For effect
     'jquery-dataTables',
     'bootstrap',
+    'knhx',
+    'kbaseTreechart',
 ], (
     $,
-    knhx,
     Jupyter,
     KBWidget,
     Config,
     StringUtil,
     kbaseAuthenticatedWidget,
     kbaseTabs,
-    kbaseTreechart,
     kbaseExpressionSparkline,
     kbaseExpressionHeatmap,
     kbaseExpressionPairwiseCorrelation,
@@ -101,63 +100,74 @@ define([
 
             self.loading(true);
 
-            const clusterSetRef = self.buildObjectIdentity(
-                this.options.workspaceID,
-                this.options.clusterSetID
-            );
+            const clusterSetRef = this.options.upas.clusterSetID;
 
             // Note order of calls is important here; state is stored in the object.
             this.ws
-                .callFunc('get_objects', [[clusterSetRef]])
-                .spread((data) => {
-                    self.clusterSet = data[0].data;
+                .callFunc('get_objects2', [
+                    {
+                        objects: [
+                            {
+                                ref: clusterSetRef,
+                            },
+                        ],
+                    },
+                ])
+                .then(([result]) => {
+                    // get_objects2 returns a list of ObjectData
+                    // https://github.com/kbase/workspace_deluxe/blob/0964b09a95f9c617547d40c413d57598cd12d04c/workspace.spec#L1043
+                    self.clusterSet = result.data[0].data;
                     self.expMatrixRef = self.clusterSet.original_data;
 
                     return self.ws
-                        .callFunc('get_object_subset', [
-                            [
-                                {
-                                    ref: self.expMatrixRef,
-                                    included: [
-                                        '/genome_ref',
-                                        '/feature_mapping',
-                                        '/data/row_ids',
-                                        '/data/col_ids',
-                                    ],
-                                },
-                            ],
+                        .callFunc('get_objects2', [
+                            {
+                                objects: [
+                                    {
+                                        ref: self.expMatrixRef,
+                                        included: [
+                                            '/genome_ref',
+                                            '/feature_mapping',
+                                            '/data/row_ids',
+                                            '/data/col_ids',
+                                        ],
+                                    },
+                                ],
+                            },
                         ])
-                        .spread((result) => {
-                            const data = result[0];
-                            self.expMatrixName = data.info[1];
-                            self.genomeRef = data.data.genome_ref;
-                            self.featureMapping = data.data.feature_mapping;
-                            self.matrixRowIds = data.data.data.row_ids;
-                            self.matrixColIds = data.data.data.col_ids;
+                        .then(([result]) => {
+                            const matrixObj = result.data[0];
+                            self.expMatrixName = matrixObj.info[1];
+                            self.genomeRef = matrixObj.data.genome_ref;
+                            self.featureMapping = matrixObj.data.feature_mapping;
+                            self.matrixRowIds = matrixObj.data.data.row_ids;
+                            self.matrixColIds = matrixObj.data.data.col_ids;
 
                             if (self.genomeRef) {
                                 return self.ws
-                                    .callFunc('get_object_subset', [
-                                        [
-                                            {
-                                                ref: self.genomeRef,
-                                                included: [
-                                                    '/id',
-                                                    '/scientific_name',
-                                                    '/features/[*]/id',
-                                                    'features/[*]/type',
-                                                    'features/[*]/function',
-                                                    'features/[*]/functions',
-                                                    'features/[*]/aliases',
-                                                ],
-                                            },
-                                        ],
+                                    .callFunc('get_objects2', [
+                                        {
+                                            objects: [
+                                                {
+                                                    ref: self.genomeRef,
+                                                    included: [
+                                                        '/id',
+                                                        '/scientific_name',
+                                                        '/features/[*]/id',
+                                                        'features/[*]/type',
+                                                        'features/[*]/function',
+                                                        'features/[*]/functions',
+                                                        'features/[*]/aliases',
+                                                    ],
+                                                },
+                                            ],
+                                        },
                                     ])
-                                    .spread((result) => {
-                                        const data = result[0];
-                                        self.genomeID = data.info[1];
-                                        self.genomeName = data.data.scientific_name;
-                                        self.features = data.data.features;
+                                    .then(([result]) => {
+                                        const genomeObj = result.data[0];
+                                        self.genomeID = genomeObj.info[1];
+                                        self.genomeName = genomeObj.data.scientific_name;
+                                        self.features = genomeObj.data.features;
                                         self.render();
                                     })
                                     .catch((error) => {
@@ -268,7 +278,7 @@ define([
                             if (row.size > MAX_EXPLORE_CLUSTER_SIZE) {
                                 const tooltip =
                                     `This cluster contains <b>${row.size}</b> genes; the Explore Cluster ` +
-                                    `feature does not work for clusters with more than <b>${MAX_GENES_FOR_HEATMAP}</b> ` +
+                                    `feature does not work for clusters with more than <b>${MAX_EXPLORE_CLUSTER_SIZE}</b> ` +
                                     `genes, due to browser and network performance considerations.`;
                                 return `
                                         <button class="btn btn-default" disabled>

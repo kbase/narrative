@@ -13,50 +13,6 @@
         </tr>
     </thead>
     <tbody class="kb-staging-table-body">
-    {{#each files}}
-        <tr class="kb-staging-table__row" scope="row">
-            <td>{{name}}</td>
-            <td class="kb-staging-table-body__cell--expander">{{isFolder}}</td>
-            <td>{{name}}</td>
-            <td>{{size}}</td>
-            <td>{{mtime}}</td>
-            <td role="option" class="kb-staging-table-body__cell--import">
-                {{#if imported }}
-                <div class="kb-staging-table-body__select_container">
-                    <select>
-                        <option></option>
-                        {{#if mappings}}
-                        <optgroup label="Suggested Types">
-                            {{#each mappings as |mapping|}} -->
-                                <option value="{{id}}">{{title}}</option>
-                            {{/each}}
-                        </optgroup>
-                        <optgroup label="Other Types">
-                            {{#each ../uploaders}}
-                            <option value="{{id}}">{{name}}</option>
-                            {{/each}}
-                        {{ else }}
-                            {{#each ../uploaders}}
-                                <option value="{{id}}">{{name}}</option>
-                            {{/each}}
-                        {{/if}}
-                        </optgroup>
-                    </select>
-                    <button data-download="{{name}}" class="kb-staging-table-body__button--download" role="button" aria-label="Download Data" title="Download data">
-                        <span class="fa fa-download"></span>
-                    </button>
-                    <button data-delete="{{name}}" class="kb-staging-table-body__button--delete" role="button" aria-label="Delete File" title="Delete file">
-                        <span class="fa fa-trash"></span>
-                    </button>
-                </div>
-            {{ else }}
-                <button data-delete="{{name}}" class="kb-staging-table-body__button--delete" role="button" aria-label="Delete Folder" title="Delete folder">
-                    <span class="fa fa-trash"></span>
-                </button>
-                {{/if}}
-            </td>
-        </tr>
-    {{/each}}
     </tbody>
 </table>
 <div class='kb-staging-table__notice'>
@@ -64,3 +20,4 @@
 </div>
 <div class='kb-staging-table-import'>
 </div>
+

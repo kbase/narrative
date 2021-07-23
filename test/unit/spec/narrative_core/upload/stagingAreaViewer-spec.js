@@ -9,7 +9,8 @@ define([
     describe('The staging area viewer widget', () => {
         let stagingViewer, container, $container, $parentNode;
         const startingPath = '/',
-            updatePathFn = null, //() => {},
+            updatePathFn = null,
+
             fakeUser = 'notAUser';
 
         beforeEach(() => {

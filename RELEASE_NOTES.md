@@ -6,6 +6,7 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
 ### Unreleased
 
+- SCT-3097 - Fix pop-ups and long timeouts & browser tab crash for expression feature clustering viewer
 - SCT-3084 - Fixed broken (non-functional) search in the data panel
 - SCT-3602 - refseq public data tool now searches by lineage as well; for all public data tools: automatically focus the search input; fix paging bug.
 - No ticket - migrate from `nosetests` to `pytest` for testing the Python stack.

@@ -2113,9 +2113,11 @@ define([
                     // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
                     // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
                     // [9] : int size // [10] : usermeta meta
-                    const info = this.dataObjects[orderedObject.objId].info;
-                    const objectTypeName = info[2].split(/[.-]/)[1];
+
                     orderedObject.inFilter = (() => {
+                        const info = this.dataObjects[orderedObject.objId].info;
+                        const objectTypeName = info[2].split(/[.-]/)[1];
+
                         // if type is defined, then our sort must also filter by the type
                         if (type && type !== objectTypeName) {
                             return false; // no match if we are not the selected type!

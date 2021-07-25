@@ -230,7 +230,7 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
         const requestBody = args.body || '';
         const jsonRpcResponse = {
             version: '1.1',
-            id: '12345',
+            id: args.id || '12345',
             result: [args.response],
         };
         const serviceResponse = {

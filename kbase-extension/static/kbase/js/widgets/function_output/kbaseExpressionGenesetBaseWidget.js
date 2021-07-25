@@ -19,7 +19,8 @@ define([
     'narrativeConfig',
     'kb_common/jsonRpc/dynamicServiceClient',
     'kb_common/jsonRpc/genericClient',
-    'widgets/common/errorView',
+    'widgets/common/ErrorView',
+    'widgets/common/LoadingMessage',
 
     // Loaded for effect
     'jquery-dataTables',
@@ -33,7 +34,8 @@ define([
     Config,
     DynamicServiceClient,
     ServiceClient,
-    $ErrorView
+    $ErrorView,
+    $LoadingMessage
 ) => {
     'use strict';
 
@@ -46,7 +48,6 @@ define([
             expressionMatrixID: null,
             geneIds: null,
             input_featureset: null,
-            loadingImage: 'static/kbase/images/ajax-loader.gif',
         },
         // Prefix for all div ids
         pref: null,
@@ -55,6 +56,8 @@ define([
         init: function (options) {
             this._super(options);
             this.pref = this.uuid();
+
+            // console.log('INIT', options);
 
             // Create a message pane
             this.$messagePane = $('<div/>').addClass('kbwidget-message-pane kbwidget-hide-message');
@@ -106,7 +109,7 @@ define([
             const self = this;
             self.loading(true);
 
-            function getSubmatrixStatsAndRender() {
+            async function getSubmatrixStatsAndRender() {
                 const smParams = self.getSubmatrixParams();
 
                 // some parameter checking
@@ -116,16 +119,17 @@ define([
                     );
                     return;
                 }
-                return self.featureValues
-                    .callFunc('get_submatrix_stat', [smParams])
-                    .then(([data]) => {
-                        self.submatrixStat = data;
-                        self.render();
-                        self.loading(false);
-                    })
-                    .catch((error) => {
-                        self.renderError(error);
-                    });
+
+                try {
+                    const [data] = await self.featureValues.callFunc('get_submatrix_stat', [
+                        smParams,
+                    ]);
+                    self.submatrixStat = data;
+                    self.render();
+                    self.loading(false);
+                } catch (ex) {
+                    self.renderError(ex);
+                }
             }
 
             // if a feature set is defined, use it.
@@ -161,6 +165,7 @@ define([
                         getSubmatrixStatsAndRender();
                     })
                     .catch((error) => {
+                        console.error('got it not xx!!', error);
                         self.renderError(error);
                     });
             } else {
@@ -168,30 +173,29 @@ define([
             }
         },
         render: function () {
-            const $overviewContainer = $('<div/>');
+            const $overviewContainer = $('<div>');
             this.$elem.append($overviewContainer);
-            this.buildOverviewDiv($overviewContainer);
+            this.renderOverview($overviewContainer);
 
             // Separator
             this.$elem.append($('<div style="margin-top:1em"></div>'));
 
-            const $vizContainer = $('<div/>');
+            const $vizContainer = $('<div>');
             this.$elem.append($vizContainer);
             this.buildWidget($vizContainer);
         },
-        buildOverviewDiv: function ($containerDiv) {
-            const self = this;
+        renderOverview: function ($container) {
             const pref = this.pref;
 
             const $overviewSwitch = $('<a/>')
                 .html('[Show/Hide Selected Features]')
                 .css('cursor', 'pointer');
-            $containerDiv.append($overviewSwitch);
+            $container.append($overviewSwitch);
 
             const $overviewContainer = $('<div hidden style="margin:1em 0 4em 0"/>');
-            $containerDiv.append($overviewContainer);
+            $container.append($overviewContainer);
 
-            const geneData = self.buildGenesTableData();
+            const geneData = this.buildGenesTableData();
             const iDisplayLength = 10;
             let style = 'lftip';
             if (geneData.length <= iDisplayLength) {
@@ -232,7 +236,7 @@ define([
         buildGenesTableData: function () {
             const submatrixStat = this.submatrixStat;
             const tableData = [];
-            const stat = submatrixStat.row_set_stats;
+            const stats = submatrixStat.row_set_stats;
             for (let i = 0; i < submatrixStat.row_descriptors.length; i++) {
                 const desc = submatrixStat.row_descriptors[i];
                 const gene_function = desc.properties['function'];
@@ -241,11 +245,11 @@ define([
                     id: desc.id,
                     name: desc.name || '-',
                     function: gene_function || '-',
-                    min: stat.mins[i] ? stat.mins[i].toFixed(2) : null,
-                    max: stat.maxs[i] ? stat.maxs[i].toFixed(2) : null,
-                    avg: stat.avgs[i] ? stat.avgs[i].toFixed(2) : null,
-                    std: stat.stds[i] ? stat.stds[i].toFixed(2) : null,
-                    missing_values: stat.missing_values[i],
+                    min: stats.mins[i] ? stats.mins[i].toFixed(2) : null,
+                    max: stats.maxs[i] ? stats.maxs[i].toFixed(2) : null,
+                    avg: stats.avgs[i] ? stats.avgs[i].toFixed(2) : null,
+                    std: stats.stds[i] ? stats.stds[i].toFixed(2) : null,
+                    missing_values: stats.missing_values[i],
                 });
             }
             return tableData;
@@ -260,13 +264,14 @@ define([
             return $row;
         },
         loading: function (isLoading) {
-            if (isLoading) this.showMessage("<img src='" + this.options.loadingImage + "'/>");
-            else this.hideMessage();
+            if (isLoading) {
+                this.showMessage($LoadingMessage('Loading...'));
+            } else {
+                this.hideMessage();
+            }
         },
-        showMessage: function (message) {
-            const span = $('<span/>').append(message);
-
-            this.$messagePane.append(span);
+        showMessage: function ($message) {
+            this.$messagePane.html($message);
             this.$messagePane.show();
         },
         hideMessage: function () {

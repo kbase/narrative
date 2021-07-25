@@ -49,6 +49,7 @@ module.exports = function (config) {
             // JS files
             'kbase-extension/static/narrative_paths.js',
             { pattern: 'kbase-extension/static/**/*.js', included: false },
+            { pattern: 'test/unit/spec/**/*.json', included: false },
             { pattern: 'nbextensions/appcell2/widgets/tabs/*.js', included: false },
             // static resources
             { pattern: 'kbase-extension/kbase_templates/*.html', included: false },

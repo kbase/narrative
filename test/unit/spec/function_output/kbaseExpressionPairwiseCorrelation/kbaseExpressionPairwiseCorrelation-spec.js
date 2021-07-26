@@ -154,7 +154,7 @@ define([
 
             // A download button is in place.
             const $downloadButton = await tryFor(() => {
-                const $button = $host.find('button');
+                const $button = $host.find('button[data-testid="download-button"]');
                 return [$button.length === 1, $button];
             }, 5000);
 
@@ -185,7 +185,7 @@ define([
             await waitForAlert($host, warnings, 5000);
 
             // The download button is not displayed
-            const $button = $host.find('button');
+            const $button = $host.find('button[data-testid="download-button"]');
             expect($button.length).toEqual(0);
 
             // An an svg is not displayed

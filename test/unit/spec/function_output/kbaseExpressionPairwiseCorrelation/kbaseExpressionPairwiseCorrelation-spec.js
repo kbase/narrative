@@ -5,7 +5,6 @@ define([
     'narrativeConfig',
     'base/js/namespace',
     'kb_common/jsonRpc/dynamicServiceClient',
-    'kb_common/jsonRpc/genericClient',
     '../../util/asyncTools',
 
     'json!./data/case1/constructorParams.json',
@@ -13,11 +12,9 @@ define([
     'json!./data/case1/KBaseFeatureValues.get_submatrix_stat.response.json',
 
     'json!./data/case2/constructorParams.json',
-    'json!./data/case2/KBaseFeatureValues.get_submatrix_stat.request.json',
     'json!./data/case2/KBaseFeatureValues.get_submatrix_stat.response.json',
 
     'json!./data/case3/constructorParams.json',
-    'json!./data/case3/KBaseFeatureValues.get_submatrix_stat.request.json',
     'json!./data/case3/KBaseFeatureValues.get_submatrix_stat.response.json',
 ], (
     $,
@@ -26,16 +23,13 @@ define([
     Config,
     Jupyter,
     DynamicServiceClient,
-    ServiceClient,
     asyncTools,
     case1ConstructorParams,
     case1Request1Data,
     case1ResponseData,
     case2ConstructorParams,
-    case2Request1Data,
     case2ResponseData,
     case3ConstructorParams,
-    case3Request1Data,
     case3ResponseData
 ) => {
     'use strict';

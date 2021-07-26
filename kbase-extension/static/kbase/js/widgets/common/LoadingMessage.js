@@ -13,6 +13,7 @@ define(['jquery'], ($) => {
             .css('display', 'flex')
             .css('flex-direction', 'row')
             .css('align-items', 'center')
+            .css('justify-content', 'center')
             .css('margin', '10px auto')
             .css('max-width', '30em')
             .append($message)

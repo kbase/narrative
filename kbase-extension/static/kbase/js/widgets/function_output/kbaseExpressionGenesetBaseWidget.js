@@ -5,9 +5,6 @@
  * 1. getSubmatrixParams - to set params for get_submatrix_stat method from the KBaseFeatureValues service
  * 2. buildWidget - to create a custom visuzualization
  *
- *
- *
- *
  * Pavel Novichkov <psnovichkov@lbl.gov>
  * @public
  */
@@ -58,8 +55,6 @@ define([
         init: function (options) {
             this._super(options);
             this.pref = new Uuid(4).format();
-
-            // console.log('INIT', options);
 
             // Create a message pane
             this.$messagePane = $('<div/>').addClass('kbwidget-message-pane kbwidget-hide-message');
@@ -252,7 +247,7 @@ define([
             }
             return tableData;
         },
-        // To be overriden
+        // To be overridden
         buildWidget: null,
 
         makeRow: function (name, value) {

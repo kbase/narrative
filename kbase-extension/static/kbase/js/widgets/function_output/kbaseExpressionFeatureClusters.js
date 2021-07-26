@@ -135,49 +135,59 @@ define([
                                 ],
                             },
                         ])
-                        .then(([result]) => {
-                            const matrixObj = result.data[0];
-                            self.expMatrixName = matrixObj.info[1];
-                            self.genomeRef = matrixObj.data.genome_ref;
-                            self.featureMapping = matrixObj.data.feature_mapping;
-                            self.matrixRowIds = matrixObj.data.data.row_ids;
-                            self.matrixColIds = matrixObj.data.data.col_ids;
+                        .then(
+                            ([
+                                {
+                                    data: [matrixObj],
+                                },
+                            ]) => {
+                                self.expMatrixName = matrixObj.info[1];
+                                self.genomeRef = matrixObj.data.genome_ref;
+                                self.featureMapping = matrixObj.data.feature_mapping;
+                                self.matrixRowIds = matrixObj.data.data.row_ids;
+                                self.matrixColIds = matrixObj.data.data.col_ids;
 
-                            if (self.genomeRef) {
-                                return self.ws
-                                    .callFunc('get_objects2', [
-                                        {
-                                            objects: [
+                                if (self.genomeRef) {
+                                    return self.ws
+                                        .callFunc('get_objects2', [
+                                            {
+                                                objects: [
+                                                    {
+                                                        ref: self.genomeRef,
+                                                        included: [
+                                                            '/id',
+                                                            '/scientific_name',
+                                                            '/features/[*]/id',
+                                                            'features/[*]/type',
+                                                            'features/[*]/function',
+                                                            'features/[*]/functions',
+                                                            'features/[*]/aliases',
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ])
+                                        .then(
+                                            ([
                                                 {
-                                                    ref: self.genomeRef,
-                                                    included: [
-                                                        '/id',
-                                                        '/scientific_name',
-                                                        '/features/[*]/id',
-                                                        'features/[*]/type',
-                                                        'features/[*]/function',
-                                                        'features/[*]/functions',
-                                                        'features/[*]/aliases',
-                                                    ],
+                                                    data: [genomeObj],
                                                 },
-                                            ],
-                                        },
-                                    ])
-                                    .then(([result]) => {
-                                        const genomeObj = result.data[0];
-                                        self.genomeID = genomeObj.info[1];
-                                        self.genomeName = genomeObj.data.scientific_name;
-                                        self.features = genomeObj.data.features;
-                                        self.render();
-                                    })
-                                    .catch((error) => {
-                                        console.error(error);
-                                        self.render();
-                                    });
-                            } else {
-                                self.render();
+                                            ]) => {
+                                                self.genomeID = genomeObj.info[1];
+                                                self.genomeName = genomeObj.data.scientific_name;
+                                                self.features = genomeObj.data.features;
+                                                self.render();
+                                            }
+                                        )
+                                        .catch((error) => {
+                                            console.error(error);
+                                            self.render();
+                                        });
+                                } else {
+                                    self.render();
+                                }
                             }
-                        })
+                        )
                         .catch((error) => {
                             console.error('ERROR', error);
                             self.clientError(error);

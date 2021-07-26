@@ -101,12 +101,14 @@ define([
 
             //Build row ids
             const rowIds = [];
-            for (let i = 0; i < rowDescriptors.length; i++) {
-                rowIds.push(rowDescriptors[i].id);
+
+            for (const { id } of rowDescriptors) {
+                rowIds.push(id);
             }
 
             // Build data
             const data = [];
+
             for (let i = 0; i < rowDescriptors.length; i++) {
                 const row = [];
                 for (let j = 0; j < rowDescriptors.length; j++) {
@@ -114,7 +116,7 @@ define([
                 }
                 data.push(row);
             }
-            const heatmap = {
+            const dataset = {
                 row_ids: rowIds,
                 row_labels: rowIds,
                 column_ids: rowIds,
@@ -159,7 +161,7 @@ define([
 
             // TODO: heatmap values out of range still scale color instead of just the max/min color
             new kbaseHeatmap($heatmapContainer, {
-                dataset: heatmap,
+                dataset,
                 colors: HEATMAP_COLORS,
                 minValue: HEATMAP_MIN_VALUE,
                 maxValue: HEATMAP_MAX_VALUE,

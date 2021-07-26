@@ -178,11 +178,9 @@ define([
             this.buildWidget($vizContainer);
         },
         renderOverview: function ($container) {
-            let showing = false;
-
             const $overviewSwitch = $('<button>')
                 .addClass('btn btn-default')
-                .html('Show Selected Features')
+                .attr('data-testid', 'overview-toggle')
                 .css('cursor', 'pointer');
             $container.append($overviewSwitch);
 
@@ -225,13 +223,25 @@ define([
                 },
             });
 
-            $overviewSwitch.click(() => {
-                $overviewContainer.toggle();
-                showing = !showing;
+            let showing = false;
+
+            function renderSwitchButtonLabel() {
                 if (showing) {
                     $overviewSwitch.text('Hide Selected Features');
                 } else {
                     $overviewSwitch.text('Show Selected Features');
+                }
+            }
+
+            renderSwitchButtonLabel();
+
+            $overviewSwitch.click(() => {
+                showing = !showing;
+                renderSwitchButtonLabel();
+                if (showing) {
+                    $overviewContainer.fadeIn();
+                } else {
+                    $overviewContainer.fadeOut();
                 }
             });
         },

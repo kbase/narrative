@@ -37,8 +37,6 @@ define([
 ) => {
     'use strict';
 
-    const MAX_EXPLORE_CLUSTER_SIZE = 200;
-
     return KBWidget({
         name: 'kbaseExpressionFeatureClusters',
         parent: kbaseAuthenticatedWidget,
@@ -284,25 +282,7 @@ define([
                     {
                         sTitle: '',
                         mData: 'rowIndex',
-                        mRender: function (rowIndex, type, row) {
-                            if (row.size > MAX_EXPLORE_CLUSTER_SIZE) {
-                                const tooltip =
-                                    `This cluster contains <b>${row.size}</b> genes; the Explore Cluster ` +
-                                    `feature does not work for clusters with more than <b>${MAX_EXPLORE_CLUSTER_SIZE}</b> ` +
-                                    `genes, due to browser and network performance considerations.`;
-                                return `
-                                        <button class="btn btn-default" disabled>
-                                            Explore Cluster <span class="caret" />
-                                        </button>
-                                        <span class="fa fa-exclamation-triangle text-warning" 
-                                              style="margin-left: 1em;"
-                                              title="${tooltip}"
-                                              data-toggle="tooltip"
-                                              data-html="true"
-                                              data-placement="top"
-                                           />
-                                    `;
-                            }
+                        mRender: function (rowIndex) {
                             return `<button class="btn btn-default ${pref}action_button" 
                                             data-rowindex="${rowIndex}">
                                         Explore Cluster  <span class="caret" />

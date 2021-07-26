@@ -16,11 +16,27 @@ define([
 ], (KBWidget, $, Uuid, kbaseExpressionGenesetBaseWidget, kbaseHeatmap) => {
     'use strict';
 
+    // The "MAX_GENES_*" constants are utilized to control performance of using a
+    // matrix, which has N² character, generally.
+
+    // Controls the max genes for which a heatmap will be inserted into the DOM.
     const MAX_GENES_FOR_INLINE_HEATMAP = 50;
+
+    // Controls the max genes for which a heatmap will be generated (and queried for), period.
     const MAX_GENES_FOR_HEATMAP = 200;
+
+    // Heatmap display controls.
     const HEATMAP_COLORS = ['#FFA500', '#FFFFFF', '#0066AA'];
     const HEATMAP_MIN_VALUE = -1.0;
     const HEATMAP_MAX_VALUE = 1.0;
+    const HEATMAP_ROW_HEIGHT = 15;
+    const HEATMAP_MIN_HEIGHT = 210;
+
+    // See base-extension/static/kbase/js/widgets/vis/kbaseHeatmap.js
+    const HEATMAP_Y_GUTTER = 80;
+    const HEATMAP_Y_PADDING = 20;
+    const HEATMAP_X_GUTTER = 110;
+    const HEATMAP_X_PADDING = 150;
 
     function $renderWarningAlert(warningContent) {
         const $warningElement = $('<div>')
@@ -103,19 +119,8 @@ define([
                 row_labels: rowIds,
                 column_ids: rowIds,
                 column_labels: rowIds,
-                data: data,
+                data,
             };
-
-            const size = rowIds.length;
-            let rowH = 15;
-            let hmH = 80 + 20 + size * rowH;
-
-            if (hmH < 210) {
-                hmH = 210;
-                rowH = Math.round((hmH - 100) / size);
-            }
-            const colW = rowH;
-            const hmW = 150 + 110 + size * colW;
 
             const $container = $('<div>').css('margin-top', '5px');
             $hostDiv.html($container);
@@ -129,9 +134,27 @@ define([
                 return;
             }
 
+            const [heatmapWidth, heatmapHeight] = (() => {
+                const size = rowIds.length;
+                let rowHeight = HEATMAP_ROW_HEIGHT;
+                let height = HEATMAP_Y_GUTTER + HEATMAP_Y_PADDING + size * rowHeight;
+
+                // Under HEATMAP_MIN_HEIGHT pixels, we set the height to the min height.
+                if (height < HEATMAP_MIN_HEIGHT) {
+                    height = HEATMAP_MIN_HEIGHT;
+                    rowHeight = Math.round(
+                        (height - (HEATMAP_Y_GUTTER + HEATMAP_Y_PADDING)) / size
+                    );
+                }
+                const columnWidth = rowHeight;
+                const width = HEATMAP_X_GUTTER + HEATMAP_X_PADDING + size * columnWidth;
+
+                return [width, height];
+            })();
+
             const $heatmapContainer = $('<div>')
-                .css('width', `${hmW}px`)
-                .css('height', `${hmH}px`)
+                .css('width', `${heatmapWidth}px`)
+                .css('height', `${heatmapHeight}px`)
                 .attr('data-testid', 'heatmap');
 
             // TODO: heatmap values out of range still scale color instead of just the max/min color

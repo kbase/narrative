@@ -31,6 +31,7 @@ from .test_job import (
 config = ConfigTests()
 test_jobs = config.load_json_file(config.get("jobs", "ee2_job_info_file"))
 JOB_NOT_FOUND = "job_not_found"
+APP_NAME = "The Best App in the World"
 
 
 def make_comm_msg(
@@ -50,6 +51,10 @@ def make_comm_msg(
         return JobRequest(msg)
     else:
         return msg
+
+
+def get_app_data(*args):
+    return {"info": {"name": APP_NAME}}
 
 
 class JobCommTestCase(unittest.TestCase):
@@ -164,19 +169,55 @@ class JobCommTestCase(unittest.TestCase):
     # ---------------
     # Lookup job info
     # ---------------
+    @mock.patch(
+        "biokbase.narrative.jobs.specmanager.SpecManager.get_spec", get_app_data
+    )
     def test_lookup_job_info_ok(self):
         job_id = JOB_COMPLETED
         req = make_comm_msg("job_info", job_id, True)
         job_info = self.jc._lookup_job_info(req)
         expected = {
             "app_id": "NarrativeTest/test_editor",
-            "app_name": "Test Editor",
+            "app_name": APP_NAME,
+            "batch_id": None,
             "job_id": job_id,
             "job_params": [
                 {
                     "k_list": [],
                     "k_max": None,
                     "output_contigset_name": "MEGAHIT.contigs",
+                }
+            ],
+        }
+        for k in expected:
+            self.assertIn(k, job_info)
+            self.assertEqual(expected[k], job_info[k])
+
+    @mock.patch(
+        "biokbase.narrative.jobs.specmanager.SpecManager.get_spec", get_app_data
+    )
+    def test_lookup_job_with_batch_id_info_ok(self):
+        job_id = "60e71159fce9347f2adeaac6"
+        req = make_comm_msg("job_info", job_id, True)
+        job_info = self.jc._lookup_job_info(req)
+        expected = {
+            "app_id": "kb_uploadmethods/import_fastq_noninterleaved_as_reads_from_staging",
+            "app_name": APP_NAME,
+            "batch_id": "60e7112887b7e512a899c8f1",
+            "job_id": job_id,
+            "job_params": [
+                {
+                    "fastq_fwd_staging_file_name": "small.forward.fq",
+                    "fastq_rev_staging_file_name": "small.reverse.fq",
+                    "import_type": "FASTQ/FASTA",
+                    "insert_size_mean": None,
+                    "insert_size_std_dev": None,
+                    "interleaved": "0",
+                    "name": "jupyter_nbconvert_config.py",
+                    "read_orientation_outward": 0,
+                    "sequencing_tech": "Illumina",
+                    "single_genome": 1,
+                    "workspace_name": "ialarmedalien:narrative_1623776017922",
                 }
             ],
         }
@@ -365,10 +406,11 @@ class JobCommTestCase(unittest.TestCase):
             req = make_comm_msg("job_logs", job_id, True, content)
             self.jc._get_job_logs(req)
             msg = self.jc._comm.last_message
+            self.assertEqual(job_id, msg["data"]["content"]["job_id"])
+            self.assertEqual(None, msg["data"]["content"]["batch_id"])
             self.assertEqual("job_logs", msg["data"]["msg_type"])
             self.assertEqual(lines_available, msg["data"]["content"]["max_lines"])
             self.assertEqual(c[3], len(msg["data"]["content"]["lines"]))
-            self.assertEqual(job_id, msg["data"]["content"]["job_id"])
             self.assertEqual(c[2], msg["data"]["content"]["latest"])
             first = 0 if c[1] is None and c[2] is True else c[0]
             n_lines = c[1] if c[1] else lines_available

@@ -62,8 +62,8 @@ define(['widgets/common/ErrorView', 'kb_common/jsonRpc/exceptions'], (
 
         it('should display a the "message" property for an unsupported object"', () => {
             class Foo {
-                constructor(message) {
-                    this.message = message;
+                constructor(_message) {
+                    this.message = _message;
                 }
             }
             const message = 'I am Foo';
@@ -90,8 +90,8 @@ define(['widgets/common/ErrorView', 'kb_common/jsonRpc/exceptions'], (
 
         it('should display the "toString()" result an unsupported object with a "toString" method"', () => {
             class Foo {
-                constructor(message2) {
-                    this.message2 = message2;
+                constructor(_message2) {
+                    this.message2 = _message2;
                 }
                 toString() {
                     return this.message2;

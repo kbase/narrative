@@ -15,6 +15,7 @@
 define([
     'kbwidget',
     'jquery',
+    'uuid',
     'kbaseAuthenticatedWidget',
     'narrativeConfig',
     'kb_common/jsonRpc/dynamicServiceClient',
@@ -30,6 +31,7 @@ define([
 ], (
     KBWidget,
     $,
+    Uuid,
     kbaseAuthenticatedWidget,
     Config,
     DynamicServiceClient,
@@ -55,7 +57,7 @@ define([
         submatrixStat: null,
         init: function (options) {
             this._super(options);
-            this.pref = this.uuid();
+            this.pref = new Uuid(4).format();
 
             // console.log('INIT', options);
 
@@ -156,10 +158,6 @@ define([
                                     self.options.geneIds += ',';
                                 }
                                 self.options.geneIds += fid;
-                                //        for now we ignore which genome it came from, just use the ids
-                                //        for (var k=0; k<fs.elements[fid].length; k++) {
-                                //            var gid = fs.elements[fid][k];
-                                //        }
                             }
                         }
                         getSubmatrixStatsAndRender();
@@ -282,44 +280,6 @@ define([
             this.loading(false);
             this.$elem.empty();
             this.$elem.html($ErrorView(error));
-        },
-
-        // clientError: function (error) {
-        //     this.loading(false);
-        //     let errString = 'Unknown error.';
-        //     console.error(error);
-        //     if (typeof error === 'string') errString = error;
-        //     else if (error.error && error.error.message) errString = error.error.message;
-        //     else if (error.error && error.error.error && typeof error.error.error === 'string') {
-        //         errString = error.error.error;
-        //         if (
-        //             errString.indexOf('java.lang.NullPointerException') > -1 &&
-        //             errString.indexOf('buildIndeces(KBaseFeatureValuesImpl.java:708)') > -1
-        //         ) {
-        //             // this is a null pointer due to an unknown feature ID.
-        //             // TODO: handle this gracefully
-        //             errString = 'Feature IDs not found.<br><br>';
-        //             errString +=
-        //                 'Currently all Features included in a FeatureSet must be present' +
-        //                 ' in the Expression Data Matrix.  Please rebuild the FeatureSet ' +
-        //                 'so that it only includes these features.  This is a known issue ' +
-        //                 'and will be fixed shortly.';
-        //         }
-        //     }
-        //
-        //     const $errorDiv = $('<div>')
-        //         .addClass('alert alert-danger')
-        //         .append('<b>Error:</b>')
-        //         .append('<br>' + errString);
-        //     this.$elem.empty();
-        //     this.$elem.append($errorDiv);
-        // },
-        uuid: function () {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-                const r = (Math.random() * 16) | 0,
-                    v = c === 'x' ? r : (r & 0x3) | 0x8;
-                return v.toString(16);
-            });
         },
         buildObjectIdentity: function (workspaceID, objectID, objectVer, wsRef) {
             const obj = {};

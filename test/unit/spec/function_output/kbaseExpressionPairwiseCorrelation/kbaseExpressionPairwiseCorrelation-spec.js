@@ -36,43 +36,19 @@ define([
 
     const { tryFor } = asyncTools;
 
-    // function mockWorkSpaceService() {
-    //     Mocks.mockJsonRpc1Call({
-    //         url: Config.url('workspace'),
-    //         response: [
-    //             35855,
-    //             'testUser:narrative_1534979778065',
-    //             'testUser',
-    //             '2020-09-30T23:22:25+0000',
-    //             2,
-    //             'a',
-    //             'n',
-    //             'unlocked',
-    //             {
-    //                 narrative_nice_name: 'CI Scratch',
-    //                 searchtags: 'narrative',
-    //                 is_temporary: 'false',
-    //                 narrative: '1',
-    //             },
-    //         ],
-    //     });
-    // }
+    const KBASE_FEATURE_VALUES_URL = 'https://ci.kbase.us/dynserv/xyz.KBaseFeatureValues';
+    const AUTH_TOKEN = 'fakeAuthToken';
 
     function mockKBaseFeatureValuesDynamicService(bodyFilter, caseData) {
         Mocks.mockJsonRpc1Call({
             url: KBASE_FEATURE_VALUES_URL,
-            // A bit crude, but I think we can make this work...
             // the "body", if present, is used to match against
             // the entire request body. We are sending json, so we
-            // match a fragment of json. If only this were a callback...
+            // match a fragment of json.
             body: new RegExp(bodyFilter),
-            // id: '1130778572818838',
             response: caseData,
         });
     }
-
-    const KBASE_FEATURE_VALUES_URL = 'https://ci.kbase.us/dynserv/xyz.KBaseFeatureValues';
-    const AUTH_TOKEN = 'fakeAuthToken';
 
     describe('The kbaseExpressionPairwiseCorrelation widget', () => {
         beforeAll(() => {
@@ -96,6 +72,10 @@ define([
                 module: 'KBaseFeatureValues',
                 url: KBASE_FEATURE_VALUES_URL,
             });
+            // Note that the first parameter, "body", is chosen as a unique matching string.
+            // It must be unique within the "constructor params" utilized in the tests below.
+            // In this case, a "gene id" from the constructor params is chosen, and must be
+            // unique for that data file amongst all the cases.
             mockKBaseFeatureValuesDynamicService('b2577', case1ResponseData);
             mockKBaseFeatureValuesDynamicService('b0023', case2ResponseData);
             mockKBaseFeatureValuesDynamicService('b0049', case3ResponseData);
@@ -105,15 +85,7 @@ define([
             jasmine.Ajax.uninstall();
         });
 
-        it('should have a functioning module definition', () => {
-            expect(Widget).toBeDefined();
-        });
-
-        // Happy paths
-
-        // Just make sure the api call works
-
-        it('should have a functioning FeatureValues ', async () => {
+        it('should have a functioning FeatureValues client', async () => {
             const featureValues = new DynamicServiceClient({
                 module: 'KBaseFeatureValues',
                 url: Config.url('service_wizard'),
@@ -125,19 +97,6 @@ define([
             expect(result).toBeDefined();
             expect(result.mtx_descriptor).toBeDefined();
         });
-
-        // it('should have a functioning Workspace ', async () => {
-        //     const featureValues = new ServiceClient({
-        //         module: 'Workspace',
-        //         url: Config.url('workspace'),
-        //         token: AUTH_TOKEN,
-        //     });
-        //     const params = Object.assign({}, caseRequest1Data.params[0]);
-        //     params.__FAKE__ = 'case1';
-        //     const [result] = await featureValues.callFunc('get_submatrix_stat', [params]);
-        //     expect(result).toBeDefined();
-        //     expect(result.mtx_descriptor).toBeDefined();
-        // });
 
         // Normal display with <= 50 genes
         it('should show a heatmap with < 50 genes', async () => {

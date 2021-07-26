@@ -2,7 +2,6 @@ define([], () => {
     'use strict';
 
     const TRY_LOOP_INTERVAL = 100;
-    const DEFAULT_TRY_LOOP_TIMEOUT = 5000;
 
     /**
      * Returns a promise which resolves when the given duration, in milliseconds,
@@ -28,7 +27,13 @@ define([], () => {
      * @param {number} duration - The timeout, in milliseconds, after which trying without success will fail
      * @returns {Promise} - A promise resolved
      */
-    async function tryFor(fun, duration = DEFAULT_TRY_LOOP_TIMEOUT) {
+    async function tryFor(fun, duration) {
+        if (typeof fun !== 'function') {
+            throw new Error('The "fun" parameter (0) is required and must be a function');
+        }
+        if (typeof duration !== 'number') {
+            throw new Error('The "duration" parameter (1) is required and must be a number');
+        }
         const interval = TRY_LOOP_INTERVAL;
         const started = Date.now();
 

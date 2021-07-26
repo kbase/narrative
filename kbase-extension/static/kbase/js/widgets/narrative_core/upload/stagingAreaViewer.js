@@ -39,7 +39,7 @@ define([
     FtpFileHeaderHtml,
     FilePathHtml,
     Workspace,
-    UUID
+    _UUID
 ) => {
     'use strict';
     const cssBaseClass = 'kb-staging-table',
@@ -80,7 +80,7 @@ define([
             this.setPath(options.path);
             this.openFileInfo = {};
             this.selectedFileTypes = {};
-            this.loadedFilesByPath = {};
+            this.checkedFiles = new Set();
 
             return this;
         },
@@ -105,7 +105,15 @@ define([
          * Returns a Promise that resolves once the rendering is done.
          */
         render: function () {
-            return this.updateView();
+            // a full render should wipe the entire view.
+            // really, this should only be done once. Subsequent data fetching
+            // just updates the data in the datatable.
+            this.$elem.empty();
+            this.renderFileHeader();
+            return this.updateView()
+                .then(() => {
+                    this.renderImportButton();
+                });
         },
 
         updateView: function () {
@@ -121,16 +129,21 @@ define([
                         if (!f.isFolder) {
                             f.imported = {};
                         }
-                        this.loadedFilesByPath[f.path] = f;
                     });
                     return this.identifyImporterMappings(files);
                 })
                 .then((files) => {
                     const scrollTop = this.$elem.parent().scrollTop();
                     $(`.${fileMetadataCssBaseClass}`).detach();
-                    this.$elem.empty();
-                    this.renderFileHeader();
-                    this.renderFiles(files);
+                    if (this.fullDataTable) {
+                        this.fullDataTable
+                            .clear()
+                            .rows.add(files)
+                            .draw(false);
+                    }
+                    else {
+                        this.renderFiles(files);
+                    }
 
                     setTimeout(() => {
                         this.$elem.parent().scrollTop(scrollTop);
@@ -138,16 +151,11 @@ define([
                 })
                 .catch((xhr) => {
                     console.error('Staging area failure:', xhr);
-                    this.$elem.empty();
-                    this.renderFileHeader();
                     this.renderError(
                         xhr.responseText
                             ? xhr.responseText
                             : 'Unknown error - directory was not found, or may have been deleted'
                     );
-                })
-                .finally(() => {
-                    this.renderImportButton();
                 });
         },
 
@@ -286,10 +294,6 @@ define([
                 .catch((err) => {
                     console.error('Error', err);
                 });
-        },
-
-        updateDataList: function () {
-            alert('fetching updated data files and rendering');
         },
 
         /**
@@ -453,10 +457,10 @@ define([
                             $(td).addClass(`${tableBodyCssBaseClass}__cell--import`)
                                 .attr('role', 'option');
                         },
-                        data: function(rowData, type, set, meta) {
+                        data: function(rowData, _type, _set, _meta) {
                             return rowData.imported ? rowData.mappings : null;
                         },
-                        render: function (data, type, rowData) {
+                        render: function (data, _type, rowData) {
                             const fileOrFolder = rowData.imported ? 'file' : 'folder';
                             const deleteBtn = button({
                                 dataDelete: rowData.path,
@@ -514,18 +518,23 @@ define([
                         .attr('data-subdir', data.subdir);
                 },
                 rowCallback: function (row, data) {
+                    const $rowCheckbox = $('td:eq(0)', row).find(`.${cssBaseClass}-body__checkbox-input`);
                     stagingAreaViewer.attachFileIconEvents($('td:eq(1)', row), data);
                     stagingAreaViewer.attachImportSelectionEvents(
                         $('td:eq(5)', row),
-                        $('td:eq(0)', row).find(`.${cssBaseClass}-body__checkbox-input`),
+                        $rowCheckbox,
                         data
                     );
                     stagingAreaViewer.attachFileNameEvents($('td:eq(2)', row), data);
-                    $('td:eq(0)', row)
-                        .find(`input.${cssBaseClass}-body__checkbox-input`)
+
+                    // attach events to the row checkbox
+                    if (stagingAreaViewer.checkedFiles.has(data.path)) {
+                        $rowCheckbox.prop('checked', true);
+                    }
+                    $rowCheckbox
                         .off('click')
-                        .on('click keyPress', (e) => {
-                            stagingAreaViewer.changeImportButton(e);
+                        .on('change', (e) => {
+                            stagingAreaViewer.changeCheckboxState(e, data.path);
                         });
                 },
             });
@@ -549,31 +558,27 @@ define([
 
             $(`input.${cssBaseClass}-body__checkbox-input:enabled`, nodes)
                 .prop('checked', selectAllChecked)
-                .attr('aria-checked', selectAllChecked);
-
-            //enable or disable import appropriately
-            if (selectAllChecked) {
-                this.enableImportButton();
-            } else {
-                this.disableImportButton();
-            }
+                .attr('aria-checked', selectAllChecked)
+                .change();
         },
 
-
-        changeImportButton: function(event) {
+        /**
+         * When a checkbox is checked/unchecked, its path is added/removed from a state saving Set.
+         * This way, when a data refresh happens, the right state can be applied to the checkbox.
+         * This also updates the import button state: if any files are checked (i.e. included in the
+         * checkedFiles Set) the import button is enabled.
+         * @param {Event} event the change event fired on the checkbox
+         * @param {string} filePath the full path for the file that was changed
+         */
+        changeCheckboxState: function(event, filePath) {
             const checked = event.currentTarget.checked;
             if (checked) {
                 this.enableImportButton();
+                this.checkedFiles.add(filePath);
             } else {
-                /*
-                check state of all checkboxes
-                if any are checked we leave import button enabled
-                */
-                const anyCheckedBoxes = this.$elem.find(
-                    `input.${cssBaseClass}-body__checkbox-input:checked`
-                );
-
-                if (!anyCheckedBoxes.length) {
+                this.checkedFiles.delete(filePath);
+                // if we don't have any checked files, disable the import button
+                if (!this.checkedFiles.length) {
                     this.disableImportButton();
                 }
             }
@@ -661,7 +666,8 @@ define([
                 if (check) {
                     $checkboxElem
                         .prop('checked', true)
-                        .attr('aria-checked', true);
+                        .attr('aria-checked', true)
+                        .change();
                     stagingAreaViewer.enableImportButton();
                 }
             }
@@ -714,21 +720,18 @@ define([
                 enableCheckboxes(dataType, true);
             });
 
-            $td
-                .find('button[data-import]')
-                .off('click')
-                .on('click', (e) => {
-                    const dataImportButton = $(e.currentTarget);
-                    const importType = dataImportButton.prevAll('select').val();
-                    this.initImportApp(importType, data.path);
-                    this.updateView();
-                });
+            // data.subdir includes a leading "/", which isn't necessary and doesn't look great.
+            const subdir = data.subdir.substring(1);
+            // instead of "/filename" or "/subpath/filename", this should be
+            // "filename" or "subpath/filename"
+            const filePath = (subdir ? subdir + '/' : '') + data.name;
+
 
             $td
                 .find('button[data-download]')
                 .off('click')
                 .on('click', () => {
-                    const url = Config.url('staging_api_url') + '/download' + data.path;
+                    const url = Config.url('staging_api_url') + '/download/' + filePath;
                     this.downloadFile(url);
                 });
 
@@ -736,10 +739,10 @@ define([
                 .find('button[data-delete]')
                 .off('click')
                 .on('click', () => {
-                    if (window.confirm('Really delete ' + data.name + '?')) {
+                    if (window.confirm('Really delete ' + filePath + '?')) {
                         this.stagingServiceClient
                             .delete({
-                                path: data.path,
+                                path: filePath,
                             })
                             .then(() => {
                                 this.updateView();
@@ -813,7 +816,7 @@ define([
             $.fn.DataTable.ext.search.pop();
 
             $.fn.DataTable.ext.search.push(
-                (settings, data, dataIndex) => {
+                (_settings, _data, dataIndex) => {
                     const row = table.row(dataIndex);
                     const subdir = row.node().getAttribute('data-subdir');
                     return subdir === this.path;
@@ -1061,7 +1064,7 @@ define([
             // get all of the selected checkbox file names and import type
 
             const checkedBoxSelector = `input.${cssBaseClass}-body__checkbox-input:checked`;
-            const selectedRows = stagingAreaViewer.fullDataTable.rows((idx, data, node) => {
+            const selectedRows = stagingAreaViewer.fullDataTable.rows((_idx, _data, node) => {
                 return !!node.querySelector(checkedBoxSelector);
             });
             selectedRows.nodes().each((rowNode) => {

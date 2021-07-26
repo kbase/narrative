@@ -106,7 +106,7 @@ define([
             // this does the staging area re-render, then tracks the time
             // it was last done.
             const renderStagingArea = () => {
-                this.stagingAreaViewer.updateDataList();
+                this.stagingAreaViewer.updateView();
                 this.lastRefresh = new Date().getTime();
             };
 

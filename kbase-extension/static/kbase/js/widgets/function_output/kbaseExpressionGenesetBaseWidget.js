@@ -178,52 +178,61 @@ define([
             this.buildWidget($vizContainer);
         },
         renderOverview: function ($container) {
-            const pref = this.pref;
+            let showing = false;
 
-            const $overviewSwitch = $('<a/>')
-                .html('[Show/Hide Selected Features]')
+            const $overviewSwitch = $('<button>')
+                .addClass('btn btn-default')
+                .html('Show Selected Features')
                 .css('cursor', 'pointer');
             $container.append($overviewSwitch);
 
-            const $overviewContainer = $('<div hidden style="margin:1em 0 4em 0"/>');
+            const $overviewContainer = $('<div>').hide().css('margin', '1em 0 4em 0');
+
             $container.append($overviewContainer);
 
             const geneData = this.buildGenesTableData();
-            const iDisplayLength = 10;
-            let style = 'lftip';
-            if (geneData.length <= iDisplayLength) {
-                style = 'fti';
+            const pageLength = 10;
+            let dom = 'lftip';
+            if (geneData.length <= pageLength) {
+                dom = 'fti';
             }
 
-            $overviewContainer.append(
-                $(
-                    '<table id="' +
-                        pref +
-                        'genes-table"  \
-                class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">\
-                </table>'
-                ).dataTable({
-                    sDom: style,
-                    iDisplayLength: iDisplayLength,
-                    aaData: geneData,
-                    aoColumns: [
-                        { sTitle: 'Name', mData: 'id', width: '10em' },
-                        { sTitle: 'Function', mData: 'function' },
-                        { sTitle: 'Min', mData: 'min' },
-                        { sTitle: 'Max', mData: 'max' },
-                        { sTitle: 'Avg', mData: 'avg' },
-                        { sTitle: 'Std', mData: 'std' },
-                        { sTitle: 'Missing', mData: 'missing_values' },
-                    ],
-                    oLanguage: {
-                        sEmptyTable: 'No genes found!',
-                        sSearch: 'Search: ',
-                    },
-                })
-            );
+            const $overviewTable = $('<table>')
+                .attr('id', this.pref + 'genes-table')
+                .addClass('table table-bordered table-striped')
+                .css('width', '100%')
+                .css('margin-left', '0')
+                .css('margin-right', '0');
+
+            $overviewContainer.html($overviewTable);
+
+            $overviewTable.dataTable({
+                dom,
+                pageLength,
+                data: geneData,
+                columns: [
+                    { sTitle: 'Name', mData: 'id', width: '10em' },
+                    { sTitle: 'Function', mData: 'function' },
+                    { sTitle: 'Min', mData: 'min' },
+                    { sTitle: 'Max', mData: 'max' },
+                    { sTitle: 'Avg', mData: 'avg' },
+                    { sTitle: 'Std', mData: 'std' },
+                    { sTitle: 'Missing', mData: 'missing_values' },
+                ],
+                oLanguage: {
+                    sEmptyTable: 'No genes found!',
+                    sSearch: 'Search: ',
+                },
+            });
 
             $overviewSwitch.click(() => {
                 $overviewContainer.toggle();
+                showing = !showing;
+                if (showing) {
+                    $overviewSwitch.text('Hide Selected Features');
+                } else {
+                    $overviewSwitch.text('Show Selected Features');
+                }
             });
         },
         buildGenesTableData: function () {

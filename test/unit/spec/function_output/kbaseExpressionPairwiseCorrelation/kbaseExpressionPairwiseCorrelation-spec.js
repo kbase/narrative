@@ -50,6 +50,21 @@ define([
         });
     }
 
+    function waitForAlert($host, warnings, timeout) {
+        return tryFor(() => {
+            const $warning = $host.find('.alert.alert-warning');
+            if ($warning.length === 0) {
+                return [false];
+            }
+            const warningText = $warning.text();
+            const warningsMatch = warnings.every((warning) => {
+                return warning.test(warningText);
+            });
+
+            return [warningsMatch];
+        }, timeout);
+    }
+
     describe('The kbaseExpressionPairwiseCorrelation widget', () => {
         beforeAll(() => {
             // remove any jquery events that get bound to document,
@@ -135,18 +150,7 @@ define([
             ];
 
             // Ensure heatmap is displayed.
-            await tryFor(() => {
-                const $warning = $host.find('.alert.alert-warning');
-                if ($warning.length === 0) {
-                    return [false];
-                }
-                const warningText = $warning.text();
-                const warningsMatch = warnings.every((warning) => {
-                    return warning.test(warningText);
-                });
-
-                return [warningsMatch];
-            }, 5000);
+            await waitForAlert($host, warnings, 5000);
 
             // A download button is in place.
             const $downloadButton = await tryFor(() => {
@@ -178,18 +182,7 @@ define([
                 ),
             ];
 
-            await tryFor(() => {
-                const $warning = $host.find('.alert.alert-warning');
-                if ($warning.length === 0) {
-                    return [false];
-                }
-                const warningText = $warning.text();
-                const warningsMatch = warnings.every((warning) => {
-                    return warning.test(warningText);
-                });
-
-                return [warningsMatch];
-            }, 5000);
+            await waitForAlert($host, warnings, 5000);
 
             // The download button is not displayed
             const $button = $host.find('button');

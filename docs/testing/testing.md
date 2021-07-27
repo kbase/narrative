@@ -2,15 +2,24 @@
 
 ***Table of Contents***
 
-- [Installation](#installation)
-- [Short Version](#short-version)
-- [Long Version](#long-version)
-  - [About](#about)
-  - [How to Run Tests](#how-to-run-tests)
-  - [Add Credentials for Tests](#add-credentials-for-tests)
-  - [Testing with Travis-CI and Coveralls](#testing-with-travis-ci-and-coveralls)
-  - [Adding Your Own Tests](#adding-your-own-tests)
-  - [Manual Testing and Debugging](#manual-testing-and-debugging)
+- [Narrative Unit Testing](#narrative-unit-testing)
+  - [Installation](#installation)
+  - [Short version](#short-version)
+  - [Long version](#long-version)
+    - [About](#about)
+    - [How to Run Tests](#how-to-run-tests)
+    - [Add Credentials for Tests](#add-credentials-for-tests)
+      - [***Python***](#python)
+      - [***JavaScript***](#javascript)
+      - [***Frontend Integration Tests***](#frontend-integration-tests)
+    - [Testing with Github Actions and Codecov](#testing-with-github-actions-and-codecov)
+    - [Adding Your Own Tests](#adding-your-own-tests)
+      - [***Python***](#python-1)
+      - [***JavaScript***](#javascript-1)
+      - [***Frontend Integration Tests***](#frontend-integration-tests-1)
+    - [Manual Testing and Debugging](#manual-testing-and-debugging)
+      - [***Python***](#python-2)
+      - [***JavaScript***](#javascript-2)
 
 ## Installation
 
@@ -31,7 +40,7 @@ npm install -g grunt-cli
 
 ### About
 
-Because the Narrative Interface is built on both the front and back ends of the Jupyter Notebook, there's two sides to Narrative testing. The front end tests are in JavaScript, and make use of [Karma](http://karma-runner.github.io/1.0/index.html) as a test runner, and [Jasmine](https://jasmine.github.io/2.0/introduction.html) as a testing language. The back end tests are written in Python using the unittest framework, and run with [nose](http://nose.readthedocs.io/en/latest/).
+Because the Narrative Interface is built on both the front and back ends of the Jupyter Notebook, there's two sides to Narrative testing. The front end tests are in JavaScript, and make use of [Karma](http://karma-runner.github.io/1.0/index.html) as a test runner, and [Jasmine](https://jasmine.github.io/2.0/introduction.html) as a testing language. The back end tests are written in Python using the unittest framework, and run with [pytest](https://docs.pytest.org/en/6.2.x/).
 
 ### How to Run Tests
 

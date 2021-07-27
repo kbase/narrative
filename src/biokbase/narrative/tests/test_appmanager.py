@@ -10,7 +10,7 @@ import unittest
 import mock
 from .narrative_mock.mockclients import get_mock_client
 import os
-from .util import TestConfig
+from .util import ConfigTests
 
 
 def mock_agent_token(*args, **kwargs):
@@ -24,7 +24,7 @@ def mock_run_job(*args, **kwargs):
 class AppManagerTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        config = TestConfig()
+        config = ConfigTests()
         cls.am = AppManager()
         cls.good_app_id = config.get("app_tests", "good_app_id")
         cls.good_tag = config.get("app_tests", "good_app_tag")

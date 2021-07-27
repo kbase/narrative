@@ -623,7 +623,11 @@ define([
                                                         },
                                                         [
                                                             span(
-                                                                { style: { marginRight: '4px' } },
+                                                                {
+                                                                    style: {
+                                                                        marginRight: '4px',
+                                                                    },
+                                                                },
                                                                 'FSM'
                                                             ),
                                                             span({ dataElement: 'content' }),

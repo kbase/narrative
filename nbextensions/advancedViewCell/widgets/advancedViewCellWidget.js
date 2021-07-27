@@ -39,7 +39,7 @@ define([
     Fsm,
     Spec,
     PR,
-    appStates,
+    appStates
 ) => {
     'use strict';
     const t = html.tag,
@@ -117,7 +117,7 @@ define([
                     runtime.config('services.narrative_method_store.url'),
                     {
                         token: runtime.authToken(),
-                    },
+                    }
                 );
 
             return nms.get_method_spec(appRef).then((data) => {
@@ -135,7 +135,7 @@ define([
         }
 
         function toBoolean(value) {
-            return (value && value !== null);
+            return value && value !== null;
         }
 
         function validateModel() {
@@ -176,7 +176,7 @@ define([
                 runId,
                 fixedApp,
                 params,
-                outputWidgetState,
+                outputWidgetState
             );
             // TODO: do something with the runId
             cell.set_text(code);
@@ -202,7 +202,7 @@ define([
                 //xinitialState: {
                 //    mode: 'editing', params: 'incomplete'
                 //},
-                onNewState: function(fsm) {
+                onNewState: function (fsm) {
                     model.setItem('fsm.currentState', fsm.getCurrentState().state);
                     // save the narrative!
                 },
@@ -266,14 +266,14 @@ define([
                                             class: 'btn btn-default',
                                             id: events.addEvent({
                                                 type: 'click',
-                                                handler: function() {
+                                                handler: function () {
                                                     doRemoveNotification(index);
                                                 },
                                             }),
                                         },
-                                        'X',
+                                        'X'
                                     ),
-                                ]),
+                                ])
                             ),
                         ]);
                     })
@@ -288,7 +288,6 @@ define([
             model.setItem('notifications', notifications);
             renderNotifications();
         }
-
 
         // WIDGETS
 
@@ -343,7 +342,7 @@ define([
                                     flexDirection: 'column',
                                 },
                             },
-                            [div({ dataElement: 'status' })],
+                            [div({ dataElement: 'status' })]
                         ),
                         div(
                             {
@@ -378,7 +377,7 @@ define([
                                                             td({ dataElement: 'title' }),
                                                             td(
                                                                 'Message',
-                                                                td({ dataElement: 'message' }),
+                                                                td({ dataElement: 'message' })
                                                             ),
                                                         ]),
                                                     ]),
@@ -401,7 +400,7 @@ define([
                                                 collapsed: utils.getCellMeta(
                                                     cell,
                                                     'kbase.viewCell.user-settings.collapsedConfigurePanel',
-                                                    false,
+                                                    false
                                                 ),
                                                 type: 'default',
                                                 classes: ['kb-panel-container'],
@@ -429,21 +428,21 @@ define([
                                                                             {
                                                                                 events: events,
                                                                                 type: 'primary',
-                                                                            },
+                                                                            }
                                                                         ),
                                                                     ]),
-                                                                ],
+                                                                ]
                                                             ),
-                                                        ],
+                                                        ]
                                                     ),
                                                 ]),
                                             }),
                                         ]),
-                                    ],
+                                    ]
                                 ),
-                            ],
+                            ]
                         ),
-                    ],
+                    ]
                 );
             container.innerHTML = content;
             events.attachEvents(container);
@@ -452,14 +451,14 @@ define([
                     utils.setCellMeta(
                         cell,
                         'kbase.viewCell.user-settings.collapsedConfigurePanel',
-                        true,
+                        true
                     );
                 })
                 .on('shown.bs.collapse', () => {
                     utils.setCellMeta(
                         cell,
                         'kbase.viewCell.user-settings.collapsedConfigurePanel',
-                        false,
+                        false
                     );
                 });
         }
@@ -482,7 +481,7 @@ define([
                     bus.emit('stop');
 
                     Jupyter.deleteCell(cell);
-                },
+                }
             );
         }
 
@@ -566,13 +565,13 @@ define([
                 eventManager.add(
                     cellBus.on('delete-cell', () => {
                         doDeleteCell();
-                    }),
+                    })
                 );
 
                 eventManager.add(
                     cellBus.on('metadata-changed', () => {
                         evaluateAppState();
-                    }),
+                    })
                 );
 
                 showCodeInputArea();
@@ -593,7 +592,7 @@ define([
                 if (!paramSpec) {
                     console.error(
                         'Parameter ' + key + ' is not defined in the parameter map',
-                        parameters,
+                        parameters
                     );
                     throw new Error('Parameter ' + key + ' is not defined in the parameter map');
                 }
@@ -636,7 +635,7 @@ define([
                                     type: 'update',
                                     parameter: message.parameter,
                                 },
-                            },
+                            }
                         );
                     });
 
@@ -653,7 +652,7 @@ define([
                                         parameter: paramId,
                                     },
                                     channel: message.replyToChannel,
-                                },
+                                }
                             );
                         });
                     });
@@ -662,7 +661,7 @@ define([
                         key: {
                             type: 'get-parameter',
                         },
-                        handle: function(message) {
+                        handle: function (message) {
                             return {
                                 value: model.getItem(['params', message.parameterName]),
                             };
@@ -734,7 +733,7 @@ define([
                             cell,
                             utils.getMeta(cell, 'attributes').id,
                             model.getItem('app'),
-                            exportParams(),
+                            exportParams()
                         );
                         fsm.newState({ mode: 'editing', params: 'complete', code: 'built' });
                         renderUI();
@@ -762,12 +761,12 @@ define([
                     utils.setCellMeta(
                         cell,
                         'kbase.attributes.title',
-                        model.getItem('app.spec.info.name'),
+                        model.getItem('app.spec.info.name')
                     );
                     utils.setCellMeta(
                         cell,
                         'kbase.attributes.subtitle',
-                        model.getItem('app.spec.info.subtitle'),
+                        model.getItem('app.spec.info.subtitle')
                     );
                     utils.setCellMeta(cell, 'kbase.attributes.info.url', url);
                     utils.setCellMeta(cell, 'kbase.attributes.info.label', 'more...');
@@ -804,7 +803,7 @@ define([
 
         const model = Props.make({
             data: utils.getMeta(cell, 'viewCell'),
-            onUpdate: function(props) {
+            onUpdate: function (props) {
                 utils.setMeta(cell, 'viewCell', props.getRawObject());
                 // saveNarrative();
             },
@@ -823,7 +822,7 @@ define([
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
         },
     };

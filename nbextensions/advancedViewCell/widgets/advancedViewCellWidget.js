@@ -135,7 +135,7 @@ define([
         }
 
         function toBoolean(value) {
-            return value && value !== null;
+            return !!value;
         }
 
         function validateModel() {

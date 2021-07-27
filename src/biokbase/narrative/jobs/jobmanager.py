@@ -272,7 +272,8 @@ class JobManager(object):
             app_id: module/name,
             app_name: random string,
             job_id: string,
-            job_params: dictionary
+            job_params: dictionary,
+            batch_id: string,
         }
         """
         job = self.get_job(job_id)
@@ -281,6 +282,7 @@ class JobManager(object):
             "app_name": job.app_spec()["info"]["name"],
             "job_id": job_id,
             "job_params": job.params,
+            "batch_id": job.batch_id,
         }
         return info
 
@@ -333,7 +335,7 @@ class JobManager(object):
         first_line: int = 0,
         num_lines: int = None,
         latest_only: bool = False,
-    ) -> tuple:
+    ) -> dict:
         """
         Raises a Value error if the job_id doesn't exist or is not present.
         :param job_id: str - the job id from the execution engine
@@ -346,12 +348,14 @@ class JobManager(object):
             of logs. This overrides the first_line parameter if set to True. So if the call made
             is get_job_logs(id, first_line=0, num_lines=5, latest_only=True), and there are 100
             log lines available, then lines 96-100 will be returned.
-        :returns: 3-tuple. elements in order:
-            int - the first line returned
-            int - the number of logs lines currently available for that job
-            list - the lines themselves, fresh from the server. These are all tiny dicts
-                with key "is_error" (either 0 or 1) and "line" - the log line string
-
+        :returns: dict with keys:
+            job_id:     string
+            batch_id:   string | None
+            first:      int - the first line returned
+            max_lines:  int - the number of logs lines currently available for that job
+            lines:      list - the lines themselves, fresh from the server. These are all tiny dicts with keys
+                "line" - the log line string
+                "is_error" - either 0 or 1
         """
         job = self.get_job(job_id)
 
@@ -371,7 +375,13 @@ class JobManager(object):
             else:
                 (max_lines, logs) = job.log(first_line=first_line, num_lines=num_lines)
 
-            return (first_line, max_lines, logs)
+            return {
+                "job_id": job.job_id,
+                "batch_id": job.batch_id,
+                "first": first_line,
+                "max_lines": max_lines,
+                "lines": logs,
+            }
         except Exception as e:
             raise transform_job_exception(e)
 

@@ -384,22 +384,14 @@ class JobComm:
         num_lines = req.rq_data.get("num_lines", None)
         latest_only = req.rq_data.get("latest", False)
         try:
-            (first_line, max_lines, logs) = self._jm.get_job_logs(
+            log_output = self._jm.get_job_logs(
                 req.job_id,
                 num_lines=num_lines,
                 first_line=first_line,
                 latest_only=latest_only,
             )
-            self.send_comm_message(
-                "job_logs",
-                {
-                    "job_id": req.job_id,
-                    "first": first_line,
-                    "max_lines": max_lines,
-                    "lines": logs,
-                    "latest": latest_only,
-                },
-            )
+            log_output["latest"] = latest_only
+            self.send_comm_message("job_logs", log_output)
         except ValueError:
             self.send_error_message("job_does_not_exist", req)
             raise

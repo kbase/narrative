@@ -61,8 +61,7 @@ define([
 
         cell.getIcon = function () {
             const iconColor = 'silver';
-            let icon;
-            icon = span({ class: 'fa fa-inverse fa-stack-1x fa-' + 'terminal' });
+            const icon = span({ class: 'fa fa-inverse fa-stack-1x fa-' + 'terminal' });
 
             return span({ style: '' }, [
                 span(
@@ -92,6 +91,7 @@ define([
                     true
                 );
                 // NB purely for side effect - toolbar refresh
+                // eslint-disable-next-line no-self-assign
                 cell.metadata = cell.metadata;
             }
         };
@@ -131,6 +131,7 @@ define([
 
         cell.renderMinMax();
         // force toolbar rerender.
+        // eslint-disable-next-line no-self-assign
         cell.metadata = cell.metadata;
     }
 
@@ -268,5 +269,6 @@ define([
         load_ipython_extension: load,
     };
 }, (err) => {
+    'use strict';
     console.error('ERROR loading codeCell main', err);
 });

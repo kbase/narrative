@@ -414,6 +414,7 @@ define([
                     }
                 })
                 .catch((error) => {
+                    // eslint-disable-next-line no-console
                     console.trace('dumping stacktrace!');
                     console.error('DataList: when checking for updates:', error);
                     if (showError) {

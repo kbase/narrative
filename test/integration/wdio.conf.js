@@ -5,6 +5,11 @@
 const testConfig = require('../testConfig');
 const fs = require('fs');
 
+// We use a specific chrome binary because chromedriver only works with
+// a single major version of chrome. This ensures integration tests work
+// across all environments.
+const CHROME_BINARY = require('puppeteer').executablePath();
+
 // Import environment variables used to control the tests.
 // Note that most have defaults, and many are only applicable
 // to testing services
@@ -222,6 +227,7 @@ function makeCapabilities(config) {
                     maxInstances: 1,
                     'goog:chromeOptions': {
                         args,
+                        binary: CHROME_BINARY,
                     },
                 };
             })();
@@ -564,7 +570,7 @@ const wdioConfig = {
      * @param {Object} exitCode 0 - success, 1 - fail
      * @param {Object} config wdio configuration object
      * @param {Array.<Object>} capabilities list of capabilities details
-     * @param {<Object>} results object containing test results
+     * @param {Object} results object containing test results
      */
     // onComplete: function(exitCode, config, capabilities, results) {
     // },

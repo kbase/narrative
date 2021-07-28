@@ -345,7 +345,6 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
         const jobIx = {
             byId: {},
             byStatus: {},
-            // jobsWithRetries: new Set(),
             jobsWithRetries: {},
             batchId: null,
         };
@@ -355,21 +354,18 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
                 status = job.status;
             jobIx.byId[jobId] = job;
             if (!jobIx.byStatus[status]) {
-                // jobIx.byStatus[status] = new Set()
                 jobIx.byStatus[status] = {};
             }
-            // jobIx.byStatus[status].add(jobId)
             jobIx.byStatus[status][jobId] = true;
 
             // any job with one or more retries
             if (job.retry_ids && job.retry_ids.length) {
-                // jobIx.jobsWithRetries.add(jobId)
                 jobIx.jobsWithRetries[jobId] = true;
             }
 
-            if (job.batch_id && job.batch_id === jobId) {
-                if (jobIx.batchId) {
-                    // OH SHIT!!
+            if (job.batch_job) {
+                if (jobIx.batchId && jobId !== jobIx.batchId) {
+                    console.error(`Error: two batch IDs present: ${jobIx.batchId} and ${jobId}`)
                 }
                 jobIx.batchId = job.batch_id;
             }

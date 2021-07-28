@@ -277,7 +277,6 @@ define(['common/format'], (format) => {
         }
     });
 
-    // the 'does_not_exist' job state is created by the narrative backend
     const unknownJob = {
         job_id: 'unknown-job',
         status: 'does_not_exist',
@@ -370,11 +369,6 @@ define(['common/format'], (format) => {
         return acc;
     }, {});
 
-    // duplicate validJobs
-    // add in a batch parent and add the batch_id to each job
-    // add child jobs to the batch parent
-    // add retry_parent
-
     /**
      * Increment all timestamps in an object by ${time} seconds
      *
@@ -428,28 +422,15 @@ define(['common/format'], (format) => {
      *  - retry 1: 'job-died-with-error'
      *  - retry 2: 'job-estimating' (most recent retry)
      *
+     * Extra metadata for batch jobs:
+     * meta.currentJob: true/false -- this is the most recent job (including retries)
+     * meta.originalJob: true/false -- this is one of the original jobs in the batch
      */
 
     function createBatchJob() {
         // extra metadata:
-        // meta.currentJob: true/false -- this is the most recent job (including retries)
-        // meta.originalJob: true/false -- this is one of the original jobs in the batch
-
-        // meta: {
-        //     canCancel: true,
-        //     canRetry: true,
-        //     createJobStatusLines: {
-        //         line: jobStrings.running,
-        //         history: [jobStrings.queueHistory, jobStrings.running],
-        //     },
-        //     jobAction: jobStrings.action.cancel,
-        //     jobLabel: 'running',
-        //     niceState: {
-        //         class: 'kb-job-status__summary',
-        //         label: 'running',
-        //     },
-        //     appCellFsm: { mode: 'processing', stage: 'running' },
-        // },
+        //
+        //
 
         const BATCH_ID = 'job-created';
         const jobsWithRetries = JSON.parse(JSON.stringify(validJobs));

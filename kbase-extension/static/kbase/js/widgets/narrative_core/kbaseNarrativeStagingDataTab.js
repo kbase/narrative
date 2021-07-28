@@ -88,8 +88,6 @@ define([
                 });
                 this.stagingAreaViewer = new StagingAreaViewer(this.$myFiles, stagingAreaArgs);
                 this.stagingAreaViewer.render();
-
-                // this.updateView();
             });
         },
 

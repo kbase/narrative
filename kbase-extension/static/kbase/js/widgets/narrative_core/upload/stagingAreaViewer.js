@@ -343,7 +343,7 @@ define([
                 input = html.tag('input');
             files = files || [];
             const emptyMsg = 'No files found.',
-                filterMsg = 'in directory (_MAX_ total files)',
+                filterMsg = 'in directory',
                 infoMsg = 'Showing _START_ to _END_ of _TOTAL_ files',
                 infoEmptyMsg = 'No files';
 

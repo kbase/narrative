@@ -17,8 +17,6 @@ define([
 ], (KBWidget, $, Config, kbaseAuthenticatedWidget, DynamicServiceClient, ServiceClient) => {
     'use strict';
 
-    // TODO: should have a configurable global service call timeout.
-    // I think a minute is quite generous for now.
     const TIMEOUT = 60000;
 
     return KBWidget({
@@ -96,9 +94,9 @@ define([
                     const fs = data[0].data;
                     if (fs.description) {
                         this.$mainPanel.append(
-                            $('<div test-id="description">')
-                                .append('<i test-id="label">Description</i>: ')
-                                .append(`<span test-id="value">${fs.description}</value>`)
+                            $('<div data-testid="description">')
+                                .append('<i data-testid="label">Description</i>: ')
+                                .append(`<span data-testid='value'>${fs.description}</value>`)
                         );
                     }
 
@@ -187,7 +185,6 @@ define([
                                 /* typeModule */ typeName /*typeVersionMajor*/ /*typeVersionMinor*/,
                                 ,
                             ] = info[2].split(/[.-]/);
-                            // console.log('object', info[1], typeModule, typeName, typeVersionMajor, typeVersionMinor);
 
                             const objectRef = [info[6], info[0], info[4]].join('/');
                             const featuresToFind = this.features[objectRef];
@@ -232,9 +229,9 @@ define([
                             if (objectType === 'AnnotatedMetagenomeAssembly') {
                                 // This is a special case because AMAs are not fully supported yet.
                                 this.featureTableData.push({
-                                    fid: `<a href="/#dataview/${objectRef}?sub=Feature&subid=${feature.feature_id}" target="_blank">${feature.feature_id}</a>`,
+                                    fid: `<a href='/#dataview/${objectRef}?sub=Feature&subid=${feature.feature_id}' target='_blank'>${feature.feature_id}</a>`,
                                     objectType,
-                                    gid: `<a href="/#dataview/${objectRef}" target="_blank">${objectName}</a>`,
+                                    gid: `<a href='/#dataview/${objectRef}' target='_blank'>${objectName}</a>`,
                                     aliases: `<span ${unsupportedTypeAttributes}>${Object.keys(
                                         feature.aliases
                                     ).join(', ')}</a>`,
@@ -243,9 +240,9 @@ define([
                                 });
                             } else {
                                 this.featureTableData.push({
-                                    fid: `<a href="/#dataview/${objectRef}?sub=Feature&subid=${feature.feature_id}" target="_blank">${feature.feature_id}</a>`,
+                                    fid: `<a href='/#dataview/${objectRef}?sub=Feature&subid=${feature.feature_id}' target='_blank'>${feature.feature_id}</a>`,
                                     objectType,
-                                    gid: `<a href="/#dataview/${objectRef}" target="_blank">${objectName}</a>`,
+                                    gid: `<a href='/#dataview/${objectRef}' target='_blank'>${objectName}</a>`,
                                     aliases: Object.keys(feature.aliases).join(', '),
                                     type: feature.feature_type,
                                     func: feature.function,
@@ -270,7 +267,7 @@ define([
             this.$featureTableDiv.empty();
 
             const $tbl = $(
-                '<table cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin-left: 0px; margin-right: 0px;">'
+                '<table cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin-left: 0; margin-right: 0;">'
             ).addClass('table table-bordered table-striped');
             this.$featureTableDiv.append($tbl);
 
@@ -339,7 +336,7 @@ define([
 
         loading: function (loading) {
             if (loading) {
-                this.showMessage("<img src='" + this.options.loadingImage + "'/>");
+                this.showMessage(`<img src='${this.options.loadingImage}' alt='Loading'/>`);
             } else {
                 this.hideMessage();
             }

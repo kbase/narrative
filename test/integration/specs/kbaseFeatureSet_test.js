@@ -26,7 +26,7 @@ describe('Test kbaseFeatureSet', () => {
             const cell = await t.waitForCell(notebookContainer, cellCase.cell);
 
             // Test description display.
-            const description = await cell.$('[test-id="description"] > [test-id="value"]');
+            const description = await cell.$('[data-testid="description"] > [data-testid="value"]');
             await expect(description).toHaveText(cellCase.description);
 
             // Test the 3rd row of the table.

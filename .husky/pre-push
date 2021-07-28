@@ -1,4 +1,4 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-npm run husky_msg && npm run prettier_check && npm run eslint-pre-push
+npm run husky_msg && npm run prettier-pre-push && npm run eslint-pre-push

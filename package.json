@@ -69,6 +69,7 @@
         "postinstall": "husky install",
         "prepare": "husky install",
         "prettier": "prettier --write '**/*.js'",
+        "prettier-pre-push": "scripts/prettier-pre-push.sh",
         "prettier_check": "prettier --check '**/*.js'",
         "prettier_debug": "prettier --debug-check '**/*.js'",
         "requirejs": "r.js -o build.js",

@@ -66,6 +66,7 @@ pip-delete-this-directory.txt
 
 # Unit test / coverage reports
 /coverage/
+/python-coverage/
 htmlcov/
 .tox/
 .coverage
@@ -76,10 +77,12 @@ coverage.xml
 *,cover
 .hypothesis/
 karma-result.json
-test/*.tok
 
 # Integration test logs
 /selenium-standalone-logs/
+
+# Test tokens
+/test/*.tok
 
 # Translations
 *.mo

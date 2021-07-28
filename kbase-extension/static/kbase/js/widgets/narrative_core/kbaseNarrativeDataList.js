@@ -1941,7 +1941,7 @@ define([
                     this.writingLock = false;
                     this.refresh();
                 });
-            this.$searchDiv = $('<div>');
+            this.$searchDiv = $('<div data-testid="search-field">');
             this.bsSearch = new BootstrapSearch(this.$searchDiv, {
                 inputFunction: () => {
                     this.search();
@@ -2096,52 +2096,62 @@ define([
                 // optimization => we filter existing matches instead of researching everything if the new
                 // term starts with the last term searched for
                 // clean the term for regex use
-                term = term.replace(/\|/g, '\\|').replace(/\\\\\|/g, '|'); // bars are common in kb ids, so escape them unless we have \\|
-                term = term.replace(/\./g, '\\.').replace(/\\\\\./g, '.'); // dots are common in names, so we escape them, but
+
+                // bars are common in kb ids, so escape them unless we have \\|
+                term = term.replace(/\|/g, '\\|').replace(/\\\\\|/g, '|');
+
+                // dots are common in names, so we escape them, but
                 // if a user writes '\\.' we assume they want the regex '.'
+                term = term.replace(/\./g, '\\.').replace(/\\\\\./g, '.');
 
                 const regex = new RegExp(term, 'i');
 
+                // TODO: n_filteredObjsRendered does not seem to be used anywhere, but needs
+                // further investigation.
                 this.n_filteredObjsRendered = 0;
                 for (const orderedObject of this.viewOrder) {
                     // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
                     // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
                     // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
                     // [9] : int size // [10] : usermeta meta
-                    let match = false;
-                    const info = this.dataObjects[orderedObject.objId].info;
-                    if (regex.test(info[1])) {
-                        match = true;
-                    } // match on name
-                    else if (regex.test(info[2].split('.')[1].split('-'))) {
-                        match = true;
-                    } // match on type name
-                    else if (regex.test(info[5])) {
-                        match = true;
-                    } // match on saved_by user
 
-                    if (!match && info[10]) {
-                        // match on metadata values
-                        for (const [metaKey, metaValue] of info[10].entries()) {
-                            // Omits enumerable properties not directly on this object,
-                            // which in reality simply won't occur.
-                            if (!Object.prototype.hasOwnProperty.call(info[10], metaKey)) {
-                                continue;
-                            }
-                            if (regex.test(metaValue) || regex.test(metaKey + '::' + metaValue)) {
-                                match = true;
-                                break;
-                            }
-                        }
-                    }
+                    orderedObject.inFilter = (() => {
+                        const info = this.dataObjects[orderedObject.objId].info;
+                        const objectTypeName = info[2].split(/[.-]/)[1];
 
-                    if (type) {
                         // if type is defined, then our sort must also filter by the type
-                        if (type !== info[2].split('-')[0].split('.')[1]) {
-                            match = false; // no match if we are not the selected type!
+                        if (type && type !== objectTypeName) {
+                            return false; // no match if we are not the selected type!
                         }
-                    }
-                    orderedObject.inFilter = match;
+
+                        // match on name
+                        if (regex.test(info[1])) {
+                            return true;
+                        }
+                        // match on type name
+                        if (regex.test(objectTypeName)) {
+                            return true;
+                        }
+                        // match on saved_by user
+                        if (regex.test(info[5])) {
+                            return true;
+                        }
+
+                        const metadata = info[10];
+                        if (metadata) {
+                            // match on metadata values
+                            for (const [metaKey, metaValue] of Object.entries(metadata)) {
+                                if (
+                                    regex.test(metaValue) ||
+                                    regex.test(metaKey + '::' + metaValue)
+                                ) {
+                                    return true;
+                                }
+                            }
+                        }
+
+                        return false;
+                    })();
                 }
             } else {
                 // no new search, so show all and render the list

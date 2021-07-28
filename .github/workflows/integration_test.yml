@@ -1,4 +1,4 @@
-name: CI-testing
+name: CI-integration-testing
 
 on:
   [push, pull_request]
@@ -37,31 +37,8 @@ jobs:
           sed -i 's/{{ if ne .Env.CONFIG_ENV "prod" }} true {{- else }} false {{- end }}/true/' src/config.json
           jupyter notebook --version
 
-    - name: Run Narrative Backend Tests
-      shell: bash -l {0}
-      run: make test-backend
-
-    - name: Run Narrative Frontend Unit Tests
-      shell: bash -l {0}
-      run: make test-frontend-unit
-
-    - name: make test output available as artefact in case of failure
-      if: ${{ failure() }}
-      uses: actions/upload-artifact@v2
-      with:
-        name: karma-result.json
-        path: karma-result.json
-
     - name: Run Narrative Frontend Integration Tests
       shell: bash -l {0}
       env:
         KBASE_TEST_TOKEN: ${{ secrets.NARRATIVE_TEST_TOKEN }}
       run: make test-integration
-
-    - name: Send to Codecov
-      uses: codecov/codecov-action@v1
-      with:
-        file: |
-          ./coverage.xml
-          ./js-coverage/lcov/lcov.info
-        fail_ci_if_error: true

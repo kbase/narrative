@@ -6,11 +6,11 @@ import biokbase.narrative.jobs.jobcomm
 import biokbase.narrative.jobs.jobmanager
 from biokbase.narrative.jobs.jobcomm import JobRequest
 from biokbase.narrative.exception_util import NarrativeException
-from .util import TestConfig, validate_job_state
+from .util import ConfigTests, validate_job_state
 from .narrative_mock.mockcomm import MockComm
 from .narrative_mock.mockclients import get_mock_client, get_failing_mock_client
 
-config = TestConfig()
+config = ConfigTests()
 job_info = config.load_json_file(config.get("jobs", "ee2_job_info_file"))
 
 

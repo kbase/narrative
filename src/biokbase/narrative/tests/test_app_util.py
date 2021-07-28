@@ -27,7 +27,7 @@ class DummyWorkspace:
 class AppUtilTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        config = util.TestConfig()
+        config = util.ConfigTests()
         self.user_id = config.get("users", "test_user")
         self.user_token = util.read_token_file(
             config.get_path("token_files", "test_user", from_root=True)

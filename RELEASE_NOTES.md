@@ -4,22 +4,47 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
-### Version NEXT
+### Unreleased
+
+- PTV-1561 - SampleSet viewer fixes to allow AMA features; not complete support for AMA features as GenomeSearchUtil does not yet support AMA.
+- SCT-3084 - Fixed broken (non-functional) search in the data panel
+- SCT-3602 - refseq public data tool now searches by lineage as well; for all public data tools: automatically focus the search input; fix paging bug.
+- No ticket - migrate from `nosetests` to `pytest` for testing the Python stack.
+- Python dependency updates
+  - pillow 8.2.0 -> 8.3.0
+  - plotly 4.14.3 -> 5.1.0
+  - pytest 6.2.3. -> 6.2.4
+  - pytest-cov 2.11.1 -> 2.12.1
+- Javascript dependency updates
+  - @wdio/browserstack-service 7.7.3 -> 7.7.4
+  - @wdio/cli 7.7.3 -> 7.7.4
+  - @wdio/local-runner 7.7.3 -> 7.7.4
+  - @wdio/mocha-framework 7.7.3 -> 7.7.4
+  - @wdio/selenium-standalone-service 7.7.3 -> 7.7.4
+  - chromedriver 91.0.0 -> 91.0.1
+  - eslint 7.28.0 -> 7.29.0
+  - husky 6.0.0 -> 7.0.0
+  - karma 6.3.3. -> 6.3.4
+  - puppeteer 10.0.0 -> 10.1.0
+  - selenium-standalone 6.23.0 -> 7.1.0
+  - terser 5.7.0 -> 5.7.1
+  - wdio-chromedriver-service 7.1.0 -> 7.1.1
+  - webdriverio 7.7.3 -> 7.7.4
+
+### Version 4.4.0
 -   No ticket: boatloads of code cleanup and fixes to the unit and internal testing
 -   PTV-1635: fix bug in data slideout tab selection
 -   PTV-1635: fix data and app slideout button and opening behavior
 -   DEVOPS-475: Change dockerfile so that container runs as nobody, without need to setuid for initialization. Enables removing CAP_SETUID from container initialization
--   PTV-1561 - SampleSet viewer fixes to allow AMA features; not complete support for AMA features as GenomeSearchUtil does not yet support AMA.
-
+-   SCT-2935 - fix refseq public data search behavior to properly restrict the search with multiple terms
+-   SCT-3038 - refseq public data search now includes genome_id and source_id
 
 ### Version 4.3.2
-
 -   SCT-2778 - convert data slideout, public tab, refseq data source to use searchapi2/rpc api rather than searchapi2/legacy.
 -   Enhanced integration testing support to add service, host, browser, screen size support.
 -   Changed the "Dashboard" link in hamburger menu to "Narratives" and use the new /narratives path.
 
 ### Version 4.3.1
-
 -   Fixed problem where code cells could forget their toggled state after saving.
 -   Fixed setting up local authentication for developers.
 -   DATAUP-69 - added a pull request template to the narrative repo.
@@ -38,11 +63,11 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 -   DATAUP-301 - fixed a problem where the staging area rendered twice in a row on page load.
 
 ### Version 4.3.0
-
--   SCT-2664 - Show the app cell status when in a collapsed state.
--   Added an "Info" tab to all app cells with app information.
--   Updated links to new KBase home page and docs site.
--   Fixed an uploader issue where uploads taking longer than 30 seconds would fail.
+- SCT-2664 - Show the app cell status when in a collapsed state.
+- Added an "Info" tab to all app cells with app information.
+- Updated links to new KBase home page and docs site.
+- Fixed an uploader issue where uploads taking longer than 30 seconds would fail.
+- (Trigger release via labels)
 
 ### Version 4.2.1
 

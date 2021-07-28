@@ -1,7 +1,7 @@
 import unittest
 import mock
 from biokbase.narrative.jobs.job import Job
-from .util import TestConfig
+from .util import ConfigTests
 from .narrative_mock.mockclients import get_mock_client
 from contextlib import contextmanager
 from io import StringIO
@@ -19,7 +19,7 @@ def capture_stdout():
         sys.stdout, sys.stderr = old_out, old_err
 
 
-config = TestConfig()
+config = ConfigTests()
 test_jobs = config.load_json_file(config.get("jobs", "ee2_job_info_file"))
 
 

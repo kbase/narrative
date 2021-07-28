@@ -2,16 +2,17 @@
 search2DataSource
 
 The search data source performs a fresh search with every new query.
-Whereas the workspace data source fetches the data once, and then performs 
+Whereas the workspace data source fetches the data once, and then performs
 a search against these cached results
 */
-define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
+define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], (
     Promise,
     Handlebars,
     SearchAPI2,
     common
-) {
+) => {
     'use strict';
+
     class RefDataSearch {
         constructor({ url, token, timeout }) {
             this.url = url;
@@ -32,7 +33,7 @@ define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
                             },
                             {
                                 term: {
-                                    source: source,
+                                    source,
                                 },
                             },
                         ],
@@ -63,7 +64,7 @@ define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
                             },
                             {
                                 term: {
-                                    source: source,
+                                    source,
                                 },
                             },
                         ],
@@ -80,13 +81,46 @@ define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
                 track_total_hits: true,
             };
             if (query !== null) {
-                params.query.bool.must.push({
-                    match: {
-                        scientific_name: {
-                            query: query,
+                // Note that this rather convoluted-looking filter how one implements a required "or" filter.
+                // Having the "should" within a "must" ensures that the at least one of the "should" matches
+                // must succeed. We want a filter here because we don't care about scoring.
+                // There may be better ways to form this query, but this one does work.
+                params.query.bool.filter = {
+                    bool: {
+                        must: {
+                            bool: {
+                                should: [
+                                    {
+                                        match: {
+                                            scientific_name: {
+                                                query: query,
+                                                operator: 'AND',
+                                            },
+                                        },
+                                    },
+                                    {
+                                        match: {
+                                            source_id: query,
+                                        },
+                                    },
+                                    {
+                                        match: {
+                                            genome_id: query,
+                                        },
+                                    },
+                                    {
+                                        match: {
+                                            taxonomy: {
+                                                query: query,
+                                                operator: 'AND',
+                                            },
+                                        },
+                                    },
+                                ],
+                            },
                         },
                     },
-                });
+                };
             }
             return this.searchAPI2.search_objects({ params, timeout: this.timeout });
         }
@@ -131,20 +165,26 @@ define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
                     common.requireArg(arg, 'token');
                     common.requireArg(arg, 'urls.searchapi2');
                     common.requireArg(arg, 'pageSize');
+                    const {
+                        config,
+                        token,
+                        urls: { searchapi2 },
+                        pageSize,
+                    } = arg;
 
-                    this.pageSize = arg.pageSize;
+                    this.pageSize = pageSize;
 
                     this.currentPage = null;
                     this.page = null;
-                    this.config = arg.config;
+                    this.config = config;
                     this.queryExpression = null;
                     this.availableData = null;
                     this.fetchedDataCount = null;
                     this.filteredData = null;
                     this.searchApi = new RefDataSearch({
-                        url: arg.urls.searchapi2,
-                        token: arg.token,
-                        timeout: arg.config.timeout,
+                        url: searchapi2,
+                        token,
+                        timeout: config.timeout,
                     });
                     this.searchState = {
                         lastSearchAt: null,
@@ -169,9 +209,9 @@ define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
                         // Prepare page number
                         let page;
                         if (query.page) {
-                            page = query.page - 1;
+                            page = query.page;
                         } else {
-                            page = 0;
+                            page = 1;
                         }
                         this.page = page;
 
@@ -183,8 +223,11 @@ define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
                         } else if (queryInput === '*') {
                             newQuery = null;
                         } else {
-                            // strip off "*" suffix if it was added by the code which
-                            // calls this method.
+                            // strip off "*" suffix from any terms in this search; it does not
+                            // act as a wildcard for search2, and would be interpreted as a
+                            // literal part of the search string.
+                            // The "*" will have been added by the generic search ui code handling
+                            // itself, not the user.
                             newQuery = queryInput
                                 .split(/[ ]+/)
                                 .map((term) => {
@@ -202,8 +245,8 @@ define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
                         const now = new Date().getTime();
 
                         const queryState = {
-                            query: query,
-                            page: page,
+                            query,
+                            page,
                             started: now,
                             promise: null,
                             canceled: false,
@@ -214,18 +257,17 @@ define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
                         this.searchState.lastSearchAt = now;
                         this.searchState.lastQuery = newQuery;
 
-                        // this.setQuery(query);
                         queryState.promise = this.searchApi
                             .referenceGenomeSearch({
                                 source: this.config.source,
                                 pageSize: this.pageSize,
                                 query: this.queryExpression,
-                                page: this.page,
+                                page: this.page - 1,
                             })
                             .then((result) => {
                                 this.availableDataCount = result.totalAvailable;
                                 this.filteredDataCount = result.result.count;
-                                this.availableData = result.result.hits.map((item) => {
+                                this.availableData = result.result.hits.map((item, index) => {
                                     // This call gives us a normalized genome result object.
                                     // In porting this over, we are preserving the field names.
                                     const genomeRecord = parseGenomeSearchResultItem(item);
@@ -236,6 +278,7 @@ define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
                                         genomeRecord
                                     );
                                     return {
+                                        rowNumber: index + (this.page - 1) * this.pageSize + 1,
                                         info: null,
                                         id: genomeRecord.genome_id,
                                         objectId: null,
@@ -248,9 +291,9 @@ define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
                                         workspaceReference: { ref: genomeRecord.ws_ref },
                                     };
                                 });
-                                // for now assume that all items before the page have been fetched
+                                // assume that all items before the page have been fetched
                                 this.fetchedDataCount =
-                                    (this.page + 1) * this.pageSize + this.availableData.length;
+                                    (this.page - 1) * this.pageSize + this.availableData.length;
                                 return this.availableData;
                             })
                             .catch((error) => {
@@ -265,63 +308,6 @@ define(['bluebird', 'handlebars', 'common/searchAPI2', './common'], function (
                     }).finally(() => {
                         this.searchState.currentQueryState = null;
                     });
-                },
-            },
-            setQuery: {
-                value: function (query) {
-                    this.queryExpression = query.replace(/[*]/g, ' ').trim().toLowerCase();
-                },
-            },
-            applyQuery: {
-                value: () => {
-                    return this.searchApi
-                        .referenceGenomeSearch({
-                            source: this.config.source,
-                            pageSize: this.itemsPerPage,
-                            query: this.queryExpression,
-                            page: this.page,
-                        })
-                        .then((result) => {
-                            this.availableDataCount = result.totalAvailable;
-                            this.filteredDataCount = result.result.count;
-                            this.availableData = result.result.objects.map(function (item) {
-                                // This call gives us a normalized genome result object.
-                                // In porting this over, we are preserving the field names.
-                                const genomeRecord = parseGenomeSearchResultItem(item);
-
-                                const name = this.titleTemplate(genomeRecord);
-                                const metadata = common.applyMetadataTemplates(
-                                    this.metadataTemplates,
-                                    genomeRecord
-                                );
-                                return {
-                                    info: null,
-                                    id: genomeRecord.genome_id,
-                                    objectId: null,
-                                    name: name,
-                                    objectName: genomeRecord.object_name,
-                                    metadata: metadata,
-                                    ws: this.config.workspaceName,
-                                    type: this.config.type,
-                                    attached: false,
-                                };
-                            });
-                            return this.availableData;
-                        });
-                },
-            },
-            load: {
-                value: function () {
-                    return common
-                        .listObjectsWithSets(
-                            this.narrativeService,
-                            this.config.workspaceName,
-                            this.config.type
-                        )
-                        .then((data) => {
-                            this.availableData = data;
-                            this.availableDataCount = this.availableData.length;
-                        });
                 },
             },
         }

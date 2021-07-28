@@ -16,7 +16,7 @@ class ViewersTestCase(unittest.TestCase):
         cls.attribute_set_ref = "36095/73/1"
         cls.generic_ref = "36095/74/1"
         cls.expression_matrix_ref = "28852/11/1"
-        config = util.TestConfig()
+        config = util.ConfigTests()
         cls.user_id = config.get("users", "test_user")
         cls.user_token = util.read_token_file(
             config.get_path("token_files", "test_user", from_root=True)

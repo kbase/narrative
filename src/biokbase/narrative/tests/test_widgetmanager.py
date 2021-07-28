@@ -3,7 +3,7 @@ from biokbase.narrative.widgetmanager import WidgetManager
 import IPython
 import mock
 import os
-from .util import TestConfig
+from .util import ConfigTests
 from .narrative_mock.mockclients import get_mock_client
 
 """
@@ -15,7 +15,7 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 class WidgetManagerTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        config = TestConfig()
+        config = ConfigTests()
         os.environ[
             "KB_WORKSPACE_ID"
         ] = "12345"  # That's the same workspace as my luggage!

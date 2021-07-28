@@ -243,8 +243,8 @@ define([
 
         renderError: function (error) {
             const errorElem = `
-                <div class="file-path pull-left"></div>
-                <div style="margin-top:2em" class="alert alert-danger">
+                <div class='file-path pull-left'></div>
+                <div style='margin-top:2em' class='alert alert-danger'>
                     <b>An error occurred while fetching your files:</b> ${error}
                 </div>
             `;

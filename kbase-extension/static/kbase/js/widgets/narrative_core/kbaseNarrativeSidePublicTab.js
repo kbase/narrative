@@ -43,14 +43,15 @@ define([
             return String(value);
         }
     }
+
     function formatItem(item) {
         return `
-            <span role="row" data-test-id="${item.id}">
-            <span style="color: #AAA; font-weight: normal; font-style: italic" data-test-id="label" role="cell">${
+            <span role='row' data-test-id='${item.id}'>
+            <span style='color: #AAA; font-weight: normal; font-style: italic' data-test-id='label' role='cell'>${
                 item.label
             }</span>: 
             &nbsp;
-            <span data-test-id="value" role="cell">${formatValue(item.value)}</span>
+            <span data-test-id='value' role='cell'>${formatValue(item.value)}</span>
             </span>
         `;
     }
@@ -63,19 +64,18 @@ define([
         const $table = $('<table role="table">').css('font-size', '80%');
 
         metadata.forEach((item) => {
-            let $row;
             let value;
             if (item.value instanceof Array) {
                 value = item.value
-                    .map((item) => {
-                        return formatItem(item);
+                    .map((value) => {
+                        return formatItem(value);
                     })
                     .join('&nbsp;&nbsp;&nbsp;');
             } else {
                 value = formatValue(item.value);
             }
 
-            $row = $(`<tr role="row" data-test-id="${item.id || item.label}">`)
+            const $row = $(`<tr role='row' data-test-id='${item.id || item.label}'>`)
                 .css('margin-bottom', '2px')
                 .append(
                     $('<td role="cell" data-test-id="label">')
@@ -111,7 +111,11 @@ define([
                     $('<span data-test-id="found-count">').css('font-weight', 'bold').text('None')
                 )
                 .append($('<span>').text(' found out of '))
-                .append($('<span>').css('font-weight', 'bold').text(numeral(total).format('0,0')))
+                .append(
+                    $('<span data-test-id="total-count">')
+                        .css('font-weight', 'bold')
+                        .text(numeral(total).format('0,0'))
+                )
                 .append($('<span>').text(' available'));
         } else if (total > found) {
             $totals
@@ -121,7 +125,11 @@ define([
                         .text(numeral(found).format('0,0'))
                 )
                 .append($('<span>').text(' found out of '))
-                .append($('<span>').css('font-weight', 'bold').text(numeral(total).format('0,0')))
+                .append(
+                    $('<span data-test-id="total-count">')
+                        .css('font-weight', 'bold')
+                        .text(numeral(total).format('0,0'))
+                )
                 .append($('<span>').text(' available'));
         } else {
             $totals
@@ -137,7 +145,7 @@ define([
     by a previous failed attempt to save the object, return either:
     - null if the target name is not found in the object set
     - 1 if the target name was found, but no target names with a suffix
-    - the greatest of the failed suffix passed in or the greatest suffix in the data 
+    - the greatest of the failed suffix passed in or the greatest suffix in the data
       set, incremented by one.
     */
     function getNextAutoSuffix(targetName, narrativeObjects, nextSuffix) {
@@ -179,6 +187,7 @@ define([
         }
         return null;
     }
+
     const dataSourceTypes = {
         search: {
             serviceDependencies: {
@@ -298,12 +307,6 @@ define([
                 );
             });
 
-            // for (var catPos in this.categories) {
-            //     var cat = this.categories[catPos];
-            //     var catName = this.dataSourceConfigs[cat].name;
-            //     $typeInput.append('<option value="'+cat+'">'+catName+'</option>');
-            // }
-
             const $dataSourceLogo = $('<span>')
                 .addClass('input-group-addon')
                 .css('width', '40px')
@@ -342,6 +345,7 @@ define([
                             $filterInput.val('');
                             inputFieldLastValue = '';
                             $filterInput.change();
+                            $filterInput.focus();
                         })
                 );
 
@@ -357,13 +361,14 @@ define([
                         this.$dataSourceLogo.append($('<img>').attr('src', dataSource.logoUrl));
                     }
                 }
+                $filterInput.focus();
                 this.searchAndRender(newDataSourceID, $filterInput.val());
             });
 
             /*
                 search and render only when input change is detected.
             */
-            var inputFieldLastValue = null;
+            let inputFieldLastValue = null;
             $filterInput.change(() => {
                 inputFieldLastValue = $filterInput.val();
                 renderInputFieldState();
@@ -383,23 +388,9 @@ define([
                 }
             }
 
-            // function inputFieldDirty() {
-            //     if (inputFieldLastValue !== $filterInput.val()) {
-            //         return true;
-            //     }
-            //     return false;
-            // }
-
             $filterInput.keyup(() => {
                 renderInputFieldState();
             });
-
-            /*
-                search and render for every keystroke!
-            */
-            // filterInput.keyup(function() {
-            //     this.searchAndRender(typeInput.val(), filterInput.val());
-            // }.bind(this));
 
             const searchFilter = $('<div class="col-sm-8">').append($filterInputField);
 
@@ -413,7 +404,11 @@ define([
 
             this.resultPanel = $('<div role="table" data-test-id="result">');
 
-            this.resultsFooterMessage = $('<div>');
+            this.resultsFooterMessage = $('<div>')
+                .css('display', 'flex')
+                .css('flex-direction', 'row')
+                .css('align-items', 'center')
+                .css('justify-content', 'center');
 
             this.resultFooter = $('<div>')
                 .css('background-color', 'rgba(200,200,200,0.5')
@@ -437,6 +432,12 @@ define([
             this.$elem.append(this.resultArea);
             const dataSourceID = parseInt($typeInput.val(), 10);
             this.searchAndRender(dataSourceID, $filterInput.val());
+            // Invocation of focus must be delayed until the next timer loop,
+            // probably because the element is not yet visible. Perhaps the
+            // tab content has an overlay.
+            window.setTimeout(() => {
+                $filterInput.focus();
+            }, 0);
             return this;
         },
 
@@ -479,7 +480,7 @@ define([
             this.objectList = [];
             this.currentCategory = category;
             this.currentQuery = query;
-            this.currentPage = 0;
+            this.currentPage = null;
             this.totalAvailable = null;
             this.currentFilteredResults = null;
 
@@ -531,17 +532,25 @@ define([
                 }
             }
 
+            // We use a flag here as a lock on rendering more, so that a renderMore
+            // request will complete before advancing the page and firing off another
+            // data fetch and render request.
+            if (this.renderingMore) {
+                return;
+            }
+            this.renderingMore = true;
+
             this.currentPage += 1;
 
-            return this.renderFromDataSource(this.currentCategory, false);
+            return this.renderFromDataSource(this.currentCategory, false).finally(() => {
+                this.renderingMore = false;
+            });
         },
 
         fetchFromDataSource: function (dataSource) {
-            const _this = this;
-
             const query = {
-                input: _this.currentQuery,
-                page: _this.currentPage,
+                input: this.currentQuery,
+                page: this.currentPage,
             };
 
             return dataSource.search(query);
@@ -575,56 +584,57 @@ define([
         },
 
         renderFromDataSource: function (dataSourceID, initial) {
-            const _this = this;
             const dataSource = this.getDataSource(dataSourceID);
-            this.resultsFooterMessage.html(html.loading('fetching another ' + this.itemsPerPage));
-            this.fetchFromDataSource(dataSource, initial)
+            this.resultsFooterMessage.html(`
+                <span>fetching another ${this.itemsPerPage} items</span> 
+                <span class='fa fa-spinner fa-spin' style='margin-left: 1ex'/>
+            `);
+
+            return this.fetchFromDataSource(dataSource, initial)
                 .then((result) => {
                     // a null result means that the search was not run for some
                     // reason -- most likely it was canceled due to overlapping
                     // queries.
                     if (result) {
-                        // _this.removeLastRowPlaceholder();
                         if (initial) {
-                            _this.totalPanel.empty();
-                            _this.resultPanel.empty();
-                            _this.resultsFooterMessage.empty();
+                            this.totalPanel.empty();
+                            this.resultPanel.empty();
+                            this.resultsFooterMessage.empty();
                         }
                         result.forEach((item, index) => {
-                            _this.addRow(dataSource, item, index);
+                            this.addRow(dataSource, item, index);
                         });
-                        // _this.addLastRowPlaceholder();
 
-                        _this.totalAvailable = dataSource.availableDataCount;
-                        _this.currentFilteredResults = dataSource.filteredDataCount;
+                        this.totalAvailable = dataSource.availableDataCount;
+                        this.currentFilteredResults = dataSource.filteredDataCount;
 
                         let message;
                         if (dataSource.filteredDataCount) {
                             if (dataSource.fetchedDataCount === dataSource.filteredDataCount) {
-                                message = 'all ' + _this.currentFilteredResults + ' fetched';
+                                message = 'all ' + this.currentFilteredResults + ' fetched';
                             } else {
                                 message =
                                     'fetched ' +
-                                    result.length +
+                                    dataSource.fetchedDataCount +
                                     ' of ' +
-                                    _this.currentFilteredResults;
+                                    this.currentFilteredResults;
                             }
-                            _this.showResultFooter();
+                            this.showResultFooter();
                         } else {
                             message = '';
-                            _this.hideResultFooter();
+                            this.hideResultFooter();
                         }
-                        _this.resultsFooterMessage.text(message);
+                        this.resultsFooterMessage.text(message);
 
-                        _this.renderTotalsPanel();
+                        this.renderTotalsPanel();
                     }
 
-                    _this.currentDataSource = dataSource;
+                    this.currentDataSource = dataSource;
                 })
                 .catch((err) => {
                     console.error('Error rendering from data source', dataSource, err);
-                    _this.showError(err);
-                    _this.renderError();
+                    this.showError(err);
+                    this.renderError();
                 });
         },
 
@@ -795,7 +805,12 @@ define([
                 .append($resultColumn);
 
             const $divider = $('<hr>').addClass('kb-data-list-row-hr').css('width', '100%');
+
             const $rowContainer = $('<div>').append($divider).append($row);
+
+            if ('rowNumber' in object) {
+                $rowContainer.attr('data-row-number', String(object.rowNumber));
+            }
 
             return $rowContainer;
         },
@@ -807,7 +822,7 @@ define([
             be here or should be a precondition (just let if fail otherwise.)
 
             the check for existence fo the object should not throw an error; the null value
-            means the object could not be read, and since we have read access to this narrative, 
+            means the object could not be read, and since we have read access to this narrative,
             that is the only possible error.
         */
 
@@ -895,7 +910,10 @@ define([
                         if (error.error.message.indexOf('may not write to workspace') >= 0) {
                             this.options.$importStatus.html(
                                 $('<div>')
-                                    .css({ color: '#F44336', width: '500px' })
+                                    .css({
+                                        color: '#F44336',
+                                        width: '500px',
+                                    })
                                     .append(
                                         'Error: you do not have permission to add data to this Narrative.'
                                     )
@@ -903,14 +921,20 @@ define([
                         } else {
                             this.options.$importStatus.html(
                                 $('<div>')
-                                    .css({ color: '#F44336', width: '500px' })
+                                    .css({
+                                        color: '#F44336',
+                                        width: '500px',
+                                    })
                                     .append('Error: ' + error.error.message)
                             );
                         }
                     } else {
                         this.options.$importStatus.html(
                             $('<div>')
-                                .css({ color: '#F44336', width: '500px' })
+                                .css({
+                                    color: '#F44336',
+                                    width: '500px',
+                                })
                                 .append('Unknown error!')
                         );
                     }

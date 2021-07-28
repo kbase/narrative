@@ -132,6 +132,8 @@ define([
                                     jobToUpdate: true,
                                 },
                             },
+                            batchId: null,
+                            jobsWithRetries: {},
                         },
                     },
                 };
@@ -162,6 +164,8 @@ define([
                                     jobToUpdate: true,
                                 },
                             },
+                            batchId: null,
+                            jobsWithRetries: {},
                         },
                     },
                 };
@@ -207,6 +211,8 @@ define([
                                     'a brave new job': true,
                                 },
                             },
+                            batchId: null,
+                            jobsWithRetries: {},
                         },
                     },
                 };

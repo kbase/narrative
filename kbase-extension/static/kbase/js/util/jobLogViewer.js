@@ -1249,7 +1249,10 @@ define([
             ui.setContent('log-container', '');
             awaitingLog = false;
             // slightly hacky way to get the appropriate job status lines
-            renderJobState({ job_state: 'does_not_exist' });
+            renderJobState({
+                job_id: '',
+                status: 'does_not_exist',
+            });
             stopJobStatusUpdates();
         }
 

@@ -270,6 +270,13 @@ define(['common/format'], (format) => {
         },
     ];
 
+    // add in the retryTarget
+    validJobs.forEach((job) => {
+        if (job.meta.canRetry) {
+            job.meta.retryTarget = job.job_id;
+        }
+    });
+
     // the 'does_not_exist' job state is created by the narrative backend
     const unknownJob = {
         job_id: 'unknown-job',
@@ -363,11 +370,179 @@ define(['common/format'], (format) => {
         return acc;
     }, {});
 
+    // duplicate validJobs
+    // add in a batch parent and add the batch_id to each job
+    // add child jobs to the batch parent
+    // add retry_parent
+
+    /**
+     * Increment all timestamps in an object by ${time} seconds
+     *
+     * @param Object jobState
+     * @param int time -- how much to increment any timestamps by
+     */
+    function passTime(jobState, time) {
+        ['created', 'finished', 'queued', 'running', 'updated'].forEach((timePoint) => {
+            if (jobState[timePoint]) {
+                jobState[timePoint] += time;
+            }
+        });
+    }
+
+    // convert a job into one that can be (has been) retried
+    function convertToRetryParent(jobState, retryArray = []) {
+        jobState.meta.originalJob = true;
+        addRetries(jobState, retryArray);
+    }
+
+    // convert a job into one that is a retry of ${retryParentId}
+    function convertToRetry(jobState, retryParentId) {
+        jobState.meta.retryTarget = retryParentId;
+        jobState.retry_parent = retryParentId;
+        addRetries(jobState, []);
+    }
+
+    function addRetries(jobState, retryArray = []) {
+        jobState.retry_ids = retryArray;
+        jobState.retry_count = retryArray.length;
+    }
+    /**
+     * output of createBatchJob:
+     *
+     * batch parent: 'job-created'
+     *
+     * initial children:
+     * 'job-cancelled-whilst-in-the-queue'
+     * 'job-cancelled-during-run'
+     * 'job-died-whilst-queueing'
+     * 'job-in-the-queue'
+     *
+     * job retries:
+     * 'job-cancelled-whilst-in-the-queue'
+     *  - retry 1: 'job-running'
+     *
+     * 'job-cancelled-during-run'
+     *  - retry 1: 'job-finished-with-success'
+     *
+     * 'job-died-whilst-queueing'
+     *  - retry 1: 'job-died-with-error'
+     *  - retry 2: 'job-estimating' (most recent retry)
+     *
+     */
+
+    function createBatchJob() {
+        // extra metadata:
+        // meta.currentJob: true/false -- this is the most recent job (including retries)
+        // meta.originalJob: true/false -- this is one of the original jobs in the batch
+
+        // meta: {
+        //     canCancel: true,
+        //     canRetry: true,
+        //     createJobStatusLines: {
+        //         line: jobStrings.running,
+        //         history: [jobStrings.queueHistory, jobStrings.running],
+        //     },
+        //     jobAction: jobStrings.action.cancel,
+        //     jobLabel: 'running',
+        //     niceState: {
+        //         class: 'kb-job-status__summary',
+        //         label: 'running',
+        //     },
+        //     appCellFsm: { mode: 'processing', stage: 'running' },
+        // },
+
+        const BATCH_ID = 'job-created';
+        const jobsWithRetries = JSON.parse(JSON.stringify(validJobs));
+        const jobIdIndex = {};
+        let thisJob, parentJob;
+        jobsWithRetries.forEach((job) => {
+            job.batch_id = BATCH_ID;
+            job.batch_job = false;
+            jobIdIndex[job.job_id] = job;
+        });
+
+        // batch parent
+        jobIdIndex[BATCH_ID].batch_job = true;
+        jobIdIndex[BATCH_ID].child_jobs = Object.keys(jobIdIndex).filter(
+            (job_id) => job_id !== BATCH_ID
+        );
+        jobIdIndex[BATCH_ID].meta.canRetry = false;
+        delete jobIdIndex[BATCH_ID].meta.retryTarget;
+
+        // no retries of 'job-in-the-queue'
+        parentJob = 'job-in-the-queue';
+        convertToRetryParent(jobIdIndex[parentJob]);
+        jobIdIndex[parentJob].meta.currentJob = true;
+
+        // these jobs have been retried
+
+        // retries of 'job-cancelled-whilst-in-the-queue'
+        parentJob = 'job-cancelled-whilst-in-the-queue';
+        convertToRetryParent(jobIdIndex[parentJob], ['job-running']);
+
+        thisJob = 'job-running';
+        convertToRetry(jobIdIndex[thisJob], parentJob);
+        jobIdIndex[thisJob].meta.currentJob = true;
+        passTime(jobIdIndex[thisJob], 15);
+
+        // retries of 'job-cancelled-during-run'
+        parentJob = 'job-cancelled-during-run';
+        convertToRetryParent(jobIdIndex[parentJob], ['job-cancelled-during-run']);
+
+        thisJob = 'job-finished-with-success';
+        convertToRetry(jobIdIndex[thisJob], parentJob);
+        jobIdIndex[thisJob].meta.currentJob = true;
+        passTime(jobIdIndex[thisJob], 20);
+
+        // two retries of 'job-died-whilst-queueing'
+        parentJob = 'job-died-whilst-queueing';
+        convertToRetryParent(jobIdIndex[parentJob], ['job-died-with-error', 'job-estimating']);
+
+        thisJob = 'job-died-with-error';
+        convertToRetry(jobIdIndex[thisJob], parentJob);
+        passTime(jobIdIndex[thisJob], 5);
+
+        thisJob = 'job-estimating';
+        convertToRetry(jobIdIndex[thisJob], parentJob);
+        jobIdIndex[thisJob].meta.currentJob = true;
+        passTime(jobIdIndex[thisJob], 10);
+
+        return {
+            jobArray: Object.values(jobIdIndex),
+            jobsById: jobIdIndex,
+            jobsWithRetries: [
+                'job-cancelled-whilst-in-the-queue',
+                'job-cancelled-during-run',
+                'job-died-whilst-queueing',
+            ],
+            originalJobs: [
+                'job-in-the-queue',
+                'job-cancelled-whilst-in-the-queue',
+                'job-cancelled-during-run',
+                'job-died-whilst-queueing',
+            ].reduce((acc, jobId) => {
+                acc[jobId] = jobIdIndex[jobId];
+                return acc;
+            }, {}),
+            currentJobs: [
+                'job-in-the-queue',
+                'job-running',
+                'job-finished-with-success',
+                'job-estimating',
+            ].reduce((acc, jobId) => {
+                acc[jobId] = jobIdIndex[jobId];
+                return acc;
+            }, {}),
+            batchId: BATCH_ID,
+        };
+    }
+
     return {
         validJobs,
         invalidJobs,
         unknownJob,
         allJobs,
+        batchJob: createBatchJob(),
         jobsByStatus,
         jobsById,
         jobStrings,

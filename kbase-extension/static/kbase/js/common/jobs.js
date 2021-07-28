@@ -205,7 +205,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
     /**
      * Given a job state object, return a boolean indicating whether the job can be cancelled
      *
-     * Jobs that are queued or running can be cancelled.
+     * A job in a non-terminal state can be cancelled.
      *
      * @param {object} jobState
      * @returns {boolean} whether or not the job can be cancelled
@@ -217,7 +217,8 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
     /**
      * Given a job state object, return a boolean indicating whether the job can be retried
      *
-     * To be retried, the job must have failed or been cancelled
+     * As the job data held by the front end may be out of date, any job not in state 'completed'
+     * can be retried
      *
      * @param {object} jobState
      * @returns {boolean} whether or not the job can be retried
@@ -341,27 +342,47 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
      */
 
     function jobArrayToIndexedObject(jobArray = []) {
-        return {
-            // save job status info under job ID
-            byId: jobArray.reduce((acc, curr) => {
-                acc[curr.job_id] = curr;
-                return acc;
-            }, {}),
-            // save job IDs grouped by status
-            byStatus: jobArray.reduce((acc, curr) => {
-                if (!acc[curr.status]) {
-                    acc[curr.status] = {};
-                }
-                acc[curr.status][curr.job_id] = true;
-                return acc;
-            }, {}),
+        const jobIx = {
+            byId: {},
+            byStatus: {},
+            // jobsWithRetries: new Set(),
+            jobsWithRetries: {},
+            batchId: null,
         };
+
+        jobArray.forEach((job) => {
+            const jobId = job.job_id,
+                status = job.status;
+            jobIx.byId[jobId] = job;
+            if (!jobIx.byStatus[status]) {
+                // jobIx.byStatus[status] = new Set()
+                jobIx.byStatus[status] = {};
+            }
+            // jobIx.byStatus[status].add(jobId)
+            jobIx.byStatus[status][jobId] = true;
+
+            // any job with one or more retries
+            if (job.retry_ids && job.retry_ids.length) {
+                // jobIx.jobsWithRetries.add(jobId)
+                jobIx.jobsWithRetries[jobId] = true;
+            }
+
+            if (job.batch_id && job.batch_id === jobId) {
+                if (jobIx.batchId) {
+                    // OH SHIT!!
+                }
+                jobIx.batchId = job.batch_id;
+            }
+        });
+        return jobIx;
     }
 
     /**
      * Ensures that the child_jobs data is in the correct place in the jobState object
      *
-     * It should be possible to remove this function after migrating to ee 2.5
+     * This is a horrible hack to move job data from the old batch implementation
+     * into the correct place
+     *
      * @param {object} jobState
      * @return {object} jobState, possibly edited
      */
@@ -407,11 +428,6 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
 
     function createJobStatusLines(jobState, includeHistory = false) {
         if (!isValidJobStateObject(jobState)) {
-            // check whether EE2 sent { job_state: 'does_not_exist' }
-            // TODO: coerce the { job_state: 'does_not_exist' } into a standard format
-            if (jobState && jobState.job_state && jobState.job_state === 'does_not_exist') {
-                return jobNotFound;
-            }
             return jobStatusUnknown;
         }
 
@@ -530,15 +546,48 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
         );
     }
 
-    const batch = 'batch job';
+    /**
+     *
+     * @param {array} jobArray array of job objects
+     * @param {object} jobsByRetryParent (optional) index, to be completed, with key retry_parent job IDs
+     * and an array of retry job IDs as values
+     * @returns {object} jobsByOriginalId object, with key retry_parent job and value job_id of most recent retry
+     */
+    function getCurrentJobs(jobArray, jobsByRetryParent = {}) {
+        // group jobs by their retry parents
+        jobArray.forEach((job) => {
+            if (job.batch_job) {
+                return;
+            }
+            const indexId = job.retry_parent || job.job_id;
+            const jobIx = `${job.created || 0}__${job.job_id}`;
+            if (!jobsByRetryParent[indexId]) {
+                jobsByRetryParent[indexId] = {
+                    job_id: indexId,
+                    jobs: {},
+                };
+            }
+            jobsByRetryParent[indexId].jobs[jobIx] = job;
+        });
 
+        // collect jobs that are not retries
+        const jobsByOriginalId = {};
+        // now take the most recent job from jobsByRetryParent
+        Object.keys(jobsByRetryParent).forEach((indexId) => {
+            const sortedJobs = Object.keys(jobsByRetryParent[indexId].jobs).sort(),
+                lastJob = sortedJobs[sortedJobs.length - 1];
+            jobsByOriginalId[indexId] = jobsByRetryParent[indexId].jobs[lastJob];
+        });
+        return jobsByOriginalId;
+    }
+
+    const batch = 'batch job';
     /**
      * create a summary string for a set of jobs
      *
      * @param {object} jobLabelFreq - an object with keys job labels and values their frequencies
      * @returns {string} - a string summarising the state of the batch job
      */
-
     function _createBatchSummaryState(jobLabelFreq) {
         // if at least one job is queued or running, the batch job is in progress
         if (jobLabelFreq.running || jobLabelFreq.queued) {
@@ -555,12 +604,17 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
         return `${batch} finished`;
     }
 
-    // reduce down jobs sorted by status into an object with keys being the job status
-    // and values the number of jobs in that state
+    /**
+     * Get counts for jobs in each status
+     * Squashes 'estimating' and 'created' job states into 'queued'
+     *
+     * @param {object} jobsByStatus
+     * @returns {object} statuses with keys job status and values the number of jobs in that state
+     */
     function _jobCountByStatus(jobsByStatus) {
         const statuses = {};
         Object.keys(jobsByStatus).forEach((status) => {
-            const nJobs = Object.keys(jobsByStatus[status]).length;
+            const nJobs = jobsByStatus[status].size;
             // reduce down the queued states
             if (status === 'estimating' || status === 'created') {
                 status = 'queued';
@@ -575,17 +629,82 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
     }
 
     /**
-     * Given an object containing job IDs indexed by status, summarise the status of the jobs
-     * @param {object} jobsByStatus job IDs indexed by status
+     * group job IDs by job status
+     *
+     * @param {object} jobIx
+     * @returns {object} jobsByStatus with keys job status and values Set object containing job IDs
+     */
+    function _groupJobsByStatus(jobIx) {
+        // index by status
+        const jobsByStatus = {};
+        Object.values(jobIx).forEach((job) => {
+            const { job_id, status } = job;
+            if (!jobsByStatus[status]) {
+                jobsByStatus[status] = new Set();
+            }
+            jobsByStatus[status].add(job_id);
+        });
+        return jobsByStatus;
+    }
+
+    /**
+     * Classify current jobs by status and return counts for each status
+     * 'created' and 'estimating' statuses are collapsed into 'queued'
+     *
+     * @param {object} jobsIndex jobs indexed by ID
+     * @param {object} options extra options for the count; currently only 'withRetries' allowed
+     * @returns {object} with keys job status and values number of jobs in that state
+     */
+    function getCurrentJobCounts(jobsIndex, options = {}) {
+        if (
+            !jobsIndex ||
+            !Object.keys(jobsIndex).length ||
+            !jobsIndex.byId ||
+            !Object.keys(jobsIndex.byId).length
+        ) {
+            return {};
+        }
+        const jobsByRetryParent = {};
+        const currentJobs = getCurrentJobs(Object.values(jobsIndex.byId), jobsByRetryParent);
+
+        // get job count for each status
+        const statuses = _jobCountByStatus(_groupJobsByStatus(currentJobs));
+
+        if (options && options.withRetries) {
+            // any retryParents in jobsByRetryParents with more than one child in jobs have been retried
+            const nRetriedParents = Object.values(jobsByRetryParent)
+                .filter((parent) => {
+                    return Object.keys(parent.jobs).length > 1;
+                })
+                .map((job) => {
+                    return job.job_id;
+                }).length;
+            if (nRetriedParents) {
+                statuses.retried = nRetriedParents;
+            }
+        }
+        return statuses;
+    }
+
+    /**
+     * Given an object containing jobs indexed by ID, summarise the status of the jobs
+     * @param {object} jobsIndex the index of job data, e.g. from retrieving `exec.jobs` in a batch cell
      * @returns {string} summary string
      */
 
-    function createCombinedJobState(jobsByStatus) {
-        if (!jobsByStatus || !Object.keys(jobsByStatus).length) {
+    function createCombinedJobState(jobsIndex) {
+        if (
+            !jobsIndex ||
+            !Object.keys(jobsIndex).length ||
+            !jobsIndex.byId ||
+            !Object.keys(jobsIndex.byId).length
+        ) {
             return '';
         }
 
-        const statuses = _jobCountByStatus(jobsByStatus);
+        // get job count for each status and retries
+        const statuses = getCurrentJobCounts(jobsIndex, { withRetries: 1 });
+
         const textStatusSummary = _createBatchSummaryState(statuses);
         const orderedStatuses = [
             'queued',
@@ -595,7 +714,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
             'terminated',
             'does_not_exist',
         ];
-        const summaryHtml =
+        let summaryHtml =
             `${textStatusSummary}: ` +
             orderedStatuses
                 .filter((state) => {
@@ -619,6 +738,12 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
                 })
                 .join(', ');
 
+        if (statuses.retried) {
+            summaryHtml += ` (${
+                statuses.retried > 1 ? statuses.retried + ' jobs' : '1 job'
+            } retried)`;
+        }
+
         const jobSpan = document.createElement('span');
         jobSpan.innerHTML = summaryHtml;
         jobSpan.title = jobSpan.textContent;
@@ -631,13 +756,17 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
      * @param {object} jobsByStatus job IDs indexed by status
      * @returns {string} FSM state
      */
-    function getFsmStateFromJobs(jobsByStatus) {
-        if (!jobsByStatus || !Object.keys(jobsByStatus).length) {
+    function getFsmStateFromJobs(jobsIndex) {
+        if (
+            !jobsIndex ||
+            !Object.keys(jobsIndex).length ||
+            !jobsIndex.byId ||
+            !Object.keys(jobsIndex.byId).length
+        ) {
             return null;
         }
 
-        const statuses = _jobCountByStatus(jobsByStatus);
-
+        const statuses = getCurrentJobCounts(jobsIndex);
         // if at least one job is running or queued, the status is 'inProgress'; otherwise,
         // all jobs are in a terminal state, so the status is 'jobsFinished'
         const baseStatus = statuses.running || statuses.queued ? 'inProgress' : 'jobsFinished';
@@ -652,6 +781,8 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
         createCombinedJobState,
         createJobStatusFromFsm,
         createJobStatusLines,
+        getCurrentJobCounts,
+        getCurrentJobs,
         getFsmStateFromJobs,
         isTerminalStatus,
         isValidJobStatus,

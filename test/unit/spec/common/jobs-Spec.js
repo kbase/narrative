@@ -11,6 +11,9 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
         'createCombinedJobState',
         'createJobStatusFromFsm',
         'createJobStatusLines',
+        'getCurrentJobCounts',
+        'getCurrentJobs',
+        'getFsmStateFromJobs',
         'isTerminalStatus',
         'isValidJobStateObject',
         'isValidJobInfoObject',
@@ -23,6 +26,7 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
         'niceState',
         'updateJobModel',
         'validJobStatuses',
+        'validStatusesForAction',
     ];
 
     const jobsByStatus = {};
@@ -138,17 +142,6 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
                 state.meta.createJobStatusLines.history.forEach((historyLine) => {
                     expect(container.textContent).toContain(historyLine);
                 });
-            });
-        });
-
-        it('should create an appropriate string if the job does not exist', () => {
-            const state = { job_state: 'does_not_exist' };
-            // Jobs.createJobStatusLines returns the same content, whether or not
-            // history is shown
-            args.forEach((arg) => {
-                const statusLines = Jobs.createJobStatusLines(state, arg);
-                container.innerHTML = arrayToHTML(statusLines);
-                expect(container.textContent).toContain(JobsData.jobStrings.not_found);
             });
         });
 
@@ -281,91 +274,166 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
         });
     });
 
+    function generateJobs(jobSpec) {
+        const outputJobs = {};
+        Object.keys(jobSpec).forEach((status) => {
+            Object.keys(jobSpec[status]).forEach((jobId) => {
+                outputJobs[jobId] = {
+                    job_id: jobId,
+                    status: status,
+                };
+            });
+        });
+        return { byId: outputJobs };
+    }
+
     describe('createCombinedJobState', () => {
         const batch = 'batch job';
+        const retryBatchId = JobsData.batchJob.batchId;
         const tests = [
             {
+                desc: 'all jobs',
+                jobs: { byId: JobsData.jobsById },
+                expected: `${batch} in progress: 3 queued, 1 running, 1 success, 2 failed, 2 cancelled, 1 not found`,
+                fsmState: 'inProgressResultsAvailable',
+                statuses: {
+                    queued: 3,
+                    running: 1,
+                    completed: 1,
+                    error: 2,
+                    terminated: 2,
+                    does_not_exist: 1,
+                },
+            },
+            {
+                desc: 'jobs with retries',
+                jobs: { byId: JobsData.batchJob.jobsById },
+                expected: `${batch} in progress: 2 queued, 1 running, 1 success (3 jobs retried)`,
+                fsmState: 'inProgressResultsAvailable',
+                statuses: { queued: 2, running: 1, completed: 1, retried: 3 },
+            },
+            {
+                desc: 'jobs with retries, original jobs only',
+                jobs: {
+                    byId: {
+                        ...JobsData.batchJob.originalJobs,
+                        retryBatchId: JobsData.batchJob.jobsById[retryBatchId],
+                    },
+                },
+                expected: `${batch} in progress: 1 queued, 1 failed, 2 cancelled`,
+                fsmState: 'inProgress',
+                statuses: { queued: 1, error: 1, terminated: 2 },
+            },
+            {
                 desc: 'all jobs queued',
-                jobs: { created: { a: 1 }, estimating: { b: 1 }, queued: { c: 1 } },
+                jobs: generateJobs({ created: { a: 1 }, estimating: { b: 1 }, queued: { c: 1 } }),
                 expected: `${batch} in progress: 3 queued`,
                 fsmState: 'inProgress',
+                statuses: { queued: 3 },
             },
             {
                 desc: 'queued and running jobs',
-                jobs: { estimating: { a: 1 }, running: { a: 1 } },
+                jobs: generateJobs({ estimating: { a: 1 }, running: { b: 1 } }),
                 expected: `${batch} in progress: 1 queued, 1 running`,
                 fsmState: 'inProgress',
+                statuses: { queued: 1, running: 1 },
             },
             {
                 desc: 'all running',
-                jobs: { running: { a: 1 } },
+                jobs: generateJobs({ running: { a: 1 } }),
                 expected: `${batch} in progress: 1 running`,
                 fsmState: 'inProgress',
-            },
-            {
-                desc: 'all jobs',
-                jobs: JobsData.jobsByStatus,
-                expected: `${batch} in progress: 3 queued, 1 running, 1 success, 2 failed, 2 cancelled, 1 not found`,
-                fsmState: 'inProgressResultsAvailable',
+                statuses: { running: 1 },
             },
             {
                 desc: 'in progress and finished',
-                jobs: { estimating: { a: 1 }, running: { b: 1 }, completed: { c: 1 } },
+                jobs: generateJobs({
+                    estimating: { a: 1 },
+                    running: { b: 1 },
+                    completed: { c: 1 },
+                }),
                 expected: `${batch} in progress: 1 queued, 1 running, 1 success`,
                 fsmState: 'inProgressResultsAvailable',
+                statuses: { queued: 1, running: 1, completed: 1 },
             },
             {
                 desc: 'all completed',
-                jobs: { completed: { a: 1, b: 1, c: 1 } },
+                jobs: generateJobs({ completed: { a: 1, b: 1, c: 1 } }),
                 expected: `${batch} finished with success: 3 successes`,
                 fsmState: 'jobsFinishedResultsAvailable',
+                statuses: { completed: 3 },
             },
             {
                 desc: 'all failed',
-                jobs: { error: { a: 1, b: 1 } },
+                jobs: generateJobs({ error: { a: 1, b: 1 } }),
                 expected: `${batch} finished with error: 2 failed`,
                 fsmState: 'jobsFinished',
+                statuses: { error: 2 },
             },
             {
                 desc: 'all terminated',
-                jobs: { terminated: { a: 1, b: 1, c: 1 } },
+                jobs: generateJobs({ terminated: { a: 1, b: 1, c: 1 } }),
                 expected: `${batch} finished with cancellation: 3 cancelled`,
                 fsmState: 'jobsFinished',
+                statuses: { terminated: 3 },
             },
             {
                 desc: 'mix of finish states',
-                jobs: { terminated: { a: 1 }, error: { a: 1, b: 1, c: 1 }, completed: { a: 1 } },
+                jobs: generateJobs({
+                    terminated: { a: 1 },
+                    error: { b: 1, c: 1, d: 1 },
+                    completed: { e: 1 },
+                }),
                 expected: `${batch} finished: 1 success, 3 failed, 1 cancelled`,
                 fsmState: 'jobsFinishedResultsAvailable',
+                statuses: { terminated: 1, error: 3, completed: 1 },
             },
             {
                 desc: 'in progress, finished, not found',
-                jobs: {
+                jobs: generateJobs({
                     estimating: { a: 1 },
                     running: { b: 1 },
                     completed: { c: 1 },
                     does_not_exist: { d: 1 },
-                },
+                }),
                 expected: `${batch} in progress: 1 queued, 1 running, 1 success, 1 not found`,
                 fsmState: 'inProgressResultsAvailable',
+                statuses: { queued: 1, running: 1, completed: 1, does_not_exist: 1 },
             },
             {
                 desc: 'jobs do not exist',
-                jobs: { does_not_exist: { a: 1, b: 1 } },
+                jobs: generateJobs({ does_not_exist: { a: 1, b: 1 } }),
                 expected: `${batch} finished with error: 2 not found`,
                 fsmState: 'jobsFinished',
+                statuses: { does_not_exist: 2 },
             },
             {
                 desc: 'no jobs',
                 jobs: {},
                 expected: '',
                 fsmState: null,
+                statuses: {},
             },
             {
-                desc: 'nothing at all',
+                desc: 'null',
                 jobs: null,
                 expected: '',
                 fsmState: null,
+                statuses: {},
+            },
+            {
+                desc: 'byId is empty',
+                jobs: { byId: {} },
+                expected: '',
+                fsmState: null,
+                statuses: {},
+            },
+            {
+                desc: 'byId is null',
+                jobs: { byId: null },
+                expected: '',
+                fsmState: null,
+                statuses: {},
             },
         ];
 
@@ -380,9 +448,34 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
                     expect(div.childNodes.length).toBe(0);
                 }
             });
-            it('deduces the FSM state', () => {
+            it(`deduces FSM state: ${test.desc}`, () => {
                 expect(Jobs.getFsmStateFromJobs(test.jobs)).toEqual(test.fsmState);
             });
+            it(`gets job counts, ${test.desc}`, () => {
+                const statuses = Jobs.getCurrentJobCounts(test.jobs, { withRetries: 1 });
+                expect(statuses).toEqual(test.statuses);
+            });
+        });
+    });
+
+    describe('getCurrentJobs', () => {
+        it('current jobs, no retries', () => {
+            const jobsByOriginalId = Jobs.getCurrentJobs(JobsData.allJobs);
+            expect(jobsByOriginalId).toEqual(JobsData.jobsById);
+        });
+
+        it('can retrieve current jobs, with retries', () => {
+            const jobsByRetryParent = {};
+            const jobsByOriginalId = Jobs.getCurrentJobs(
+                JobsData.batchJob.jobArray,
+                jobsByRetryParent
+            );
+            expect(Object.keys(jobsByOriginalId).sort()).toEqual(
+                Object.keys(JobsData.batchJob.originalJobs).sort()
+            );
+            expect(Object.keys(jobsByOriginalId).sort()).toEqual(
+                Object.keys(jobsByRetryParent).sort()
+            );
         });
     });
 
@@ -405,8 +498,37 @@ define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
             expect(Object.keys(statusIndex).sort()).toEqual(Object.keys(jobStatuses).sort());
         });
 
+        it('collects retried jobs', () => {
+            const model = Jobs.jobArrayToIndexedObject(JobsData.batchJob.jobArray);
+            const idIndex = model.byId,
+                statusIndex = model.byStatus;
+
+            const jobStatuses = {};
+            expect(Object.keys(idIndex).sort()).toEqual(
+                JobsData.batchJob.jobArray
+                    .map((jobState) => {
+                        jobStatuses[jobState.status] = 1;
+                        return jobState.job_id;
+                    })
+                    .sort()
+            );
+
+            expect(Object.keys(statusIndex).sort()).toEqual(Object.keys(jobStatuses).sort());
+            expect(model.batchId).toEqual('job-created');
+            expect(Object.keys(model.jobsWithRetries).sort()).toEqual(
+                JobsData.batchJob.jobsWithRetries.sort()
+            );
+        });
+
         it('creates an empty model with an empty jobs array', () => {
             const model = Jobs.jobArrayToIndexedObject([]);
+            expect(model).toEqual({
+                byId: {},
+                byStatus: {},
+                // jobsWithRetries: new Set(),
+                jobsWithRetries: {},
+                batchId: null,
+            });
             expect(model.byId).toEqual({});
             expect(model.byStatus).toEqual({});
         });

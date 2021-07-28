@@ -3,19 +3,20 @@ define([
     'kbase/js/widgets/narrative_core/upload/stagingAreaViewer',
     'base/js/namespace',
     'kbaseNarrative',
-], ($, StagingAreaViewer, Jupyter) => {
+    'narrativeConfig',
+], ($, StagingAreaViewer, Jupyter, Narrative, Config) => {
     'use strict';
 
     describe('The staging area viewer widget', () => {
         let stagingViewer, container, $container, $parentNode;
         const startingPath = '/',
             updatePathFn = null,
-
-            fakeUser = 'notAUser';
+            fakeUser = 'notAUser',
+            stagingServiceUrl = Config.url('staging_api_url');
 
         beforeEach(() => {
             jasmine.Ajax.install();
-            jasmine.Ajax.stubRequest(/.*\/staging_service\/list\/?/).andReturn({
+            jasmine.Ajax.stubRequest(new RegExp(`${stagingServiceUrl}/list/`)).andReturn({
                 status: 200,
                 statusText: 'success',
                 contentType: 'text/plain',
@@ -27,15 +28,14 @@ define([
                         mtime: 1532738637499,
                         size: 34,
                         isFolder: true,
-                        mappings: null,
                     },
                     {
-                        name: 'file_list.txt',
-                        path: fakeUser + '/test_folder/file_list.txt',
+                        name: 'some_reads.fq',
+                        path: fakeUser + '/test_folder/some_reads.fq',
                         mtime: 1532738637555,
                         size: 49233,
                         source: 'KBase upload',
-                        mappings: [],
+                        isFolder: false,
                     },
                     {
                         name: 'fake_sra_reads.sra',
@@ -43,13 +43,30 @@ define([
                         mtime: 1532738637555,
                         size: 49233,
                         source: 'KBase upload',
-                        mappings: [{ id: 'sra_reads', title: 'SRA Reads' }],
+                        isFolder: false,
+                    },
+                    {
+                        name: 'unknown_file.txt',
+                        path: fakeUser + '/unknown_file.txt',
+                        mtime: 1532738637555,
+                        size: 100,
+                        source: 'KBase upload',
+                        isFolder: false,
                     },
                 ]),
             });
 
-            const mappings = { mappings: [null, null, null] };
-            jasmine.Ajax.stubRequest(/.*\/staging_service\/importer_mappings\/?/).andReturn({
+            const mappings = {
+                mappings: [
+                    null,
+                    null,
+                    [{ id: 'sra_reads', app_weight: 1, title: 'SRA Reads' }],
+                    null,
+                ],
+            };
+            jasmine.Ajax.stubRequest(
+                new RegExp(`${stagingServiceUrl}/importer_mappings/`)
+            ).andReturn({
                 status: 200,
                 statusText: 'success',
                 contentType: 'text/plain',
@@ -140,12 +157,19 @@ define([
             expect($urlButton.html()).toContain('Upload with URL');
         });
 
-        it('Should start a help tour', async () => {
+        it('Should start a help tour on function call', async () => {
             await stagingViewer.render();
             stagingViewer.startTour();
             expect(stagingViewer.tour).not.toBeNull();
             // clean up the DOM afterwards
             stagingViewer.tour.tour.end();
+        });
+
+        it('Should start a tour on click', async () => {
+            await stagingViewer.render();
+            spyOn(stagingViewer, 'startTour');
+            container.querySelector('button#help').click();
+            expect(stagingViewer.startTour).toHaveBeenCalled();
         });
 
         it('Should update its view with a proper subpath', async () => {
@@ -156,9 +180,9 @@ define([
             ).toContain(fakeUser);
         });
 
-        it('Should show an error when a path does not exist', async () => {
+        it('Should show an error when file listing fails', async () => {
             const errorText = 'An error occurred while fetching your files';
-            jasmine.Ajax.stubRequest(/.*\/staging_service\/list\/foo?/).andReturn({
+            jasmine.Ajax.stubRequest(new RegExp(`${stagingServiceUrl}/list`)).andReturn({
                 status: 404,
                 statusText: 'success',
                 contentType: 'text/plain',
@@ -166,20 +190,14 @@ define([
                 responseText: errorText,
             });
 
-            await stagingViewer.setPath('//foo');
+            stagingViewer.setPath('/foo');
+            await stagingViewer.updateView();
             expect($container.find('.alert.alert-danger').html()).toContain(errorText);
         });
 
-        it('Should show a "no files" next when a path has no files', async () => {
-            jasmine.Ajax.stubRequest(/.*\/staging_service\/list\/empty?/).andReturn({
-                status: 200,
-                statusText: 'success',
-                contentType: 'text/plain',
-                responseHeaders: '',
-                responseText: JSON.stringify([]),
-            });
-
-            await stagingViewer.setPath('//empty');
+        it('Should show a "no files" text when a directory has no files', async () => {
+            await stagingViewer.updateView();
+            stagingViewer.setPath('/empty');
             expect($container.find('tbody.kb-staging-table-body').html()).toContain(
                 'No files found.'
             );
@@ -196,15 +214,19 @@ define([
         it('Should have clickable folder icons', async () => {
             spyOn(stagingViewer, 'updatePathFn');
             await stagingViewer.render();
-            stagingViewer.$elem.find('button[data-name="test_folder"]').click();
-            expect(stagingViewer.updatePathFn).toHaveBeenCalledWith('//test_folder');
+            stagingViewer.$elem
+                .find('button.kb-staging-table-body__button--folder[data-name="test_folder"]')
+                .click();
+            expect(stagingViewer.updatePathFn).toHaveBeenCalledWith('/test_folder');
         });
 
         it('Should have clickable folder names', async () => {
             spyOn(stagingViewer, 'updatePathFn');
             await stagingViewer.render();
-            stagingViewer.$elem.find('button[data-name="test_folder"]').click();
-            expect(stagingViewer.updatePathFn).toHaveBeenCalledWith('//test_folder');
+            stagingViewer.$elem
+                .find('span.kb-staging-table-body__folder[data-name="test_folder"]')
+                .click();
+            expect(stagingViewer.updatePathFn).toHaveBeenCalledWith('/test_folder');
         });
 
         it('Should have multi-clicked folder buttons only fire once', async () => {
@@ -323,6 +345,49 @@ define([
             expect(tableCheckbox.prop('checked')).toBeTruthy();
         });
 
+        it('checkboxes should remain checked after a refresh', async () => {
+            await stagingViewer.render();
+            const file = 'fake_sra_reads.sra';
+            const selectDropdown = $container.find(`[data-download="${file}"]`).siblings('select');
+
+            selectDropdown.val('sra_reads').trigger('change').trigger('select2:select');
+
+            const checkboxSelector = `input.kb-staging-table-body__checkbox-input[data-file-name="${file}"]`;
+            let checkbox = container.querySelector(checkboxSelector);
+            expect(checkbox.disabled).toBeFalse();
+            expect(checkbox.checked).toBeTrue();
+
+            await stagingViewer.updateView();
+            checkbox = container.querySelector(checkboxSelector);
+            expect(checkbox.checked).toBeTrue();
+        });
+
+        it('checkboxes in subdirectories should remain checked while navigating', async () => {
+            await stagingViewer.render();
+            stagingViewer.setPath('/test_folder');
+            const filePath = 'test_folder/some_reads.fq';
+            const selectDropdown = $container
+                .find(`[data-download="${filePath}"]`)
+                .siblings('select');
+
+            selectDropdown
+                .val('fastq_reads_interleaved')
+                .trigger('change')
+                .trigger('select2:select');
+            const checkboxSelector = `input.kb-staging-table-body__checkbox-input[data-file-name="${filePath}"]`;
+            let checkbox = container.querySelector(checkboxSelector);
+            expect(checkbox.disabled).toBeFalse();
+            expect(checkbox.checked).toBeTrue();
+
+            stagingViewer.setPath('/');
+            checkbox = container.querySelector(checkboxSelector);
+            expect(checkbox).toBeNull();
+
+            stagingViewer.setPath('/test_folder');
+            checkbox = container.querySelector(checkboxSelector);
+            expect(checkbox.checked).toBeTrue();
+        });
+
         it('should render the import selected button', async () => {
             await stagingViewer.render();
 
@@ -335,17 +400,25 @@ define([
         it('should enable the import button when a type is selected', async () => {
             await stagingViewer.render();
 
-            //find the fake sra reads one specifically
+            const importButton = container.querySelector('.kb-staging-table-import__button');
+            expect(importButton.disabled).toBeTrue();
+
+            // find the fake sra reads one specifically
             const selectDropdown = $container
                 .find('[data-download="fake_sra_reads.sra"]')
                 .siblings('select');
 
             selectDropdown.val('sra_reads').trigger('change').trigger('select2:select');
-            const importButton = container.querySelector('.kb-staging-table-import__button');
             expect(importButton.disabled).toBeFalse();
 
-            //check the checkbox
-            $container.find('input.kb-staging-table-body__checkbox-input:enabled').click();
+            // expect there's an enabled, checked checkbox
+            const checkbox = container.querySelector(
+                'input.kb-staging-table-body__checkbox-input[data-file-name="fake_sra_reads.sra"]'
+            );
+            expect(checkbox.disabled).toBeFalse();
+            expect(checkbox.checked).toBeTrue();
+            // the click function doesn't trigger the change event, gotta do that manually.
+            checkbox.click();
             expect(importButton.disabled).toBeTrue();
         });
 
@@ -378,33 +451,17 @@ define([
                 expect(Jupyter.narrative.hideOverlay).toHaveBeenCalled();
             });
 
-            it('Should initialize an import app with files in subdirectories', async () => {
+            it('Should initialize an import app with files in subdirectories', () => {
                 const subDir = 'a_subdirectory',
                     inputs = {
                         fastq_fwd_staging_file_name: subDir + '/' + fileName,
                         name: fileName + '_reads',
                         import_type: 'FASTQ/FASTA',
                     };
-                jasmine.Ajax.stubRequest(/.*\/staging_service\/list\/a_subdirectory?/).andReturn({
-                    status: 200,
-                    statusText: 'success',
-                    contentType: 'text/plain',
-                    responseHeaders: '',
-                    responseText: JSON.stringify([
-                        {
-                            name: fileName,
-                            path: fakeUser + '/' + subDir + '/' + fileName,
-                            mtime: 1532738637555,
-                            size: 49233,
-                            source: 'KBase upload',
-                            mappings: [],
-                        },
-                    ]),
-                });
                 spyOn(Jupyter.narrative, 'addAndPopulateApp');
                 spyOn(Jupyter.narrative, 'hideOverlay');
-                await stagingViewer.setPath('//' + subDir);
-                stagingViewer.initImportApp(fileType, fileName);
+
+                stagingViewer.initImportApp(fileType, subDir + '/' + fileName);
                 expect(Jupyter.narrative.addAndPopulateApp).toHaveBeenCalledWith(
                     appId,
                     tag,
@@ -433,19 +490,19 @@ define([
                 },
                 {
                     subdir: 'test_folder',
-                    filename: 'file_list.txt',
+                    filename: 'some_reads.fq',
                 },
             ].forEach((testCase) => {
-                it('Should initialize a bulk import cell with the expected inputs', async () => {
+                const filePath = (testCase.subdir ? testCase.subdir + '/' : '') + testCase.filename;
+                it(`Should initialize a bulk import cell with the expected input file ${filePath}`, async () => {
                     await stagingViewer.render();
                     if (testCase.subdir) {
                         stagingViewer.$elem.find(`button[data-name="${testCase.subdir}"]`).click();
-                        await stagingViewer.render();
                     }
 
                     //find the fake sra reads one specifically
                     const selectDropdown = $container
-                        .find(`[data-download='${testCase.filename}']`)
+                        .find(`[data-download='${filePath}']`)
                         .siblings('select');
 
                     //this auto-checks the checkbox
@@ -455,13 +512,9 @@ define([
                     expect(button.disabled).toBeFalse();
 
                     const expectedInputs = {};
-                    let expectedFilename = testCase.filename;
-                    if (testCase.subdir) {
-                        expectedFilename = testCase.subdir + '/' + expectedFilename;
-                    }
                     expectedInputs[importType] = {
                         appId,
-                        files: [expectedFilename],
+                        files: [filePath],
                     };
 
                     spyOn(Jupyter.narrative, 'insertBulkImportCell');
@@ -474,10 +527,40 @@ define([
                 });
             });
         });
-    });
 
-    //TODO
-    //Test to see if
-    // * for one autodetect mapping, the detected filetype is selected
-    // * for multiple mappings, they are available, and two OptGroups are available
+        describe('autodetect mapping tests', () => {
+            const filename = 'fake_sra_reads.sra',
+                typeId = 'sra_reads';
+            let $selectInput;
+
+            beforeEach(async () => {
+                await stagingViewer.render();
+                $selectInput = $container.find(`[data-download="${filename}"]`).siblings('select');
+            });
+
+            it('should render autodetected mappings in the type select dropdown', () => {
+                const $suggestedOptGroup = $selectInput.find('optgroup[label="Suggested Types"]');
+                const $otherOptGroup = $selectInput.find('optgroup[label="Other Types"]');
+                expect($suggestedOptGroup.length).toBe(1);
+                expect($otherOptGroup.length).toBe(1);
+
+                expect($suggestedOptGroup.children().length).toBe(1);
+                expect($suggestedOptGroup.find(`option[value="${typeId}"]`).length).toBe(1);
+            });
+
+            it('should automatically select the mapping if there is only one suggested file type', () => {
+                // only one suggested file type for the sra reads file, so just make sure it's selected!
+                expect($selectInput.val()).toBe(typeId);
+            });
+        });
+
+        // TODO file metadata viewer tests
+        xdescribe('file metadata view tests', () => {
+            it('should render the file metadata view when the caret is clicked', async () => {});
+
+            it('should render the same metadata, without a second network call, when the view is toggled twice', async () => {});
+
+            it('should restore the metadata view after a table data refresh', async () => {});
+        });
+    });
 });

@@ -7,15 +7,6 @@ const fs = require('fs');
 
 const CHROME_BINARY = require('puppeteer').executablePath();
 
-// const CHROME_BINARY = require('puppeteer').executablePath();
-// process.env.
-
-// Import environment variables used to control the tests.
-// Note that most have defaults, and many are only applicable
-// to testing services
-
-// For testing services
-
 /**
  * Given a preset key, return set set of common configuration keys for a given service, os, and browser
  * This is useful because testing services support a limited number of browser dimensions, which differs
@@ -180,14 +171,6 @@ const authToken = (() => {
 // Thus, we should keep the selenium-standalone dependency up to date to ensure
 // the most recent version of Firefox is supported.
 //
-// const drivers = {
-//     chrome: {
-//         version: '87.0.4280.20',
-//     },
-//     firefox: {
-//         version: '0.28.0'
-//     }
-// };
 
 const serviceConfigs = {
     'selenium-standalone': {
@@ -570,7 +553,7 @@ const wdioConfig = {
      * @param {Object} exitCode 0 - success, 1 - fail
      * @param {Object} config wdio configuration object
      * @param {Array.<Object>} capabilities list of capabilities details
-     * @param {<Object>} results object containing test results
+     * @param {Object} results object containing test results
      */
     // onComplete: function(exitCode, config, capabilities, results) {
     // },

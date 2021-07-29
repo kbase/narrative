@@ -78,8 +78,7 @@ define([
                             [
                                 div(
                                     {
-                                        style:
-                                            'display:inline-block; width: 34px; vertical-align: top;',
+                                        style: 'display:inline-block; width: 34px; vertical-align: top;',
                                     },
                                     [
                                         span({
@@ -96,7 +95,6 @@ define([
                                     [
                                         span({ 'data-element': 'realname' }, displayName),
                                         br(),
-                                        i({}, userName),
                                         i({ 'data-element': 'username' }, userName),
                                     ]
                                 ),

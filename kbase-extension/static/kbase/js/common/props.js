@@ -289,23 +289,27 @@ define([], () => {
             return true;
         }
 
+        function getRawObject() {
+            return obj;
+        }
+
+        function getLastRawObject() {
+            return lastObj;
+        }
+
         const api = {
-            setItem: setItem,
-            hasItem: hasItem,
-            getItem: getItem,
-            copyItem: copyItem,
-            incrItem: incrItem,
-            deleteItem: deleteItem,
-            pushItem: pushItem,
-            popItem: popItem,
-            reset: reset,
-            getRawObject: function () {
-                return obj;
-            },
-            getLastRawObject: function () {
-                return lastObj;
-            },
-            getHistoryCount: getHistoryCount,
+            setItem,
+            hasItem,
+            getItem,
+            copyItem,
+            incrItem,
+            deleteItem,
+            pushItem,
+            popItem,
+            reset,
+            getRawObject,
+            getLastRawObject,
+            getHistoryCount,
         };
         return api;
     }
@@ -314,9 +318,9 @@ define([], () => {
         make: function (config) {
             return factory(config);
         },
-        getDataItem: getDataItem,
-        setDataItem: setDataItem,
-        pushDataItem: pushDataItem,
-        popDataItem: popDataItem,
+        getDataItem,
+        setDataItem,
+        pushDataItem,
+        popDataItem,
     };
 });

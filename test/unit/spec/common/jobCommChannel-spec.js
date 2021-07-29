@@ -140,7 +140,7 @@ define(['common/jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUti
             },
             {
                 channel: 'request-job-updates-start',
-                message: { jobId: 'someJob', parentJobId: 'someParent' },
+                message: { jobId: 'someJob' },
                 expected: {
                     request_type: 'start_job_update',
                     job_id: 'someJob',

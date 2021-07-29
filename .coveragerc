@@ -1,3 +1,10 @@
 [run]
 omit =
-    src/biokbase/narrative/tests/*
+    */biokbase/narrative/tests/*
+    */biokbase/narrative/sphinxext/*
+
+[html]
+directory = ./python-coverage
+
+[xml]
+output = ./python-coverage/coverage.xml

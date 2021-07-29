@@ -1,33 +1,21 @@
-
-
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'narrativeConfig',
-		'kbaseAuthenticatedWidget',
-		'jquery-dataTables'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		Config,
-		kbaseAuthenticatedWidget,
-		jquery_dataTables
-	) {
-
-    var workspaceURL = Config.url('workspace');
-    var loadingImage = Config.get('loading_gif');
+define([
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+    'narrativeConfig',
+    'kbaseAuthenticatedWidget',
+    'jquery-dataTables',
+], (KBWidget, bootstrap, $, Config, kbaseAuthenticatedWidget, jquery_dataTables) => {
+    const workspaceURL = Config.url('workspace');
+    const loadingImage = Config.get('loading_gif');
     return KBWidget({
         name: 'kbaseMatrix2DAbstract',
-        parent : kbaseAuthenticatedWidget,
+        parent: kbaseAuthenticatedWidget,
         version: '1.0.0',
         options: {
             workspaceID: null,
             matrixID: null,
         },
-
 
         // Prefix for all div ids
         pref: null,
@@ -38,21 +26,20 @@ define (
         // Matrix
         matrix: null,
 
-        init: function(options) {
+        init: function (options) {
             this._super(options);
             this.pref = this.uuid();
 
             // Create a message pane
-            this.$messagePane = $("<div/>")
-                .addClass("kbwidget-message-pane kbwidget-hide-message")
+            this.$messagePane = $('<div/>')
+                .addClass('kbwidget-message-pane kbwidget-hide-message')
                 .appendTo(this.$elem);
 
             return this;
         },
 
-        loggedInCallback: function(event, auth) {
-
-           // Build a client
+        loggedInCallback: function (event, auth) {
+            // Build a client
             this.wsClient = new Workspace(workspaceURL, auth);
 
             // Let's go...
@@ -60,36 +47,36 @@ define (
             return this;
         },
 
-        loggedOutCallback: function(event, auth) {
+        loggedOutCallback: function (event, auth) {
             this.isLoggedIn = false;
             return this;
         },
 
-        loadAndRender: function(){
-            var self = this;
+        loadAndRender: function () {
+            const self = this;
             self.loading(true);
 
-//            self.setTestParameters();
-            var ref = self.buildObjectIdentity(this.options.workspaceID, this.options.matrixID);
-            self.wsClient.get_objects([ref],
-                function(data) {
+            //            self.setTestParameters();
+            const ref = self.buildObjectIdentity(this.options.workspaceID, this.options.matrixID);
+            self.wsClient.get_objects(
+                [ref],
+                (data) => {
                     self.matrix = data[0].data;
                     self.render();
                 },
-                function(error){
+                (error) => {
                     self.clientError(error);
-//                    self.clientError('Can not load the matrix');
+                    //                    self.clientError('Can not load the matrix');
                 }
             );
         },
 
         // To be overriden
-        render: function(){
+        render: function () {
             this.loading(false);
         },
 
         ////////////////// Matrix2D API /////////////////////////////////////////////
-
 
         /*
         * Checks whether the column or row metadata (array of PropertyValue) has a given PropertyValue defined by
@@ -98,13 +85,13 @@ define (
         * @return:
             boolean
         */
-        hasProperty: function(properties, category, propertyName, propertyUnit, propertyValue){
-            for(var i in properties){
-                var pv = properties[i];
-                if(pv.category != category) continue;
-                if(pv.property_name != propertyName) continue;
-                if(pv.property_unit != propertyUnit) continue;
-                if(pv.property_value != propertyValue) continue;
+        hasProperty: function (properties, category, propertyName, propertyUnit, propertyValue) {
+            for (const i in properties) {
+                const pv = properties[i];
+                if (pv.category != category) continue;
+                if (pv.property_name != propertyName) continue;
+                if (pv.property_unit != propertyUnit) continue;
+                if (pv.property_value != propertyValue) continue;
                 return true;
             }
             return false;
@@ -117,11 +104,11 @@ define (
         * @return:
             [PropertyValue]
         */
-        getProperties: function(properties, category){
-            var selectedProperties = [];
-            for(var i in properties){
-                var pv = properties[i];
-                if(pv.category != category) continue;
+        getProperties: function (properties, category) {
+            const selectedProperties = [];
+            for (const i in properties) {
+                const pv = properties[i];
+                if (pv.category != category) continue;
                 selectedProperties.push(pv);
             }
             return selectedProperties;
@@ -134,11 +121,11 @@ define (
         * @return:
             PropertyValue
         */
-        getProperty: function(properties, category, propertyName){
-            for(var i in properties){
-                var pv = properties[i];
-                if(pv.category != category) continue;
-                if(pv.property_name != propertyName) continue;
+        getProperty: function (properties, category, propertyName) {
+            for (const i in properties) {
+                const pv = properties[i];
+                if (pv.category != category) continue;
+                if (pv.property_name != propertyName) continue;
                 return pv;
             }
             return null;
@@ -151,11 +138,11 @@ define (
         * @return:
             scalar - property_value
         */
-        getPropertyValue: function(properties, category, propertyName){
-            for(var i in properties){
-                var pv = properties[i];
-                if(pv.category != category) continue;
-                if(pv.property_name != propertyName) continue;
+        getPropertyValue: function (properties, category, propertyName) {
+            for (const i in properties) {
+                const pv = properties[i];
+                if (pv.category != category) continue;
+                if (pv.property_name != propertyName) continue;
                 return pv.property_value;
             }
             return null;
@@ -168,12 +155,12 @@ define (
         * @return:
             [scalar] - list of property_value
         */
-        getPropertyValues: function(crsMetadata, category, propertyName){
-            var values = [];
-            for(var id in crsMetadata){
-                var properties = crsMetadata[id];
-                var val = this.getPropertyValue(properties, category, propertyName);
-                if(val != null){
+        getPropertyValues: function (crsMetadata, category, propertyName) {
+            const values = [];
+            for (const id in crsMetadata) {
+                const properties = crsMetadata[id];
+                const val = this.getPropertyValue(properties, category, propertyName);
+                if (val != null) {
                     values.push(val);
                 }
             }
@@ -196,22 +183,22 @@ define (
             ]
         }
         */
-        groupCrowsByPropertyValue: function(crowsIds, crowsMetadata, category, propertyName){
-            var groupId2CrowsMetadata = {};
-            for(var crowIndex in crowsIds){
-                var crowId = crowsIds[crowIndex];
-                var crowMetadata = crowsMetadata[crowId];
-                var groupValue = this.getPropertyValue(crowMetadata, category, propertyName);
-                if( groupValue != null){
-                    var crowList = groupId2CrowsMetadata[groupValue];
-                    if( crowList == null){
+        groupCrowsByPropertyValue: function (crowsIds, crowsMetadata, category, propertyName) {
+            const groupId2CrowsMetadata = {};
+            for (const crowIndex in crowsIds) {
+                const crowId = crowsIds[crowIndex];
+                const crowMetadata = crowsMetadata[crowId];
+                const groupValue = this.getPropertyValue(crowMetadata, category, propertyName);
+                if (groupValue != null) {
+                    let crowList = groupId2CrowsMetadata[groupValue];
+                    if (crowList == null) {
                         crowList = [];
                         groupId2CrowsMetadata[groupValue] = crowList;
                     }
                     crowList.push({
                         id: crowId,
                         index: crowIndex,
-                        properties: crowMetadata
+                        properties: crowMetadata,
                     });
                 }
             }
@@ -242,35 +229,34 @@ define (
             ]
 
         */
-        getNumericPropertyCourse: function(crowsIds, crowsMetadata, category, propertyName){
-            var points = [];
+        getNumericPropertyCourse: function (crowsIds, crowsMetadata, category, propertyName) {
+            const points = [];
 
-            for(var crowIndex in crowsIds){
-                var crowId = crowsIds[crowIndex];
-                var crowMetadata = crowsMetadata[crowId];
+            for (const crowIndex in crowsIds) {
+                const crowId = crowsIds[crowIndex];
+                const crowMetadata = crowsMetadata[crowId];
 
-                var value = null;
-                for(var i in crowMetadata){
-                    var pv = crowMetadata[i];
-                    if(pv.category != category) continue;
-                    if(propertyName != null && pv.property_name != propertyName) continue;
+                let value = null;
+                for (const i in crowMetadata) {
+                    const pv = crowMetadata[i];
+                    if (pv.category != category) continue;
+                    if (propertyName != null && pv.property_name != propertyName) continue;
                     value = parseFloat(pv.property_value);
                     break;
                 }
-                if(value == null) continue;
+                if (value == null) continue;
                 points.push({
                     value: value,
                     index: crowIndex,
-                    id: crowId
+                    id: crowId,
                 });
             }
 
-            points.sort(function (a, b) {
-                return a.value > b.value ? 1 : ( a.value < b.value ? -1 : 0);
+            points.sort((a, b) => {
+                return a.value > b.value ? 1 : a.value < b.value ? -1 : 0;
             });
             return points;
         },
-
 
         /*
         * The method iterates across all columns or rows metadata and calculates basic
@@ -292,20 +278,20 @@ define (
         }
 
         */
-        getNumericProperyStat: function(crowsMetadata, category, propertyName){
-            var valueMin = null;
-            var valueMax = null;
-            var pointsCount = 0;
-            var valueUnit = null;
-            for(var crId in crowsMetadata){
-                var crMetadata = crowsMetadata[crId];
-                var value = null;
-                for(var i in crMetadata){
-                    var pv = crMetadata[i];
-                    if(pv.category != category) {
+        getNumericProperyStat: function (crowsMetadata, category, propertyName) {
+            let valueMin = null;
+            let valueMax = null;
+            let pointsCount = 0;
+            let valueUnit = null;
+            for (const crId in crowsMetadata) {
+                const crMetadata = crowsMetadata[crId];
+                let value = null;
+                for (const i in crMetadata) {
+                    const pv = crMetadata[i];
+                    if (pv.category != category) {
                         continue;
                     }
-                    if(propertyName != null && pv.property_name != propertyName) continue;
+                    if (propertyName != null && pv.property_name != propertyName) continue;
 
                     // If property name is not defined as an input parameter,
                     // than we will identify automaticlly by taking the frist one from the given category
@@ -315,28 +301,26 @@ define (
                     valueUnit = pv.property_unit;
                     break;
                 }
-                if(value == null){
+                if (value == null) {
                     // this should be error
                     continue;
                 }
-                pointsCount ++;
-                if(valueMin == null || value < valueMin){
+                pointsCount++;
+                if (valueMin == null || value < valueMin) {
                     valueMin = value;
                 }
-                if(valueMax == null || value > valueMax){
+                if (valueMax == null || value > valueMax) {
                     valueMax = value;
                 }
             }
             return {
-                        propertyName: propertyName,
-                        valueMin : valueMin,
-                        valueMax : valueMax,
-                        valueUnit: valueUnit,
-                        pointsCount: pointsCount
-                   };
-
+                propertyName: propertyName,
+                valueMin: valueMin,
+                valueMax: valueMax,
+                valueUnit: valueUnit,
+                pointsCount: pointsCount,
+            };
         },
-
 
         /*
         * Creates a lookup table to convert columnId into column index. Colummn index is needed for fast access of
@@ -351,11 +335,11 @@ define (
             }
 
         */
-        buildColumnIds2ColumnIndex: function(matrix){
-            var columnIds2ColumnIndex = {};
-            var columnIds = matrix.data.col_ids;
-            for(var columnIndex in columnIds){
-                columnIds2ColumnIndex[ columnIds[columnIndex] ] = columnIndex;
+        buildColumnIds2ColumnIndex: function (matrix) {
+            const columnIds2ColumnIndex = {};
+            const columnIds = matrix.data.col_ids;
+            for (const columnIndex in columnIds) {
+                columnIds2ColumnIndex[columnIds[columnIndex]] = columnIndex;
             }
             return columnIds2ColumnIndex;
         },
@@ -366,12 +350,12 @@ define (
         * @return
             string
         */
-        propertiesToString: function(properties){
-            var str = "";
-            for(var i in properties){
-                var pv  = properties[i];
-                if(str){
-                    str += "; ";
+        propertiesToString: function (properties) {
+            let str = '';
+            for (const i in properties) {
+                const pv = properties[i];
+                if (str) {
+                    str += '; ';
                 }
                 str += this.propertyValueToString(pv);
             }
@@ -384,130 +368,128 @@ define (
         * @return
             string
         */
-        propertyValueToString: function(pv){
-//            return pv.property_name
-//                    + ": " + pv.property_value
-//                    +  (pv.property_unit ? " " + pv.property_unit : "");
-            return pv.property_name
-                    + ": " + pv.property_value
-                    +  (pv.property_unit ? "" + pv.property_unit : "");
+        propertyValueToString: function (pv) {
+            //            return pv.property_name
+            //                    + ": " + pv.property_value
+            //                    +  (pv.property_unit ? " " + pv.property_unit : "");
+            return (
+                pv.property_name +
+                ': ' +
+                pv.property_value +
+                (pv.property_unit ? '' + pv.property_unit : '')
+            );
         },
 
         ////////////////// WIDGETS /////////////////////////////////////////////
 
-        buildTable: function($container, data, columns, emptyTableMessage){
-            var pref = self.pref;
+        buildTable: function ($container, data, columns, emptyTableMessage) {
+            const pref = self.pref;
 
-            var iDisplayLength = 10;
-            var style = 'lftip';
-            if(data.length <= iDisplayLength) { style = 'fti'; }
+            const iDisplayLength = 10;
+            let style = 'lftip';
+            if (data.length <= iDisplayLength) {
+                style = 'fti';
+            }
 
-            var table = $('<table>')
-                .attr('id', pref+'conditions-table')
+            const table = $('<table>')
+                .attr('id', pref + 'conditions-table')
                 .addClass('table table-bordered table-striped')
                 .css('width', '100%')
                 .css('margin-left', '0px')
                 .css('margin-right', '0px')
                 .appendTo($container)
-                .dataTable( {
-                    "sDom": style,
-                    "iDisplayLength": iDisplayLength,
-                    "aaData": data,
-                    "aoColumns": columns,
-                    "oLanguage": {
-                                "sEmptyTable": emptyTableMessage,
-                                "sSearch": "Search: "
-                    }
-                } );
-
+                .dataTable({
+                    sDom: style,
+                    iDisplayLength: iDisplayLength,
+                    aaData: data,
+                    aoColumns: columns,
+                    oLanguage: {
+                        sEmptyTable: emptyTableMessage,
+                        sSearch: 'Search: ',
+                    },
+                });
         },
 
-        buildMatrixOverview: function($container){
-            var pref = self.pref;
+        buildMatrixOverview: function ($container) {
+            const pref = self.pref;
 
-
-            var $tableOverview = $('<table>')
-                .attr('id',pref+'overview-table')
+            const $tableOverview = $('<table>')
+                .attr('id', pref + 'overview-table')
                 .addClass('table table-striped table-bordered')
-                .css('width','100%')
-                .css('margin-left','0px')
-                .css('margin-right','0px')
+                .css('width', '100%')
+                .css('margin-left', '0px')
+                .css('margin-right', '0px')
                 .appendTo($container);
 
-            for(var i in this.matrix.metadata.matrix_metadata){
-                var md = this.matrix.metadata.matrix_metadata[i];
+            for (const i in this.matrix.metadata.matrix_metadata) {
+                const md = this.matrix.metadata.matrix_metadata[i];
 
-                var label = md.category;
-                if( md.property_name != undefined && md.property_name != ''){
-                    label += "." + md.property_name;
+                let label = md.category;
+                if (md.property_name != undefined && md.property_name != '') {
+                    label += '.' + md.property_name;
                 }
 
-                $tableOverview.append( this.makeRow(
-                    label,
-                    md.property_value + (md.property_unit ? md.property_unit : "" ) ) );
+                $tableOverview.append(
+                    this.makeRow(
+                        label,
+                        md.property_value + (md.property_unit ? md.property_unit : '')
+                    )
+                );
             }
         },
 
-        makeRow: function(name, value) {
-            var $row = $("<tr/>")
-                       .append($("<th />").css('width','20%').append(name))
-                       .append($("<td />").append(value));
+        makeRow: function (name, value) {
+            const $row = $('<tr/>')
+                .append($('<th />').css('width', '20%').append(name))
+                .append($('<td />').append(value));
             return $row;
         },
 
-        loading: function(isLoading) {
-            if (isLoading)
-                this.showMessage("<img src='" + loadingImage + "'/>");
-            else
-                this.hideMessage();
+        loading: function (isLoading) {
+            if (isLoading) this.showMessage("<img src='" + loadingImage + "'/>");
+            else this.hideMessage();
         },
 
-        showMessage: function(message) {
-            var span = $("<span/>").append(message);
+        showMessage: function (message) {
+            const span = $('<span/>').append(message);
 
             this.$messagePane.append(span);
             this.$messagePane.show();
         },
 
-        hideMessage: function() {
+        hideMessage: function () {
             this.$messagePane.hide();
             this.$messagePane.empty();
         },
 
-        clientError: function(error){
+        clientError: function (error) {
             this.loading(false);
             this.showMessage(error.error.error);
         },
 
-        uuid: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
-                function(c) {
-                    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                    return v.toString(16);
-                });
+        uuid: function () {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+                const r = (Math.random() * 16) | 0,
+                    v = c == 'x' ? r : (r & 0x3) | 0x8;
+                return v.toString(16);
+            });
         },
 
-        buildObjectIdentity: function(workspaceID, objectID, objectVer, wsRef) {
-            var obj = {};
+        buildObjectIdentity: function (workspaceID, objectID, objectVer, wsRef) {
+            const obj = {};
             if (wsRef) {
                 obj['ref'] = wsRef;
             } else {
-                if (/^\d+$/.exec(workspaceID))
-                    obj['wsid'] = workspaceID;
-                else
-                    obj['workspace'] = workspaceID;
+                if (/^\d+$/.exec(workspaceID)) obj['wsid'] = workspaceID;
+                else obj['workspace'] = workspaceID;
 
                 // same for the id
-                if (/^\d+$/.exec(objectID))
-                    obj['objid'] = objectID;
-                else
-                    obj['name'] = objectID;
+                if (/^\d+$/.exec(objectID)) obj['objid'] = objectID;
+                else obj['name'] = objectID;
 
-                if (objectVer)
-                    obj['ver'] = objectVer;
+                if (objectVer) obj['ver'] = objectVer;
             }
             return obj;
-        }
-
+        },
     });
 });

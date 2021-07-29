@@ -5,35 +5,32 @@
     Customize bootstrap styles
 */
 
-
 /*
-  Bs recommends h4 for the modal title, but this is overridden by the general 
+  Bs recommends h4 for the modal title, but this is overridden by the general
   purpose kbase h4 style. Generally, I (Erik) do not like using semantic tags
   in bootstrap anyway, especially header tags which inherently imply a specific
   document structure which modal dialogs in no way can represent!)
 */
 
 .modal .modal-title {
-    font-family: "Oxygen", Arial, sans-serif;
-    font-size: 130%;
-    font-weight: bold;
-    color: #2e618d;
+  font-family: Oxygen, Arial, sans-serif;
+  font-size: 130%;
+  font-weight: bold;
+  color: #2e618d;
 }
 
-
 /*
-    Unset the global modal title color set above for alert modals, which 
+    Unset the global modal title color set above for alert modals, which
     may set the color style based on the alert type.
 */
 
 .modal.kb-modal-alert .modal-title {
-    color: unset;
+  color: unset;
 }
-
 
 /*
     The BS checkbox appears too low, due to the top margin, when used with a label
-    in the recommended manner. 
+    in the recommended manner.
     Note: I don't understand why BS handles checkbox styling as they do, turning
     the checkbox into relatively posiioned and then pushing the label to checkbox
     to the left and down (at the same time given the container extra margin to
@@ -42,77 +39,73 @@
 */
 
 .modal input[type="checkbox"] {
-    margin-top: 1px;
+  margin-top: 1px;
 }
 
 .panel.kb-panel-light {
-    border: none;
-    margin-bottom: 10px;
+  border: none;
+  margin-bottom: 10px;
 }
-
 
 /* colors copied shamelessly from peeking at bootstrap
    http://getbootstrap.com/css/
 */
 
 .panel-danger.kb-panel-light .panel-title {
-    color: #a94442;
+  color: #a94442;
 }
 
 .panel-success.kb-panel-light .panel-title {
-    color: #3c763d;
+  color: #3c763d;
 }
 
 .panel-warning.kb-panel-light .panel-title {
-    color: #8a6d3b;
+  color: #8a6d3b;
 }
 
 .panel-info.kb-panel-light .panel-title {
-    color: blue;
+  color: blue;
 }
 
-.panel.kb-panel-light>.panel-heading {
-    background-color: transparent;
-    font-weight: bold;
-    color: #666;
-    padding-left: 0;
-    padding-bottom: 2px;
-    border-bottom: 1px #CCC solid;
+.panel.kb-panel-light > .panel-heading {
+  background-color: transparent;
+  font-weight: bold;
+  color: #666;
+  padding-left: 0;
+  padding-bottom: 2px;
+  border-bottom: 1px #ccc solid;
 }
 
 .panel.kb-panel-light .panel-body {
-    padding-top: 0;
-    padding: 0;
+  padding: 0;
 }
 
 .panel.kb-panel-container {
-    border: none;
+  border: none;
 }
 
-.panel.kb-panel-container>.panel-heading {
-    background-color: transparent;
-    font-weight: bold;
-    xcolor: #2e618d;
-    padding-left: 0;
-    padding-bottom: 2px;
-    border-bottom: 2px #CCC solid;
-    margin-bottom: 10px;
+.panel.kb-panel-container > .panel-heading {
+  background-color: transparent;
+  font-weight: bold;
+  padding-left: 0;
+  padding-bottom: 2px;
+  border-bottom: 2px #ccc solid;
+  margin-bottom: 10px;
 }
 
 .panel.kb-panel-container .panel-body {
-    padding-top: 0;
+  padding-top: 0;
 }
 
-
 /*
-  The button bar in a cell widgetis located at the bottom of the inputs, but 
+  The button bar in a cell widgetis located at the bottom of the inputs, but
   above any outputs.
   These styles attempt to help the button toolbar, which represents the actions
   the user can take, be visually distinct from the other bits surrounding it.
 */
 
 .btn-toolbar.kb-btn-toolbar-cell-widget {
-    margin-bottom: 20px;
-    background-color: #EEE;
-    padding: 6px;
+  margin-bottom: 20px;
+  background-color: #eee;
+  padding: 6px;
 }

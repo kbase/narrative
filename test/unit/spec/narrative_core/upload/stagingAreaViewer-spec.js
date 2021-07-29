@@ -1,32 +1,18 @@
-/*global define*/
-/*global describe, it, xit, expect*/
-/*global jasmine*/
-/*global beforeEach, afterEach*/
-/*jslint white: true*/
-
-define ([
+define([
     'jquery',
     'kbase/js/widgets/narrative_core/upload/stagingAreaViewer',
     'base/js/namespace',
     'kbaseNarrative',
-    'testUtil'
-], function(
-    $,
-    StagingAreaViewer,
-    Jupyter,
-    Narrative,
-    TestUtil
-) {
+], ($, StagingAreaViewer, Jupyter) => {
     'use strict';
 
-    describe('Test the staging area viewer widget', function() {
-        let stagingViewer,
-            $targetNode = $('<div>'),
-            startingPath = '/',
-            updatePathFn = function(newPath) { },
+    describe('The staging area viewer widget', () => {
+        let stagingViewer, $targetNode, parentNode;
+        const startingPath = '/',
+            updatePathFn = () => {},
             fakeUser = 'notAUser';
 
-        beforeEach(function() {
+        beforeEach(() => {
             jasmine.Ajax.install();
             jasmine.Ajax.stubRequest(/.*\/staging_service\/list\/?/).andReturn({
                 status: 200,
@@ -35,142 +21,176 @@ define ([
                 responseHeaders: '',
                 responseText: JSON.stringify([
                     {
-                        name: "test_folder",
-                        path: fakeUser + "/test_folder",
+                        name: 'test_folder',
+                        path: fakeUser + '/test_folder',
                         mtime: 1532738637499,
                         size: 34,
-                        isFolder: true
-                    }, {
-                        name: "file_list.txt",
-                        path: fakeUser + "/test_folder/file_list.txt",
+                        isFolder: true,
+                    },
+                    {
+                        name: 'file_list.txt',
+                        path: fakeUser + '/test_folder/file_list.txt',
                         mtime: 1532738637555,
                         size: 49233,
-                        source: 'KBase upload'
-                    }
-                ])
+                        source: 'KBase upload',
+                    },
+                ]),
             });
             Jupyter.narrative = {
                 userId: fakeUser,
-                getAuthToken: () => { return 'fakeToken'; },
+                getAuthToken: () => 'fakeToken',
                 sidePanel: {
-                    '$dataWidget': {
-                        '$overlayPanel': {}
+                    $dataWidget: {
+                        $overlayPanel: {},
                     },
-                    '$methodsWidget': {
-                        currentTag: 'release'
-                    }
+                    $methodsWidget: {
+                        currentTag: 'release',
+                    },
                 },
                 showDataOverlay: () => {},
-                addAndPopulateApp: (id, tag, inputs) => {},
+                addAndPopulateApp: () => {},
                 hideOverlay: () => {},
             };
+            parentNode = $('<div id="stagingAreaDivParent">');
+            $targetNode = $('<div>');
+            parentNode.append($targetNode);
             stagingViewer = new StagingAreaViewer($targetNode, {
                 path: startingPath,
                 updatePathFn: updatePathFn,
                 userInfo: {
                     user: fakeUser,
-                    globusLinked: false
-                }
+                    globusLinked: false,
+                },
+                refreshIntervalDuration: 2,
             });
         });
 
         afterEach(() => {
-            jasmine.Ajax.uninstall();
-            $targetNode.remove();
+            parentNode.remove();
+            stagingViewer.deactivate();
             stagingViewer = null;
+            jasmine.Ajax.uninstall();
+            Jupyter.narrative = null;
         });
 
-        it('Should initialize properly', function() {
+        it('Should initialize properly', () => {
             expect(stagingViewer).not.toBeNull();
         });
 
-        it('Should render properly', function() {
-            stagingViewer.render();
+        it('Should render properly', async () => {
+            await stagingViewer.render();
             expect(stagingViewer).not.toBeNull();
         });
 
-        it('Should render properly with a Globus linked account', (done) => {
-            let $node = $('<div>'),
+        it('Should render properly with a Globus linked account', async () => {
+            const $node = $('<div>'),
                 linkedStagingViewer = new StagingAreaViewer($node, {
                     path: startingPath,
                     updatePathFn: updatePathFn,
                     userInfo: {
                         user: fakeUser,
-                        globusLinked: true
-                    }
+                        globusLinked: true,
+                    },
                 });
-            linkedStagingViewer.render()
-                .then(() => {
-                    expect($node.html()).toContain('Or upload to this staging area by using');
-                    expect($node.html()).toContain('https://app.globus.org/file-manager?destination_id=c3c0a65f-5827-4834-b6c9-388b0b19953a&amp;destination_path=%2F' + fakeUser);
-                    done();
-                });
+            await linkedStagingViewer.render();
+            const $globusButton = $node.find('#globusLinked');
+            expect($globusButton).toBeDefined();
+            expect($globusButton.html()).toContain('Upload with Globus');
+            expect($globusButton.attr('href')).toEqual(
+                'https://app.globus.org/file-manager?destination_id=c3c0a65f-5827-4834-b6c9-388b0b19953a&destination_path=' +
+                    fakeUser
+            );
         });
 
-        it('Should render properly without a Globus linked account', () => {
-            expect($targetNode.html()).not.toContain('Or upload to this staging area by using');
+        it('Should render properly without a Globus linked account', async () => {
+            await stagingViewer.render();
+            const $globusButton = $targetNode.find('#globusNotLinked');
+            expect($globusButton).toBeDefined();
+            expect($globusButton.html()).toContain('Upload with Globus');
+            expect($globusButton.attr('href')).toEqual('https://docs.kbase.us/data/globus');
         });
 
-        it('Should start a help tour', function() {
-            stagingViewer.render();
+        it('Should render a url button', async () => {
+            await stagingViewer.render();
+            const $urlButton = $targetNode.find('.web_upload_div');
+            expect($urlButton).toBeDefined();
+            expect($urlButton.html()).toContain('Upload with URL');
+        });
+
+        it('Should start a help tour', async () => {
+            await stagingViewer.render();
             stagingViewer.startTour();
             expect(stagingViewer.tour).not.toBeNull();
+            // clean up the DOM afterwards
+            stagingViewer.tour.tour.end();
         });
 
-        it('Should update its view with a proper subpath', function(done) {
-            stagingViewer.updateView()
-                .then(function() {
-                    done();
-                })
-                .catch(err => {
-                    console.log(err);
-                    fail();
-                });
+        // FIXME: test requires expectations
+        xit('Should update its view with a proper subpath', async () => {
+            await stagingViewer.updateView();
         });
 
-        it('Should show an error when a path does not exist', (done, fail) => {
+        it('Should show an error when a path does not exist', async () => {
             const errorText = 'An error occurred while fetching your files';
             jasmine.Ajax.stubRequest(/.*\/staging_service\/list\/foo?/).andReturn({
                 status: 404,
                 statusText: 'success',
                 contentType: 'text/plain',
                 responseHeaders: '',
-                responseText: errorText
+                responseText: errorText,
             });
 
-            stagingViewer.setPath('//foo')
-                .then(() => {
-                    expect($targetNode.find('.alert.alert-danger').html()).toContain(errorText);
-                    // reset path. something gets cached with how async tests run.
-                    stagingViewer.setPath('/');
-                    done();
-                });
+            await stagingViewer.setPath('//foo');
+            expect($targetNode.find('.alert.alert-danger').html()).toContain(errorText);
         });
 
-        it('Should show a "no files" next when a path has no files', (done) => {
+        it('Should show a "no files" next when a path has no files', async () => {
             jasmine.Ajax.stubRequest(/.*\/staging_service\/list\/empty?/).andReturn({
                 status: 200,
                 statusText: 'success',
                 contentType: 'text/plain',
                 responseHeaders: '',
-                responseText: JSON.stringify([])
+                responseText: JSON.stringify([]),
             });
 
-            stagingViewer.setPath('//empty')
-                .then(() => {
-                    expect($targetNode.find('#kb-data-staging-table').html()).toContain('No files found.');
-                    // reset path. something gets cached with how async tests run.
-                    stagingViewer.setPath('/');
-                    done();
-                });
+            await stagingViewer.setPath('//empty');
+            expect($targetNode.find('#kb-data-staging-table').html()).toContain('No files found.');
         });
 
-        it('Should respond to activate and deactivate commands', () => {
+        it('Should respond to activate and deactivate commands', async () => {
             expect(stagingViewer.refreshInterval).toBeFalsy();
-            stagingViewer.activate();
+            await stagingViewer.activate();
             expect(stagingViewer.refreshInterval).toBeDefined();
             stagingViewer.deactivate();
             expect(stagingViewer.refreshInterval).toBeUndefined();
+        });
+
+        it('Should have clickable folder icons', async () => {
+            spyOn(stagingViewer, 'updatePathFn');
+            await stagingViewer.render();
+            stagingViewer.$elem.find('button[data-name="test_folder"]').click();
+            expect(stagingViewer.updatePathFn).toHaveBeenCalledWith('//test_folder');
+        });
+
+        it('Should have clickable folder names', async () => {
+            spyOn(stagingViewer, 'updatePathFn');
+            await stagingViewer.render();
+            stagingViewer.$elem.find('span.kb-data-staging-folder').click();
+            expect(stagingViewer.updatePathFn).toHaveBeenCalledWith('//test_folder');
+        });
+
+        it('Should have multi-clicked folder buttons only fire once', async () => {
+            spyOn(stagingViewer, 'updatePathFn');
+            await stagingViewer.render();
+            stagingViewer.$elem.find('button[data-name]').click().click().click();
+            expect(stagingViewer.updatePathFn).toHaveBeenCalledTimes(1);
+        });
+
+        it('Should have multi-clicked folder names only fire once', async () => {
+            spyOn(stagingViewer, 'updatePathFn');
+            await stagingViewer.render();
+            stagingViewer.$elem.find('span.kb-data-staging-folder').click().click().click();
+            expect(stagingViewer.updatePathFn).toHaveBeenCalledTimes(1);
         });
 
         it('Should initialize an import app with the expected inputs', () => {
@@ -181,11 +201,11 @@ define ([
                 inputs = {
                     fastq_fwd_staging_file_name: fileName,
                     name: fileName + '_reads',
-                    import_type: 'FASTQ/FASTA'
+                    import_type: 'FASTQ/FASTA',
                 };
             spyOn(Jupyter.narrative, 'addAndPopulateApp');
             spyOn(Jupyter.narrative, 'hideOverlay');
-            stagingViewer.initImportApp(fileType, {name: fileName});
+            stagingViewer.initImportApp(fileType, { name: fileName });
             expect(Jupyter.narrative.addAndPopulateApp).toHaveBeenCalledWith(appId, tag, inputs);
             expect(Jupyter.narrative.hideOverlay).toHaveBeenCalled();
         });
@@ -200,10 +220,11 @@ define ([
 
         it('Creates a downloader iframe when requested', () => {
             stagingViewer.downloadFile('some_url');
-            let dlNode = document.getElementById('hiddenDownloader');
+            const dlNode = document.getElementById('hiddenDownloader');
             expect(dlNode).toBeDefined();
             expect(dlNode.getAttribute('src')).toEqual('some_url');
+            // clean up the DOM
+            $(dlNode).remove();
         });
-
     });
 });

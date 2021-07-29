@@ -1,64 +1,83 @@
 define([
-    'testUtil',
     'common/runtime',
     'widgets/appWidgets2/input/newObjectInput',
     'base/js/namespace',
-    'kbaseNarrative'
-], (
-    TestUtil,
-    Runtime,
-    NewObjectInput,
-    Jupyter,
-    Narrative
-) => {
+    'narrativeMocks',
+], (Runtime, NewObjectInput, Jupyter, Mocks) => {
     'use strict';
-    let bus,
-        testConfig,
+    let bus, testConfig, runtime, node;
+    const AUTH_TOKEN = 'fakeAuthToken',
         required = false,
-        runtime,
-        node,
-        defaultValue = 'apple';
-    const wsObjName = 'SomeObject',
+        defaultValue = 'apple',
+        wsObjName = 'SomeObject',
         wsObjType = 'SomeModule.SomeType',
         wsObjMapping = {
-            '1': [null],
-            '2': [[1, wsObjName, wsObjType, '2019-07-23T22:42:44+0000', 1, 'someuser', 2, 'someworkspace', 'somehash', 123, null]],
-            '3': [[1, wsObjName, 'SomeOtherModule.SomeOtherType', '2019-07-23T22:42:44+0000', 1, 'someotheruser', 3, 'someotherworkspace', 'somehash', 123, null]]
+            1: [null],
+            2: [
+                [
+                    1,
+                    wsObjName,
+                    wsObjType,
+                    '2019-07-23T22:42:44+0000',
+                    1,
+                    'someuser',
+                    2,
+                    'someworkspace',
+                    'somehash',
+                    123,
+                    null,
+                ],
+            ],
+            3: [
+                [
+                    1,
+                    wsObjName,
+                    'SomeOtherModule.SomeOtherType',
+                    '2019-07-23T22:42:44+0000',
+                    1,
+                    'someotheruser',
+                    3,
+                    'someotherworkspace',
+                    'somehash',
+                    123,
+                    null,
+                ],
+            ],
         };
 
-    function buildTestConfig(required, defaultValue, bus) {
+    function buildTestConfig(_required, _defaultValue, _bus) {
         return {
-            bus: bus,
+            bus: _bus,
             parameterSpec: {
                 data: {
-                    defaultValue: defaultValue,
+                    defaultValue: _defaultValue,
                     nullValue: '',
                     constraints: {
-                        required: required,
-                        defaultValue: defaultValue,
-                        types: ['SomeModule.SomeType']
-                    }
-                }
+                        required: _required,
+                        defaultValue: _defaultValue,
+                        types: ['SomeModule.SomeType'],
+                    },
+                },
             },
-            channelName: bus.channelName,
+            channelName: _bus.channelName,
             closeParameters: [],
-            workspaceId: 777
+            workspaceId: 777,
         };
     }
 
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('New Object Input tests', () => {
         beforeEach(() => {
             runtime = Runtime.make();
-            if (TestUtil.getAuthToken()) {
-                document.cookie = 'kbase_session=' + TestUtil.getAuthToken();
-                Jupyter.narrative = new Narrative();
-                Jupyter.narrative.authToken = TestUtil.getAuthToken();
-                Jupyter.narrative.userId = TestUtil.getUserId();
-            }
+            Mocks.setAuthToken(AUTH_TOKEN);
+            Jupyter.narrative = {
+                getAuthToken: () => AUTH_TOKEN,
+                userId: 'test_user',
+            };
 
             node = document.createElement('div');
             bus = runtime.bus().makeChannelBus({
-                description: 'select input testing - ' + Math.random().toString(36).substring(2)
+                description: 'select input testing - ' + Math.random().toString(36).substring(2),
             });
             testConfig = buildTestConfig(required, defaultValue, bus);
 
@@ -66,37 +85,47 @@ define([
             jasmine.Ajax.install();
             jasmine.Ajax.stubRequest(
                 runtime.config('services.workspace.url'),
-                /wsid.\s*\:\s*777\s*,/
-            ).andReturn((function() {
-                return {
-                    status: 200,
-                    statusText: 'HTTP/1.1 200 OK',
-                    contentType: 'application/json',
-                    responseText: JSON.stringify({'result': [wsObjMapping['2']]})
-                }
-            })());
-
+                /wsid.\s*:\s*777\s*,/
+            ).andReturn(
+                (function () {
+                    return {
+                        status: 200,
+                        statusText: 'HTTP/1.1 200 OK',
+                        contentType: 'application/json',
+                        responseText: JSON.stringify({ result: [wsObjMapping['2']] }),
+                    };
+                })()
+            );
         });
 
         afterEach(() => {
             jasmine.Ajax.uninstall();
-        })
+            bus.stop();
+            window.kbaseRuntime = null;
+            Jupyter.narrative = null;
+        });
 
-        it('Should load the widget', () => {
+        it('should be defined', () => {
             expect(NewObjectInput).not.toBeNull();
         });
 
-        it('Should start and stop a widget', (done) => {
-            let widget = NewObjectInput.make(testConfig);
-            expect(widget).toBeDefined();
-            expect(widget.start).toBeDefined();
+        it('should be instantiable', () => {
+            const widget = NewObjectInput.make(testConfig);
+            expect(widget).toEqual(jasmine.any(Object));
+            expect(widget.start).toEqual(jasmine.any(Function));
+        });
+
+        it('Should start a widget', (done) => {
+            const widget = NewObjectInput.make(testConfig);
 
             bus.on('sync', () => {
-                let inputElem = node.querySelector('input');
+                const inputElem = node.querySelector('input');
                 expect(inputElem).toBeDefined();
                 done();
             });
-            widget.start().then(() => {bus.emit('run', {node: node})});
+            widget.start().then(() => {
+                bus.emit('run', { node: node });
+            });
         });
 
         it('Should update value via bus', (done) => {
@@ -104,20 +133,20 @@ define([
             // check along the way.
             bus.respond({
                 key: {
-                    type: 'get-parameters'
+                    type: 'get-parameters',
                 },
                 handle: () => {
                     return {
                         p1: null,
                         p2: 'banana',
-                        p3: 'bar2'
-                    }
-                }
+                        p3: 'bar2',
+                    };
+                },
             });
 
             bus.on('validation', (message) => {
                 expect(message.isValid).toBeTruthy();
-                let inputElem = node.querySelector('input[data-element="input"]');
+                const inputElem = node.querySelector('input[data-element="input"]');
                 if (inputElem) {
                     expect(inputElem.value).toBe('foo');
                     done();
@@ -125,10 +154,12 @@ define([
             });
 
             bus.on('sync', () => {
-                bus.emit('update', {value: 'foo'});
+                bus.emit('update', { value: 'foo' });
             });
-            let widget = NewObjectInput.make(testConfig);
-            widget.start().then(() => {bus.emit('run', {node: node})});
+            const widget = NewObjectInput.make(testConfig);
+            widget.start().then(() => {
+                bus.emit('run', { node: node });
+            });
         });
 
         it('Should reset to default via bus', (done) => {
@@ -136,37 +167,38 @@ define([
 
             bus.respond({
                 key: {
-                    type: 'get-parameters'
+                    type: 'get-parameters',
                 },
                 handle: () => {
                     return {
                         p1: null,
                         p2: 'banana',
-                        p3: 'bar2'
-                    }
-                }
+                        p3: 'bar2',
+                    };
+                },
             });
 
-            bus.on('validation', (message) => {
-                let inputElem = node.querySelector('input[data-element="input"]');
+            bus.on('validation', () => {
+                const inputElem = node.querySelector('input[data-element="input"]');
                 if (inputElem) {
                     if (validationCount < 1) {
                         expect(inputElem.value).toBe('foobarbaz');
                         validationCount++;
                         bus.emit('reset-to-defaults');
-                    }
-                    else {
+                    } else {
                         expect(inputElem.value).toBe('apple');
                         done();
                     }
                 }
             });
             bus.on('sync', () => {
-                bus.emit('update', {value: 'foobarbaz'});
+                bus.emit('update', { value: 'foobarbaz' });
             });
 
-            let widget = NewObjectInput.make(testConfig);
-            widget.start().then(() => {bus.emit('run', {node: node})});
+            const widget = NewObjectInput.make(testConfig);
+            widget.start().then(() => {
+                bus.emit('run', { node: node });
+            });
         });
 
         it('Should reset to empty string via bus without default', (done) => {
@@ -174,26 +206,25 @@ define([
             let validationCount = 0;
             bus.respond({
                 key: {
-                    type: 'get-parameters'
+                    type: 'get-parameters',
                 },
                 handle: () => {
                     return {
                         p1: null,
                         p2: 'banana',
-                        p3: 'bar2'
-                    }
-                }
+                        p3: 'bar2',
+                    };
+                },
             });
 
-            bus.on('validation', (message) => {
-                let inputElem = node.querySelector('input[data-element="input"]');
+            bus.on('validation', () => {
+                const inputElem = node.querySelector('input[data-element="input"]');
                 if (inputElem) {
                     if (validationCount < 1) {
                         expect(inputElem.value).toBe('foobarbaz');
                         validationCount++;
                         bus.emit('reset-to-defaults');
-                    }
-                    else {
+                    } else {
                         expect(inputElem.value).toBe('');
                         done();
                     }
@@ -201,26 +232,28 @@ define([
             });
 
             bus.on('sync', () => {
-                bus.emit('update', {value: 'foobarbaz'});
+                bus.emit('update', { value: 'foobarbaz' });
             });
-            let widget = NewObjectInput.make(testConfig);
-            widget.start().then(() => {bus.emit('run', {node: node})});
+            const widget = NewObjectInput.make(testConfig);
+            widget.start().then(() => {
+                bus.emit('run', { node: node });
+            });
         });
 
         it('Should respond to duplicate parameter change events with "validation"', (done) => {
-            let widget = NewObjectInput.make(testConfig);
+            const widget = NewObjectInput.make(testConfig);
             const inputStr = 'banana';
             bus.respond({
                 key: {
-                    type: 'get-parameters'
+                    type: 'get-parameters',
                 },
                 handle: () => {
                     return {
                         p1: null,
                         p2: 'banana',
-                        p3: 'bar2'
-                    }
-                }
+                        p3: 'bar2',
+                    };
+                },
             });
 
             bus.on('validation', (message) => {
@@ -230,82 +263,85 @@ define([
                 done();
             });
             bus.on('sync', () => {
-                bus.emit('update', {value: inputStr});
+                bus.emit('update', { value: inputStr });
                 // TestUtil.wait(500)
                 //     .then(() => {
                 //         let inputElem = node.querySelector('input[data-element="input"]');
                 //         inputElem.dispatchEvent(new Event('change'));
                 //     });
             });
-            widget.start().then(() => {bus.emit('run', {node: node})});
+            widget.start().then(() => {
+                bus.emit('run', { node: node });
+            });
         });
 
         it('Should respond to non-unique parameter change events with "validation"', (done) => {
-            TestUtil.pendingIfNoToken();
-            let widget = NewObjectInput.make(testConfig);
+            const widget = NewObjectInput.make(testConfig);
             const inputStr = 'banana';
             bus.respond({
                 key: {
-                    type: 'get-parameters'
+                    type: 'get-parameters',
                 },
                 handle: () => {
                     return {
                         p1: null,
                         p2: 'foo2',
-                        p3: 'bar2'
-                    }
-                }
+                        p3: 'bar2',
+                    };
+                },
             });
 
-            bus.on('validation', (message) => {
-                let inputElem = node.querySelector('input[data-element="input"]');
+            bus.on('validation', () => {
+                const inputElem = node.querySelector('input[data-element="input"]');
                 if (inputElem) {
                     inputElem.dispatchEvent(new Event('change'));
                 }
             });
             bus.on('sync', () => {
-                bus.emit('update', {value: inputStr});
+                bus.emit('update', { value: inputStr });
             });
             bus.on('changed', (message) => {
                 expect(message.newValue).toBe('banana');
                 done();
             });
-            widget.start().then(() => {bus.emit('run', {node: node})});
+            widget.start().then(() => {
+                bus.emit('run', { node: node });
+            });
         });
 
         it('Should validate against workspace with non-unique parameter change events with "validation"', (done) => {
-            TestUtil.pendingIfNoToken();
-            let widget = NewObjectInput.make(testConfig);
+            const widget = NewObjectInput.make(testConfig);
             const inputStr = wsObjName;
             bus.respond({
                 key: {
-                    type: 'get-parameters'
+                    type: 'get-parameters',
                 },
                 handle: () => {
                     return {
                         p1: null,
                         p2: 'foo2',
-                        p3: 'bar2'
-                    }
-                }
+                        p3: 'bar2',
+                    };
+                },
             });
 
             bus.on('validation', (message) => {
                 expect(message.isValid).toBeTruthy();
-                expect(message.shortMessage).toBe('an object already exists with this name')
+                expect(message.shortMessage).toBe('an object already exists with this name');
                 expect(message.diagnosis).toBe('suspect');
                 done();
             });
             bus.on('sync', () => {
-                bus.emit('update', {value: inputStr});
+                bus.emit('update', { value: inputStr });
                 // TestUtil.wait(500)
                 //     .then(() => {
                 //         let inputElem = node.querySelector('input[data-element="input"]');
                 //         inputElem.dispatchEvent(new Event('change'));
                 //     });
             });
-            widget.start().then(() => {bus.emit('run', {node: node})});
+            widget.start().then(() => {
+                bus.emit('run', { node: node });
+            });
         });
-
     });
 });

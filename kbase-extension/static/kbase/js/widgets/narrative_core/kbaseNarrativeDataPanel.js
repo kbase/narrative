@@ -1,5 +1,3 @@
-/*global define,Workspace*/
-/*jslint white: true*/
 /*eslint-env browser*/
 
 /**
@@ -23,29 +21,25 @@ define([
     'kbase/js/widgets/narrative_core/dataBrowser',
     'narrativeConfig',
     'base/js/namespace',
-    'kbaseNarrative',
     'kbaseNarrativeControlPanel',
     'kbaseNarrativeDataList',
     'kbaseNarrativeSidePublicTab',
     'kbaseNarrativeExampleDataTab',
     'kbaseNarrativeStagingDataTab',
-    'api/dataProvider',
-    'bootstrap'
-], function (
+    'bootstrap',
+], (
     KBWidget,
     $,
     _,
     DataBrowser,
     Config,
     Jupyter,
-    kbaseNarrative,
     kbaseNarrativeControlPanel,
     kbaseNarrativeDataList,
     kbaseNarrativeSidePublicTab,
     kbaseNarrativeExampleDataTab,
-    kbaseNarrativeStagingDataTab,
-    DataProvider
-) {
+    kbaseNarrativeStagingDataTab
+) => {
     'use strict';
 
     /*
@@ -65,8 +59,6 @@ define([
       data, this is probably the cause and should be revisited. For now, I'm going to sweep it under the rug.
     */
 
-    var knownTypes = [];
-
     return KBWidget({
         name: 'kbaseNarrativeDataPanel',
         parent: kbaseNarrativeControlPanel,
@@ -77,7 +69,7 @@ define([
         $errorMessage: null,
         $loading: null,
         isLoggedIn: false,
-        narrWs: null, /* see setNarrWS */
+        narrWs: null /* see setNarrWS */,
         // The set of all data currently loaded into the widget
         loadedData: {},
         options: {
@@ -93,113 +85,103 @@ define([
         // Constants
         dataListWidget: null,
         $myDataHeader: null,
-        myDataTempNarrativeMsg: 'Warning! This Narrative is temporary (untitled). ' +
+        myDataTempNarrativeMsg:
+            'Warning! This Narrative is temporary (untitled). ' +
             'Data of temporary Narratives is not visible on this tab. Please change ' +
             'the name of the Narrative to make it permanent.',
         renderedTabs: [false, false, false, false, false],
-
 
         init: function (options) {
             this._super(options);
 
             this.ws_name = Jupyter.narrative.getWorkspaceName();
 
-            var icons = Config.get('icons');
+            const icons = Config.get('icons');
             this.data_icons = icons.data;
             this.icon_colors = icons.colors;
 
-            var $dataList = $('<div>');
+            const $dataList = $('<div>');
             this.body().append($dataList);
-            this.dataListWidget =
-                new kbaseNarrativeDataList($dataList, {
-                    ws_name: this.ws_name,
-                    parentControlPanel: this,
-                    slideTime: this.slideTime
-                });
+            this.dataListWidget = new kbaseNarrativeDataList($dataList, {
+                ws_name: this.ws_name,
+                parentControlPanel: this,
+                slideTime: this.slideTime,
+            });
             this.buildSlideoutPanel();
 
             /**
              * This should be triggered if something wants to know what data is loaded from the current workspace
              */
             $(document).on(
-                'dataLoadedQuery.Narrative', $.proxy(function (e, params, ignoreVersion, callback) {
-                    var obj_data = this.dataListWidget.getObjData(params, ignoreVersion);
+                'dataLoadedQuery.Narrative',
+                $.proxy(function (e, params, ignoreVersion, callback) {
+                    const obj_data = this.dataListWidget.getObjData(params, ignoreVersion);
                     if (callback) {
                         callback(obj_data);
                     }
-                },
-                this)
+                }, this)
             );
-
 
             /**
              * This should be triggered when something updates the available data in either the narrative or
              * in the workspace.
              */
-            $(document).on(
-                'updateData.Narrative', function () {
-                    this.dataListWidget.refresh();
-                }.bind(this)
-            );
+            $(document).on('updateData.Narrative', () => {
+                this.dataListWidget.refresh();
+            });
 
             /**
              * This should be triggered when something wants to know what workspace this widget is currently linked to.
              */
-            $(document).on(
-                'workspaceQuery.Narrative', function (e, callback) {
-                    if (callback) {
-                        callback(this.ws_name);
-                    }
-                }.bind(this)
-            );
+            $(document).on('workspaceQuery.Narrative', (e, callback) => {
+                if (callback) {
+                    callback(this.ws_name);
+                }
+            });
 
             $(document).on(
-                'sidePanelOverlayShown.Narrative', function () {
-                    // find the index of what tab is being shown.
-                    if (this.$overlayPanel.is(':visible')) {
-                        var idx = $('.kb-side-overlay-container').find('.kb-side-header.active').index();
-                        this.updateSlideoutRendering(idx);
-                    }
-                }.bind(this)
+                'deleteDataList.Narrative',
+                $.proxy(function (event, data) {
+                    this.loadedData[data] = false;
+                    const className = '.' + data.split('.').join('--');
+                    $(className).html('');
+                    $(className)
+                        .append($('<span>').addClass('fa fa-chevron-circle-left'))
+                        .append(' Add');
+                }, this)
             );
-
-            $(document).on('deleteDataList.Narrative', $.proxy(function (event, data) {
-                this.loadedData[data] = false;
-                var className = '.' + data.split('.').join('--');
-                $(className).html('');
-                $(className).append($('<span>').addClass('fa fa-chevron-circle-left'))
-                    .append(' Add');
-            }, this));
 
             // note how many times we've clicked on the data browser slideout button.
-            var numDataBrowserClicks = 0;
+            let numDataBrowserClicks = 0;
 
-            this.$slideoutBtn = $('<button>')
+            this.$slideoutBtn = $('<button data-test-id="data-slideout-button">')
                 .addClass('btn btn-xs btn-default')
                 .tooltip({
                     title: 'Hide / Show data browser',
                     container: 'body',
                     delay: {
                         show: Config.get('tooltip').showDelay,
-                        hide: Config.get('tooltip').hideDelay
-                    }
+                        hide: Config.get('tooltip').hideDelay,
+                    },
                 })
                 .append('<span class="fa fa-arrow-right"></span>')
-                .click(function () {
-                    this.$slideoutBtn.children().toggleClass('fa-arrow-right fa-arrow-left');
+                .click(() => {
                     this.$slideoutBtn.tooltip('hide');
-                    this.trigger('hideGalleryPanelOverlay.Narrative');
-                    this.trigger('toggleSidePanelOverlay.Narrative', this.$overlayPanel);
+                    this.trigger('toggleSidePanelOverlay.Narrative', [this.$overlayPanel]);
 
-                    // NOTE - this will be missed and a widget will remain active if the panel is closed by means other than clicking this button.
+                    // NOTE - this will be missed and a widget will remain active if the panel
+                    // is closed by means other than clicking this button.
                     // This should be re-visited at some point.
-                    this.deactivateLastRenderedPanel();
+                    // this.deactivateLastRenderedPanel();
 
-                    //once we've clicked it 10 times, meaning we've open and shut the browser 5x, we reveal its TRUE NAME.
+                    // once we've clicked it 10 times, meaning we've open and shut the browser 5x, we reveal its TRUE NAME.
                     if (++numDataBrowserClicks >= 10) {
-                        this.$slideoutBtn.attr('data-original-title', 'Hide / Show Slidey McSliderface');
+                        this.$slideoutBtn.attr(
+                            'data-original-title',
+                            'Hide / Show Slidey McSliderface'
+                        );
                     }
-                }.bind(this));
+                });
 
             this.addButton(this.$slideoutBtn);
 
@@ -232,48 +214,45 @@ define([
          * It associates the new auth token with this widget and refreshes the data panel.
          * @private
          */
-        loggedInCallback: function (event, auth) {
+        loggedInCallback: function () {
             this.isLoggedIn = true;
             if (this.ws_name) {
                 this.tabMapping = [
                     {
-                        widget : this.mineTab,
-                        render : function () {
+                        widget: this.mineTab,
+                        render: function () {
                             this.mineTab.updateView(true, true);
                         }.bind(this),
                     },
                     {
-                        widget : this.sharedTab,
-                        render : function () {
+                        widget: this.sharedTab,
+                        render: function () {
                             this.sharedTab.updateView(true, true);
                         }.bind(this),
                     },
                     {
-                        widget : this.publicTab,
-                        render : function () {
+                        widget: this.publicTab,
+                        render: function () {
                             this.publicTab.render();
                         }.bind(this),
                     },
                     {
-                        widget : this.exampleTab,
-                        render : function () {
+                        widget: this.exampleTab,
+                        render: function () {
                             this.exampleTab.getExampleDataAndRender();
                         }.bind(this),
                     },
-                    { render : function() {} },
+                    { render: function () {} },
                 ];
 
                 if (Config.get('features').stagingDataViewer) {
-                    this.tabMapping.push(
-                        {
-                            widget : this.stagingTab,
-                            render : function () {
-                                this.stagingTab.updateView();
-                            }.bind(this)
-                        }
-                    );
+                    this.tabMapping.push({
+                        widget: this.stagingTab,
+                        render: function () {
+                            this.stagingTab.updateView();
+                        }.bind(this),
+                    });
                 }
-
             } else {
                 //console.error("ws_name is not defined");
             }
@@ -339,61 +318,75 @@ define([
             }
         },
 
-        getDataObjectByName: function(name) {
+        getDataObjectByName: function (name) {
             if (this.dataListWidget) {
                 return this.dataListWidget.getDataObjectByName(name);
             }
         },
 
-        getDataObjectByRef: function(ref, asObject) {
+        getDataObjectByRef: function (ref, asObject) {
             if (this.dataListWidget) {
                 return this.dataListWidget.getDataObjectByRef(ref, asObject);
             }
         },
 
         buildTabs: function (tabs, isOuter) {
-            var $header = $('<div style="background-color: #2196F3">');
-            var $body = $('<div>');
+            const $header = $('<div style="background-color: #2196F3" role="tablist">');
+            const $body = $('<div>');
 
-            for (var i = 0; i < tabs.length; i++) {
-                var tab = tabs[i];
-                $header.append($('<div>')
-                    .addClass('kb-side-header')
-                    .css('width', (100 / tabs.length) + '%')
-                    .append(tab.tabName));
-                $body.append($('<div>')
-                    .addClass('kb-side-tab')
-                    .append(tab.content));
+            for (let i = 0; i < tabs.length; i++) {
+                const tab = tabs[i];
+                $header.append(
+                    $('<div>')
+                        .addClass('kb-side-header')
+                        .attr('role', 'tab')
+                        .attr('data-test-id', `tab-${tab.id}`)
+                        .css('width', 100 / tabs.length + '%')
+                        .click((e) => {
+                            const $tab = $(e.currentTarget);
+                            if ($tab.hasClass('active')) {
+                                return;
+                            }
+
+                            // deactivate active tab
+                            $header.find('.kb-side-header.active').removeClass('active');
+
+                            // Make this one active
+                            $tab.addClass('active');
+
+                            // Deactivate tab panel.
+                            $body.find('div.kb-side-tab.active').removeClass('active');
+
+                            // Activate this one.
+                            $body
+                                .find('div:nth-child(' + (i + 1) + ').kb-side-tab')
+                                .addClass('active');
+
+                            if (isOuter) {
+                                this.hideOverlay();
+                            }
+                            this.updateSlideoutRendering(i);
+                        })
+                        .append(`<span data-test-id="label">${tab.tabName}</tab>`)
+                );
+                $body.append(
+                    $('<div>')
+                        .addClass('kb-side-tab')
+                        .attr('data-test-id', `panel-${tab.id}`)
+                        .append(tab.content)
+                );
             }
-
-            $header.find('div').click($.proxy(function (event) {
-                event.preventDefault();
-                event.stopPropagation();
-                var $headerDiv = $(event.currentTarget);
-
-                if (!$headerDiv.hasClass('active')) {
-                    var idx = $headerDiv.index();
-                    $header.find('div').removeClass('active');
-                    $headerDiv.addClass('active');
-                    $body.find('div.kb-side-tab').removeClass('active');
-                    $body.find('div:nth-child(' + (idx + 1) + ').kb-side-tab').addClass('active');
-                    if (isOuter)
-                        this.hideOverlay();
-
-                    this.updateSlideoutRendering(idx);
-                }
-            }, this));
 
             $header.find('div:first-child').addClass('active');
             $body.find('div:first-child.kb-side-tab').addClass('active');
 
             return {
                 header: $header,
-                body: $body
+                body: $body,
             };
         },
 
-        deactivateLastRenderedPanel : function() {
+        deactivateLastRenderedPanel: function () {
             if (this.$lastRenderedWidget && this.$lastRenderedWidget.deactivate) {
                 this.$lastRenderedWidget.deactivate();
                 this.$lastRenderedWidget = undefined;
@@ -407,7 +400,7 @@ define([
                 this.tabMapping[panelIdx].render();
                 this.renderedTabs[panelIdx] = true;
             }
-            var $widget = this.tabMapping[panelIdx].widget;
+            const $widget = this.tabMapping[panelIdx].widget;
             if ($widget && $widget.activate) {
                 $widget.activate();
             }
@@ -417,61 +410,124 @@ define([
 
         currentWsIsTemp: function () {
             this.$myDataHeader.empty();
-            this.$myDataHeader.css({'color': '#777', 'margin': '10px 10px 0px 10px'});
+            this.$myDataHeader.css({ color: '#777', margin: '10px 10px 0px 10px' });
             this.$myDataHeader.append(this.myDataTempNarrativeMsg);
+        },
+
+        preRenderOverlayState: function () {
+            if (this.$overlayPanel.is(':visible')) {
+                this.$slideoutBtn.children().toggleClass('fa-arrow-left', false);
+                this.$slideoutBtn.children().toggleClass('fa-arrow-right', true);
+            } else {
+                this.$slideoutBtn.children().toggleClass('fa-arrow-left', true);
+                this.$slideoutBtn.children().toggleClass('fa-arrow-right', false);
+            }
+        },
+
+        renderOverlayState: function () {
+            if (this.$overlayPanel.is(':visible')) {
+                const idx = $('.kb-side-overlay-container').find('.kb-side-header.active').index();
+                this.updateSlideoutRendering(idx);
+            } else {
+                this.deactivateLastRenderedPanel();
+            }
         },
 
         buildSlideoutPanel: function () {
             // tab panels
-            let minePanel = $('<div class="kb-import-content kb-import-mine">'),
+            const minePanel = $('<div class="kb-import-content kb-import-mine">'),
                 sharedPanel = $('<div class="kb-import-content kb-import-shared">'),
-                publicPanel = $('<div class="kb-import-content kb-import-public">'),
+                publicPanel = $(
+                    '<div class="kb-import-content kb-import-public" data-test-id="panel-public">'
+                ),
                 examplePanel = $('<div class="kb-import-content">'),
                 stagingPanel = $('<div class="kb-import-content">');
 
-            let tabList = [
-                {tabName: '<small>My Data</small>', content: minePanel},
-                {tabName: '<small>Shared With Me</small>', content: sharedPanel},
-                {tabName: '<small>Public</small>', content: publicPanel},
-                {tabName: '<small>Example</small>', content: examplePanel},
+            const tabList = [
+                { id: 'mydata', tabName: '<small>My Data</small>', content: minePanel },
+                {
+                    id: 'sharedwithme',
+                    tabName: '<small>Shared With Me</small>',
+                    content: sharedPanel,
+                },
+                { id: 'public', tabName: '<small>Public</small>', content: publicPanel },
+                { id: 'example', tabName: '<small>Example</small>', content: examplePanel },
             ];
 
             if (Config.get('features').stagingDataViewer) {
-                tabList.push({tabName: '<small>Import<small>', content: stagingPanel});
+                tabList.push({
+                    id: 'import',
+                    tabName: '<small>Import<small>',
+                    content: stagingPanel,
+                });
             }
 
             // add tabs
-            let $tabs = this.buildTabs(tabList);
+            const $tabs = this.buildTabs(tabList);
 
-            var body = $('<div>');
-            var footer = $('<div>');
+            const body = $('<div>');
+            const footer = $('<div>');
             body.addClass('kb-side-panel');
+            body.attr('data-test-id', 'data-slideout-panel');
             body.append($tabs.header, $tabs.body);
 
             // add footer status container and buttons
-            var importStatus = $('<div class="pull-left kb-import-status">');
+            const importStatus = $('<div class="pull-left kb-import-status">');
             footer.append(importStatus);
-            var btn = $('<button class="btn btn-primary pull-right" disabled>Add to Narrative</button>').css({'margin': '10px'});
-            var closeBtn = $('<button class="kb-default-btn pull-right">Close</button>').css({'margin': '10px'});
+            const closeBtn = $('<button class="kb-default-btn pull-right">Close</button>').css({
+                margin: '10px',
+            });
 
             // Setup the panels that are defined by widgets
-            this.mineTab = new DataBrowser(minePanel, {$importStatus: importStatus, ws_name: this.ws_name, dataSet: 'mine'});
-            this.sharedTab = new DataBrowser(sharedPanel, {$importStatus: importStatus, ws_name: this.ws_name, dataSet: 'shared'});
-            this.publicTab = new kbaseNarrativeSidePublicTab(publicPanel, {$importStatus: importStatus, ws_name: this.ws_name});
-            this.exampleTab = new kbaseNarrativeExampleDataTab(examplePanel, {$importStatus: importStatus, ws_name: this.ws_name});
+            this.mineTab = new DataBrowser(minePanel, {
+                $importStatus: importStatus,
+                ws_name: this.ws_name,
+                dataSet: 'mine',
+            });
+            this.sharedTab = new DataBrowser(sharedPanel, {
+                $importStatus: importStatus,
+                ws_name: this.ws_name,
+                dataSet: 'shared',
+            });
+            this.publicTab = new kbaseNarrativeSidePublicTab(publicPanel, {
+                $importStatus: importStatus,
+                ws_name: this.ws_name,
+            });
+            this.exampleTab = new kbaseNarrativeExampleDataTab(examplePanel, {
+                $importStatus: importStatus,
+                ws_name: this.ws_name,
+            });
             if (Config.get('features').stagingDataViewer) {
                 this.stagingTab = new kbaseNarrativeStagingDataTab(stagingPanel).render();
             }
 
+            $(document).on('sidePanelOverlayHidden.Narrative', () => {
+                this.renderOverlayState();
+            });
+
+            $(document).on('sidePanelOverlayHiding.Narrative', (_ev, panel) => {
+                if (panel === this.$overlayPanel) {
+                    this.preRenderOverlayState();
+                }
+            });
+
+            $(document).on('sidePanelOverlayShowing.Narrative', (_ev, panel) => {
+                if (panel === this.$overlayPanel) {
+                    this.preRenderOverlayState();
+                }
+            });
+
+            $(document).on('sidePanelOverlayShown.Narrative', () => {
+                this.renderOverlayState();
+            });
+
             closeBtn.click(() => {
-                this.$slideoutBtn.children().toggleClass('fa-arrow-right fa-arrow-left');
                 this.trigger('hideSidePanelOverlay.Narrative');
             });
+
             footer.append(closeBtn);
 
             this.$overlayPanel = body.append(footer);
-        }
-
+        },
     });
-
 });

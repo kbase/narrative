@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'kb_common/html',
@@ -10,24 +8,16 @@ define([
     '../inputUtils',
 
     'bootstrap',
-    'css!font-awesome'
-], function(
-    Promise,
-    html,
-    Validation,
-    Events,
-    UI,
-    Props,
-    inputUtils
-) {
+    'css!font-awesome',
+], (Promise, html, Validation, Events, UI, Props, inputUtils) => {
     'use strict';
 
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         input = t('input');
 
     function factory(config) {
-        var spec = config.parameterSpec,
+        let spec = config.parameterSpec,
             bus = config.bus,
             parent,
             container,
@@ -67,16 +57,17 @@ define([
             return input({
                 class: 'form-control',
                 readonly: true,
-                dataElement: 'input'
+                dataElement: 'input',
             });
         }
 
         function render(events) {
-            return div({
-                dataElement: 'input-container'
-            }, [
-                makeViewControl(events)
-            ]);
+            return div(
+                {
+                    dataElement: 'input-container',
+                },
+                [makeViewControl(events)]
+            );
         }
 
         // EVENT HANDLERS
@@ -85,7 +76,7 @@ define([
             Focus the input control.
         */
         function doFocus() {
-            var node = ui.getElement('input-container.input');
+            const node = ui.getElement('input-container.input');
             if (node) {
                 node.focus();
             }
@@ -94,22 +85,21 @@ define([
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
-
-                var events = Events.make();
+                const events = Events.make();
                 container.innerHTML = render(events);
                 events.attachEvents(container);
                 // model.setItem('value', config.initialValue);
                 syncModelToControl();
 
-                bus.on('reset-to-defaults', function() {
+                bus.on('reset-to-defaults', () => {
                     resetModelValue();
                 });
-                bus.on('focus', function() {
+                bus.on('focus', () => {
                     doFocus();
                 });
                 // bus.emit('sync');
@@ -117,7 +107,7 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 if (container) {
                     parent.removeChild(container);
                 }
@@ -128,22 +118,22 @@ define([
 
         model = Props.make({
             data: {
-                value: null
+                value: null,
             },
-            onUpdate: function() {}
+            onUpdate: function () {},
         });
 
         setModelValue(config.initialValue);
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

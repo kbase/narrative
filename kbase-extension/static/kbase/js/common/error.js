@@ -1,10 +1,5 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
-define([
-], function () {
+define([], () => {
     'use strict';
-
 
     function KBError(arg) {
         this.type = arg.type;
@@ -32,7 +27,7 @@ define([
                 type: 'js-error',
                 name: err.name,
                 message: err.message,
-                original: err
+                original: err,
             });
         }
 
@@ -41,7 +36,7 @@ define([
                 return new KBError({
                     type: 'string-error',
                     message: err,
-                    original: err
+                    original: err,
                 });
             case 'object':
                 if (err.error) {
@@ -51,21 +46,21 @@ define([
                         name: err.error.name,
                         message: err.error.message,
                         detail: err.error.error,
-                        original: err
+                        original: err,
                     });
                 } else if (err.message) {
                     return new KBError({
                         type: 'js-error',
                         name: err.name,
                         message: err.message,
-                        original: err
+                        original: err,
                     });
                 } else {
                     return new KBError({
                         type: 'unknown-error',
                         name: 'Unknown',
                         message: 'An unknown error occurred',
-                        original: err
+                        original: err,
                     });
                 }
             default:
@@ -73,14 +68,13 @@ define([
                     type: 'unknown-error',
                     name: 'Unknown',
                     message: 'An unknown error occurred',
-                    original: err
+                    original: err,
                 });
         }
     }
 
-
     return {
         grokError: grokError,
-        KBError: KBError
+        KBError: KBError,
     };
 });

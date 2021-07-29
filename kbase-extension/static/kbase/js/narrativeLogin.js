@@ -1,12 +1,10 @@
-/*global define,window*/
-/*jslint white:true,browser:true*/
 /**
  * Uses the user's login information to initialize the IPython environment.
  * This should be one of the very first functions to be run on the page, as it sets up
  * the login widget, and wires the environment together.
  * @author Bill Riehl wjriehl@lbl.gov
  */
-define ([
+define([
     'jquery',
     'bluebird',
     'kbapi',
@@ -14,126 +12,166 @@ define ([
     'narrativeConfig',
     'api/auth',
     'userMenu',
-    'util/bootstrapDialog'
-], function(
-    $,
-    Promise,
-    kbapi,
-    JupyterUtils,
-    Config,
-    Auth,
-    UserMenu,
-    BootstrapDialog
-) {
+    'util/bootstrapDialog',
+], ($, Promise, kbapi, JupyterUtils, Config, Auth, UserMenu, BootstrapDialog) => {
     'use strict';
-    var baseUrl = JupyterUtils.get_body_data('baseUrl'),
-        authClient = Auth.make({url: Config.url('auth')}),
-        sessionInfo = null,
-        tokenCheckTimer = null,
-        tokenWarningTimer = null;
+    const baseUrl = JupyterUtils.get_body_data('baseUrl');
+    const authClient = Auth.make({ url: Config.url('auth') });
+    let sessionInfo = null;
+    let tokenCheckTimer = null;
+
+    // don't warn if less than 30 seconds to auto-logout
+    const ABOUT_TO_LOGOUT_MINIMUM = 1000 * 30;
+
+    // Do warn if les than 5 minutes to auto-logout
+    const ABOUT_TO_LOGOUT_THRESHOLD = 1000 * 60 * 5;
+
+    // How often to inspect the current browser auth token.
+    const TOKEN_MONITORING_INTERVAL = 1000;
+
+    // Delay after which to automatically logout the Narrative
+    // after the logging-out dialog is shown.
+    const AUTO_LOGOUT_DELAY = 1000 * 30;
 
     /* set the auth token by calling the kernel execute method on a function in
      * the magics module
      */
     function ipythonLogin(token) {
-        window.kb = new KBCacheClient(token);
+        window.kb = new window.KBCacheClient(token); // just as bad as global, but passes linting
         $.ajax({
-            url: JupyterUtils.url_join_encode(baseUrl, 'login')
-        }).then(
-            function(ret) {
+            url: JupyterUtils.url_join_encode(baseUrl, 'login'),
+        })
+            .then(() => {
                 // console.log(ret);
-            }
-        ).fail(
-            function(err) {
+            })
+            .fail(() => {
                 // console.err(err);
-            }
-        );
+            });
     }
 
     function ipythonLogout() {
         $.ajax({
-            url: JupyterUtils.url_join_encode(baseUrl, 'logout')
-        }).then(
-            function(ret) {
+            url: JupyterUtils.url_join_encode(baseUrl, 'logout'),
+        })
+            .then(() => {
                 // console.log(ret);
-            }
-        ).fail(
-            function(err) {
+            })
+            .fail(() => {
                 // console.err(err);
-            }
-        );
+            });
         window.location.href = '/';
     }
 
     function showTokenInjectionDialog() {
-        var $inputField = $('<input type="text" class="form-control">');
-        var $body = $('<div>')
-            .append('<div>You appear to be working on a local development environment of the Narrative Interface, but you don\'t have a valid auth token. You can paste one in below.</div>')
-            .append('<div><b>You are operating in the ' + Config.get('environment') + ' environment.')
+        const $inputField = $('<input type="text" class="form-control">');
+        const $body = $('<div data-test-id="dev-login">')
+            .append(
+                "<div>You appear to be working on a local development environment of the Narrative Interface, but you don't have a valid auth token. You can paste one in below.</div>"
+            )
+            .append(
+                '<div><b>You are operating in the ' + Config.get('environment') + ' environment.'
+            )
             .append($('<div>').append($inputField));
         var dialog = new BootstrapDialog({
-            'title': 'Insert an authentication token?',
-            'body': $body,
-            'buttons': [$('<a type="button" class="btn btn-default">')
-                .append('OK')
-                .click(function () {
-                    dialog.hide();
-                    var newToken = $inputField.val();
-                    authClient.setAuthToken(newToken);
-                    location.reload();
-                })]
+            title: 'Insert an authentication token?',
+            body: $body,
+            buttons: [
+                $('<a type="button" class="btn btn-default">')
+                    .append('OK')
+                    .click(() => {
+                        dialog.hide();
+                        const newToken = $inputField.val();
+                        authClient.setCookie({
+                            name: 'kbase_session',
+                            value: newToken,
+                            domain: 'localhost',
+                            secure: false,
+                        });
+                        location.reload();
+                    }),
+            ],
         });
         dialog.show();
     }
 
     function showNotLoggedInDialog() {
+        const message = `
+        <p>You are logged out (or your session has expired).</p>
+        <p>You will be redirected to the sign in page after closing this, or ${
+            AUTO_LOGOUT_DELAY / 1000
+        } seconds,
+           whichever comes first.</p>
+        `;
         var dialog = new BootstrapDialog({
-            'title': 'Not Logged In',
-            'body': $('<div>').append('You are not logged in (or your session has expired), and you will be redirected to the sign in page shortly.'),
-            'buttons': [
+            title: 'Logged Out',
+            body: $('<div>').append(message),
+            buttons: [
                 $('<a type="button" class="btn btn-default">')
                     .append('OK')
-                    .click(function () {
+                    .click(() => {
                         dialog.hide();
-                        ipythonLogout();
-                    })
-            ]
+                    }),
+            ],
+        });
+        dialog.onHide(() => {
+            window.clearTimeout(autoLogoutTimer);
+            ipythonLogout();
         });
         dialog.show();
+        const autoLogoutTimer = window.setTimeout(() => {
+            dialog.hide();
+            ipythonLogout();
+        }, AUTO_LOGOUT_DELAY);
     }
 
-    function showAboutToLogoutDialog(tokenExpirationTime) {
-        var dialog = new BootstrapDialog({
-            'title': 'Expiring session',
-            'body': $('<div>').append('Your authenticated KBase session will expire in approximately 5 minutes. To continue using KBase, we suggest you log out and back in.'),
-            'buttons': [
+    let aboutToLogoutDialog = null;
+    function showAboutToLogoutDialog() {
+        aboutToLogoutDialog = new BootstrapDialog({
+            title: 'Expiring session',
+            body: $('<div>').append(
+                'Your authenticated KBase session will expire in 5 minutes or less. To continue using KBase, we suggest you log out and back in.'
+            ),
+            buttons: [
                 $('<a type="button" class="btn btn-default">')
                     .append('OK')
-                    .click(function () {
-                        var remainingTime = tokenExpirationTime - new Date().getTime();
-                        if (remainingTime < 0) {
-                            remainingTime = 0;
-                        }
-                        tokenWarningTimer = setTimeout(function() {
-                            tokenTimeout();
-                        });
-                        dialog.hide();
-                    })
-            ]
+                    .click(() => {
+                        aboutToLogoutDialog.hide();
+                    }),
+            ],
         });
-        dialog.show();
+        aboutToLogoutDialog.show();
     }
 
     function initEvents() {
-        $(document).on('loggedInQuery.kbase', function(e, callback) {
+        $(document).on('loggedInQuery.kbase', (e, callback) => {
             if (callback) {
                 callback(sessionInfo);
             }
         });
 
-        $(document).on('logout.kbase', function(e, hideMessage) {
+        $(document).on('logout.kbase', (e, hideMessage) => {
             tokenTimeout(!hideMessage);
         });
+    }
+
+    // When true, will cause the token check interval timer to return early.
+    // Should be set true when an async process is running inside the
+    // interval function, and set false when that process is completed.
+
+    let hasViewedAboutToLogout = false;
+
+    let tokenCheckEnabled = true;
+
+    function disableTokenCheck() {
+        tokenCheckEnabled = false;
+    }
+
+    function enableTokenCheck() {
+        tokenCheckEnabled = true;
+    }
+
+    function isTokenCheckEnabled() {
+        return tokenCheckEnabled;
     }
 
     function initTokenTimer(tokenExpirationTime) {
@@ -141,65 +179,78 @@ define ([
          * First timer - check for token existence very second.
          * trigger the logout behavior if it's not there.
          */
-        var lastCheckTime = new Date().getTime(),
-            browserSleepValidateTime = Config.get('auth_sleep_recheck_ms'),
-            validateOnCheck = false,
-            validationInProgress = false;
-        tokenCheckTimer = setInterval(function() {
-            var token = authClient.getAuthToken();
+        let lastCheckTime = Date.now();
+        const browserSleepValidateTime = Config.get('auth_sleep_recheck_ms');
+
+        tokenCheckTimer = setInterval(() => {
+            if (!isTokenCheckEnabled()) {
+                return;
+            }
+            const token = authClient.getAuthToken();
             if (!token) {
+                disableTokenCheck();
                 tokenTimeout();
+                return;
             }
-            var lastCheckInterval = new Date().getTime() - lastCheckTime;
-            if (lastCheckInterval > browserSleepValidateTime) {
-                validateOnCheck = true;
+
+            const currentTime = Date.now();
+
+            // If the token is expired, force a logout and cookie expunging, even
+            // without checking with auth first.
+            const timeUntilExpiration = tokenExpirationTime - currentTime;
+            if (timeUntilExpiration <= 0) {
+                // already expired! logout!
+                disableTokenCheck();
+                tokenTimeout(true);
+                return;
             }
-            if (validateOnCheck && !validationInProgress) {
-                validationInProgress = true;
-                authClient.validateToken(token)
-                    .then(function(info) {
-                        validateOnCheck = false;
+
+            // Expiring within 5 minutes, but in more than 30 seconds? Show the dialog, but still
+            // continue with the possible token validation check.
+            // The reason for a minimal time is that a user will not have time to absorb and respond
+            // to the dialog in just a few seconds.
+            if (
+                timeUntilExpiration > ABOUT_TO_LOGOUT_MINIMUM &&
+                timeUntilExpiration <= ABOUT_TO_LOGOUT_THRESHOLD
+            ) {
+                if (!hasViewedAboutToLogout) {
+                    hasViewedAboutToLogout = true;
+                    showAboutToLogoutDialog();
+                }
+            }
+
+            const lastCheckInterval = currentTime - lastCheckTime;
+            const validateOnCheck = lastCheckInterval > browserSleepValidateTime;
+            if (validateOnCheck) {
+                // ensure we don't enter this check a second time.
+                // hmm, this is really an edge case, but possible.
+                // in order to meet this condition, the validateToken() call would
+                // need to take longer than browserSleepValidateTime which is currently
+                // hard coded in the config at 1 minute.
+                disableTokenCheck();
+                lastCheckTime = Date.now();
+                authClient
+                    .validateToken(token)
+                    .then((info) => {
                         if (info !== true) {
                             tokenTimeout(true);
-                            // console.warn('Auth is invalid! Logging out.');
-                        } else {
-                            // console.warn('Auth is still valid after ' + (lastCheckInterval/1000) + 's.');
                         }
                     })
-                    .catch(function(error) {
+                    .catch((error) => {
                         // This might happen while waiting for internet to reconnect.
                         console.error('Error while validating token after sleep. Trying again...');
                         console.error(error);
                     })
-                    .finally(function() {
-                        validationInProgress = false;
+                    .finally(() => {
+                        enableTokenCheck();
                     });
-                lastCheckTime = new Date().getTime();
             }
-        }, 1000);
-
-        var currentTime = new Date().getTime();
-        if (currentTime >= tokenExpirationTime) {
-            // already expired! logout!
-            tokenTimeout();
-        }
-        var timeToWarning = tokenExpirationTime - currentTime - (1000 * 60 * 5);
-        if (timeToWarning <= 0) {
-            timeToWarning = 0;
-        }
-        else {
-            tokenWarningTimer = setTimeout(function() {
-                showAboutToLogoutDialog(tokenExpirationTime);
-            }, timeToWarning);
-        }
+        }, TOKEN_MONITORING_INTERVAL);
     }
 
     function clearTokenCheckTimers() {
         if (tokenCheckTimer) {
             clearInterval(tokenCheckTimer);
-        }
-        if (tokenWarningTimer) {
-            clearInterval(tokenWarningTimer);
         }
     }
 
@@ -212,14 +263,16 @@ define ([
      * 4. Redirect to the logout page, with an optional warning that the user's now logged out.
      */
     function tokenTimeout(showDialog) {
+        if (aboutToLogoutDialog) {
+            aboutToLogoutDialog.hide();
+        }
         clearTokenCheckTimers();
         authClient.clearAuthToken();
         authClient.revokeAuthToken(sessionInfo.token, sessionInfo.id);
         // show dialog - you're signed out!
         if (showDialog) {
             showNotLoggedInDialog();
-        }
-        else {
+        } else {
             ipythonLogout();
         }
     }
@@ -241,10 +294,13 @@ define ([
          * communication with other KBase resources.
          */
         clearTokenCheckTimers();
-        var sessionToken = authClient.getAuthToken();
-        return Promise.all([authClient.getTokenInfo(sessionToken), authClient.getUserProfile(sessionToken)])
-            .then(function(results) {
-                var tokenInfo = results[0];
+        const sessionToken = authClient.getAuthToken();
+        return Promise.all([
+            authClient.getTokenInfo(sessionToken),
+            authClient.getUserProfile(sessionToken),
+        ])
+            .then((results) => {
+                const tokenInfo = results[0];
                 sessionInfo = tokenInfo;
                 this.sessionInfo = tokenInfo;
                 this.sessionInfo.token = sessionToken;
@@ -252,34 +308,43 @@ define ([
                 this.sessionInfo.user_id = this.sessionInfo.user;
                 initEvents();
                 initTokenTimer(sessionInfo.expires);
-                UserMenu.make({
-                    target: $elem,
-                    token: sessionToken,
-                    userName: sessionInfo.user,
-                    email: results[1].email,
-                    displayName: results[1].display
-                });
                 if (!noServer) {
                     ipythonLogin(sessionToken);
                 }
                 $(document).trigger('loggedIn', this.sessionInfo);
                 $(document).trigger('loggedIn.kbase', this.sessionInfo);
-            }.bind(this))
-            .catch(function(error) {
+                const userMenu = UserMenu.make({
+                    target: $elem,
+                    token: sessionToken,
+                    userName: sessionInfo.user,
+                    email: results[1].email,
+                    displayName: results[1].display,
+                });
+                return userMenu.start();
+            })
+            .catch((error) => {
                 console.error(error);
-                if (document.location.hostname.indexOf('localhost') !== -1 ||
-                    document.location.hostname.indexOf('0.0.0.0') !== -1) {
+                if (
+                    document.location.hostname.indexOf('localhost') !== -1 ||
+                    document.location.hostname.indexOf('0.0.0.0') !== -1
+                ) {
                     showTokenInjectionDialog();
-                }
-                else {
+                } else {
                     showNotLoggedInDialog();
                 }
             });
     }
 
+    function destroy() {
+        $(document).off('loggedInQuery.kbase');
+        $(document).off('logout.kbase');
+    }
+
     return {
-        init: init,
-        sessionInfo: sessionInfo,
-        getAuthToken: getAuthToken
+        init,
+        sessionInfo,
+        getAuthToken,
+        clearTokenCheckTimers,
+        destroy,
     };
 });

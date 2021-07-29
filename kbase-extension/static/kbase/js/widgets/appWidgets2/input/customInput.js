@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'require',
@@ -11,21 +9,12 @@ define([
     'common/runtime',
 
     'bootstrap',
-    'css!font-awesome'
-], function (
-    Promise,
-    require,
-    html,
-    Validation,
-    Events,
-    UI,
-    Props,
-    Runtime
-) {
+    'css!font-awesome',
+], (Promise, require, html, Validation, Events, UI, Props, Runtime) => {
     'use strict';
 
     function factory(config) {
-        var spec = config.parameterSpec,
+        let spec = config.parameterSpec,
             runtime = Runtime.make(),
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(config.channelName),
@@ -71,61 +60,56 @@ define([
             // setControlValue(model.getItem('value', null));
         }
 
-
-
         // VALIDATION
 
         function importControlValue() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 return Validation.importString(getControlValue());
             });
         }
 
         function validate(value) {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 return Validation.validate(value, spec);
             });
         }
 
         function autoValidate() {
-            return validate(model.getItem('value'))
-                .then(function (result) {
-                    channel.emit('validation', result);
-                });
+            return validate(model.getItem('value')).then((result) => {
+                channel.emit('validation', result);
+            });
         }
 
         // DOM & RENDERING
 
         function prequire(module) {
-            return new Promise(function (resolve, reject) {
-                require([module], function (Module) {
+            return new Promise((resolve, reject) => {
+                require([module], (Module) => {
                     resolve(Module);
-                }, function (err) {
+                }, (err) => {
                     reject(err);
                 });
             });
         }
 
         function makeCustomWidget(arg) {
-
-            // For now all custom inputs live in the 
+            // For now all custom inputs live in the
             // customInputs directory of the input collection directory
             // and are named like <type>Input.js
-            return prequire('./customInputs/' + subtype + 'Input')
-                .then(function (Module) {
-                    var inputWidget = Module.make({
-                        runtime: runtime
-                    });
-
-                    inputWidget.channel.on('changed', function (message) {
-                        model.setItem('value', message.newValue);
-                        channel.emit('changed', {
-                            newValue: message.newValue
-                        });
-                    });
-
-                    return inputWidget;
+            return prequire('./customInputs/' + subtype + 'Input').then((Module) => {
+                const inputWidget = Module.make({
+                    runtime: runtime,
                 });
+
+                inputWidget.channel.on('changed', (message) => {
+                    model.setItem('value', message.newValue);
+                    channel.emit('changed', {
+                        newValue: message.newValue,
+                    });
+                });
+
+                return inputWidget;
+            });
         }
 
         // EVENT HANDLERS
@@ -134,53 +118,51 @@ define([
             Focus the input control.
         */
         function doFocus() {
-            var node = ui.getElement('input-container.input');
+            const node = ui.getElement('input-container.input');
             if (node) {
                 node.focus();
             }
         }
 
-
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
                 return makeCustomWidget()
-                    .then(function (customWidget) {
+                    .then((customWidget) => {
                         inputWidget = customWidget;
                         return customWidget.start({
                             node: container,
-                            initialValue: model.getItem('value', null)
+                            initialValue: model.getItem('value', null),
                         });
                     })
-                    .then(function () {
-
-                        channel.on('reset-to-defaults', function () {
+                    .then(() => {
+                        channel.on('reset-to-defaults', () => {
                             resetModelValue();
                         });
-                        channel.on('update', function (message) {
+                        channel.on('update', (message) => {
                             setModelValue(message.value);
                             syncModelToControl();
                             autoValidate();
                         });
-                        channel.on('focus', function () {
+                        channel.on('focus', () => {
                             doFocus();
                         });
                         // channel.emit('sync');
                     })
-                    .catch(function (err) {
+                    .catch((err) => {
                         UI.showErrorDialog({
                             title: 'Error',
                             error: {
                                 name: 'Error',
                                 message: err.message,
                                 detail: 'detail here',
-                                resolution: 'how to resolve here.'
-                            }
+                                resolution: 'how to resolve here.',
+                            },
                         });
                         console.error('ERROR', err);
                     });
@@ -188,8 +170,7 @@ define([
         }
 
         function stop() {
-            return inputWidget.stop()
-            .then(function () {
+            return inputWidget.stop().then(() => {
                 if (container) {
                     parent.removeChild(container);
                 }
@@ -201,22 +182,22 @@ define([
 
         model = Props.make({
             data: {
-                value: null
+                value: null,
             },
-            onUpdate: function () {}
+            onUpdate: function () {},
         });
 
         setModelValue(config.initialValue);
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

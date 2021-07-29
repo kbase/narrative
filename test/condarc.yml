@@ -1,0 +1,3 @@
+# Used for testing in Github Actions
+changeps1: False
+always_yes: True

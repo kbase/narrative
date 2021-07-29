@@ -10,10 +10,10 @@ class SpecManagerTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.sm = SpecManager()
-        cls.good_app_id = 'NarrativeTest/test_input_params'
-        cls.good_tag = 'dev'
-        cls.bad_app_id = 'NotARealApp'
-        cls.bad_tag = 'NotARealTag'
+        cls.good_app_id = "NarrativeTest/test_input_params"
+        cls.good_tag = "dev"
+        cls.bad_app_id = "NotARealApp"
+        cls.bad_tag = "NotARealTag"
 
     @classmethod
     def tearDownClass(cls):
@@ -37,13 +37,20 @@ class SpecManagerTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.sm.check_app(self.bad_app_id, raise_exception=True)
 
-    @mock.patch('biokbase.narrative.jobs.specmanager.clients.get', get_mock_client)
+    @mock.patch("biokbase.narrative.jobs.specmanager.clients.get", get_mock_client)
     def test_get_type_spec(self):
         self.sm.reload()
-        self.assertIn("export_functions", list(self.sm.get_type_spec("KBaseFBA.FBA").keys()))
-        self.assertIn("export_functions", list(self.sm.get_type_spec("KBaseFBA.NU_FBA").keys()))
+        self.assertIn(
+            "export_functions", list(self.sm.get_type_spec("KBaseFBA.FBA").keys())
+        )
+        self.assertIn(
+            "export_functions", list(self.sm.get_type_spec("KBaseFBA.NU_FBA").keys())
+        )
         with self.assertRaisesRegex(ValueError, "Unknown type"):
-            self.assertIn("export_functions", list(self.sm.get_type_spec("KBaseExpression.NU_FBA").keys()))
+            self.assertIn(
+                "export_functions",
+                list(self.sm.get_type_spec("KBaseExpression.NU_FBA").keys()),
+            )
 
 
 if __name__ == "__main__":

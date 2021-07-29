@@ -7,26 +7,43 @@
 | master | [![Build Status](https://travis-ci.org/kbase/narrative.svg?branch=master)](https://travis-ci.org/kbase/narrative) [![Coverage Status](https://coveralls.io/repos/kbase/narrative/badge.svg?branch=master)](https://coveralls.io/r/kbase/narrative?branch=master) |
 | develop | [![Build Status](https://travis-ci.org/kbase/narrative.svg?branch=develop)](https://travis-ci.org/kbase/narrative) [![Coverage Status](https://coveralls.io/repos/kbase/narrative/badge.svg?branch=develop)](https://coveralls.io/r/kbase/narrative?branch=develop)|
 
-This is the repository for the KBase Narrative Interface.
+***Table of Contents***
+
+- [About](#about)
+- [Installation](#installation)
+  - [Local Installation](#local-installation)
+    - [Using a Conda Environment](#using-a-conda-environment)
+    - [Without Conda](#without-conda)
+- [Architecture](#architecture)
+- [Testing](#testing)
+- [NPM scripts](#npm-scripts)
+- [Git Hooks](#git-hooks)
+- [Submitting Code](#submitting-code)
 
 ## About
 
-The KBase Narrative Interface builds on the [Jupyter Notebook](http://jupyter.org) and contains elements to interact with various KBase tools and data stores.
+This is the repository for the KBase Narrative Interface. The KBase Narrative Interface builds on the [Jupyter Notebook](http://jupyter.org) and contains elements to interact with various KBase tools and data stores.
 
 This document contains links to various documentation in the [docs](docs) directory, with a brief description of each.
 
 ## Installation
+
 If you want to use the KBase Narrative Interface, just point your browser at https://narrative.kbase.us, make a free account, and jump in. This repo is only for people who wish to contribute to the development of the interface.
 
-## Local Installation (for developers)
+### Local Installation
+
 Short version:
 Requires the following:
-* Python 3.6+
-* Anaconda/Miniconda as an environment manager (https://www.anaconda.com/)
-* Node.js (latest LTS recommended)
-* Bower 1.8.8+
 
-### Using a conda environment (recommended!)
+-   Python 3.6+
+-   Anaconda/Miniconda as an environment manager (<https://www.anaconda.com/>)
+-   Node.js (latest LTS recommended)
+-   Bower 1.8.8+
+
+### *Using a Conda Environment*
+
+This is the recommended method of installation!
+
 ```
 git clone https://github.com/kbase/narrative
 cd narrative
@@ -35,19 +52,22 @@ conda activate my_narrative_environment
 ./scripts/install_narrative.sh
 kbase-narrative
 ```
+
 If the previous instructions do not work, try
+
 ```
 # source ~/anaconda3/bin/activate or wherever you have python installed
-conda create -n my_narrative_environment 
+conda create -n my_narrative_environment
 conda activate my_narrative_environment
 sh scripts/install_narrative.sh
 # scripts/install_narrative.sh
 kbase-narrative
 ```
 
+### *Without conda*
 
+This process installs lots of requirements of specific versions and may clobber things on your PYTHONPATH.
 
-### Or, without conda - this installs lots of requirements of specific versions and may clobber things on your PYTHONPATH.
 ```
 git clone https://github.com/kbase/narrative
 cd narrative
@@ -55,22 +75,11 @@ cd narrative
 kbase-narrative
 ```
 
-Long version:
-
-[Local Narrative setup/deployment](docs/install/local_install.md)
-
-## Server installation (for administrators)
-
-If you want to set up your own Narrative server that uses the Docker framework, the below document will walk you through it. Once the server is set up, you only need to pull new code and build a new Docker image from it. You can also pull Narrative images directly from Dockerhub in the KBase namespace.
-
-The document specifically describes how you would build the system on a [Vagrant](https://www.vagrantup.com) image, but is applicable to any Ubuntu-based system.
-
-[Production Narrative setup/deployment](docs/install/deployment.md)
-[Dockerhub Narrative builds](docs/install/dockerhub_builds.md)
+Long version: [Local Narrative setup](docs/install/local_install.md)
 
 ## Architecture
 
-### In progress!
+***In progress!***
 
 The Narrative sits on top of the Jupyter Notebook, so most of its architecture is a mirror of that. However, the Narrative's interaction with other KBase elements - namely the data stores and job running services - merits its own description. This will be ongoing (and evolving!), but a brief description of how a job gets run and registered is available here:
 
@@ -80,31 +89,30 @@ When deployed in production, the Narrative Interface is compiled into a [Docker]
 
 ## Testing
 
-Testing is composed of three components:
+For general testing instructions and guidance refer to [docs/testing.md](docs/testing.md). For information about headless browser testing refer to [docs/HeadlessTesting.md](docs/HeadlessTesting.md).
 
-- a `make test` directive that runs through a batch of unit-testing of the Narrative, both the front-end Javascript-based components, and the back-end IPython modifications
-- a `travis.yml` file for Travis-CI testing
-- a set of Selenium-based end-to-end tests that simulate browser interactions
+## NPM Scripts
 
-Testing locally (i.e. not through Travis-CI) requires a local Narrative installation, with active virtualenv (if installed that way). Then just run `make test` or `make test-frontend-unit` or `make test-backend`. If you haven't changed any configuration, this will run unauthenticated tests and skip any tests that require authentication.
+A number of commands are available to automate parts of the development process. See [docs/developer/running_tasks.md](docs/developer/running_tasks.md) for more information.
 
-To run authenticated tests, you'll need to get an auth token from KBase servers, drop it in a file in the test directory (as the only line in that file), then modify two config files. These are `test/unit/testConfig.json` for frontend tests, and `src/biokbase/narrative/tests/test.cfg` for backend tests [TODO: merge those, or move them somewhere sensible]. The frontend test file should have the "token" block modified to include your username and the path to the token file. The backend test file should be updated so that the `test_user` and/or `private_user` keys in the `[users]` and `[token_files]` block are aligned (e.g. users.test_user is the user for the token in token_files.test_user).
+## Git Hooks
 
-Note: **DO NOT CHECK YOUR TOKEN FILE IN TO GITHUB**. You'll be shamed without mercy.
+The narrative repo uses the NPM module [Husky](https://www.npmjs.com/package/husky) to install and execute git hooks. Please ensure that any other git hook packages (e.g. the python `pre-commit` package) have been fully uninstalled first. If you run `npm install`, or use the standard install process, husky and the husky git hooks will be installed. If you are adding the module to an existing npm installation, you will need to run
 
-## Manual Testing
+```js
+npx husky install
+```
 
-* It can be useful to immediately see your changes in the narrative. For javascript changes, you will just have to reload the page. You can print messages to the console with `console.log`
+to enable git hooks.
 
-* For python changes, it will require shutting down the notebook, running `scripts/install_narrative.sh -u` and then starting the notebook server up again with kbase-narrative. You can print messages to the terminal using 
+The `.husky` directory contains the hooks that are run. See the [package.json](package.json) file and [docs/developer/running_tasks.md](docs/developer/running_tasks.md) for more information on the npm scripts that are executed, and the [Husky documentation](https://typicode.github.io/husky/) for details on how to add or edit hooks.
+
+Husky hooks can be skipped by setting the environment variable:
 
 ```
-log = logging.getLogger("tornado.application")
-log.info("Your Logs Go Here")
+HUSKY=0
 ```
 
 ## Submitting code
 
-Ensure that tests pass (and add some for your changes), then submit a PR to the `develop` branch.
-
-This branch will eventually get merged to `master` where it is tagged and released to production.
+Follow the gitflow directions located at [docs/git-workflow.md](docs/git-workflow.md) to submit code to this repository.

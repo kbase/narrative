@@ -17,12 +17,13 @@
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseStylesheet.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrative.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseIcons.css") }}"  type="text/css"/>
-    <link rel="stylesheet" href="{{ static_url("kbase/css/landing-pages.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("kbase/css/landingPages.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseEditor.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNotify.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/methodCell.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/bootstrapHelper.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/buttons.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("kbase/css/contigBrowserStyles.css") }}" type="text/css" />
 
     <script src="{{ static_url("ext_components/bowser/bowser.min.js") }}" type="text/javascript" charset="utf-8"></script>
     <script>
@@ -35,7 +36,7 @@
          * https://github.com/ded/bowser
          */
         function checkBrowser() {
-            var redirectUrl = 'kbase.us/user-support/messages/unsupported-browser';
+            var redirectUrl = 'https://docs.kbase.us/getting-started/browsers';
 
             if (bowser.msie && bowser.version <= 9) {
                 var protocol = window.location.protocol;

@@ -3,22 +3,16 @@
  * The viewer updates based on changes to the job state and view model.
  * It reports the current job state, runtime, and how long it has been / was queued for.
  */
-define([
-    'bluebird',
-    'common/runtime',
-    'common/ui',
-    'common/format',
-    'kb_common/html'
-], function(
+define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'kb_common/html'], (
     Promise,
     Runtime,
     UI,
     format,
     html
-) {
+) => {
     'use strict';
 
-    let t = html.tag,
+    const t = html.tag,
         div = t('div'),
         p = t('p'),
         span = t('span');
@@ -33,8 +27,7 @@ define([
      * @param {string} jobState
      */
     function niceState(jobState) {
-        let label,
-            color;
+        let label, color;
         switch (jobState) {
             case 'completed':
                 label = 'success';
@@ -57,12 +50,15 @@ define([
                 color = 'black';
         }
 
-        return span({
-            style: {
-                color: color,
-                fontWeight: 'bold'
-            }
-        }, label);
+        return span(
+            {
+                style: {
+                    color: color,
+                    fontWeight: 'bold',
+                },
+            },
+            label
+        );
     }
 
     /**
@@ -117,11 +113,11 @@ define([
                         viewModel.finish.state = niceState(jobState.status);
                         viewModel.finish.time = format.niceTime(finishTime);
                         viewModel.finish.elapsed = format.niceDuration(now - finishTime);
-
                     } else {
                         viewModel.run._attrib.style = { fontWeight: 'bold' };
                         viewModel.run.active = true;
-                        viewModel.run.label = 'Running ' + ui.loading({ size: null, color: 'green' });
+                        viewModel.run.label =
+                            'Running ' + ui.loading({ size: null, color: 'green' });
                         viewModel.run.elapsed = format.niceDuration(now - execStartTime);
 
                         viewModel.finish._attrib.hidden = true;
@@ -154,7 +150,8 @@ define([
                         // Queue Status - in the queue
                         viewModel.queue._attrib.style = { fontWeight: 'bold' };
                         viewModel.queue.active = true;
-                        viewModel.queue.label = 'Queued ' + ui.loading({ size: null, color: 'orange' });
+                        viewModel.queue.label =
+                            'Queued ' + ui.loading({ size: null, color: 'orange' });
                         if (jobState.position) {
                             viewModel.queue.position.label = ', currently at position ';
                             viewModel.queue.position.number = jobState.position;
@@ -187,81 +184,105 @@ define([
      */
     function renderRunStats() {
         return div({ dataElement: 'run-stats', style: { paddingTop: '6px' } }, [
-            div({
-                class: 'row',
-                dataElement: 'launch'
-            }, [
-                span({
-                    dataElement: 'label'
-                }),
-                ' ',
-                span({
-                    dataElement: 'elapsed',
-                    class: 'kb-elapsed-time'
-                })
-            ]),
-            div({
-                class: 'row',
-                dataElement: 'job_not_found'
-            }, [
-                span({
-                    dataElement: 'message'
-                })
-            ]),
-            div({
-                class: 'row',
-                dataElement: 'queue'
-            }, [
-                span({
-                    dataElement: 'label'
-                }, 'Queue'),
-                ' ',
-                span({
-                    dataElement: 'elapsed',
-                    class: 'kb-elapsed-time'
-                }),
-                span({
-                    dataElement: 'position'
-                }, [
+            div(
+                {
+                    class: 'row',
+                    dataElement: 'launch',
+                },
+                [
                     span({
-                        dataElement: 'label'
+                        dataElement: 'label',
                     }),
+                    ' ',
                     span({
-                        dataElement: 'number'
-                    })
-                ])
-            ]),
-            div({
-                class: 'row',
-                dataElement: 'run'
-            }, [
-                span({
-                    dataElement: 'label'
-                }, 'Run'),
-                ' ',
-                span({
-                    dataElement: 'elapsed',
-                    class: 'kb-elapsed-time'
-                })
-            ]),
-            div({
-                class: 'row',
-                dataElement: 'finish'
-            }, [
-                span('Finished with '),
-                span({
-                    dataElement: 'state'
-                }),
-                ' on ',
-                span({
-                    dataElement: 'time'
-                }),
-                ' (',
-                span({
-                    dataElement: 'elapsed'
-                }),
-                ' ago)'
-            ])
+                        dataElement: 'elapsed',
+                        class: 'kb-elapsed-time',
+                    }),
+                ]
+            ),
+            div(
+                {
+                    class: 'row',
+                    dataElement: 'job_not_found',
+                },
+                [
+                    span({
+                        dataElement: 'message',
+                    }),
+                ]
+            ),
+            div(
+                {
+                    class: 'row',
+                    dataElement: 'queue',
+                },
+                [
+                    span(
+                        {
+                            dataElement: 'label',
+                        },
+                        'Queue'
+                    ),
+                    ' ',
+                    span({
+                        dataElement: 'elapsed',
+                        class: 'kb-elapsed-time',
+                    }),
+                    span(
+                        {
+                            dataElement: 'position',
+                        },
+                        [
+                            span({
+                                dataElement: 'label',
+                            }),
+                            span({
+                                dataElement: 'number',
+                            }),
+                        ]
+                    ),
+                ]
+            ),
+            div(
+                {
+                    class: 'row',
+                    dataElement: 'run',
+                },
+                [
+                    span(
+                        {
+                            dataElement: 'label',
+                        },
+                        'Run'
+                    ),
+                    ' ',
+                    span({
+                        dataElement: 'elapsed',
+                        class: 'kb-elapsed-time',
+                    }),
+                ]
+            ),
+            div(
+                {
+                    class: 'row',
+                    dataElement: 'finish',
+                },
+                [
+                    span('Finished with '),
+                    span({
+                        dataElement: 'state',
+                    }),
+                    ' on ',
+                    span({
+                        dataElement: 'time',
+                    }),
+                    ' (',
+                    span({
+                        dataElement: 'elapsed',
+                    }),
+                    ' ago)',
+                ]
+            ),
         ]);
     }
 
@@ -271,72 +292,72 @@ define([
      * @param {object} config - the config passed to this widget (not used, but in the format)
      */
     function factory(config) {
-        let container, ui, listeners = [],
+        let container,
+            ui,
+            listeners = [],
             jobState = null,
             runtime = Runtime.make(),
             listeningForJob = false,
             jobId,
             parentJobId;
 
-        let viewModel = {
+        const viewModel = {
             lastUpdated: {
                 elapsed: null,
-                time: null
+                time: null,
             },
             launch: {
                 _attrib: {
                     hidden: true,
-                    style: {}
+                    style: {},
                 },
                 label: null,
-                elapsed: null
+                elapsed: null,
             },
             queue: {
                 _attrib: {
                     hidden: true,
-                    style: {}
+                    style: {},
                 },
                 active: null,
                 label: null,
                 elapsed: null,
                 position: {
                     label: null,
-                    number: null
-                }
+                    number: null,
+                },
             },
             run: {
                 _attrib: {
                     hidden: true,
-                    style: {}
+                    style: {},
                 },
                 active: null,
                 label: null,
-                elapsed: null
+                elapsed: null,
             },
             finish: {
                 _attrib: {
                     hidden: true,
-                    style: {}
+                    style: {},
                 },
                 active: null,
                 state: null,
                 time: null,
-                elapsed: null
+                elapsed: null,
             },
             job_not_found: {
                 _attrib: {
                     hidden: true,
-                    style: {}
+                    style: {},
                 },
                 message: div([
                     p([
-                        'This job was not found, or may not have been registered with this Narrative.'
+                        'This job was not found, or may not have been registered with this Narrative.',
                     ]),
-                    p([
-                        'You will not be able to inspect the job status or view the job log'
-                    ])
-                ])
-            }
+                    p(['You will not be able to inspect the job status or view the job log']),
+                ]),
+            },
         };
 
         /**
@@ -348,7 +369,7 @@ define([
             }
             runtime.bus().emit('request-job-update', {
                 jobId: jobId,
-                parentJobId: parentJobId
+                parentJobId: parentJobId,
             });
             listeningForJob = true;
         }
@@ -367,7 +388,7 @@ define([
          */
         function handleJobDoesNotExistUpdate(message) {
             jobState = {
-                job_state: 'does_not_exist'
+                job_state: 'does_not_exist',
             };
         }
 
@@ -407,34 +428,34 @@ define([
         function listenForJobStatus() {
             let ev = runtime.bus().listen({
                 channel: {
-                    jobId: jobId
+                    jobId: jobId,
                 },
                 key: {
-                    type: 'job-status'
+                    type: 'job-status',
                 },
-                handle: handleJobStatusUpdate
+                handle: handleJobStatusUpdate,
             });
             listeners.push(ev);
 
             ev = runtime.bus().listen({
                 channel: {
-                    jobId: jobId
+                    jobId: jobId,
                 },
                 key: {
-                    type: 'job-canceled'
+                    type: 'job-canceled',
                 },
-                handle: () => {}
+                handle: () => {},
             });
             listeners.push(ev);
 
             ev = runtime.bus().listen({
                 channel: {
-                    jobId: jobId
+                    jobId: jobId,
                 },
                 key: {
-                    type: 'job-does-not-exist'
+                    type: 'job-does-not-exist',
                 },
-                handle: handleJobDoesNotExistUpdate
+                handle: handleJobDoesNotExistUpdate,
             });
             listeners.push(ev);
         }
@@ -451,8 +472,7 @@ define([
                 if (container) {
                     return detach();
                 }
-            })
-            .then(() => {
+            }).then(() => {
                 return Promise.try(() => {
                     container = arg.node;
                     ui = UI.make({ node: container });
@@ -462,16 +482,18 @@ define([
                     jobId = arg.jobId;
                     parentJobId = arg.parentJobId ? arg.parentJobId : null;
 
-                    listeners.push(runtime.bus().on('clock-tick', () => {
-                        updateRunStats(ui, viewModel, jobState);
-                    }));
+                    listeners.push(
+                        runtime.bus().on('clock-tick', () => {
+                            updateRunStats(ui, viewModel, jobState);
+                        })
+                    );
 
                     listenForJobStatus();
 
                     // request a new job status update from the kernel on start
                     runtime.bus().emit('request-job-status', {
                         jobId: jobId,
-                        parentJobId: parentJobId
+                        parentJobId: parentJobId,
                     });
                     listeningForJob = true;
 
@@ -485,7 +507,7 @@ define([
          * On widget stop, this removes all listeners for job status to clean itself up.
          */
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(() => {
                 stopListeningForJobStatus();
             });
         }
@@ -496,23 +518,21 @@ define([
          * then removes itself from the DOM.
          */
         function detach() {
-            return stop()
-                .then(() => {
-                    container.innerHTML = '';
-                });
+            return stop().then(() => {
+                container.innerHTML = '';
+            });
         }
 
         return {
             start: start,
             stop: stop,
-            detach: detach
+            detach: detach,
         };
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
-        }
+        },
     };
-
 });

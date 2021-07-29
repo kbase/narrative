@@ -1,7 +1,7 @@
 import unittest
 import mock
 from biokbase.narrative.jobs.job import Job
-from .util import TestConfig
+from .util import ConfigTests
 from .narrative_mock.mockclients import get_mock_client
 from contextlib import contextmanager
 from io import StringIO
@@ -19,8 +19,8 @@ def capture_stdout():
         sys.stdout, sys.stderr = old_out, old_err
 
 
-config = TestConfig()
-test_jobs = config.load_json_file(config.get('jobs', 'ee2_job_info_file'))
+config = ConfigTests()
+test_jobs = config.load_json_file(config.get("jobs", "ee2_job_info_file"))
 
 
 class JobTest(unittest.TestCase):
@@ -44,7 +44,9 @@ class JobTest(unittest.TestCase):
         cls.inputs = None
 
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
-    def _mocked_job(self, with_version=True, with_cell_id=True, with_run_id=True, with_token_id=True):
+    def _mocked_job(
+        self, with_version=True, with_cell_id=True, with_run_id=True, with_token_id=True
+    ):
         kwargs = dict()
         if with_version:
             kwargs["app_version"] = self.app_version
@@ -55,7 +57,14 @@ class JobTest(unittest.TestCase):
         if with_token_id:
             kwargs["token_id"] = self.token_id
 
-        job = Job(self.job_id, self.app_id, self.inputs, self.owner, tag=self.app_tag, **kwargs)
+        job = Job(
+            self.job_id,
+            self.app_id,
+            self.inputs,
+            self.owner,
+            tag=self.app_tag,
+            **kwargs
+        )
 
         return job
 
@@ -72,12 +81,17 @@ class JobTest(unittest.TestCase):
         self.assertEqual(job.token_id, self.token_id)
 
     def test_job_from_state(self):
-        job_info = {
-            "params": self.inputs,
-            "service_ver": self.app_version
-        }
-        job = Job.from_state(self.job_id, job_info, self.owner, self.app_id, tag=self.app_tag,
-                             cell_id=self.cell_id, run_id=self.run_id, token_id=self.token_id)
+        job_info = {"params": self.inputs, "service_ver": self.app_version}
+        job = Job.from_state(
+            self.job_id,
+            job_info,
+            self.owner,
+            self.app_id,
+            tag=self.app_tag,
+            cell_id=self.cell_id,
+            run_id=self.run_id,
+            token_id=self.token_id,
+        )
         self.assertEqual(job.job_id, self.job_id)
         self.assertEqual(job.app_id, self.app_id)
         self.assertEqual(job.inputs, self.inputs)
@@ -106,7 +120,8 @@ class JobTest(unittest.TestCase):
         job = self._mocked_job()
         js_out = job._repr_javascript_()
         self.assertIsInstance(js_out, str)
-        # spot check to make sure the core pieces are present. needs the element.html part, job_id, and widget
+        # spot check to make sure the core pieces are present. needs the
+        # element.html part, job_id, and widget
         self.assertIn("element.html", js_out)
         self.assertIn(job.job_id, js_out)
         self.assertIn("kbaseNarrativeJobStatus", js_out)
@@ -121,10 +136,10 @@ class JobTest(unittest.TestCase):
         job = self._mocked_job()
         state = job.state()
 
-        self.assertEqual(state['job_id'], job.job_id)
-        self.assertIn('status', state)
-        self.assertIn('updated', state)
-        self.assertNotIn('job_input', state)
+        self.assertEqual(state["job_id"], job.job_id)
+        self.assertIn("status", state)
+        self.assertIn("updated", state)
+        self.assertNotIn("job_input", state)
 
         # to do - add a test to only fetch from _last_state if it's populated and in a final state
         job.state()
@@ -138,7 +153,7 @@ class JobTest(unittest.TestCase):
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def test_show_output_widget(self):
         job = self._mocked_job()
-        out_widget = job.show_output_widget()
+        job.show_output_widget()
 
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def test_log(self):
@@ -162,14 +177,14 @@ class JobTest(unittest.TestCase):
         self.assertEqual(logs[0], total_lines)
         self.assertEqual(len(logs[1]), offset)
         for i in range(total_lines - offset):
-            self.assertIn(str(i+offset), logs[1][i]["line"])
+            self.assertIn(str(i + offset), logs[1][i]["line"])
         # grab a bite from the middle
         num_fetch = 20
         logs = job.log(first_line=offset, num_lines=num_fetch)
         self.assertEqual(logs[0], total_lines)
         self.assertEqual(len(logs[1]), num_fetch)
         for i in range(num_fetch):
-            self.assertIn(str(i+offset), logs[1][i]["line"])
+            self.assertIn(str(i + offset), logs[1][i]["line"])
         # should normalize negative numbers properly
         logs = job.log(first_line=-5)
         self.assertEqual(logs[0], total_lines)

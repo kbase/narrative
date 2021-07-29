@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'jquery',
     'bluebird',
@@ -12,19 +10,8 @@ define([
     'base/js/namespace',
     '../subdataMethods/manager',
     'bootstrap',
-    'css!font-awesome'
-], function (
-    $,
-    Promise,
-    html,
-    Validation,
-    Events,
-    Runtime,
-    UI,
-    Props,
-    Jupyter,
-    SubdataMethods
-) {
+    'css!font-awesome',
+], ($, Promise, html, Validation, Events, Runtime, UI, Props, Jupyter, SubdataMethods) => {
     'use strict';
 
     /*
@@ -43,7 +30,7 @@ define([
      */
 
     // Constants
-    var t = html.tag,
+    const t = html.tag,
         div = t('div'),
         p = t('p'),
         span = t('span'),
@@ -52,7 +39,7 @@ define([
         button = t('button');
 
     function factory(config) {
-        var spec = config.parameterSpec,
+        let spec = config.parameterSpec,
             runtime = Runtime.make(),
             workspaceId = runtime.getEnv('workspaceId'),
             busConnection = runtime.bus().connect(),
@@ -69,29 +56,34 @@ define([
         subdataMethods = SubdataMethods.make();
 
         function buildOptions() {
-            var availableValues = model.getItem('availableValues'),
+            const availableValues = model.getItem('availableValues'),
                 value = model.getItem('value') || [],
                 selectOptions = [option({ value: '' }, '')];
             if (!availableValues) {
                 return selectOptions;
             }
-            return selectOptions.concat(availableValues.map(function (availableValue) {
-                var selected = false,
-                    optionLabel = availableValue.id,
-                    optionValue = availableValue.id;
-                // TODO: pull the value out of the object
-                if (value.indexOf(availableValue.id) >= 0) {
-                    selected = true;
-                }
-                return option({
-                    value: optionValue,
-                    selected: selected
-                }, optionLabel);
-            }));
+            return selectOptions.concat(
+                availableValues.map((availableValue) => {
+                    let selected = false,
+                        optionLabel = availableValue.id,
+                        optionValue = availableValue.id;
+                    // TODO: pull the value out of the object
+                    if (value.indexOf(availableValue.id) >= 0) {
+                        selected = true;
+                    }
+                    return option(
+                        {
+                            value: optionValue,
+                            selected: selected,
+                        },
+                        optionLabel
+                    );
+                })
+            );
         }
 
         function buildCount() {
-            var availableValues = model.getItem('availableValues') || [],
+            const availableValues = model.getItem('availableValues') || [],
                 value = model.getItem('value') || [];
 
             return String(value.length) + ' / ' + String(availableValues.length) + ' items';
@@ -101,8 +93,8 @@ define([
             if (!filter) {
                 return items;
             }
-            var re = new RegExp(filter, 'i');
-            return items.filter(function (item) {
+            const re = new RegExp(filter, 'i');
+            return items.filter((item) => {
                 if (item.text && item.text.match(re)) {
                     return true;
                 }
@@ -111,9 +103,8 @@ define([
         }
 
         function doFilterItems() {
-            var items = model.getItem('availableValues', []),
+            const items = model.getItem('availableValues', []),
                 filteredItems = filterItems(items, model.getItem('filter'));
-
 
             // for now we just reset the from/to range to the beginning.
             model.setItem('filteredAvailableItems', filteredItems);
@@ -122,44 +113,45 @@ define([
         }
 
         function didChange() {
-            validate()
-                .then(function (result) {
-                    if (result.isValid) {
-                        model.setItem('value', result.value);
-                        updateInputControl('value');
-                        channel.emit('changed', {
-                            newValue: result.value
-                        });
-                    } else if (result.diagnosis === 'required-missing') {
-                        model.setItem('value', result.value);
-                        updateInputControl('value');
-                        channel.emit('changed', {
-                            newValue: result.value
-                        });
-                    }
-                    channel.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
+            validate().then((result) => {
+                if (result.isValid) {
+                    model.setItem('value', result.value);
+                    updateInputControl('value');
+                    channel.emit('changed', {
+                        newValue: result.value,
                     });
+                } else if (result.diagnosis === 'required-missing') {
+                    model.setItem('value', result.value);
+                    updateInputControl('value');
+                    channel.emit('changed', {
+                        newValue: result.value,
+                    });
+                }
+                channel.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
 
         function doAddItem(itemId) {
-            var selectedItems = model.getItem('selectedItems', []);
+            const selectedItems = model.getItem('selectedItems', []);
             selectedItems.push(itemId);
             model.setItem('selectedItems', selectedItems);
             didChange();
         }
 
         function doRemoveSelectedItem(indexOfitemToRemove) {
-            var selectedItems = model.getItem('selectedItems', []),
+            const selectedItems = model.getItem('selectedItems', []),
                 prevAllowSelection = spec.ui.multiSelection || selectedItems.length === 0;
             selectedItems.splice(indexOfitemToRemove, 1);
 
-            var newAllowSelection = spec.ui.multiSelection || selectedItems.length === 0;
+            const newAllowSelection = spec.ui.multiSelection || selectedItems.length === 0;
             if (newAllowSelection && !prevAllowSelection) {
                 // update text areas to have md-col-7 (from md-col-10)
-                $(ui.getElement('input-container')).find('.row > .col-md-10').switchClass('col-md-10', 'col-md-7');
+                $(ui.getElement('input-container'))
+                    .find('.row > .col-md-10')
+                    .switchClass('col-md-10', 'col-md-7');
                 $(ui.getElement('input-container')).find('.col-md-3.hidden').removeClass('hidden');
 
                 // update button areas to remove hidden class
@@ -169,20 +161,23 @@ define([
         }
 
         function doRemoveSelectedAvailableItem(idToRemove) {
-            var selectedItems = model.getItem('selectedItems', []);
+            const selectedItems = model.getItem('selectedItems', []);
 
-            model.setItem('selectedItems', selectedItems.filter(function (id) {
-                if (idToRemove === id) {
-                    return false;
-                }
-                return true;
-            }));
+            model.setItem(
+                'selectedItems',
+                selectedItems.filter((id) => {
+                    if (idToRemove === id) {
+                        return false;
+                    }
+                    return true;
+                })
+            );
             didChange();
         }
 
         function renderAvailableItems() {
-            var selected = model.getItem('selectedItems', []),
-                allowSelection = (spec.ui.multiSelection || selected.length === 0),
+            let selected = model.getItem('selectedItems', []),
+                allowSelection = spec.ui.multiSelection || selected.length === 0,
                 items = model.getItem('filteredAvailableItems', []),
                 from = model.getItem('showFrom'),
                 to = model.getItem('showTo'),
@@ -195,99 +190,122 @@ define([
             } else if (itemsToShow.length === 0) {
                 content = div({ style: { textAlign: 'center' } }, 'no available values');
             } else {
-                content = itemsToShow.map(function (item, index) {
-                    item.isAdding = false;
-                    var isSelected = selected.some(function (id) {
-                            return (item.id === id);
-                        }),
-                        disabled = isSelected;
-                    return div({ class: 'row', style: { border: '1px #CCC solid' } }, [
-                        div({
-                            class: 'col-md-2',
-                            style: {
-                                verticalAlign: 'middle',
-                                borderRadius: '3px',
-                                padding: '2px',
-                                backgroundColor: '#EEE',
-                                color: '#444',
-                                textAlign: 'right',
-                                paddingRight: '6px',
-                                fontFamily: 'monospace'
-                            }
-                        }, String(from + index + 1)),
-                        div({
-                            class: 'col-md-8',
-                            style: {
-                                padding: '2px'
-                            }
-                        }, item.text),
-                        div({
-                            class: 'col-md-2',
-                            style: {
-                                padding: '2px',
-                                textAlign: 'right',
-                                verticalAlign: 'top'
-                            }
-                        }, [
-                            (function () {
-                                if (disabled) {
-                                    return span({
-                                        class: 'kb-btn-icon',
-                                        type: 'button',
-                                        dataToggle: 'tooltip',
-                                        title: 'Remove from selected',
-                                        id: events.addEvent({
-                                            type: 'click',
-                                            handler: function () {
-                                                doRemoveSelectedAvailableItem(item.id);
-                                            }
-                                        })
-                                    }, [
-                                        span({
-                                            class: 'fa fa-minus-circle',
-                                            style: {
-                                                color: 'red',
-                                                fontSize: '200%'
-                                            }
-                                        })
-                                    ]);
-                                }
-                                if (allowSelection) {
-                                    return span({
-                                        class: 'kb-btn-icon',
-                                        type: 'button',
-                                        dataToggle: 'tooltip',
-                                        title: 'Add to selected',
-                                        dataItemId: item.id,
-                                        id: events.addEvent({
-                                            type: 'click',
-                                            handler: function () {
-                                                if (!item.isAdding) {
-                                                    item.isAdding = true;
-                                                    doAddItem(item.id);
-                                                }
-                                            }
-                                        })
-                                    }, [span({
-                                        class: 'fa fa-plus-circle',
-                                        style: {
-                                            color: 'green',
-                                            fontSize: '200%'
+                content = itemsToShow
+                    .map((item, index) => {
+                        item.isAdding = false;
+                        const isSelected = selected.some((id) => {
+                                return item.id === id;
+                            }),
+                            disabled = isSelected;
+                        return div({ class: 'row', style: { border: '1px #CCC solid' } }, [
+                            div(
+                                {
+                                    class: 'col-md-2',
+                                    style: {
+                                        verticalAlign: 'middle',
+                                        borderRadius: '3px',
+                                        padding: '2px',
+                                        backgroundColor: '#EEE',
+                                        color: '#444',
+                                        textAlign: 'right',
+                                        paddingRight: '6px',
+                                        fontFamily: 'monospace',
+                                    },
+                                },
+                                String(from + index + 1)
+                            ),
+                            div(
+                                {
+                                    class: 'col-md-8',
+                                    style: {
+                                        padding: '2px',
+                                    },
+                                },
+                                item.text
+                            ),
+                            div(
+                                {
+                                    class: 'col-md-2',
+                                    style: {
+                                        padding: '2px',
+                                        textAlign: 'right',
+                                        verticalAlign: 'top',
+                                    },
+                                },
+                                [
+                                    (function () {
+                                        if (disabled) {
+                                            return span(
+                                                {
+                                                    class: 'kb-btn-icon',
+                                                    type: 'button',
+                                                    dataToggle: 'tooltip',
+                                                    title: 'Remove from selected',
+                                                    id: events.addEvent({
+                                                        type: 'click',
+                                                        handler: function () {
+                                                            doRemoveSelectedAvailableItem(item.id);
+                                                        },
+                                                    }),
+                                                },
+                                                [
+                                                    span({
+                                                        class: 'fa fa-minus-circle',
+                                                        style: {
+                                                            color: 'red',
+                                                            fontSize: '200%',
+                                                        },
+                                                    }),
+                                                ]
+                                            );
                                         }
-                                    })]);
-                                }
-                                return span({
-                                    class: 'kb-btn-icon',
-                                    type: 'button',
-                                    dataToggle: 'tooltip',
-                                    title: 'Can\'t add - remove one first',
-                                    dataItemId: item.id
-                                }, span({ class: 'fa fa-ban', style: { color: 'silver', fontSize: '200%' } }));
-                            }())
-
-                        ])
-                    ]);
-                })
+                                        if (allowSelection) {
+                                            return span(
+                                                {
+                                                    class: 'kb-btn-icon',
+                                                    type: 'button',
+                                                    dataToggle: 'tooltip',
+                                                    title: 'Add to selected',
+                                                    dataItemId: item.id,
+                                                    id: events.addEvent({
+                                                        type: 'click',
+                                                        handler: function () {
+                                                            if (!item.isAdding) {
+                                                                item.isAdding = true;
+                                                                doAddItem(item.id);
+                                                            }
+                                                        },
+                                                    }),
+                                                },
+                                                [
+                                                    span({
+                                                        class: 'fa fa-plus-circle',
+                                                        style: {
+                                                            color: 'green',
+                                                            fontSize: '200%',
+                                                        },
+                                                    }),
+                                                ]
+                                            );
+                                        }
+                                        return span(
+                                            {
+                                                class: 'kb-btn-icon',
+                                                type: 'button',
+                                                dataToggle: 'tooltip',
+                                                title: "Can't add - remove one first",
+                                                dataItemId: item.id,
+                                            },
+                                            span({
+                                                class: 'fa fa-ban',
+                                                style: { color: 'silver', fontSize: '200%' },
+                                            })
+                                        );
+                                    })(),
+                                ]
+                            ),
+                        ]);
+                    })
                     .join('\n');
             }
 
@@ -297,7 +315,7 @@ define([
         }
 
         function renderSelectedItems() {
-            var selectedItems = model.getItem('selectedItems', []),
+            let selectedItems = model.getItem('selectedItems', []),
                 valuesMap = model.getItem('availableValuesMap', {}),
                 events = Events.make({ node: container }),
                 content;
@@ -305,70 +323,87 @@ define([
             if (selectedItems.length === 0) {
                 content = div({ style: { textAlign: 'center' } }, 'no selected values');
             } else {
-                content = selectedItems.map(function (itemId, index) {
-                    var item = valuesMap[itemId];
-                    if (item === undefined || item === null) {
-                        item = {
-                            text: itemId
-                        };
-                    }
-
-                    return div({
-                        class: 'row',
-                        style: {
-                            border: '1px #CCC solid',
-                            borderCollapse: 'collapse',
-                            boxSizing: 'border-box'
+                content = selectedItems
+                    .map((itemId, index) => {
+                        let item = valuesMap[itemId];
+                        if (item === undefined || item === null) {
+                            item = {
+                                text: itemId,
+                            };
                         }
-                    }, [
-                        div({
-                            class: 'col-md-2',
-                            style: {
-                                verticalAlign: 'middle',
-                                borderRadius: '3px',
-                                padding: '2px',
-                                backgroundColor: '#EEE',
-                                color: '#444',
-                                textAlign: 'right',
-                                paddingRight: '6px',
-                                fontFamily: 'monospace'
-                            }
-                        }, String(index + 1)),
-                        div({
-                            class: 'col-md-8',
-                            style: {
-                                padding: '2px'
-                            }
-                        }, item.text),
-                        div({
-                            class: 'col-md-2',
-                            style: {
-                                padding: '2px',
-                                textAlign: 'right',
-                                verticalAlign: 'top'
-                            }
-                        }, [
-                            span({
-                                class: 'kb-btn-icon',
-                                type: 'button',
-                                dataToggle: 'tooltip',
-                                title: 'Remove from selected',
-                                id: events.addEvent({
-                                    type: 'click',
-                                    handler: function () {
-                                        doRemoveSelectedItem(index);
-                                    }
-                                })
-                            }, span({
-                                class: 'fa fa-minus-circle',
+
+                        return div(
+                            {
+                                class: 'row',
                                 style: {
-                                    color: 'red',
-                                    fontSize: '200%'
-                                }
-                            }))
-                        ])
-                    ]);
-                }).join('\n');
+                                    border: '1px #CCC solid',
+                                    borderCollapse: 'collapse',
+                                    boxSizing: 'border-box',
+                                },
+                            },
+                            [
+                                div(
+                                    {
+                                        class: 'col-md-2',
+                                        style: {
+                                            verticalAlign: 'middle',
+                                            borderRadius: '3px',
+                                            padding: '2px',
+                                            backgroundColor: '#EEE',
+                                            color: '#444',
+                                            textAlign: 'right',
+                                            paddingRight: '6px',
+                                            fontFamily: 'monospace',
+                                        },
+                                    },
+                                    String(index + 1)
+                                ),
+                                div(
+                                    {
+                                        class: 'col-md-8',
+                                        style: {
+                                            padding: '2px',
+                                        },
+                                    },
+                                    item.text
+                                ),
+                                div(
+                                    {
+                                        class: 'col-md-2',
+                                        style: {
+                                            padding: '2px',
+                                            textAlign: 'right',
+                                            verticalAlign: 'top',
+                                        },
+                                    },
+                                    [
+                                        span(
+                                            {
+                                                class: 'kb-btn-icon',
+                                                type: 'button',
+                                                dataToggle: 'tooltip',
+                                                title: 'Remove from selected',
+                                                id: events.addEvent({
+                                                    type: 'click',
+                                                    handler: function () {
+                                                        doRemoveSelectedItem(index);
+                                                    },
+                                                }),
+                                            },
+                                            span({
+                                                class: 'fa fa-minus-circle',
+                                                style: {
+                                                    color: 'red',
+                                                    fontSize: '200%',
+                                                },
+                                            })
+                                        ),
+                                    ]
+                                ),
+                            ]
+                        );
+                    })
+                    .join('\n');
             }
             ui.setContent('selected-items', content);
             events.attachEvents();
@@ -376,7 +411,7 @@ define([
         }
 
         function renderSearchBox() {
-            var events = Events.make({ node: container }),
+            let events = Events.make({ node: container }),
                 content;
 
             content = input({
@@ -385,33 +420,34 @@ define([
                 placeholder: 'search',
                 value: model.getItem('filter') || '',
                 id: events.addEvents({
-                    events: [{
-                        type: 'keyup',
-                        handler: function (e) {
-                            doSearchKeyUp(e);
-                        }
-                    },
-                    {
-                        type: 'focus',
-                        handler: function () {
-                            Jupyter.narrative.disableKeyboardManager();
-                        }
-                    },
-                    {
-                        type: 'blur',
-                        handler: function () {
-                            // console.log('SingleSubData Search BLUR');
-                            // Jupyter.narrative.enableKeyboardManager();
-                        }
-                    },
-                    {
-                        type: 'click',
-                        handler: function () {
-                            Jupyter.narrative.disableKeyboardManager();
-                        }
-                    }
-                    ]
-                })
+                    events: [
+                        {
+                            type: 'keyup',
+                            handler: function (e) {
+                                doSearchKeyUp(e);
+                            },
+                        },
+                        {
+                            type: 'focus',
+                            handler: function () {
+                                Jupyter.narrative.disableKeyboardManager();
+                            },
+                        },
+                        {
+                            type: 'blur',
+                            handler: function () {
+                                // console.log('SingleSubData Search BLUR');
+                                // Jupyter.narrative.enableKeyboardManager();
+                            },
+                        },
+                        {
+                            type: 'click',
+                            handler: function () {
+                                Jupyter.narrative.disableKeyboardManager();
+                            },
+                        },
+                    ],
+                }),
             });
 
             ui.setContent('search-box', content);
@@ -419,8 +455,8 @@ define([
         }
 
         function renderSearchMessage() {
-            var content = span({
-                dataElement: 'message'
+            const content = span({
+                dataElement: 'message',
             });
 
             ui.setContent('search-message', content);
@@ -431,30 +467,24 @@ define([
         }
 
         function renderStats() {
-            var availableItems = model.getItem('availableValues', []),
+            let availableItems = model.getItem('availableValues', []),
                 filteredItems = model.getItem('filteredAvailableItems', []),
                 content;
             if (!isAvailableValuesInitialized) {
                 content = span({ style: { fontStyle: 'italic' } }, [
-                    ' - ' + html.loading('Loading data...')
+                    ' - ' + html.loading('Loading data...'),
                 ]);
             } else if (availableItems.length === 0) {
-                content = span({ style: { fontStyle: 'italic' } }, [
-                    ' - no available items'
-                ]);
+                content = span({ style: { fontStyle: 'italic' } }, [' - no available items']);
             } else if (filteredItems.length === availableItems.length) {
                 content = span({ style: { fontStyle: 'italic' } }, [
                     ' - ',
-                    String(availableItems.length)
+                    String(availableItems.length),
                 ]);
             } else {
                 content = span({ style: { fontStyle: 'italic' } }, [
                     ' - filtered ',
-                    span([
-                        String(filteredItems.length),
-                        ' out of ',
-                        String(availableItems.length)
-                    ])
+                    span([String(filteredItems.length), ' out of ', String(availableItems.length)]),
                 ]);
             }
 
@@ -462,7 +492,7 @@ define([
         }
 
         function renderToolbar() {
-            var items = model.getItem('filteredAvailableItems', []),
+            let items = model.getItem('filteredAvailableItems', []),
                 events = Events.make({ node: container }),
                 content;
 
@@ -470,50 +500,62 @@ define([
                 content = '';
             } else {
                 content = div([
-                    button({
-                        type: 'button',
-                        class: 'btn btn-default',
-                        style: { xwidth: '100%' },
-                        id: events.addEvent({
-                            type: 'click',
-                            handler: function () {
-                                doFirstPage();
-                            }
-                        })
-                    }, ui.buildIcon({ name: 'step-forward', rotate: 270 })),
-                    button({
-                        class: 'btn btn-default',
-                        type: 'button',
-                        style: { xwidth: '50%' },
-                        id: events.addEvent({
-                            type: 'click',
-                            handler: function () {
-                                doPreviousPage();
-                            }
-                        })
-                    }, ui.buildIcon({ name: 'caret-up' })),
-                    button({
-                        class: 'btn btn-default',
-                        type: 'button',
-                        style: { xwidth: '100%' },
-                        id: events.addEvent({
-                            type: 'click',
-                            handler: function () {
-                                doNextPage();
-                            }
-                        })
-                    }, ui.buildIcon({ name: 'caret-down' })),
-                    button({
-                        type: 'button',
-                        class: 'btn btn-default',
-                        style: { xwidth: '100%' },
-                        id: events.addEvent({
-                            type: 'click',
-                            handler: function () {
-                                doLastPage();
-                            }
-                        })
-                    }, ui.buildIcon({ name: 'step-forward', rotate: 90 }))
+                    button(
+                        {
+                            type: 'button',
+                            class: 'btn btn-default',
+                            style: { xwidth: '100%' },
+                            id: events.addEvent({
+                                type: 'click',
+                                handler: function () {
+                                    doFirstPage();
+                                },
+                            }),
+                        },
+                        ui.buildIcon({ name: 'step-forward', rotate: 270 })
+                    ),
+                    button(
+                        {
+                            class: 'btn btn-default',
+                            type: 'button',
+                            style: { xwidth: '50%' },
+                            id: events.addEvent({
+                                type: 'click',
+                                handler: function () {
+                                    doPreviousPage();
+                                },
+                            }),
+                        },
+                        ui.buildIcon({ name: 'caret-up' })
+                    ),
+                    button(
+                        {
+                            class: 'btn btn-default',
+                            type: 'button',
+                            style: { xwidth: '100%' },
+                            id: events.addEvent({
+                                type: 'click',
+                                handler: function () {
+                                    doNextPage();
+                                },
+                            }),
+                        },
+                        ui.buildIcon({ name: 'caret-down' })
+                    ),
+                    button(
+                        {
+                            type: 'button',
+                            class: 'btn btn-default',
+                            style: { xwidth: '100%' },
+                            id: events.addEvent({
+                                type: 'click',
+                                handler: function () {
+                                    doLastPage();
+                                },
+                            }),
+                        },
+                        ui.buildIcon({ name: 'step-forward', rotate: 90 })
+                    ),
                 ]);
             }
 
@@ -522,7 +564,7 @@ define([
         }
 
         function setPageStart(newFrom) {
-            var from = model.getItem('showFrom'),
+            let from = model.getItem('showFrom'),
                 to = model.getItem('to'),
                 newTo,
                 total = model.getItem('filteredAvailableItems', []).length,
@@ -571,16 +613,18 @@ define([
         }
 
         function doSearchKeyUp(e) {
-            var filterLength = e.target.value.length;
+            const filterLength = e.target.value.length;
             if (filterLength >= minimumFilterLength) {
                 model.setItem('filter', e.target.value);
                 doFilterItems();
                 setSearchMessage('filter applied');
             } else {
                 if (filterLength > 0 && minimumFilterLength > 0) {
-                    setSearchMessage('Enter ' + 
-                        (minimumFilterLength - e.target.value.length) +
-                        ' more character to filter');
+                    setSearchMessage(
+                        'Enter ' +
+                            (minimumFilterLength - e.target.value.length) +
+                            ' more character to filter'
+                    );
                 } else {
                     setSearchMessage('');
                 }
@@ -594,65 +638,77 @@ define([
         function makeInputControl() {
             // There is an input control, and a dropdown,
             // TODO select2 after we get a handle on this...
-            var availableValues = model.getItem('availableValues');
+            const availableValues = model.getItem('availableValues');
 
             if (!availableValues) {
-                return p({
-                    class: 'form-control-static',
-                    style: {
-                        fontStyle: 'italic',
-                        whiteSpace: 'normal',
-                        padding: '3px',
-                        border: '1px silver solid'
-                    }
-                }, 'Items will be available after selecting a value for ' + spec.data.constraints.subdataSelection.parameter_id);
+                return p(
+                    {
+                        class: 'form-control-static',
+                        style: {
+                            fontStyle: 'italic',
+                            whiteSpace: 'normal',
+                            padding: '3px',
+                            border: '1px silver solid',
+                        },
+                    },
+                    'Items will be available after selecting a value for ' +
+                        spec.data.constraints.subdataSelection.parameter_id
+                );
             }
 
             return div([
                 ui.buildCollapsiblePanel({
                     title: span(['Available Items', span({ dataElement: 'stats' })]),
                     classes: ['kb-panel-light'],
-                    body: div({ dataElement: 'available-items-area', style: { marginTop: '10px' } }, [
-                        div({ class: 'row' }, [
-                            div({
-                                class: 'col-md-6'
-                            }, [
-                                span({ dataElement: 'search-box' }),
-                                span({ 
-                                    style: {
-                                        marginLeft: '4px',
-                                        fontStyle: 'italic'
-                                    }, 
-                                    dataElement: 'search-message' 
-                                })
-                            ]),
-                            div({
-                                class: 'col-md-6',
-                                style: { textAlign: 'right' },
-                                dataElement: 'toolbar'
-                            })
-                        ]),
-                        div({ class: 'row', style: { marginTop: '4px' } }, [
-                            div({ class: 'col-md-12' },
-                                div({
-                                    style: {
-                                        border: '1px silver solid'
+                    body: div(
+                        { dataElement: 'available-items-area', style: { marginTop: '10px' } },
+                        [
+                            div({ class: 'row' }, [
+                                div(
+                                    {
+                                        class: 'col-md-6',
                                     },
-                                    dataElement: 'available-items'
-                                }))
-                        ])
-                    ])
+                                    [
+                                        span({ dataElement: 'search-box' }),
+                                        span({
+                                            style: {
+                                                marginLeft: '4px',
+                                                fontStyle: 'italic',
+                                            },
+                                            dataElement: 'search-message',
+                                        }),
+                                    ]
+                                ),
+                                div({
+                                    class: 'col-md-6',
+                                    style: { textAlign: 'right' },
+                                    dataElement: 'toolbar',
+                                }),
+                            ]),
+                            div({ class: 'row', style: { marginTop: '4px' } }, [
+                                div(
+                                    { class: 'col-md-12' },
+                                    div({
+                                        style: {
+                                            border: '1px silver solid',
+                                        },
+                                        dataElement: 'available-items',
+                                    })
+                                ),
+                            ]),
+                        ]
+                    ),
                 }),
                 ui.buildPanel({
                     title: 'Selected Items',
                     classes: ['kb-panel-light'],
                     body: div({
                         style: {
-                            border: '1px silver solid'
+                            border: '1px silver solid',
                         },
-                        dataElement: 'selected-items'
-                    })
-                })
+                        dataElement: 'selected-items',
+                    }),
+                }),
             ]);
         }
 
@@ -669,27 +725,25 @@ define([
          */
         function updateInputControl(changedProperty) {
             switch (changedProperty) {
-            case 'value':
-                // just change the selections.
-                var count = buildCount();
-                ui.setContent('input-control.count', count);
+                case 'value':
+                    // just change the selections.
+                    var count = buildCount();
+                    ui.setContent('input-control.count', count);
 
-                break;
-            case 'availableValues':
-                // rebuild the options
-                // re-apply the selections from the value
-                var options = buildOptions();
-                ui.setContent('input-control.input', options);
-                ui.setContent('input-control.count', count);
+                    break;
+                case 'availableValues':
+                    // rebuild the options
+                    // re-apply the selections from the value
+                    var options = buildOptions();
+                    ui.setContent('input-control.input', options);
+                    ui.setContent('input-control.count', count);
 
-                break;
-            case 'referenceObjectName':
+                    break;
+                case 'referenceObjectName':
                 // refetch the available values
                 // set available values
                 // update input control for available values
                 // set value to null
-
-
             }
         }
 
@@ -711,10 +765,10 @@ define([
         }
 
         function validate() {
-            return Promise.try(function () {
-                var rawValue = getInputValue(),
+            return Promise.try(() => {
+                const rawValue = getInputValue(),
                     validationOptions = {
-                        required: spec.data.constraints.required
+                        required: spec.data.constraints.required,
                     };
 
                 return Validation.validateStringSet(rawValue, validationOptions);
@@ -722,7 +776,7 @@ define([
         }
 
         function fetchData() {
-            var referenceObjectName = model.getItem('referenceObjectName'),
+            let referenceObjectName = model.getItem('referenceObjectName'),
                 referenceObjectRef = spec.data.constraints.subdataSelection.constant_ref;
 
             if (!referenceObjectName) {
@@ -732,89 +786,87 @@ define([
             if (!referenceObjectRef) {
                 if (referenceObjectName.indexOf('/') === -1) {
                     referenceObjectRef = workspaceId + '/' + referenceObjectName;
-                }
-                else {
+                } else {
                     referenceObjectRef = referenceObjectName;
                 }
             }
 
-            return subdataMethods.fetchData({
-                referenceObjectRef: referenceObjectRef,
-                spec: spec
-            })
-                .then(function (values) {
+            return subdataMethods
+                .fetchData({
+                    referenceObjectRef: referenceObjectRef,
+                    spec: spec,
+                })
+                .then((values) => {
                     return [true, values];
                 });
         }
 
         function syncAvailableValues() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 return fetchData();
-            })
-                .spread(function (haveRefData, data) {
-                    isAvailableValuesInitialized = true;
+            }).spread((haveRefData, data) => {
+                isAvailableValuesInitialized = true;
 
-                    // If default values have been provided, prepend them to the data.
+                // If default values have been provided, prepend them to the data.
 
-                    // We use the raw default values here since we are not really using
-                    // it as the default value, but as a set of additional items
-                    // to select.
-                    var defaultValues = spec.data.defaultValue;
-                    var newAvailableValues = data || [];
-                    if (defaultValues && (defaultValues instanceof Array) && (defaultValues.length > 0)) {
-                        defaultValues.forEach(function (itemId) {
-                            if (itemId && itemId.trim().length > 0) {
-                                // Add the item to the available data
-                                var newItem = {
-                                    id: itemId,
-                                    text: itemId
-                                };
-                                newAvailableValues.unshift(newItem);
-                            }
-                        });
-                    }
-
-                    // The data represents the total available subdata, with all
-                    // necessary fields for display. We build from that three
-                    // additional structures
-                    // - a map of id to object
-                    // - a set of available ids
-                    // - a set of selected ids
-                    // - a set of filtered ids
-                    model.setItem('availableValues', newAvailableValues);
-
-                    if (newAvailableValues.length > 4000) {
-                        minimumFilterLength = 3;
-                    } else {
-                        minimumFilterLength = 0;
-                    }
-
-                    // TODO: generate all of this in the fetchData -- it will be a bit faster.
-                    var map = {};
-                    newAvailableValues.forEach(function (datum) {
-                        map[datum.id] = datum;
+                // We use the raw default values here since we are not really using
+                // it as the default value, but as a set of additional items
+                // to select.
+                const defaultValues = spec.data.defaultValue;
+                const newAvailableValues = data || [];
+                if (defaultValues && defaultValues instanceof Array && defaultValues.length > 0) {
+                    defaultValues.forEach((itemId) => {
+                        if (itemId && itemId.trim().length > 0) {
+                            // Add the item to the available data
+                            const newItem = {
+                                id: itemId,
+                                text: itemId,
+                            };
+                            newAvailableValues.unshift(newItem);
+                        }
                     });
+                }
 
-                    model.setItem('availableValuesMap', map);
+                // The data represents the total available subdata, with all
+                // necessary fields for display. We build from that three
+                // additional structures
+                // - a map of id to object
+                // - a set of available ids
+                // - a set of selected ids
+                // - a set of filtered ids
+                model.setItem('availableValues', newAvailableValues);
 
-                    // Ensure that selectedValues not in the new available values are removed.
-                    var selectedValues = model.getItem('selectedItems', []).filter(function (value) {
-                        return map[value];
-                    });
-                    model.setItem('selectedItems', selectedValues);
+                if (newAvailableValues.length > 4000) {
+                    minimumFilterLength = 3;
+                } else {
+                    minimumFilterLength = 0;
+                }
 
-                    doFilterItems();
+                // TODO: generate all of this in the fetchData -- it will be a bit faster.
+                const map = {};
+                newAvailableValues.forEach((datum) => {
+                    map[datum.id] = datum;
                 });
+
+                model.setItem('availableValuesMap', map);
+
+                // Ensure that selectedValues not in the new available values are removed.
+                const selectedValues = model.getItem('selectedItems', []).filter((value) => {
+                    return map[value];
+                });
+                model.setItem('selectedItems', selectedValues);
+
+                doFilterItems();
+            });
         }
 
         function autoValidate() {
-            return validate()
-                .then(function (result) {
-                    channel.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
+            return validate().then((result) => {
+                channel.emit('validation', {
+                    errorMessage: result.errorMessage,
+                    diagnosis: result.diagnosis,
                 });
+            });
         }
 
         /*
@@ -823,16 +875,19 @@ define([
          * Hooks up event listeners
          */
         function render() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 // check to see if we have to render inputControl.
-                var events = Events.make({ node: container }),
+                const events = Events.make({ node: container }),
                     inputControl = makeInputControl(events),
-                    content = div({
-                        class: 'input-group',
-                        style: {
-                            width: '100%'
-                        }
-                    }, inputControl);
+                    content = div(
+                        {
+                            class: 'input-group',
+                            style: {
+                                width: '100%',
+                            },
+                        },
+                        inputControl
+                    );
 
                 ui.setContent('input-container', content);
                 renderSearchBox();
@@ -844,10 +899,10 @@ define([
 
                 events.attachEvents();
             })
-                .then(function () {
+                .then(() => {
                     return autoValidate();
                 })
-                .catch(function (err) {
+                .catch((err) => {
                     console.error('ERROR in render', err);
                 });
         }
@@ -858,16 +913,19 @@ define([
          * For the objectInput, there is only ever one control.
          */
         function layout(events) {
-            var content = div({
-                dataElement: 'main-panel'
-            }, [
-                div({
-                    dataElement: 'input-container'
-                })
-            ]);
+            const content = div(
+                {
+                    dataElement: 'main-panel',
+                },
+                [
+                    div({
+                        dataElement: 'input-container',
+                    }),
+                ]
+            );
             return {
                 content: content,
-                events: events
+                events: events,
             };
         }
 
@@ -876,7 +934,7 @@ define([
              * Issued when thre is a need to have all params reset to their
              * default value.
              */
-            channel.on('reset-to-defaults', function () {
+            channel.on('reset-to-defaults', () => {
                 resetModelValue();
                 // TODO: this should really be set when the linked field is reset...
                 model.setItem('availableValues', []);
@@ -888,7 +946,7 @@ define([
             /*
              * Issued when there is an update for this param.
              */
-            channel.on('update', function (message) {
+            channel.on('update', (message) => {
                 model.setItem('value', message.value);
                 updateInputControl('value');
             });
@@ -903,10 +961,10 @@ define([
                 paramsChannel.listen({
                     key: {
                         type: 'parameter-changed',
-                        parameter: spec.data.constraints.subdataSelection.constant_ref
+                        parameter: spec.data.constraints.subdataSelection.constant_ref,
                     },
                     handle: function (message) {
-                        var newValue = message.newValue;
+                        let newValue = message.newValue;
                         if (message.newValue === '') {
                             newValue = null;
                         }
@@ -914,13 +972,13 @@ define([
                         model.reset();
                         model.setItem('referenceObjectName', newValue);
                         syncAvailableValues()
-                            .then(function () {
+                            .then(() => {
                                 updateInputControl('availableValues');
                             })
-                            .catch(function (err) {
+                            .catch((err) => {
                                 console.error('ERROR syncing available values', err);
                             });
-                    }
+                    },
                 });
             }
 
@@ -928,26 +986,26 @@ define([
                 paramsChannel.listen({
                     key: {
                         type: 'parameter-changed',
-                        parameter: spec.data.constraints.subdataSelection.parameter_id
+                        parameter: spec.data.constraints.subdataSelection.parameter_id,
                     },
                     handle: function (message) {
-                        var newValue = message.newValue;
+                        let newValue = message.newValue;
                         if (message.newValue === '') {
                             newValue = null;
                         }
                         // reset the entire model.
-                        var selectedItems = model.getItem('selectedItems');
+                        const selectedItems = model.getItem('selectedItems');
                         model.reset();
                         model.setItem('selectedItems', selectedItems);
                         model.setItem('referenceObjectName', newValue);
                         syncAvailableValues()
-                            .then(function () {
+                            .then(() => {
                                 updateInputControl('availableValues');
                             })
-                            .catch(function (err) {
+                            .catch((err) => {
                                 console.error('ERROR syncing available values', err);
                             });
-                    }
+                    },
                 });
             }
 
@@ -955,23 +1013,23 @@ define([
                 paramsChannel.listen({
                     key: {
                         type: 'parameter-value',
-                        parameter: spec.data.constraints.subdataSelection.parameter_id
+                        parameter: spec.data.constraints.subdataSelection.parameter_id,
                     },
                     handle: function (message) {
-                        var newValue = message.newValue;
+                        let newValue = message.newValue;
                         if (message.newValue === '') {
                             newValue = null;
                         }
                         model.reset();
                         model.setItem('referenceObjectName', newValue);
                         syncAvailableValues()
-                            .then(function () {
+                            .then(() => {
                                 updateInputControl('availableValues');
                             })
-                            .catch(function (err) {
+                            .catch((err) => {
                                 console.error('ERROR syncing available values', err);
                             });
-                    }
+                    },
                 });
             }
 
@@ -987,20 +1045,20 @@ define([
             //            });
             // channel.emit('sync');
 
-            paramsChannel.request({
-                parameterName: spec.id
-            }, {
-                key: {
-                    type: 'get-parameter'
-                }
-            })
-                .then(function () {
+            paramsChannel
+                .request(
+                    {
+                        parameterName: spec.id,
+                    },
+                    {
+                        key: {
+                            type: 'get-parameter',
+                        },
+                    }
+                )
+                .then(() => {
                     // console.log('Now i got it again', message);
                 });
-
-
-
-
         }
 
         // MODIFICATION EVENTS
@@ -1023,14 +1081,14 @@ define([
         // LIFECYCLE API
 
         function start(arg) {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({
-                    node: container
+                    node: container,
                 });
 
-                var events = Events.make(),
+                const events = Events.make(),
                     theLayout = layout(events);
 
                 container.innerHTML = theLayout.content;
@@ -1044,19 +1102,22 @@ define([
                 // Get initial data.
                 // Weird, but will make it look nicer.
                 return Promise.all([
-                    paramsChannel.request({
-                        parameterName: spec.data.constraints.subdataSelection.parameter_id
-                    }, {
-                        key: {
-                            type: 'get-parameter'
+                    paramsChannel.request(
+                        {
+                            parameterName: spec.data.constraints.subdataSelection.parameter_id,
+                        },
+                        {
+                            key: {
+                                type: 'get-parameter',
+                            },
                         }
-                    })
+                    ),
                 ])
-                    .spread(function (referencedParamValue) {
+                    .spread((referencedParamValue) => {
                         if (!config.initialValue) {
                             model.setItem('selectedItems', []);
                         } else {
-                            var selectedItems = config.initialValue;
+                            let selectedItems = config.initialValue;
                             if (!(selectedItems instanceof Array)) {
                                 selectedItems = [selectedItems];
                             }
@@ -1068,22 +1129,22 @@ define([
                             model.setItem('referenceObjectName', referencedParamValue.value);
                         }
                         return syncAvailableValues()
-                            .then(function () {
+                            .then(() => {
                                 updateInputControl('availableValues');
                                 return autoValidate();
                             })
-                            .catch(function (err) {
+                            .catch((err) => {
                                 console.error('ERROR syncing available values', err);
                             });
                     })
-                    .catch(function (err) {
+                    .catch((err) => {
                         console.error('ERROR fetching initial data', err);
                     });
             });
         }
 
         function stop() {
-            return Promise.try(function () {
+            return Promise.try(() => {
                 if (parent && container) {
                     parent.removeChild(container);
                 }
@@ -1100,25 +1161,25 @@ define([
                 selectedItems: [],
                 value: null,
                 showFrom: 0,
-                showTo: 5
+                showTo: 5,
             },
             onUpdate: function () {
                 renderStats();
                 renderToolbar();
                 renderAvailableItems();
                 renderSelectedItems();
-            }
+            },
         });
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
         };
     }
 
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
     };
 });

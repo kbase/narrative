@@ -1,6 +1,5 @@
 {
     "appdev": {
-        "KBaseSearchEngine": "https://appdev.kbase.us/services/searchapi2/legacy",
         "auth": "https://appdev.kbase.us/services/auth",
         "awe": "https://appdev.kbase.us/services/awe-api",
         "catalog": "https://appdev.kbase.us/services/catalog",
@@ -31,6 +30,7 @@
         "provenance_view": "/#objgraphview",
         "reset_password": "https://gologin.kbase.us/ResetPassword",
         "search": "https://appdev.kbase.us/services/search/getResults",
+        "searchapi2": "https://appdev.kbase.us/services/searchapi2/rpc",
         "service_wizard": "https://appdev.kbase.us/services/service_wizard",
         "shock": "https://appdev.kbase.us/services/shock-api",
         "staging_api_url": "https://appdev.kbase.us/services/staging_service",
@@ -52,7 +52,6 @@
     "auth_cookie": "kbase_session",
     "auth_sleep_recheck_ms": 60000,
     "ci": {
-        "KBaseSearchEngine": "https://ci.kbase.us/services/searchapi2/legacy",
         "auth": "https://ci.kbase.us/services/auth",
         "awe": "https://ci.kbase.us/services/awe-api",
         "catalog": "https://ci.kbase.us/services/catalog",
@@ -82,6 +81,7 @@
         "provenance_view": "/#objgraphview",
         "reset_password": "https://gologin.kbase.us/ResetPassword",
         "search": "https://ci.kbase.us/services/search/getResults",
+        "searchapi2": "https://ci.kbase.us/services/searchapi2/rpc",
         "service_wizard": "https://ci.kbase.us/services/service_wizard",
         "shock": "https://ci.kbase.us/services/shock-api",
         "staging_api_url": "https://ci.kbase.us/services/staging_service",
@@ -103,7 +103,7 @@
         "google_ad_conversion": "kR9OCLas4JgBEOy2pucC"
     },
     "comm_wait_timeout": 600000,
-    "config": "dev",
+    "config": "ci",
     "data_panel": {
         "initial_sort_limit": 10000,
         "max_name_length": 33,
@@ -116,7 +116,6 @@
         "ws_max_objs_to_fetch": 30000
     },
     "dev": {
-        "KBaseSearchEngine": "https://ci.kbase.us/services/searchapi2/legacy",
         "auth": "https://ci.kbase.us/services/auth",
         "awe": "https://ci.kbase.us/services/awe-api",
         "catalog": "https://ci.kbase.us/services/catalog",
@@ -146,6 +145,7 @@
         "provenance_view": "/#objgraphview",
         "reset_password": "https://gologin.kbase.us/ResetPassword",
         "search": "https://ci.kbase.us/services/search/getResults",
+        "searchapi2": "https://ci.kbase.us/services/searchapi2/rpc",
         "service_wizard": "https://ci.kbase.us/services/service_wizard",
         "shock": "https://ci.kbase.us/services/shock-api",
         "staging_api_url": "https://ci.kbase.us/services/staging_service",
@@ -164,13 +164,12 @@
         "ws_browser": "https://narrative.kbase.us/#ws",
         "google_analytics_id": "UA-74532036-1"
     },
-    "dev_mode":  true,
-    "git_commit_hash": "465a86a62",
-    "git_commit_time": "Fri May 22 16:29:47 2020 -0700",
+    "dev_mode": true,
+    "git_commit_hash": "3f9ee0617",
+    "git_commit_time": "Thu Nov 19 08:33:21 2020 -0800",
     "loading_gif": "/narrative/static/kbase/images/ajax-loader.gif",
     "name": "KBase Narrative",
     "next": {
-        "KBaseSearchEngine": "https://next.kbase.us/services/searchapi2/legacy",
         "auth": "https://next.kbase.us/services/auth",
         "awe": "https://next.kbase.us/services/awe-api",
         "catalog": "https://next.kbase.us/services/catalog",
@@ -201,6 +200,7 @@
         "provenance_view": "/#objgraphview",
         "reset_password": "https://gologin.kbase.us/ResetPassword",
         "search": "https://kbase.us/services/search/getResults",
+        "searchapi2": "https://next.kbase.us/services/searchapi2/rpc",
         "service_wizard": "https://next.kbase.us/services/service_wizard",
         "shock": "https://next.kbase.us/services/shock-api",
         "staging_api_url": "https://next.kbase.us/services/staging_service",
@@ -220,7 +220,6 @@
         "google_analytics_id": "UA-74530365-1"
     },
     "prod": {
-        "KBaseSearchEngine": "https://kbase.us/services/searchapi2/legacy",
         "auth": "https://kbase.us/services/auth",
         "awe": "https://kbase.us/services/awe-api",
         "catalog": "https://kbase.us/services/catalog",
@@ -251,6 +250,7 @@
         "provenance_view": "/#objgraphview",
         "reset_password": "https://gologin.kbase.us/ResetPassword",
         "search": "https://kbase.us/services/search/getResults",
+        "searchapi2": "https://kbase.us/services/searchapi2/rpc",
         "service_wizard": "https://kbase.us/services/service_wizard",
         "shock": "https://kbase.us/services/shock-api",
         "staging_api_url": "https://kbase.us/services/staging_service",
@@ -272,7 +272,6 @@
         "google_ad_conversion": "kR9OCLas4JgBEOy2pucC"
     },
     "narrative-dev": {
-        "KBaseSearchEngine": "https://narrative-dev.kbase.us/services/searchapi2/legacy",
         "auth": "https://narrative-dev.kbase.us/services/auth",
         "awe": "https://narrative-dev.kbase.us/services/awe-api",
         "catalog": "https://narrative-dev.kbase.us/services/catalog",
@@ -288,6 +287,7 @@
         "genomeCmp": "https://narrative-dev.kbase.us/services/genome_comparison/jsonrpc",
         "groups": "https://narrative-dev.kbase.us/services/groups",
         "job_service": "https://narrative-dev.kbase.us/services/njs_wrapper",
+        "KBaseSearchEngine": "https://narrative-dev.kbase.us/services/searchapi2/legacy",
         "landing_pages": "/#dataview/",
         "log_host": "https://elasticsearch2.chicago.kbase.us",
         "log_port": 9000,
@@ -303,6 +303,7 @@
         "provenance_view": "/#objgraphview",
         "reset_password": "https://gologin.kbase.us/ResetPassword",
         "search": "https://narrative-dev.kbase.us/services/search/getResults",
+        "searchapi2": "https://narrative-dev.kbase.us/services/searchapi2/rpc",
         "service_wizard": "https://narrative-dev.kbase.us/services/service_wizard",
         "shock": "https://narrative-dev.kbase.us/services/shock-api",
         "staging_api_url": "https://narrative-dev.kbase.us/services/staging_service",
@@ -321,11 +322,67 @@
         "ws_browser": "https://narrative-dev.kbase.us/#ws",
         "google_analytics_id": "UA-131054609-1"
     },
+    "narrative-refactor": {
+        "auth": "https://narrative-refactor.kbase.us/services/auth",
+        "awe": "https://narrative-refactor.kbase.us/services/awe-api",
+        "catalog": "https://narrative-refactor.kbase.us/services/catalog",
+        "cdn": "https://narrative-refactor.kbase.us/cdn/files",
+        "compound_img_url": "http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/",
+        "data_import_export": "https://narrative-refactor.kbase.us/services/data_import_export",
+        "data_panel_sources": "/data_source_config.json",
+        "execution_engine2": "https://narrative-refactor.kbase.us/services/ee2",
+        "fba": "https://narrative-refactor.kbase.us/services/KBaseFBAModeling/",
+        "ftp_api_root": "/data/bulk",
+        "ftp_api_url": "https://narrative-refactor.kbase.us/services/kb-ftp-api/v0",
+        "gene_families": "https://narrative-refactor.kbase.us/services/gene_families",
+        "genomeCmp": "https://narrative-refactor.kbase.us/services/genome_comparison/jsonrpc",
+        "groups": "https://narrative-refactor.kbase.us/services/groups",
+        "job_service": "https://narrative-refactor.kbase.us/services/njs_wrapper",
+        "landing_pages": "/#dataview/",
+        "log_host": "https://elasticsearch2.chicago.kbase.us",
+        "log_port": 9000,
+        "log_proxy_host": "172.17.42.1",
+        "log_proxy_port": 32001,
+        "login": "https://narrative-refactor.kbase.us/services/authorization/Sessions/Login",
+        "narrative_job_proxy": "https://narrative-refactor.kbase.us/services/narrativejobproxy/",
+        "narrative_method_store": "https://narrative-refactor.kbase.us/services/narrative_method_store/rpc",
+        "narrative_method_store_image": "https://narrative-refactor.kbase.us/services/narrative_method_store/",
+        "narrative_method_store_types": "https://narrative-refactor.kbase.us/services/narrative_method_store/rpc",
+        "profile_page": "/#people/",
+        "protein_info": "",
+        "provenance_view": "/#objgraphview",
+        "reset_password": "https://gologin.kbase.us/ResetPassword",
+        "search": "https://narrative-refactor.kbase.us/services/search/getResults",
+        "searchapi2": "https://narrative-refactor.kbase.us/services/searchapi2/rpc",
+        "service_wizard": "https://narrative-refactor.kbase.us/services/service_wizard",
+        "shock": "https://narrative-refactor.kbase.us/services/shock-api",
+        "staging_api_url": "https://narrative-refactor.kbase.us/services/staging_service",
+        "static_narrative_root": "https://kbase.us/n",
+        "status_page": "http://kbase.us/internal/status/",
+        "submit_jira_ticket": "https://atlassian.kbase.us/secure/CreateIssueDetails!init.jspa?pid=10200&issuetype=1&description=Narrative%20version",
+        "transform": "https://narrative-refactor.kbase.us/services/transform",
+        "trees": "https://narrative-refactor.kbase.us/services/trees",
+        "ui_common_root": "https://narrative-refactor.kbase.us/",
+        "update_profile": "https://gologin.kbase.us/account/UpdateProfile",
+        "uploader": "",
+        "user_and_job_state": "https://narrative-refactor.kbase.us/services/userandjobstate",
+        "user_profile": "https://narrative-refactor.kbase.us/services/user_profile/rpc",
+        "version_check": "{{ .Env.VERSION_CHECK }}",
+        "workspace": "https://narrative-refactor.kbase.us/services/ws",
+        "ws_browser": "https://narrative-refactor.kbase.us/#ws",
+        "google_analytics_id": "UA-131054609-1"
+    },
     "release_notes": "https://github.com/kbase/narrative/blob/master/RELEASE_NOTES.md",
     "tooltip": {
         "hideDelay": 0,
         "showDelay": 750
     },
+    "upload": {
+        "timeout": 0,
+        "parallel_uploads": 10,
+        "max_file_size": 20480,
+        "globus_upload_url": "https://app.globus.org/file-manager?destination_id=c3c0a65f-5827-4834-b6c9-388b0b19953a"
+    },
     "use_local_widgets": true,
-    "version": "4.2.1"
+    "version": "4.4.0"
 }

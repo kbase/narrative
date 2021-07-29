@@ -138,9 +138,9 @@ define([
                 });
         },
 
-        genomeLookupTable: null, // genomeId: { featureId: indexInFeatureList }
-        genomeObjectInfo: null, //{},
-        featureTableData: null, // list for datatables
+        genomeLookupTable: null,
+        genomeObjectInfo: null,
+        featureTableData: null,
 
         getGenomeData: function () {
             if (Object.keys(this.features).length === 0) {
@@ -180,11 +180,7 @@ define([
                 .then(([result]) => {
                     return Promise.all(
                         result.infos.map((info) => {
-                            const [
-                                ,
-                                /* typeModule */ typeName /*typeVersionMajor*/ /*typeVersionMinor*/,
-                                ,
-                            ] = info[2].split(/[.-]/);
+                            const [, typeName, ,] = info[2].split(/[.-]/);
 
                             const objectRef = [info[6], info[0], info[4]].join('/');
                             const featuresToFind = this.features[objectRef];

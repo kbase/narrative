@@ -414,6 +414,7 @@ define([
                     }
                 })
                 .catch((error) => {
+                    // eslint-disable-next-line no-console
                     console.trace('dumping stacktrace!');
                     console.error('DataList: when checking for updates:', error);
                     if (showError) {
@@ -1547,8 +1548,7 @@ define([
                     new BootstrapDialog({
                         type: 'warning',
                         title: 'Warning',
-                        body:
-                            'Read-only Narrative -- may not insert a data viewer into this Narrative',
+                        body: 'Read-only Narrative -- may not insert a data viewer into this Narrative',
                         alertOnly: true,
                     }).show();
                     return;

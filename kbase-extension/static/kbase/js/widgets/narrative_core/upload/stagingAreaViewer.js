@@ -746,26 +746,22 @@ define([
                     .trigger('change');
                 //enable the checkboxes
                 enableCheckboxes(storedFileData.dataType);
-            }
-
-            //otherwise we set the dropdowns with a placeholder
-            else {
+            } else if (suggestedType) {
+                // otherwise we set the dropdowns with a placeholder
                 // And if we have a suggested type, select it and enable the checkboxes
-                if (suggestedType) {
-                    importDropdown
-                        .select2({
-                            containerCssClass: `${cssBaseClass}-body__import-dropdown ${cssBaseClass}-body__import-type-selected`,
-                            placeholder: 'make the empty option disappear',
-                        })
-                        .val(suggestedType.id)
-                        .trigger('change');
-                    enableCheckboxes(suggestedType.id);
-                } else {
-                    importDropdown.select2({
-                        placeholder: 'Select a type',
-                        containerCssClass: `${cssBaseClass}-body__import-dropdown`,
-                    });
-                }
+                importDropdown
+                    .select2({
+                        containerCssClass: `${cssBaseClass}-body__import-dropdown ${cssBaseClass}-body__import-type-selected`,
+                        placeholder: 'make the empty option disappear',
+                    })
+                    .val(suggestedType.id)
+                    .trigger('change');
+                enableCheckboxes(suggestedType.id);
+            } else {
+                importDropdown.select2({
+                    placeholder: 'Select a type',
+                    containerCssClass: `${cssBaseClass}-body__import-dropdown`,
+                });
             }
 
             // set the behavior on the import dropdown when a user selects a type

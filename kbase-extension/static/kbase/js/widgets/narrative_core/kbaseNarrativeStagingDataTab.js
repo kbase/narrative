@@ -87,8 +87,7 @@ define([
                     userInfo: userInfo,
                 });
                 this.stagingAreaViewer = new StagingAreaViewer(this.$myFiles, stagingAreaArgs);
-
-                this.updateView();
+                this.stagingAreaViewer.render();
             });
         },
 
@@ -105,7 +104,7 @@ define([
             // this does the staging area re-render, then tracks the time
             // it was last done.
             const renderStagingArea = () => {
-                this.stagingAreaViewer.render();
+                this.stagingAreaViewer.updateView();
                 this.lastRefresh = new Date().getTime();
             };
 

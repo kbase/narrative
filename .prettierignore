@@ -7,5 +7,6 @@ kbase-extension/static/ext_components
 kbase-extension/static/ext_packages
 kbase-extension/static/ext_modules
 kbase-extension/static/kbase/js/patched-components
-venv
+node_modules
 cover
+venv

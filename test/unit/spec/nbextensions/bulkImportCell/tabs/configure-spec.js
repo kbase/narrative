@@ -9,6 +9,8 @@ define([
 ], (ConfigureTab, Jupyter, Runtime, Props, Spec, TestUtil, TestAppObject) => {
     'use strict';
 
+    afterAll(() => TestUtil.clearRuntime());
+
     describe('test the bulk import cell configure tab', () => {
         const appId = 'kb_uploadmethods/import_fastq_sra_as_reads_from_staging',
             typesToFiles = {

@@ -1,5 +1,7 @@
-define(['common/html'], (html) => {
+define(['common/html', 'testUtil'], (html, TestUtil) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
 
     describe('html utility library', () => {
         // camelToKebab

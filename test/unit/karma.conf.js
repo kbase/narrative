@@ -44,7 +44,8 @@ module.exports = function (config) {
             { pattern: 'test/unit/testUtil.js', nocache: true },
             { pattern: 'test/unit/mocks.js', nocache: true },
             { pattern: 'test/unit/test-main.js', nocache: true },
-            { pattern: 'test/unit/spec/**/*.js', included: false, nocache: true },
+            { pattern: 'test/unit/spec/**/!(bulkImportCell)/*.js', included: false, nocache: true },
+            // { pattern: 'test/unit/spec/**/*.js', included: false, nocache: true },
             { pattern: 'test/testConfig.json', included: false, nocache: true },
             { pattern: 'test/*.tok', included: false, nocache: true },
             { pattern: 'test/data/**/*', included: false, nocache: true },
@@ -84,7 +85,7 @@ module.exports = function (config) {
         ],
         // test results reporter to use
         // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-        reporters: ['mocha', 'coverage', 'json-result'],
+        reporters: ['mocha', 'coverage' ], //, 'json-result'],
         coverageReporter: {
             type: 'html',
             dir: 'js-coverage/',
@@ -132,6 +133,6 @@ module.exports = function (config) {
             '/static/kbase/config': '/base/kbase-extension/static/kbase/config',
             '/test/': '/base/test/',
         },
-        concurrency: Infinity,
+        concurrency: 1,
     });
 };

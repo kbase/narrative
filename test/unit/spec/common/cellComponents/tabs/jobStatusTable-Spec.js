@@ -16,6 +16,8 @@ define([
     const model = makeModel(jobArray);
     const bus = Runtime.make().bus();
 
+    afterAll(() => TestUtil.clearRuntime());
+
     function makeModel(jobs) {
         return Props.make({
             data: {
@@ -404,7 +406,8 @@ define([
             describe('table buttons', () => {
                 afterEach(() => {
                     container.remove();
-                    window.kbaseRuntime = null;
+
+                    TestUtil.clearRuntime();
                 });
 
                 describe('results button', () => {
@@ -481,7 +484,7 @@ define([
             });
 
             afterEach(() => {
-                window.kbaseRuntime = null;
+                TestUtil.clearRuntime();
             });
             describe('job state:', () => {
                 describe(`valid jobState object`, () => {

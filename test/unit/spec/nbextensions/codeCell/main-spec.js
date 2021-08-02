@@ -1,9 +1,10 @@
 define([
     'jquery',
     '../../../../../../narrative/nbextensions/codeCell/main',
+    'testUtil',
     'base/js/namespace',
     'narrativeMocks',
-], ($, Main, Jupyter, Mocks) => {
+], ($, Main, TestUtil, Jupyter, Mocks) => {
     'use strict';
 
     function isCodeCell(cell) {
@@ -12,6 +13,8 @@ define([
         }
         return cell.metadata.kbase.type === 'code';
     }
+
+    afterAll(() => TestUtil.clearRuntime());
 
     describe('test the codeCell entrypoint module', () => {
         beforeAll(() => {
@@ -37,7 +40,7 @@ define([
 
         afterEach(() => {
             Jupyter.notebook = null;
-            window.kbaseRuntime = null;
+            TestUtil.clearRuntime();
         });
 
         it('should have a load_ipython_extension function', () => {

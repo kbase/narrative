@@ -3,8 +3,11 @@ define([
     'common/validation',
     'widgets/appWidgets2/validators/int',
     'widgets/appWidgets2/validators/resolver',
-], (Promise, Validation, IntValidation, ValidationResolver) => {
+    'testUtil',
+], (Promise, Validation, IntValidation, ValidationResolver, TestUtil) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
 
     describe('Props core functions', () => {
         it('Is alive', () => {

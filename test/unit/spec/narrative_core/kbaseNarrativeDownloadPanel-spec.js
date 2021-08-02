@@ -1,10 +1,14 @@
-define(['jquery', 'kbaseNarrativeDownloadPanel', 'base/js/namespace', 'narrativeMocks'], (
+define(['jquery', 'kbaseNarrativeDownloadPanel', 'base/js/namespace', 'narrativeMocks', 'testUtil'], (
     $,
     kbaseNarrativeDownloadPanel,
     Jupyter,
-    Mocks
+    Mocks,
+    TestUtil
 ) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
+
     describe('The kbaseNarrativeDownloadPanel widget', () => {
         let $div = null;
         beforeEach(() => {

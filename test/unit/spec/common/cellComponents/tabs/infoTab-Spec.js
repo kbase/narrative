@@ -1,5 +1,7 @@
-define(['common/cellComponents/tabs/infoTab'], (InfoTab) => {
+define(['common/cellComponents/tabs/infoTab', 'testUtil'], (InfoTab, TestUtil) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
 
     describe('The App Info Tab module', () => {
         it('loads', () => {

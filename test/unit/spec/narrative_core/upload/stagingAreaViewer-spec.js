@@ -2,10 +2,12 @@ define([
     'jquery',
     'kbase/js/widgets/narrative_core/upload/stagingAreaViewer',
     'base/js/namespace',
-    'kbaseNarrative',
     'narrativeConfig',
-], ($, StagingAreaViewer, Jupyter, Narrative, Config) => {
+    'testUtil',
+], ($, StagingAreaViewer, Jupyter, Config, TestUtil) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
 
     describe('The staging area viewer widget', () => {
         let stagingViewer, container, $container, $parentNode;
@@ -111,6 +113,7 @@ define([
             stagingViewer = null;
             jasmine.Ajax.uninstall();
             Jupyter.narrative = null;
+            TestUtil.clearRuntime();
         });
 
         it('Should initialize properly', () => {

@@ -3,9 +3,12 @@ define([
     'common/jobMessages',
     'common/jobs',
     'common/props',
+    'testUtil',
     '/test/data/testAppObj',
-], (JobActionDropdown, JobMessages, Jobs, Props, TestAppObj) => {
+], (JobActionDropdown, JobMessages, Jobs, Props, TestUtil, TestAppObj) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
 
     let container, jobActionDropdownInstance;
 

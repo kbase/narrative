@@ -1,5 +1,7 @@
-define(['jquery', 'narrativeConfig', 'kbase/js/widgets/appInfoPanel'], ($, Config, InfoPanel) => {
+define(['jquery', 'narrativeConfig', 'kbase/js/widgets/appInfoPanel', 'testUtil'], ($, Config, InfoPanel, TestUtil) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
 
     function makeDummyPanel() {
         return InfoPanel.make({

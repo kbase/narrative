@@ -1,5 +1,7 @@
-define(['common/ui'], (UI) => {
+define(['common/ui', 'testUtil'], (UI, TestUtil) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
 
     // don't require a UI object
     const functions = [

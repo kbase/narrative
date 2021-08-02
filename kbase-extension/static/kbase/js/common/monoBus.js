@@ -42,6 +42,15 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
             }
         }
 
+        /**
+         * Clears all variables and the timer, if it exists
+         */
+        function destroy() {
+            if (timer) {
+                clearTimeout(timer);
+            }
+        }
+
         // CHANNELS
 
         /*
@@ -849,6 +858,7 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
             removeListener: removeListener,
             removeListeners: removeListeners,
             connect: connect,
+            destroy,
         };
 
         return api;

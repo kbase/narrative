@@ -4,9 +4,12 @@ define([
     'common/runtime',
     'common/props',
     'common/spec',
+    'testUtil',
     '/test/data/testAppObj',
-], (Jupyter, ParamsWidget, Runtime, Props, Spec, TestAppObject) => {
+], (Jupyter, ParamsWidget, Runtime, Props, Spec, TestUtil, TestAppObject) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
 
     describe('The Parameter module', () => {
         it('loads', () => {
@@ -29,7 +32,7 @@ define([
         }
 
         beforeAll(() => {
-            window.kbaseRuntime = null;
+            TestUtil.clearRuntime();
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',
             };
@@ -74,7 +77,7 @@ define([
         });
 
         afterEach(() => {
-            window.kbaseRuntime = null;
+            TestUtil.clearRuntime();
             container.remove();
         });
 

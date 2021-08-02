@@ -1,8 +1,10 @@
-define(['common/runtime', 'widgets/appWidgets2/input/textInput'], (Runtime, TextInput) => {
+define(['common/runtime', 'widgets/appWidgets2/input/textInput', 'testUtil'], (Runtime, TextInput, TestUtil) => {
     'use strict';
     let testConfig;
     const required = false,
         defaultValue = 'some test text';
+
+    afterAll(() => TestUtil.clearRuntime());
 
     function buildTestConfig(_required, _defaultValue, _bus) {
         return {
@@ -30,9 +32,9 @@ define(['common/runtime', 'widgets/appWidgets2/input/textInput'], (Runtime, Text
     }
 
     describe('The Text Input widget', () => {
-        let bus, widget, container;
+        let bus, widget, container, runtime;
         beforeEach(() => {
-            const runtime = Runtime.make();
+            runtime = Runtime.make();
             container = document.createElement('div');
             bus = runtime.bus().makeChannelBus({
                 description: 'text input testing',
@@ -43,8 +45,9 @@ define(['common/runtime', 'widgets/appWidgets2/input/textInput'], (Runtime, Text
 
         afterEach(() => {
             bus.stop();
-            window.kbaseRuntime = null;
+            runtime.destroy();
             container.remove();
+            TestUtil.clearRuntime();
         });
 
         it('should be defined', () => {

@@ -1,5 +1,8 @@
-define(['common/errorDisplay', 'common/props'], (ErrorDisplay, Props) => {
+define(['common/errorDisplay', 'common/props', 'testUtil'], (ErrorDisplay, Props, TestUtil) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
+
     const validInput = Props.make({
         data: {
             exec: {

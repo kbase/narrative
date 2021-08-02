@@ -8,6 +8,8 @@ define([
 ], ($, TestUtil, Runtime, Select2ObjectInput, Jupyter, Mocks) => {
     'use strict';
 
+    afterAll(() => TestUtil.clearRuntime());
+
     const AUTH_TOKEN = 'fakeAuthToken';
     const readsItem = [
             3,
@@ -172,7 +174,8 @@ define([
             }
             jasmine.Ajax.uninstall();
             bus.stop();
-            window.kbaseRuntime = null;
+            runtime.destroy();
+            TestUtil.clearRuntime();
             Jupyter.narrative = null;
             container.remove();
         });

@@ -5,8 +5,11 @@ define([
     'kb_service/client/workspace',
     'base/js/namespace',
     'narrativeMocks',
-], (DataList, $, Config, Workspace, Jupyter, Mocks) => {
+    'testUtil'
+], (DataList, $, Config, Workspace, Jupyter, Mocks, TestUtil) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
 
     const FAKE_NS_URL = 'https://ci.kbase.us/services/fake_url';
     const FAKE_WS_NAME = 'some_workspace';

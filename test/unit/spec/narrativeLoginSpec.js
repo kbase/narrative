@@ -1,13 +1,16 @@
-define(['jquery', 'narrativeLogin', 'narrativeConfig', 'narrativeMocks', 'util/bootstrapDialog'], (
+define(['jquery', 'narrativeLogin', 'narrativeConfig', 'narrativeMocks', 'util/bootstrapDialog', 'testUtil'], (
     $,
     Login,
     Config,
     Mocks,
-    BootstrapDialog
+    BootstrapDialog,
+    TestUtil
 ) => {
     'use strict';
 
     const FAKE_TOKEN = 'some_fake_token';
+
+    afterAll(() => TestUtil.clearRuntime());
 
     describe('Test the narrativeLogin module', () => {
         let $container;

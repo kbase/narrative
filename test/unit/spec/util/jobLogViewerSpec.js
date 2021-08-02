@@ -193,9 +193,7 @@ define([
 
     describe('The job log viewer instance', () => {
         beforeAll(() => {
-            if (window.kbaseRuntime) {
-                window.kbaseRuntime = null;
-            }
+            TestUtil.clearRuntime();
         });
 
         beforeEach(function () {
@@ -204,7 +202,7 @@ define([
 
         afterEach(function () {
             this.jobLogViewerInstance.detach();
-            window.kbaseRuntime = null;
+            TestUtil.clearRuntime();
         });
 
         it('should have methods defined', function () {

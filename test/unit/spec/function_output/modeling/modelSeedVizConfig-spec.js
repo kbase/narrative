@@ -1,4 +1,4 @@
-define(['modelSeedVizConfig'], (Widget) => {
+define(['modelSeedVizConfig', 'testUtil'], (Widget, TestUtil) => {
     'use strict';
     describe('Test the modelSeedVizConfig widget', () => {
         let cfg;

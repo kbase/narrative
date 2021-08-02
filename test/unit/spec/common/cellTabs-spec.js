@@ -1,4 +1,4 @@
-define(['common/cellComponents/cellTabs', 'common/runtime'], (CellTabs, Runtime) => {
+define(['common/cellComponents/cellTabs', 'common/runtime', 'testUtil'], (CellTabs, Runtime, TestUtil) => {
     'use strict';
     let container;
     const tabSet = {
@@ -23,6 +23,8 @@ define(['common/cellComponents/cellTabs', 'common/runtime'], (CellTabs, Runtime)
     const toggleAction = (tab) => {
         console.warn(`performing action on tab ${tab}`);
     };
+
+    afterAll(() => TestUtil.clearRuntime());
 
     describe('The CellTabs module', () => {
         it('Should load', () => {
@@ -87,6 +89,7 @@ define(['common/cellComponents/cellTabs', 'common/runtime'], (CellTabs, Runtime)
 
         afterEach(() => {
             container.remove();
+            TestUtil.clearRuntime();
         });
 
         it('has the expected functions when made', function () {

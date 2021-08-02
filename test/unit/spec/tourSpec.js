@@ -1,5 +1,8 @@
-define(['jquery', 'narrativeTour', 'bootstraptour'], ($, Tour, BSTour) => {
+define(['jquery', 'narrativeTour', 'bootstraptour', 'testUtil'], ($, Tour, BSTour, TestUtil) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
+
     describe('Test the narrativeTour module', () => {
         it('Loaded the Tour module', () => {
             expect(Tour).not.toBe(null);

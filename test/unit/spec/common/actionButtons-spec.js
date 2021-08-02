@@ -4,7 +4,8 @@ define([
     'common/runtime',
     'common/ui',
     'common/events',
-], (ActionButton, $, Runtime, UI, Events) => {
+    'testUtil'
+], (ActionButton, $, Runtime, UI, Events, TestUtil) => {
     'use strict';
     let actionButtonInstance, ui, container;
     const runAction = () => {},
@@ -29,6 +30,7 @@ define([
                 },
             },
         };
+    afterAll(() => TestUtil.clearRuntime());
 
     describe('The action button widget', () => {
         beforeEach(() => {
@@ -50,7 +52,7 @@ define([
 
         afterEach(() => {
             actionButtonInstance = null;
-            window.kbaseRuntime = null;
+            TestUtil.clearRuntime();
             ui = null;
             container.remove();
         });

@@ -1,5 +1,7 @@
-define(['common/pythonInterop'], (PythonInterop) => {
+define(['common/pythonInterop', 'testUtil'], (PythonInterop, TestUtil) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
 
     describe('Props core functions', () => {
         it('loads the core functions', () => {

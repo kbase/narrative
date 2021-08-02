@@ -1,5 +1,8 @@
-define(['KBasePhenotypes.PhenotypeSet', 'KBModeling'], (Widget, kbm) => {
+define(['KBasePhenotypes.PhenotypeSet', 'KBModeling', 'testUtil'], (Widget, kbm, TestUtil) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
+
     describe('Test the KBasePhenotypes.PhenotypeSet widget', () => {
         it('Should load the module', () => {
             const api = new KBModeling('token');

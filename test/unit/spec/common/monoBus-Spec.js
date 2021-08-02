@@ -1,5 +1,7 @@
-define(['common/monoBus'], (Bus) => {
+define(['common/monoBus', 'testUtil'], (Bus, TestUtil) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
 
     // Setting a shorter timeout pretty much forces us to set a timeout explicitly
     // per async test which falls outside of this reasonable setting for "normal"

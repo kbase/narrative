@@ -9,6 +9,8 @@ define([
     'use strict';
     const AUTH_TOKEN = 'fakeAuthToken';
 
+    afterAll(() => TestUtil.clearRuntime());
+
     function buildTestConfig(required, defaultValue, bus) {
         return {
             parameterSpec: {
@@ -36,10 +38,10 @@ define([
         const required = false,
             defaultValue = 'apple',
             fakeServiceUrl = 'https://ci.kbase.us/services/fake_taxonomy_service';
-        let bus, testConfig, container, widget;
+        let bus, testConfig, container, widget, runtime;
 
         beforeEach(() => {
-            const runtime = Runtime.make();
+            runtime = Runtime.make();
             Mocks.setAuthToken(AUTH_TOKEN);
             Jupyter.narrative = {
                 getAuthToken: () => AUTH_TOKEN,
@@ -109,7 +111,8 @@ define([
             }
             container.remove();
             bus.stop();
-            window.kbaseRuntime = null;
+            runtime.destroy();
+            TestUtil.clearRuntime();
             Jupyter.narrative = null;
             jasmine.Ajax.uninstall();
         });
@@ -127,6 +130,8 @@ define([
             beforeEach(async () => {
                 await widget.start({ node: container });
             });
+
+            afterEach(() => TestUtil.clearRuntime());
 
             it('Should start and stop', async () => {
                 expect(container.childElementCount).toBeGreaterThan(0);

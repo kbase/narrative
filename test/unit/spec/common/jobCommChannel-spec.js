@@ -6,6 +6,8 @@ define(['common/jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUti
 ) => {
     'use strict';
 
+    afterAll(() => TestUtil.clearRuntime());
+
     const DEFAULT_COMM_INFO = {
         content: {
             comms: [],
@@ -64,7 +66,7 @@ define(['common/jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUti
         });
 
         afterEach(() => {
-            window.kbaseRuntime = null;
+            TestUtil.clearRuntime();
             Jupyter.notebook = null;
             testBus = null;
         });

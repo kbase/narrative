@@ -5,7 +5,8 @@ define([
     'kbwidget',
     'jquery',
     'narrativeConfig',
-    'kbaseAuthenticatedWidget',
+    'kb_service/client/workspace',
+    'common/runtime',
     'jquery-dataTables',
     'datatables.net-buttons',
     'datatables.net-buttons-bs',
@@ -14,11 +15,10 @@ define([
     'datatables.net-buttons-print',
     'knhx',
     'widgetMaxWidthCorrection',
-], (KBWidget, $, Config, kbaseAuthenticatedWidget) => {
+], (KBWidget, $, Config, Workspace, Runtime) => {
     'use strict';
     return KBWidget({
         name: 'kbaseAttributeMapping',
-        parent: kbaseAuthenticatedWidget,
         version: '0.0.1',
         options: {
             obj_ref: null,
@@ -40,7 +40,6 @@ define([
             if (!this.options.obj_ref) {
                 this.renderError('No object to render!');
             } else {
-                this.token = this.authToken();
                 this.renderAndLoad();
             }
 
@@ -48,24 +47,23 @@ define([
         },
 
         renderAndLoad: function () {
-            this.ws = new Workspace(this.options.wsURL, { token: this.token });
+            this.ws = new Workspace(this.options.wsURL, { token: Runtime.make().authToken() });
             this.loading(false);
             this.$mainPanel.hide();
             this.$mainPanel.empty();
-            this.loadData();
+            return this.loadData()
+                .then((ret) => {
+                    this.parseObj(ret.data[0].data);
+                })
+                .catch((error) => {
+                    this.loading(true);
+                    this.renderError(error);
+                });
         },
 
         loadData: function () {
-            const self = this;
-            self.ws.get_objects2(
-                { objects: [{ ref: self.options.obj_ref }] },
-                (ret) => {
-                    self.parseObj(ret.data[0].data);
-                },
-                (error) => {
-                    self.loading(true);
-                    self.renderError(error);
-                }
+            return this.ws.get_objects2(
+                { objects: [{ ref: this.options.obj_ref }] }
             );
         },
         parseObj: function (ws_obj) {
@@ -154,14 +152,6 @@ define([
         hideMessage: function () {
             this.$messagePane.hide();
             this.$messagePane.empty();
-        },
-
-        loggedInCallback: function (event, auth) {
-            if (this.token == null) {
-                this.token = auth.token;
-                this.renderAndLoad();
-            }
-            return this;
         },
     });
 });

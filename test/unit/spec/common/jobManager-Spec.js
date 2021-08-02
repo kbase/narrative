@@ -2,11 +2,13 @@ define([
     'common/jobManager',
     'common/jobs',
     'common/props',
-    'common/runtime',
     'common/ui',
+    'testUtil',
     '/test/data/jobsData',
-], (JobManager, Jobs, Props, Runtime, UI, JobsData) => {
+], (JobManager, Jobs, Props, UI, TestUtil, JobsData) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
 
     function createJobManagerInstance(context) {
         return new JobManager({

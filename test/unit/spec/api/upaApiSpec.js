@@ -1,5 +1,8 @@
-define(['api/upa', 'narrativeConfig'], (UpaApi, Config) => {
+define(['api/upa', 'narrativeConfig', 'testUtil'], (UpaApi, Config, TestUtil) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
+
     describe('Test the UPA API', () => {
         const upaApi = new UpaApi(),
             serializeTestData = [

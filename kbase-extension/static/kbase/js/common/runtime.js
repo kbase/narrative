@@ -30,15 +30,22 @@ define([
                 created: new Date(),
                 bus: theBus,
                 env: Props.make({}),
+                clock
             };
         }
 
         function destroy() {
-            clock.stop();
+            if (clock) {
+                clock.stop();
+            }
             $(document).off('dataUpdated.Narrative');
+            if (theBus) {
+                theBus.destroy();
+            }
             theBus = null;
             window.kbaseRuntime = null;
         }
+
         /*
          * The runtime hooks into a window
          */

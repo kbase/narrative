@@ -1,5 +1,6 @@
-define(['common/fsm'], (Fsm) => {
+define(['common/fsm', 'testUtil'], (Fsm, TestUtil) => {
     'use strict';
+    afterAll(() => TestUtil.clearRuntime());
 
     const simpleStates = [
             {

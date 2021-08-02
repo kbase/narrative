@@ -1,4 +1,4 @@
-define(['widgets/appWidgets2/input/intInput', 'common/runtime'], (IntInput, Runtime) => {
+define(['widgets/appWidgets2/input/intInput', 'common/runtime', 'testUtil'], (IntInput, Runtime, TestUtil) => {
     'use strict';
 
     describe('Test int data input widget', () => {
@@ -6,6 +6,8 @@ define(['widgets/appWidgets2/input/intInput', 'common/runtime'], (IntInput, Runt
             runtime,
             bus,
             container;
+
+        afterAll(() => TestUtil.clearRuntime());
 
         beforeEach(() => {
             runtime = Runtime.make();
@@ -35,7 +37,8 @@ define(['widgets/appWidgets2/input/intInput', 'common/runtime'], (IntInput, Runt
 
         afterEach(() => {
             bus.stop();
-            window.kbaseRuntime = null;
+            runtime.destroy();
+            TestUtil.clearRuntime();
             container.remove();
         });
 

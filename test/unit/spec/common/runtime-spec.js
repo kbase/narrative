@@ -1,4 +1,4 @@
-define(['common/runtime', 'base/js/namespace', 'narrativeConfig'], (Runtime, Jupyter, Config) => {
+define(['common/runtime', 'base/js/namespace', 'narrativeConfig', 'testUtil'], (Runtime, Jupyter, Config, TestUtil) => {
     'use strict';
 
     const runtimeKeys = ['bus', 'created', 'env'];
@@ -14,6 +14,8 @@ define(['common/runtime', 'base/js/namespace', 'narrativeConfig'], (Runtime, Jup
     ];
     const config = Config.getConfig();
 
+    afterAll(() => TestUtil.clearRuntime());
+
     describe('Test Runtime module', () => {
         it('Should be loaded with the right functions', () => {
             expect(Runtime).toBeDefined();
@@ -25,15 +27,16 @@ define(['common/runtime', 'base/js/namespace', 'narrativeConfig'], (Runtime, Jup
 
     describe('The runtime instance', () => {
         beforeAll(() => {
-            window.kbaseRuntime = null;
+            TestUtil.clearRuntime();
         });
 
         beforeEach(function () {
             this.runtime = Runtime.make();
         });
 
-        afterEach(() => {
-            window.kbaseRuntime = null;
+        afterEach(function () {
+            this.runtime.destroy();
+            this.runtime = null;
         });
 
         it('has methods defined', function () {
@@ -74,11 +77,11 @@ define(['common/runtime', 'base/js/namespace', 'narrativeConfig'], (Runtime, Jup
 
     describe('create_runtime', () => {
         beforeAll(() => {
-            window.kbaseRuntime = null;
+            TestUtil.clearRuntime();
         });
 
         afterEach(() => {
-            window.kbaseRuntime = null;
+            TestUtil.clearRuntime();
         });
 
         it('will reuse an existing runtime', () => {
@@ -109,14 +112,15 @@ define(['common/runtime', 'base/js/namespace', 'narrativeConfig'], (Runtime, Jup
 
     describe('setEnv and getEnv', () => {
         beforeAll(() => {
-            window.kbaseRuntime = null;
+            TestUtil.clearRuntime();
         });
 
         beforeEach(function () {
             this.runtime = Runtime.make();
         });
-        afterEach(() => {
-            window.kbaseRuntime = null;
+        afterEach(function () {
+            this.runtime.destroy();
+            TestUtil.clearRuntime();
         });
 
         it('should set and retrieve env vars using setEnv and getEnv', function () {
@@ -129,7 +133,7 @@ define(['common/runtime', 'base/js/namespace', 'narrativeConfig'], (Runtime, Jup
 
     describe('narrative-related functions', () => {
         beforeAll(() => {
-            window.kbaseRuntime = null;
+            TestUtil.clearRuntime();
         });
         beforeEach(function () {
             Jupyter.narrative = {
@@ -140,9 +144,10 @@ define(['common/runtime', 'base/js/namespace', 'narrativeConfig'], (Runtime, Jup
             };
             this.runtime = Runtime.make();
         });
-        afterEach(() => {
+        afterEach(function () {
             Jupyter.narrative = null;
-            window.kbaseRuntime = null;
+            this.runtime.destroy();
+            TestUtil.clearRuntime();
         });
 
         it('should retrieve the user ID from the narrative', function () {
@@ -155,13 +160,14 @@ define(['common/runtime', 'base/js/namespace', 'narrativeConfig'], (Runtime, Jup
 
     describe('narrative config-related functions', () => {
         beforeAll(() => {
-            window.kbaseRuntime = null;
+            TestUtil.clearRuntime();
         });
         beforeEach(function () {
             this.runtime = Runtime.make();
         });
-        afterEach(() => {
-            window.kbaseRuntime = null;
+        afterEach(function () {
+            this.runtime.destroy();
+            TestUtil.clearRuntime();
         });
 
         it('should retrieve a value from the narrative config', function () {
@@ -178,7 +184,7 @@ define(['common/runtime', 'base/js/namespace', 'narrativeConfig'], (Runtime, Jup
 
     describe('get user settings', () => {
         beforeAll(() => {
-            window.kbaseRuntime = null;
+            TestUtil.clearRuntime();
         });
         beforeEach(function () {
             Jupyter.notebook = {
@@ -193,8 +199,9 @@ define(['common/runtime', 'base/js/namespace', 'narrativeConfig'], (Runtime, Jup
             };
             this.runtime = Runtime.make();
         });
-        afterEach(() => {
-            window.kbaseRuntime = null;
+        afterEach(function () {
+            this.runtime.destroy();
+            TestUtil.clearRuntime();
             Jupyter.notebook = null;
         });
         it('should fetch values from the user settings', function () {
@@ -209,17 +216,12 @@ define(['common/runtime', 'base/js/namespace', 'narrativeConfig'], (Runtime, Jup
     });
 
     describe('bus creation', () => {
-        let runtime;
-        beforeAll(() => {
-            window.kbaseRuntime = null;
-        });
-        afterEach(() => {
-            runtime.destroy();
-            window.kbaseRuntime = null;
+        beforeEach(() => {
+            TestUtil.clearRuntime();
         });
 
         it('should pass on arguments to the bus, strict mode', () => {
-            runtime = Runtime.make({ bus: { strict: true } });
+            const runtime = Runtime.make({ bus: { strict: true } });
             try {
                 // in strict mode, a channel without a description will throw an error
                 runtime.bus().makeChannel({});
@@ -227,16 +229,19 @@ define(['common/runtime', 'base/js/namespace', 'narrativeConfig'], (Runtime, Jup
             } catch (error) {
                 expect(error).toBeInstanceOf(Error);
                 expect(error).toMatch(/Channel description is required/);
+            } finally {
+                runtime.destroy();
             }
         });
 
         it('should pass on arguments to the bus, verbose', () => {
-            runtime = Runtime.make({ bus: { verbose: true } });
+            const runtime = Runtime.make({ bus: { verbose: true } });
 
             // in verbose mode, a channel without a description will emit a warning
             spyOn(console, 'warn').and.callThrough();
             runtime.bus().makeChannel({});
             expect(console.warn).toHaveBeenCalledOnceWith(['Channel created without description']);
+            runtime.destroy();
         });
     });
 });

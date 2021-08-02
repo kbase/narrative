@@ -1,9 +1,12 @@
-define(['kbaseCellToolbarMenu', 'narrativeConfig', 'base/js/namespace'], (
+define(['kbaseCellToolbarMenu', 'narrativeConfig', 'base/js/namespace', 'testUtil'], (
     Widget,
     Config,
-    Jupyter
+    Jupyter,
+    TestUtil
 ) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
 
     function generateCell(mode, stage, collapsedState) {
         const currentState = {

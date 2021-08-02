@@ -1,5 +1,7 @@
-define(['widgets/appWidgets2/input/checkboxInput', 'common/runtime'], (CheckboxInput, Runtime) => {
+define(['widgets/appWidgets2/input/checkboxInput', 'common/runtime', 'testUtil'], (CheckboxInput, Runtime, TestUtil) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
 
     describe('Test checkbox data input widget', () => {
         let testConfig = {},
@@ -33,7 +35,8 @@ define(['widgets/appWidgets2/input/checkboxInput', 'common/runtime'], (CheckboxI
 
         afterEach(() => {
             bus.stop();
-            window.kbaseRuntime = null;
+            runtime.destroy();
+            TestUtil.clearRuntime();
             container.remove();
         });
 

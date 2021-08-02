@@ -1,8 +1,11 @@
-define(['common/spec', 'json!/test/data/NarrativeTest.test_input_params.spec.json'], (
+define(['common/spec', 'testUtil', 'json!/test/data/NarrativeTest.test_input_params.spec.json'], (
     Spec,
+    TestUtil,
     TestAppSpec
 ) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
 
     function testSpecFns(spec) {
         ['getSpec', 'makeDefaultedModel', 'validateModel', 'validateParams'].forEach((fn) => {

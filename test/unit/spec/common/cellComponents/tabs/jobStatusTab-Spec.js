@@ -2,9 +2,12 @@ define([
     'common/cellComponents/tabs/jobStatus/jobStatusTab',
     'common/cellComponents/tabs/jobStatus/jobStatusTable',
     'common/props',
+    'testUtil',
     '/test/data/testAppObj',
-], (JobStatusTab, JobStatusTable, Props, TestAppObject) => {
+], (JobStatusTab, JobStatusTable, Props, TestUtil, TestAppObject) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
 
     const model = Props.make({
         data: TestAppObject,

@@ -9,6 +9,8 @@ define([
 ], (Jupyter, FilePathWidget, $, Runtime, Spec, TestUtil, TestSpec) => {
     'use strict';
 
+    afterAll(() => TestUtil.clearRuntime());
+
     describe('The file path widget module', () => {
         it('loads', () => {
             expect(FilePathWidget).not.toBe(null);
@@ -30,7 +32,7 @@ define([
         }
 
         beforeAll(function () {
-            window.kbaseRuntime = null;
+            TestUtil.clearRuntime();
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',
             };
@@ -68,7 +70,7 @@ define([
 
         afterEach(() => {
             container.remove();
-            window.kbaseRuntime = null;
+            TestUtil.clearRuntime();
         });
 
         [

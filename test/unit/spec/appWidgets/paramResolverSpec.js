@@ -1,5 +1,7 @@
-define(['widgets/appWidgets2/paramResolver'], (ParamResolver) => {
+define(['widgets/appWidgets2/paramResolver', 'testUtil'], (ParamResolver, TestUtil) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
 
     describe('The ParamResolver module', () => {
         it('Should load the module code successfully', () => {

@@ -1,5 +1,7 @@
-define(['narrativeViewers', 'narrativeConfig'], (Viewers, Config) => {
+define(['narrativeViewers', 'narrativeConfig', 'testUtil'], (Viewers, Config, TestUtil) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
 
     /** data format taken from
      * https://github.com/kbase/narrative_method_store/blob/master/NarrativeMethodStore.spec#L709
@@ -100,6 +102,7 @@ define(['narrativeViewers', 'narrativeConfig'], (Viewers, Config) => {
 
         afterEach(() => {
             jasmine.Ajax.uninstall();
+            TestUtil.clearRuntime();
         });
 
         it('should load and have expected functions', () => {

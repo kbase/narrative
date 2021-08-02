@@ -1,10 +1,10 @@
 define([
     'common/cellComponents/cellControlPanel',
-    // 'jquery',
     'common/runtime',
     'common/ui',
     'common/events',
-], (CellControlPanel, Runtime, UI, Events) => {
+    'testUtil'
+], (CellControlPanel, Runtime, UI, Events, TestUtil) => {
     'use strict';
 
     let container;
@@ -31,6 +31,8 @@ define([
             },
         };
 
+    afterAll(() => TestUtil.clearRuntime());
+
     describe('The cell control panel widget', () => {
         beforeEach(function () {
             this.bus = Runtime.make().bus();
@@ -52,6 +54,7 @@ define([
 
         afterEach(() => {
             container.remove();
+            TestUtil.clearRuntime();
         });
 
         it('Should load', () => {

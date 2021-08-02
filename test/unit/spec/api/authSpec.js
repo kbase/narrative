@@ -1,4 +1,4 @@
-define(['api/auth', 'narrativeConfig', 'uuid'], (Auth, Config, Uuid) => {
+define(['api/auth', 'narrativeConfig', 'uuid', 'testUtil'], (Auth, Config, Uuid, TestUtil) => {
     'use strict';
 
     let authClient;
@@ -138,6 +138,8 @@ define(['api/auth', 'narrativeConfig', 'uuid'], (Auth, Config, Uuid) => {
             request: 'users/search/foo/?fields=username,displayname',
         },
     ];
+
+    afterAll(() => TestUtil.clearRuntime());
 
     describe('Test the Auth API module', () => {
         beforeEach(() => {

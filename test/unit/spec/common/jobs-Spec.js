@@ -1,5 +1,7 @@
-define(['common/jobs', '/test/data/jobsData'], (Jobs, JobsData) => {
+define(['common/jobs', '/test/data/jobsData', 'testUtil'], (Jobs, JobsData, TestUtil) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
 
     function arrayToHTML(array) {
         return array.map((item) => `<div>${item}</div>`).join('\n');

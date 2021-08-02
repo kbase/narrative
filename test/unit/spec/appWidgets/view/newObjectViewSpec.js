@@ -5,6 +5,8 @@ define(['widgets/appWidgets2/view/newObjectView', 'common/runtime', 'testUtil'],
 ) => {
     'use strict';
 
+    afterAll(() => TestUtil.clearRuntime());
+
     describe('New Object View widget', () => {
         const paramSpec = {
             id: 'newObj',
@@ -23,7 +25,7 @@ define(['widgets/appWidgets2/view/newObjectView', 'common/runtime', 'testUtil'],
 
         afterEach(function () {
             this.node.remove();
-            window.kbaseRuntime = null;
+            TestUtil.clearRuntime();
         });
 
         it('should have a valid constructor', function () {

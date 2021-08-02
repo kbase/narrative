@@ -4,9 +4,12 @@ define([
     'widgets/appWidgets2/paramResolver',
     'common/props',
     'common/spec',
+    'testUtil',
     '/test/data/testAppObj',
-], (Jupyter, FieldCellWidget, ParamResolver, Props, Spec, TestAppObject) => {
+], (Jupyter, FieldCellWidget, ParamResolver, Props, Spec, TestUtil, TestAppObject) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
 
     describe('The Field Table Cell Widget module', () => {
         it('loads', () => {
@@ -131,7 +134,7 @@ define([
                 });
             }
             container.remove();
-            window.kbaseRuntime = null;
+            TestUtil.clearRuntime();
         });
 
         it('has a factory which can be invoked', function () {

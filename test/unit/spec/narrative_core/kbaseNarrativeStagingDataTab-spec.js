@@ -1,9 +1,13 @@
-define(['jquery', 'kbaseNarrativeStagingDataTab', 'base/js/namespace'], (
+define(['jquery', 'kbaseNarrativeStagingDataTab', 'base/js/namespace', 'testUtil'], (
     $,
     StagingDataTab,
-    Jupyter
+    Jupyter,
+    TestUtil
 ) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
+
     describe('The kbaseNarrativeStagingDataTab widget', () => {
         const fakeUser = 'notAUser';
         let $dummyNode, stagingWidget;
@@ -67,6 +71,7 @@ define(['jquery', 'kbaseNarrativeStagingDataTab', 'base/js/namespace'], (
             } catch (err) {}
             Jupyter.narrative = null;
             jasmine.Ajax.uninstall();
+            TestUtil.clearRuntime();
         });
 
         it('can load properly', async () => {

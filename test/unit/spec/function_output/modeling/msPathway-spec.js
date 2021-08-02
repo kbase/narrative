@@ -1,5 +1,8 @@
-define(['msPathway', 'jquery'], (Widget, $) => {
+define(['msPathway', 'jquery', 'testUtil'], (Widget, $, TestUtil) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
+
     describe('Test the msPathway widget', () => {
         it('Should load the module', () => {
             expect(ModelSeedPathway).toEqual(jasmine.any(Function));

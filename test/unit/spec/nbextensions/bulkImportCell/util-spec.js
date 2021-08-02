@@ -2,8 +2,9 @@ define([
     '../../../../../../narrative/nbextensions/bulkImportCell/util',
     'common/props',
     'common/spec',
+    'testUtil',
     '/test/data/testAppObj',
-], (Util, Props, Spec, TestAppObj) => {
+], (Util, Props, Spec, TestUtil, TestAppObj) => {
     'use strict';
 
     const testFileType = 'someFileType';
@@ -73,6 +74,8 @@ define([
             onUpdate: () => {},
         });
     }
+
+    afterAll(() => TestUtil.clearRuntime());
 
     describe('BulkImportCell Utility tests', () => {
         let spec;

@@ -4,9 +4,12 @@ define([
     '../../../../../../narrative/nbextensions/bulkImportCell/bulkImportCell',
     'base/js/namespace',
     'narrativeMocks',
+    'testUtil',
     'json!/test/data/NarrativeTest.test_input_params.spec.json',
-], ($, Main, BulkImportCell, Jupyter, Mocks, TestAppSpec) => {
+], ($, Main, BulkImportCell, Jupyter, Mocks, TestUtil, TestAppSpec) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
 
     describe('test the bulkImportCell entrypoint module', () => {
         beforeAll(() => {

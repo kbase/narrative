@@ -1,8 +1,10 @@
-define(['jquery', 'kbaseAttributeMapping', 'base/js/namespace', 'narrativeMocks'], (
+define(['jquery', 'kbaseAttributeMapping', 'base/js/namespace', 'narrativeMocks', 'narrativeConfig', 'testUtil'], (
     $,
     kbaseAttributeMapping,
     Jupyter,
-    Mocks
+    Mocks,
+    Config,
+    TestUtil
 ) => {
     'use strict';
     describe('The kbaseAttributeMapping widget', () => {
@@ -22,9 +24,10 @@ define(['jquery', 'kbaseAttributeMapping', 'base/js/namespace', 'narrativeMocks'
             Jupyter.narrative = null;
             jasmine.Ajax.uninstall();
             $div.remove();
+            TestUtil.clearRuntime();
         });
 
-        it('Should properly render AttributeMapping data', (done) => {
+        it('Should properly render AttributeMapping data', async () => {
             const attributeMappingData = {
                 ontology_mapping_method: 'User Curation',
                 instances: {
@@ -58,7 +61,7 @@ define(['jquery', 'kbaseAttributeMapping', 'base/js/namespace', 'narrativeMocks'
                 ],
             };
             // this code is more of less ignored, because two WS calls are made both can't be stubbed
-            jasmine.Ajax.stubRequest('https://ci.kbase.us/services/ws').andReturn({
+            jasmine.Ajax.stubRequest(Config.url('workspace')).andReturn({
                 status: 200,
                 statusText: 'success',
                 contentType: 'application/json',
@@ -72,14 +75,15 @@ define(['jquery', 'kbaseAttributeMapping', 'base/js/namespace', 'narrativeMocks'
                     ],
                 }),
             });
-            new kbaseAttributeMapping($div, { upas: { obj_ref: 'fake' } });
+            await TestUtil.waitForElementChange($div[0], () => {
+                new kbaseAttributeMapping($div, { upas: { obj_ref: 'fake' } });
+            });
             ['Time series design', 'Treatment with Sirolimus', 'S1', 'S9'].forEach((str) => {
                 expect($div.html()).toContain(str);
             });
-            done();
         });
 
-        it('Should properly render ConditionSet data', (done) => {
+        it('Should properly render ConditionSet data', async () => {
             const conditionSetData = {
                 ontology_mapping_method: 'User Curation',
                 conditions: {
@@ -113,7 +117,7 @@ define(['jquery', 'kbaseAttributeMapping', 'base/js/namespace', 'narrativeMocks'
                 ],
             };
             // this code is more of less ignored, because two WS calls are made both can't be stubbed
-            jasmine.Ajax.stubRequest('https://ci.kbase.us/services/ws').andReturn({
+            jasmine.Ajax.stubRequest(Config.url('workspace')).andReturn({
                 status: 200,
                 statusText: 'success',
                 contentType: 'application/json',
@@ -127,11 +131,12 @@ define(['jquery', 'kbaseAttributeMapping', 'base/js/namespace', 'narrativeMocks'
                     ],
                 }),
             });
-            new kbaseAttributeMapping($div, { upas: { obj_ref: 'fake' } });
+            await TestUtil.waitForElementChange($div[0], () => {
+                new kbaseAttributeMapping($div, { upas: { obj_ref: 'fake' } });
+            });
             ['Time series design', 'Treatment with Sirolimus', 'S1', 'S9'].forEach((str) => {
                 expect($div.html()).toContain(str);
             });
-            done();
         });
     });
 });

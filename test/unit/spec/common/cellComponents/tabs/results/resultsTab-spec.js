@@ -2,9 +2,12 @@ define([
     'common/cellComponents/tabs/results/resultsTab',
     'base/js/namespace',
     'common/props',
+    'testUtil',
     '/test/data/testAppObj',
-], (ResultsTab, Jupyter, Props, TestAppObject) => {
+], (ResultsTab, Jupyter, Props, TestUtil, TestAppObject) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
 
     const reportObject = {
         data: {

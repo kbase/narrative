@@ -1,9 +1,12 @@
-define(['jquery', 'base/js/namespace', 'kbase/js/widgets/narrative_core/kbaseAppCard'], (
+define(['jquery', 'kbase/js/widgets/narrative_core/kbaseAppCard', 'testUtil'], (
     $,
-    Jupyter,
-    AppCard
+    AppCard,
+    TestUtil
 ) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
+
     let app, $card;
     describe('The kbaseAppCard widget', () => {
         beforeEach(() => {
@@ -27,6 +30,9 @@ define(['jquery', 'base/js/namespace', 'kbase/js/widgets/narrative_core/kbaseApp
                 app: app,
                 favorite: '123',
             });
+        });
+        afterEach(() => {
+            TestUtil.clearRuntime();
         });
         it('Should initalize properly', (done) => {
             expect($card instanceof $).toEqual(true);

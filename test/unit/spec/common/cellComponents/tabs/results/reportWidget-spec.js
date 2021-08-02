@@ -4,8 +4,11 @@ define([
     '/test/data/fakeResultsData',
     'narrativeConfig',
     'narrativeMocks',
-], (ReportWidget, Jupyter, ResultsData, Config, Mocks) => {
+    'testUtil'
+], (ReportWidget, Jupyter, ResultsData, Config, Mocks, TestUtil) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
 
     const FAKE_REPORT_OBJ = {
         direct_html: 'Here is some direct html for your Narrative perusal.',

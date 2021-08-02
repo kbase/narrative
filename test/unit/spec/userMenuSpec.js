@@ -23,6 +23,8 @@ define([
         });
     }
 
+    afterAll(() => TestUtil.clearRuntime());
+
     describe('Test the UserMenu module', () => {
         beforeEach(() => {
             jasmine.Ajax.install();

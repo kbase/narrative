@@ -1,9 +1,11 @@
-define(['common/runtime', 'widgets/appWidgets2/input/textareaInput'], (Runtime, TextareaInput) => {
+define(['common/runtime', 'widgets/appWidgets2/input/textareaInput', 'testUtil'], (Runtime, TextareaInput, TestUtil) => {
     'use strict';
     let testConfig;
     const required = false,
         defaultValue = 'some test text',
         numRows = 3;
+
+    afterAll(() => TestUtil.clearRuntime());
 
     function buildTestConfig(_required, _defaultValue, _bus) {
         return {
@@ -34,9 +36,9 @@ define(['common/runtime', 'widgets/appWidgets2/input/textareaInput'], (Runtime, 
     }
 
     describe('Textarea Input tests', () => {
-        let widget, bus, container;
+        let widget, bus, container, runtime
         beforeEach(() => {
-            const runtime = Runtime.make();
+            runtime = Runtime.make();
             container = document.createElement('div');
             bus = runtime.bus().makeChannelBus({
                 description: 'textarea testing',
@@ -47,7 +49,8 @@ define(['common/runtime', 'widgets/appWidgets2/input/textareaInput'], (Runtime, 
 
         afterEach(() => {
             bus.stop();
-            window.kbaseRuntime = null;
+            runtime.destroy();
+            TestUtil.clearRuntime();
             container.remove();
         });
 

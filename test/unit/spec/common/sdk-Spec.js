@@ -1,9 +1,12 @@
 define([
     'common/sdk',
+    'testUtil',
     'json!/test/data/NarrativeTest.test_simple_inputs.spec.json',
     'json!/test/data/NarrativeTest.test_input_params.spec.json',
-], (SDK, SimpleAppSpec, ComplexAppSpec) => {
+], (SDK, TestUtil, SimpleAppSpec, ComplexAppSpec) => {
     'use strict';
+    afterAll(() => TestUtil.clearRuntime());
+
     const validateConvertedSpec = function (spec) {
         if (!spec || !('parameters' in spec)) {
             return false;

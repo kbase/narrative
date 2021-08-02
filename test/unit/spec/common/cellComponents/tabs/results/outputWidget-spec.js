@@ -1,9 +1,12 @@
 define([
     'common/cellComponents/tabs/results/outputWidget',
     'base/js/namespace',
+    'testUtil',
     '/test/data/fakeResultsData',
-], (OutputWidget, Jupyter, ResultsData) => {
+], (OutputWidget, Jupyter, TestUtil, ResultsData) => {
     'use strict';
+
+    afterAll(() => TestUtil.clearRuntime());
 
     describe('test the created objects viewer', () => {
         let container;

@@ -3,6 +3,22 @@ from biokbase.execution_engine2.baseclient import ServerError as EEServerError
 from biokbase.userandjobstate.baseclient import ServerError as UJSServerError
 
 
+class NoJobException(ValueError):
+    """
+    Raised when a job ID is invalid (e.g., None, "", ...)
+    or not registered in JobManager._running_jobs
+    Subclasses ValueError for except-clause backwards compatibility
+    """
+    pass
+
+
+class NotBatchException(Exception):
+    """
+    Raised when expecting a batch container job
+    """
+    pass
+
+
 class NarrativeException(Exception):
     def __init__(self, code, message, name, source):
         self.code = code

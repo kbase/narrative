@@ -217,6 +217,9 @@ These are organized by the `request_type` field, followed by the expected respon
 * `job_id` - string OR `job_id_list` - array of strings
 * `parent_job_id` - optional string
 
+`job_status_batch` request job statuses, responds with `job_statuses`
+* `job_id` - string - job_id of batch container job
+
 `start_update_loop` - request starting the global job status update thread, no specific response, but generally with `job_status_all`
 
 `stop_update_loop` - request stopping the global job status update thread, no response
@@ -232,6 +235,9 @@ These are organized by the `request_type` field, followed by the expected respon
 `job_info` - request general information about job(s), responds with `job_info` for each job
 * `job_id` - string OR `job_id_list` - array of strings
 * `parent_job_id` - optional string
+
+`job_info_batch` - request general information about jobs, responds with `job_infos`
+* `job_id` - string - job_id of batch container job
 
 `job_logs` - request job log information, responds with `job_logs` for each job
 * `job_id` - string OR `job_id_list` - array of strings
@@ -327,8 +333,26 @@ Includes information about the running job
   * `app_name` - string, the human-readable app name
   * `job_id` - string, the job id
   * `job_params` - the unstructured set of parameters sent to the execution engine
+  * `batch_id` - id of batch container job
 
 **bus** - `job-info`
+
+### `job_infos`
+Includes information about the jobs
+
+**content**
+```json
+{
+  "job_id_1": { ...contents... },
+  "job_id_2": { ...contents... }
+}
+```
+Where the inner objects' format is the same as for `job_info`, i.e., they have the keys
+  * `app_id` - string, the app id (format = `module_name/app_name`)
+  * `app_name` - string, the human-readable app name
+  * `job_id` - string, the job id
+  * `job_params` - the unstructured set of parameters sent to the execution engine
+  * `batch_id` - id of batch container job
 
 ### `job_status`
 The current job state. This one is probably most common.

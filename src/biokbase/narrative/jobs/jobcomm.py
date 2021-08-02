@@ -3,7 +3,7 @@ import threading
 from typing import List
 from ipykernel.comm import Comm
 import biokbase.narrative.jobs.jobmanager as jobmanager
-from biokbase.narrative.exception_util import NarrativeException
+from biokbase.narrative.exception_util import NarrativeException, NoJobException
 from biokbase.narrative.common import kblogging
 
 UNKNOWN_REASON = "Unknown reason"
@@ -47,10 +47,13 @@ class JobRequest:
         each request.
     """
 
-    # request types either require a job_id, a job_id_list, or neither
+    # each kind of request handling requires a job_id, a job_id_list,
+    # or none of those
     REQUIRE_JOB_ID = [
         "job_info",
+        "job_info_batch",
         "job_status",
+        "job_status_batch",
         "start_job_update",
         "stop_job_update",
         "job_logs",
@@ -180,20 +183,22 @@ class JobComm:
                 "cancel_job": self._cancel_jobs,
                 "retry_job": self._retry_jobs,
                 "job_logs": self._get_job_logs,
+                "job_status_batch": self._lookup_job_state_batch,
+                "job_info_batch": self._lookup_job_info_batch,
             }
 
     def _verify_job_id(self, req: JobRequest) -> None:
         if not req.job_id:
             self.send_error_message("job_does_not_exist", req)
-            raise ValueError(f"Job id required to process {req.request} request")
+            raise NoJobException(f"Job id required to process {req.request} request")
 
     def _verify_job_id_list(self, req: JobRequest) -> None:
         if not isinstance(req.job_id_list, list):
-            raise ValueError("List expected for job_id_list")
+            raise TypeError("List expected for job_id_list")
         req.job_id_list[:] = [job_id for job_id in req.job_id_list if job_id]
         if len(req.job_id_list) == 0:
             self.send_error_message("job_does_not_exist", req)
-            raise ValueError("No valid job ids")
+            raise NoJobException("No valid job ids")
 
     def start_job_status_loop(self, *args, **kwargs) -> None:
         """
@@ -272,6 +277,20 @@ class JobComm:
             self.send_error_message("job_does_not_exist", req)
             raise
 
+    def _lookup_job_info_batch(self, req: JobRequest) -> dict:
+        self._verify_job_id(req)
+        try:
+            job_ids = self._jm.update_batch_job(req.job_id)
+            job_infos = dict()
+            for job_id in job_ids[1:]:
+                job_infos[job_id] = self._jm.lookup_job_info(job_id)
+        except NoJobException:
+            self.send_error_message("job_does_not_exist", req)
+            raise
+
+        self.send_comm_message("job_infos", job_infos)
+        return job_infos
+
     def lookup_job_state(self, job_id: str) -> dict:
         """
         This differs from the _lookup_job_state (underscored version) in that
@@ -303,6 +322,23 @@ class JobComm:
                 {"state": {"job_id": req.job_id, "status": "does_not_exist"}},
             )
             raise
+
+    def _lookup_job_state_batch(self, req: JobRequest) -> dict:
+        self._verify_job_id(req)
+
+        try:
+            job_ids = self._jm.update_batch_job(req.job_id)
+            output_states = self._jm.get_job_states(job_ids)
+        except NoJobException:
+            self.send_error_message("job_does_not_exist", req)
+            self.send_comm_message(
+                "job_status",
+                {"state": {"job_id": req.job_id, "status": "does_not_exist"}},
+            )
+            raise
+
+        self.send_comm_message("job_statuses", output_states)
+        return output_states
 
     def _modify_job_update(self, req: JobRequest) -> None:
         """

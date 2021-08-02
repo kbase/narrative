@@ -1,7 +1,12 @@
 """
 Tests for job management
 """
-from src.biokbase.narrative.jobs.job import COMPLETED_STATUS, JOB_ATTR_DEFAULTS
+from src.biokbase.narrative.jobs.job import (
+    COMPLETED_STATUS,
+    EXCLUDED_JOB_STATE_FIELDS,
+    JOB_ATTR_DEFAULTS,
+    get_dne_job_state,
+)
 import unittest
 import copy
 from unittest import mock
@@ -23,9 +28,14 @@ from .test_job import (
     BATCH_RETRY_COMPLETED,
     BATCH_RETRY_RUNNING,
     BATCH_RETRY_ERROR,
+    JOB_NOT_FOUND,
     ALL_JOBS,
     FINISHED_JOBS,
     ACTIVE_JOBS,
+    BATCH_CHILDREN,
+    get_test_job,
+    get_test_spec,
+    TEST_JOBS,
 )
 import os
 from IPython.display import HTML
@@ -35,20 +45,13 @@ from .narrative_mock.mockclients import (
     assert_obj_method_called,
     MockClients,
 )
-from biokbase.narrative.exception_util import NarrativeException
+from biokbase.narrative.exception_util import NarrativeException, NoJobException, NotBatchException
 from biokbase.narrative.app_util import map_inputs_from_job, map_outputs_from_state
 
 
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
-config = ConfigTests()
-test_jobs = config.load_json_file(config.get("jobs", "ee2_job_info_file"))
-with mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client):
-    sm = SpecManager()
-    sm.reload()
-    test_specs = copy.deepcopy(sm.app_specs)
 
-JOB_NOT_FOUND = "job_not_found"
 TERMINAL_IDS = [JOB_COMPLETED, JOB_TERMINATED, JOB_ERROR]
 NON_TERMINAL_IDS = [JOB_CREATED, JOB_RUNNING]
 
@@ -80,15 +83,11 @@ def get_retry_job_state(orig_id, status="unmocked"):
     }
 
 
-def get_dne_job_state(job_id):
-    return {"state": {"job_id": job_id, "status": "does_not_exist"}}
-
-
 def get_test_job_states():
     # generate full job state objects
     job_states = {}
-    for job_id in test_jobs.keys():
-        state = copy.deepcopy(test_jobs[job_id])
+    for job_id in TEST_JOBS.keys():
+        state = get_test_job(job_id)
         job_input = state.get("job_input", {})
         narr_cell_info = job_input.get("narrative_cell_info", {})
 
@@ -109,7 +108,7 @@ def get_test_job_states():
             params = job_input.get("params", JOB_ATTR_DEFAULTS["params"])
             tag = narr_cell_info.get("tag", JOB_ATTR_DEFAULTS["tag"])
             app_id = job_input.get("app_id", JOB_ATTR_DEFAULTS["app_id"])
-            spec = test_specs[tag][app_id]
+            spec = get_test_spec(tag, app_id)
             output_widget, widget_params = map_outputs_from_state(
                 state,
                 map_inputs_from_job(params, spec),
@@ -139,7 +138,8 @@ class JobManagerTest(unittest.TestCase):
     @classmethod
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def setUpClass(cls):
-        cls.job_ids = list(test_jobs.keys())
+        cls.job_ids = list(TEST_JOBS.keys())
+        config = ConfigTests()
         os.environ["KB_WORKSPACE_ID"] = config.get("jobs", "job_test_wsname")
         cls.maxDiff = None
 
@@ -262,7 +262,7 @@ class JobManagerTest(unittest.TestCase):
         self.assertIsInstance(job, Job)
 
     def test_get_job_bad(self):
-        with self.assertRaisesRegex(ValueError, "No job present with id not_a_job_id"):
+        with self.assertRaisesRegex(NoJobException, "No job present with id not_a_job_id"):
             self.jm.get_job("not_a_job_id")
 
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
@@ -313,8 +313,8 @@ class JobManagerTest(unittest.TestCase):
         )
 
     def test_cancel_jobs__job_already_finished(self):
-        self.assertEqual(test_jobs[JOB_COMPLETED]["status"], "completed")
-        self.assertEqual(test_jobs[JOB_TERMINATED]["status"], "terminated")
+        self.assertEqual(get_test_job(JOB_COMPLETED)["status"], "completed")
+        self.assertEqual(get_test_job(JOB_TERMINATED)["status"], "terminated")
         self.assertTrue(self.jm.get_job(JOB_COMPLETED).was_terminal)
         self.assertTrue(self.jm.get_job(JOB_TERMINATED).was_terminal)
 
@@ -419,7 +419,7 @@ class JobManagerTest(unittest.TestCase):
         for job_id in orig_ids + retry_ids:
             job = self.jm.get_job(job_id)
             self.assertIn(job_id, self.jm._running_jobs)
-            self.assertIsNotNone(job._last_state)
+            self.assertIsNotNone(job._acc_state)
 
         for job_id in dne_ids:
             self.assertNotIn(job_id, self.jm._running_jobs)
@@ -521,7 +521,7 @@ class JobManagerTest(unittest.TestCase):
             }
         ]
 
-        test_jobs_ = copy.deepcopy(test_jobs)
+        test_jobs_ = copy.deepcopy(TEST_JOBS)
         test_jobs_[retry_id] = {"job_id": retry_id, "status": retry_status}
         with mock.patch.object(
             MockClients,
@@ -619,6 +619,97 @@ class JobManagerTest(unittest.TestCase):
     #     msg = self.jm._comm.last_message
     #     self.assertTrue(self.jm._running_jobs[phony_id]['refresh'] == 0)
     #     self.assertIsNone(msg)
+
+    @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
+    def test_get_job_states(self):
+        job_ids = [
+            None,
+            None,
+            JOB_CREATED,
+            JOB_NOT_FOUND,
+            JOB_CREATED,
+            JOB_RUNNING,
+            JOB_TERMINATED,
+            JOB_COMPLETED,
+            BATCH_PARENT,
+            "",
+            JOB_NOT_FOUND,
+        ]
+
+        exp = {
+            **{
+                job_id: self.job_states[job_id]
+                for job_id in [JOB_CREATED, JOB_RUNNING, JOB_TERMINATED, JOB_COMPLETED, BATCH_PARENT]
+            },
+            JOB_NOT_FOUND: get_dne_job_state(JOB_NOT_FOUND)
+        }
+
+        res = self.jm.get_job_states(job_ids)
+        self.assertEqual(exp, res)
+
+    def test_get_job_states__empty(self):
+        with self.assertRaisesRegex(NoJobException, r"No job id\(s\) supplied"):
+            self.jm.get_job_states([])
+
+    def test_update_batch_job__dne(self):
+        with self.assertRaisesRegex(NoJobException, f"{JOB_NOT_FOUND} not registered"):
+            self.jm.update_batch_job(JOB_NOT_FOUND)
+
+    def test_update_batch_job__not_batch(self):
+        with self.assertRaisesRegex(NotBatchException, "Not a batch job"):
+            self.jm.update_batch_job(JOB_CREATED)
+
+        with self.assertRaisesRegex(NotBatchException, "Not a batch job"):
+            self.jm.update_batch_job(BATCH_TERMINATED)
+
+    @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
+    def test_update_batch_job__no_change(self):
+        job_ids = self.jm.update_batch_job(BATCH_PARENT)
+        self.assertEqual(BATCH_PARENT, job_ids[0])
+        self.assertCountEqual(BATCH_CHILDREN, job_ids[1:])
+
+    @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
+    def test_update_batch_job__change(self):
+        """test child ids having changed"""
+        exp_child_ids = BATCH_CHILDREN[1:] + [JOB_CREATED, JOB_NOT_FOUND]
+
+        def mock_check_job(params):
+            """Called from job.state()"""
+            job_id = params["job_id"]
+            if job_id == BATCH_PARENT:
+                return {"child_jobs": exp_child_ids}
+            elif job_id in TEST_JOBS:
+                return get_test_job(job_id)
+            else:
+                return {"job_id": job_id, "status": "does_not_exist"}
+
+        with mock.patch.object(
+            MockClients,
+            "check_job",
+            side_effect=mock_check_job
+        ) as m:
+            job_ids = self.jm.update_batch_job(BATCH_PARENT)
+
+        m.assert_has_calls(
+            [
+                mock.call({"job_id": BATCH_PARENT, "exclude_fields": EXCLUDED_JOB_STATE_FIELDS}),
+                mock.call({"job_id": JOB_NOT_FOUND, "exclude_fields": EXCLUDED_JOB_STATE_FIELDS})
+            ]
+        )
+
+        self.assertEqual(BATCH_PARENT, job_ids[0])
+        self.assertCountEqual(
+            exp_child_ids, job_ids[1:]
+        )
+
+        batch_job = self.jm.get_job(BATCH_PARENT)
+        reg_child_jobs = [
+            self.jm.get_job(job_id)
+            for job_id in batch_job.child_jobs
+        ]
+
+        self.assertCountEqual(batch_job.child_jobs, exp_child_ids)
+        self.assertCountEqual(batch_job.children, reg_child_jobs)
 
 
 if __name__ == "__main__":

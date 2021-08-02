@@ -5,11 +5,7 @@ from IPython.display import HTML
 from jinja2 import Template
 from datetime import datetime, timezone, timedelta
 from biokbase.narrative.app_util import system_variable
-from biokbase.narrative.exception_util import (
-    transform_job_exception,
-    NoJobException,
-    NotBatchException,
-)
+from biokbase.narrative.exception_util import transform_job_exception, NoJobException, NotBatchException
 import copy
 from typing import List
 
@@ -536,16 +532,18 @@ class JobManager(object):
             child_jobs = []
             for child_id in child_ids:
                 if child_id in self._running_jobs:
-                    child_job = self._running_jobs[child_id]["job"]
-                else:
-                    child_job = Job.from_attributes(job_id=child_id)
-                    self.register_new_job(
-                        job=child_job,
-                        refresh=int(
-                            child_job.state().get("status") not in TERMINAL_STATUSES
-                        ),
+                    child_jobs.append(
+                        self._running_jobs[child_id]["job"]
                     )
-                child_jobs.append(child_job)
+                else:
+                    job = Job.from_attributes(
+                        job_id=child_id
+                    )
+                    self.register_new_job(
+                        job=job,
+                        refresh=int(job.state().get("status") not in TERMINAL_STATUSES)
+                    )
+                    child_jobs.append(job)
 
             parent_job.update_children(child_jobs)
 

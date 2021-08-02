@@ -11,11 +11,7 @@ from IPython.display import HTML
 from jinja2 import Template
 from datetime import datetime, timezone, timedelta
 from biokbase.narrative.app_util import system_variable
-from biokbase.narrative.exception_util import (
-    transform_job_exception,
-    NoJobException,
-    NotBatchException,
-)
+from biokbase.narrative.exception_util import transform_job_exception, NoJobException, NotBatchException
 import copy
 from typing import List
 

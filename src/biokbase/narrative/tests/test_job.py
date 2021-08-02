@@ -54,8 +54,6 @@ def get_test_job(job_id):
     return copy.deepcopy(TEST_JOBS[job_id])
 
 
-JOB_NOT_FOUND = "job_not_found"
-
 # test_jobs contains jobs in the following states
 JOB_COMPLETED = "5d64935ab215ad4128de94d6"
 JOB_CREATED = "5d64935cb215ad4128de94d7"
@@ -70,6 +68,7 @@ BATCH_ERROR_RETRIED = "60e7112887b7e512a899c8f5"
 BATCH_RETRY_COMPLETED = "60e71159fce9347f2adeaac6"
 BATCH_RETRY_RUNNING = "60e7165f3e91121969554d82"
 BATCH_RETRY_ERROR = "60e717d78ac80701062efe63"
+JOB_NOT_FOUND = "job_not_found"
 
 BATCH_CHILDREN = [
     BATCH_COMPLETED,
@@ -653,7 +652,8 @@ class JobTest(unittest.TestCase):
         parent_state = create_state_from_ee2(BATCH_PARENT)
         child_states = [create_state_from_ee2(job_id) for job_id in BATCH_CHILDREN]
         with self.assertRaisesRegex(
-            ValueError, "Must supply children when setting children of batch job parent"
+            ValueError,
+            "Must supply children when setting children of batch job parent"
         ):
             Job(parent_state)
 

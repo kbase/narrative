@@ -336,6 +336,25 @@ i.e.
 
 **bus** - `job-info`
 
+**bus** - `job-info`
+
+### `job_infos`
+Includes information about the jobs
+
+**content**
+```json
+{
+  "job_id_1": { ...contents... },
+  "job_id_2": { ...contents... }
+}
+```
+Where the inner objects' format is the same as for `job_info`, i.e., they have the keys
+  * `app_id` - string, the app id (format = `module_name/app_name`)
+  * `app_name` - string, the human-readable app name
+  * `job_id` - string, the job id
+  * `job_params` - the unstructured set of parameters sent to the execution engine
+  * `batch_id` - id of batch container job
+
 ### `job_status`
 The current job state. This one is probably most common.
 

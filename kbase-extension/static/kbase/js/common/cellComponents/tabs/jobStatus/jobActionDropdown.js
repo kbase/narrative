@@ -98,16 +98,24 @@ define([
                 return Promise.resolve(false);
             }
 
-            const jobIdList = jobManager.getJobIDsByStatus(
+            const jobList = jobManager.getCurrentJobsByStatus(
                 statusList,
                 Jobs.validStatusesForAction[action]
             );
-            if (!jobIdList || !jobIdList.length) {
+            if (!jobList || !jobList.length) {
                 return Promise.resolve(false);
             }
 
-            return JobMessages.showDialog({ action, statusList, jobIdList }).then((confirmed) => {
+            return JobMessages.showDialog({ action, statusList, jobList }).then((confirmed) => {
                 if (confirmed) {
+                    const jobIdList =
+                        action === 'retry'
+                            ? jobList.map((job) => {
+                                  return job.retry_parent || job.job_id;
+                              })
+                            : jobList.map((job) => {
+                                  return job.job_id;
+                              });
                     jobManager.doJobAction(action, jobIdList);
                 }
                 return Promise.resolve(confirmed);
@@ -172,10 +180,13 @@ define([
         }
 
         function updateState() {
-            const jobsByStatus = jobManager.model.getItem(`exec.jobs.byStatus`);
+            const jobCountsByStatus = Jobs.getCurrentJobCounts(
+                jobManager.model.getItem('exec.jobs')
+            );
+
             actionArr.forEach((action) => {
                 const result = action.target.some((status) => {
-                    return jobsByStatus[status];
+                    return jobCountsByStatus[status];
                 });
                 // if the status exists, enable the button; otherwise, set it to disabled
                 container.querySelector(

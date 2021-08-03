@@ -10,11 +10,7 @@ define([
 
     const cssBaseClass = JobLogViewer.cssBaseClass;
 
-    const jobsByStatus = {};
-    // N.b. this only saves one job of each type
-    JobsData.allJobs.forEach((job) => {
-        jobsByStatus[job.status] = job;
-    });
+    const jobsByStatus = JobsData.jobsByStatus;
 
     const endStates = ['completed', 'error', 'terminated'];
     const queueStates = ['created', 'estimating', 'queued'];
@@ -275,7 +271,7 @@ define([
                 itHasJobStatus();
             });
 
-            JobsData.validJobs.forEach((jobState) => {
+            JobsData.allJobs.forEach((jobState) => {
                 describe(`should create a string for status ${jobState.status}`, () => {
                     beforeEach(async function () {
                         this.jobState = jobState;
@@ -321,7 +317,7 @@ define([
                 itHasJobStatusHistory();
             });
 
-            JobsData.validJobs.forEach((jobState) => {
+            JobsData.allJobs.forEach((jobState) => {
                 describe(`should create an array in history mode for status ${jobState.status}`, () => {
                     beforeEach(async function () {
                         this.jobState = jobState;
@@ -456,7 +452,7 @@ define([
                             firstCall = false;
                             this.runtimeBus.send(
                                 ...formatMessage(jobId, 'status', {
-                                    jobState: jobsByStatus['running'],
+                                    jobState: jobsByStatus['running'][0],
                                 })
                             );
                         } else {
@@ -484,8 +480,8 @@ define([
                         expect(Jobs.isValidJobStateObject.calls.count()).toEqual(2);
                         const allCallArgs = Jobs.isValidJobStateObject.calls.allArgs();
                         expect(allCallArgs[0][0]).toEqual(state);
-                        expect(allCallArgs[1][0]).toEqual(jobsByStatus['running']);
-                        this.jobState = jobsByStatus['running'];
+                        expect(allCallArgs[1][0]).toEqual(jobsByStatus['running'][0]);
+                        this.jobState = jobsByStatus['running'][0];
                         testJobStatus(this);
                     });
                 });
@@ -500,7 +496,7 @@ define([
 
             // job not found: logs container is removed
             it('should not render logs if the job is not found', async function () {
-                const jobState = jobsByStatus['does_not_exist'];
+                const jobState = jobsByStatus['does_not_exist'][0];
                 const jobId = jobState.job_id;
 
                 this.runtimeBus.on('request-job-status', (msg) => {
@@ -525,7 +521,7 @@ define([
             // queued jobs: message to say that the logs will be available when job runs
             queueStates.forEach((queueState) => {
                 it(`should render a queued message for "${queueState}" jobs`, async function () {
-                    const jobState = jobsByStatus[queueState];
+                    const jobState = jobsByStatus[queueState][0];
                     const jobId = jobState.job_id;
 
                     this.runtimeBus.on('request-job-status', (msg) => {
@@ -552,7 +548,7 @@ define([
 
             // running job: job logs are updated as they are received
             it('Should render job logs whilst job is running', async function () {
-                const jobState = jobsByStatus['running'];
+                const jobState = jobsByStatus['running'][0];
                 const jobId = jobState.job_id;
 
                 // lines to return each time there is a request for the latest logs
@@ -605,7 +601,7 @@ define([
 
             // job running, job logs have been deleted
             it(`should render a message when logs are deleted, state running`, async function () {
-                const jobState = jobsByStatus['running'];
+                const jobState = jobsByStatus['running'][0];
                 const jobId = jobState.job_id;
 
                 this.runtimeBus.on('request-job-status', (msg) => {
@@ -645,7 +641,7 @@ define([
             endStates.forEach((endState) => {
                 // completed statuses - should be one request for logs
                 it(`Should render all job logs if the job status is ${endState}`, async function () {
-                    const jobState = jobsByStatus[endState];
+                    const jobState = jobsByStatus[endState][0];
                     const jobId = jobState.job_id;
 
                     this.runtimeBus.on('request-job-status', (msg) => {
@@ -674,7 +670,7 @@ define([
                 // create a mutation observer to watch for changes to the log-panel node; when those changes
                 // occur, `callback` will be run to test that the changes are as expected
                 it(`should render a message when logs are deleted, state ${endState}`, async function () {
-                    const jobState = jobsByStatus[endState];
+                    const jobState = jobsByStatus[endState][0];
                     const jobId = jobState.job_id;
 
                     this.runtimeBus.on('request-job-status', (msg) => {

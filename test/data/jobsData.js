@@ -270,13 +270,6 @@ define(['common/format'], (format) => {
         },
     ];
 
-    // add in the retryTarget
-    validJobs.forEach((job) => {
-        if (job.meta.canRetry) {
-            job.meta.retryTarget = job.job_id;
-        }
-    });
-
     const unknownJob = {
         job_id: 'unknown-job',
         status: 'does_not_exist',
@@ -298,7 +291,43 @@ define(['common/format'], (format) => {
         },
     };
 
-    const allJobs = [...validJobs, unknownJob];
+    const batchParentJob = {
+        job_id: 'batch-parent-job',
+        batch_id: 'batch-parent-job',
+        batch_job: true,
+        child_jobs: ['unknown-job'].concat(
+            validJobs.map((job) => {
+                return job.job_id;
+            })
+        ),
+        created: t.created,
+        meta: {
+            canCancel: true,
+            canRetry: false,
+            jobAction: jobStrings.action.cancel,
+            // may want to reinstate these in the future
+            // createJobStatusLines: {
+            //     line: null,
+            //     history: null,
+            // },
+            // jobLabel: null,
+            // niceState: null,
+        },
+        status: 'created',
+        updated: t.finished,
+    };
+
+    // add in the retryTarget
+    validJobs.forEach((job) => {
+        if (job.meta.canRetry) {
+            job.meta.retryTarget = job.job_id;
+        }
+        job.batch_id = 'batch-parent-job';
+        job.batch_job = false;
+    });
+
+    const allJobs = JSON.parse(JSON.stringify([...validJobs, unknownJob]));
+    const allJobsWithBatchParent = JSON.parse(JSON.stringify([batchParentJob].concat(allJobs)));
 
     const invalidJobs = [
         1,
@@ -335,10 +364,12 @@ define(['common/format'], (format) => {
             job_id: 'job_with_single_param',
             app_id: 'NarrativeTest/app_sleep',
             app_name: 'App Sleep',
+            batch_id: 'batch-parent-job',
         },
         {
             job_params: [{ tag_two: 'value two', tag_three: 'value three' }],
             job_id: 'job_with_multiple_params',
+            batch_id: 'batch-parent-job',
         },
     ];
 
@@ -409,18 +440,18 @@ define(['common/format'], (format) => {
      * 'job-cancelled-whilst-in-the-queue'
      * 'job-cancelled-during-run'
      * 'job-died-whilst-queueing'
-     * 'job-in-the-queue'
+     * 'job-in-the-queue' --> can cancel, can retry
      *
      * job retries:
      * 'job-cancelled-whilst-in-the-queue'
-     *  - retry 1: 'job-running'
+     *  - retry 1: 'job-running' --> can cancel, can retry
      *
      * 'job-cancelled-during-run'
-     *  - retry 1: 'job-finished-with-success'
+     *  - retry 1: 'job-finished-with-success' --> cannot cancel or retry
      *
      * 'job-died-whilst-queueing'
      *  - retry 1: 'job-died-with-error'
-     *  - retry 2: 'job-estimating' (most recent retry)
+     *  - retry 2: 'job-estimating' (most recent retry) --> can cancel, can retry
      *
      * Extra metadata for batch jobs:
      * meta.currentJob: true/false -- this is the most recent job (including retries)
@@ -428,10 +459,6 @@ define(['common/format'], (format) => {
      */
 
     function createBatchJob() {
-        // extra metadata:
-        //
-        //
-
         const BATCH_ID = 'job-created';
         const jobsWithRetries = JSON.parse(JSON.stringify(validJobs));
         const jobIdIndex = {};
@@ -515,6 +542,10 @@ define(['common/format'], (format) => {
                 return acc;
             }, {}),
             batchId: BATCH_ID,
+            expectedButtonState: [
+                ['.dropdown [data-action="cancel"]', false],
+                ['.dropdown [data-action="retry"]', true],
+            ],
         };
     }
 
@@ -522,7 +553,9 @@ define(['common/format'], (format) => {
         validJobs,
         invalidJobs,
         unknownJob,
+        batchParentJob,
         allJobs,
+        allJobsWithBatchParent,
         batchJob: createBatchJob(),
         jobsByStatus,
         jobsById,

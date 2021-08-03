@@ -4,19 +4,16 @@ define([
     'common/jobs',
     'common/props',
     'testUtil',
-    '/test/data/testAppObj',
-], (JobActionDropdown, JobMessages, Jobs, Props, TestUtil, TestAppObj) => {
+    '/test/data/jobsData',
+], (JobActionDropdown, JobMessages, Jobs, Props, TestUtil, JobsData) => {
     'use strict';
 
     let container, jobActionDropdownInstance;
 
     const batchJobModel = Props.make({
-        data: {
-            exec: {
-                jobs: TestAppObj.exec.jobs,
-            },
-        },
+        data: {},
     });
+    Jobs.populateModelFromJobArray(JobsData.allJobsWithBatchParent, batchJobModel);
 
     function createInstance(config) {
         return JobActionDropdown.make(
@@ -106,7 +103,7 @@ define([
                 container = document.createElement('div');
                 this.jobManager = {
                     model: batchJobModel,
-                    getJobIDsByStatus: () => {
+                    getCurrentJobsByStatus: () => {
                         // nothing
                     },
                     doJobAction: () => {
@@ -144,19 +141,19 @@ define([
                     },
                 ];
                 const argCombos = orderedButtons.map((button) => {
-                    // arguments to jobManager.getJobIDsByStatus
+                    // arguments to jobManager.getCurrentJobsByStatus
                     return [button.statusList, button.validStatuses];
                 });
 
-                spyOn(this.jobManager, 'getJobIDsByStatus').and.returnValue([]);
+                spyOn(this.jobManager, 'getCurrentJobsByStatus').and.returnValue([]);
 
                 const dropdownButtons = container.querySelectorAll('.dropdown [data-action]');
                 dropdownButtons.forEach((button) => {
                     button.click();
                 });
 
-                expect(this.jobManager.getJobIDsByStatus).toHaveBeenCalled();
-                expect(this.jobManager.getJobIDsByStatus.calls.allArgs()).toEqual(argCombos);
+                expect(this.jobManager.getCurrentJobsByStatus).toHaveBeenCalled();
+                expect(this.jobManager.getCurrentJobsByStatus.calls.allArgs()).toEqual(argCombos);
             });
         });
 
@@ -166,7 +163,7 @@ define([
                 this.clickTarget = document.createElement('button');
                 this.jobManager = {
                     model: batchJobModel,
-                    getJobIDsByStatus: () => {
+                    getCurrentJobsByStatus: () => {
                         // nothing
                     },
                     doJobAction: () => {
@@ -187,12 +184,12 @@ define([
             it('resolves to false with an invalid action', async function () {
                 this.clickTarget.setAttribute('data-action', 'go-to-results');
                 this.clickTarget.setAttribute('data-target', 'running');
-                spyOn(this.jobManager, 'getJobIDsByStatus');
+                spyOn(this.jobManager, 'getCurrentJobsByStatus');
                 const outcome = await jobActionDropdownInstance.doBatchJobAction({
                     target: this.clickTarget,
                 });
                 expect(outcome).toBeFalse();
-                expect(this.jobManager.getJobIDsByStatus).not.toHaveBeenCalled();
+                expect(this.jobManager.getCurrentJobsByStatus).not.toHaveBeenCalled();
             });
 
             [null, undefined, []].forEach((returnValue) => {
@@ -201,13 +198,13 @@ define([
                 )}`, async function () {
                     this.clickTarget.setAttribute('data-action', 'cancel');
                     this.clickTarget.setAttribute('data-target', 'running');
-                    spyOn(this.jobManager, 'getJobIDsByStatus').and.returnValue(returnValue);
+                    spyOn(this.jobManager, 'getCurrentJobsByStatus').and.returnValue(returnValue);
                     const outcome = await jobActionDropdownInstance.doBatchJobAction({
                         target: this.clickTarget,
                     });
                     expect(outcome).toBeFalse();
-                    expect(this.jobManager.getJobIDsByStatus).toHaveBeenCalled();
-                    expect(this.jobManager.getJobIDsByStatus.calls.allArgs()).toEqual([
+                    expect(this.jobManager.getCurrentJobsByStatus).toHaveBeenCalled();
+                    expect(this.jobManager.getCurrentJobsByStatus.calls.allArgs()).toEqual([
                         [['running'], Jobs.validStatusesForAction.cancel],
                     ]);
                 });
@@ -220,15 +217,15 @@ define([
                 const returnValue = [1, 2, 3];
                 this.clickTarget.setAttribute('data-action', action);
                 this.clickTarget.setAttribute('data-target', target);
-                spyOn(this.jobManager, 'getJobIDsByStatus').and.returnValue(returnValue);
+                spyOn(this.jobManager, 'getCurrentJobsByStatus').and.returnValue(returnValue);
                 spyOn(this.jobManager, 'doJobAction');
                 spyOn(JobMessages, 'showDialog').and.resolveTo(false);
                 const outcome = await jobActionDropdownInstance.doBatchJobAction({
                     target: this.clickTarget,
                 });
                 expect(outcome).toBeFalse();
-                expect(this.jobManager.getJobIDsByStatus).toHaveBeenCalled();
-                expect(this.jobManager.getJobIDsByStatus.calls.allArgs()).toEqual([
+                expect(this.jobManager.getCurrentJobsByStatus).toHaveBeenCalled();
+                expect(this.jobManager.getCurrentJobsByStatus.calls.allArgs()).toEqual([
                     [[target], Jobs.validStatusesForAction.cancel],
                 ]);
                 expect(this.jobManager.doJobAction).not.toHaveBeenCalled();
@@ -237,23 +234,36 @@ define([
             it('resolves to true if the user accepts the dialog', async function () {
                 const action = 'retry';
                 const target = 'error';
-                const returnValue = [1, 2, 3];
+                const returnValue = [
+                    {
+                        job_id: 1,
+                        retry_parent: 11,
+                    },
+                    {
+                        job_id: 2,
+                        retry_parent: 22,
+                    },
+                    {
+                        job_id: 3,
+                        retry_parent: 33,
+                    },
+                ];
                 this.clickTarget.setAttribute('data-action', action);
                 this.clickTarget.setAttribute('data-target', target);
-                spyOn(this.jobManager, 'getJobIDsByStatus').and.returnValue(returnValue);
+                spyOn(this.jobManager, 'getCurrentJobsByStatus').and.returnValue(returnValue);
                 spyOn(this.jobManager, 'doJobAction');
                 spyOn(JobMessages, 'showDialog').and.resolveTo(true);
                 const outcome = await jobActionDropdownInstance.doBatchJobAction({
                     target: this.clickTarget,
                 });
                 expect(outcome).toBeTrue();
-                expect(this.jobManager.getJobIDsByStatus).toHaveBeenCalled();
-                expect(this.jobManager.getJobIDsByStatus.calls.allArgs()).toEqual([
+                expect(this.jobManager.getCurrentJobsByStatus).toHaveBeenCalled();
+                expect(this.jobManager.getCurrentJobsByStatus.calls.allArgs()).toEqual([
                     [[target], Jobs.validStatusesForAction.retry],
                 ]);
                 expect(this.jobManager.doJobAction).toHaveBeenCalled();
                 expect(this.jobManager.doJobAction.calls.allArgs()).toEqual([
-                    [action, returnValue],
+                    [action, [11, 22, 33]],
                 ]);
             });
         });
@@ -288,14 +298,32 @@ define([
                 });
             }
 
+            function generateJobs(jobSpec) {
+                const outputJobs = [JobsData.batchParentJob];
+                Object.keys(jobSpec).forEach((status) => {
+                    Object.keys(jobSpec[status]).forEach((jobId) => {
+                        outputJobs.push({
+                            job_id: jobId,
+                            status: status,
+                            batch_id: JobsData.batchParentJob.job_id,
+                        });
+                    });
+                });
+                return outputJobs;
+            }
+
             beforeAll(async function () {
                 container = document.createElement('div');
                 this.jobManager = {
-                    model: Props.make({ data: { exec: { jobs: { byStatus: {} } } } }),
+                    model: Props.make({ data: {} }),
                 };
                 jobActionDropdownInstance = await createStartedInstance(container, {
                     jobManager: this.jobManager,
                 });
+            });
+
+            afterEach(() => {
+                TestUtil.clearRuntime();
             });
 
             afterAll(async () => {
@@ -303,81 +331,106 @@ define([
                 container.remove();
             });
 
-            afterEach(() => {
-                TestUtil.clearRuntime();
-            });
+            const tests = [
+                {
+                    desc: 'no jobs: all off',
+                    input: [],
+                },
+                {
+                    desc: 'batch job with retries: cancel on, retry off',
+                    input: JobsData.batchJob.jobArray,
+                    expect: JobsData.batchJob.expectedButtonState,
+                },
+                {
+                    desc: 'all jobs: all on',
+                    input: JobsData.allJobsWithBatchParent,
+                    expect: [['.dropdown [data-action]', false]],
+                },
+                {
+                    desc: 'all jobs complete: all off',
+                    input: generateJobs({
+                        completed: {
+                            job_1: true,
+                            job_2: true,
+                        },
+                    }),
+                },
+                {
+                    desc: 'no jobs found: all off',
+                    input: generateJobs({
+                        does_not_exist: {
+                            job_1: true,
+                            job_2: true,
+                        },
+                    }),
+                },
+                {
+                    desc: 'queued and running: cancel on, retry off',
+                    input: generateJobs({
+                        queued: { job_1: true, job_2: true },
+                        running: { job_3: true },
+                    }),
+                    expect: [
+                        ['.dropdown [data-action="cancel"]', false],
+                        ['.dropdown [data-action="retry"]', true],
+                    ],
+                },
+                {
+                    desc: 'created, estimating, and running: cancel on, retry off',
+                    input: generateJobs({
+                        created: { job_1: true },
+                        estimating: { job_2: true },
+                        running: { job_3: true },
+                    }),
+                    expect: [
+                        ['.dropdown [data-action="cancel"]', false],
+                        ['.dropdown [data-action="retry"]', true],
+                    ],
+                },
+                {
+                    desc: 'failed and cancelled: cancel off, retry on',
+                    input: generateJobs({
+                        error: {
+                            job_1: true,
+                            job_2: true,
+                        },
+                        terminated: {
+                            job_3: true,
+                        },
+                    }),
+                    expect: [
+                        ['.dropdown [data-action="cancel"]', true],
+                        ['.dropdown [data-action="retry"]', false],
+                    ],
+                },
+                {
+                    desc: 'errored jobs only: retry errors on',
+                    input: generateJobs({
+                        error: {
+                            job_1: true,
+                            job_2: true,
+                        },
+                        does_not_exist: {
+                            job_3: true,
+                        },
+                        completed: {
+                            job_4: true,
+                            job_5: true,
+                        },
+                    }),
+                    expect: [
+                        ['.dropdown [data-action="cancel"]', true],
+                        ['.dropdown [data-target="terminated"]', true],
+                        ['.dropdown [data-target="error"]', false],
+                    ],
+                },
+            ];
 
-            it('should not have any buttons enabled without jobs', function () {
-                this.jobManager.model.setItem('exec.jobs.byStatus', {});
-                expectButtonState();
-            });
-
-            it('should not have any buttons enabled if all jobs are completed', function () {
-                this.jobManager.model.setItem('exec.jobs.byStatus', {
-                    completed: {
-                        job_1: true,
-                        job_2: true,
-                    },
+            tests.forEach((test) => {
+                it(test.desc, function () {
+                    Jobs.populateModelFromJobArray(test.input, this.jobManager.model);
+                    test.expect ? expectButtonState(test.expect) : expectButtonState();
                 });
-                expectButtonState();
-            });
-
-            it('should not have any buttons enabled if all jobs are not found', function () {
-                this.jobManager.model.setItem('exec.jobs.byStatus', {
-                    does_not_exist: {
-                        job_1: true,
-                        job_2: true,
-                    },
-                });
-                expectButtonState();
-            });
-
-            it('should have all buttons enabled with one job of each type', function () {
-                // the default set-up (batchJobModel) should have all buttons active
-                this.jobManager.model.setItem(
-                    'exec.jobs.byStatus',
-                    batchJobModel.getItem('exec.jobs.byStatus')
-                );
-                expectButtonState([['.dropdown [data-action]', false]]);
-            });
-
-            it('queued and running jobs: cancel buttons active, retry buttons disabled', function () {
-                this.jobManager.model.setItem('exec.jobs.byStatus', {
-                    queued: { job_1: true, job_2: true },
-                    running: { job_3: true },
-                });
-                expectButtonState([
-                    ['.dropdown [data-action="cancel"]', false],
-                    ['.dropdown [data-action="retry"]', true],
-                ]);
-            });
-
-            it('queued and running jobs: cancel buttons active, retry buttons disabled', function () {
-                this.jobManager.model.setItem('exec.jobs.byStatus', {
-                    created: { job_1: true },
-                    estimating: { job_2: true },
-                    running: { job_3: true },
-                });
-                expectButtonState([
-                    ['.dropdown [data-action="cancel"]', false],
-                    ['.dropdown [data-action="retry"]', true],
-                ]);
-            });
-
-            it('cancelled and failed jobs: retry buttons active, cancel buttons disabled', function () {
-                this.jobManager.model.setItem('exec.jobs.byStatus', {
-                    error: {
-                        job_1: true,
-                        job_2: true,
-                    },
-                    terminated: {
-                        job_3: true,
-                    },
-                });
-                expectButtonState([
-                    ['.dropdown [data-action="cancel"]', true],
-                    ['.dropdown [data-action="retry"]', false],
-                ]);
             });
         });
     });

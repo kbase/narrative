@@ -244,6 +244,8 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
          */
         updateModel(jobArray) {
             const jobIndex = this.model.getItem('exec.jobs');
+            const batchId = this.model.getItem('exec.jobState.job_id');
+            let batchJob;
             jobArray.forEach((jobState) => {
                 const status = jobState.status,
                     jobId = jobState.job_id,
@@ -263,22 +265,22 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
                         delete jobIndex.byStatus[oldStatus];
                     }
                 }
+                if (jobId === batchId) {
+                    batchJob = jobState;
+                }
             });
             this.model.setItem('exec.jobs', jobIndex);
+            // check whether the batch parent needs updating
+            if (batchJob) {
+                this.model.setItem('exec.jobState', batchJob);
+            }
             this.runHandler('modelUpdate', jobArray);
             return this.model;
         }
 
         /* UTIL FUNCTIONS */
 
-        /**
-         * Get the IDs of jobs with a certain status
-         *
-         * @param {array} statusList - array of statuses to find
-         * @param {array} validStates - array of valid statuses for this action (optional)
-         * @returns {array} job IDs to perform the action upon
-         */
-        getJobIDsByStatus(statusList, validStates) {
+        _checkStates(statusList, validStates) {
             if (validStates && validStates.length) {
                 const allInTheList = statusList.every((status) => {
                     return validStates.includes(status);
@@ -292,16 +294,48 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
                     return null;
                 }
             }
+            return statusList;
+        }
 
-            const jobsByStatus = this.model.getItem('exec.jobs.byStatus');
-            if (!jobsByStatus || !Object.keys(jobsByStatus).length) {
-                return null;
+        /**
+         * Get jobs with a certain status, excluding the batch parent job
+         *
+         * @param {array} statusList - array of statuses to find
+         * @param {array} validStates - array of valid statuses for this action (optional)
+         * @returns {array} job IDs
+         */
+        getCurrentJobIDsByStatus(rawStatusList, validStates) {
+            return this.getCurrentJobsByStatus(rawStatusList, validStates).map((job) => {
+                return job.job_id;
+            });
+        }
+
+        /**
+         * Get jobs with a certain status, excluding the batch parent job
+         *
+         * @param {array} statusList - array of statuses to find
+         * @param {array} validStates - array of valid statuses for this action (optional)
+         * @returns {array} job objects
+         */
+        getCurrentJobsByStatus(rawStatusList, validStates) {
+            const statusList = this._checkStates(rawStatusList, validStates);
+            const jobsById = this.model.getItem('exec.jobs.byId');
+            if (!statusList || !jobsById || !Object.keys(jobsById).length) {
+                return [];
             }
-            return statusList
-                .map((status) => {
-                    return jobsByStatus[status] ? Object.keys(jobsByStatus[status]) : [];
+            const batchId = this.model.getItem('exec.jobState.job_id');
+
+            // this should only use current jobs
+            const currentJobs = Jobs.getCurrentJobs(Object.values(jobsById));
+
+            // return only jobs with the appropriate status and that are not the batch parent
+            return Object.keys(currentJobs)
+                .filter((job_id) => {
+                    return statusList.includes(currentJobs[job_id].status) && job_id !== batchId;
                 })
-                .flat();
+                .map((job_id) => {
+                    return currentJobs[job_id];
+                });
         }
     }
 
@@ -347,28 +381,41 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
              * @param {object} args with keys
              *      action:        {string} action to perform (cancel or retry)
              *      statusList:    {array}  list of statuses to perform it on
-             *      validStatuses: {array}  list of statuses that it is valid to perform the action on
              *
              * @returns {Promise} that resolves to false if there is some error with the input or
              * if the user cancels the batch action. If the users confirms the action, the appropriate
              * message will be emitted by the bus.
              */
             executeActionByJobStatus(args) {
-                const { action, statusList, validStatuses } = args;
-
-                const jobIdList = this.getJobIDsByStatus(statusList, validStatuses);
-                if (!jobIdList || !jobIdList.length) {
+                const { action, statusList } = args;
+                // valid actions: cancel or retry
+                if (!['cancel', 'retry'].includes(action)) {
                     return Promise.resolve(false);
                 }
 
-                return JobMessages.showDialog({ action, statusList, jobIdList }).then(
-                    (confirmed) => {
-                        if (confirmed) {
-                            this.doJobAction(action, jobIdList);
-                        }
-                        return confirmed;
-                    }
+                const jobList = this.getCurrentJobsByStatus(
+                    statusList,
+                    Jobs.validStatusesForAction[action]
                 );
+                if (!jobList || !jobList.length) {
+                    return Promise.resolve(false);
+                }
+
+                return JobMessages.showDialog({ action, statusList, jobList }).then((confirmed) => {
+                    if (confirmed) {
+                        const jobIdList =
+                            action === 'retry'
+                                ? // return the retry_parent (if available)
+                                  jobList.map((job) => {
+                                      return job.retry_parent || job.job_id;
+                                  })
+                                : jobList.map((job) => {
+                                      return job.job_id;
+                                  });
+                        this.doJobAction(action, jobIdList);
+                    }
+                    return confirmed;
+                });
             }
 
             /**
@@ -417,6 +464,34 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
                     validStatuses: Jobs.validStatusesForAction.retry,
                 });
             }
+
+            /**
+             * Cancel a batch job by submitting a cancel request for the batch job container
+             *
+             * This action is triggered by hitting the 'Cancel' button at the top right of the
+             * bulk cell
+             */
+            cancelBatchJob() {
+                this.doJobAction('cancel', [this.model.getItem('exec.jobState.job_id')]);
+                // TODO: should this reset jobs or listeners?
+            }
+
+            /**
+             * Reset the job manager, removing all listeners and stored job data
+             */
+            resetJobs() {
+                const allJobs = this.model.getItem('exec.jobs.byId');
+                if (!allJobs || !Object.keys(allJobs).length) {
+                    return;
+                }
+                const parentJob = this.model.getItem('exec.jobState');
+                Object.keys(allJobs)
+                    .concat(parentJob)
+                    .forEach((jobId) => {
+                        this.removeJobListeners(jobId);
+                    });
+                this.model.deleteItem('exec');
+            }
         };
 
     const BatchInitMixin = (Base) =>
@@ -443,26 +518,31 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
                 this.addListener('job-status', child_job_ids);
                 this.addListener('job-does-not-exist', child_job_ids);
 
-                // initialise `exec.jobs` with the new child jobs
-                this.model.setItem(
-                    'exec.jobs',
-                    Jobs.jobArrayToIndexedObject(
-                        child_job_ids.map((id) => {
-                            return { job_id: id, status: 'created', created: 0 };
-                        })
-                    )
-                );
-
-                // request updates on the child jobs
-                this.bus.emit('request-job-updates-start', {
-                    jobIdList: child_job_ids,
+                // create the child jobs
+                const childJobs = child_job_ids.map((job_id) => {
+                    return {
+                        job_id: job_id,
+                        batch_id: batch_id,
+                        status: 'created',
+                        created: 0,
+                    };
                 });
 
-                // TODO: implement more complete handling for parent
-                this.model.setItem('exec.jobState', {
+                // add the parent job
+                childJobs.push({
                     job_id: batch_id,
+                    batch_id: batch_id,
+                    batch_job: true,
                     status: 'created',
                     created: 0,
+                });
+
+                // populate the model
+                Jobs.populateModelFromJobArray(childJobs, this.model);
+
+                // request job updates
+                this.bus.emit('request-job-updates-start', {
+                    jobIdList: child_job_ids.concat([batch_id]),
                 });
             }
 

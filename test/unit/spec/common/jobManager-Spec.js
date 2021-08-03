@@ -97,12 +97,9 @@ define([
     describe('the JobManager instance', () => {
         beforeEach(function () {
             this.model = Props.make({
-                data: {
-                    exec: {
-                        jobs: Jobs.jobArrayToIndexedObject(JobsData.allJobs),
-                    },
-                },
+                data: {},
             });
+            Jobs.populateModelFromJobArray(JobsData.allJobsWithBatchParent, this.model);
 
             this.bus = {
                 emit: () => {
@@ -624,11 +621,7 @@ define([
                     actionStatusMatrix[action].valid.forEach((status) => {
                         it(`cannot ${action} a batch of ${status} jobs if there are none in that state`, async function () {
                             const model = Props.make({
-                                data: {
-                                    exec: {
-                                        jobs: Jobs.jobArrayToIndexedObject([]),
-                                    },
-                                },
+                                data: {},
                             });
                             this.jobManagerInstance = new JobManager({
                                 model: model,
@@ -660,6 +653,82 @@ define([
                             expect(callArgs[0][0]).toEqual(`request-job-${actionString}`);
                             expect(callArgs[0][1].jobIdList.sort()).toEqual(expectedJobIds);
                         });
+
+                        it(`can ${action} a batch of jobs, including retries, in status ${status}`, async function () {
+                            const model = Props.make({
+                                data: {},
+                            });
+                            const batchParent = JobsData.batchParentJob;
+                            // duplicate the allJobs array and give each job a retry parent
+                            const allDupeJobs = JSON.parse(JSON.stringify(JobsData.allJobs)).map(
+                                (job) => {
+                                    job.retry_parent = job.job_id;
+                                    job.job_id = job.job_id + '-retry';
+                                    job.batch_id = batchParent.job_id;
+                                    job.created += 5;
+                                    return job;
+                                }
+                            );
+                            // retry parent jobs -- all in state 'terminated'
+                            const retryParentJobs = JSON.parse(
+                                JSON.stringify(JobsData.allJobs)
+                            ).map((job) => {
+                                job.status = 'terminated';
+                                return job;
+                            });
+                            // a second set of jobs that have not been retried
+                            const allOriginalJobs = JSON.parse(
+                                JSON.stringify(JobsData.allJobs)
+                            ).map((job) => {
+                                job.job_id += '-v2';
+                                return job;
+                            });
+
+                            const allJobs = [batchParent]
+                                .concat(allDupeJobs)
+                                .concat(retryParentJobs)
+                                .concat(allOriginalJobs);
+
+                            Jobs.populateModelFromJobArray(allJobs, model);
+                            this.jobManagerInstance = new JobManager({
+                                model,
+                                bus: this.bus,
+                                devMode: true,
+                            });
+                            expect(
+                                Object.keys(
+                                    this.jobManagerInstance.model.getItem('exec.jobs.byId')
+                                ).sort()
+                            ).toEqual(
+                                allJobs
+                                    .map((job) => {
+                                        return job.job_id;
+                                    })
+                                    .sort()
+                            );
+
+                            spyOn(this.bus, 'emit');
+                            spyOn(UI, 'showConfirmDialog').and.resolveTo(true);
+                            await this.jobManagerInstance[`${action}JobsByStatus`]([status]);
+                            expect(UI.showConfirmDialog).toHaveBeenCalled();
+                            expect(this.bus.emit).toHaveBeenCalled();
+
+                            const callArgs = this.bus.emit.calls.allArgs();
+                            const actionString = actionStatusMatrix[action].request;
+                            // all the jobs of status `status` should be included
+                            const expectedJobIds = Object.values(JobsData.jobsByStatus[status])
+                                .map((jobState) => {
+                                    if (action === 'retry') {
+                                        return [jobState.job_id, jobState.job_id + '-v2'];
+                                    }
+                                    return [jobState.job_id + '-retry', jobState.job_id + '-v2'];
+                                })
+                                .flat()
+                                .sort();
+                            expect(callArgs.length).toEqual(1);
+                            expect(callArgs[0][0]).toEqual(`request-job-${actionString}`);
+                            expect(callArgs[0][1].jobIdList.sort()).toEqual(expectedJobIds);
+                        });
                     });
                 });
             });
@@ -672,9 +741,9 @@ define([
                     title: 'Cancel queued jobs',
                 },
                 {
-                    action: 'cancel',
+                    action: 'retry',
                     statusList: ['created', 'estimating', 'queued'],
-                    title: 'Cancel queued jobs',
+                    title: 'Retry queued jobs',
                 },
                 // these actions can't be done through the UI at present, but they are legal
                 {
@@ -749,6 +818,38 @@ define([
                     expect(this.bus.emit).not.toHaveBeenCalled();
                 });
             });
+
+            describe('cancelBatchJob', () => {
+                it('cancels the current batch parent job', function () {
+                    spyOn(this.bus, 'emit');
+                    this.jobManagerInstance.cancelBatchJob();
+                    expect(this.bus.emit).toHaveBeenCalled();
+                    // check the args to bus.emit were correct
+                    const callArgs = this.bus.emit.calls.allArgs();
+                    const actionRequest = `request-job-${actionStatusMatrix.cancel.request}`;
+                    expect(callArgs).toEqual([
+                        [actionRequest, { jobIdList: [JobsData.batchParentJob.job_id] }],
+                    ]);
+                });
+            });
+
+            describe('resetJobs', () => {
+                it('can reset the stored jobs and listeners', function () {
+                    expect(
+                        Object.keys(this.jobManagerInstance.model.getItem('exec.jobs.byId')).sort()
+                    ).toEqual(
+                        JobsData.allJobsWithBatchParent
+                            .map((jobState) => {
+                                return jobState.job_id;
+                            })
+                            .sort()
+                    );
+                    expect(this.jobManagerInstance.listeners).toBeDefined();
+                    this.jobManagerInstance.resetJobs();
+                    expect(this.jobManagerInstance.model.getItem('exec')).not.toBeDefined();
+                    expect(this.jobManagerInstance.listeners).toEqual({});
+                });
+            });
         });
 
         describe('initBatchJob', () => {
@@ -774,25 +875,30 @@ define([
             });
 
             it('replaces any existing job data with the new input', function () {
-                const childJobs = ['this', 'that', 'the other'];
+                const childIds = ['this', 'that', 'the other'],
+                    batchId = 'something';
                 expect(
                     Object.keys(this.jobManagerInstance.model.getItem('exec.jobs.byId')).sort()
                 ).toEqual(
-                    JobsData.allJobs
+                    JobsData.allJobsWithBatchParent
                         .map((job) => {
                             return job.job_id;
                         })
                         .sort()
                 );
+                expect(this.jobManagerInstance.model.getItem('exec.jobState')).toEqual(
+                    JobsData.batchParentJob
+                );
+
                 this.jobManagerInstance.initBatchJob({
-                    batch_id: 'something',
-                    child_job_ids: childJobs,
+                    batch_id: batchId,
+                    child_job_ids: childIds,
                 });
                 expect(
                     Object.keys(this.jobManagerInstance.model.getItem('exec.jobs.byId')).sort()
-                ).toEqual(['that', 'the other', 'this']);
+                ).toEqual([batchId, 'that', 'the other', 'this']);
                 expect(this.jobManagerInstance.model.getItem('exec.jobState').job_id).toEqual(
-                    'something'
+                    batchId
                 );
             });
         });

@@ -1,7 +1,28 @@
 define(['./jobsData', 'common/jobs'], (JobsData, Jobs) => {
     'use strict';
 
-    const jobData = JobsData.validJobs;
+    const batchParentJob = Object.assign({}, JobsData.batchParentJob, {
+        job_output: {
+            id: JobsData.batchParentJob.job_id,
+            result: [
+                {
+                    // object with jobIds as keys and
+                    // { final_job_state: jobState } as values
+                    batch_results: JobsData.allJobs.reduce(
+                        (acc, curr) => ({
+                            ...acc,
+                            [curr.job_id]: { final_job_state: curr },
+                        }),
+                        {}
+                    ),
+                    report_name: 'batch_report_1607109609490',
+                    report_ref: '57373/19/1',
+                },
+            ],
+            version: '1.1',
+        },
+    });
+
     return {
         app: {
             fileParamIds: {
@@ -400,44 +421,8 @@ define(['./jobsData', 'common/jobs'], (JobsData, Jobs) => {
             },
         },
         exec: {
-            jobState: {
-                authstrat: 'kbaseworkspace',
-                batch_size: jobData.length,
-                cell_id: '13395335-1f3d-4e0c-80f7-44b634968da0',
-                child_jobs: jobData,
-                created: 1607109147000,
-                finished: 1607109627617,
-                job_id: '5fca8a1bd257f9f38c9862a0',
-                job_output: {
-                    id: '5fca8a1bd257f9f38c9862a0',
-                    result: [
-                        {
-                            // object with jobIds as keys and
-                            // { final_job_state: jobState } as values
-                            batch_results: jobData.reduce(
-                                (acc, curr) => ({
-                                    ...acc,
-                                    [curr.job_id]: { final_job_state: curr },
-                                }),
-                                {}
-                            ),
-                            report_name: 'batch_report_1607109609490',
-                            report_ref: '57373/19/1',
-                        },
-                    ],
-                    version: '1.1',
-                },
-                queued: 1607109147274,
-                run_id: '13395335-1f3d-4e0c-80f7-44b634968da0',
-                running: 1607109162603,
-                scheduler_id: '23203',
-                scheduler_type: 'condor',
-                status: 'completed',
-                updated: 1607109627760,
-                user: 'ialarmedalien',
-                wsid: 57373,
-            },
-            jobs: Jobs.jobArrayToIndexedObject(jobData),
+            jobState: batchParentJob,
+            jobs: Jobs.jobArrayToIndexedObject(JobsData.allJobsWithBatchParent),
             jobStateUpdated: 1607109635241,
             launchState: {
                 cell_id: '13395335-1f3d-4e0c-80f7-44b634968da0',

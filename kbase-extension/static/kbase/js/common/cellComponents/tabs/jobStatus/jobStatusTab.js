@@ -46,8 +46,8 @@ define(['bluebird', 'common/html', './jobStatusTable'], (Promise, html, JobStatu
         }
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

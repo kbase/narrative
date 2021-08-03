@@ -12,18 +12,16 @@ define([
     'use strict';
 
     const cssBaseClass = JobStatusTable.cssBaseClass;
-    const jobArray = JobsData.allJobs;
+    const jobArray = JobsData.allJobsWithBatchParent;
     const model = makeModel(jobArray);
     const bus = Runtime.make().bus();
 
     function makeModel(jobs) {
-        return Props.make({
-            data: {
-                exec: {
-                    jobs: Jobs.jobArrayToIndexedObject(jobs),
-                },
-            },
+        const model = Props.make({
+            data: {},
         });
+        Jobs.populateModelFromJobArray(jobs, model);
+        return model;
     }
 
     function createInstance(config = {}) {
@@ -494,7 +492,7 @@ define([
             });
             describe('job state:', () => {
                 describe(`valid jobState object`, () => {
-                    JobsData.validJobs.forEach((state) => {
+                    JobsData.allJobs.forEach((state) => {
                         it(`with status ${state.status}`, async function () {
                             // this row can't be updated as it's the same as the input
                             if (state.status === 'created') {
@@ -516,7 +514,9 @@ define([
                                 this.jobManager.model.getItem(`exec.jobs.byId.${this.job.job_id}`)
                             ).toEqual(this.input);
                             // if it is a terminal job state, the listener should have been removed
-                            if (Jobs.isTerminalStatus(this.input.status)) {
+                            if (this.input.status === 'does_not_exist') {
+                                expect(this.jobManager.listeners).toEqual({});
+                            } else if (Jobs.isTerminalStatus(this.input.status)) {
                                 expect(
                                     this.jobManager.listeners[this.job.job_id]['job-status']
                                 ).toBeUndefined();

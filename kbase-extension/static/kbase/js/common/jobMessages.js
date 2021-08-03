@@ -11,12 +11,12 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
      * @param {object} args with keys
      *      {string} action - what action is to occur (cancel or retry)
      *      {array} statusList - array of statuses that the action applies to
-     *      {array} jobIdList - array of job IDs
+     *      {array} jobList - array of job objects
      * @returns {object} arguments to create a modal to confirm or cancel the action
      */
 
     function generateDialogArgs(args) {
-        const { action, statusList, jobIdList } = args;
+        const { action, statusList, jobList } = args;
         const statusSet = new Set(statusList);
 
         // for presentation, created and estimating jobs are listed as 'queued'
@@ -32,7 +32,7 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
                 .sort()
                 .map((status) => Jobs.jobLabel({ status: status }))
         );
-        const jobString = jobIdList.length === 1 ? '1 job' : jobIdList.length + ' jobs';
+        const jobString = jobList.length === 1 ? '1 job' : jobList.length + ' jobs';
         const ucfirstAction = String.capitalize(action);
         return {
             title: `${ucfirstAction} ${jobLabelString} jobs`,

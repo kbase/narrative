@@ -345,10 +345,10 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui'], (
     /**
      * Add an array of jobs to a model
      *
-     * @param {array} jobArray - array of job state objects
      * @param {object} model - the model to add the jobs to
+     * @param {array} jobArray - array of job state objects
      */
-    function populateModelFromJobArray(jobArray = [], model) {
+    function populateModelFromJobArray(model, jobArray = []) {
         if (!model) {
             throw new Error('Missing a model to populate');
         }

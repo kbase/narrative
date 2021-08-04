@@ -35,6 +35,44 @@ define([
         });
     }
 
+    // set up a model with jobs populated with
+    // - JobsData.allJobs, altered so each job is a retry, named <original-name>-retry
+    //   the retry parent is <original_name>
+    // - JobsData.allJobs, altered so that each is a retry parent and has status 'terminated'
+    // - JobsData.allJobs, duplicated and named <original-name>-v2
+    function createModelWithBatchJobWithRetries() {
+        const model = Props.make({
+            data: {},
+        });
+        const batchParent = JobsData.batchParentJob;
+        // duplicate the allJobs array and give each job a retry parent
+        const allDupeJobs = JSON.parse(JSON.stringify(JobsData.allJobs)).map((job) => {
+            job.retry_parent = job.job_id;
+            job.job_id = job.job_id + '-retry';
+            job.batch_id = batchParent.job_id;
+            job.created += 5;
+            return job;
+        });
+        // retry parent jobs -- all in state 'terminated'
+        const retryParentJobs = JSON.parse(JSON.stringify(JobsData.allJobs)).map((job) => {
+            job.status = 'terminated';
+            return job;
+        });
+        // a second set of jobs that have not been retried
+        const allOriginalJobs = JSON.parse(JSON.stringify(JobsData.allJobs)).map((job) => {
+            job.job_id += '-v2';
+            return job;
+        });
+
+        const allJobs = [batchParent]
+            .concat(allDupeJobs)
+            .concat(retryParentJobs)
+            .concat(allOriginalJobs);
+
+        Jobs.populateModelFromJobArray(allJobs, model);
+        return { model, allJobs };
+    }
+
     const screamStr = 'AARRGGHH!!',
         shoutStr = 'Beware!',
         scream = () => {
@@ -582,24 +620,61 @@ define([
             ['cancel', 'retry'].forEach((action) => {
                 // cancelJob and retryJob: input is a single job ID
                 describe(`${action}Job`, () => {
+                    beforeEach(function () {
+                        const { model } = createModelWithBatchJobWithRetries();
+                        this.jobManagerInstance = new JobManager({
+                            model,
+                            bus: this.bus,
+                            devMode: true,
+                        });
+                    });
+
                     actionStatusMatrix[action].valid.forEach((status) => {
                         const jobId = JobsData.jobsByStatus[status][0].job_id;
                         it(`can ${action} a job in status ${status}`, function () {
                             spyOn(this.bus, 'emit');
-                            const result = this.jobManagerInstance[`${action}Job`](jobId);
+                            const result = this.jobManagerInstance[`${action}Job`](`${jobId}-v2`);
                             expect(result).toBeTrue();
                             expect(this.bus.emit).toHaveBeenCalled();
                             // check the args to bus.emit were correct
                             const callArgs = this.bus.emit.calls.allArgs();
                             const actionRequest = `request-job-${actionStatusMatrix[action].request}`;
-                            expect(callArgs[0]).toEqual([actionRequest, { jobIdList: [jobId] }]);
+                            expect(callArgs[0]).toEqual([
+                                actionRequest,
+                                { jobIdList: [`${jobId}-v2`] },
+                            ]);
+                        });
+                        it(`can ${action} a retried job in status ${status}`, function () {
+                            spyOn(this.bus, 'emit');
+                            const result = this.jobManagerInstance[`${action}Job`](
+                                `${jobId}-retry`
+                            );
+                            expect(result).toBeTrue();
+                            expect(this.bus.emit).toHaveBeenCalled();
+                            // check the args to bus.emit were correct
+                            const callArgs = this.bus.emit.calls.allArgs();
+                            const actionRequest = `request-job-${actionStatusMatrix[action].request}`;
+                            // if this is a retry, use the retry parent ID
+                            const actionJobId = action === 'retry' ? jobId : `${jobId}-retry`;
+                            expect(callArgs[0]).toEqual([
+                                actionRequest,
+                                { jobIdList: [actionJobId] },
+                            ]);
                         });
                     });
                     actionStatusMatrix[action].invalid.forEach((status) => {
                         const jobId = JobsData.jobsByStatus[status][0].job_id;
                         it(`cannot ${action} a job in status ${status}`, function () {
                             spyOn(this.bus, 'emit');
-                            const result = this.jobManagerInstance[`${action}Job`](jobId);
+                            const result = this.jobManagerInstance[`${action}Job`](`${jobId}-v2`);
+                            expect(result).toBeFalse();
+                            expect(this.bus.emit).not.toHaveBeenCalled();
+                        });
+                        it(`cannot ${action} a retried job in status ${status}`, function () {
+                            spyOn(this.bus, 'emit');
+                            const result = this.jobManagerInstance[`${action}Job`](
+                                `${jobId}-retry`
+                            );
                             expect(result).toBeFalse();
                             expect(this.bus.emit).not.toHaveBeenCalled();
                         });
@@ -655,41 +730,7 @@ define([
                         });
 
                         it(`can ${action} a batch of jobs, including retries, in status ${status}`, async function () {
-                            const model = Props.make({
-                                data: {},
-                            });
-                            const batchParent = JobsData.batchParentJob;
-                            // duplicate the allJobs array and give each job a retry parent
-                            const allDupeJobs = JSON.parse(JSON.stringify(JobsData.allJobs)).map(
-                                (job) => {
-                                    job.retry_parent = job.job_id;
-                                    job.job_id = job.job_id + '-retry';
-                                    job.batch_id = batchParent.job_id;
-                                    job.created += 5;
-                                    return job;
-                                }
-                            );
-                            // retry parent jobs -- all in state 'terminated'
-                            const retryParentJobs = JSON.parse(
-                                JSON.stringify(JobsData.allJobs)
-                            ).map((job) => {
-                                job.status = 'terminated';
-                                return job;
-                            });
-                            // a second set of jobs that have not been retried
-                            const allOriginalJobs = JSON.parse(
-                                JSON.stringify(JobsData.allJobs)
-                            ).map((job) => {
-                                job.job_id += '-v2';
-                                return job;
-                            });
-
-                            const allJobs = [batchParent]
-                                .concat(allDupeJobs)
-                                .concat(retryParentJobs)
-                                .concat(allOriginalJobs);
-
-                            Jobs.populateModelFromJobArray(allJobs, model);
+                            const { model, allJobs } = createModelWithBatchJobWithRetries();
                             this.jobManagerInstance = new JobManager({
                                 model,
                                 bus: this.bus,

@@ -9,9 +9,11 @@ define([
 ], (Jupyter, FieldCellWidget, ParamResolver, Props, Spec, TestUtil, TestAppObject) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     describe('The Field Table Cell Widget module', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('loads', () => {
             expect(FieldCellWidget).not.toBe(null);
         });

@@ -1,8 +1,6 @@
 define(['widgets/appWidgets2/input/subdataInput', 'testUtil'], (SubdataInput, TestUtil) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     describe('Test subobject data input widget', () => {
         const testConfig = {
             parameterSpec: {

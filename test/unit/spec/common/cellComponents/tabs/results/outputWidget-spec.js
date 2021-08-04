@@ -6,8 +6,6 @@ define([
 ], (OutputWidget, Jupyter, TestUtil, ResultsData) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     describe('test the created objects viewer', () => {
         let container;
         beforeEach(function () {
@@ -21,6 +19,7 @@ define([
         afterEach(() => {
             Jupyter.narrative = null;
             container.remove();
+            TestUtil.clearRuntime();
         });
 
         it('should start and render with data', async function () {

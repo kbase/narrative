@@ -5,8 +5,6 @@ define(['widgets/appWidgets2/view/dynamicDropdownView', 'common/runtime', 'testU
 ) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     const DEFAULT_VALUE = 'banana';
     const SELECTOR = 'select.form-control[data-element="input"]';
 

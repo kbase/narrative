@@ -1,4 +1,9 @@
-define(['common/runtime', 'base/js/namespace', 'narrativeConfig', 'testUtil'], (Runtime, Jupyter, Config, TestUtil) => {
+define(['common/runtime', 'base/js/namespace', 'narrativeConfig', 'testUtil'], (
+    Runtime,
+    Jupyter,
+    Config,
+    TestUtil
+) => {
     'use strict';
 
     const runtimeKeys = ['bus', 'created', 'env'];

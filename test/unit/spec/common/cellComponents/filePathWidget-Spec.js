@@ -9,9 +9,11 @@ define([
 ], (Jupyter, FilePathWidget, $, Runtime, Spec, TestUtil, TestSpec) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     describe('The file path widget module', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('loads', () => {
             expect(FilePathWidget).not.toBe(null);
         });

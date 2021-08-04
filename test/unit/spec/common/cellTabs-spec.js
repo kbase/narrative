@@ -1,4 +1,8 @@
-define(['common/cellComponents/cellTabs', 'common/runtime', 'testUtil'], (CellTabs, Runtime, TestUtil) => {
+define(['common/cellComponents/cellTabs', 'common/runtime', 'testUtil'], (
+    CellTabs,
+    Runtime,
+    TestUtil
+) => {
     'use strict';
     let container;
     const tabSet = {
@@ -24,9 +28,11 @@ define(['common/cellComponents/cellTabs', 'common/runtime', 'testUtil'], (CellTa
         console.warn(`performing action on tab ${tab}`);
     };
 
-    afterAll(() => TestUtil.clearRuntime());
-
     describe('The CellTabs module', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('Should load', () => {
             expect(CellTabs).toEqual(jasmine.any(Object));
         });

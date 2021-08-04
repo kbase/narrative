@@ -1,13 +1,15 @@
 define(['common/monoBus', 'testUtil'], (Bus, TestUtil) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     // Setting a shorter timeout pretty much forces us to set a timeout explicitly
     // per async test which falls outside of this reasonable setting for "normal"
     // async code. When we simulate async failures, or chained async calls, we
     // need to control the timing expectations within the test itself.
     describe('Bus core functions', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('Is alive', () => {
             let alive;
             if (Bus) {
@@ -417,194 +419,156 @@ define(['common/monoBus', 'testUtil'], (Bus, TestUtil) => {
         }, 5000);
     });
 
-    it('Send and receive a test based message over a named channel using a connection', (done) => {
-        const bus = Bus.make(),
-            connection = bus.connect();
-
-        connection.channel('test').on('my-message', (message) => {
-            expect(message.msg).toEqual('greetings');
-            done();
-        });
-        connection.channel('test').emit('my-message', {
-            msg: 'greetings',
-        });
-    });
-
-    it('A connection should destroy all listeners upon stop', (done) => {
-        const bus = Bus.make(),
-            connection = bus.connect();
-
-        connection.channel('test').on('test', () => {
-            // do nothing...
+    describe('Bus functions', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
         });
 
-        connection.channel('test').on('my-message', () => {
-            // expect(message.msg).toEqual('greetings');
-            expect(connection.stats().listeners.active).toEqual(2);
-            connection.stop();
-            const stats = connection.stats();
-            expect(stats.listeners.active).toEqual(0);
-            done();
-        });
-        connection.channel('test').emit('my-message', {
-            msg: 'greetings',
-        });
-    });
+        it('Send and receive a test based message over a named channel using a connection', (done) => {
+            const bus = Bus.make(),
+                connection = bus.connect();
 
-    it('Send and receive an async message over a named channel using a connection', (done) => {
-        const bus = Bus.make(),
-            connection = bus.connect();
-
-        connection
-            .channel('test')
-            .when('my-message')
-            .then((message) => {
+            connection.channel('test').on('my-message', (message) => {
                 expect(message.msg).toEqual('greetings');
                 done();
             });
-
-        connection.channel('test').set('my-message', {
-            msg: 'greetings',
+            connection.channel('test').emit('my-message', {
+                msg: 'greetings',
+            });
         });
-    });
 
-    it('Send and receive an async message over a named channel using a connection, then another', (done) => {
-        const bus = Bus.make(),
-            connection = bus.connect();
+        it('A connection should destroy all listeners upon stop', (done) => {
+            const bus = Bus.make(),
+                connection = bus.connect();
 
-        connection
-            .channel('test')
-            .when('my-message')
-            .then((message) => {
-                expect(message.msg).toEqual('greetings');
-                connection.channel('test').on('my-message', (_message) => {
-                    expect(_message.msg).toEqual('goodbye');
-                    connection.stop();
+            connection.channel('test').on('test', () => {
+                // do nothing...
+            });
+
+            connection.channel('test').on('my-message', () => {
+                expect(connection.stats().listeners.active).toEqual(2);
+                connection.stop();
+                const stats = connection.stats();
+                expect(stats.listeners.active).toEqual(0);
+                done();
+            });
+            connection.channel('test').emit('my-message', {
+                msg: 'greetings',
+            });
+        });
+
+        it('Send and receive an async message over a named channel using a connection', (done) => {
+            const bus = Bus.make(),
+                connection = bus.connect();
+
+            connection
+                .channel('test')
+                .when('my-message')
+                .then((message) => {
+                    expect(message.msg).toEqual('greetings');
                     done();
                 });
+
+            connection.channel('test').set('my-message', {
+                msg: 'greetings',
+            });
+        });
+
+        it('Send and receive an async message over a named channel using a connection, then another', (done) => {
+            const bus = Bus.make(),
+                connection = bus.connect();
+
+            connection
+                .channel('test')
+                .when('my-message')
+                .then((message) => {
+                    expect(message.msg).toEqual('greetings');
+                    connection.channel('test').on('my-message', (_message) => {
+                        expect(_message.msg).toEqual('goodbye');
+                        connection.stop();
+                        done();
+                    });
+                });
+
+            connection.channel('test').set('my-message', {
+                msg: 'greetings',
+            });
+            connection.channel('test').set('my-message', {
+                msg: 'goodbye',
+            });
+        });
+
+        it('Set a persistent message and get it synchronously', (done) => {
+            const bus = Bus.make(),
+                connection = bus.connect();
+
+            connection.channel('test').set('my-message', {
+                msg: 'greetings',
             });
 
-        connection.channel('test').set('my-message', {
-            msg: 'greetings',
-        });
-        connection.channel('test').set('my-message', {
-            msg: 'goodbye',
-        });
-    });
+            const message = connection.channel('test').get('my-message');
 
-    it('Set a persistent message and get it synchronously', (done) => {
-        const bus = Bus.make(),
-            connection = bus.connect();
-
-        connection.channel('test').set('my-message', {
-            msg: 'greetings',
-        });
-
-        const message = connection.channel('test').get('my-message');
-
-        expect(message.msg).toEqual('greetings');
-        done();
-        connection.stop();
-    });
-
-    it('Set a persistent message and get it synchronously, failed', (done) => {
-        const bus = Bus.make(),
-            connection = bus.connect();
-
-        connection.channel('test').set('my-message', {
-            msg: 'greetings',
-        });
-
-        const message = connection.channel('test').get('my-messagex', { msg: 'goodbye' });
-
-        expect(message.msg).toEqual('goodbye');
-        done();
-        connection.stop();
-    });
-
-    it('Set a persistent message and get it synchronously, set after get, should get default value', (done) => {
-        const bus = Bus.make(),
-            connection = bus.connect();
-
-        const message = connection.channel('test').get('my-messagex', { msg: 'goodbye' });
-
-        connection.channel('test').set('my-message', {
-            msg: 'greetings',
-        });
-
-        expect(message.msg).toEqual('goodbye');
-        done();
-        connection.stop();
-    });
-
-    it('Send and receive an async message over a named channel using a connection, then another', (done) => {
-        const bus = Bus.make(),
-            connection = bus.connect();
-
-        const started = new Date().getTime();
-
-        // var test2Called = 0;
-
-        // var test3 = connection.channel('test').plisten({
-        //     key: {
-        //         type: 'my-message'
-        //     },
-        //     handle: function(message) {
-        //         done.fail();
-        //     }
-        // });
-        // test3.promise.then(function() {
-        //     done.fail();
-        // });
-
-        // var test4 = connection.channel('test').plisten({
-        //     key: {
-        //         type: 'my-message'
-        //     },
-        //     handle: function(message) {
-        //         done.fail();
-        //     }
-        // });
-        // test4.promise.then(function() {
-        //     done.fail();
-        // });
-
-        const result = connection.channel('test').plisten({
-            key: {
-                type: 'my-message',
-            },
-            handle: function (message) {
-                const elapsed = new Date().getTime() - started;
-                expect(elapsed > 1000).toBeTruthy();
-                expect(message.msg).toEqual('goodbye');
-                done();
-            },
-        });
-
-        // test2.promise
-        //     .then(function(message) {
-        //         expect(message.msg).toEqual('hello');
-        //     });
-
-        // connection.channel('test2').set('my-message', {
-        //     msg: 'hello'
-        // });
-        // connection.channel('test2').set('my-message', {
-        //     msg: 'hi!'
-        // });
-
-        result.promise.then((message) => {
             expect(message.msg).toEqual('greetings');
             done();
+            connection.stop();
         });
 
-        connection.channel('test').set('my-message', {
-            msg: 'greetings',
+        it('Set a persistent message and get it synchronously, failed', (done) => {
+            const bus = Bus.make(),
+                connection = bus.connect();
+
+            connection.channel('test').set('my-message', {
+                msg: 'greetings',
+            });
+
+            const message = connection.channel('test').get('my-messagex', { msg: 'goodbye' });
+
+            expect(message.msg).toEqual('goodbye');
+            done();
+            connection.stop();
         });
-        // window.setTimeout(function() {
-        //     connection.channel('test').set('my-message', {
-        //         msg: 'goodbye'
-        //     });
-        // }, 2000);
+
+        it('Set a persistent message and get it synchronously, set after get, should get default value', (done) => {
+            const bus = Bus.make(),
+                connection = bus.connect();
+
+            const message = connection.channel('test').get('my-messagex', { msg: 'goodbye' });
+
+            connection.channel('test').set('my-message', {
+                msg: 'greetings',
+            });
+
+            expect(message.msg).toEqual('goodbye');
+            done();
+            connection.stop();
+        });
+
+        it('Send and receive an async message over a named channel using a connection, then another', (done) => {
+            const bus = Bus.make(),
+                connection = bus.connect();
+
+            const started = new Date().getTime();
+
+            const result = connection.channel('test').plisten({
+                key: {
+                    type: 'my-message',
+                },
+                handle: function (message) {
+                    const elapsed = new Date().getTime() - started;
+                    expect(elapsed > 1000).toBeTruthy();
+                    expect(message.msg).toEqual('goodbye');
+                    done();
+                },
+            });
+
+            result.promise.then((message) => {
+                expect(message.msg).toEqual('greetings');
+                done();
+            });
+
+            connection.channel('test').set('my-message', {
+                msg: 'greetings',
+            });
+        });
     });
 });

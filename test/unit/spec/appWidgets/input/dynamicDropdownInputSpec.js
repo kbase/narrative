@@ -1,12 +1,10 @@
-define(['widgets/appWidgets2/input/dynamicDropdownInput', 'base/js/namespace', 'narrativeMocks', 'testUtil'], (
-    DynamicDropdownInput,
-    Jupyter,
-    Mocks,
-    TestUtil
-) => {
+define([
+    'widgets/appWidgets2/input/dynamicDropdownInput',
+    'base/js/namespace',
+    'narrativeMocks',
+    'testUtil',
+], (DynamicDropdownInput, Jupyter, Mocks, TestUtil) => {
     'use strict';
-
-    afterAll(() => TestUtil.clearRuntime());
 
     describe('Test dynamic dropdown input widget', () => {
         const testConfig = {

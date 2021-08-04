@@ -9,8 +9,6 @@ define([
 ], ($, Main, BulkImportCell, Jupyter, Mocks, TestUtil, TestAppSpec) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     describe('test the bulkImportCell entrypoint module', () => {
         beforeAll(() => {
             Jupyter.narrative = {
@@ -20,6 +18,10 @@ define([
 
         afterAll(() => {
             Jupyter.narrative = null;
+        });
+
+        afterEach(() => {
+            TestUtil.clearRuntime();
         });
 
         describe('on start', () => {

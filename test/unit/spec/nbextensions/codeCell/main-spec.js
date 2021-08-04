@@ -14,8 +14,6 @@ define([
         return cell.metadata.kbase.type === 'code';
     }
 
-    afterAll(() => TestUtil.clearRuntime());
-
     describe('test the codeCell entrypoint module', () => {
         beforeAll(() => {
             Jupyter.narrative = {

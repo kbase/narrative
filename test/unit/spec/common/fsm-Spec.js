@@ -1,6 +1,5 @@
 define(['common/fsm', 'testUtil'], (Fsm, TestUtil) => {
     'use strict';
-    afterAll(() => TestUtil.clearRuntime());
 
     const simpleStates = [
             {
@@ -350,6 +349,10 @@ define(['common/fsm', 'testUtil'], (Fsm, TestUtil) => {
     ];
 
     describe('FSM core functions', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('Is alive', () => {
             let alive;
             if (Fsm) {
@@ -380,6 +383,10 @@ define(['common/fsm', 'testUtil'], (Fsm, TestUtil) => {
     });
 
     describe('Operations on a simple FSM', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('Create with an FSM', () => {
             const states = simpleStates,
                 fsm = Fsm.make({

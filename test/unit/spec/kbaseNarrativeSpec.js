@@ -5,7 +5,7 @@ define([
     'base/js/namespace',
     'narrativeLogin',
     'narrativeMocks',
-    'testUtil'
+    'testUtil',
 ], ($, Config, Narrative, Jupyter, NarrativeLogin, Mocks, TestUtil) => {
     'use strict';
 

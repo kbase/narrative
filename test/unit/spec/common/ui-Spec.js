@@ -1,8 +1,6 @@
 define(['common/ui', 'testUtil'], (UI, TestUtil) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     // don't require a UI object
     const functions = [
         'buildCollapsiblePanel',
@@ -114,6 +112,10 @@ define(['common/ui', 'testUtil'], (UI, TestUtil) => {
     }
 
     describe('UI module', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('should be defined', () => {
             expect(UI).toBeDefined();
         });

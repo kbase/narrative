@@ -9,9 +9,11 @@ define([
 ], (Jupyter, ParamsWidget, Runtime, Props, Spec, TestUtil, TestAppObject) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     describe('The Parameter module', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('loads', () => {
             expect(ParamsWidget).not.toBe(null);
         });
@@ -40,6 +42,7 @@ define([
 
         afterAll(() => {
             Jupyter.narrative = null;
+            TestUtil.clearRuntime();
         });
 
         beforeEach(function () {
@@ -77,7 +80,6 @@ define([
         });
 
         afterEach(() => {
-            TestUtil.clearRuntime();
             container.remove();
         });
 

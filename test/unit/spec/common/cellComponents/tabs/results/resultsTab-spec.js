@@ -7,8 +7,6 @@ define([
 ], (ResultsTab, Jupyter, Props, TestUtil, TestAppObject) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     const reportObject = {
         data: {
             objects_created: [
@@ -57,6 +55,7 @@ define([
 
         afterEach(() => {
             container.remove();
+            TestUtil.clearRuntime();
         });
 
         afterAll(() => {

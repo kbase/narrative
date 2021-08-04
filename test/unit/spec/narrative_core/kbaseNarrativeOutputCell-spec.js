@@ -8,8 +8,6 @@ define([
 ], ($, Widget, Jupyter, Mocks, Config, TestUtil) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     describe('The kbaseNarrativeOutputCell widget', () => {
         const testWidget = 'kbaseDefaultNarrativeOutput',
             testUpas = {

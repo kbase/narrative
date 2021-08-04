@@ -6,7 +6,6 @@ define([
     'testUtil',
 ], (Runtime, NewObjectInput, Jupyter, Mocks, TestUtil) => {
     'use strict';
-    afterAll(() => TestUtil.clearRuntime());
 
     const AUTH_TOKEN = 'fakeAuthToken',
         required = false,

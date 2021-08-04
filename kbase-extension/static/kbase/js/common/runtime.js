@@ -30,7 +30,7 @@ define([
                 created: new Date(),
                 bus: theBus,
                 env: Props.make({}),
-                clock
+                clock,
             };
         }
 

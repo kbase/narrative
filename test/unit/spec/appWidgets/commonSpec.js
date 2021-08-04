@@ -9,8 +9,6 @@ define(['common/events', 'common/ui', 'kb_common/html', 'widgets/appWidgets2/com
     const div = html.tag('div'),
         button = html.tag('button');
 
-    afterAll(() => TestUtil.clearRuntime());
-
     describe('Test WidgetCommon module', () => {
         let container;
         beforeEach(function () {

@@ -1,8 +1,6 @@
 define(['api/upa', 'narrativeConfig', 'testUtil'], (UpaApi, Config, TestUtil) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     describe('Test the UPA API', () => {
         const upaApi = new UpaApi(),
             serializeTestData = [
@@ -92,6 +90,10 @@ define(['api/upa', 'narrativeConfig', 'testUtil'], (UpaApi, Config, TestUtil) =>
 
         beforeEach(() => {
             Config.config.workspaceId = 31;
+        });
+
+        afterEach(() => {
+            TestUtil.clearRuntime();
         });
 
         it('Should properly serialize an UPA from this workspace', () => {

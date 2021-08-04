@@ -1,4 +1,8 @@
-define(['widgets/appWidgets2/input/intInput', 'common/runtime', 'testUtil'], (IntInput, Runtime, TestUtil) => {
+define(['widgets/appWidgets2/input/intInput', 'common/runtime', 'testUtil'], (
+    IntInput,
+    Runtime,
+    TestUtil
+) => {
     'use strict';
 
     describe('Test int data input widget', () => {
@@ -6,8 +10,6 @@ define(['widgets/appWidgets2/input/intInput', 'common/runtime', 'testUtil'], (In
             runtime,
             bus,
             container;
-
-        afterAll(() => TestUtil.clearRuntime());
 
         beforeEach(() => {
             runtime = Runtime.make();

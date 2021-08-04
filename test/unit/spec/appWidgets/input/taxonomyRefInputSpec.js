@@ -9,8 +9,6 @@ define([
     'use strict';
     const AUTH_TOKEN = 'fakeAuthToken';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     function buildTestConfig(required, defaultValue, bus) {
         return {
             parameterSpec: {

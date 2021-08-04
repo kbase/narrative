@@ -1,9 +1,11 @@
 define(['common/props', 'testUtil'], (Props, TestUtil) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     describe('Props core functions', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('Is alive', () => {
             let alive;
             if (Props) {

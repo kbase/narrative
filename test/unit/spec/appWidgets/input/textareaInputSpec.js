@@ -1,11 +1,13 @@
-define(['common/runtime', 'widgets/appWidgets2/input/textareaInput', 'testUtil'], (Runtime, TextareaInput, TestUtil) => {
+define(['common/runtime', 'widgets/appWidgets2/input/textareaInput', 'testUtil'], (
+    Runtime,
+    TextareaInput,
+    TestUtil
+) => {
     'use strict';
     let testConfig;
     const required = false,
         defaultValue = 'some test text',
         numRows = 3;
-
-    afterAll(() => TestUtil.clearRuntime());
 
     function buildTestConfig(_required, _defaultValue, _bus) {
         return {
@@ -36,7 +38,7 @@ define(['common/runtime', 'widgets/appWidgets2/input/textareaInput', 'testUtil']
     }
 
     describe('Textarea Input tests', () => {
-        let widget, bus, container, runtime
+        let widget, bus, container, runtime;
         beforeEach(() => {
             runtime = Runtime.make();
             container = document.createElement('div');

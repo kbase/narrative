@@ -1,9 +1,11 @@
 define(['common/pythonInterop', 'testUtil'], (PythonInterop, TestUtil) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     describe('Python interoperation core functions', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('loads the core functions', () => {
             expect(PythonInterop).toBeDefined();
             [

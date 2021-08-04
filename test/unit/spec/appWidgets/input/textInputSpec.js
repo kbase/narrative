@@ -1,10 +1,12 @@
-define(['common/runtime', 'widgets/appWidgets2/input/textInput', 'testUtil'], (Runtime, TextInput, TestUtil) => {
+define(['common/runtime', 'widgets/appWidgets2/input/textInput', 'testUtil'], (
+    Runtime,
+    TextInput,
+    TestUtil
+) => {
     'use strict';
     let testConfig;
     const required = false,
         defaultValue = 'some test text';
-
-    afterAll(() => TestUtil.clearRuntime());
 
     function buildTestConfig(_required, _defaultValue, _bus) {
         return {

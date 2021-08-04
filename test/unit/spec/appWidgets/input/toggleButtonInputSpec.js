@@ -8,7 +8,6 @@ define(['common/runtime', 'widgets/appWidgets2/input/toggleButtonInput', 'testUt
     const required = false,
         defaultValue = true;
 
-    afterAll(() => TestUtil.clearRuntime());
     function buildTestConfig(_required, _defaultValue, _bus) {
         return {
             bus: _bus,

@@ -7,8 +7,6 @@ define([
 ], (JobStatusTab, JobStatusTable, Props, TestUtil, TestAppObject) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     const model = Props.make({
         data: TestAppObject,
         onUpdate: () => {},
@@ -16,6 +14,10 @@ define([
     const jobTabContainerClass = 'kb-job__tab_container';
 
     describe('The job status tab module', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('loads', () => {
             expect(JobStatusTab).not.toBe(null);
         });
@@ -43,6 +45,7 @@ define([
 
         afterEach(() => {
             container.remove();
+            TestUtil.clearRuntime();
         });
 
         it('has a make function that returns an object', function () {

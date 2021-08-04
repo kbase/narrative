@@ -1,4 +1,9 @@
-define(['jquery', 'bluebird', 'widgets/dynamicTable', 'testUtil'], ($, Promise, DynamicTable, TestUtil) => {
+define(['jquery', 'bluebird', 'widgets/dynamicTable', 'testUtil'], (
+    $,
+    Promise,
+    DynamicTable,
+    TestUtil
+) => {
     'use strict';
     const rows = [
             [1, 2, 3],

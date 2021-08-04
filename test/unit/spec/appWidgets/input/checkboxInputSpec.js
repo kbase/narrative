@@ -1,7 +1,9 @@
-define(['widgets/appWidgets2/input/checkboxInput', 'common/runtime', 'testUtil'], (CheckboxInput, Runtime, TestUtil) => {
+define(['widgets/appWidgets2/input/checkboxInput', 'common/runtime', 'testUtil'], (
+    CheckboxInput,
+    Runtime,
+    TestUtil
+) => {
     'use strict';
-
-    afterAll(() => TestUtil.clearRuntime());
 
     describe('Test checkbox data input widget', () => {
         let testConfig = {},

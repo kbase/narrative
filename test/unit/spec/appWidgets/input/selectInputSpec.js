@@ -8,8 +8,6 @@ define(['common/runtime', 'widgets/appWidgets2/input/selectInput', 'testUtil'], 
     const required = false,
         defaultValue = 'apple';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     function buildTestConfig(_required, _defaultValue, _bus) {
         return {
             bus: _bus,

@@ -1,9 +1,11 @@
 define(['widgets/appWidgets2/paramResolver', 'testUtil'], (ParamResolver, TestUtil) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     describe('The ParamResolver module', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('Should load the module code successfully', () => {
             expect(ParamResolver).toBeDefined();
         });
@@ -24,6 +26,10 @@ define(['widgets/appWidgets2/paramResolver', 'testUtil'], (ParamResolver, TestUt
     describe('The paramResolver instance', () => {
         beforeEach(function () {
             this.paramResolverInstance = ParamResolver.make();
+        });
+
+        afterEach(() => {
+            TestUtil.clearRuntime();
         });
 
         const testList = [

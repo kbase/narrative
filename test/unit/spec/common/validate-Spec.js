@@ -1,8 +1,6 @@
 define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, TestUtil) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     describe('Validator functions', () => {
         /* map from wsid to objects that match the name
          * used for mocking out the responses needed for validateWorkspaceObjectName,
@@ -78,6 +76,7 @@ define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, Test
         });
 
         afterEach(() => {
+            TestUtil.clearRuntime();
             jasmine.Ajax.uninstall();
         });
 

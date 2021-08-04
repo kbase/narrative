@@ -1,11 +1,11 @@
-define(['kbaseReportView', 'base/js/namespace', 'jquery', 'narrativeMocks', 'narrativeConfig', 'testUtil'], (
-    ReportView,
-    Jupyter,
-    $,
-    Mocks,
-    Config,
-    TestUtil
-) => {
+define([
+    'kbaseReportView',
+    'base/js/namespace',
+    'jquery',
+    'narrativeMocks',
+    'narrativeConfig',
+    'testUtil',
+], (ReportView, Jupyter, $, Mocks, Config, TestUtil) => {
     'use strict';
     const FAKE_SERV_URL = 'https://ci.kbase.us/report_serv';
     const REPORT_REF = '1/2/3';

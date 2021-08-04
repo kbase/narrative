@@ -62,9 +62,7 @@ define([
         },
 
         loadData: function () {
-            return this.ws.get_objects2(
-                { objects: [{ ref: this.options.obj_ref }] }
-            );
+            return this.ws.get_objects2({ objects: [{ ref: this.options.obj_ref }] });
         },
         parseObj: function (ws_obj) {
             const cols = [{ title: 'ID' }];
@@ -124,8 +122,7 @@ define([
             let errString = 'Sorry, an unknown error occurred';
             if (typeof error === 'string') {
                 errString = error;
-            }
-            else if (error.error && error.error.message) {
+            } else if (error.error && error.error.message) {
                 errString = error.error.message;
             }
 
@@ -141,8 +138,7 @@ define([
         loading: function (doneLoading) {
             if (doneLoading) {
                 this.hideMessage();
-            }
-            else {
+            } else {
                 this.showMessage('<img src="' + this.options.loadingImage + '"/>');
             }
         },
@@ -162,6 +158,6 @@ define([
             if (this.conditionsTable) {
                 this.conditionsTable.destroy();
             }
-        }
+        },
     });
 });

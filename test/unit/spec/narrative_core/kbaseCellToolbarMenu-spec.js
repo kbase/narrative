@@ -6,8 +6,6 @@ define(['kbaseCellToolbarMenu', 'narrativeConfig', 'base/js/namespace', 'testUti
 ) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     function generateCell(mode, stage, collapsedState) {
         const currentState = {
             mode: mode,
@@ -95,6 +93,10 @@ define(['kbaseCellToolbarMenu', 'narrativeConfig', 'base/js/namespace', 'testUti
             Jupyter.narrative = {
                 readonly: false,
             };
+        });
+
+        afterEach(() => {
+            TestUtil.clearRuntime();
         });
 
         describe('the cell options buttons', () => {

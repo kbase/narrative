@@ -1,9 +1,8 @@
 define(['kbaseNarrativeManagePanel', 'testUtil'], (Widget, TestUtil) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     describe('The kbaseNarrativeManagePanel widget', () => {
+        afterAll(() => TestUtil.clearRuntime());
         it('should be defined', () => {
             expect(Widget).toBeDefined();
         });

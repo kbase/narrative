@@ -4,7 +4,7 @@ define([
     'common/runtime',
     'common/ui',
     'common/events',
-    'testUtil'
+    'testUtil',
 ], (ActionButton, $, Runtime, UI, Events, TestUtil) => {
     'use strict';
     let actionButtonInstance, ui, container;
@@ -30,7 +30,6 @@ define([
                 },
             },
         };
-    afterAll(() => TestUtil.clearRuntime());
 
     describe('The action button widget', () => {
         beforeEach(() => {

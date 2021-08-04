@@ -8,8 +8,6 @@ define([
 ], ($, TestUtil, Runtime, Select2ObjectInput, Jupyter, Mocks) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     const AUTH_TOKEN = 'fakeAuthToken';
     const readsItem = [
             3,

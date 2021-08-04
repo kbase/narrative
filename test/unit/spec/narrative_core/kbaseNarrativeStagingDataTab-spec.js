@@ -1,10 +1,10 @@
-define(['jquery', 'kbaseNarrativeStagingDataTab', 'base/js/namespace', 'narrativeConfig', 'testUtil'], (
-    $,
-    StagingDataTab,
-    Jupyter,
-    Config,
-    TestUtil
-) => {
+define([
+    'jquery',
+    'kbaseNarrativeStagingDataTab',
+    'base/js/namespace',
+    'narrativeConfig',
+    'testUtil',
+], ($, StagingDataTab, Jupyter, Config, TestUtil) => {
     'use strict';
 
     describe('The kbaseNarrativeStagingDataTab widget', () => {
@@ -52,12 +52,12 @@ define(['jquery', 'kbaseNarrativeStagingDataTab', 'base/js/namespace', 'narrativ
                         mtime: 1532738637555,
                         size: 49233,
                         source: 'KBase upload',
-                        isFolder: false
+                        isFolder: false,
                     },
                 ]),
             });
             const mappings = {
-                mappings: [null, null]
+                mappings: [null, null],
             };
             jasmine.Ajax.stubRequest(
                 new RegExp(`${stagingServiceUrl}/importer_mappings/`)

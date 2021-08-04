@@ -3,7 +3,7 @@ define([
     'common/runtime',
     'common/ui',
     'common/events',
-    'testUtil'
+    'testUtil',
 ], (CellControlPanel, Runtime, UI, Events, TestUtil) => {
     'use strict';
 
@@ -30,8 +30,6 @@ define([
                 },
             },
         };
-
-    afterAll(() => TestUtil.clearRuntime());
 
     describe('The cell control panel widget', () => {
         beforeEach(function () {

@@ -1,8 +1,6 @@
 define(['common/jobs', '/test/data/jobsData', 'testUtil'], (Jobs, JobsData, TestUtil) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     function arrayToHTML(array) {
         return array.map((item) => `<div>${item}</div>`).join('\n');
     }
@@ -38,6 +36,10 @@ define(['common/jobs', '/test/data/jobsData', 'testUtil'], (Jobs, JobsData, Test
     });
 
     describe('Test Jobs module', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('Should be loaded with the right functions', () => {
             expect(Jobs).toBeDefined();
             jobsModuleExports.forEach((f) => {
@@ -49,6 +51,10 @@ define(['common/jobs', '/test/data/jobsData', 'testUtil'], (Jobs, JobsData, Test
     const badStates = [undefined, null, 'Mary Poppins', 12345678];
 
     describe('the isTerminalStatus function', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('should return true if the job status is terminal', () => {
             ['completed', 'terminated', 'error', 'does_not_exist'].forEach((status) => {
                 expect(Jobs.isTerminalStatus(status)).toBeTrue();
@@ -67,6 +73,10 @@ define(['common/jobs', '/test/data/jobsData', 'testUtil'], (Jobs, JobsData, Test
     });
 
     describe('The isValidJobStateObject function', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('Should know how to tell good job states', () => {
             JobsData.allJobs
                 .concat([
@@ -93,6 +103,10 @@ define(['common/jobs', '/test/data/jobsData', 'testUtil'], (Jobs, JobsData, Test
     });
 
     describe('The isValidJobInfoObject function', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         JobsData.validInfo.forEach((elem) => {
             it(`passes ${JSON.stringify(elem)}`, () => {
                 expect(Jobs.isValidJobInfoObject(elem)).toBeTrue();
@@ -126,6 +140,11 @@ define(['common/jobs', '/test/data/jobsData', 'testUtil'], (Jobs, JobsData, Test
         beforeAll(() => {
             container = document.createElement('div');
         });
+
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         afterAll(() => {
             container.remove();
         });
@@ -178,6 +197,10 @@ define(['common/jobs', '/test/data/jobsData', 'testUtil'], (Jobs, JobsData, Test
     });
 
     describe('jobAction', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         badStates.forEach((item) => {
             it(`should generate no action with the job state ${item}`, () => {
                 expect(Jobs.jobAction({ status: item })).toEqual(null);
@@ -191,6 +214,10 @@ define(['common/jobs', '/test/data/jobsData', 'testUtil'], (Jobs, JobsData, Test
     });
 
     describe('jobLabel', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         badStates.forEach((item) => {
             it(`creates an appropriate label with the input ${JSON.stringify(item)}`, () => {
                 expect(Jobs.jobLabel({ status: item })).toEqual('not found');
@@ -213,6 +240,10 @@ define(['common/jobs', '/test/data/jobsData', 'testUtil'], (Jobs, JobsData, Test
         beforeAll(() => {
             container = document.createElement('div');
         });
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         afterAll(() => {
             container.remove();
         });
@@ -240,6 +271,10 @@ define(['common/jobs', '/test/data/jobsData', 'testUtil'], (Jobs, JobsData, Test
         beforeAll(() => {
             container = document.createElement('div');
         });
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         afterAll(() => {
             container.remove();
         });
@@ -290,6 +325,10 @@ define(['common/jobs', '/test/data/jobsData', 'testUtil'], (Jobs, JobsData, Test
     }
 
     describe('createCombinedJobState', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         const batch = 'batch job';
         const retryBatchId = JobsData.batchJob.batchId;
         const tests = [
@@ -461,6 +500,10 @@ define(['common/jobs', '/test/data/jobsData', 'testUtil'], (Jobs, JobsData, Test
     });
 
     describe('getCurrentJobs', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('current jobs, no retries', () => {
             const jobsByOriginalId = Jobs.getCurrentJobs(JobsData.allJobs);
             expect(jobsByOriginalId).toEqual(JobsData.jobsById);
@@ -482,6 +525,10 @@ define(['common/jobs', '/test/data/jobsData', 'testUtil'], (Jobs, JobsData, Test
     });
 
     describe('jobArrayToIndexedObject', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('creates a model with jobs indexed by ID and by status', () => {
             const model = Jobs.jobArrayToIndexedObject(JobsData.allJobs);
             const idIndex = model.byId,

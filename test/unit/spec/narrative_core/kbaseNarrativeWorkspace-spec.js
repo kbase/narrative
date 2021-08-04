@@ -9,8 +9,6 @@ define([
 ], (KBaseNarrativeWorkspace, $, Jupyter, Mocks, TestUtil, Runtime, AppSpec) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     describe('Test the kbaseNarrativeWorkspace widget', () => {
         let $node, $container;
         beforeAll(() => {

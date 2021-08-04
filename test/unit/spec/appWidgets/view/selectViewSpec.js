@@ -5,8 +5,6 @@ define(['widgets/appWidgets2/view/selectView', 'common/runtime', 'testUtil'], (
 ) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     /**
      * Builds a dummy parameter spec from the array of select options.
      * Each option is a key-value pair with keys "display" and "value", both strings
@@ -104,7 +102,9 @@ define(['widgets/appWidgets2/view/selectView', 'common/runtime', 'testUtil'], (
                 await widget.start({ node: this.node });
                 const selectElem = this.node.querySelector(SELECTOR);
                 expect(selectElem).not.toBeNull();
-                const expectedValues = testCase.overrideValues ? testCase.overrideValues : TEST_VALUES;
+                const expectedValues = testCase.overrideValues
+                    ? testCase.overrideValues
+                    : TEST_VALUES;
                 expect(selectElem.children.length).toBe(expectedValues.length + 1); // blank is an option
                 expect(selectElem.value).toBe(testCase.initialValue);
 

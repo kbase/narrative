@@ -183,6 +183,6 @@ define('testUtil', ['bluebird', 'json!/test/testConfig.json'], (Promise, TestCon
         waitForElement,
         waitForElementState,
         waitForElementChange,
-        clearRuntime
+        clearRuntime,
     };
 });

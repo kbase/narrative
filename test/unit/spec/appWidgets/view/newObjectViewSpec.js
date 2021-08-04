@@ -5,8 +5,6 @@ define(['widgets/appWidgets2/view/newObjectView', 'common/runtime', 'testUtil'],
 ) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     describe('New Object View widget', () => {
         const paramSpec = {
             id: 'newObj',

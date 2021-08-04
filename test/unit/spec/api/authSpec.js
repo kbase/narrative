@@ -139,9 +139,9 @@ define(['api/auth', 'narrativeConfig', 'uuid', 'testUtil'], (Auth, Config, Uuid,
         },
     ];
 
-    afterAll(() => TestUtil.clearRuntime());
-
     describe('Test the Auth API module', () => {
+        afterAll(() => TestUtil.clearRuntime());
+
         beforeEach(() => {
             setToken(FAKE_TOKEN);
             authClient = Auth.make({

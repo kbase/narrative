@@ -5,8 +5,6 @@ define(['jquery', 'kbase/js/widgets/narrative_core/kbaseAppCard', 'testUtil'], (
 ) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     let app, $card;
     describe('The kbaseAppCard widget', () => {
         beforeEach(() => {

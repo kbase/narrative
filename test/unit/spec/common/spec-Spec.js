@@ -5,8 +5,6 @@ define(['common/spec', 'testUtil', 'json!/test/data/NarrativeTest.test_input_par
 ) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     function testSpecFns(spec) {
         ['getSpec', 'makeDefaultedModel', 'validateModel', 'validateParams'].forEach((fn) => {
             expect(spec[fn]).toEqual(jasmine.any(Function));
@@ -14,6 +12,10 @@ define(['common/spec', 'testUtil', 'json!/test/data/NarrativeTest.test_input_par
     }
 
     describe('basic spec module test', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('should have a factory', () => {
             expect(Spec.make).toEqual(jasmine.any(Function));
         });
@@ -66,6 +68,10 @@ define(['common/spec', 'testUtil', 'json!/test/data/NarrativeTest.test_input_par
             this.spec = Spec.make({
                 appSpec: TestAppSpec,
             });
+        });
+
+        afterEach(() => {
+            TestUtil.clearRuntime();
         });
 
         it('should return the spec structure on request', function () {

@@ -12,8 +12,6 @@ define([
         '/narrative/static/kbase/images/kbase_animated_logo.gif'
     );
 
-    afterAll(() => TestUtil.clearRuntime());
-
     describe('Test the LoadingWidget module', () => {
         let container;
         beforeEach(() => {
@@ -23,6 +21,7 @@ define([
 
         afterEach(() => {
             container.remove();
+            TestUtil.clearRuntime();
         });
 
         it('Should instantiate with a null node', () => {

@@ -4,11 +4,9 @@ define([
     '/test/data/fakeResultsData',
     'narrativeConfig',
     'narrativeMocks',
-    'testUtil'
+    'testUtil',
 ], (ReportWidget, Jupyter, ResultsData, Config, Mocks, TestUtil) => {
     'use strict';
-
-    afterAll(() => TestUtil.clearRuntime());
 
     const FAKE_REPORT_OBJ = {
         direct_html: 'Here is some direct html for your Narrative perusal.',
@@ -67,6 +65,7 @@ define([
         afterEach(() => {
             container.remove();
             jasmine.Ajax.uninstall();
+            TestUtil.clearRuntime();
         });
 
         it('should start and render with data', async function () {

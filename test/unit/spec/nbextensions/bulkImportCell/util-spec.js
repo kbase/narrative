@@ -75,12 +75,14 @@ define([
         });
     }
 
-    afterAll(() => TestUtil.clearRuntime());
-
     describe('BulkImportCell Utility tests', () => {
         let spec;
         beforeAll(() => {
             spec = Spec.make({ appSpec: TestAppObj.app.specs[testAppId] });
+        });
+
+        afterEach(() => {
+            TestUtil.clearRuntime();
         });
 
         describe('evaluateAppConfig tests', () => {

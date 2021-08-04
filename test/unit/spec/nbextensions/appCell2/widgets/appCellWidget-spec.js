@@ -75,8 +75,6 @@ define([
         },
     };
 
-    afterAll(() => TestUtil.clearRuntime());
-
     // Can only test the public functions...
     describe('The appCell widget', () => {
         beforeEach(() => {

@@ -7,7 +7,6 @@ define([
     'testUtil',
 ], ($, Jupyter, Mocks, Config, StaticNarrativesManager, TestUtil) => {
     'use strict';
-    afterAll(() => TestUtil.clearRuntime());
 
     const staticNarrativeServiceUrl = 'https://ci.kbase.us/dynserv/blah.StaticNarrative';
 

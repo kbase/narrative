@@ -5,11 +5,9 @@ define([
     'kb_service/client/workspace',
     'base/js/namespace',
     'narrativeMocks',
-    'testUtil'
+    'testUtil',
 ], (DataList, $, Config, Workspace, Jupyter, Mocks, TestUtil) => {
     'use strict';
-
-    afterAll(() => TestUtil.clearRuntime());
 
     const FAKE_NS_URL = 'https://ci.kbase.us/services/fake_url';
     const FAKE_WS_NAME = 'some_workspace';
@@ -109,6 +107,7 @@ define([
             $dataList = null;
             dataListObj = null;
             $(document).off();
+            TestUtil.clearRuntime();
         });
 
         it('Should instantiate itself with expected functions', () => {

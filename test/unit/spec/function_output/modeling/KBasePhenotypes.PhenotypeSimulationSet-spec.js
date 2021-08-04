@@ -1,4 +1,8 @@
-define(['KBasePhenotypes.PhenotypeSimulationSet', 'KBModeling', 'testUtil'], (Widget, kbm, TestUtil) => {
+define(['KBasePhenotypes.PhenotypeSimulationSet', 'KBModeling', 'testUtil'], (
+    Widget,
+    kbm,
+    TestUtil
+) => {
     'use strict';
 
     describe('Test the KBasePhenotypes.PhenotypeSimulationSet widget', () => {

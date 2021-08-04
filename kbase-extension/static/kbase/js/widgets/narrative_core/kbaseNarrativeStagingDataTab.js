@@ -54,8 +54,7 @@ define([
         activate: function () {
             if (this.stagingAreaViewer) {
                 this.stagingAreaViewer.activate();
-            }
-            else {
+            } else {
                 console.error('Call "render" before "activate"');
             }
         },

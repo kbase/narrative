@@ -1,11 +1,11 @@
-define(['jquery', 'kbaseAttributeMapping', 'base/js/namespace', 'narrativeMocks', 'narrativeConfig', 'testUtil'], (
-    $,
-    kbaseAttributeMapping,
-    Jupyter,
-    Mocks,
-    Config,
-    TestUtil
-) => {
+define([
+    'jquery',
+    'kbaseAttributeMapping',
+    'base/js/namespace',
+    'narrativeMocks',
+    'narrativeConfig',
+    'testUtil',
+], ($, kbaseAttributeMapping, Jupyter, Mocks, Config, TestUtil) => {
     'use strict';
     describe('The kbaseAttributeMapping widget', () => {
         let container;

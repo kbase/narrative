@@ -5,7 +5,6 @@ define([
     'json!/test/data/NarrativeTest.test_input_params.spec.json',
 ], (SDK, TestUtil, SimpleAppSpec, ComplexAppSpec) => {
     'use strict';
-    afterAll(() => TestUtil.clearRuntime());
 
     const validateConvertedSpec = function (spec) {
         if (!spec || !('parameters' in spec)) {
@@ -28,6 +27,10 @@ define([
     };
 
     describe('Test SDK convertor tool', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('Is alive!', () => {
             expect(SDK).toBeTruthy();
         });

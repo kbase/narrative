@@ -8,8 +8,6 @@ define([
 ], (JobManager, Jobs, Props, UI, TestUtil, JobsData) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     function createJobManagerInstance(context) {
         return new JobManager({
             model: context.model,
@@ -47,6 +45,10 @@ define([
         };
 
     describe('the JobManager module', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('Should be loaded with the right functions', () => {
             expect(JobManager).toEqual(jasmine.any(Function));
         });
@@ -113,6 +115,10 @@ define([
                     // nope
                 },
             };
+        });
+
+        afterEach(() => {
+            TestUtil.clearRuntime();
         });
 
         describe('the updateModel function', () => {

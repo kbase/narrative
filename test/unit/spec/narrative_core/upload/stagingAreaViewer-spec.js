@@ -7,8 +7,6 @@ define([
 ], ($, StagingAreaViewer, Jupyter, Config, TestUtil) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     describe('The staging area viewer widget', () => {
         let stagingViewer, container, $container, $parentNode;
         const startingPath = '/',

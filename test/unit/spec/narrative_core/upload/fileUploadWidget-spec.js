@@ -7,8 +7,6 @@ define([
 ], ($, FileUploadWidget, Jupyter, Config, TestUtil) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     const fakeUser = 'notAUser',
         filename = 'foo.txt',
         stagingUrl = Config.url('staging_api_url') + '/upload';

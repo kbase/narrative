@@ -1,9 +1,11 @@
 define(['narrativeConfig', 'testUtil'], (Config, TestUtil) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     describe('Tests for narrativeConfig', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('loaded the config module', () => {
             expect(Config).not.toBeNull();
         });

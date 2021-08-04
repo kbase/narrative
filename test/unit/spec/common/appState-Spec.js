@@ -1,8 +1,6 @@
 define(['common/fsm', 'testUtil'], (Fsm, TestUtil) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     const appStates = [
             {
                 state: {
@@ -243,6 +241,9 @@ define(['common/fsm', 'testUtil'], (Fsm, TestUtil) => {
             }
             expect(alive).toBeTruthy();
         });
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
         //        it('Two simple objects equal', function () {
         //            var a = {
         //                name: 'erik'
@@ -264,6 +265,10 @@ define(['common/fsm', 'testUtil'], (Fsm, TestUtil) => {
     });
 
     describe('Operations on the app state FSM', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('Create with an FSM', () => {
             const states = appStates,
                 fsm = Fsm.make({

@@ -170,13 +170,6 @@ define([
                             byId: {
                                 jobToUpdate: this.starterJob,
                             },
-                            byStatus: {
-                                queued: {
-                                    jobToUpdate: true,
-                                },
-                            },
-                            batchId: null,
-                            jobsWithRetries: {},
                         },
                     },
                 };
@@ -202,13 +195,6 @@ define([
                             byId: {
                                 jobToUpdate: jobState,
                             },
-                            byStatus: {
-                                running: {
-                                    jobToUpdate: true,
-                                },
-                            },
-                            batchId: null,
-                            jobsWithRetries: {},
                         },
                     },
                 };
@@ -246,16 +232,6 @@ define([
                                 jobToUpdate: this.starterJob,
                                 'a brave new job': jobState,
                             },
-                            byStatus: {
-                                queued: {
-                                    jobToUpdate: true,
-                                },
-                                does_not_exist: {
-                                    'a brave new job': true,
-                                },
-                            },
-                            batchId: null,
-                            jobsWithRetries: {},
                         },
                     },
                 };

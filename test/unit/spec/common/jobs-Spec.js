@@ -556,42 +556,15 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (Jobs
             TestUtil.clearRuntime();
         });
 
-        it('creates a model with jobs indexed by ID and by status', () => {
+        it('creates a model with jobs indexed by ID', () => {
             const model = Jobs.jobArrayToIndexedObject(JobsData.allJobsWithBatchParent);
-            const idIndex = model.byId,
-                statusIndex = model.byStatus;
-
-            const jobStatuses = {};
+            const idIndex = model.byId;
             expect(Object.keys(idIndex).sort()).toEqual(
                 JobsData.allJobsWithBatchParent
                     .map((jobState) => {
-                        jobStatuses[jobState.status] = 1;
                         return jobState.job_id;
                     })
                     .sort()
-            );
-            expect(Object.keys(statusIndex).sort()).toEqual(Object.keys(jobStatuses).sort());
-        });
-
-        it('collects retried jobs', () => {
-            const model = Jobs.jobArrayToIndexedObject(JobsData.batchJob.jobArray);
-            const idIndex = model.byId,
-                statusIndex = model.byStatus;
-
-            const jobStatuses = {};
-            expect(Object.keys(idIndex).sort()).toEqual(
-                JobsData.batchJob.jobArray
-                    .map((jobState) => {
-                        jobStatuses[jobState.status] = 1;
-                        return jobState.job_id;
-                    })
-                    .sort()
-            );
-
-            expect(Object.keys(statusIndex).sort()).toEqual(Object.keys(jobStatuses).sort());
-            expect(model.batchId).toEqual('job-created');
-            expect(Object.keys(model.jobsWithRetries).sort()).toEqual(
-                JobsData.batchJob.jobsWithRetries.sort()
             );
         });
 
@@ -599,13 +572,8 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (Jobs
             const model = Jobs.jobArrayToIndexedObject([]);
             expect(model).toEqual({
                 byId: {},
-                byStatus: {},
-                // jobsWithRetries: new Set(),
-                jobsWithRetries: {},
-                batchId: null,
             });
             expect(model.byId).toEqual({});
-            expect(model.byStatus).toEqual({});
         });
     });
 });

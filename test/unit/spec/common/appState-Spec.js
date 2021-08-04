@@ -244,24 +244,6 @@ define(['common/fsm', 'testUtil'], (Fsm, TestUtil) => {
         afterEach(() => {
             TestUtil.clearRuntime();
         });
-        //        it('Two simple objects equal', function () {
-        //            var a = {
-        //                name: 'erik'
-        //            },
-        //            b = {
-        //                name: 'erik'
-        //            };
-        //            expect(Fsm.test.objectEqual(a, b)).toBeTruthy();
-        //        });
-        //        it('Two simple objects not equal', function () {
-        //            var a = {
-        //                name: 'erik'
-        //            },
-        //            b = {
-        //                name: 'alex'
-        //            };
-        //            expect(Fsm.test.objectEqual(a, b)).not.toBeTruthy();
-        //        });
     });
 
     describe('Operations on the app state FSM', () => {

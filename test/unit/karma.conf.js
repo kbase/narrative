@@ -132,6 +132,6 @@ module.exports = function (config) {
             '/static/kbase/config': '/base/kbase-extension/static/kbase/config',
             '/test/': '/base/test/',
         },
-        concurrency: 1,
+        concurrency: Infinity,
     });
 };

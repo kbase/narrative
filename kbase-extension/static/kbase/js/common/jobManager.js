@@ -247,25 +247,9 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
             const batchId = this.model.getItem('exec.jobState.job_id');
             let batchJob;
             jobArray.forEach((jobState) => {
-                const status = jobState.status,
-                    jobId = jobState.job_id,
-                    oldJob = jobIndex.byId[jobId];
-
                 // update the job object
-                jobIndex.byId[jobId] = jobState;
-                if (!jobIndex.byStatus[status]) {
-                    jobIndex.byStatus[status] = {};
-                }
-                jobIndex.byStatus[status][jobId] = true;
-
-                if (oldJob && status !== oldJob.status) {
-                    const oldStatus = oldJob.status;
-                    delete jobIndex.byStatus[oldStatus][jobId];
-                    if (!Object.keys(jobIndex.byStatus[oldStatus]).length) {
-                        delete jobIndex.byStatus[oldStatus];
-                    }
-                }
-                if (jobId === batchId) {
+                jobIndex.byId[jobState.job_id] = jobState;
+                if (jobState.job_id === batchId) {
                     batchJob = jobState;
                 }
             });
@@ -556,7 +540,7 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
              * @returns {string} bulk import cell FSM state
              */
             getFsmStateFromJobs() {
-                return Jobs.getFsmStateFromJobs(this.model.getItem('exec.jobs.byStatus'));
+                return Jobs.getFsmStateFromJobs(this.model.getItem('exec.jobs'));
             }
         };
 

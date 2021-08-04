@@ -521,7 +521,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (Jobs
     describe('populateModelFromJobArray', () => {
         it('dies without a model', () => {
             expect(() => {
-                Jobs.populateModelFromJobArray([]);
+                Jobs.populateModelFromJobArray();
             }).toThrowError(/Missing a model to populate/);
         });
         it('create removes existing jobs and jobState data with an empty jobs array', () => {
@@ -535,7 +535,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (Jobs
                 },
             });
             expect(model.getItem('exec')).toEqual({ jobs: {}, jobState: {}, limo: 'Rolls Royce' });
-            Jobs.populateModelFromJobArray([], model);
+            Jobs.populateModelFromJobArray(model, []);
             expect(model.getItem('exec')).toEqual({ limo: 'Rolls Royce' });
         });
 
@@ -545,7 +545,7 @@ define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (Jobs
                 }),
                 batchData = JobsData.batchJob;
             expect(model.getItem('exec')).toBeUndefined();
-            Jobs.populateModelFromJobArray(batchData.jobArray, model);
+            Jobs.populateModelFromJobArray(model, batchData.jobArray);
             expect(model.getItem('exec.jobState')).toEqual(batchData.jobsById[batchData.batchId]);
             expect(model.getItem('exec.jobs.byId')).toEqual(batchData.jobsById);
         });

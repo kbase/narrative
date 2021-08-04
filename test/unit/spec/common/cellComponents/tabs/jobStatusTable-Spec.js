@@ -17,11 +17,11 @@ define([
     const bus = Runtime.make().bus();
 
     function makeModel(jobs) {
-        const model = Props.make({
+        const tempModel = Props.make({
             data: {},
         });
-        Jobs.populateModelFromJobArray(jobs, model);
-        return model;
+        Jobs.populateModelFromJobArray(tempModel, jobs);
+        return tempModel;
     }
 
     function createInstance(config = {}) {

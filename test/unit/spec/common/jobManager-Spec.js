@@ -69,7 +69,7 @@ define([
             .concat(retryParentJobs)
             .concat(allOriginalJobs);
 
-        Jobs.populateModelFromJobArray(allJobs, model);
+        Jobs.populateModelFromJobArray(model, allJobs);
         return { model, allJobs };
     }
 
@@ -137,7 +137,7 @@ define([
             this.model = Props.make({
                 data: {},
             });
-            Jobs.populateModelFromJobArray(JobsData.allJobsWithBatchParent, this.model);
+            Jobs.populateModelFromJobArray(this.model, JobsData.allJobsWithBatchParent);
 
             this.bus = {
                 emit: () => {

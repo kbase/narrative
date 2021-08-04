@@ -13,7 +13,7 @@ define([
     const batchJobModel = Props.make({
         data: {},
     });
-    Jobs.populateModelFromJobArray(JobsData.allJobsWithBatchParent, batchJobModel);
+    Jobs.populateModelFromJobArray(batchJobModel, JobsData.allJobsWithBatchParent);
 
     function createInstance(config) {
         return JobActionDropdown.make(
@@ -428,7 +428,7 @@ define([
 
             tests.forEach((test) => {
                 it(test.desc, function () {
-                    Jobs.populateModelFromJobArray(test.input, this.jobManager.model);
+                    Jobs.populateModelFromJobArray(this.jobManager.model, test.input);
                     test.expect ? expectButtonState(test.expect) : expectButtonState();
                 });
             });

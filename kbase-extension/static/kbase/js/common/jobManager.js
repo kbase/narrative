@@ -523,7 +523,7 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
                 });
 
                 // populate the model
-                Jobs.populateModelFromJobArray(childJobs, this.model);
+                Jobs.populateModelFromJobArray(this.model, childJobs);
 
                 // request job updates
                 this.bus.emit('request-job-updates-start', {

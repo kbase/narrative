@@ -36,6 +36,7 @@ from .test_job import (
     get_test_job,
     get_test_spec,
     TEST_JOBS,
+    get_test_job_states,
 )
 import os
 from IPython.display import HTML
@@ -46,7 +47,6 @@ from .narrative_mock.mockclients import (
     MockClients,
 )
 from biokbase.narrative.exception_util import NarrativeException, NoJobException, NotBatchException
-from biokbase.narrative.app_util import map_inputs_from_job, map_outputs_from_state
 
 
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
@@ -81,57 +81,6 @@ def get_retry_job_state(orig_id, status="unmocked"):
         "widget_info": None,
         "user": None,
     }
-
-
-def get_test_job_states():
-    # generate full job state objects
-    job_states = {}
-    for job_id in TEST_JOBS.keys():
-        state = get_test_job(job_id)
-        job_input = state.get("job_input", {})
-        narr_cell_info = job_input.get("narrative_cell_info", {})
-
-        state.update(
-            {
-                "batch_id": state.get(
-                    "batch_id", job_id if state.get("batch_job", False) else None
-                ),
-                "cell_id": narr_cell_info.get("cell_id", None),
-                "run_id": narr_cell_info.get("run_id", None),
-                "job_output": state.get("job_output", {}),
-                "child_jobs": state.get("child_jobs", []),
-            }
-        )
-
-        widget_info = None
-        if state.get("status") == COMPLETED_STATUS:
-            params = job_input.get("params", JOB_ATTR_DEFAULTS["params"])
-            tag = narr_cell_info.get("tag", JOB_ATTR_DEFAULTS["tag"])
-            app_id = job_input.get("app_id", JOB_ATTR_DEFAULTS["app_id"])
-            spec = get_test_spec(tag, app_id)
-            output_widget, widget_params = map_outputs_from_state(
-                state,
-                map_inputs_from_job(params, spec),
-                spec,
-            )
-            widget_info = (
-                {
-                    "name": output_widget,
-                    "tag": narr_cell_info.get("tag", "release"),
-                    "params": widget_params,
-                }
-            )
-
-        for f in biokbase.narrative.jobs.job.EXCLUDED_JOB_STATE_FIELDS:
-            if f in state:
-                del state[f]
-        job_states[job_id] = {
-            "state": state,
-            "widget_info": widget_info,
-            "user": state.get("user"),
-        }
-
-    return job_states
 
 
 class JobManagerTest(unittest.TestCase):
@@ -652,7 +601,7 @@ class JobManagerTest(unittest.TestCase):
             self.jm.get_job_states([])
 
     def test_update_batch_job__dne(self):
-        with self.assertRaisesRegex(NoJobException, f"{JOB_NOT_FOUND} not registered"):
+        with self.assertRaisesRegex(NoJobException, f"No job present with id {JOB_NOT_FOUND}"):
             self.jm.update_batch_job(JOB_NOT_FOUND)
 
     def test_update_batch_job__not_batch(self):
@@ -671,17 +620,19 @@ class JobManagerTest(unittest.TestCase):
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
     def test_update_batch_job__change(self):
         """test child ids having changed"""
-        exp_child_ids = BATCH_CHILDREN[1:] + [JOB_CREATED, JOB_NOT_FOUND]
+        new_child_ids = BATCH_CHILDREN[1:] + [JOB_CREATED, JOB_NOT_FOUND]
 
         def mock_check_job(params):
             """Called from job.state()"""
             job_id = params["job_id"]
             if job_id == BATCH_PARENT:
-                return {"child_jobs": exp_child_ids}
+                return {"child_jobs": new_child_ids}
             elif job_id in TEST_JOBS:
                 return get_test_job(job_id)
-            else:
+            elif job_id == JOB_NOT_FOUND:
                 return {"job_id": job_id, "status": "does_not_exist"}
+            else:
+                raise Exception()
 
         with mock.patch.object(
             MockClients,
@@ -699,7 +650,7 @@ class JobManagerTest(unittest.TestCase):
 
         self.assertEqual(BATCH_PARENT, job_ids[0])
         self.assertCountEqual(
-            exp_child_ids, job_ids[1:]
+            new_child_ids, job_ids[1:]
         )
 
         batch_job = self.jm.get_job(BATCH_PARENT)
@@ -708,7 +659,7 @@ class JobManagerTest(unittest.TestCase):
             for job_id in batch_job.child_jobs
         ]
 
-        self.assertCountEqual(batch_job.child_jobs, exp_child_ids)
+        self.assertCountEqual(batch_job.child_jobs, new_child_ids)
         self.assertCountEqual(batch_job.children, reg_child_jobs)
 
 

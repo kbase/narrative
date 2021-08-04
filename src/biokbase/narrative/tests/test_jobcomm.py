@@ -217,7 +217,7 @@ class JobCommTestCase(unittest.TestCase):
     def test_lookup_job_state_batch__dne(self):
         job_id = JOB_NOT_FOUND
         req = make_comm_msg("job_status_batch", job_id, True)
-        with self.assertRaises(NoJobException):
+        with self.assertRaisesRegex(NoJobException, f"No job present with id {job_id}"):
             self.jc._lookup_job_state_batch(req)
         msg = self.jc._comm.last_message
         self.assertEqual(
@@ -322,9 +322,8 @@ class JobCommTestCase(unittest.TestCase):
     def test_lookup_job_info_bad_job(self):
         job_id = "nope"
         req = make_comm_msg("job_info", job_id, True)
-        with self.assertRaises(NoJobException) as e:
+        with self.assertRaisesRegex(NoJobException, f"No job present with id {job_id}"):
             self.jc._lookup_job_info(req)
-        self.assertIn(f"No job present with id {job_id}", str(e.exception))
         msg = self.jc._comm.last_message
         self.assertEqual(
             {"job_id": job_id, "source": "job_info"}, msg["data"]["content"]
@@ -373,7 +372,7 @@ class JobCommTestCase(unittest.TestCase):
     def test_lookup_job_info_batch__dne(self):
         job_id = JOB_NOT_FOUND
         req = make_comm_msg("job_info_batch", job_id, True)
-        with self.assertRaisesRegex(NoJobException, f"{job_id} not registered"):
+        with self.assertRaisesRegex(NoJobException, f"No job present with id {job_id}"):
             self.jc._lookup_job_info_batch(req)
         msg = self.jc._comm.last_message
         self.assertEqual(
@@ -688,9 +687,8 @@ class JobCommTestCase(unittest.TestCase):
     def test_get_job_logs_bad_job(self):
         job_id = "bad_job"
         req = make_comm_msg("job_logs", job_id, True)
-        with self.assertRaises(NoJobException) as e:
+        with self.assertRaisesRegex(NoJobException, f"No job present with id {job_id}"):
             self.jc._get_job_logs(req)
-        self.assertIn(f"No job present with id {job_id}", str(e.exception))
         msg = self.jc._comm.last_message
         self.assertEqual(
             {"job_id": job_id, "source": "job_logs"}, msg["data"]["content"]

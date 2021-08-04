@@ -1,10 +1,11 @@
-from src.biokbase.narrative.jobs.job import COMPLETED_STATUS, EXCLUDED_JOB_STATE_FIELDS
 import unittest
 import mock
 import copy
+from biokbase.narrative.app_util import map_inputs_from_job, map_outputs_from_state
 from biokbase.narrative.jobs.job import (
     Job,
-    EXTRA_JOB_STATE_FIELDS,
+    COMPLETED_STATUS,
+    EXCLUDED_JOB_STATE_FIELDS,
     JOB_ATTRS,
     JOB_ATTR_DEFAULTS,
 )
@@ -54,6 +55,8 @@ def get_test_job(job_id):
     return copy.deepcopy(TEST_JOBS[job_id])
 
 
+JOB_NOT_FOUND = "job_not_found"
+
 # test_jobs contains jobs in the following states
 JOB_COMPLETED = "5d64935ab215ad4128de94d6"
 JOB_CREATED = "5d64935cb215ad4128de94d7"
@@ -68,7 +71,6 @@ BATCH_ERROR_RETRIED = "60e7112887b7e512a899c8f5"
 BATCH_RETRY_COMPLETED = "60e71159fce9347f2adeaac6"
 BATCH_RETRY_RUNNING = "60e7165f3e91121969554d82"
 BATCH_RETRY_ERROR = "60e717d78ac80701062efe63"
-JOB_NOT_FOUND = "job_not_found"
 
 BATCH_CHILDREN = [
     BATCH_COMPLETED,
@@ -189,6 +191,59 @@ def create_state_from_ee2(job_id, mode):
                 del state[k]
 
     return state
+
+
+def get_widget_info(job_id):
+    state = get_test_job(job_id)
+    if state.get("status") != COMPLETED_STATUS:
+        return None
+    job_input = state.get("job_input", {})
+    narr_cell_info = job_input.get("narrative_cell_info", {})
+    params = job_input.get("params", JOB_ATTR_DEFAULTS["params"])
+    tag = narr_cell_info.get("tag", JOB_ATTR_DEFAULTS["tag"])
+    app_id = job_input.get("app_id", JOB_ATTR_DEFAULTS["app_id"])
+    spec = get_test_spec(tag, app_id)
+    output_widget, widget_params = map_outputs_from_state(
+        state,
+        map_inputs_from_job(params, spec),
+        spec,
+    )
+    return {
+        "name": output_widget,
+        "tag": narr_cell_info.get("tag", "release"),
+        "params": widget_params,
+    }
+
+
+def get_test_job_states():
+    # generate full job state objects
+    job_states = {}
+    for job_id in TEST_JOBS.keys():
+        state = get_test_job(job_id)
+        job_input = state.get("job_input", {})
+        narr_cell_info = job_input.get("narrative_cell_info", {})
+
+        state.update(
+            {
+                "batch_id": state.get(
+                    "batch_id", job_id if state.get("batch_job", False) else None
+                ),
+                "cell_id": narr_cell_info.get("cell_id", None),
+                "run_id": narr_cell_info.get("run_id", None),
+                "job_output": state.get("job_output", {}),
+                "child_jobs": state.get("child_jobs", []),
+            }
+        )
+        for f in EXCLUDED_JOB_STATE_FIELDS:
+            if f in state:
+                del state[f]
+        job_states[job_id] = {
+            "state": state,
+            "widget_info": get_widget_info(job_id),
+            "user": state.get("user"),
+        }
+
+    return job_states
 
 
 class JobTest(unittest.TestCase):
@@ -686,29 +741,36 @@ class JobTest(unittest.TestCase):
                 children=child_jobs,
             )
 
-    def test_get_viewer_params(self):
-        for job_id in ALL_JOBS:
+    def test_get_viewer_params__active(self):
+        for job_id in ACTIVE_JOBS:
             if job_id == BATCH_PARENT:
                 continue
-
-            state = create_state_from_ee2(job_id, mode="state")
-
-            job = create_job_from_ee2(job_id, mode="state")
-            job.get_viewer_params(state)
-
             job = create_job_from_ee2(job_id, mode="attributes")
-            job.get_viewer_params(state)
+            state = create_state_from_ee2(job_id, mode="state")
+            out = job.get_viewer_params(state)
+            self.assertIsNone(out)
 
-        # do batch parent separately
-        # since it requires passing in child jobs
+    def test_get_viewer_params__finished(self):
+        for job_id in FINISHED_JOBS:
+            job = create_job_from_ee2(job_id, mode="attributes")
+            state = create_state_from_ee2(job_id, mode="state")
+            out = job.get_viewer_params(state)
+            self.assertEqual(
+                get_widget_info(job_id),
+                out
+            )
+
+    def test_get_viewer_params__batch_parent(self):
+        """
+        do batch parent separately
+        since it requires passing in child jobs
+        """
         state = create_state_from_ee2(BATCH_PARENT, mode="state")
         batch_children = [
             create_job_from_ee2(job_id, mode="state")
             for job_id in BATCH_CHILDREN
         ]
 
-        job = create_job_from_ee2(BATCH_PARENT, mode="state", children=batch_children)
-        job.get_viewer_params(state)
-
         job = create_job_from_ee2(BATCH_PARENT, mode="attributes", children=batch_children)
-        job.get_viewer_params(state)
+        out = job.get_viewer_params(state)
+        self.assertIsNone(out)

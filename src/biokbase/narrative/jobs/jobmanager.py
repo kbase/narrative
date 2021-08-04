@@ -506,14 +506,11 @@ class JobManager(object):
         if self._running_jobs[job_id]["refresh"] < 0:
             self._running_jobs[job_id]["refresh"] = 0
 
-    def update_batch_job(self, batch_id: int) -> List[str]:
+    def update_batch_job(self, batch_id: str) -> List[str]:
         """
         Update a batch job and create child jobs if necessary
         """
-        if batch_id not in self._running_jobs:
-            raise NoJobException(f"{batch_id} not registered")
-
-        parent_job = self._running_jobs[batch_id]["job"]
+        parent_job = self.get_job(batch_id)
 
         if not parent_job.batch_job:
             raise NotBatchException("Not a batch job")
@@ -527,18 +524,16 @@ class JobManager(object):
             child_jobs = []
             for child_id in child_ids:
                 if child_id in self._running_jobs:
-                    child_jobs.append(
-                        self._running_jobs[child_id]["job"]
-                    )
+                    child_job = self._running_jobs[child_id]["job"]
                 else:
-                    job = Job.from_attributes(
+                    child_job = Job.from_attributes(
                         job_id=child_id
                     )
                     self.register_new_job(
-                        job=job,
-                        refresh=int(job.state().get("status") not in TERMINAL_STATUSES)
+                        job=child_job,
+                        refresh=int(child_job.state().get("status") not in TERMINAL_STATUSES)
                     )
-                    child_jobs.append(job)
+                child_jobs.append(child_job)
 
             parent_job.update_children(child_jobs)
 

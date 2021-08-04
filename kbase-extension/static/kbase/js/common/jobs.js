@@ -386,43 +386,20 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui'], (
     }
 
     /**
-     * Given an array of jobState objects, create an object with jobs indexed by ID and by status
+     * Given an array of jobState objects, create an object with jobs indexed by ID
      *
      * @param {array} jobArray array of jobState objects
      * @returns {object} with indexed job data:
      *      byId        key: job_id, value: jobState object
-     *      byStatus    key: status, value: object whose keys are the job IDs
-     *                      of jobs with that status
      */
 
     function jobArrayToIndexedObject(jobArray = []) {
         const jobIx = {
             byId: {},
-            byStatus: {},
-            jobsWithRetries: {},
-            batchId: null,
         };
 
         jobArray.forEach((job) => {
-            const jobId = job.job_id,
-                status = job.status;
-            jobIx.byId[jobId] = job;
-            if (!jobIx.byStatus[status]) {
-                jobIx.byStatus[status] = {};
-            }
-            jobIx.byStatus[status][jobId] = true;
-
-            // any job with one or more retries
-            if (job.retry_ids && job.retry_ids.length) {
-                jobIx.jobsWithRetries[jobId] = true;
-            }
-
-            if (job.batch_job) {
-                if (jobIx.batchId && jobId !== jobIx.batchId) {
-                    console.error(`Error: two batch IDs present: ${jobIx.batchId} and ${jobId}`);
-                }
-                jobIx.batchId = job.batch_id;
-            }
+            jobIx.byId[job.job_id] = job;
         });
         return jobIx;
     }
@@ -803,7 +780,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui'], (
     /**
      * Get the FSM state for a bulk cell from the jobs
      *
-     * @param {object} jobsByStatus job IDs indexed by status
+     * @param {object} jobsIndex jobs index
      * @returns {string} FSM state
      */
     function getFsmStateFromJobs(jobsIndex) {

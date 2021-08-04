@@ -610,13 +610,13 @@ define([
                             // Update the execMessage panel with details of the active jobs
                             controlPanel.setExecMessage(
                                 Jobs.createCombinedJobState(
-                                    jobManagerContext.model.getItem('exec.jobs.byStatus')
+                                    jobManagerContext.model.getItem('exec.jobs')
                                 )
                             );
                         },
                         fsmState: (jobManagerContext) => {
                             const fsmState = Jobs.getFsmStateFromJobs(
-                                jobManagerContext.model.getItem('exec.jobs.byStatus')
+                                jobManagerContext.model.getItem('exec.jobs')
                             );
                             if (fsmState) {
                                 updateState(fsmState);

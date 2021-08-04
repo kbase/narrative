@@ -14,8 +14,6 @@ define(['common/runtime', 'base/js/namespace', 'narrativeConfig', 'testUtil'], (
     ];
     const config = Config.getConfig();
 
-    afterAll(() => TestUtil.clearRuntime());
-
     describe('Test Runtime module', () => {
         it('Should be loaded with the right functions', () => {
             expect(Runtime).toBeDefined();
@@ -23,6 +21,8 @@ define(['common/runtime', 'base/js/namespace', 'narrativeConfig', 'testUtil'], (
             expect(Runtime.make).toBeDefined();
             expect(Runtime.make).toEqual(jasmine.any(Function));
         });
+
+        afterAll(() => TestUtil.clearRuntime());
     });
 
     describe('The runtime instance', () => {
@@ -36,6 +36,7 @@ define(['common/runtime', 'base/js/namespace', 'narrativeConfig', 'testUtil'], (
 
         afterEach(function () {
             this.runtime.destroy();
+            TestUtil.clearRuntime();
             this.runtime = null;
         });
 
@@ -118,6 +119,7 @@ define(['common/runtime', 'base/js/namespace', 'narrativeConfig', 'testUtil'], (
         beforeEach(function () {
             this.runtime = Runtime.make();
         });
+
         afterEach(function () {
             this.runtime.destroy();
             TestUtil.clearRuntime();

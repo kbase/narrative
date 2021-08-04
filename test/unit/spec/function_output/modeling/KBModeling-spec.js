@@ -1,9 +1,9 @@
 define(['jquery', 'KBModeling', 'testUtil'], ($, kbm, TestUtil) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     describe('test the KBModeling module', () => {
+        afterAll(() => TestUtil.clearRuntime());
+
         it('should load a function', () => {
             expect(KBModeling).toEqual(jasmine.any(Function));
         });

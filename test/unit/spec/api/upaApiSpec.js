@@ -160,6 +160,7 @@ define(['api/upa', 'narrativeConfig', 'testUtil'], (UpaApi, Config, TestUtil) =>
         });
 
         it('Should fail if the workspace id cannot be found.', () => {
+            const prevWsId = Config.get('workspaceId');
             Config.config.workspaceId = undefined;
             try {
                 upaApi.deserialize('[1]/2/3');
@@ -169,6 +170,8 @@ define(['api/upa', 'narrativeConfig', 'testUtil'], (UpaApi, Config, TestUtil) =>
                 expect(error.error).toEqual(
                     'Currently loaded workspace is unknown! Unable to deserialize UPA.'
                 );
+            } finally {
+                Config.config.workspaceId = prevWsId;
             }
         });
 

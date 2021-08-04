@@ -124,19 +124,13 @@ define([
                         // expect to see the modal appear now
                         expect(document.querySelector(modalQuerySelector)).not.toBeNull();
 
-                        // click the appropriate button for this test
-                        document.querySelector(test.button).click();
-                        expect(BootstrapDialog.prototype.hide).toHaveBeenCalled();
-
-                        // .modal should have style display: none
-                        return TestUtil.waitForElementState(document.body, () => {
-                            return document.querySelector('.modal').style.display === 'none';
-                        });
-                    })
-                    .then(() => {
                         // wait for the modal to be removed
                         return TestUtil.waitForElementState(document.body, () => {
                             return document.querySelectorAll('.modal').length === 0;
+                        }, () => {
+                            // click the appropriate button for this test
+                            document.querySelector(test.button).click();
+                            expect(BootstrapDialog.prototype.hide).toHaveBeenCalled();
                         });
                     })
                     .then(() => {

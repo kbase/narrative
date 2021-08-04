@@ -9,7 +9,7 @@ define([
 
     afterAll(() => TestUtil.clearRuntime());
 
-    describe('Props core functions', () => {
+    describe('Validator2 core functions', () => {
         it('Is alive', () => {
             let alive;
             if (Validation) {

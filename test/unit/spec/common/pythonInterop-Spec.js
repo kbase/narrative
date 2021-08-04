@@ -3,7 +3,7 @@ define(['common/pythonInterop', 'testUtil'], (PythonInterop, TestUtil) => {
 
     afterAll(() => TestUtil.clearRuntime());
 
-    describe('Props core functions', () => {
+    describe('Python interoperation core functions', () => {
         it('loads the core functions', () => {
             expect(PythonInterop).toBeDefined();
             [

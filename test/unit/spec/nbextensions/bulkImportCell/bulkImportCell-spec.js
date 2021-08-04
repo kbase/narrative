@@ -20,9 +20,7 @@ define([
                 TestAppObj.app.specs['kb_uploadmethods/import_fastq_sra_as_reads_from_staging'],
         };
 
-    afterAll(() => TestUtil.clearRuntime());
-
-    describe('test the bulk import cell module', () => {
+    xdescribe('test the bulk import cell module', () => {
         let runtime;
         beforeAll(() => {
             Jupyter.narrative = {

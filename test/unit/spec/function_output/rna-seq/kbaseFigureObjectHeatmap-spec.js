@@ -1,9 +1,9 @@
 define(['kbaseFigureObjectHeatmap', 'testUtil'], (Widget, TestUtil) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     describe('The kbaseFigureObjectHeatmap widget', () => {
+        afterAll(() => TestUtil.clearRuntime());
+
         it('should be defined', () => {
             expect(Widget).toBeDefined();
         });

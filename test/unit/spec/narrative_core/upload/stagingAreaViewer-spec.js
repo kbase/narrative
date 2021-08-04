@@ -110,6 +110,8 @@ define([
         afterEach(() => {
             $parentNode.remove();
             stagingViewer.deactivate();
+            // just in case.
+            $.fn.DataTable.ext.search.pop();
             stagingViewer = null;
             jasmine.Ajax.uninstall();
             Jupyter.narrative = null;

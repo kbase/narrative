@@ -22,8 +22,6 @@ define(['jquery', 'bluebird', 'widgets/dynamicTable', 'testUtil'], ($, Promise, 
             },
         ];
 
-    afterAll(() => TestUtil.clearRuntime());
-
     describe('The DynamicTable widget', () => {
         let container;
         beforeEach(function () {
@@ -43,6 +41,8 @@ define(['jquery', 'bluebird', 'widgets/dynamicTable', 'testUtil'], ($, Promise, 
         afterEach(() => {
             container.remove();
         });
+
+        afterAll(() => TestUtil.clearRuntime());
 
         it('Should instantiate with essentially empty data', () => {
             container = document.createElement('div');

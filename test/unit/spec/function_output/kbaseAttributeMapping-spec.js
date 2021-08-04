@@ -8,7 +8,7 @@ define(['jquery', 'kbaseAttributeMapping', 'base/js/namespace', 'narrativeMocks'
 ) => {
     'use strict';
     describe('The kbaseAttributeMapping widget', () => {
-        let $div = null;
+        let container;
         beforeEach(() => {
             jasmine.Ajax.install();
             const AUTH_TOKEN = 'fakeAuthToken';
@@ -16,14 +16,14 @@ define(['jquery', 'kbaseAttributeMapping', 'base/js/namespace', 'narrativeMocks'
             Jupyter.narrative = {
                 getAuthToken: () => AUTH_TOKEN,
             };
-            $div = $('<div>');
+            container = document.createElement('div');
         });
 
         afterEach(() => {
             Mocks.clearAuthToken();
             Jupyter.narrative = null;
             jasmine.Ajax.uninstall();
-            $div.remove();
+            container.remove();
             TestUtil.clearRuntime();
         });
 
@@ -75,12 +75,14 @@ define(['jquery', 'kbaseAttributeMapping', 'base/js/namespace', 'narrativeMocks'
                     ],
                 }),
             });
-            await TestUtil.waitForElementChange($div[0], () => {
-                new kbaseAttributeMapping($div, { upas: { obj_ref: 'fake' } });
+            let widget;
+            await TestUtil.waitForElementChange(container, () => {
+                widget = new kbaseAttributeMapping($(container), { upas: { obj_ref: 'fake' } });
             });
             ['Time series design', 'Treatment with Sirolimus', 'S1', 'S9'].forEach((str) => {
-                expect($div.html()).toContain(str);
+                expect(container.innerHTML).toContain(str);
             });
+            widget.destroy();
         });
 
         it('Should properly render ConditionSet data', async () => {
@@ -131,12 +133,14 @@ define(['jquery', 'kbaseAttributeMapping', 'base/js/namespace', 'narrativeMocks'
                     ],
                 }),
             });
-            await TestUtil.waitForElementChange($div[0], () => {
-                new kbaseAttributeMapping($div, { upas: { obj_ref: 'fake' } });
+            let widget;
+            await TestUtil.waitForElementChange(container, () => {
+                widget = new kbaseAttributeMapping($(container), { upas: { obj_ref: 'fake' } });
             });
             ['Time series design', 'Treatment with Sirolimus', 'S1', 'S9'].forEach((str) => {
-                expect($div.html()).toContain(str);
+                expect(container.innerHTML).toContain(str);
             });
+            widget.destroy();
         });
     });
 });

@@ -1,9 +1,9 @@
 define(['kbaseRNASeqAnalysis', 'testUtil'], (Widget, TestUtil) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     describe('The kbaseRNASeqAnalysis widget', () => {
+        afterAll(() => TestUtil.clearRuntime());
+
         it('should be defined', () => {
             expect(Widget).toBeDefined();
         });

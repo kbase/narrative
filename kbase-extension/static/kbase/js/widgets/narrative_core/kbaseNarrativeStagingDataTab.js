@@ -52,11 +52,22 @@ define([
         },
 
         activate: function () {
-            this.stagingAreaViewer.activate();
+            if (this.stagingAreaViewer) {
+                this.stagingAreaViewer.activate();
+            }
+            else {
+                console.error('Call "render" before "activate"');
+            }
         },
 
         deactivate: function () {
-            this.stagingAreaViewer.deactivate();
+            if (this.stagingAreaViewer) {
+                this.stagingAreaViewer.deactivate();
+            }
+            if (this.updateTimeout) {
+                clearTimeout(this.updateTimeout);
+                this.updateTimeout = null;
+            }
         },
 
         updatePath: function (newPath) {

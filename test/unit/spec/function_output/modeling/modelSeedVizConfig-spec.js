@@ -7,6 +7,8 @@ define(['modelSeedVizConfig', 'testUtil'], (Widget, TestUtil) => {
             cfg = new ModelSeedVizConfig();
         });
 
+        afterEach(() => TestUtil.clearRuntime());
+
         it('Should load the functions', () => {
             expect(ModelSeedVizConfig).toBeDefined();
         });

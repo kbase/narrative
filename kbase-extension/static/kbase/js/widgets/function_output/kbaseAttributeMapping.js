@@ -67,7 +67,6 @@ define([
             );
         },
         parseObj: function (ws_obj) {
-            const self = this;
             const cols = [{ title: 'ID' }];
             let rows;
             // Back compatible with ConditionSets
@@ -91,24 +90,22 @@ define([
                     return [_id].concat(ws_obj.instances[_id]);
                 });
             }
-            self.$mainPanel.show();
-            self.renderTable(rows, cols);
-            self.loading(true);
+            this.$mainPanel.show();
+            this.renderTable(rows, cols);
+            this.loading(true);
         },
 
         $tableDiv: null,
         renderTable: function (rows, cols) {
-            const self = this;
-
-            if (!self.$tableDiv) {
-                self.$tableDiv = $('<div>').css({ margin: '5px' });
-                self.$mainPanel.append(self.$tableDiv);
+            if (!this.$tableDiv) {
+                this.$tableDiv = $('<div>').css({ margin: '5px' });
+                this.$mainPanel.append(this.$tableDiv);
             }
 
-            self.$tableDiv.empty();
+            this.$tableDiv.empty();
 
             const $tbl = $('<table>').addClass('table table-bordered table-striped');
-            self.$tableDiv.append($tbl);
+            this.$tableDiv.append($tbl);
 
             const tblSettings = {
                 scrollX: true,
@@ -120,14 +117,17 @@ define([
                 columns: cols,
                 data: rows,
             };
-            const ConditionsTable = $tbl.DataTable(tblSettings);
-            //ConditionsTable.draw();
+            this.conditionsTable = $tbl.DataTable(tblSettings);
         },
 
         renderError: function (error) {
             let errString = 'Sorry, an unknown error occurred';
-            if (typeof error === 'string') errString = error;
-            else if (error.error && error.error.message) errString = error.error.message;
+            if (typeof error === 'string') {
+                errString = error;
+            }
+            else if (error.error && error.error.message) {
+                errString = error.error.message;
+            }
 
             const $errorDiv = $('<div>')
                 .addClass('alert alert-danger')
@@ -135,11 +135,16 @@ define([
                 .append('<br>' + errString);
             this.$elem.empty();
             this.$elem.append($errorDiv);
+            console.error(error);
         },
 
         loading: function (doneLoading) {
-            if (doneLoading) this.hideMessage();
-            else this.showMessage('<img src="' + this.options.loadingImage + '"/>');
+            if (doneLoading) {
+                this.hideMessage();
+            }
+            else {
+                this.showMessage('<img src="' + this.options.loadingImage + '"/>');
+            }
         },
 
         showMessage: function (message) {
@@ -150,8 +155,13 @@ define([
         },
 
         hideMessage: function () {
-            this.$messagePane.hide();
             this.$messagePane.empty();
         },
+
+        destroy: function () {
+            if (this.conditionsTable) {
+                this.conditionsTable.destroy();
+            }
+        }
     });
 });

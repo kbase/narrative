@@ -1,9 +1,9 @@
 define(['kbasePathways', 'testUtil'], (Widget, TestUtil) => {
     'use strict';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     describe('Test the kbasePathways widget', () => {
+        afterAll(() => TestUtil.clearRuntime());
+
         it('Should load the widget', () => {
             expect(Widget).toBeDefined();
         });

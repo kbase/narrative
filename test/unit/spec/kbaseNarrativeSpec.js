@@ -15,8 +15,6 @@ define([
         TEST_TOKEN = 'foo',
         TEST_USER = 'some_user';
 
-    afterAll(() => TestUtil.clearRuntime());
-
     describe('Test the kbaseNarrative module', () => {
         let container;
         let narr;
@@ -26,6 +24,8 @@ define([
             // including login and logout listeners
             $(document).off();
         });
+
+        afterAll(() => TestUtil.clearRuntime());
 
         beforeEach(async () => {
             $(document).off();

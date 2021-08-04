@@ -368,9 +368,10 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
             executeActionOnJobId(args) {
                 const { action, jobId } = args;
                 const jobState = this.model.getItem(`exec.jobs.byId.${jobId}`);
-
                 if (jobState && Jobs.canDo(action, jobState)) {
-                    this.doJobAction(action, [jobId]);
+                    const actionJobId =
+                        action === 'retry' && jobState.retry_parent ? jobState.retry_parent : jobId;
+                    this.doJobAction(action, [actionJobId]);
                     return true;
                 }
                 return false;

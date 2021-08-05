@@ -31,33 +31,34 @@ define(['common/runtime', 'base/js/namespace', 'narrativeConfig', 'testUtil'], (
     });
 
     describe('The runtime instance', () => {
+        let runtime;
         beforeAll(() => {
             TestUtil.clearRuntime();
         });
 
-        beforeEach(function () {
-            this.runtime = Runtime.make();
+        beforeEach(() => {
+            runtime = Runtime.make();
         });
 
-        afterEach(function () {
-            this.runtime.destroy();
+        afterEach(() => {
+            runtime.destroy();
             TestUtil.clearRuntime();
-            this.runtime = null;
+            runtime = null;
         });
 
-        it('has methods defined', function () {
+        it('has methods defined', () => {
             runtimeFunctions.forEach((fn) => {
-                expect(this.runtime[fn]).toEqual(jasmine.any(Function));
+                expect(runtime[fn]).toEqual(jasmine.any(Function));
             });
         });
 
-        it('adds "kbaseRuntime" to the window', function () {
+        it('adds "kbaseRuntime" to the window', () => {
             expect(window.kbaseRuntime).toBeDefined();
             runtimeKeys.forEach((key) => {
                 expect(window.kbaseRuntime[key]).toBeDefined();
                 expect(window.kbaseRuntime[key]).toEqual(jasmine.any(Object));
             });
-            expect(this.runtime.bus()).toEqual(window.kbaseRuntime.bus);
+            expect(runtime.bus()).toEqual(window.kbaseRuntime.bus);
             expect(window.kbaseRuntime.created).toBeInstanceOf(Date);
             // a bit of duck-typing, since we can't check the object type.
             const propsFunctions = [
@@ -117,83 +118,90 @@ define(['common/runtime', 'base/js/namespace', 'narrativeConfig', 'testUtil'], (
     });
 
     describe('setEnv and getEnv', () => {
+        let runtime;
         beforeAll(() => {
             TestUtil.clearRuntime();
         });
 
-        beforeEach(function () {
-            this.runtime = Runtime.make();
+        beforeEach(() => {
+            runtime = Runtime.make();
         });
 
-        afterEach(function () {
-            this.runtime.destroy();
+        afterEach(() => {
+            runtime.destroy();
             TestUtil.clearRuntime();
         });
 
-        it('should set and retrieve env vars using setEnv and getEnv', function () {
-            expect(this.runtime.getEnv('this')).toBeUndefined();
-            this.runtime.setEnv('this', 'that');
-            expect(this.runtime.getEnv('this')).toEqual('that');
+        it('should set and retrieve env vars using setEnv and getEnv', () => {
+            expect(runtime.getEnv('this')).toBeUndefined();
+            runtime.setEnv('this', 'that');
+            expect(runtime.getEnv('this')).toEqual('that');
             expect(window.kbaseRuntime.env.getRawObject()).toEqual({ this: 'that' });
         });
     });
 
     describe('narrative-related functions', () => {
+        let runtime;
         beforeAll(() => {
             TestUtil.clearRuntime();
         });
-        beforeEach(function () {
+        beforeEach(() => {
             Jupyter.narrative = {
                 userId: 'player_1',
                 getAuthToken: () => {
                     return 'ready player one';
                 },
             };
-            this.runtime = Runtime.make();
+            runtime = Runtime.make();
         });
-        afterEach(function () {
+        afterEach(() => {
             Jupyter.narrative = null;
-            this.runtime.destroy();
+            runtime.destroy();
             TestUtil.clearRuntime();
         });
 
-        it('should retrieve the user ID from the narrative', function () {
-            expect(this.runtime.userId()).toEqual('player_1');
+        it('should retrieve the user ID from the narrative', () => {
+            expect(runtime.userId()).toEqual('player_1');
         });
-        it('should retrieve the user auth token from the narrative', function () {
-            expect(this.runtime.authToken()).toEqual('ready player one');
+        it('should retrieve the user auth token from the narrative', () => {
+            expect(runtime.authToken()).toEqual('ready player one');
         });
     });
 
     describe('narrative config-related functions', () => {
+        let runtime;
+
         beforeAll(() => {
             TestUtil.clearRuntime();
         });
-        beforeEach(function () {
-            this.runtime = Runtime.make();
+        beforeEach(() => {
+            runtime = Runtime.make();
         });
-        afterEach(function () {
-            this.runtime.destroy();
+        afterEach(() => {
+            runtime.destroy();
             TestUtil.clearRuntime();
         });
 
-        it('should retrieve a value from the narrative config', function () {
-            expect(this.runtime.config('environment')).toEqual(config.environment);
-            expect(this.runtime.config('deploy.hostname')).toEqual(config.deploy.hostname);
+        it('should retrieve a value from the narrative config', () => {
+            expect(runtime.config('environment')).toEqual(config.environment);
+            expect(runtime.config('deploy.hostname')).toEqual(config.deploy.hostname);
         });
-        it('should use the default if the value is not available', function () {
-            expect(this.runtime.config('power_level', 'MAXIMUM!')).toEqual('MAXIMUM!');
+        it('should use the default if the value is not available', () => {
+            expect(runtime.config('power_level', 'MAXIMUM!')).toEqual('MAXIMUM!');
         });
-        it('should fetch the workspace ID', function () {
-            expect(this.runtime.workspaceId()).toEqual(Config.get('workspaceId'));
+        it('should fetch the workspace ID', () => {
+            expect(runtime.workspaceId()).toEqual(Config.get('workspaceId'));
         });
     });
 
     describe('get user settings', () => {
+        let runtime;
+
         beforeAll(() => {
             TestUtil.clearRuntime();
         });
-        beforeEach(function () {
+
+        beforeEach(() => {
             Jupyter.notebook = {
                 metadata: {
                     kbase: {
@@ -204,21 +212,23 @@ define(['common/runtime', 'base/js/namespace', 'narrativeConfig', 'testUtil'], (
                     },
                 },
             };
-            this.runtime = Runtime.make();
+            runtime = Runtime.make();
         });
-        afterEach(function () {
-            this.runtime.destroy();
+
+        afterEach(() => {
+            runtime.destroy();
             TestUtil.clearRuntime();
             Jupyter.notebook = null;
         });
-        it('should fetch values from the user settings', function () {
-            expect(this.runtime.getUserSetting('this', 'thing')).toEqual('that');
+
+        it('should fetch values from the user settings', () => {
+            expect(runtime.getUserSetting('this', 'thing')).toEqual('that');
             // using the default
-            expect(this.runtime.getUserSetting('the', 'other')).toEqual('other');
-            expect(this.runtime.getUserSetting('that')).toEqual(undefined);
+            expect(runtime.getUserSetting('the', 'other')).toEqual('other');
+            expect(runtime.getUserSetting('that')).toEqual(undefined);
             // delete the user settings
             Jupyter.notebook.metadata.kbase = {};
-            expect(this.runtime.getUserSetting('this', 'thing')).toEqual('thing');
+            expect(runtime.getUserSetting('this', 'thing')).toEqual('thing');
         });
     });
 

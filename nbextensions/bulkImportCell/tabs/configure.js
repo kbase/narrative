@@ -176,7 +176,13 @@ define([
             fileTypePanel.updateState(getFileTypeState());
             model.setItem('state.selectedFileType', fileType);
             // stop and start the widgets.
-            return stopInputWidgets().then(startInputWidgets());
+            return stopInputWidgets()
+                .then(() => startInputWidgets())
+                .then(() => {
+                    cellBus.emit('toggled-active-filetype', {
+                        fileType: selectedFileType
+                    });
+                });
         }
 
         /**

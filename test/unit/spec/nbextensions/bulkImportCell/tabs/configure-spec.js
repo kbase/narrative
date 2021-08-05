@@ -21,7 +21,7 @@ define([
                 appSpec: TestAppObject.app.specs[appId],
             }),
             specs = {};
-        let bus, container, initialState;
+        let bus, container, initialState, runtime;
 
         beforeAll(() => {
             Jupyter.narrative = {
@@ -31,7 +31,8 @@ define([
         });
 
         beforeEach(() => {
-            bus = Runtime.make().bus();
+            runtime = Runtime.make();
+            bus = runtime.bus();
             container = document.createElement('div');
             initialState = {
                 state: 'editingIncomplete',
@@ -44,11 +45,12 @@ define([
 
         afterEach(() => {
             container.remove();
-            TestUtil.clearRuntime();
+            runtime.destroy();
         });
 
         afterAll(() => {
             Jupyter.narrative = null;
+            TestUtil.clearRuntime();
         });
 
         [
@@ -178,17 +180,28 @@ define([
                             'kb-bulk-import-configure__filetype_panel__filetype_button--selected'
                         )
                     ).toBeFalsy();
-                    return TestUtil.waitForElementState(
-                        btn2,
-                        () => {
-                            return btn2.classList.contains(
-                                'kb-bulk-import-configure__filetype_panel__filetype_button--selected'
-                            );
-                        },
-                        () => {
-                            btn2.click();
-                        }
-                    );
+
+                    return new Promise((resolve) => {
+                        bus.on('toggled-active-filetype', (message) => {
+                            expect(message.fileType).toBe('dataType2');
+                            expect(btn2.classList.contains('kb-bulk-import-configure__filetype_panel__filetype_button--selected')).toBeTrue();
+                            resolve();
+                        });
+
+                        btn2.click();
+                    });
+
+                    // return TestUtil.waitForElementState(
+                    //     btn2,
+                    //     () => {
+                    //         return btn2.classList.contains(
+                    //             'kb-bulk-import-configure__filetype_panel__filetype_button--selected'
+                    //         );
+                    //     },
+                    //     () => {
+                    //         btn2.click();
+                    //     }
+                    // );
                 })
                 .then(() => {
                     expect(_model.getItem('state.selectedFileType')).toBe('dataType2');

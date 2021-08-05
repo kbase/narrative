@@ -34,7 +34,6 @@ define([
         }
 
         beforeAll(() => {
-            TestUtil.clearRuntime();
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',
             };

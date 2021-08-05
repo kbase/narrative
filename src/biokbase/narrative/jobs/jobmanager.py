@@ -1,11 +1,15 @@
 import biokbase.narrative.clients as clients
-from .job import Job, TERMINAL_STATUSES, EXCLUDED_JOB_STATE_FIELDS
+from .job import Job, TERMINAL_STATUSES, EXCLUDED_JOB_STATE_FIELDS, get_dne_job_state
 from biokbase.narrative.common import kblogging
 from IPython.display import HTML
 from jinja2 import Template
 from datetime import datetime, timezone, timedelta
 from biokbase.narrative.app_util import system_variable
-from biokbase.narrative.exception_util import transform_job_exception
+from biokbase.narrative.exception_util import (
+    transform_job_exception,
+    NoJobException,
+    NotBatchException,
+)
 import copy
 from typing import List
 
@@ -142,7 +146,7 @@ class JobManager(object):
                     results["error"].append(job_id)
 
         if not len(results["job_id_list"]) and not len(results["error"]):
-            raise ValueError("No job id(s) supplied")
+            raise NoJobException("No job id(s) supplied")
 
         return results
 
@@ -266,7 +270,7 @@ class JobManager(object):
 
     def lookup_job_info(self, job_id):
         """
-        Will raise a ValueError if job_id doesn't exist.
+        Will raise a NoJobException if job_id doesn't exist.
         Sends the info over the comm channel as this packet:
         {
             app_id: module/name,
@@ -327,7 +331,7 @@ class JobManager(object):
         if job_id in self._running_jobs:
             return self._running_jobs[job_id]["job"]
         else:
-            raise ValueError(f"No job present with id {job_id}")
+            raise NoJobException(f"No job present with id {job_id}")
 
     def get_job_logs(
         self,
@@ -407,7 +411,9 @@ class JobManager(object):
         job_states = self._construct_job_state_set(checked_jobs["job_id_list"])
 
         for job_id in checked_jobs["error"]:
-            job_states[job_id] = {"state": {"job_id": job_id, "status": "does_not_exist"}}
+            job_states[job_id] = {
+                "state": {"job_id": job_id, "status": "does_not_exist"}
+            }
 
         return job_states
 
@@ -487,6 +493,13 @@ class JobManager(object):
         state = self._running_jobs[job_id]["job"].output_state()
         return state
 
+    def get_job_states(self, job_ids: List[str]) -> dict:
+        checked_jobs = self._check_job_list(job_ids)
+        output_states = self._construct_job_state_set(checked_jobs["job_id_list"])
+        for error_id in checked_jobs["error"]:
+            output_states[error_id] = get_dne_job_state(error_id)
+        return output_states
+
     def modify_job_refresh(self, job_id: str, update_adjust: int) -> None:
         """
         Modifies how many things want to get the job updated.
@@ -498,3 +511,36 @@ class JobManager(object):
         self._running_jobs[job_id]["refresh"] += update_adjust
         if self._running_jobs[job_id]["refresh"] < 0:
             self._running_jobs[job_id]["refresh"] = 0
+
+    def update_batch_job(self, batch_id: str) -> List[str]:
+        """
+        Update a batch job and create child jobs if necessary
+        """
+        parent_job = self.get_job(batch_id)
+
+        if not parent_job.batch_job:
+            raise NotBatchException("Not a batch job")
+
+        old_child_ids = parent_job.child_jobs
+        parent_job.state(force_refresh=True)
+        child_ids = parent_job.child_jobs
+
+        if sorted(child_ids) != sorted(old_child_ids):
+
+            child_jobs = []
+            for child_id in child_ids:
+                if child_id in self._running_jobs:
+                    child_job = self._running_jobs[child_id]["job"]
+                else:
+                    child_job = Job.from_attributes(job_id=child_id)
+                    self.register_new_job(
+                        job=child_job,
+                        refresh=int(
+                            child_job.state().get("status") not in TERMINAL_STATUSES
+                        ),
+                    )
+                child_jobs.append(child_job)
+
+            parent_job.update_children(child_jobs)
+
+        return [batch_id] + child_ids

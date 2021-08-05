@@ -1,7 +1,7 @@
 import biokbase.narrative.clients as clients
 from .specmanager import SpecManager
 from biokbase.narrative.app_util import map_inputs_from_job, map_outputs_from_state
-from biokbase.narrative.exception_util import transform_job_exception
+from biokbase.narrative.exception_util import transform_job_exception, NotBatchException
 import copy
 import json
 import uuid
@@ -67,30 +67,28 @@ def _attr_to_ee2(attr):
         return attr
 
 
+def get_dne_job_state(job_id, output_state=True):
+    state = {"job_id": job_id, "status": "does_not_exist"}
+    if output_state:
+        state = {"state": state}
+    return state
+
+
 class Job(object):
     _job_logs = list()
-    _const_state = None  # for original/constant attributes
-    _last_state = None  # for changing attributes
+    _acc_state = None  # accumulates state
 
     def __init__(self, ee2_state, extra_data=None, children=None):
         # verify job_id
         if ee2_state.get("job_id") is None:
             raise ValueError("Cannot create a job without a job ID!")
 
-        # verify parent-children relationship
-        if ee2_state.get("batch_job") is True:
-            if children is None or len(children) == 0:
-                raise ValueError(
-                    "Job with `batch_job=True` must be instantiated with child job instances"
-                )
-            state_child_ids = ee2_state.get("child_jobs", [])
-            inst_child_ids = [job.job_id for job in children]
-            if sorted(state_child_ids) != sorted(inst_child_ids):
-                raise ValueError("Child job id mismatch")
-
-        self._const_state = ee2_state
-        self._last_state = ee2_state
+        self._acc_state = ee2_state
         self.extra_data = extra_data
+
+        # verify parent-children relationship
+        if ee2_state.get("batch_job"):
+            self._verify_children(children)
         self.children = children
 
     @classmethod
@@ -132,37 +130,21 @@ class Job(object):
         children (list): applies to batch parent jobs, Job instances of this Job's child jobs
         """
         # reconstruct the ee2 job state object
-        ee2_state = kwargs.get("ee2_state", {})
-        job_input = ee2_state.get("job_input", {})
-        narr_cell_info = job_input.get("narrative_cell_info", {})
-
-        narr_cell_info.update(
-            {
-                key: kwargs[key]
-                for key in NARR_CELL_INFO_ATTRS
-                if key in kwargs and key not in narr_cell_info
-            }
-        )
-        job_input.update(
-            {
-                **{
-                    _attr_to_ee2(key): kwargs[key]
-                    for key in JOB_INPUT_ATTRS
-                    if key in kwargs and key not in job_input
-                },
-                "narrative_cell_info": narr_cell_info,
-            }
-        )
-        ee2_state.update(
-            {
-                **{
-                    key: kwargs[key]
-                    for key in STATE_ATTRS
-                    if key in kwargs and key not in ee2_state
-                },
-                "job_input": job_input,
-            }
-        )
+        narr_cell_info = {
+            key: kwargs[key] for key in NARR_CELL_INFO_ATTRS if key in kwargs
+        }
+        job_input = {
+            **{
+                _attr_to_ee2(key): kwargs[key]
+                for key in JOB_INPUT_ATTRS
+                if key in kwargs
+            },
+            "narrative_cell_info": narr_cell_info,
+        }
+        ee2_state = {
+            **{key: kwargs[key] for key in STATE_ATTRS if key in kwargs},
+            "job_input": job_input,
+        }
 
         return cls(
             ee2_state=ee2_state,
@@ -175,43 +157,45 @@ class Job(object):
         Map expected job attributes to paths in stored ee2 state
         """
         attr = dict(
-            app_id=lambda: self._const_state.get("job_input", {}).get(
+            app_id=lambda: self._acc_state.get("job_input", {}).get(
                 "app_id", JOB_ATTR_DEFAULTS["app_id"]
             ),
-            app_version=lambda: self._const_state.get("job_input", {}).get(
+            app_version=lambda: self._acc_state.get("job_input", {}).get(
                 "service_ver", JOB_ATTR_DEFAULTS["app_version"]
             ),
             batch_id=lambda: (
                 self.job_id
                 if self.batch_job
-                else self._const_state.get("batch_id", JOB_ATTR_DEFAULTS["batch_id"])
+                else self._acc_state.get("batch_id", JOB_ATTR_DEFAULTS["batch_id"])
             ),
-            batch_job=lambda: self._const_state.get(
+            batch_job=lambda: self._acc_state.get(
                 "batch_job", JOB_ATTR_DEFAULTS["batch_job"]
             ),
-            cell_id=lambda: self._const_state.get("job_input", {})
+            cell_id=lambda: self._acc_state.get("job_input", {})
             .get("narrative_cell_info", {})
             .get("cell_id", JOB_ATTR_DEFAULTS["cell_id"]),
-            child_jobs=lambda: self.state().get(
-                "child_jobs", JOB_ATTR_DEFAULTS["child_jobs"]
+            child_jobs=lambda: copy.deepcopy(
+                self._acc_state.get("child_jobs", JOB_ATTR_DEFAULTS["child_jobs"])
             ),
-            job_id=lambda: self._const_state.get("job_id"),
-            params=lambda: self._const_state.get("job_input", {}).get(
-                "params", JOB_ATTR_DEFAULTS["params"]
+            job_id=lambda: self._acc_state.get("job_id"),
+            params=lambda: copy.deepcopy(
+                self._acc_state.get("job_input", {}).get(
+                    "params", JOB_ATTR_DEFAULTS["params"]
+                )
             ),
-            retry_ids=lambda: self.state().get(
+            retry_ids=lambda: self._acc_state.get(
                 "retry_ids", JOB_ATTR_DEFAULTS["retry_ids"]
             ),
-            retry_parent=lambda: self._const_state.get(
+            retry_parent=lambda: self._acc_state.get(
                 "retry_parent", JOB_ATTR_DEFAULTS["retry_parent"]
             ),
-            run_id=lambda: self._const_state.get("job_input", {})
+            run_id=lambda: self._acc_state.get("job_input", {})
             .get("narrative_cell_info", {})
             .get("run_id", JOB_ATTR_DEFAULTS["run_id"]),
-            tag=lambda: self._const_state.get("job_input", {})
+            tag=lambda: self._acc_state.get("job_input", {})
             .get("narrative_cell_info", {})
             .get("tag", JOB_ATTR_DEFAULTS["tag"]),
-            user=lambda: self._const_state.get("user", JOB_ATTR_DEFAULTS["user"]),
+            user=lambda: self._acc_state.get("user", JOB_ATTR_DEFAULTS["user"]),
         )
 
         if name not in attr:
@@ -221,16 +205,16 @@ class Job(object):
 
     def __setattr__(self, name, value):
         if name in STATE_ATTRS:
-            self._const_state[name] = value
+            self._acc_state[name] = value
         elif name in JOB_INPUT_ATTRS:
-            self._const_state["job_input"] = self._const_state.get("job_input", {})
-            self._const_state["job_input"][name] = value
+            self._acc_state["job_input"] = self._acc_state.get("job_input", {})
+            self._acc_state["job_input"][name] = value
         elif name in NARR_CELL_INFO_ATTRS:
-            self._const_state["job_input"] = self._const_state.get("job_input", {})
-            self._const_state["job_input"]["narrative_cell_info"] = self._const_state[
+            self._acc_state["job_input"] = self._acc_state.get("job_input", {})
+            self._acc_state["job_input"]["narrative_cell_info"] = self._acc_state[
                 "job_input"
             ].get("narrative_cell_info", {})
-            self._const_state["job_input"]["narrative_cell_info"] = value
+            self._acc_state["job_input"]["narrative_cell_info"][name] = value
         else:
             object.__setattr__(self, name, value)
 
@@ -242,18 +226,18 @@ class Job(object):
         # add in a check for the case where this is a batch parent job
         # batch parent jobs with where all children have status "completed" are in a terminal state
         # otherwise, child jobs may be retried
-        if self._const_state.get("batch_job"):
+        if self._acc_state.get("batch_job"):
             for child_job in self.children:
                 if (
-                    child_job._last_state
-                    and child_job._last_state.get("status") != COMPLETED_STATUS
+                    child_job._acc_state
+                    and child_job._acc_state.get("status") != COMPLETED_STATUS
                 ):
                     return False
             return True
 
         else:
             return (
-                self._last_state and self._last_state.get("status") in TERMINAL_STATUSES
+                self._acc_state and self._acc_state.get("status") in TERMINAL_STATUSES
             )
 
     @property
@@ -300,35 +284,26 @@ class Job(object):
                     f"Unable to fetch parameters for job {self.job_id} - {e}"
                 )
 
-    def update_state(self, state):
+    def update_state(self, state: dict) -> dict:
         """
         given a state data structure (as emitted by ee2), update the stored state in the job object
         """
-        if not state:
-            return
+        if state:
 
-        if "job_id" in state and state["job_id"] != self.job_id:
-            raise ValueError(
-                f"Job ID mismatch in update_state: job ID: {self.job_id}; state ID: {state['job_id']}"
-            )
+            if "job_id" in state and state["job_id"] != self.job_id:
+                raise ValueError(
+                    f"Job ID mismatch in update_state: job ID: {self.job_id}; state ID: {state['job_id']}"
+                )
 
-        state = copy.deepcopy(state)
-        if self._last_state is None:
-            self._last_state = state
-        else:
-            # TODO: implement batch job code updates here
-            # TODO: update state structure-wise
-            self._last_state.update(state)
+            state = copy.deepcopy(state)
+            if self._acc_state is None:
+                self._acc_state = state
+            else:
+                self._acc_state.update(state)
 
-        return copy.deepcopy(self._last_state)
+        return copy.deepcopy(self._acc_state)
 
-    def clear_state(self):
-        """
-        reset the internal job state by removing the stored state
-        """
-        self._last_state = None
-
-    def _augment_ee2_state(self, state):
+    def _augment_ee2_state(self, state: dict) -> dict:
         output_state = copy.deepcopy(state)
         for field in EXCLUDED_JOB_STATE_FIELDS:
             if field in output_state:
@@ -345,7 +320,7 @@ class Job(object):
         """
 
         if self.was_terminal and not force_refresh:
-            state = copy.deepcopy(self._last_state)
+            state = copy.deepcopy(self._acc_state)
         else:
             try:
                 state = clients.get("execution_engine2").check_job(
@@ -569,7 +544,7 @@ class Job(object):
         Display job info without having to iterate through the attributes
         """
 
-        return {attr: getattr(self, attr) for attr in [*JOB_ATTRS, "_last_state"]}
+        return {attr: getattr(self, attr) for attr in [*JOB_ATTRS, "_acc_state"]}
 
     def _create_error_state(
         self,
@@ -603,3 +578,19 @@ class Job(object):
             "created": 0,
             "updated": 0,
         }
+
+    def _verify_children(self, children: List["Job"]) -> None:
+        if not self.batch_job:
+            raise NotBatchException("Not a batch container job")
+        if children is None:
+            raise ValueError(
+                "Must supply children when setting children of batch job parent"
+            )
+
+        inst_child_ids = [job.job_id for job in children]
+        if sorted(inst_child_ids) != sorted(self.child_jobs):
+            raise ValueError("Child job id mismatch")
+
+    def update_children(self, children: List["Job"]) -> None:
+        self._verify_children(children)
+        self.children = children

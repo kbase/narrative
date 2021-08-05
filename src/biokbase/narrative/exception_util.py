@@ -9,6 +9,7 @@ class NoJobException(ValueError):
     or not registered in JobManager._running_jobs
     Subclasses ValueError for except-clause backwards compatibility
     """
+
     pass
 
 
@@ -16,6 +17,7 @@ class NotBatchException(Exception):
     """
     Raised when expecting a batch container job
     """
+
     pass
 
 

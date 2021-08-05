@@ -194,18 +194,6 @@ define([
 
                         btn2.click();
                     });
-
-                    // return TestUtil.waitForElementState(
-                    //     btn2,
-                    //     () => {
-                    //         return btn2.classList.contains(
-                    //             'kb-bulk-import-configure__filetype_panel__filetype_button--selected'
-                    //         );
-                    //     },
-                    //     () => {
-                    //         btn2.click();
-                    //     }
-                    // );
                 })
                 .then(() => {
                     expect(_model.getItem('state.selectedFileType')).toBe('dataType2');

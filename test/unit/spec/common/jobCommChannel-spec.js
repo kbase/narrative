@@ -121,7 +121,7 @@ define(['common/jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUti
                 expected: { request_type: 'ping', ping_id: 'ping!', pongId: 'pong!' },
             },
             {
-                channel: 'request-job-cancellation',
+                channel: 'request-job-cancel',
                 message: { jobId: 'someJob' },
                 expected: { request_type: 'cancel_job', job_id: 'someJob' },
             },
@@ -129,27 +129,6 @@ define(['common/jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUti
                 channel: 'request-job-retry',
                 message: { jobId: 'someJob' },
                 expected: { request_type: 'retry_job', job_id: 'someJob' },
-            },
-            {
-                channel: 'request-job-status',
-                message: { jobId: 'someJob' },
-                expected: {
-                    request_type: 'job_status',
-                    job_id: 'someJob',
-                },
-            },
-            {
-                channel: 'request-job-updates-start',
-                message: { jobId: 'someJob' },
-                expected: {
-                    request_type: 'start_job_update',
-                    job_id: 'someJob',
-                },
-            },
-            {
-                channel: 'request-job-updates-stop',
-                message: { jobId: 'someJob' },
-                expected: { request_type: 'stop_job_update', job_id: 'someJob' },
             },
             {
                 channel: 'request-job-log',
@@ -185,26 +164,47 @@ define(['common/jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUti
                     latest: true,
                 },
             },
-            {
-                channel: 'request-job-info',
-                message: { jobId: 'someJob' },
-                expected: {
-                    request_type: 'job_info',
-                    job_id: 'someJob',
-                },
-            },
-            {
-                channel: 'request-job-info',
-                message: { jobIdList: ['someJob', 'someOtherJob', 'aThirdJob'] },
-                expected: {
-                    request_type: 'job_info',
-                    job_id_list: ['someJob', 'someOtherJob', 'aThirdJob'],
-                },
-            },
         ];
 
+        const translated = {
+            info: 'job_info',
+            status: 'job_status',
+            'updates-start': 'start_job_update',
+            'updates-stop': 'stop_job_update',
+        };
+
+        // all these can have a single job ID, a job ID list, or a batch ID as input
+        Object.keys(translated).forEach((type) => {
+            busMsgCases.push(
+                {
+                    channel: `request-job-${type}`,
+                    message: { jobId: 'someJob' },
+                    expected: {
+                        request_type: translated[type],
+                        job_id: 'someJob',
+                    },
+                },
+                {
+                    channel: `request-job-${type}`,
+                    message: { jobIdList: ['someJob', 'someOtherJob', 'aThirdJob'] },
+                    expected: {
+                        request_type: translated[type],
+                        job_id_list: ['someJob', 'someOtherJob', 'aThirdJob'],
+                    },
+                },
+                {
+                    channel: `request-job-${type}`,
+                    message: { batchId: 'batch_job' },
+                    expected: {
+                        request_type: `${translated[type]}_batch`,
+                        batch_id: 'batch_job',
+                    },
+                }
+            );
+        });
+
         busMsgCases.forEach((testCase) => {
-            it('Should handle a ' + testCase.channel + ' bus message', () => {
+            it(`should handle a ${testCase.channel} bus message`, () => {
                 const comm = new JobCommChannel();
                 return comm
                     .initCommChannel()
@@ -373,6 +373,9 @@ define(['common/jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUti
             });
         });
 
+        // TODO: awaiting backend implementation
+        xit('Should send a job_status_batch message to the bus', () => {});
+
         it('Should send a job_info message to the bus', () => {
             const jobId = 'foo',
                 jobStateMsg = {
@@ -397,6 +400,9 @@ define(['common/jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUti
                 });
             });
         });
+
+        // TODO: awaiting backend implementation
+        xit('Should send a job_info_batch message to the bus', () => {});
 
         it('Should send job_does_not_exist messages to the bus', () => {
             const jobId = 'foo-dne',

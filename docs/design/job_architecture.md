@@ -21,28 +21,27 @@ All the `request-job-*` requests take as arguments either a single job ID string
 
 `request-job-status` - gets the status for a job or an array of jobs.
   * `jobId` - a string, the job id OR
-  * `jobIdList` - an array of job IDs
-  * `parentJobId` - (optional) a string, the id of the requested job's "parent" job
+  * `jobIdList` - an array of job IDs OR
+  * `batchId` - a batch parent (make the request for all jobs in the batch)
 
 `request-job-updates-start` - request the status for a job or jobs, but start an update cycle so that it's continually requested.
   * `jobId` - a string, the job id OR
-  * `jobIdList` - an array of job IDs
-  * `parentJobId` - (optional) a string, the id of the requested job's "parent" job
+  * `jobIdList` - an array of job IDs OR
+  * `batchId` - a batch parent (make the request for all jobs in the batch)
 
 `request-job-updates-stop` - signal that the front end doesn't need any more updates for the specified job(s), so stop sending them for each loop cycle. Doesn't actually end the job, only requests for updates.
   * `jobId` - a string, the job id OR
-  * `jobIdList` - an array of job IDs
-  * `parentJobId` - (optional) a string, the id of the requested job's "parent" job
+  * `jobIdList` - an array of job IDs OR
+  * `batchId` - a batch parent (make the request for all jobs in the batch)
 
 `request-job-info` - request information about the job(s), specifically app id, spec, input parameters and (if finished) outputs
   * `jobId` - a string, the job id OR
-  * `jobIdList` - an array of job IDs
-  * `parentJobId` - (optional) a string, the id of the requested job's "parent" job
+  * `jobIdList` - an array of job IDs OR
+  * `batchId` - a batch parent (make the request for all jobs in the batch)
 
-`request-job-cancellation` - request that the server cancel the running job(s)
+`request-job-cancel` - request that the server cancel the running job(s)
   * `jobId` - a string, the job id OR
   * `jobIdList` - an array of job IDs
-  * `parentJobId` - (optional) a string, the id of the requested job's "parent" job
 
 `request-job-retry` - request that the server rerun a job or set of jobs
   * `jobId` - a string, the job id OR
@@ -214,35 +213,29 @@ These are organized by the `request_type` field, followed by the expected respon
 `all_status` - request the status of all currently running jobs, responds with `job_status_all`
 
 `job_status` - request job status, responds with `job_status` for each job
-* `job_id` - string OR `job_id_list` - array of strings
-* `parent_job_id` - optional string
+* `job_id` - string OR `job_id_list` - array of strings OR `batch_id` - string
 
 `start_update_loop` - request starting the global job status update thread, no specific response, but generally with `job_status_all`
 
 `stop_update_loop` - request stopping the global job status update thread, no response
 
 `start_job_update` - request updating job(s) during the update thread, no specific response, but generally with `job_status`
-* `job_id` - string OR `job_id_list` - array of strings
-* `parent_job_id` - optional string
+* `job_id` - string OR `job_id_list` - array of strings OR `batch_id` - string
 
 `stop_job_update` - request halting update for job(s) during the update thread, no response
-* `job_id` - string OR `job_id_list` - array of strings
-* `parent_job_id` - optional string
+* `job_id` - string OR `job_id_list` - array of strings OR `batch_id` - string
 
 `job_info` - request general information about job(s), responds with `job_info` for each job
-* `job_id` - string OR `job_id_list` - array of strings
-* `parent_job_id` - optional string
+* `job_id` - string OR `job_id_list` - array of strings OR `batch_id` - string
 
 `job_logs` - request job log information, responds with `job_logs` for each job
 * `job_id` - string OR `job_id_list` - array of strings
-* `parent_job_id` - optional string
 * `first_line` - int >= 0, ignored if `latest` is `true`
 * `num_lines` - int > 0
 * `latest` - boolean, `true` if requesting just the latest logs
 
 `cancel_job` - cancel a job or list of jobs; responds with `job_statuses`
 * `job_id` - string OR `job_id_list` - array of strings
-* `parent_job_id` - optional string
 
 `retry_job` - retry a job or list of jobs, responds with `jobs_retried` and `new_job`
 * `job_id` - string OR `job_id_list` - array of strings

@@ -564,7 +564,7 @@ define([
                 cancel: {
                     valid: Jobs.validStatusesForAction.cancel,
                     invalid: [],
-                    request: 'cancellation',
+                    request: 'cancel',
                 },
                 retry: {
                     valid: Jobs.validStatusesForAction.retry,

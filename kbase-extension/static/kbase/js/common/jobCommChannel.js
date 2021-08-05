@@ -56,40 +56,51 @@ define([
     'use strict';
 
     const COMM_NAME = 'KBaseJobs',
-        JOB_STATUS = 'job_status',
-        STOP_JOB_UPDATE = 'stop_job_update',
-        START_JOB_UPDATE = 'start_job_update',
-        CANCEL_JOB = 'cancel_job',
-        RETRY_JOB = 'retry_job',
-        JOB_LOGS = 'job_logs',
-        JOB_INFO = 'job_info',
+        CELL = 'cell',
         JOB = 'jobId',
-        CELL = 'cell';
+        // messages to be sent to backend for job request types
+        JOB_REQUESTS = {
+            CANCEL: 'cancel_job',
+            INFO: 'job_info',
+            LOGS: 'job_logs',
+            RETRY: 'retry_job',
+            STATUS: 'job_status',
+            START_UPDATE: 'start_job_update',
+            STOP_UPDATE: 'stop_job_update',
+        },
+        // these job request types also have a 'batch' version
+        batchRequests = ['INFO', 'STATUS', 'START_UPDATE', 'STOP_UPDATE'],
+        BATCH_JOB_REQUESTS = {};
+    // the batch version of JOB_REQUESTS[type]
+    batchRequests.forEach((type) => {
+        BATCH_JOB_REQUESTS[JOB_REQUESTS[type]] = JOB_REQUESTS[type] + '_batch';
+    });
 
     // Conversion of the message type of an incoming message
     // to the type used for the message to be sent to the backend
     const requestTranslation = {
         'ping-comm-channel': 'ping',
 
+        // cancels the job
+        'request-job-cancel': JOB_REQUESTS.CANCEL,
+
+        // Fetches info (not state) about a job, including the app id, name, and inputs.
+        'request-job-info': JOB_REQUESTS.INFO,
+
+        // Fetches job logs from kernel.
+        'request-job-log': JOB_REQUESTS.LOGS,
+
+        // retries the job
+        'request-job-retry': JOB_REQUESTS.RETRY,
+
         // Fetches job status from kernel.
-        'request-job-status': JOB_STATUS,
+        'request-job-status': JOB_REQUESTS.STATUS,
 
         // Requests job status updates for this job via the job channel, and also
         // ensures that job polling is running.
-        'request-job-updates-start': START_JOB_UPDATE,
+        'request-job-updates-start': JOB_REQUESTS.START_UPDATE,
         // Tells kernel to stop including a job in the lookup loop.
-        'request-job-updates-stop': STOP_JOB_UPDATE,
-
-        // cancels the job
-        'request-job-cancellation': CANCEL_JOB,
-        // retries the job
-        'request-job-retry': RETRY_JOB,
-
-        // Fetches info (not state) about a job, including the app id, name, and inputs.
-        'request-job-info': JOB_INFO,
-
-        // Fetches job logs from kernel.
-        'request-job-log': JOB_LOGS,
+        'request-job-updates-stop': JOB_REQUESTS.STOP_UPDATE,
     };
 
     class JobCommChannel {
@@ -189,6 +200,7 @@ define([
                 };
 
                 const translations = {
+                    batchId: 'batch_id',
                     jobId: 'job_id',
                     jobIdList: 'job_id_list',
                     pingId: 'ping_id',
@@ -198,6 +210,10 @@ define([
                     if (key !== 'options') {
                         const msgKey = translations[key] || key;
                         msg[msgKey] = value;
+                    }
+                    // convert to the batch form of the request
+                    if (key === 'batchId' && BATCH_JOB_REQUESTS[msgType]) {
+                        msg.request_type = BATCH_JOB_REQUESTS[msgType];
                     }
                 }
 
@@ -337,6 +353,10 @@ define([
                     });
                     break;
 
+                case 'job_info_batch':
+                    // TODO: awaiting backend implementation
+                    break;
+
                 case 'job_init_err':
                 case 'job_init_lookup_err':
                     this.displayJobError(msgData);
@@ -348,6 +368,26 @@ define([
                         jobId: msgData.job_id,
                         logs: msgData,
                         latest: msgData.latest,
+                    });
+                    break;
+
+                case 'jobs_retried':
+                    msgData.forEach((jobRetried) => {
+                        this.sendBusMessage(
+                            JOB,
+                            jobRetried.job.state.job_id,
+                            'job-retry-response',
+                            {
+                                job: {
+                                    jobState: jobRetried.job.state,
+                                    widgetParameters: jobRetried.job.widget_info,
+                                },
+                                retry: {
+                                    jobState: jobRetried.retry.state,
+                                    widgetParameters: jobRetried.retry.widget_info,
+                                },
+                            }
+                        );
                     });
                     break;
 
@@ -378,6 +418,11 @@ define([
                         outputWidgetInfo: msgData.widget_info,
                     });
                     break;
+
+                case 'job_status_batch':
+                    // TODO: awaiting backend implementation
+                    break;
+
                 /*
                  * This message must carry all jobs linked to this narrative.
                  * The job deletion logic, specifically, requires that the job

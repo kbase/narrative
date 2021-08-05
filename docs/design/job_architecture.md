@@ -332,7 +332,7 @@ i.e.
 
 **bus** - `job-info`
 
-### `job_infos`
+### `job_info_batch`
 Includes information about the jobs
 
 **content**

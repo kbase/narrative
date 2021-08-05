@@ -730,12 +730,13 @@ class JobTest(unittest.TestCase):
     def test_parent_children__fail(self):
         parent_state = create_state_from_ee2(BATCH_PARENT, mode="state")
         with self.assertRaisesRegex(
-            ValueError,
-            "Must supply children when setting children of batch job parent"
+            ValueError, "Must supply children when setting children of batch job parent"
         ):
             Job.from_state(parent_state)
 
-        child_jobs = [create_job_from_ee2(job_id, mode="attributes") for job_id in BATCH_CHILDREN][1:]
+        child_jobs = [
+            create_job_from_ee2(job_id, mode="attributes") for job_id in BATCH_CHILDREN
+        ][1:]
         with self.assertRaisesRegex(ValueError, "Child job id mismatch"):
             Job.from_state(
                 parent_state,

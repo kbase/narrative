@@ -17,7 +17,7 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
 
     const jobCommand = {
         cancel: {
-            command: 'request-job-cancellation',
+            command: 'request-job-cancel',
             listener: 'job-canceled',
         },
         retry: {

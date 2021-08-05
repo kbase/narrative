@@ -380,11 +380,11 @@ define([
                             {
                                 job: {
                                     jobState: jobRetried.job.state,
-                                    widgetParameters: jobRetried.job.widget_info,
+                                    outputWidgetInfo: jobRetried.job.widget_info,
                                 },
                                 retry: {
                                     jobState: jobRetried.retry.state,
-                                    widgetParameters: jobRetried.retry.widget_info,
+                                    outputWidgetInfo: jobRetried.retry.widget_info,
                                 },
                             }
                         );

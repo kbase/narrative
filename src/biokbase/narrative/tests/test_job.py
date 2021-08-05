@@ -652,8 +652,7 @@ class JobTest(unittest.TestCase):
         parent_state = create_state_from_ee2(BATCH_PARENT)
         child_states = [create_state_from_ee2(job_id) for job_id in BATCH_CHILDREN]
         with self.assertRaisesRegex(
-            ValueError,
-            "Must supply children when setting children of batch job parent"
+            ValueError, "Must supply children when setting children of batch job parent"
         ):
             Job(parent_state)
 

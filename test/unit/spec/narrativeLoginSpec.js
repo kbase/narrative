@@ -1,10 +1,11 @@
-define(['jquery', 'narrativeLogin', 'narrativeConfig', 'narrativeMocks', 'util/bootstrapDialog'], (
-    $,
-    Login,
-    Config,
-    Mocks,
-    BootstrapDialog
-) => {
+define([
+    'jquery',
+    'narrativeLogin',
+    'narrativeConfig',
+    'narrativeMocks',
+    'util/bootstrapDialog',
+    'testUtil',
+], ($, Login, Config, Mocks, BootstrapDialog, TestUtil) => {
     'use strict';
 
     const FAKE_TOKEN = 'some_fake_token';
@@ -28,6 +29,7 @@ define(['jquery', 'narrativeLogin', 'narrativeConfig', 'narrativeMocks', 'util/b
             Login.destroy();
             jasmine.Ajax.uninstall();
             Mocks.clearAuthToken();
+            TestUtil.clearRuntime();
         });
 
         it('Should instantiate and have expected functions', () => {

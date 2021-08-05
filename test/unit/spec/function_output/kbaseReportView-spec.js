@@ -1,10 +1,11 @@
-define(['kbaseReportView', 'base/js/namespace', 'jquery', 'narrativeMocks', 'narrativeConfig'], (
-    ReportView,
-    Jupyter,
-    $,
-    Mocks,
-    Config
-) => {
+define([
+    'kbaseReportView',
+    'base/js/namespace',
+    'jquery',
+    'narrativeMocks',
+    'narrativeConfig',
+    'testUtil',
+], (ReportView, Jupyter, $, Mocks, Config, TestUtil) => {
     'use strict';
     const FAKE_SERV_URL = 'https://ci.kbase.us/report_serv';
     const REPORT_REF = '1/2/3';
@@ -123,6 +124,7 @@ define(['kbaseReportView', 'base/js/namespace', 'jquery', 'narrativeMocks', 'nar
 
         afterAll(() => {
             Jupyter.narrative = null;
+            TestUtil.clearRuntime();
         });
 
         beforeEach(function () {
@@ -139,6 +141,7 @@ define(['kbaseReportView', 'base/js/namespace', 'jquery', 'narrativeMocks', 'nar
         afterEach(() => {
             jasmine.Ajax.uninstall();
             container.remove();
+            TestUtil.clearRuntime();
         });
 
         it('should be defined', () => {

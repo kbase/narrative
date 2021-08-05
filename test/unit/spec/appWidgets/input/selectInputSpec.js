@@ -52,8 +52,9 @@ define(['common/runtime', 'widgets/appWidgets2/input/selectInput', 'testUtil'], 
 
         afterEach(() => {
             bus.stop();
-            window.kbaseRuntime = null;
+            runtime.destroy();
             container.remove();
+            TestUtil.clearRuntime();
         });
 
         it('should be defined', () => {

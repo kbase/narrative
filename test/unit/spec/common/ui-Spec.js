@@ -1,4 +1,4 @@
-define(['common/ui'], (UI) => {
+define(['common/ui', 'testUtil'], (UI, TestUtil) => {
     'use strict';
 
     // don't require a UI object
@@ -112,6 +112,10 @@ define(['common/ui'], (UI) => {
     }
 
     describe('UI module', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('should be defined', () => {
             expect(UI).toBeDefined();
         });

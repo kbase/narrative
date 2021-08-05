@@ -164,6 +164,15 @@ define('testUtil', ['bluebird', 'json!/test/testConfig.json'], (Promise, TestCon
         });
     }
 
+    function clearRuntime() {
+        if (window.kbaseRuntime) {
+            if (window.kbaseRuntime.clock) {
+                window.kbaseRuntime.clock.stop();
+            }
+            window.kbaseRuntime = null;
+        }
+    }
+
     return {
         make,
         getAuthToken,
@@ -174,5 +183,6 @@ define('testUtil', ['bluebird', 'json!/test/testConfig.json'], (Promise, TestCon
         waitForElement,
         waitForElementState,
         waitForElementChange,
+        clearRuntime,
     };
 });

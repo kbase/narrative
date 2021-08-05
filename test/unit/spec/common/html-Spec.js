@@ -1,7 +1,11 @@
-define(['common/html'], (html) => {
+define(['common/html', 'testUtil'], (html, TestUtil) => {
     'use strict';
 
     describe('html utility library', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         // camelToKebab
         it('Converts camelCaseToHyphen', () => {
             expect(html.camelToKebab('camelCase')).toEqual('camel-case');

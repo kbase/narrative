@@ -64,7 +64,7 @@ define(['common/jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUti
         });
 
         afterEach(() => {
-            window.kbaseRuntime = null;
+            TestUtil.clearRuntime();
             Jupyter.notebook = null;
             testBus = null;
         });

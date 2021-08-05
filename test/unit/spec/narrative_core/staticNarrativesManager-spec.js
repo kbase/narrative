@@ -4,8 +4,10 @@ define([
     'narrativeMocks',
     'narrativeConfig',
     'widgets/narrative_core/staticNarrativesManager',
-], ($, Jupyter, Mocks, Config, StaticNarrativesManager) => {
+    'testUtil',
+], ($, Jupyter, Mocks, Config, StaticNarrativesManager, TestUtil) => {
     'use strict';
+
     const staticNarrativeServiceUrl = 'https://ci.kbase.us/dynserv/blah.StaticNarrative';
 
     const wsId = 43667,
@@ -184,6 +186,7 @@ define([
             Jupyter.narrative = null;
             jasmine.Ajax.uninstall();
             container.remove();
+            TestUtil.clearRuntime();
         });
 
         it('Should exist', () => {

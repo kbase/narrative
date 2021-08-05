@@ -2,8 +2,9 @@ define([
     '../../../../../../narrative/nbextensions/bulkImportCell/util',
     'common/props',
     'common/spec',
+    'testUtil',
     '/test/data/testAppObj',
-], (Util, Props, Spec, TestAppObj) => {
+], (Util, Props, Spec, TestUtil, TestAppObj) => {
     'use strict';
 
     const testFileType = 'someFileType';
@@ -78,6 +79,10 @@ define([
         let spec;
         beforeAll(() => {
             spec = Spec.make({ appSpec: TestAppObj.app.specs[testAppId] });
+        });
+
+        afterEach(() => {
+            TestUtil.clearRuntime();
         });
 
         describe('evaluateAppConfig tests', () => {

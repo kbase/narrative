@@ -1,7 +1,11 @@
-define(['common/cellComponents/tabs/infoTab'], (InfoTab) => {
+define(['common/cellComponents/tabs/infoTab', 'testUtil'], (InfoTab, TestUtil) => {
     'use strict';
 
     describe('The App Info Tab module', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('loads', () => {
             expect(InfoTab).not.toBe(null);
         });
@@ -55,6 +59,7 @@ define(['common/cellComponents/tabs/infoTab'], (InfoTab) => {
 
         afterEach(() => {
             container.remove();
+            TestUtil.clearRuntime();
         });
 
         it('has a factory which can be invoked', () => {

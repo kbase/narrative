@@ -3,8 +3,10 @@ define([
     'widgets/appWidgets2/input/newObjectInput',
     'base/js/namespace',
     'narrativeMocks',
-], (Runtime, NewObjectInput, Jupyter, Mocks) => {
+    'testUtil',
+], (Runtime, NewObjectInput, Jupyter, Mocks, TestUtil) => {
     'use strict';
+
     const AUTH_TOKEN = 'fakeAuthToken',
         required = false,
         defaultValue = 'apple',
@@ -100,7 +102,8 @@ define([
         afterEach(() => {
             jasmine.Ajax.uninstall();
             bus.stop();
-            window.kbaseRuntime = null;
+            runtime.destroy();
+            TestUtil.clearRuntime();
             Jupyter.narrative = null;
             container.remove();
         });

@@ -1,5 +1,6 @@
-define(['common/errorDisplay', 'common/props'], (ErrorDisplay, Props) => {
+define(['common/errorDisplay', 'common/props', 'testUtil'], (ErrorDisplay, Props, TestUtil) => {
     'use strict';
+
     const validInput = Props.make({
         data: {
             exec: {
@@ -16,6 +17,10 @@ define(['common/errorDisplay', 'common/props'], (ErrorDisplay, Props) => {
     let cssBaseClass;
 
     describe('The error display module', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('loads', () => {
             expect(ErrorDisplay).not.toBe(null);
         });
@@ -29,12 +34,20 @@ define(['common/errorDisplay', 'common/props'], (ErrorDisplay, Props) => {
     });
 
     describe('The UI module attribute defaultAdvice', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('should return a string about contacting support', () => {
             expect(ErrorDisplay.defaultAdvice).toContain('www.kbase.us/support');
         });
     });
 
     describe('The UI module attribute cssBaseClass', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('should return a string to use as a CSS base class', () => {
             expect(ErrorDisplay.cssBaseClass).toContain('kb-error-display');
         });
@@ -51,6 +64,7 @@ define(['common/errorDisplay', 'common/props'], (ErrorDisplay, Props) => {
 
         afterEach(() => {
             container.remove();
+            TestUtil.clearRuntime();
         });
 
         it('has a make function that returns an object', () => {
@@ -91,6 +105,7 @@ define(['common/errorDisplay', 'common/props'], (ErrorDisplay, Props) => {
 
         afterEach(() => {
             container.remove();
+            TestUtil.clearRuntime();
         });
 
         invalidArgs.forEach((input) => {

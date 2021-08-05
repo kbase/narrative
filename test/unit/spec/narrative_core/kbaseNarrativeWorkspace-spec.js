@@ -8,6 +8,7 @@ define([
     'json!/test/data/NarrativeTest.test_simple_inputs.spec.json',
 ], (KBaseNarrativeWorkspace, $, Jupyter, Mocks, TestUtil, Runtime, AppSpec) => {
     'use strict';
+
     describe('Test the kbaseNarrativeWorkspace widget', () => {
         let $node, $container;
         beforeAll(() => {
@@ -45,6 +46,7 @@ define([
             jasmine.Ajax.uninstall();
             $container.remove();
             $(document).off();
+            TestUtil.clearRuntime();
         });
 
         it('should attach to a node and show its UI mode', () => {

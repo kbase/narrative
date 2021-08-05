@@ -2,7 +2,8 @@ define([
     '/narrative/nbextensions/bulkImportCell/tabs/fileTypePanel',
     'common/runtime',
     'bluebird',
-], (FileTypePanel, Runtime, Promise) => {
+    'testUtil',
+], (FileTypePanel, Runtime, Promise, TestUtil) => {
     'use strict';
 
     const fileTypes = {
@@ -20,6 +21,7 @@ define([
         icon: 'fa fa-times',
         label: 'File Header',
     };
+
     describe('test the file type panel', () => {
         let container;
         beforeEach(() => {
@@ -27,6 +29,7 @@ define([
         });
         afterEach(() => {
             container.remove();
+            TestUtil.clearRuntime();
         });
         it('should load and start properly with the right available functions', () => {
             const panel = FileTypePanel.make({

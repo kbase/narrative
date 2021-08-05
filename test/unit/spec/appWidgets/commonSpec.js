@@ -1,8 +1,9 @@
-define(['common/events', 'common/ui', 'kb_common/html', 'widgets/appWidgets2/common'], (
+define(['common/events', 'common/ui', 'kb_common/html', 'widgets/appWidgets2/common', 'testUtil'], (
     Events,
     UI,
     html,
-    WidgetCommon
+    WidgetCommon,
+    TestUtil
 ) => {
     'use strict';
     const div = html.tag('div'),
@@ -17,6 +18,7 @@ define(['common/events', 'common/ui', 'kb_common/html', 'widgets/appWidgets2/com
         });
         afterEach(() => {
             container.remove();
+            TestUtil.clearRuntime();
         });
 
         it('Should be loaded with the right functions', () => {

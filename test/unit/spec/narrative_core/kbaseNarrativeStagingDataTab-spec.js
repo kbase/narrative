@@ -1,12 +1,17 @@
-define(['jquery', 'kbaseNarrativeStagingDataTab', 'base/js/namespace'], (
-    $,
-    StagingDataTab,
-    Jupyter
-) => {
+define([
+    'jquery',
+    'kbaseNarrativeStagingDataTab',
+    'base/js/namespace',
+    'narrativeConfig',
+    'testUtil',
+], ($, StagingDataTab, Jupyter, Config, TestUtil) => {
     'use strict';
+
     describe('The kbaseNarrativeStagingDataTab widget', () => {
-        const fakeUser = 'notAUser';
+        const fakeUser = 'notAUser',
+            stagingServiceUrl = Config.url('staging_api_url');
         let $dummyNode, stagingWidget;
+
         beforeEach(() => {
             jasmine.Ajax.install();
             jasmine.Ajax.stubRequest(/\/auth\/api\/V2\/me$/).andReturn({
@@ -28,7 +33,7 @@ define(['jquery', 'kbaseNarrativeStagingDataTab', 'base/js/namespace'], (
                     ],
                 }),
             });
-            jasmine.Ajax.stubRequest(/.*\/staging_service\/list\/.*/).andReturn({
+            jasmine.Ajax.stubRequest(new RegExp(`${stagingServiceUrl}/list/`)).andReturn({
                 status: 200,
                 statusText: 'success',
                 contentType: 'text/plain',
@@ -47,9 +52,23 @@ define(['jquery', 'kbaseNarrativeStagingDataTab', 'base/js/namespace'], (
                         mtime: 1532738637555,
                         size: 49233,
                         source: 'KBase upload',
+                        isFolder: false,
                     },
                 ]),
             });
+            const mappings = {
+                mappings: [null, null],
+            };
+            jasmine.Ajax.stubRequest(
+                new RegExp(`${stagingServiceUrl}/importer_mappings/`)
+            ).andReturn({
+                status: 200,
+                statusText: 'success',
+                contentType: 'text/plain',
+                responseHeaders: '',
+                responseText: JSON.stringify(mappings),
+            });
+
             Jupyter.narrative = {
                 userId: fakeUser,
                 getAuthToken: () => {
@@ -61,12 +80,14 @@ define(['jquery', 'kbaseNarrativeStagingDataTab', 'base/js/namespace'], (
         });
 
         afterEach(() => {
-            try {
-                stagingWidget.deactivate();
-                // eslint-disable-next-line no-empty
-            } catch (err) {}
+            stagingWidget.deactivate();
+            // to deal with some datatables bleed over into global testing space.
+            $.fn.DataTable.ext.search.pop();
+            $dummyNode.empty();
+            $dummyNode.remove();
             Jupyter.narrative = null;
             jasmine.Ajax.uninstall();
+            TestUtil.clearRuntime();
         });
 
         it('can load properly', async () => {
@@ -118,10 +139,10 @@ define(['jquery', 'kbaseNarrativeStagingDataTab', 'base/js/namespace'], (
             await stagingWidget.render();
             // kinda cheating - but to test that things are run, we know that this will call
             // stagingAreaViewer.render
-            spyOn(stagingWidget.stagingAreaViewer, 'render');
+            spyOn(stagingWidget.stagingAreaViewer, 'updateView');
             stagingWidget.updateView();
             jasmine.clock().tick(stagingWidget.minRefreshTime + 100);
-            expect(stagingWidget.stagingAreaViewer.render).toHaveBeenCalled();
+            expect(stagingWidget.stagingAreaViewer.updateView).toHaveBeenCalled();
 
             jasmine.clock().uninstall();
         });
@@ -138,13 +159,12 @@ define(['jquery', 'kbaseNarrativeStagingDataTab', 'base/js/namespace'], (
             jasmine.clock().install();
             await stagingWidget.render();
             // run a bunch of triggers, should only call render on the staging area once
-            spyOn(stagingWidget.stagingAreaViewer, 'render');
-            for (let i = 0; i < 100; i++) {
+            spyOn(stagingWidget.stagingAreaViewer, 'updateView');
+            for (let i = 0; i < 50; i++) {
                 stagingWidget.uploadWidget.dropzone.emit('complete', { name: 'foo', size: 12345 });
             }
             jasmine.clock().tick(stagingWidget.minRefreshTime + 100);
-            expect(stagingWidget.stagingAreaViewer.render.calls.count()).toEqual(1);
-
+            expect(stagingWidget.stagingAreaViewer.updateView.calls.count()).toEqual(2);
             jasmine.clock().uninstall();
         });
     });

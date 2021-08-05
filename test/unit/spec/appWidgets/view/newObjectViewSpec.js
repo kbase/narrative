@@ -23,7 +23,7 @@ define(['widgets/appWidgets2/view/newObjectView', 'common/runtime', 'testUtil'],
 
         afterEach(function () {
             this.node.remove();
-            window.kbaseRuntime = null;
+            TestUtil.clearRuntime();
         });
 
         it('should have a valid constructor', function () {

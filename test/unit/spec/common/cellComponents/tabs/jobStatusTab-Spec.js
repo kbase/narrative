@@ -2,8 +2,9 @@ define([
     'common/cellComponents/tabs/jobStatus/jobStatusTab',
     'common/cellComponents/tabs/jobStatus/jobStatusTable',
     'common/props',
+    'testUtil',
     '/test/data/testAppObj',
-], (JobStatusTab, JobStatusTable, Props, TestAppObject) => {
+], (JobStatusTab, JobStatusTable, Props, TestUtil, TestAppObject) => {
     'use strict';
 
     const model = Props.make({
@@ -13,6 +14,10 @@ define([
     const jobTabContainerClass = 'kb-job__tab_container';
 
     describe('The job status tab module', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('loads', () => {
             expect(JobStatusTab).not.toBe(null);
         });
@@ -40,6 +45,7 @@ define([
 
         afterEach(() => {
             container.remove();
+            TestUtil.clearRuntime();
         });
 
         it('has a make function that returns an object', function () {

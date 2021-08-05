@@ -3,8 +3,9 @@ define([
     'common/jobMessages',
     'common/jobs',
     'common/props',
+    'testUtil',
     '/test/data/testAppObj',
-], (JobActionDropdown, JobMessages, Jobs, Props, TestAppObj) => {
+], (JobActionDropdown, JobMessages, Jobs, Props, TestUtil, TestAppObj) => {
     'use strict';
 
     let container, jobActionDropdownInstance;
@@ -40,6 +41,10 @@ define([
     }
 
     describe('The job action dropdown module', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('loads', () => {
             expect(JobActionDropdown).not.toBe(null);
         });
@@ -63,6 +68,7 @@ define([
         afterEach(async () => {
             await jobActionDropdownInstance.stop();
             container.remove();
+            TestUtil.clearRuntime();
         });
 
         it('has a make function that returns an object', () => {
@@ -115,6 +121,7 @@ define([
             afterEach(async () => {
                 await jobActionDropdownInstance.stop();
                 container.remove();
+                TestUtil.clearRuntime();
             });
 
             it('should perform dropdown options when clicked', function () {
@@ -174,6 +181,7 @@ define([
             afterEach(async () => {
                 await jobActionDropdownInstance.stop();
                 container.remove();
+                TestUtil.clearRuntime();
             });
 
             it('resolves to false with an invalid action', async function () {
@@ -293,6 +301,10 @@ define([
             afterAll(async () => {
                 await jobActionDropdownInstance.stop();
                 container.remove();
+            });
+
+            afterEach(() => {
+                TestUtil.clearRuntime();
             });
 
             it('should not have any buttons enabled without jobs', function () {

@@ -2,10 +2,10 @@ define([
     'common/jobManager',
     'common/jobs',
     'common/props',
-    'common/runtime',
     'common/ui',
+    'testUtil',
     '/test/data/jobsData',
-], (JobManager, Jobs, Props, Runtime, UI, JobsData) => {
+], (JobManager, Jobs, Props, UI, TestUtil, JobsData) => {
     'use strict';
 
     function createJobManagerInstance(context) {
@@ -45,6 +45,10 @@ define([
         };
 
     describe('the JobManager module', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('Should be loaded with the right functions', () => {
             expect(JobManager).toEqual(jasmine.any(Function));
         });
@@ -111,6 +115,10 @@ define([
                     // nope
                 },
             };
+        });
+
+        afterEach(() => {
+            TestUtil.clearRuntime();
         });
 
         describe('the updateModel function', () => {

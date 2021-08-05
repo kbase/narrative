@@ -6,7 +6,8 @@ define([
     'testUtil',
     '/test/data/testAppObj',
     'common/ui',
-], (BulkImportCell, Jupyter, Runtime, Mocks, TestUtil, TestAppObj, UI) => {
+    'narrativeConfig',
+], (BulkImportCell, Jupyter, Runtime, Mocks, TestUtil, TestAppObj, UI, Config) => {
     'use strict';
     const fakeInputs = {
             dataType: {
@@ -17,16 +18,16 @@ define([
         fakeSpecs = {
             someApp:
                 TestAppObj.app.specs['kb_uploadmethods/import_fastq_sra_as_reads_from_staging'],
-        },
-        runtime = Runtime.make();
+        };
 
-    describe('test the bulk import cell module', () => {
+    xdescribe('test the bulk import cell module', () => {
+        let runtime;
         beforeAll(() => {
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',
             };
             jasmine.Ajax.install();
-            jasmine.Ajax.stubRequest(runtime.config('services.workspace.url')).andReturn({
+            jasmine.Ajax.stubRequest(Config.url('workspace')).andReturn({
                 status: 200,
                 statusText: 'HTTP/1.1 200 OK',
                 contentType: 'application/json',
@@ -34,8 +35,13 @@ define([
             });
         });
 
+        beforeEach(() => {
+            runtime = Runtime.make();
+        });
+
         afterEach(() => {
-            window.kbaseRuntime = null;
+            runtime.destroy();
+            TestUtil.clearRuntime();
         });
 
         afterAll(() => {

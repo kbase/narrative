@@ -4,11 +4,16 @@ define([
     'common/runtime',
     'common/props',
     'common/spec',
+    'testUtil',
     '/test/data/testAppObj',
-], (Jupyter, ParamsWidget, Runtime, Props, Spec, TestAppObject) => {
+], (Jupyter, ParamsWidget, Runtime, Props, Spec, TestUtil, TestAppObject) => {
     'use strict';
 
     describe('The Parameter module', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('loads', () => {
             expect(ParamsWidget).not.toBe(null);
         });
@@ -29,7 +34,6 @@ define([
         }
 
         beforeAll(() => {
-            window.kbaseRuntime = null;
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',
             };
@@ -37,6 +41,7 @@ define([
 
         afterAll(() => {
             Jupyter.narrative = null;
+            TestUtil.clearRuntime();
         });
 
         beforeEach(function () {
@@ -74,7 +79,6 @@ define([
         });
 
         afterEach(() => {
-            window.kbaseRuntime = null;
             container.remove();
         });
 

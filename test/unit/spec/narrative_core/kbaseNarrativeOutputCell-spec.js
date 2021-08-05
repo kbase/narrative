@@ -4,8 +4,10 @@ define([
     'base/js/namespace',
     'narrativeMocks',
     'narrativeConfig',
-], ($, Widget, Jupyter, Mocks, Config) => {
+    'testUtil',
+], ($, Widget, Jupyter, Mocks, Config, TestUtil) => {
     'use strict';
+
     describe('The kbaseNarrativeOutputCell widget', () => {
         const testWidget = 'kbaseDefaultNarrativeOutput',
             testUpas = {
@@ -71,6 +73,7 @@ define([
             Jupyter.narrative = null;
             jasmine.Ajax.uninstall();
             $container.remove();
+            TestUtil.clearRuntime();
         });
 
         it('Should load properly with a dummy UPA', () => {

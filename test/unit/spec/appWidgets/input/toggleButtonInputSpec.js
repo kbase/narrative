@@ -1,6 +1,7 @@
-define(['common/runtime', 'widgets/appWidgets2/input/toggleButtonInput'], (
+define(['common/runtime', 'widgets/appWidgets2/input/toggleButtonInput', 'testUtil'], (
     Runtime,
-    ToggleButtonInput
+    ToggleButtonInput,
+    TestUtil
 ) => {
     'use strict';
     let bus, testConfig, runtime, container;
@@ -39,8 +40,9 @@ define(['common/runtime', 'widgets/appWidgets2/input/toggleButtonInput'], (
         });
         afterEach(() => {
             bus.stop();
-            window.kbaseRuntime = null;
+            runtime.destroy();
             container.remove();
+            TestUtil.clearRuntime();
         });
 
         it('should be defined', () => {

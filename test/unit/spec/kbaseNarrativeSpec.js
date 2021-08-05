@@ -1,12 +1,12 @@
 define([
-    'bluebird',
     'jquery',
     'narrativeConfig',
     'kbaseNarrative',
     'base/js/namespace',
     'narrativeLogin',
     'narrativeMocks',
-], (Promise, $, Config, Narrative, Jupyter, NarrativeLogin, Mocks) => {
+    'testUtil',
+], ($, Config, Narrative, Jupyter, NarrativeLogin, Mocks, TestUtil) => {
     'use strict';
 
     const DEFAULT_FULLY_LOADED = false,
@@ -24,6 +24,8 @@ define([
             // including login and logout listeners
             $(document).off();
         });
+
+        afterAll(() => TestUtil.clearRuntime());
 
         beforeEach(async () => {
             $(document).off();

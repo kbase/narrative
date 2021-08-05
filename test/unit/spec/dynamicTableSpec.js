@@ -1,4 +1,9 @@
-define(['jquery', 'bluebird', 'widgets/dynamicTable'], ($, Promise, DynamicTable) => {
+define(['jquery', 'bluebird', 'widgets/dynamicTable', 'testUtil'], (
+    $,
+    Promise,
+    DynamicTable,
+    TestUtil
+) => {
     'use strict';
     const rows = [
             [1, 2, 3],
@@ -41,6 +46,8 @@ define(['jquery', 'bluebird', 'widgets/dynamicTable'], ($, Promise, DynamicTable
         afterEach(() => {
             container.remove();
         });
+
+        afterAll(() => TestUtil.clearRuntime());
 
         it('Should instantiate with essentially empty data', () => {
             container = document.createElement('div');

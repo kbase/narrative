@@ -3,7 +3,8 @@ define([
     'kbase/js/widgets/narrative_core/upload/fileUploadWidget',
     'base/js/namespace',
     'narrativeConfig',
-], ($, FileUploadWidget, Jupyter, Config) => {
+    'testUtil',
+], ($, FileUploadWidget, Jupyter, Config, TestUtil) => {
     'use strict';
 
     const fakeUser = 'notAUser',
@@ -56,6 +57,7 @@ define([
             jasmine.Ajax.requests.reset();
             jasmine.Ajax.uninstall();
             container.remove();
+            TestUtil.clearRuntime();
         });
 
         it('Should be able to set and retrieve the path', () => {

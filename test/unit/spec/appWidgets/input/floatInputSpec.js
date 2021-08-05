@@ -1,4 +1,8 @@
-define(['widgets/appWidgets2/input/floatInput', 'common/runtime'], (FloatInput, Runtime) => {
+define(['widgets/appWidgets2/input/floatInput', 'common/runtime', 'testUtil'], (
+    FloatInput,
+    Runtime,
+    TestUtil
+) => {
     'use strict';
 
     describe('Test float data input widget', () => {
@@ -35,7 +39,8 @@ define(['widgets/appWidgets2/input/floatInput', 'common/runtime'], (FloatInput, 
         afterEach(() => {
             container.remove();
             bus.stop();
-            window.kbaseRuntime = null;
+            runtime.destroy();
+            TestUtil.clearRuntime();
         });
 
         it('should be defined', () => {

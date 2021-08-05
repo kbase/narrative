@@ -1,4 +1,4 @@
-define(['bluebird', 'common/validation'], (Promise, Validation) => {
+define(['bluebird', 'common/validation', 'testUtil'], (Promise, Validation, TestUtil) => {
     'use strict';
 
     describe('Validator functions', () => {
@@ -76,6 +76,7 @@ define(['bluebird', 'common/validation'], (Promise, Validation) => {
         });
 
         afterEach(() => {
+            TestUtil.clearRuntime();
             jasmine.Ajax.uninstall();
         });
 

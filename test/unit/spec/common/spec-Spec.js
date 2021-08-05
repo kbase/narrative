@@ -1,5 +1,6 @@
-define(['common/spec', 'json!/test/data/NarrativeTest.test_input_params.spec.json'], (
+define(['common/spec', 'testUtil', 'json!/test/data/NarrativeTest.test_input_params.spec.json'], (
     Spec,
+    TestUtil,
     TestAppSpec
 ) => {
     'use strict';
@@ -11,6 +12,10 @@ define(['common/spec', 'json!/test/data/NarrativeTest.test_input_params.spec.jso
     }
 
     describe('basic spec module test', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('should have a factory', () => {
             expect(Spec.make).toEqual(jasmine.any(Function));
         });
@@ -63,6 +68,10 @@ define(['common/spec', 'json!/test/data/NarrativeTest.test_input_params.spec.jso
             this.spec = Spec.make({
                 appSpec: TestAppSpec,
             });
+        });
+
+        afterEach(() => {
+            TestUtil.clearRuntime();
         });
 
         it('should return the spec structure on request', function () {

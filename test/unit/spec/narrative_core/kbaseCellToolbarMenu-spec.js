@@ -1,7 +1,8 @@
-define(['kbaseCellToolbarMenu', 'narrativeConfig', 'base/js/namespace'], (
+define(['kbaseCellToolbarMenu', 'narrativeConfig', 'base/js/namespace', 'testUtil'], (
     Widget,
     Config,
-    Jupyter
+    Jupyter,
+    TestUtil
 ) => {
     'use strict';
 
@@ -92,6 +93,10 @@ define(['kbaseCellToolbarMenu', 'narrativeConfig', 'base/js/namespace'], (
             Jupyter.narrative = {
                 readonly: false,
             };
+        });
+
+        afterEach(() => {
+            TestUtil.clearRuntime();
         });
 
         describe('the cell options buttons', () => {

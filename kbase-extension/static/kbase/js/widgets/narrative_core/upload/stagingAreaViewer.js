@@ -97,6 +97,10 @@ define([
                 clearInterval(this.refreshInterval);
                 this.refreshInterval = undefined;
             }
+            if (this.fullDataTable) {
+                $.fn.DataTable.ext.search.pop();
+                this.fullDataTable.destroy();
+            }
         },
 
         /**

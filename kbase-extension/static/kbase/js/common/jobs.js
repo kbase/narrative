@@ -365,7 +365,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
 
             if (job.batch_job) {
                 if (jobIx.batchId && jobId !== jobIx.batchId) {
-                    console.error(`Error: two batch IDs present: ${jobIx.batchId} and ${jobId}`)
+                    console.error(`Error: two batch IDs present: ${jobIx.batchId} and ${jobId}`);
                 }
                 jobIx.batchId = job.batch_id;
             }

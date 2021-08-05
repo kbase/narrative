@@ -1,4 +1,4 @@
-define(['modelSeedVizConfig'], (Widget) => {
+define(['modelSeedVizConfig', 'testUtil'], (Widget, TestUtil) => {
     'use strict';
     describe('Test the modelSeedVizConfig widget', () => {
         let cfg;
@@ -6,6 +6,8 @@ define(['modelSeedVizConfig'], (Widget) => {
         beforeEach(() => {
             cfg = new ModelSeedVizConfig();
         });
+
+        afterEach(() => TestUtil.clearRuntime());
 
         it('Should load the functions', () => {
             expect(ModelSeedVizConfig).toBeDefined();

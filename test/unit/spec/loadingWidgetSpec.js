@@ -1,15 +1,17 @@
 define([
     'jquery',
     'widgets/loadingWidget',
+    'testUtil',
     'text!/kbase_templates/loading.html',
     'css!/narrative/static/kbase/css/all_concat.css',
-], ($, LoadingWidget, LoadingTemplate) => {
+], ($, LoadingWidget, TestUtil, LoadingTemplate) => {
     'use strict';
 
     const templateHtml = LoadingTemplate.replace(
         '{{ static_url("kbase/images/kbase_animated_logo.gif") }}',
         '/narrative/static/kbase/images/kbase_animated_logo.gif'
     );
+
     describe('Test the LoadingWidget module', () => {
         let container;
         beforeEach(() => {
@@ -19,6 +21,7 @@ define([
 
         afterEach(() => {
             container.remove();
+            TestUtil.clearRuntime();
         });
 
         it('Should instantiate with a null node', () => {

@@ -24,8 +24,8 @@ define([], () => {
         }
 
         return {
-            start: start,
-            stop: stop,
+            start,
+            stop,
         };
     }
 

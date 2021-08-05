@@ -1,8 +1,9 @@
 define([
     '../../../../../../../narrative/nbextensions/appCell2/widgets/appCellWidget',
     'common/runtime',
+    'testUtil',
     'base/js/namespace',
-], (AppCell, Runtime, Jupyter) => {
+], (AppCell, Runtime, TestUtil, Jupyter) => {
     'use strict';
     let mockAppCell;
 
@@ -94,7 +95,7 @@ define([
 
         afterEach(() => {
             mockAppCell = null;
-            window.kbaseRuntime = null;
+            TestUtil.clearRuntime();
             Jupyter.notebook = null;
             Jupyter.narrative = null;
         });

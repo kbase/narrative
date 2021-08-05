@@ -174,6 +174,10 @@ define([
     }
 
     describe('The job status table module', () => {
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         it('loads', () => {
             expect(JobStatusTable).not.toBe(null);
         });
@@ -190,6 +194,10 @@ define([
 
     describe('the job status table', () => {
         let container, jobStatusTableInstance;
+        afterEach(() => {
+            TestUtil.clearRuntime();
+        });
+
         describe('The job status table instance', () => {
             beforeEach(function () {
                 container = document.createElement('div');
@@ -404,7 +412,8 @@ define([
             describe('table buttons', () => {
                 afterEach(() => {
                     container.remove();
-                    window.kbaseRuntime = null;
+
+                    TestUtil.clearRuntime();
                 });
 
                 describe('results button', () => {
@@ -481,7 +490,7 @@ define([
             });
 
             afterEach(() => {
-                window.kbaseRuntime = null;
+                TestUtil.clearRuntime();
             });
             describe('job state:', () => {
                 describe(`valid jobState object`, () => {

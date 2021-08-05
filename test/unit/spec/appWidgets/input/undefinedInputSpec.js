@@ -1,4 +1,4 @@
-define(['widgets/appWidgets2/input/undefinedInput'], (UndefinedInput) => {
+define(['widgets/appWidgets2/input/undefinedInput', 'testUtil'], (UndefinedInput, TestUtil) => {
     'use strict';
 
     describe('Undefined Input Widget test', () => {
@@ -9,6 +9,7 @@ define(['widgets/appWidgets2/input/undefinedInput'], (UndefinedInput) => {
         });
         afterEach(() => {
             container.remove();
+            TestUtil.clearRuntime();
         });
         it('Should be loaded', () => {
             expect(UndefinedInput).not.toBeNull();

@@ -707,7 +707,9 @@ class JobTest(unittest.TestCase):
 
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def test_parent_children__ok(self):
-        child_jobs = [create_job_from_ee2(job_id, mode="attributes") for job_id in BATCH_CHILDREN]
+        child_jobs = [
+            create_job_from_ee2(job_id, mode="attributes") for job_id in BATCH_CHILDREN
+        ]
         parent_job = Job.from_state(
             create_state_from_ee2(BATCH_PARENT, mode="state"),
             children=child_jobs,
@@ -729,12 +731,13 @@ class JobTest(unittest.TestCase):
     def test_parent_children__fail(self):
         parent_state = create_state_from_ee2(BATCH_PARENT, mode="state")
         with self.assertRaisesRegex(
-            ValueError,
-            "Must supply children when setting children of batch job parent"
+            ValueError, "Must supply children when setting children of batch job parent"
         ):
             Job.from_state(parent_state)
 
-        child_jobs = [create_job_from_ee2(job_id, mode="attributes") for job_id in BATCH_CHILDREN][1:]
+        child_jobs = [
+            create_job_from_ee2(job_id, mode="attributes") for job_id in BATCH_CHILDREN
+        ][1:]
         with self.assertRaisesRegex(ValueError, "Child job id mismatch"):
             Job.from_state(
                 parent_state,
@@ -755,10 +758,7 @@ class JobTest(unittest.TestCase):
             job = create_job_from_ee2(job_id, mode="attributes")
             state = create_state_from_ee2(job_id, mode="state")
             out = job.get_viewer_params(state)
-            self.assertEqual(
-                get_widget_info(job_id),
-                out
-            )
+            self.assertEqual(get_widget_info(job_id), out)
 
     def test_get_viewer_params__batch_parent(self):
         """
@@ -767,10 +767,11 @@ class JobTest(unittest.TestCase):
         """
         state = create_state_from_ee2(BATCH_PARENT, mode="state")
         batch_children = [
-            create_job_from_ee2(job_id, mode="state")
-            for job_id in BATCH_CHILDREN
+            create_job_from_ee2(job_id, mode="state") for job_id in BATCH_CHILDREN
         ]
 
-        job = create_job_from_ee2(BATCH_PARENT, mode="attributes", children=batch_children)
+        job = create_job_from_ee2(
+            BATCH_PARENT, mode="attributes", children=batch_children
+        )
         out = job.get_viewer_params(state)
         self.assertIsNone(out)

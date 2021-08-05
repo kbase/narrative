@@ -241,8 +241,8 @@ class JobComm:
         Run a loop that will look up job info. After running, this spawns a Timer thread on a 10
         second loop to run itself again.
         """
-        job_statuses = self._lookup_all_job_states(None)
-        if len(job_statuses) == 0 or not self._running_lookup_loop:
+        all_job_states = self._lookup_all_job_states(None)
+        if len(all_job_states) == 0 or not self._running_lookup_loop:
             self.stop_job_status_loop()
         else:
             self._lookup_timer = threading.Timer(10, self._lookup_job_status_loop)
@@ -253,9 +253,9 @@ class JobComm:
         Fetches status of all jobs in the current workspace and sends them to the front end.
         req can be None, as it's not used.
         """
-        job_statuses = self._jm.lookup_all_job_states(ignore_refresh_flag=True)
-        self.send_comm_message("job_status_all", job_statuses)
-        return job_statuses
+        all_job_states = self._jm.lookup_all_job_states(ignore_refresh_flag=True)
+        self.send_comm_message("job_status_all", all_job_states)
+        return all_job_states
 
     def _lookup_job_info(self, req: JobRequest) -> dict:
         """
@@ -281,15 +281,15 @@ class JobComm:
         self._verify_job_id(req)
         try:
             job_ids = self._jm.update_batch_job(req.job_id)
-            job_infos = dict()
+            job_info_batch = dict()
             for job_id in job_ids[1:]:
-                job_infos[job_id] = self._jm.lookup_job_info(job_id)
+                job_info_batch[job_id] = self._jm.lookup_job_info(job_id)
         except NoJobException:
             self.send_error_message("job_does_not_exist", req)
             raise
 
-        self.send_comm_message("job_infos", job_infos)
-        return job_infos
+        self.send_comm_message("job_info_batch", job_info_batch)
+        return job_info_batch
 
     def lookup_job_state(self, job_id: str) -> dict:
         """
@@ -332,12 +332,12 @@ class JobComm:
         except NoJobException:
             self.send_error_message("job_does_not_exist", req)
             self.send_comm_message(
-                "job_status",
+                "job_status_batch",
                 {"state": {"job_id": req.job_id, "status": "does_not_exist"}},
             )
             raise
 
-        self.send_comm_message("job_statuses", output_states)
+        self.send_comm_message("job_status_batch", output_states)
         return output_states
 
     def _modify_job_update(self, req: JobRequest) -> None:

@@ -46,7 +46,11 @@ from .narrative_mock.mockclients import (
     assert_obj_method_called,
     MockClients,
 )
-from biokbase.narrative.exception_util import NarrativeException, NoJobException, NotBatchException
+from biokbase.narrative.exception_util import (
+    NarrativeException,
+    NoJobException,
+    NotBatchException,
+)
 
 
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
@@ -211,7 +215,9 @@ class JobManagerTest(unittest.TestCase):
         self.assertIsInstance(job, Job)
 
     def test_get_job_bad(self):
-        with self.assertRaisesRegex(NoJobException, "No job present with id not_a_job_id"):
+        with self.assertRaisesRegex(
+            NoJobException, "No job present with id not_a_job_id"
+        ):
             self.jm.get_job("not_a_job_id")
 
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
@@ -254,12 +260,7 @@ class JobManagerTest(unittest.TestCase):
             self.jm.cancel_jobs(["", "", None])
 
         job_states = self.jm.cancel_jobs([JOB_NOT_FOUND])
-        self.assertEqual(
-            {
-                JOB_NOT_FOUND: get_dne_job_state(JOB_NOT_FOUND)
-            },
-            job_states
-        )
+        self.assertEqual({JOB_NOT_FOUND: get_dne_job_state(JOB_NOT_FOUND)}, job_states)
 
     def test_cancel_jobs__job_already_finished(self):
         self.assertEqual(get_test_job(JOB_COMPLETED)["status"], "completed")
@@ -588,9 +589,15 @@ class JobManagerTest(unittest.TestCase):
         exp = {
             **{
                 job_id: self.job_states[job_id]
-                for job_id in [JOB_CREATED, JOB_RUNNING, JOB_TERMINATED, JOB_COMPLETED, BATCH_PARENT]
+                for job_id in [
+                    JOB_CREATED,
+                    JOB_RUNNING,
+                    JOB_TERMINATED,
+                    JOB_COMPLETED,
+                    BATCH_PARENT,
+                ]
             },
-            JOB_NOT_FOUND: get_dne_job_state(JOB_NOT_FOUND)
+            JOB_NOT_FOUND: get_dne_job_state(JOB_NOT_FOUND),
         }
 
         res = self.jm.get_job_states(job_ids)
@@ -601,7 +608,9 @@ class JobManagerTest(unittest.TestCase):
             self.jm.get_job_states([])
 
     def test_update_batch_job__dne(self):
-        with self.assertRaisesRegex(NoJobException, f"No job present with id {JOB_NOT_FOUND}"):
+        with self.assertRaisesRegex(
+            NoJobException, f"No job present with id {JOB_NOT_FOUND}"
+        ):
             self.jm.update_batch_job(JOB_NOT_FOUND)
 
     def test_update_batch_job__not_batch(self):
@@ -635,29 +644,32 @@ class JobManagerTest(unittest.TestCase):
                 raise Exception()
 
         with mock.patch.object(
-            MockClients,
-            "check_job",
-            side_effect=mock_check_job
+            MockClients, "check_job", side_effect=mock_check_job
         ) as m:
             job_ids = self.jm.update_batch_job(BATCH_PARENT)
 
         m.assert_has_calls(
             [
-                mock.call({"job_id": BATCH_PARENT, "exclude_fields": EXCLUDED_JOB_STATE_FIELDS}),
-                mock.call({"job_id": JOB_NOT_FOUND, "exclude_fields": EXCLUDED_JOB_STATE_FIELDS})
+                mock.call(
+                    {
+                        "job_id": BATCH_PARENT,
+                        "exclude_fields": EXCLUDED_JOB_STATE_FIELDS,
+                    }
+                ),
+                mock.call(
+                    {
+                        "job_id": JOB_NOT_FOUND,
+                        "exclude_fields": EXCLUDED_JOB_STATE_FIELDS,
+                    }
+                ),
             ]
         )
 
         self.assertEqual(BATCH_PARENT, job_ids[0])
-        self.assertCountEqual(
-            new_child_ids, job_ids[1:]
-        )
+        self.assertCountEqual(new_child_ids, job_ids[1:])
 
         batch_job = self.jm.get_job(BATCH_PARENT)
-        reg_child_jobs = [
-            self.jm.get_job(job_id)
-            for job_id in batch_job.child_jobs
-        ]
+        reg_child_jobs = [self.jm.get_job(job_id) for job_id in batch_job.child_jobs]
 
         self.assertCountEqual(batch_job.child_jobs, new_child_ids)
         self.assertCountEqual(batch_job.children, reg_child_jobs)

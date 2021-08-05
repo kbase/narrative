@@ -5,7 +5,11 @@ from IPython.display import HTML
 from jinja2 import Template
 from datetime import datetime, timezone, timedelta
 from biokbase.narrative.app_util import system_variable
-from biokbase.narrative.exception_util import transform_job_exception, NoJobException, NotBatchException
+from biokbase.narrative.exception_util import (
+    transform_job_exception,
+    NoJobException,
+    NotBatchException,
+)
 import copy
 from typing import List
 
@@ -407,7 +411,9 @@ class JobManager(object):
         job_states = self._construct_job_state_set(checked_jobs["job_id_list"])
 
         for job_id in checked_jobs["error"]:
-            job_states[job_id] = {"state": {"job_id": job_id, "status": "does_not_exist"}}
+            job_states[job_id] = {
+                "state": {"job_id": job_id, "status": "does_not_exist"}
+            }
 
         return job_states
 
@@ -526,12 +532,12 @@ class JobManager(object):
                 if child_id in self._running_jobs:
                     child_job = self._running_jobs[child_id]["job"]
                 else:
-                    child_job = Job.from_attributes(
-                        job_id=child_id
-                    )
+                    child_job = Job.from_attributes(job_id=child_id)
                     self.register_new_job(
                         job=child_job,
-                        refresh=int(child_job.state().get("status") not in TERMINAL_STATUSES)
+                        refresh=int(
+                            child_job.state().get("status") not in TERMINAL_STATUSES
+                        ),
                     )
                 child_jobs.append(child_job)
 

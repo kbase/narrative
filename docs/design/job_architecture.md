@@ -217,7 +217,7 @@ These are organized by the `request_type` field, followed by the expected respon
 * `job_id` - string OR `job_id_list` - array of strings
 * `parent_job_id` - optional string
 
-`job_status_batch` request job statuses, responds with `job_statuses`
+`job_status_batch` request job statuses, responds with `job_status_batch`
 * `job_id` - string - job_id of batch container job
 
 `start_update_loop` - request starting the global job status update thread, no specific response, but generally with `job_status_all`
@@ -236,7 +236,7 @@ These are organized by the `request_type` field, followed by the expected respon
 * `job_id` - string OR `job_id_list` - array of strings
 * `parent_job_id` - optional string
 
-`job_info_batch` - request general information about jobs, responds with `job_infos`
+`job_info_batch` - request general information about jobs, responds with `job_info_batch`
 * `job_id` - string - job_id of batch container job
 
 `job_logs` - request job log information, responds with `job_logs` for each job
@@ -246,7 +246,7 @@ These are organized by the `request_type` field, followed by the expected respon
 * `num_lines` - int > 0
 * `latest` - boolean, `true` if requesting just the latest logs
 
-`cancel_job` - cancel a job or list of jobs; responds with `job_statuses`
+`cancel_job` - cancel a job or list of jobs; responds with `job_status_batch`
 * `job_id` - string OR `job_id_list` - array of strings
 * `parent_job_id` - optional string
 
@@ -309,22 +309,6 @@ A general job comm error, capturing most errors that get thrown by the kernel
 
 **bus** one of `job-cancel-error`, `job-log-deleted`, `job-error`
 
-### `job_status_all`
-The set of all job states for all running jobs, or at least the set that should be updated (those that are complete and not requested by the front end are not included - if a job is sitting in an error or finished state, it doesn't need ot have its app cell updated)
-
-**content** - all of the below are included, but the top-level keys are all job id strings, e.g.:
-```json
-{
-  "job_id_1": { ...contents... },
-  "job_id_2": { ...contents... }
-}
-```
-  * `state` - the job state (see the **Data Structures** section below for details
-  * `widget_info` - the parameters to send to output widgets, only available for a completed job
-  * `user` - string, username of user who submitted the job
-
-**bus** - a series of `job-status` or `job-deleted` messages
-
 ### `job_info`
 Includes information about the running job
 
@@ -337,7 +321,7 @@ Includes information about the running job
 
 **bus** - `job-info`
 
-### `job_infos`
+### `job_info_batch`
 Includes information about the jobs
 
 **content**
@@ -364,7 +348,7 @@ The current job state. This one is probably most common.
 
 **bus** - `job-status`
 
-## `job_statuses`
+## `job_status_batch`
 The current job states for some jobs. The format is the same as for `job_status_all`.
 
 **content**
@@ -376,7 +360,23 @@ The current job states for some jobs. The format is the same as for `job_status_
 ```
 Where the inner objects' format is the BE Output State described in the Data Structures section.
 
-**bus** - TODO
+**bus** - a series of `job-status` messages
+
+### `job_status_all`
+The set of all job states for all running jobs, or at least the set that should be updated (those that are complete and not requested by the front end are not included - if a job is sitting in an error or finished state, it doesn't need ot have its app cell updated)
+
+**content** - all of the below are included, but the top-level keys are all job id strings, e.g.:
+```json
+{
+  "job_id_1": { ...contents... },
+  "job_id_2": { ...contents... }
+}
+```
+  * `state` - the job state (see the **Data Structures** section below for details
+  * `widget_info` - the parameters to send to output widgets, only available for a completed job
+  * `user` - string, username of user who submitted the job
+
+**bus** - a series of `job-status` messages
 
 ### `job_logs`
 Includes log statement information for a given job.

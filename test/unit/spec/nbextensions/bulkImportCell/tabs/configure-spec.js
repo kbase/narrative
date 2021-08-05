@@ -184,7 +184,11 @@ define([
                     return new Promise((resolve) => {
                         bus.on('toggled-active-filetype', (message) => {
                             expect(message.fileType).toBe('dataType2');
-                            expect(btn2.classList.contains('kb-bulk-import-configure__filetype_panel__filetype_button--selected')).toBeTrue();
+                            expect(
+                                btn2.classList.contains(
+                                    'kb-bulk-import-configure__filetype_panel__filetype_button--selected'
+                                )
+                            ).toBeTrue();
                             resolve();
                         });
 

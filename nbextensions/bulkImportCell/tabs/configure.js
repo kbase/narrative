@@ -180,7 +180,7 @@ define([
                 .then(() => startInputWidgets())
                 .then(() => {
                     cellBus.emit('toggled-active-filetype', {
-                        fileType: selectedFileType
+                        fileType: selectedFileType,
                     });
                 });
         }

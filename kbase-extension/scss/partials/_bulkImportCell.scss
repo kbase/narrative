@@ -74,7 +74,7 @@ $tab-widget-padding: 4px;
       margin: -($tab-widget-margin + $tab-widget-padding);
     }
 
-    // kb-bulk-import__filetype_panel
+    // kb-bulk-import-configure__filetype_panel
     &__filetype_panel {
       background-color: use-color('base-lightest');
       width: 24rem;
@@ -92,7 +92,7 @@ $tab-widget-padding: 4px;
       }
 
       &__filetype {
-        // .kb-bulk-import__filetype_panel__filetype_button
+        // .kb-bulk-import-configure__filetype_panel__filetype_button
         &_button {
           @extend %file_type_button;
 
@@ -105,7 +105,7 @@ $tab-widget-padding: 4px;
             cursor: pointer;
           }
 
-          // .kb-bulk-import__filetype_panel__filetype_button--selected
+          // .kb-bulk-import-configure__filetype_panel__filetype_button--selected
           &--selected {
             @extend %file_type_button;
 
@@ -118,24 +118,24 @@ $tab-widget-padding: 4px;
           }
         }
 
-        // .kb-bulk-import__filetype_panel__filetype_icon
+        // .kb-bulk-import-configure__filetype_panel__filetype_icon
         &_icon {
           padding: 2px 8px 0;
           width: 3rem;
           text-align: center;
 
-          // .kb-bulk-import__filetype_panel__filetype_icon--complete
+          // .kb-bulk-import-configure__filetype_panel__filetype_icon--complete
           &--complete {
             color: use_color('green');
           }
 
-          // .kb-bulk-import__filetype_panel__filetype_icon--incomplete
+          // .kb-bulk-import-configure__filetype_panel__filetype_icon--incomplete
           &--incomplete {
             color: use_color('red');
           }
         }
 
-        // .kb-bulk-import__filetype_panel__filetype_label
+        // .kb-bulk-import-configure__filetype_panel__filetype_label
         &_label {
           flex: 1;
         }
@@ -173,16 +173,57 @@ $tab-widget-padding: 4px;
 }
 
 .kb-field-cell {
+  // kb-field-cell__param_container
   &__param_container {
     margin: 3px;
   }
 
+  // kb-field-cell__input_control
   &__input_control select {
     margin-left: 0;
   }
 
+  // kb-field-cell__cell_label
   &__cell_label {
     margin-bottom: 0;
     padding-top: 8px;
+  }
+
+  // kb-field-cell__error_message
+  &__error_message {
+    border-color: use_color('error');
+    color: use_color('error');
+    .form-control {
+      border-color: use_color('error');
+      color: use_color('error');
+    }
+  }
+
+  // kb-field-cell__message_panel
+  &__message_panel {
+    border: 1px solid $component-border;
+    padding: 0.5em;
+
+    // kb-field-cell__message_panel__error
+    &__error {
+      border-color: use-color('error-light');
+      background-color: use-color('error-lightest');
+      color: use-color('ink');
+
+      &__title {
+        color: use-color('error');
+      }
+    }
+
+    // kb-field-cell__message_panel__warning
+    &__warning {
+      border-color: use-color('warning-light');
+      background-color: use-color('warning-lightest');
+      color: use-color('ink');
+
+      &__title {
+        color: use-color('warning-darker');
+      }
+    }
   }
 }

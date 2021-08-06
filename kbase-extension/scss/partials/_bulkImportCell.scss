@@ -64,6 +64,7 @@ $tab-widget-padding: 4px;
   &__tab_pane_widget {
     margin: $tab-widget-margin;
     padding: $tab-widget-padding;
+    width: 100%;
   }
 
   // kb-bulk-import-configure

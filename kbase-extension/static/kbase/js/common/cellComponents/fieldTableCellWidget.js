@@ -20,13 +20,13 @@ define([
                 prefix: 'Error',
                 messageClass: `${messageBaseClass}__error`,
                 containerClass: `${cssBaseClass}__error_message`,
-                icon: 'fa fa-exclamation-triangle'
+                icon: 'fa fa-exclamation-triangle',
             },
             warning: {
                 prefix: 'Warning',
                 messageClass: `${messageBaseClass}__warning`,
-                icon: 'fa fa-exclamation-circle'
-            }
+                icon: 'fa fa-exclamation-circle',
+            },
         };
 
     function factory(config) {
@@ -74,14 +74,17 @@ define([
                         id: ids.inputControl,
                         dataElement: 'input-control',
                     }),
-                    div({
-                        class: `${messageBaseClass} hidden`,
-                        dataElement: 'message-panel'
-                    }, [
-                        div({
-                            class: `${messageBaseClass}__body`
-                        })
-                    ])
+                    div(
+                        {
+                            class: `${messageBaseClass} hidden`,
+                            dataElement: 'message-panel',
+                        },
+                        [
+                            div({
+                                class: `${messageBaseClass}__body`,
+                            }),
+                        ]
+                    ),
                 ]
             );
 
@@ -110,17 +113,23 @@ define([
         }
 
         function showMessage(messageInfo, text) {
-            const message = span({
-                class: `${messageInfo.messageClass}__title`
-            }, [
-                iTag({
-                    class: messageInfo.icon
-                }),
-                strong(` ${messageInfo.prefix}: `)
-            ]) + text;
+            const message =
+                span(
+                    {
+                        class: `${messageInfo.messageClass}__title`,
+                    },
+                    [
+                        iTag({
+                            class: messageInfo.icon,
+                        }),
+                        strong(` ${messageInfo.prefix}: `),
+                    ]
+                ) + text;
 
             if (messageInfo.containerClass) {
-                parent.querySelector(`.${cssBaseClass}__rowCell`).classList.add(messageInfo.containerClass);
+                parent
+                    .querySelector(`.${cssBaseClass}__rowCell`)
+                    .classList.add(messageInfo.containerClass);
             }
             parent.querySelector(`.${messageBaseClass}__body`).innerHTML = message;
             const msgPanel = parent.querySelector(`.${messageBaseClass}`);
@@ -129,7 +138,9 @@ define([
         }
 
         function clearMessage() {
-            parent.querySelector(`.${cssBaseClass}__rowCell`).classList.remove(`${cssBaseClass}__error_message`);
+            parent
+                .querySelector(`.${cssBaseClass}__rowCell`)
+                .classList.remove(`${cssBaseClass}__error_message`);
             const msgPanel = parent.querySelector(`.${messageBaseClass}`);
             msgPanel.className = `${messageBaseClass} hidden`;
         }
@@ -152,7 +163,7 @@ define([
         function validateField(message) {
             // always clear the existing message to start with
             clearMessage();
-            switch(message.diagnosis) {
+            switch (message.diagnosis) {
                 case 'required-missing':
                 case 'invalid':
                     showMessage(MESSAGE.error, message.errorMessage);

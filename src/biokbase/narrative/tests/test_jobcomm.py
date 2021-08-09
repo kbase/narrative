@@ -760,9 +760,6 @@ class JobCommTestCase(unittest.TestCase):
         req = make_comm_msg("job_info", job_id, False)
         self.jc._handle_comm_message(req)
         msg = self.jc._comm.last_message
-        import json
-
-        print(json.dumps(msg, indent=2, sort_keys=True))
         self.assertEqual(msg["data"]["msg_type"], "job_info")
         self.assertEqual(
             msg["data"]["content"],

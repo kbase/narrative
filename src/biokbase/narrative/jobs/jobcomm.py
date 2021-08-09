@@ -271,7 +271,7 @@ class JobComm:
         self._verify_job_id(req)
         try:
             job_info = self._jm.lookup_job_info(req.job_id)
-            self.send_comm_message("job_info", job_info)
+            self.send_comm_message("job_info", {req.job_id: job_info})
             return job_info
         except ValueError:
             self.send_error_message("job_does_not_exist", req)
@@ -288,7 +288,7 @@ class JobComm:
             self.send_error_message("job_does_not_exist", req)
             raise
 
-        self.send_comm_message("job_info_batch", job_info_batch)
+        self.send_comm_message("job_info", job_info_batch)
         return job_info_batch
 
     def lookup_job_state(self, job_id: str) -> dict:
@@ -312,14 +312,18 @@ class JobComm:
         self._verify_job_id(req)
         try:
             job_state = self._jm.get_job_state(req.job_id)
-            self.send_comm_message("job_status", job_state)
+            self.send_comm_message("job_status", {req.job_id: job_state})
             return job_state
         except ValueError:
             # kblogging.log_event(self._log, "lookup_job_state_error", {"err": str(e)})
             self.send_error_message("job_does_not_exist", req)
             self.send_comm_message(
                 "job_status",
-                {"state": {"job_id": req.job_id, "status": "does_not_exist"}},
+                {
+                    req.job_id: {
+                        "state": {"job_id": req.job_id, "status": "does_not_exist"}
+                    }
+                },
             )
             raise
 
@@ -332,12 +336,16 @@ class JobComm:
         except NoJobException:
             self.send_error_message("job_does_not_exist", req)
             self.send_comm_message(
-                "job_status_batch",
-                {"state": {"job_id": req.job_id, "status": "does_not_exist"}},
+                "job_status",
+                {
+                    req.job_id: {
+                        "state": {"job_id": req.job_id, "status": "does_not_exist"}
+                    }
+                },
             )
             raise
 
-        self.send_comm_message("job_status_batch", output_states)
+        self.send_comm_message("job_status", output_states)
         return output_states
 
     def _modify_job_update(self, req: JobRequest) -> None:
@@ -369,7 +377,7 @@ class JobComm:
         self._verify_job_id_list(req)
         try:
             cancel_results = self._jm.cancel_jobs(req.job_id_list)
-            self.send_comm_message("job_statuses", cancel_results)
+            self.send_comm_message("job_status", cancel_results)
         except NarrativeException as e:
             self.send_error_message(
                 "job_comm_error",

@@ -170,7 +170,7 @@ class JobCommTestCase(unittest.TestCase):
         req = make_comm_msg("job_state", job_id, True)
         state = self.jc._lookup_job_state(req)
         msg = self.jc._comm.last_message
-        self.assertEqual(state, msg["data"]["content"])
+        self.assertEqual({JOB_COMPLETED: state}, msg["data"]["content"])
         self.assertEqual("job_status", msg["data"]["msg_type"])
         validate_job_state(state)
 
@@ -195,7 +195,7 @@ class JobCommTestCase(unittest.TestCase):
         self.assertIn(f"No job present with id {job_id}", str(e.exception))
         msg = self.jc._comm.last_message
         self.assertEqual(
-            {"state": {"job_id": job_id, "status": "does_not_exist"}},
+            {job_id: {"state": {"job_id": job_id, "status": "does_not_exist"}}},
             msg["data"]["content"],
         )
         self.assertEqual("job_status", msg["data"]["msg_type"])
@@ -213,7 +213,7 @@ class JobCommTestCase(unittest.TestCase):
         msg = self.jc._comm.last_message
         self.assertEqual(
             {
-                "msg_type": "job_status_batch",
+                "msg_type": "job_status",
                 "content": {
                     job_id: self.job_states[job_id]
                     for job_id in [BATCH_PARENT] + BATCH_CHILDREN
@@ -230,8 +230,8 @@ class JobCommTestCase(unittest.TestCase):
         msg = self.jc._comm.last_message
         self.assertEqual(
             {
-                "msg_type": "job_status_batch",
-                "content": get_dne_job_state(JOB_NOT_FOUND),
+                "msg_type": "job_status",
+                "content": {JOB_NOT_FOUND: get_dne_job_state(JOB_NOT_FOUND)},
             },
             msg["data"],
         )
@@ -287,13 +287,13 @@ class JobCommTestCase(unittest.TestCase):
         "biokbase.narrative.jobs.specmanager.SpecManager.get_spec", get_app_data
     )
     def test_lookup_job_with_batch_id_info_ok(self):
-        job_id = "60e71159fce9347f2adeaac6"
+        job_id = BATCH_RETRY_COMPLETED
         req = make_comm_msg("job_info", job_id, True)
         job_info = self.jc._lookup_job_info(req)
         expected = {
             "app_id": "kb_uploadmethods/import_fastq_noninterleaved_as_reads_from_staging",
             "app_name": APP_NAME,
-            "batch_id": "60e7112887b7e512a899c8f1",
+            "batch_id": BATCH_PARENT,
             "job_id": job_id,
             "job_params": [
                 {
@@ -348,7 +348,7 @@ class JobCommTestCase(unittest.TestCase):
         msg = self.jc._comm.last_message
         self.assertEqual(
             {
-                "msg_type": "job_info_batch",
+                "msg_type": "job_info",
                 "content": {
                     job_id: get_test_job_info(job_id) for job_id in BATCH_CHILDREN
                 },
@@ -411,7 +411,7 @@ class JobCommTestCase(unittest.TestCase):
         msg = self.jc._comm.last_message
         self.assertEqual(
             {
-                "msg_type": "job_statuses",
+                "msg_type": "job_status",
                 "content": {
                     JOB_RUNNING: self.job_states[JOB_RUNNING],
                 },
@@ -429,7 +429,7 @@ class JobCommTestCase(unittest.TestCase):
         msg = self.jc._comm.last_message
         self.assertEqual(
             {
-                "msg_type": "job_statuses",
+                "msg_type": "job_status",
                 "content": {
                     JOB_RUNNING: self.job_states[JOB_RUNNING],
                 },
@@ -447,7 +447,7 @@ class JobCommTestCase(unittest.TestCase):
         msg = self.jc._comm.last_message
         self.assertEqual(
             {
-                "msg_type": "job_statuses",
+                "msg_type": "job_status",
                 "content": {
                     JOB_CREATED: self.job_states[JOB_CREATED],
                     JOB_RUNNING: self.job_states[JOB_RUNNING],
@@ -497,7 +497,7 @@ class JobCommTestCase(unittest.TestCase):
         msg = self.jc._comm.last_message
         self.assertEqual(
             {
-                "msg_type": "job_statuses",
+                "msg_type": "job_status",
                 "content": {
                     JOB_RUNNING: self.job_states[JOB_RUNNING],
                     JOB_CREATED: self.job_states[JOB_CREATED],
@@ -516,7 +516,7 @@ class JobCommTestCase(unittest.TestCase):
         msg = self.jc._comm.last_message
         self.assertEqual(
             {
-                "msg_type": "job_statuses",
+                "msg_type": "job_status",
                 "content": {
                     JOB_NOT_FOUND: get_dne_job_state(JOB_NOT_FOUND),
                     FAKE_JOB: get_dne_job_state(FAKE_JOB),
@@ -750,14 +750,38 @@ class JobCommTestCase(unittest.TestCase):
         self.jc._handle_comm_message(req)
         msg = self.jc._comm.last_message
         self.assertEqual(msg["data"]["msg_type"], "job_status")
-        validate_job_state(msg["data"]["content"])
+        validate_job_state(msg["data"]["content"][JOB_COMPLETED])
 
+    @mock.patch(
+        "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get", get_mock_client
+    )
     def test_handle_job_info_msg(self):
         job_id = JOB_COMPLETED
         req = make_comm_msg("job_info", job_id, False)
         self.jc._handle_comm_message(req)
         msg = self.jc._comm.last_message
+        import json
+
+        print(json.dumps(msg, indent=2, sort_keys=True))
         self.assertEqual(msg["data"]["msg_type"], "job_info")
+        self.assertEqual(
+            msg["data"]["content"],
+            {
+                JOB_COMPLETED: {
+                    "app_id": "NarrativeTest/test_editor",
+                    "app_name": "Test Editor",
+                    "batch_id": None,
+                    "job_id": JOB_COMPLETED,
+                    "job_params": [
+                        {
+                            "k_list": [],
+                            "k_max": None,
+                            "output_contigset_name": "MEGAHIT.contigs",
+                        }
+                    ],
+                }
+            },
+        )
 
     @mock.patch(
         "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get", get_mock_client
@@ -767,7 +791,7 @@ class JobCommTestCase(unittest.TestCase):
         req = make_comm_msg("cancel_job", job_id, False)
         self.jc._handle_comm_message(req)
         msg = self.jc._comm.last_message
-        self.assertEqual(msg["data"]["msg_type"], "job_statuses")
+        self.assertEqual(msg["data"]["msg_type"], "job_status")
 
     @mock.patch(
         "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get", get_mock_client
@@ -836,7 +860,7 @@ class JobCommTestCase(unittest.TestCase):
         req = make_comm_msg("cancel_job", job_id_list, False)
         self.jc._handle_comm_message(req)
         msg = self.jc._comm.last_message
-        self.assertEqual(msg["data"]["msg_type"], "job_statuses")
+        self.assertEqual(msg["data"]["msg_type"], "job_status")
 
 
 class JobRequestTestCase(unittest.TestCase):

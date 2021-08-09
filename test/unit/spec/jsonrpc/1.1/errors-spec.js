@@ -1,301 +1,230 @@
-define(['jsonrpc/1.1/errors'], (errors) => {
+define(['jsonrpc/1.1/errors', './helpers'], (errors, helpers) => {
     'use strict';
 
     const {
-        JSONRPCError,
-        JSONRPCRequestError,
-        JSONRPCTimeoutError,
-        JSONRPCResponseError,
-        JSONRPCMethodError,
+        ClientError,
+        ClientRequestError,
+        ClientParseError,
+        ClientAbortError,
+        ClientResponseError,
     } = errors;
 
-    describe('The JSONR-RPC 1.1 errors', () => {
-        // JSONRPCError
+    const { expectErrorBehavior } = helpers;
 
-        it('should be constructable without crashing', () => {
-            // this should crash, fix it!
-            const error = new JSONRPCError('Test Message', {
+    describe('In the JSONR-RPC 1.1 errors module', () => {
+        it('a ClientError instance should be constructable, contain the provided properties, and create valid JSON', () => {
+            expectErrorBehavior(ClientError, 'ClientError', {
                 url: 'https://foo.boo.com',
                 method: 'method',
                 params: { param1: 'value1' },
                 originalMessage: 'original message',
             });
-            expect(error).toBeDefined();
         });
 
-        it('a JSONRPCError instance should be able to produce a JSON-compatible simple object', () => {
-            // this should crash, fix it!
-            const error = new JSONRPCError('Test Message', {
+        // ClientRequestError
+
+        it('a ClientRequestError instance should be constructable, contain the provided properties, and create valid JSON', () => {
+            expectErrorBehavior(ClientRequestError, 'ClientRequestError', {
                 url: 'https://foo.boo.com',
                 method: 'method',
                 params: { param1: 'value1' },
                 originalMessage: 'original message',
             });
-            const json = error.toJSON();
-            expect(json).toBeDefined();
-            for (const key of ['url', 'method', 'originalMessage']) {
-                expect(json[key]).toEqual(error[key]);
-            }
         });
 
-        // JSONRPCRequestError
+        // Parse error
 
-        it('should be able to construct a general JSONRPCRequestError', () => {
-            // this should crash, fix it!
-            const error = new JSONRPCRequestError('Test Message', {
+        it('should be able to construct a ClientParseError', () => {
+            expectErrorBehavior(ClientParseError, 'ClientParseError', {
                 url: 'https://foo.boo.com',
                 method: 'method',
                 params: { param1: 'value1' },
                 originalMessage: 'original message',
+                responseCode: 123,
+                responseText: 'foo',
             });
-            expect(error).toBeDefined();
-            expect(error.name).toEqual('JSONRPCRequestError');
         });
 
-        // JSONRPCTimeoutError
+        // ClientTimeoutError
 
-        it('should be able to construct a JSONRPCTimeoutError', () => {
-            // this should crash, fix it!
-            const error = new JSONRPCTimeoutError('Test Message', {
+        it('should be able to construct a ClientAbortError', () => {
+            expectErrorBehavior(ClientAbortError, 'ClientAbortError', {
                 url: 'https://foo.boo.com',
                 method: 'method',
                 params: { param1: 'value1' },
                 originalMessage: 'original message',
                 timeout: 1,
                 elapsed: 2,
+                status: 'none',
             });
-            expect(error).toBeDefined();
-            expect(error.name).toEqual('JSONRPCRequestError');
         });
 
-        it('a JSONRPCTimeoutError instance should be able to produce a JSON-compatible simple object', () => {
-            // this should crash, fix it!
-            const error = new JSONRPCTimeoutError('Test Message', {
+        // ClientResponseError
+
+        it('should be able to construct a ClientResponseError', () => {
+            const error = new ClientResponseError('Test Message', {
                 url: 'https://foo.boo.com',
                 method: 'method',
                 params: { param1: 'value1' },
                 originalMessage: 'original message',
-                timeout: 1,
-                elapsed: 2,
+                responseCode: 200,
+            });
+            expect(error).toBeDefined();
+            expect(error.name).toEqual('ClientResponseError');
+        });
+
+        it('a ClientResponseError instance should be able to produce a JSON-compatible simple object', () => {
+            const error = new ClientResponseError('Test Message', {
+                url: 'https://foo.boo.com',
+                method: 'method',
+                params: { param1: 'value1' },
+                originalMessage: 'original message',
+                responseCode: 200,
             });
             const json = error.toJSON();
             expect(json).toBeDefined();
-            for (const key of ['url', 'method', 'originalMessage', 'timeout', 'elapsed']) {
+            for (const key of ['url', 'method', 'originalMessage', 'responseCode']) {
                 expect(json[key]).toEqual(error[key]);
             }
         });
 
-        // JSONRPCResponseError
+        // ClientParseError
 
-        it('should be able to construct a JSONRPCResponseError', () => {
-            // this should crash, fix it!
-            const error = new JSONRPCResponseError('Test Message', {
+        it('should be able to construct a ClientParseError', () => {
+            const props = {
                 url: 'https://foo.boo.com',
                 method: 'method',
                 params: { param1: 'value1' },
                 originalMessage: 'original message',
-                statusCode: 200,
-            });
+                responseCode: 200,
+                responseText: 'some bad response',
+            };
+            const error = new ClientParseError('Test Message', props);
             expect(error).toBeDefined();
-            expect(error.name).toEqual('JSONRPCResponseError');
-        });
-
-        it('a JSONRPCResponseError instance should be able to produce a JSON-compatible simple object', () => {
-            // this should crash, fix it!
-            const error = new JSONRPCResponseError('Test Message', {
-                url: 'https://foo.boo.com',
-                method: 'method',
-                params: { param1: 'value1' },
-                originalMessage: 'original message',
-                statusCode: 200,
-            });
-            const json = error.toJSON();
-            expect(json).toBeDefined();
-            for (const key of ['url', 'method', 'originalMessage', 'statusCode']) {
-                expect(json[key]).toEqual(error[key]);
+            expect(error.name).toEqual('ClientParseError');
+            for (const [key, value] of Object.entries(props)) {
+                expect(error[key]).toEqual(value);
             }
         });
 
-        // JSONRPCMethodError
-
-        it('should be able to construct a JSONRPCMethodError', () => {
-            // this should crash, fix it!
-            const error = new JSONRPCMethodError('Test Message', {
-                url: 'https://foo.boo.com',
-                method: 'method',
-                params: { param1: 'value1' },
-                originalMessage: 'original message',
-                statusCode: 200,
-                error: {
-                    name: 'JSONRPCError',
-                    message: 'service error',
-                    code: 123,
-                    error: 'an error trace\nwith multiple\nlines',
-                },
-            });
-            expect(error).toBeDefined();
-            expect(error.name).toEqual('JSONRPCMethodError');
-            expect(error.message).toEqual('Test Message');
-            expect(error.error.error).toBeInstanceOf(Array);
-            expect(error.error.error.length).toEqual(3);
-        });
-
-        it('a JSONRPCMethodError instance should be able to produce a JSON-compatible simple object', () => {
-            // this should crash, fix it!
-            const error = new JSONRPCMethodError('Test Message', {
-                url: 'https://foo.boo.com',
-                method: 'method',
-                params: { param1: 'value1' },
-                originalMessage: 'original message',
-                statusCode: 200,
-                error: {
-                    name: 'JSONRPCError',
-                    message: 'service error',
-                    code: 123,
-                    error: 'an error string',
-                },
-            });
-            const json = error.toJSON();
-            expect(json).toBeDefined();
-            for (const key of ['url', 'method', 'originalMessage', 'statusCode', 'error']) {
-                expect(json[key]).toEqual(error[key]);
-            }
-            for (const key of ['name', 'message', 'code', 'error']) {
-                expect(json.error[key]).toEqual(error.error[key]);
-            }
-        });
+        // ClientMethodError
 
         // Errors
 
         // Construction errors
-        it('should throw if constructed without a url', () => {
-            // this should crash, fix it!
+
+        // ClientError
+
+        it('should throw if constructed without a "url"', () => {
             function noURL() {
-                new JSONRPCError('Test Message', {
+                new ClientError('Test Message', {
                     method: 'method',
-                    params: { param1: 'value1' },
-                    originalMessage: 'original message',
                 });
             }
-            expect(noURL).toThrow();
+            expect(noURL).toThrowError(
+                TypeError,
+                'the "url" property is required in the second constructor argument'
+            );
         });
 
-        it('should throw if constructed without a method', () => {
-            // this should crash, fix it!
-            function noURL() {
-                new JSONRPCError('Test Message', {
+        it('should throw if constructed without a "method"', () => {
+            function noMethod() {
+                new ClientError('Test Message', {
                     url: 'https://foo.boo.com',
-                    params: { param1: 'value1' },
-                    originalMessage: 'original message',
                 });
             }
-            expect(noURL).toThrow();
+            expect(noMethod).toThrowError(
+                TypeError,
+                'the "method" property is required in the second constructor argument'
+            );
         });
+
+        // ClientTimeoutError
 
         it('should throw if constructed without a "timeout" parameter', () => {
-            // this should crash, fix it!
-            function noURL() {
-                new JSONRPCTimeoutError('Test Message', {
+            function noTimeout() {
+                new ClientAbortError('Test Message', {
                     url: 'https://foo.boo.com',
                     method: 'method',
                     params: { param1: 'value1' },
                     originalMessage: 'original message',
                     elapsed: 2,
+                    status: 'none',
                 });
             }
-            expect(noURL).toThrow();
+            expect(noTimeout).toThrowError(
+                TypeError,
+                'the "timeout" property is required in the second constructor argument'
+            );
         });
 
         it('should throw if constructed without an "elapsed" parameter', () => {
-            // this should crash, fix it!
             function noElapsed() {
-                new JSONRPCTimeoutError('Test Message', {
+                new ClientAbortError('Test Message', {
                     url: 'https://foo.boo.com',
                     method: 'method',
                     params: { param1: 'value1' },
                     originalMessage: 'original message',
                     timeout: 1,
+                    status: 'none',
                 });
             }
-            expect(noElapsed).toThrow();
+            expect(noElapsed).toThrowError(
+                TypeError,
+                'the "elapsed" property is required in the second constructor argument'
+            );
         });
 
-        it('should throw if constructed without an "statusCode" parameter', () => {
-            // this should crash, fix it!
-            function noStatusCode() {
-                new JSONRPCResponseError('Test Message', {
+        it('should throw if constructed without a "status" parameter', () => {
+            function noElapsed() {
+                new ClientAbortError('Test Message', {
+                    url: 'https://foo.boo.com',
+                    method: 'method',
+                    params: { param1: 'value1' },
+                    originalMessage: 'original message',
+                    timeout: 1,
+                    elapsed: 2,
+                });
+            }
+            expect(noElapsed).toThrowError(
+                TypeError,
+                'the "status" property is required in the second constructor argument'
+            );
+        });
+
+        // ClientResponseError
+
+        it('should throw if constructed without an "responseCode" parameter', () => {
+            function noResponseCode() {
+                new ClientResponseError('Test Message', {
                     url: 'https://foo.boo.com',
                     method: 'method',
                     params: { param1: 'value1' },
                     originalMessage: 'original message',
                 });
             }
-            expect(noStatusCode).toThrow();
+            expect(noResponseCode).toThrowError(
+                TypeError,
+                'the "responseCode" property is required in the second constructor argument'
+            );
         });
 
-        it('should throw if constructed without an "error" parameter', () => {
-            // this should crash, fix it!
-            function noError() {
-                new JSONRPCMethodError('Test Message', {
+        // ClientParseError
+
+        it('should throw if constructed without an "responseText" parameter', () => {
+            function noResponseCode() {
+                new ClientParseError('Test Message', {
                     url: 'https://foo.boo.com',
                     method: 'method',
                     params: { param1: 'value1' },
                     originalMessage: 'original message',
-                    statusCode: 200,
+                    responseCode: 400,
                 });
             }
-            expect(noError).toThrow();
-        });
-
-        it('should throw if constructed with a bad "error" parameter', () => {
-            // this should crash, fix it!
-            function noError() {
-                new JSONRPCMethodError('Test Message', {
-                    url: 'https://foo.boo.com',
-                    method: 'method',
-                    params: { param1: 'value1' },
-                    originalMessage: 'original message',
-                    statusCode: 200,
-                    error: false,
-                });
-            }
-            expect(noError).toThrow();
-        });
-
-        it('should throw if constructed with properties missing from the "error" parameter', () => {
-            // this should crash, fix it!
-            const params = {
-                url: 'https://foo.boo.com',
-                method: 'method',
-                params: { param1: 'value1' },
-                originalMessage: 'original message',
-                statusCode: 200,
-            };
-            const error = {
-                name: 'JSONRPCError',
-                message: 'service error',
-                code: 123,
-                error: 'an error string',
-            };
-            const requiredKeys = ['name', 'code', 'message'];
-            const optionalKeys = ['error'];
-
-            function removeErrorKey(keyToRemove) {
-                return () => {
-                    const newParams = Object.assign({}, params);
-                    const newError = Object.assign({}, error);
-                    delete newError[keyToRemove];
-                    newParams.error = newError;
-                    new JSONRPCMethodError('Test Message', newParams);
-                };
-            }
-            for (const key of requiredKeys) {
-                expect(removeErrorKey(key)).toThrow();
-            }
-
-            for (const key of optionalKeys) {
-                expect(removeErrorKey(key)).not.toThrow();
-            }
+            expect(noResponseCode).toThrowError(
+                TypeError,
+                'the "responseText" property is required in the second constructor argument'
+            );
         });
     });
 });

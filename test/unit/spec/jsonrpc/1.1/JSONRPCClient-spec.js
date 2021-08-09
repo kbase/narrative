@@ -1,12 +1,13 @@
-define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors', './helpers'], (
-    mswUtils,
-    JSONRPCClient,
-    errors,
-    helpers
-) => {
+define([
+    '../../util/mswUtils',
+    'jsonrpc/1.1/JSONRPCClient',
+    'jsonrpc/1.1/errors',
+    'jsonrpc/1.1/jsonrpcErrors',
+    './helpers',
+], (mswUtils, JSONRPCClient, errors, jsonrpcErrors, helpers) => {
     'use strict';
     const { MockWorker, waitFor } = mswUtils;
-    const { makeJSONRPCClient, makeResponse, makeBadResponse, makeErrorResponse, URL } = helpers;
+    const { makeJSONRPCClient, makeResponse, makeErrorResponse, URL } = helpers;
 
     describe('The JSONRPCClient', () => {
         it('should be able to construct a minimal client', () => {
@@ -21,7 +22,9 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
         it('should be able to make a request and get a response', async () => {
             const mock = await new MockWorker().start();
             mock.useJSONResponder(URL, (req) => {
-                return makeResponse(req);
+                return makeResponse(req, {
+                    bar: 'foo',
+                });
             });
             const params = [
                 {
@@ -69,7 +72,9 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
         it('should be able to make a request with no params', async () => {
             const mock = await new MockWorker().start();
             mock.useJSONResponder(URL, (req) => {
-                return makeResponse(req);
+                return makeResponse(req, {
+                    bar: 'foo',
+                });
             });
 
             const client = makeJSONRPCClient();
@@ -87,10 +92,15 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
                         message: 'No authorization',
                     });
                 }
-                return makeResponse(req);
+
+                return makeResponse(req, {
+                    bar: 'foo',
+                });
             });
 
-            const client = makeJSONRPCClient([['authorization', 'token']]);
+            const client = makeJSONRPCClient({
+                extraArgs: [['authorization', 'token']],
+            });
             const result = await client.request({
                 method: 'function',
             });
@@ -102,7 +112,7 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
 
         it('making a client without a "timeout" constructor param should throw an error', () => {
             function noTimeout() {
-                return makeJSONRPCClient(['timeout']);
+                return makeJSONRPCClient({ extraArgs: ['timeout'] });
             }
 
             expect(noTimeout).toThrow();
@@ -110,7 +120,7 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
 
         it('making a client without a "url" constructor param should throw an error', () => {
             function noURL() {
-                return makeJSONRPCClient(['url']);
+                return makeJSONRPCClient({ extraArgs: ['url'] });
             }
 
             expect(noURL).toThrow();
@@ -119,7 +129,9 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
         it('making a request without a method should throw', async () => {
             const mock = await new MockWorker().start();
             mock.useJSONResponder(URL, (req) => {
-                return makeResponse(req);
+                return makeResponse(req, {
+                    bar: 'foo',
+                });
             });
 
             const client = makeJSONRPCClient();
@@ -136,11 +148,13 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
         it('a timeout should trigger an exception', async () => {
             const mock = await new MockWorker().start();
             mock.useJSONResponder(URL, async (req) => {
-                await waitFor(2000);
-                return makeResponse(req);
+                await waitFor(100);
+                return makeResponse(req, {
+                    bar: 'foo',
+                });
             });
 
-            const client = makeJSONRPCClient();
+            const client = makeJSONRPCClient({ extraArgs: { timeout: 1 } });
 
             function shouldTimeout() {
                 return client.request({ method: 'function' });
@@ -154,10 +168,12 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
             const mock = await new MockWorker().start();
             mock.useJSONResponder(URL, async (req) => {
                 await waitFor(2000);
-                return makeResponse(req);
+                return makeResponse(req, {
+                    bar: 'foo',
+                });
             });
 
-            const client = makeJSONRPCClient();
+            const client = makeJSONRPCClient({ extraArgs: { timeout: 3000 } });
 
             function shouldAbort() {
                 const responsePromise = client.request({ method: 'function' });
@@ -168,6 +184,33 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
             await expectAsync(shouldAbort()).toBeRejected();
             mock.done();
         });
+
+        // Simulate network disconnection?
+
+        it('a network error should trigger an exception', async () => {
+            const mock = await new MockWorker().start();
+            mock.useJSONResponder(URL, (_req, res) => {
+                return res.networkError('Failed to connect');
+            });
+
+            const client = makeJSONRPCClient();
+
+            function shouldFail() {
+                return client.request({ method: 'function' });
+            }
+
+            try {
+                await shouldFail();
+                fail('Expected to fail');
+            } catch (ex) {
+                expect(ex).toBeInstanceOf(errors.ClientRequestError);
+                expect(ex.message).toEqual('Network error');
+                // Can't predict what the original error message was,
+                // it does not appear to be documented in the fetch standard.
+            }
+        });
+
+        // Other error conditions
 
         it('returning non-json response should throw', async () => {
             const mock = await new MockWorker().start();
@@ -190,7 +233,13 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
         it('no id in response in strict mode should throw', async () => {
             const mock = await new MockWorker().start();
             mock.useJSONResponder(URL, (req) => {
-                return makeBadResponse(req, { replace: ['id'] });
+                return makeResponse(
+                    req,
+                    {
+                        bar: 'foo',
+                    },
+                    { replace: ['id'] }
+                );
             });
 
             const client = makeJSONRPCClient();
@@ -206,10 +255,16 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
         it('mismatching id in response in strict mode should throw', async () => {
             const mock = await new MockWorker().start();
             mock.useJSONResponder(URL, (req) => {
-                return makeBadResponse(req, { replace: [['id', 'abc']] });
+                return makeResponse(
+                    req,
+                    {
+                        bar: 'foo',
+                    },
+                    { replace: [['id', 'abc']] }
+                );
             });
 
-            const client = makeJSONRPCClient();
+            const client = makeJSONRPCClient({ extraArgs: { strict: true } });
 
             function noMethod() {
                 return client.request({ method: 'foo' });
@@ -222,7 +277,13 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
         it('no version in the response should throw', async () => {
             const mock = await new MockWorker().start();
             mock.useJSONResponder(URL, (req) => {
-                return makeBadResponse(req, { replace: ['version'] });
+                return makeResponse(
+                    req,
+                    {
+                        bar: 'foo',
+                    },
+                    { replace: ['version'] }
+                );
             });
 
             const client = makeJSONRPCClient();
@@ -238,7 +299,13 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
         it('a version other than "1.1" in the response should throw', async () => {
             const mock = await new MockWorker().start();
             mock.useJSONResponder(URL, (req) => {
-                return makeBadResponse(req, { replace: [['version', '1.0']] });
+                return makeResponse(
+                    req,
+                    {
+                        bar: 'foo',
+                    },
+                    { replace: [['version', '1.0']] }
+                );
             });
 
             const client = makeJSONRPCClient();
@@ -269,7 +336,7 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
                 try {
                     await client.request({ method: 'foo' });
                 } catch (ex) {
-                    if (ex instanceof errors.JSONRPCMethodError) {
+                    if (ex instanceof jsonrpcErrors.JSONRPCApplicationError) {
                         if (ex.error.message !== 'Error message') {
                             return false;
                         }
@@ -284,10 +351,35 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
             mock.done();
         });
 
+        it('a plain text response should throw a parse error', async () => {
+            const mock = await new MockWorker().start();
+            mock.useTextResponder(URL, () => {
+                return 'foo';
+            });
+
+            const client = makeJSONRPCClient({ extraArgs: { strict: true } });
+
+            function noID() {
+                return client.request({ method: 'foo' });
+            }
+
+            await expectAsync(noID()).toBeRejectedWithError(
+                errors.ClientParseError,
+                'Error parsing response'
+            );
+            mock.done();
+        });
+
         it('neither a result or a error should throw', async () => {
             const mock = await new MockWorker().start();
             mock.useJSONResponder(URL, (req) => {
-                return makeBadResponse(req, { replace: ['result'] });
+                return makeResponse(
+                    req,
+                    {
+                        bar: 'foo',
+                    },
+                    { replace: ['result'] }
+                );
             });
 
             const client = makeJSONRPCClient();
@@ -297,7 +389,7 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
             }
 
             await expectAsync(noResultOrError()).toBeRejectedWithError(
-                errors.JSONRPCResponseError,
+                jsonrpcErrors.JSONRPCResponseError,
                 '"result" or "error" property required in response'
             );
             mock.done();
@@ -306,7 +398,13 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
         it('both a result and an error should throw', async () => {
             const mock = await new MockWorker().start();
             mock.useJSONResponder(URL, (req) => {
-                return makeBadResponse(req, { replace: [['error', 'foo']] });
+                return makeResponse(
+                    req,
+                    {
+                        bar: 'foo',
+                    },
+                    { replace: [['error', 'foo']] }
+                );
             });
 
             const client = makeJSONRPCClient();
@@ -316,9 +414,109 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/JSONRPCClient', 'jsonrpc/1.1/errors'
             }
 
             await expectAsync(noResultOrError()).toBeRejectedWithError(
-                errors.JSONRPCResponseError,
+                jsonrpcErrors.JSONRPCResponseError,
                 'only one of "result" or "error" property may be provided in the response'
             );
+            mock.done();
+        });
+
+        // Client errors
+        it('a response without an id but an id is in the request should return an error', async () => {
+            const mock = await new MockWorker().start();
+            mock.useJSONResponder(URL, (req) => {
+                return makeResponse(
+                    req,
+                    {
+                        bar: 'foo',
+                    },
+                    { replace: ['id'] }
+                );
+            });
+
+            const client = makeJSONRPCClient({ extraArgs: { strict: true } });
+
+            function noID() {
+                return client.request({ bar: 'foo' });
+            }
+
+            await expectAsync(noID()).toBeRejectedWithError(
+                jsonrpcErrors.JSONRPCResponseError,
+                '"id" missing in response'
+            );
+            mock.done();
+        });
+
+        it('a response without an id yet the error is parse error should not return an error', async () => {
+            const codes = [
+                [-32700], // Parse error
+                [-32600], // Invalid request error
+            ];
+            const client = makeJSONRPCClient({ extraArgs: { strict: true } });
+            const expectedResult = { method: 'foo' };
+            function noID() {
+                return client.request(expectedResult);
+            }
+            for (const [code] of codes) {
+                const mock = await new MockWorker().start();
+                mock.useJSONResponder(URL, (req) => {
+                    return makeErrorResponse(
+                        req,
+                        {
+                            name: 'JSONRPCError',
+                            code,
+                            message: 'Some error',
+                        },
+                        { replace: ['id'] }
+                    );
+                });
+
+                await expectAsync(noID()).toBeRejected();
+
+                mock.done();
+            }
+        });
+
+        it('a response without an id but not in strict mode should not return an error', async () => {
+            const mock = await new MockWorker().start();
+            mock.useJSONResponder(URL, (req) => {
+                return makeResponse(
+                    req,
+                    {
+                        bar: 'foo',
+                    },
+                    { replace: ['id'] }
+                );
+            });
+
+            const client = makeJSONRPCClient({ extraArgs: { strict: false } });
+
+            function noID() {
+                return client.request({ method: 'foo' });
+            }
+
+            await expectAsync(noID()).toBeResolved();
+            mock.done();
+        });
+
+        it('a response without an id and an id is absent the request should not return an error', async () => {
+            const mock = await new MockWorker().start();
+            mock.useJSONResponder(URL, (req) => {
+                return makeResponse(
+                    req,
+                    {
+                        bar: 'foo',
+                    },
+                    { replace: ['id'] }
+                );
+            });
+
+            const client = makeJSONRPCClient({ extraArgs: { strict: true } });
+
+            function noID() {
+                return client.request({ method: 'foo', omitId: true });
+            }
+
+            await expectAsync(noID()).toBeResolved();
             mock.done();
         });
     });

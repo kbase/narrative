@@ -51,13 +51,13 @@ define([
      * @returns {Promise} A promise which resolves to the jsonrpc response for the requested method;
      *                    or an error response.
      */
-    function sampleServiceHandler() {
+    function sampleServiceHandler(sampleSetName) {
         const handleGetSamples = async (params, id) => {
             // just handle ref for now.
             const samples = await Promise.all(
                 params.samples.map(({ id: sampleId, version }) => {
                     const fileName = `sample_${sampleId}_${version}.json`;
-                    return pRequire(`json!./data/${fileName}`);
+                    return pRequire(`json!./data/${sampleSetName}/${fileName}`);
                 })
             );
 
@@ -80,6 +80,7 @@ define([
                             version: '1.1',
                             id: req.body.id,
                             error: {
+                                name: 'JSONRPCError',
                                 code: 100,
                                 message: ex.message,
                             },
@@ -90,6 +91,7 @@ define([
                         version: '1.1',
                         id: req.body.id,
                         error: {
+                            name: 'JSONRPCError',
                             code: -32601,
                             message: 'Method not found',
                         },
@@ -105,7 +107,7 @@ define([
      * @returns {Promise} A promise which resolves to the jsonrpc response for the requested method;
      *                    or an error response.
      */
-    function workspaceHandler() {
+    function workspaceHandler(sampleSetName) {
         const handleGetObjects2 = async (params, id) => {
             // just handle ref for now.
             const objects = await Promise.all(
@@ -113,8 +115,8 @@ define([
                     const { ref } = objectSpec;
                     // make object ref into a filesystem friendly name
                     // E.g. 53116/17/1 = > 53116-17-1
-                    const fileName = `object_${ref.replace(/\//g, '-')}.json`;
-                    return pRequire(`json!./data/${fileName}`);
+                    const fileName = `object_${ref.replace(/\//g, '_')}.json`;
+                    return pRequire(`json!./data/${sampleSetName}/${fileName}`);
                 })
             );
 
@@ -142,6 +144,7 @@ define([
                             version: '1.1',
                             id: req.body.id,
                             error: {
+                                name: 'JSONRPCError',
                                 code: 100,
                                 message: ex.message,
                             },
@@ -152,6 +155,7 @@ define([
                         version: '1.1',
                         id: req.body.id,
                         error: {
+                            name: 'JSONRPCError',
                             code: -32601,
                             message: 'Method not found',
                         },
@@ -160,13 +164,13 @@ define([
         };
     }
 
-    describe('The kbaseSampleSet viewer widget', () => {
+    describe('The kbaseSampleSet viewer widget with a SESAR sample set', () => {
         let mock = null;
         beforeAll(async () => {
             mock = new MockWorker();
             await mock.start();
-            mock.useJSONResponder(WORKSPACE_URL, workspaceHandler());
-            mock.useJSONResponder(SAMPLE_SERVICE_URL, sampleServiceHandler());
+            mock.useJSONResponder(WORKSPACE_URL, workspaceHandler('sampleSet1'));
+            mock.useJSONResponder(SAMPLE_SERVICE_URL, sampleServiceHandler('sampleSet1'));
         });
 
         afterAll(async () => {
@@ -185,13 +189,11 @@ define([
             });
 
             const objects = await wsClient.callFunc('get_objects2', {
-                params: {
-                    objects: [
-                        {
-                            ref: '53116/17/1',
-                        },
-                    ],
-                },
+                objects: [
+                    {
+                        ref: '53116/17/1',
+                    },
+                ],
             });
 
             expect(objects).toBeDefined();
@@ -206,14 +208,12 @@ define([
             });
 
             const samples = await sampleServiceClient.callFunc('get_samples', {
-                params: {
-                    samples: [
-                        {
-                            id: '11d293e2-b968-4efa-bba4-c16ca61cf4c6',
-                            version: 1,
-                        },
-                    ],
-                },
+                samples: [
+                    {
+                        id: '11d293e2-b968-4efa-bba4-c16ca61cf4c6',
+                        version: 1,
+                    },
+                ],
             });
 
             expect(samples).toBeDefined();
@@ -228,13 +228,11 @@ define([
             });
 
             const { data } = await wsClient.callFunc('get_objects2', {
-                params: {
-                    objects: [
-                        {
-                            ref: '53116/17/1',
-                        },
-                    ],
-                },
+                objects: [
+                    {
+                        ref: '53116/17/1',
+                    },
+                ],
             });
             const sampleSet = data[0].data;
 
@@ -246,20 +244,20 @@ define([
             });
 
             const samples = await sampleServiceClient.callFunc('get_samples', {
-                params: {
-                    samples: sampleSet.samples.map(({ id, version }) => {
-                        return { id, version };
-                    }),
-                },
+                samples: sampleSet.samples.map(({ id, version }) => {
+                    return { id, version };
+                }),
             });
 
             expect(samples).toBeDefined();
         });
 
         it('should render a SampleSet', async () => {
-            const $sampleSetView = new KBaseSampleSetView($('<div>'), {
+            const sampleSetViewWidget = new KBaseSampleSetView($('<div>'), {
                 upas: { id: '53116/17/1' },
-            }).$elem;
+            });
+            sampleSetViewWidget.loggedInCallback();
+            const $sampleSetView = sampleSetViewWidget.$elem;
 
             function findDescription() {
                 return tryFor(() => {
@@ -308,6 +306,7 @@ define([
 
             // Tests first sample in the set.
             [
+                '1',
                 'SESAR',
                 'HRV003M16',
                 'Other',
@@ -345,7 +344,187 @@ define([
                 'IECUR0002Y',
                 'IECUR0002Z',
             ].forEach((text, rowIndex) => {
-                expectCell($samplesTabContent, 2, rowIndex + 1, 2, text);
+                expectCell($samplesTabContent, 2, rowIndex + 1, 3, text);
+            });
+        });
+    });
+
+    describe('The kbaseSampleSet viewer widget with an ENIGMA sample set', () => {
+        let mock = null;
+        beforeAll(async () => {
+            mock = new MockWorker();
+            await mock.start();
+            mock.useJSONResponder(WORKSPACE_URL, workspaceHandler('sampleSet2'));
+            mock.useJSONResponder(SAMPLE_SERVICE_URL, sampleServiceHandler('sampleSet2'));
+        });
+
+        afterAll(async () => {
+            if (mock) {
+                await mock.stop();
+                mock.reset();
+            }
+        });
+
+        it('should be able to fetch a SampleSet object via the workspace client', async () => {
+            const wsClient = new ServiceClient({
+                url: WORKSPACE_URL,
+                module: 'Workspace',
+                token: 'token',
+                timeout: 2000,
+            });
+
+            const objects = await wsClient.callFunc('get_objects2', {
+                objects: [
+                    {
+                        ref: '53116/34/1',
+                    },
+                ],
+            });
+
+            expect(objects).toBeDefined();
+        });
+
+        it('should fetch samples via the SampleService', async () => {
+            const sampleServiceClient = new ServiceClient({
+                url: SAMPLE_SERVICE_URL,
+                module: 'SampleService',
+                token: 'token',
+                timeout: 2000,
+            });
+
+            const samples = await sampleServiceClient.callFunc('get_samples', {
+                samples: [
+                    {
+                        id: '1e476e13-20be-4133-bf8a-6a5681423070',
+                        version: 1,
+                    },
+                ],
+            });
+
+            expect(samples).toBeDefined();
+        });
+
+        it('should fetch a SampleSet and all Samples', async () => {
+            const wsClient = new ServiceClient({
+                url: WORKSPACE_URL,
+                module: 'Workspace',
+                token: 'token',
+                timeout: 2000,
+            });
+
+            const { data } = await wsClient.callFunc('get_objects2', {
+                objects: [
+                    {
+                        ref: '53116/34/1',
+                    },
+                ],
+            });
+            const sampleSet = data[0].data;
+
+            const sampleServiceClient = new ServiceClient({
+                url: SAMPLE_SERVICE_URL,
+                module: 'SampleService',
+                token: 'token',
+                timeout: 2000,
+            });
+
+            const samples = await sampleServiceClient.callFunc('get_samples', {
+                samples: sampleSet.samples.map(({ id, version }) => {
+                    return { id, version };
+                }),
+            });
+
+            expect(samples).toBeDefined();
+        });
+
+        it('should render a SampleSet', async () => {
+            const sampleSetViewWidget = new KBaseSampleSetView($('<div>'), {
+                upas: { id: '53116/34/1' },
+            });
+            sampleSetViewWidget.loggedInCallback();
+            const $sampleSetView = sampleSetViewWidget.$elem;
+
+            function findDescription() {
+                return tryFor(() => {
+                    const textToMatch = $sampleSetView.html();
+                    const result = /enigma sample set first 10 samples/.test(textToMatch);
+                    return Promise.resolve([result, result]);
+                }, 3000);
+            }
+
+            await expectAsync(findDescription()).toBeResolvedTo(true);
+
+            // Inspect the rows of the summary table.
+            const $summaryTab = await findTab($sampleSetView, 'Summary');
+            expect($summaryTab).toBeDefined();
+            $summaryTab.click();
+
+            const $summaryTabContent = await findTabContent($sampleSetView, 1);
+            expect($summaryTabContent).toBeDefined();
+
+            expectCell($summaryTabContent, 1, 1, 1, 'KBase Object Name');
+            expectCell(
+                $summaryTabContent,
+                1,
+                1,
+                2,
+                'ENIGMA_SampleMetaData_AddedENVO_May4-2_first_10.csv_sample_set'
+            );
+
+            [
+                ['Saved by', 'kbaseuitest'],
+                ['Number of Samples', '10'],
+                ['Description', 'enigma sample set first 10 samples'],
+            ].forEach((row, rowIndex) => {
+                row.forEach((cellText, cellIndex) => {
+                    expectCell($summaryTabContent, 1, rowIndex + 2, cellIndex + 1, cellText);
+                });
+            });
+
+            // Inspect the rows of the samples table.
+            const $samplesTab = await findTab($sampleSetView, 'Samples');
+            expect($samplesTab).toBeDefined();
+            $samplesTab.click();
+
+            const $samplesTabContent = await findTabContent($sampleSetView, 2);
+            expect($samplesTabContent).toBeDefined();
+
+            // Tests first sample in the set.
+            [
+                '1',
+                'ENIGMA',
+                'filtered groundwater',
+                '100 Well',
+                'Area 1',
+                'FW021',
+                'water',
+                'ENVO:01001004',
+                '2',
+                '35.978',
+                '-84.272',
+                '597.8652',
+                '11/27/12',
+                '10:17:00 AM',
+                'UTC-4',
+                '6678.5',
+            ].forEach((text, index) => {
+                expectCell($samplesTabContent, 2, 1, index + 1, text);
+            });
+
+            // Check 6th column, Well Name
+            [
+                'FW021',
+                'FW021',
+                'FW021',
+                'FW021',
+                'FW106',
+                'FW233-17',
+                'FW233-17',
+                'FW303',
+                'FW303',
+                'FW303',
+            ].forEach((text, rowIndex) => {
+                expectCell($samplesTabContent, 2, rowIndex + 1, 6, text);
             });
         });
     });

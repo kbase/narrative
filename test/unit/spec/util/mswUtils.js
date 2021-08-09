@@ -60,7 +60,7 @@ define(['msw'], (msw) => {
 
         useJSONResponder(url, responder) {
             const handler = rest.post(url, async (req, res, ctx) => {
-                const response = await responder(req);
+                const response = await responder(req, res);
                 if (response) {
                     return res(ctx.json(response));
                 }

@@ -3,7 +3,7 @@ module.exports = function (config) {
     'use strict';
     config.set({
         basePath: '../../',
-        frameworks: ['jasmine', 'requirejs', 'es6-shim'],
+        frameworks: ['jasmine', 'requirejs', 'es6-shim', 'jasmine-matchers'],
         client: {
             jasmine: {
                 failFast: false,
@@ -15,6 +15,7 @@ module.exports = function (config) {
         },
         plugins: [
             'karma-jasmine',
+            'karma-jasmine-matchers',
             'karma-chrome-launcher',
             'karma-firefox-launcher',
             'karma-requirejs',
@@ -27,8 +28,9 @@ module.exports = function (config) {
         ],
         preprocessors: {
             'kbase-extension/static/kbase/js/**/!(api)/*.js': ['coverage'],
-            'kbase-extension/static/kbase/js/api/!(*[Cc]lient*|Catalog|KBaseFeatureValues|NarrativeJobServiceWrapper|NewWorkspace)*.js':
-                ['coverage'],
+            'kbase-extension/static/kbase/js/api/!(*[Cc]lient*|Catalog|KBaseFeatureValues|NarrativeJobServiceWrapper|NewWorkspace)*.js': [
+                'coverage',
+            ],
             'kbase-extension/static/kbase/js/api/RestAPIClient.js': ['coverage'],
             'nbextensions/appcell2/widgets/tabs/*.js': ['coverage'],
             'kbase-extension/static/kbase/js/*.js': ['coverage'],

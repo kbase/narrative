@@ -208,6 +208,25 @@ class JobManagerTest(unittest.TestCase):
             },
         )
 
+    def test__construct_job_state_set__empty_list(self):
+        self.assertEqual(
+            self.jm._construct_job_state_set([]),
+            {}
+        )
+
+    def test__create_jobs__empty_list(self):
+        self.assertEqual(
+            self.jm._create_jobs([]),
+            {}
+        )
+
+    def test__create_jobs__jobs_already_exist(self):
+        job_list = self.jm._running_jobs.keys()
+        self.assertEqual(
+            self.jm._create_jobs(job_list),
+            {}
+        )
+
     def test_get_job_good(self):
         job_id = self.job_ids[0]
         job = self.jm.get_job(job_id)

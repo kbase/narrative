@@ -109,6 +109,9 @@ class JobManager(object):
         Given a list of job IDs, creates job objects for them and populates the _running_jobs dictionary
         """
         job_ids = [job_id for job_id in job_ids if job_id not in self._running_jobs]
+        if not len(job_ids):
+            return {}
+
         job_states = clients.get("execution_engine2").check_jobs(
             {
                 "job_ids": job_ids,
@@ -232,6 +235,9 @@ class JobManager(object):
         # return all.
         if not isinstance(job_ids, list):
             raise ValueError("job_ids must be a list")
+
+        if not len(job_ids):
+            return {}
 
         job_states = dict()
         jobs_to_lookup = list()

@@ -6,8 +6,8 @@ define([
     'jquery',
     'narrativeConfig',
     'kbaseAuthenticatedWidget',
-    'jsonrpc/DynamicServiceClient',
-    'jsonrpc/ServiceClient',
+    'jsonrpc/1.1/DynamicServiceClient',
+    'jsonrpc/1.1/ServiceClient',
 
     // for effect
     'jquery-dataTables',

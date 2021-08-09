@@ -1,6 +1,6 @@
 define(['jquery'], ($) => {
     'use strict';
-    function loadingMessage(message) {
+    function $LoadingMessage(message) {
         return $('<div>')
             .addClass('alert alert-info')
             .css('display', 'flex')
@@ -11,5 +11,5 @@ define(['jquery'], ($) => {
             .text(message)
             .append($('<i>').addClass('fa fa-spinner fa-spin fa-2x').css('margin-left', '1ex'));
     }
-    return loadingMessage;
+    return $LoadingMessage;
 });

@@ -2,19 +2,29 @@ define(['./JSONRPCClient'], (JSONRPCClient) => {
     'use strict';
 
     class ServiceClient {
+        /**
+         * A class representing a client for a KBase core service based on JSON-RPC 1.1
+         *
+         * @param {Object} param
+         * @param {string} param.url
+         * @param {string} param.module
+         * @param {number} param.timeout
+         * @param {string} [param.token]
+         * @param {boolean} [param.strict] -
+         */
         constructor({ url, module, timeout, token, strict }) {
             // Required
-            if (!url) {
+            if (typeof url === 'undefined') {
                 throw new TypeError('"url" is required');
             }
             this.url = url;
 
-            if (!module) {
+            if (typeof module === 'undefined') {
                 throw new TypeError('"module" is required');
             }
             this.module = module;
 
-            if (!timeout) {
+            if (typeof timeout === 'undefined') {
                 throw new TypeError('"timeout" is required');
             }
             this.timeout = timeout;
@@ -24,7 +34,7 @@ define(['./JSONRPCClient'], (JSONRPCClient) => {
             this.strict = strict || false;
         }
 
-        rpcCall(funcName, { params, timeout, token }) {
+        rpcCall(funcName, params, { timeout, token }) {
             let callParams;
             if (typeof params === 'undefined') {
                 callParams = [];
@@ -33,9 +43,9 @@ define(['./JSONRPCClient'], (JSONRPCClient) => {
             }
 
             timeout = timeout || this.timeout;
-            const options = {};
+            const requestOptions = {};
             if (this.token) {
-                options.authorization = this.token;
+                requestOptions.authorization = this.token;
             }
             const constructorParams = { url: this.url, timeout, strict: this.strict };
 
@@ -47,25 +57,22 @@ define(['./JSONRPCClient'], (JSONRPCClient) => {
 
             const client = new JSONRPCClient(constructorParams);
 
-            const request = client
-                .request({
-                    method: `${this.module}.${funcName}`,
-                    params: callParams,
-                    options,
-                })
-                .then((response) => {
-                    if (!Array.isArray(response)) {
-                        throw new Error(`response is not an array`);
-                    }
-                    const [unwrapped] = response;
-                    return unwrapped;
-                });
+            requestOptions.method = `${this.module}.${funcName}`;
+            requestOptions.params = callParams;
+
+            const request = client.request(requestOptions).then((response) => {
+                if (!Array.isArray(response)) {
+                    throw new Error(`response is not an array`);
+                }
+                const [unwrapped] = response;
+                return unwrapped;
+            });
 
             return [request, client];
         }
 
-        callFuncCancellable(funcName, options = {}) {
-            const [request, client] = this.rpcCall(funcName, options);
+        callFuncCancellable(funcName, params, options = {}) {
+            const [request, client] = this.rpcCall(funcName, params, options);
 
             const canceller = () => {
                 client.cancelPending();
@@ -74,8 +81,8 @@ define(['./JSONRPCClient'], (JSONRPCClient) => {
             return [request, canceller];
         }
 
-        callFunc(funcName, options = {}) {
-            const [request] = this.rpcCall(funcName, options);
+        callFunc(funcName, params, options = {}) {
+            const [request] = this.rpcCall(funcName, params, options);
             return request;
         }
     }

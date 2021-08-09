@@ -1,14 +1,17 @@
-/*
-Sebastian Le Bras, David Lyon - April 2020
-*/
+/**
+ * A module implementing a SampleSet viewer
+ *
+ * @module kbaseSampleSetView
+ * @authors Sebastian Le Bras, David Lyon, Erik Pearson
+ */
 define([
     'kbwidget',
     'jquery',
     'kbaseAuthenticatedWidget',
     'kbaseTabs',
     'narrativeConfig',
-    'widgets/common/loadingMessage',
-    'widgets/common/errorMessage',
+    'widgets/common/LoadingMessage',
+    'widgets/common/ErrorMessage',
     'widgets/function_output/samples/SampleSet',
 
     // For effect.
@@ -19,15 +22,28 @@ define([
     kbaseAuthenticatedWidget,
     kbaseTabs,
     Config,
-    LoadingMessage,
-    ErrorMessage,
+    $LoadingMessage,
+    $ErrorMessage,
     SampleSet
 ) => {
     'use strict';
 
+    // A default timeout duration in milliseconds.
     const SERVICE_TIMEOUT = 60000;
 
-    function formatField(value, schema) {
+    /**
+     *
+     * @typedef {Object} Schema
+     */
+
+    /**
+     * Renders a value according to the associated sample field schema
+     *
+     * @param {any} value
+     * @param {Schema} schema
+     * @returns {jQuery} A jQuery element containing the formatted field value
+     */
+    function $renderField(value, schema) {
         if (!schema) {
             return $(`<span>`).text(String(value)).attr('title', String(value));
         }
@@ -62,38 +78,105 @@ define([
         }
     }
 
+    /**
+     *
+     * objid, name, type, save_date, ver, saved_by, wsid, workspace, chsum, size, meta
+     * @typedef {[number, string, string, string, number, string, number, string, string, number, Object]} ObjectInfo
+     */
+
+    /**
+     * Renders a link to the "dataview" ui object viewer for a given object using the provided
+     * standard "object info" array.
+     *
+     * @param {ObjectInfo} objectInfo - An object info array for the given object
+     * @returns {jQuery} the rendered dataview link
+     */
+    function $renderDataviewLink(objectInfo) {
+        const [objectId, objectName, , , version, , workspaceId] = objectInfo;
+
+        return $('<a>')
+            .attr('href', `/#dataview/${workspaceId}/${objectId}/${version}`)
+            .attr('target', '_blank')
+            .text(objectName);
+    }
+
+    /**
+     * Renders a link to the user profile page for the user who last saved the given object.
+     *
+     * @param {ObjectInfo} objectInfo - An object info array for the given object
+     * @returns {jQuery} a jQuery object containing the rendered link
+     */
+    function $renderSavedByLink(objectInfo) {
+        const [, , , , , savedBy] = objectInfo;
+
+        return $('<a>').attr('href', `/#people/${savedBy}`).attr('target', '_blank').text(savedBy);
+    }
+
+    /**
+     * A widget to render a Sample Set within the Narrative
+     *
+     */
     return KBWidget({
         name: 'kbaseSampleSetView',
         parent: kbaseAuthenticatedWidget,
         version: '1.0.0',
-        options: {
-            pageLimit: 10,
-            default_blank_value: '',
-        },
+        options: {},
 
+        /**
+         *
+         * @typedef {Object} Options
+         * @property {Object} upas
+         * @property {string} upas.id
+         */
+
+        /**
+         * Initialize the widget with the provided options
+         *
+         * @param {Options} options
+         * @returns {kbaseSampleSetView} A reference to the widget object
+         */
         init: function (options) {
             this._super(options);
 
-            this.obj_ref = this.options.upas.id;
+            this.obj_ref = options.upas.id;
 
             this.model = new SampleSet({
                 workspaceURL: Config.url('workspace'),
                 sampleServiceURL: Config.url('sample_service'),
                 token: this.authToken(),
                 timeout: SERVICE_TIMEOUT,
-                ref: this.options.upas.id,
+                ref: options.upas.id,
             });
-
-            // Render
-            this.render();
 
             return this;
         },
 
+        /**
+         * Called by the Narrative upon object instantiation if authenticated, and whenever
+         * authentication state changes from unauthenticated to authenticated.
+         *
+         * @method
+         * @returns {void} nothing
+         */
         loggedInCallback: function () {
             this.render();
         },
 
+        /**
+         * Called by the Narrative upon object instantiation if unauthenticated, and whenever
+         * authentication state changes from authenticated to unauthenticated.
+         *
+         * @returns {void} nothing
+         */
+        loggedOutCallback: function () {
+            this.render();
+        },
+
+        /**
+         * The main rendering entry point.
+         *
+         * @returns {void} nothing
+         */
         render: function () {
             this.$elem.empty();
 
@@ -117,110 +200,116 @@ define([
                 ],
             });
 
-            $summaryTab.append(LoadingMessage('Loading SampleSet and Samples... '));
-            $samplesTab.append(LoadingMessage('Loading SampleSet and Samples... '));
+            $summaryTab.append($LoadingMessage('Loading SampleSet and Samples... '));
+            $samplesTab.append($LoadingMessage('Loading SampleSet and Samples... '));
             this.model
                 .load()
                 .then(() => {
-                    this.renderSummary($summaryTab);
-                    this.renderSamples($samplesTab);
+                    $summaryTab.html(this.$renderSummary());
+                    $samplesTab.html(this.$renderSamples());
                 })
                 .catch((err) => {
-                    this.renderError(this.$elem, err);
+                    this.$elem.html($ErrorMessage(err));
                 });
         },
 
-        renderError: function ($container, err) {
-            $container.html(ErrorMessage(err));
-        },
-
-        renderDataviewLink: function (objectInfo) {
-            const [objectId, objectName, , , version, , workspaceId] = objectInfo;
-
-            return $('<a>')
-                .attr('href', `/#dataview/${workspaceId}/${objectId}/${version}`)
-                .attr('target', '_blank')
-                .text(objectName);
-        },
-
-        renderPeopleLink: function (objectInfo) {
-            const [, , , , , savedBy] = objectInfo;
-
-            return $('<a>')
-                .attr('href', `/#people/${savedBy}`)
-                .attr('target', '_blank')
-                .text(savedBy);
-        },
-
-        renderSummary: function ($container) {
-            $container.empty();
-
+        /**
+         * Renders the summery for a sample set, which should already be available in the
+         * widget object.
+         *
+         * @returns {jQuery} the rendered summary
+         */
+        $renderSummary: function () {
             // Build table
-            const $overviewTable = $('<table role="table">').addClass(
-                'table table-bordered table-hover SummaryTable'
-            );
+            const $overviewTable = $('<table>')
+                .attr('role', 'table')
+                .addClass('table table-bordered table-hover SummaryTable');
 
-            const $tbody = $('<tbody role="rowgroup">').appendTo($overviewTable);
+            const $tbody = $('<tbody>').attr('role', 'rowgroup').appendTo($overviewTable);
             $tbody.append(
-                $('<tr role="row">').append(
-                    $('<th role="cell">').text('KBase Object Name'),
-                    $('<td role="cell">').html(this.renderDataviewLink(this.model.sampleSet.info))
-                ),
-                $('<tr role="row">').append(
-                    $('<th role="cell">').text('Saved by'),
-                    $('<td role="cell">').html(this.renderPeopleLink(this.model.sampleSet.info))
-                ),
-                $('<tr role="row">').append(
-                    $('<th role="cell">').text('Number of Samples'),
-                    $('<td role="cell">').text(
-                        Intl.NumberFormat('en-US', { useGrouping: true }).format(
-                            this.model.samples.length
-                        )
+                $('<tr>')
+                    .attr('role', 'row')
+                    .append(
+                        $('<th>').attr('role', 'cell').text('KBase Object Name'),
+                        $('<td>')
+                            .attr('role', 'cell')
+                            .append($renderDataviewLink(this.model.sampleSet.info))
+                    ),
+                $('<tr>')
+                    .attr('role', 'row')
+                    .append(
+                        $('<th>').attr('role', 'cell').text('Saved by'),
+                        $('<td>')
+                            .attr('role', 'cell')
+                            .append($renderSavedByLink(this.model.sampleSet.info))
+                    ),
+                $('<tr>')
+                    .attr('role', 'row')
+                    .append(
+                        $('<th>').attr('role', 'cell').text('Number of Samples'),
+                        $('<td>')
+                            .attr('role', 'cell')
+                            .text(
+                                Intl.NumberFormat('en-US', { useGrouping: true }).format(
+                                    this.model.samples.length
+                                )
+                            )
+                    ),
+                $('<tr>')
+                    .attr('role', 'row')
+                    .append(
+                        $('<th>').attr('role', 'cell').text('Description'),
+                        $('<td>').attr('role', 'cell').text(this.model.sampleSet.data.description)
                     )
-                ),
-                $('<tr role="row">').append(
-                    $('<th role="cell">').text('Description'),
-                    $('<td role="cell">').text(this.model.sampleSet.data.description)
-                )
             );
 
-            // Attach table to the container
-            $container.append($overviewTable);
+            return $overviewTable;
         },
 
-        renderTable: function ($container) {
+        /**
+         * Render all samples in a table. Columns are grouped and ordered according to the
+         * groups config, and cell contents formatted according to the field specs.
+         *
+         * This table does not have paging, etc.; it simply scrolls the rows and has a
+         * vertically fixed header.
+         *
+         * @returns {jQuery} a jQuery object containing the rendered table.
+         */
+        $renderTable: function () {
             const table = this.model.toTable();
 
             // create table
-            const $table = $('<table class="SampleSetTable" role="table">');
-            $container.append($table);
+            const $table = $('<table>').addClass('SampleSetTable').attr('role', 'table');
 
             // create thead
-            const $thead = $('<thead role="rowgroup">');
+            const $thead = $('<thead>').attr('role', 'rowgroup');
             $table.append($thead);
 
             // create column group header
-            const $columnGroupRow = $('<tr role="row">');
+            const $columnGroupRow = $('<tr>').attr('role', 'row');
             $thead.append($columnGroupRow);
             for (const columnGroup of this.model.columnGroups) {
                 $columnGroupRow.append(
-                    $(`<th role='cell' colspan='${columnGroup.columnCount}'>`).text(
-                        columnGroup.title
-                    )
+                    $('<th>')
+                        .attr('role', 'cell')
+                        .attr('colspan', String(columnGroup.columnCount))
+                        .text(columnGroup.title)
                 );
             }
 
             // create column header
-            const $headerRow = $('<tr role="row">');
+            const $headerRow = $('<tr>').attr('role', 'row');
             $thead.append($headerRow);
             for (const header of this.model.headerFields) {
                 $headerRow.append(
-                    $('<th role="cell">').append($('<div class="-content">').text(header.title))
+                    $('<th>')
+                        .attr('role', 'cell')
+                        .append($('<div>').addClass('-content').text(header.title))
                 );
             }
 
             // create units header
-            const $unitsHeaderRow = $('<tr style="font-style: italic;" role="row">');
+            const $unitsHeaderRow = $('<tr>').css('font-style', 'italic').attr('role', 'row');
             $thead.append($unitsHeaderRow);
             for (const header of this.model.headerFields) {
                 const unit = () => {
@@ -231,40 +320,45 @@ define([
                     }
                 };
                 $unitsHeaderRow.append(
-                    $('<th role="cell">').append($('<div class="-content">').text(unit))
+                    $('<th>')
+                        .attr('role', 'cell')
+                        .append($('<div>').addClass('-content').text(unit))
                 );
             }
 
             // create tbody
-            const $tbody = $('<tbody role="rowgroup">');
+            const $tbody = $('<tbody>').attr('role', 'rowgroup');
             $table.append($tbody);
 
             // for each data table row, create an html table row.
             for (const [, { row, info }] of table.entries()) {
-                const $row = $('<tr role="row">').dblclick(() => {
-                    const url = `${window.location.origin}/#samples/view/${info.id}/${info.version}`;
-                    window.open(url, '_blank');
-                });
+                const $row = $('<tr>')
+                    .attr('role', 'row')
+                    .dblclick(() => {
+                        const url = `${window.location.origin}/#samples/view/${info.id}/${info.version}`;
+                        window.open(url, '_blank');
+                    });
                 $tbody.append($row);
                 for (const [index] of this.model.headerFields.entries()) {
                     const value = row[index];
-                    const $field = $('<div class="-content">').append(
-                        formatField(value, this.model.headerFields[index].schema)
-                    );
-                    $row.append($('<td role="cell">').append($field));
+                    const $field = $('<div>')
+                        .addClass('-content')
+                        .append($renderField(value, this.model.headerFields[index].schema));
+                    $row.append($('<td>').attr('role', 'cell').append($field));
                 }
             }
 
             return $table;
         },
 
-        renderSamples: function ($container) {
-            $container.empty();
-
-            const $tableDiv = $('<div style="overflow: auto; max-height: 40em;" />');
-            $container.append($tableDiv);
-
-            this.renderTable($tableDiv);
+        /**
+         *
+         * @returns {jQuery} the rendered samples
+         */
+        $renderSamples: function () {
+            const $tableDiv = $('<div>').css('overflow', 'auto').css('max-height', '40em');
+            $tableDiv.append(this.$renderTable());
+            return $tableDiv;
         },
     });
 });

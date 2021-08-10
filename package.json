@@ -15,7 +15,7 @@
         "bower": "1.8.12",
         "chrome-launcher": "0.14.0",
         "chromedriver": "91.0.1",
-        "eslint": "7.31.0",
+        "eslint": "7.32.0",
         "eslint-config-prettier": "8.3.0",
         "grunt": "1.4.1",
         "grunt-cli": "1.4.3",
@@ -38,8 +38,9 @@
         "karma-mocha-reporter": "2.2.5",
         "karma-requirejs": "1.1.0",
         "karma-safari-launcher": "1.0.0",
+        "lint-staged": "11.1.2",
         "msw": "0.32.1",
-        "prettier": "2.2.1",
+        "prettier": "2.3.2",
         "puppeteer": "10.1.0",
         "requirejs": "2.3.6",
         "selenium-standalone": "7.1.0",
@@ -62,6 +63,8 @@
         "black": "black -v --exclude '.+Impl.py' .",
         "bower": "bower install",
         "eslint": "eslint --fix '**/*.js'",
+        "eslint-check": "eslint '**/*.js'",
+        "eslint-pre-push": "scripts/eslint-pre-push.sh",
         "flake8": "flake8 .",
         "husky_msg": "echo Running git hooks -- see the 'husky' section of package.json for details",
         "minify": "r.js -o build.js && terser kbase-extension/static/kbase-narrative.js -c --source-map --output kbase-extension/static/kbase-narrative-min.js && grunt regex-replace",
@@ -69,6 +72,7 @@
         "prettier": "prettier --write '**/*.js'",
         "prettier_check": "prettier --check '**/*.js'",
         "prettier_debug": "prettier --debug-check '**/*.js'",
+        "prettier-pre-push": "scripts/prettier-pre-push.sh",
         "requirejs": "r.js -o build.js",
         "headless": "kbase-narrative --no-browser --NotebookApp.allow_origin='*' --ip=127.0.0.1 --port=32323",
         "tdd": "karma start test/unit/karma.local.conf.js --auto-watch --no-single-run",
@@ -81,5 +85,9 @@
     },
     "msw": {
         "workerDirectory": "kbase-extension/static/ext_modules/msw"
+    },
+    "lint-staged": {
+        "*.js": "eslint --check",
+        "*.js": "prettier --check"
     }
 }

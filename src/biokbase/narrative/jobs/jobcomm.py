@@ -189,7 +189,9 @@ class JobComm:
 
     def _verify_job_id(self, req: JobRequest) -> None:
         if not req.job_id:
-            self.send_error_message("job_does_not_exist", req)
+            self.send_error_message(
+                "job_comm_error", req, {"message": "No job ID supplied"}
+            )
             raise NoJobException(f"Job id required to process {req.request} request")
 
     def _verify_job_id_list(self, req: JobRequest) -> None:
@@ -197,7 +199,9 @@ class JobComm:
             raise TypeError("List expected for job_id_list")
         req.job_id_list[:] = [job_id for job_id in req.job_id_list if job_id]
         if len(req.job_id_list) == 0:
-            self.send_error_message("job_does_not_exist", req)
+            self.send_error_message(
+                "job_comm_error", req, {"message": "No job IDs supplied"}
+            )
             raise NoJobException("No valid job ids")
 
     def start_job_status_loop(self, *args, **kwargs) -> None:

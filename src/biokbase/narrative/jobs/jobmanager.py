@@ -319,8 +319,7 @@ class JobManager(object):
                 jobs_to_lookup.append(job_id)
         if len(jobs_to_lookup) > 0:
             return self._construct_job_state_set(jobs_to_lookup)
-        else:
-            return dict()
+        return dict()
 
     def register_new_job(self, job: Job, refresh: int = 0) -> None:
         """
@@ -338,12 +337,11 @@ class JobManager(object):
     def get_job(self, job_id):
         """
         Returns a Job with the given job_id.
-        Raises a ValueError if not found.
+        Raises a NoJobException if not found.
         """
         if job_id in self._running_jobs:
             return self._running_jobs[job_id]["job"]
-        else:
-            raise NoJobException(f"No job present with id {job_id}")
+        raise NoJobException(f"No job present with id {job_id}")
 
     def get_job_logs(
         self,

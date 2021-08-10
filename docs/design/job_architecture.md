@@ -99,14 +99,6 @@ When the kernel sends a message to the front end, the only module set up to list
 
 ### Job-related
 
-`job-canceled` - sent when a job has been canceled in the kernel, as a response to other messages
-  * `jobId` - string, the job id
-  * `via` - string, generally "job_canceled"
-
-`job-cancel-error` - a cancel request has thrown an error
-  * `jobId` - string, the job id
-  * `message` - string, a reason for the error
-
 `job-does-not-exist` - sent in response to a request for information about a job that doesn't exist. Jobs might not exist if (1) they have been previously canceled, or (2) a malformed request was sent.
   * `jobId` - string, the job id
   * `source` - string, the source of the message in the kernel (what service, or module, was invoked. Usually "JobManager" or "ExecutionEngine2")

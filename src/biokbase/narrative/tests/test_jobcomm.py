@@ -122,6 +122,37 @@ class JobCommTestCase(unittest.TestCase):
         self.jc.stop_job_status_loop()
         self.job_states = get_test_job_states()
 
+    # response when no input was submitted with a query
+    # args:
+    #   msg: the response message object
+    #   input: the specified job_id
+    #   source: the request that was called
+    def check_no_input_error_job_id(self, msg, input, source):
+        self.assertEqual(
+            {
+                "msg_type": "job_comm_error",
+                "content": {
+                    "message": "No job ID supplied",
+                    "source": source,
+                    "job_id": input,
+                },
+            },
+            msg["data"],
+        )
+
+    def check_no_input_error_job_id_list(self, msg, input, source):
+        self.assertEqual(
+            {
+                "msg_type": "job_comm_error",
+                "content": {
+                    "message": "No job IDs supplied",
+                    "source": source,
+                    "job_id_list": input,
+                },
+            },
+            msg["data"],
+        )
+
     def test_send_comm_msg_ok(self):
         self.jc.send_comm_message("some_msg", {"foo": "bar"})
         msg = self.jc._comm.last_message
@@ -219,16 +250,7 @@ class JobCommTestCase(unittest.TestCase):
         with self.assertRaisesRegex(NoJobException, NO_JOB_ERR):
             self.jc._lookup_job_states(req)
         msg = self.jc._comm.last_message
-        self.assertEqual(
-            {
-                "msg_type": "job_does_not_exist",
-                "content": {
-                    "source": "job_status",
-                    "job_id_list": [],
-                },
-            },
-            msg["data"]
-        )
+        self.check_no_input_error_job_id_list(msg, job_id_list, "job_status")
 
     def test_lookup_job_states__ok_bad(self):
         job_id_list = ["nope", JOB_COMPLETED]
@@ -297,13 +319,7 @@ class JobCommTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.jc._lookup_job_states_batch(req)
         msg = self.jc._comm.last_message
-        self.assertEqual(
-            {
-                "msg_type": "job_does_not_exist",
-                "content": {"source": "job_status_batch", "job_id": job_id},
-            },
-            msg["data"],
-        )
+        self.check_no_input_error_job_id(msg, job_id, "job_status_batch")
 
     def test_lookup_job_states_batch__not_batch(self):
         job_id = JOB_CREATED
@@ -346,16 +362,7 @@ class JobCommTestCase(unittest.TestCase):
         with self.assertRaisesRegex(NoJobException, NO_JOB_ERR):
             self.jc._lookup_job_info(req)
         msg = self.jc._comm.last_message
-        self.assertEqual(
-            {
-                "msg_type": "job_does_not_exist",
-                "content": {
-                    "source": "job_info",
-                    "job_id_list": [],
-                },
-            },
-            msg["data"]
-        )
+        self.check_no_input_error_job_id_list(msg, job_id_list, "job_info")
 
     def test_lookup_job_info__ok_bad(self):
         job_id_list = [JOB_COMPLETED, JOB_NOT_FOUND]
@@ -402,16 +409,7 @@ class JobCommTestCase(unittest.TestCase):
         ):
             self.jc._lookup_job_info_batch(req)
         msg = self.jc._comm.last_message
-        self.assertEqual(
-            {
-                "msg_type": "job_does_not_exist",
-                "content": {
-                    "source": "job_info_batch",
-                    "job_id": job_id,
-                },
-            },
-            msg["data"],
-        )
+        self.check_no_input_error_job_id(msg, job_id, "job_info_batch")
 
     def test_lookup_job_info_batch__dne(self):
         job_id = JOB_NOT_FOUND
@@ -505,16 +503,7 @@ class JobCommTestCase(unittest.TestCase):
         with self.assertRaisesRegex(NoJobException, NO_JOB_ERR):
             self.jc._cancel_jobs(req)
         msg = self.jc._comm.last_message
-        self.assertEqual(
-            {
-                "msg_type": "job_does_not_exist",
-                "content": {
-                    "source": "cancel_job",
-                    "job_id_list": [],
-                },
-            },
-            msg["data"],
-        )
+        self.check_no_input_error_job_id_list(msg, job_id_list, "cancel_job")
 
     @mock.patch(
         "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get", get_mock_client
@@ -615,10 +604,7 @@ class JobCommTestCase(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, NO_JOB_ERR):
             self.jc._retry_jobs(req)
         msg = self.jc._comm.last_message
-        self.assertEqual(
-            {"job_id_list": [], "source": "retry_job"}, msg["data"]["content"]
-        )
-        self.assertEqual("job_does_not_exist", msg["data"]["msg_type"])
+        self.check_no_input_error_job_id_list(msg, [], "retry_job")
 
     @mock.patch(
         "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get", get_mock_client
@@ -727,10 +713,7 @@ class JobCommTestCase(unittest.TestCase):
             self.jc._get_job_logs(req)
         self.assertIn("Job id required to process job_logs request", str(e.exception))
         msg = self.jc._comm.last_message
-        self.assertEqual(
-            {"job_id": job_id, "source": "job_logs"}, msg["data"]["content"]
-        )
-        self.assertEqual("job_does_not_exist", msg["data"]["msg_type"])
+        self.check_no_input_error_job_id(msg, job_id, "job_logs")
 
     def test_get_job_logs_bad_job(self):
         job_id = "bad_job"
@@ -802,16 +785,7 @@ class JobCommTestCase(unittest.TestCase):
         with self.assertRaisesRegex(NoJobException, NO_JOB_ERR):
             self.jc._modify_job_updates(req)
         msg = self.jc._comm.last_message
-        self.assertEqual(
-            {
-                "msg_type": "job_does_not_exist",
-                "content": {
-                    "source": "start_job_update",
-                    "job_id_list": [],
-                },
-            },
-            msg["data"]
-        )
+        self.check_no_input_error_job_id_list(msg, job_id_list, "start_job_update")
 
     def test_modify_job_update__stop__ok_bad_job(self):
         job_id_list = [JOB_COMPLETED]
@@ -919,16 +893,7 @@ class JobCommTestCase(unittest.TestCase):
         ):
             self.jc._modify_job_updates_batch(req)
         msg = self.jc._comm.last_message
-        self.assertEqual(
-            {
-                "msg_type": "job_does_not_exist",
-                "content": {
-                    "source": "start_job_update_batch",
-                    "job_id": job_id,
-                },
-            },
-            msg["data"]
-        )
+        self.check_no_input_error_job_id(msg, job_id, "start_job_update_batch")
 
     def test_modify_job_update_batch__bad_job(self):
         job_id = JOB_NOT_FOUND

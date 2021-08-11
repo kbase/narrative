@@ -282,9 +282,11 @@ define(['uuid', './errors', './jsonrpcErrors'], (Uuid, errors, jsonrpcErrors) =>
 
             const rpc = this.makeRPCRequest(method, params, options);
 
-            const headers = {
-                'Content-Type': 'application/json',
-            };
+            // NB cannot add content-type, otherwise triggers CORS errors for cross-domain
+            // requests because our servers are not always set up to respond to preflight requests,
+            // which are triggered by certain usages (e.g. using Content-Type).
+            // see: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#simple_requests
+            const headers = {};
 
             const authorization = options.authorization || this.authorization;
             if (authorization) {
@@ -325,6 +327,7 @@ define(['uuid', './errors', './jsonrpcErrors'], (Uuid, errors, jsonrpcErrors) =>
                         }
                     );
                 }
+                console.error('EX', ex);
                 throw new ClientRequestError('Network error', {
                     method,
                     params,

@@ -1,15 +1,10 @@
-define(['jquery'], ($) => {
+define(['jquery', 'css!./LoadingMessage.css'], ($) => {
     'use strict';
     function $LoadingMessage(message) {
         return $('<div>')
-            .addClass('alert alert-info')
-            .css('display', 'flex')
-            .css('align-items', 'center')
-            .css('justify-content', 'center')
-            .css('margin', '10px auto')
-            .css('max-width', '30em')
+            .addClass('alert alert-info LoadingMessage')
             .text(message)
-            .append($('<i>').addClass('fa fa-spinner fa-spin fa-2x').css('margin-left', '1ex'));
+            .append($('<i>').addClass('fa fa-spinner fa-spin fa-2x LoadingMessage-icon'));
     }
     return $LoadingMessage;
 });

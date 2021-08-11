@@ -3,7 +3,10 @@ define([
     'jsonrpc/1.1/errors',
     'jsonrpc/1.1/jsonrpcErrors',
     'widgets/common/RenderJSON',
+
+    // for effect
     'bootstrap',
+    'css!./ErrorMessage.css',
 ], ($, errors, jsonrpcErrors, RenderJSON) => {
     'use strict';
 
@@ -36,10 +39,7 @@ define([
     }
 
     function $renderSectionHeader(headerText) {
-        return $('<div>')
-            .css('font-weight', 'bold')
-            .css('text-decoration', 'underline')
-            .text(headerText);
+        return $('<div>').addClass('ErrorMessage-sectionHeader').text(headerText);
     }
 
     function $renderError(err) {
@@ -67,7 +67,7 @@ define([
                     $renderJSONObject({
                         url: err.url,
                         method: err.method,
-                        code: errors.code,
+                        params: err.params,
                     })
                 )
                 .append($renderSectionHeader('Error Response'))
@@ -140,7 +140,7 @@ define([
      */
     function $renderContactInfo() {
         return $('<div>')
-            .css('margin-top', '20px')
+            .addClass('Errormessage-contactInfo')
             .append($renderText('You may ', 'span'))
             .append(
                 $('<a>')

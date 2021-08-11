@@ -1,4 +1,4 @@
-define(['jquery'], ($) => {
+define(['jquery', 'css!./RenderJSON.css'], ($) => {
     'use strict';
 
     /**
@@ -20,7 +20,7 @@ define(['jquery'], ($) => {
     function $renderJSONArray(data) {
         const $rows = data.map((value, index) => {
             return $('<tr>').append(
-                $('<th>').css('color', 'rgba(150, 150, 150, 1)').text(String(index)),
+                $('<th>').addClass('RenderJSON-headerCell').text(String(index)),
                 $('<td>').append($renderJSON(value))
             );
         });
@@ -41,7 +41,7 @@ define(['jquery'], ($) => {
     function $renderJSONObject(data) {
         const $rows = Object.entries(data).map(([key, value]) => {
             return $('<tr>').append(
-                $('<th>').css('color', 'rgba(150, 150, 150, 1)').text(key),
+                $('<th>').addClass('RenderJSON-headerCell').text(key),
                 $('<td>').append($renderJSON(value))
             );
         });

@@ -1,4 +1,9 @@
-define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (Jobs, JobsData, Props, TestUtil) => {
+define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
+    Jobs,
+    JobsData,
+    Props,
+    TestUtil
+) => {
     'use strict';
 
     function arrayToHTML(array) {

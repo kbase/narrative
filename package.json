@@ -15,8 +15,10 @@
         "bower": "1.8.12",
         "chrome-launcher": "0.14.0",
         "chromedriver": "91.0.1",
+        "commander": "8.1.0",
         "eslint": "7.32.0",
         "eslint-config-prettier": "8.3.0",
+        "glob": "7.1.7",
         "grunt": "1.4.1",
         "grunt-cli": "1.4.3",
         "grunt-contrib-copy": "1.0.0",
@@ -39,7 +41,7 @@
         "karma-requirejs": "1.1.0",
         "karma-safari-launcher": "1.0.0",
         "lint-staged": "11.1.2",
-        "msw": "0.32.1",
+        "msw": "0.34.0",
         "prettier": "2.3.2",
         "puppeteer": "10.1.0",
         "requirejs": "2.3.6",
@@ -83,11 +85,10 @@
         "prepare": "husky install",
         "install-npm": "node scripts/install-npm.js"
     },
-    "msw": {
-        "workerDirectory": "kbase-extension/static/ext_modules/msw"
-    },
     "lint-staged": {
-        "*.js": "eslint --check",
-        "*.js": "prettier --check"
+        "*.js": [
+            "eslint --check",
+            "prettier --check"
+        ]
     }
 }

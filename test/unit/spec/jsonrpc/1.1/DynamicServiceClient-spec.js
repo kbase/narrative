@@ -1,12 +1,14 @@
-define(['../../util/mswUtils', 'jsonrpc/1.1/DynamicServiceClient', './helpers'], (
-    mswUtils,
-    DynamicServiceClient,
-    helpers
-) => {
+define([
+    '../../util/mswUtils',
+    'jsonrpc/1.1/DynamicServiceClient',
+    'jsonrpc/1.1/errors',
+    './helpers',
+], (mswUtils, DynamicServiceClient, errors, helpers) => {
     'use strict';
 
     const { MockWorker } = mswUtils;
     const { makeErrorResponse } = helpers;
+    const { ClientAbortError } = errors;
 
     const SERVICE_WIZARD_URL = 'https://ci.kbase.us/services/service_wizard';
     const DYNAMIC_SERVICE_URL = 'https://ci.kbase.us/dynserv/ABC.ADynamicService';
@@ -85,7 +87,6 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/DynamicServiceClient', './helpers'],
                     }
                 }
                 // simulate param missing error
-                // TODO
                 return makeErrorResponse(req, {
                     name: 'JSONRPCError',
                     code: -32602,
@@ -164,7 +165,17 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/DynamicServiceClient', './helpers'],
         }
     }
 
-    describe('The ServiceClient', () => {
+    describe('The DynamicServiceClient', () => {
+        let mock = null;
+
+        beforeEach(async () => {
+            mock = await new MockWorker().start();
+        });
+
+        afterEach(() => {
+            mock.stop();
+        });
+
         it('should be constructable without crashing', () => {
             const client = new DynamicServiceClient({
                 url: 'foo',
@@ -177,7 +188,6 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/DynamicServiceClient', './helpers'],
         // Happy Paths
 
         it('should be able to make an unauthorized request (without a token) and get a response', async () => {
-            const mock = await new MockWorker().start();
             mock.useJSONResponder(SERVICE_WIZARD_URL, (req) => {
                 return makeServiceWizardResponse(req);
             });
@@ -199,12 +209,10 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/DynamicServiceClient', './helpers'],
             const result = await client.callFunc('function2', params);
             expect(result).toHaveString('bar');
             expect(result.bar).toEqual('foo');
-            mock.done();
         });
 
         // call normal service endpoint, params, success
         it('should be able to make an authorized request with a token and get a response', async () => {
-            const mock = await new MockWorker().start();
             mock.useJSONResponder(SERVICE_WIZARD_URL, (req) => {
                 return makeServiceWizardResponse(req);
             });
@@ -233,11 +241,9 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/DynamicServiceClient', './helpers'],
             const client = new DynamicServiceClient(constructorParams);
             const result = await client.callFunc('function2', params);
             expect(result).toEqual({ bar: 'foo' });
-            mock.done();
         });
 
         it('should be able to make an authorized request without a token and get an error response', async () => {
-            const mock = await new MockWorker().start();
             mock.useJSONResponder(SERVICE_WIZARD_URL, (req) => {
                 return makeServiceWizardResponse(req);
             });
@@ -267,12 +273,10 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/DynamicServiceClient', './helpers'],
             };
 
             await expectAsync(noAccess()).toBeRejected();
-            mock.done();
         });
 
         // call parameter-less service endpoint
         it('should be able to make a request without params and get a response', async () => {
-            const mock = await new MockWorker().start();
             mock.useJSONResponder(SERVICE_WIZARD_URL, (req) => {
                 return makeServiceWizardResponse(req);
             });
@@ -291,11 +295,9 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/DynamicServiceClient', './helpers'],
             const client = new DynamicServiceClient(constructorParams);
             const result = await client.callFunc('function1');
             expect(result).toEqual({ bath: 'salt' });
-            mock.done();
         });
 
         it('should be able to make a request with empty params and get a response', async () => {
-            const mock = await new MockWorker().start();
             mock.useJSONResponder(SERVICE_WIZARD_URL, (req) => {
                 return makeServiceWizardResponse(req);
             });
@@ -314,11 +316,9 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/DynamicServiceClient', './helpers'],
             const client = new DynamicServiceClient(constructorParams);
             const result = await client.callFunc('function1', []);
             expect(result).toEqual({ bath: 'salt' });
-            mock.done();
         });
 
         it('should be able to make a request for each type of version tag', async () => {
-            const mock = await new MockWorker().start();
             mock.useJSONResponder(SERVICE_WIZARD_URL, (req) => {
                 return makeServiceWizardResponse(req);
             });
@@ -339,15 +339,12 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/DynamicServiceClient', './helpers'],
                 const result = await client.callFunc('function2', { foo: 'bar' });
                 expect(result).toEqual({ bar: 'foo' });
             }
-
-            mock.done();
         });
 
         // ERRORS
 
         // // call endpoint which returns error
         it('a response with an error should throw', async () => {
-            const mock = await new MockWorker().start();
             mock.useJSONResponder(SERVICE_WIZARD_URL, (req) => {
                 return makeServiceWizardResponse(req);
             });
@@ -372,11 +369,9 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/DynamicServiceClient', './helpers'],
                 return client.callFunc('function');
             };
             await expectAsync(shouldThrow()).toBeRejected();
-            mock.done();
         });
 
-        xit('should receive errors for invalid version tags', async () => {
-            const mock = await new MockWorker().start();
+        it('should receive errors for invalid version tags', async () => {
             mock.useJSONResponder(SERVICE_WIZARD_URL, (req) => {
                 return makeServiceWizardResponse(req);
             });
@@ -395,13 +390,11 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/DynamicServiceClient', './helpers'],
                 };
                 const badVersion = () => {
                     const client = new DynamicServiceClient(constructorParams);
-                    client.callFunc('function2');
+                    return client.callFunc('function2');
                 };
 
-                await expectAsync(badVersion).toBeRejected();
+                await expectAsync(badVersion()).toBeRejected();
             }
-
-            mock.done();
         });
 
         // // Errors
@@ -442,83 +435,73 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/DynamicServiceClient', './helpers'],
             expect(noURL).toThrow();
         });
 
-        // // Usage exceptions
+        // Usage exceptions
 
-        // it('a timeout should trigger an exception', async () => {
-        //     const mock = await new MockWorker().start();
-        //     mock.useJSONResponder(URL, async (req) => {
-        //         await waitFor(2000);
-        //         return makeSDKResponse(req);
-        //     });
+        it('a timeout should trigger an exception for a long running service wizard request', async () => {
+            mock.useJSONResponder(
+                SERVICE_WIZARD_URL,
+                (req) => {
+                    return makeServiceWizardResponse(req);
+                },
+                {
+                    delay: 500,
+                }
+            );
 
-        //     const constructorParams = {
-        //         url: URL,
-        //         module: 'Module',
-        //         timeout: 1000,
-        //     };
+            mock.useJSONResponder(DYNAMIC_SERVICE_URL, (req) => {
+                return makeSDKResponse(req);
+            });
 
-        //     const client = new ServiceClient(constructorParams);
-        //     const shouldTimeout = () => {
-        //         return client.callFunc('function');
-        //     };
+            const constructorParams = {
+                url: SERVICE_WIZARD_URL,
+                module: 'Module2',
+                timeout: 100,
+            };
 
-        //     await expectAsync(shouldTimeout()).toBeRejected();
-        //     mock.done();
-        // });
+            const client = new DynamicServiceClient(constructorParams);
+            const shouldTimeout = () => {
+                return client.callFunc('function');
+            };
 
-        // it('aborting before timeout should trigger an exception', async () => {
-        //     const mock = await new MockWorker().start();
-        //     mock.useJSONResponder(URL, async (req) => {
-        //         await waitFor(2000);
-        //         return makeSDKResponse(req);
-        //     });
+            // try {
+            //     const response = await shouldTimeout();
+            //     console.log('GOT', response);
+            // } catch (ex) {
+            //     console.error('EX', ex);
+            // }
 
-        //     const constructorParams = {
-        //         url: URL,
-        //         module: 'Module',
-        //         timeout: 1000,
-        //     };
+            await expectAsync(shouldTimeout()).toBeRejectedWithError(ClientAbortError);
+        });
 
-        //     const client = new ServiceClient(constructorParams);
-        //     const shouldAbort = () => {
-        //         const [responsePromise, cancel] = client.callFuncCancellable('function');
-        //         cancel();
-        //         return responsePromise;
-        //     };
+        it('a timeout should trigger an exception for a long running request', async () => {
+            // let cancelRequest = null;
 
-        //     await expectAsync(shouldAbort()).toBeRejected();
-        //     mock.done();
-        // });
+            mock.useJSONResponder(SERVICE_WIZARD_URL, (req) => {
+                return makeServiceWizardResponse(req);
+            });
 
-        // // call normal service endpoint, params, success
-        // it('returning a non-array should throw', async () => {
-        //     // We need to set up the listener for the RPC sub-layer.
-        //     const mock = await new MockWorker().start();
-        //     mock.useJSONResponder(URL, (req) => {
-        //         return {
-        //             version: '1.1',
-        //             id: req.body.id,
-        //             result: 'foo',
-        //         };
-        //     });
+            mock.useJSONResponder(
+                DYNAMIC_SERVICE_URL,
+                (req) => {
+                    return makeSDKResponse(req);
+                },
+                {
+                    delay: 200,
+                }
+            );
 
-        //     const constructorParams = {
-        //         url: URL,
-        //         module: 'Module',
-        //         timeout: 1000,
-        //     };
-        //     const params = {
-        //         param1: 'value',
-        //     };
-        //     const client = new ServiceClient(constructorParams);
+            const constructorParams = {
+                url: SERVICE_WIZARD_URL,
+                module: 'Module',
+                timeout: 100,
+            };
 
-        //     const shouldThrow = () => {
-        //         return client.callFunc('function', { params });
-        //     };
+            const client = new DynamicServiceClient(constructorParams);
+            const shouldTimeout = () => {
+                return client.callFunc('function1');
+            };
 
-        //     await expectAsync(shouldThrow()).toBeRejected();
-
-        //     mock.stop();
-        // });
+            await expectAsync(shouldTimeout()).toBeRejectedWithError(ClientAbortError);
+        });
     });
 });

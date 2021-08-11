@@ -6,32 +6,12 @@ define(['jsonrpc/Cache', 'jsonrpc/1.1/ServiceClient'], (Cache, ServiceClient) =>
     const WAITER_TIMEOUT = 30000;
     const WAITER_FREQUENCY = 100;
 
-    // now import the service wizard, and one auth generic client
-
-    // type Promise<T> = Promise<T>
-
-    // interface ModuleInfo {
-
-    //     module_name: string;
-    // }
-
     const moduleCache = new Cache({
         itemLifetime: ITEM_LIFETIME,
         monitoringFrequency: MONITORING_FREQUENCY,
         waiterTimeout: WAITER_TIMEOUT,
         waiterFrequency: WAITER_FREQUENCY,
     });
-
-    /*
-     * arg is:
-     * url - service wizard url
-     * timeout - request timeout
-     * version - service release version or tag
-     * auth - auth structure
-     *   token - auth token
-     *   username - username
-     * rpcContext
-     */
 
     const SERVICE_DISCOVERY_MODULE = 'ServiceWizard';
 
@@ -116,19 +96,15 @@ define(['jsonrpc/Cache', 'jsonrpc/1.1/ServiceClient'], (Cache, ServiceClient) =>
         async callFunc(funcName, params, options = {}) {
             const moduleInfo = await this.getModule();
             const { module_name, url } = moduleInfo;
-            const client = new ServiceClient({
+            const serviceClient = new ServiceClient({
                 module: module_name,
                 url,
                 timeout: this.timeout,
                 token: this.token,
                 strict: this.strict,
             });
-            return client.callFunc(funcName, params, options);
+            return serviceClient.callFunc(funcName, params, options);
         }
-        // async callFuncEmptyResult(funcName, params) {
-        //     await this.lookupModule();
-        //     return super.callFuncEmptyResult(funcName, params);
-        // }
     }
 
     return DynamicServiceClient;

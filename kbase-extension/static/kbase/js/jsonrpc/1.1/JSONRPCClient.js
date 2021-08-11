@@ -18,6 +18,8 @@ define(['uuid', './errors', './jsonrpcErrors'], (Uuid, errors, jsonrpcErrors) =>
             this.controller = new AbortController();
             this.status = 'none';
             this.timeoutTimer = null;
+            this.startedAt = null;
+            this.timedoutAt = null;
         }
 
         /**
@@ -29,8 +31,10 @@ define(['uuid', './errors', './jsonrpcErrors'], (Uuid, errors, jsonrpcErrors) =>
             this.timeoutTimer = window.setTimeout(() => {
                 this.timeout = null;
                 this.status = 'timedout';
+                this.timedoutAt = Date.now();
                 this.controller.abort();
             }, this.timeoutAfter);
+            this.startedAt = Date.now();
             this.status = 'started;';
             return this;
         }
@@ -75,6 +79,10 @@ define(['uuid', './errors', './jsonrpcErrors'], (Uuid, errors, jsonrpcErrors) =>
          */
         getStatus() {
             return this.status;
+        }
+
+        getElapsed() {
+            return this.timedoutAt - this.startedAt;
         }
     }
 
@@ -199,14 +207,14 @@ define(['uuid', './errors', './jsonrpcErrors'], (Uuid, errors, jsonrpcErrors) =>
                                 method,
                                 params,
                                 url,
-                                statusCode: response.status,
+                                responseCode: response.status,
                             });
                         }
                     } else {
                         if (jsonrpcResponse.id !== rpc.id) {
                             throw new ClientResponseError(
                                 `"id" in response "${jsonrpcResponse.id}" does not match "id" in request "${rpc.id}"`,
-                                { method, params, url }
+                                { method, params, url, responseCode: response.status }
                             );
                         }
                     }
@@ -217,13 +225,13 @@ define(['uuid', './errors', './jsonrpcErrors'], (Uuid, errors, jsonrpcErrors) =>
                         method,
                         params,
                         url,
-                        statusCode: response.status,
+                        responseCode: response.status,
                     });
                 }
                 if (jsonrpcResponse.version !== '1.1') {
                     throw new ClientResponseError(
                         `"version" property is "${jsonrpcResponse.version}" not "1.1" as required`,
-                        { method, params, url, statusCode: response.status }
+                        { method, params, url, responseCode: response.status }
                     );
                 }
             }
@@ -238,7 +246,7 @@ define(['uuid', './errors', './jsonrpcErrors'], (Uuid, errors, jsonrpcErrors) =>
                             method,
                             params,
                             url,
-                            statusCode: response.status,
+                            responseCode: response.status,
                         }
                     );
                 }
@@ -251,7 +259,7 @@ define(['uuid', './errors', './jsonrpcErrors'], (Uuid, errors, jsonrpcErrors) =>
                     method,
                     params,
                     url,
-                    statusCode: response.status,
+                    responseCode: response.status,
                 });
             }
 
@@ -303,9 +311,9 @@ define(['uuid', './errors', './jsonrpcErrors'], (Uuid, errors, jsonrpcErrors) =>
                 response = await fetch(url, fetchOptions);
             } catch (ex) {
                 if (ex instanceof DOMException && ex.name === 'AbortError') {
-                    const elapsed = Date.now() - controller.started;
+                    const elapsed = controller.getElapsed();
                     throw new ClientAbortError(
-                        `Requested aborted with status "${controller.status}" after ${elapsed}ms with timeout of ${timeout}ms`,
+                        `Request aborted with status "${controller.status}" after ${elapsed}ms with timeout of ${timeout}ms`,
                         {
                             method,
                             params,

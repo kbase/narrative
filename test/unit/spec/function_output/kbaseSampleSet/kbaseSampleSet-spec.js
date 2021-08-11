@@ -5,10 +5,11 @@ define([
     'require',
     'jsonrpc/1.1/ServiceClient',
     'narrativeConfig',
-], ($, KBaseSampleSetView, mswUtils, localRequire, ServiceClient, Config) => {
+    'json!./data/index.json',
+], ($, KBaseSampleSetView, mswUtils, localRequire, ServiceClient, Config, testData) => {
     'use strict';
 
-    const { tryFor, MockWorker, findTabContent, expectCell, findTab } = mswUtils;
+    const { tryFor, MockWorker, findTabContent, expectCell, findTab, getProp } = mswUtils;
 
     const WORKSPACE_URL = Config.url('workspace'); // 'https://ci.kbase.us/services/ws';
     const SAMPLE_SERVICE_URL = Config.url('sample_service'); // 'https://ci.kbase.us/services/sampleservice';
@@ -25,26 +26,6 @@ define([
      */
 
     /**
-     * Wraps a requirejs `require` in a Promise.
-     *
-     * @param {string} modulePath - a module "path" to load
-     * @returns {Promise} A promise which will resolve to the requested module, or a rejection with an error value.
-     */
-    function pRequire(modulePath) {
-        return new Promise((resolve, reject) => {
-            localRequire(
-                [modulePath],
-                (module) => {
-                    resolve(module);
-                },
-                (err) => {
-                    reject(err);
-                }
-            );
-        });
-    }
-
-    /**
      * An `msw` handler for the sample service. It handles the methods implemented within the switch statement,
      * using data available in the local `data` directory.
      *
@@ -52,14 +33,12 @@ define([
      *                    or an error response.
      */
     function sampleServiceHandler(sampleSetName) {
-        const handleGetSamples = async (params, id) => {
-            // just handle ref for now.
-            const samples = await Promise.all(
-                params.samples.map(({ id: sampleId, version }) => {
-                    const fileName = `sample_${sampleId}_${version}.json`;
-                    return pRequire(`json!./data/${sampleSetName}/${fileName}`);
-                })
-            );
+        const handleGetSamples = (params, id) => {
+            const samples = params.samples.map(({ id: sampleId, version }) => {
+                const fileName = `sample_${sampleId}_${version}.json`;
+                const path = [sampleSetName, fileName];
+                return getProp(testData, path);
+            });
 
             // Don't forget to wrap the result in an array!
             return {
@@ -68,13 +47,13 @@ define([
                 result: [samples],
             };
         };
-        return async (req) => {
+        return (req) => {
             const method = req.body.method;
             const [params] = req.body.params;
             switch (method) {
                 case 'SampleService.get_samples':
                     try {
-                        return await handleGetSamples(params, req.body.id);
+                        return handleGetSamples(params, req.body.id);
                     } catch (ex) {
                         return {
                             version: '1.1',
@@ -108,17 +87,26 @@ define([
      *                    or an error response.
      */
     function workspaceHandler(sampleSetName) {
-        const handleGetObjects2 = async (params, id) => {
+        const handleGetObjects2 = (params, id) => {
             // just handle ref for now.
-            const objects = await Promise.all(
-                params.objects.map((objectSpec) => {
-                    const { ref } = objectSpec;
-                    // make object ref into a filesystem friendly name
-                    // E.g. 53116/17/1 = > 53116-17-1
-                    const fileName = `object_${ref.replace(/\//g, '_')}.json`;
-                    return pRequire(`json!./data/${sampleSetName}/${fileName}`);
-                })
-            );
+            // const objects = await Promise.all(
+            //     params.objects.map((objectSpec) => {
+            //         const { ref } = objectSpec;
+            //         // make object ref into a filesystem friendly name
+            //         // E.g. 53116/17/1 = > 53116-17-1
+            //         const fileName = `object_${ref.replace(/\//g, '_')}.json`;
+            //         return pRequire(`json!./data/${sampleSetName}/${fileName}`);
+            //     })
+            // );
+
+            const objects = params.objects.map((objectSpec) => {
+                // make object ref into a filesystem friendly name
+                // E.g. 53116/17/1 = > 53116-17-1
+                const { ref } = objectSpec;
+                const fileName = `object_${ref.replace(/\//g, '_')}.json`;
+                const path = [sampleSetName, fileName];
+                return getProp(testData, path);
+            });
 
             // Don't forget to wrap the result in an array!
             return {
@@ -132,13 +120,13 @@ define([
             };
         };
 
-        return async (req) => {
+        return (req) => {
             const method = req.body.method;
             const [params] = req.body.params;
             switch (method) {
                 case 'Workspace.get_objects2':
                     try {
-                        return await handleGetObjects2(params, req.body.id);
+                        return handleGetObjects2(params, req.body.id);
                     } catch (ex) {
                         return {
                             version: '1.1',
@@ -173,10 +161,9 @@ define([
             mock.useJSONResponder(SAMPLE_SERVICE_URL, sampleServiceHandler('sampleSet1'));
         });
 
-        afterAll(async () => {
+        afterAll(() => {
             if (mock) {
-                await mock.stop();
-                mock.reset();
+                mock.stop();
             }
         });
 

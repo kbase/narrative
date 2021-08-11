@@ -115,27 +115,28 @@ function myServiceHandler() {
     }
 ```
 
-### Use `beforeAll` and `afterAll` to control mock lifecycle
+### Use `beforeEach` and `afterEach` to control mock lifecycle
 
 E.g., taken from working tests:
 
 ```javascript
         let mock = null;
-        beforeAll(async () => {
+        beforeEach(async () => {
             mock = new MockWorker();
             await mock.start();
             mock.useJSONResponder(WORKSPACE_URL, workspaceHandler());
             mock.useJSONResponder(SAMPLE_SERVICE_URL, sampleServiceHandler());
         });
 
-        afterAll(async () => {
+        afterEach(() => {
             if (mock) {
-                await mock.stop();
-                mock.reset();
+                mock.stop();
             }
         });
 
 ```
+
+Note that these are `each` test lifecycle hooks. This is because this this case we want the mocking machinery pristine for each test. We could also use beforeAll if we just need to set up the responders the same way for all tests, etc.
 
 Note that the handlers are provided as defined above, and a url must also be provided. In this case, the urls are taken from the test configuration, so will match what the tests naturally use (as long as they also use the test configuration), and what nested code will use (code not controlled by the tests, which nevertheless uses the global config.)
 
@@ -195,7 +196,7 @@ To support more advanced testing scenarios, involving authentication, search, et
 
 ## Status
 
-Usage of this library is very new. There are some rough edeges. It isn't integrated into the documentation yet. There is one workaround in the `mswUtils.js` to patch over a bug (https://github.com/mswjs/msw/issues/694). `mswUtils.js` itself could use some work and documentation, and some of the utility functions are enough and can moved elsewhere.
+Usage of this library is very new. There are some rough edges. It isn't integrated into the documentation yet. There is one workaround in the `mswUtils.js` to patch over a bug (https://github.com/mswjs/msw/issues/694). `mswUtils.js` itself could use some work and documentation, and some of the utility functions are more general than msw usage and can moved elsewhere.
 
 ## TODO
 
@@ -203,5 +204,3 @@ Usage of this library is very new. There are some rough edeges. It isn't integra
 - Make handler utils and wrapper for creating fully compliant JSON-RPC 1.1 and 2.0 handlers (they currently aren't).
 - Make handler utils and wrapper for REST services.
 - Create basic service handlers, at least as examples, if not re-usable, for all core services.
-
-

@@ -58,12 +58,17 @@ define(['msw'], (msw) => {
         // worker has started. They can be removed using resetHandlers. These are the preferred
         // way to use msw in tests.
 
-        useJSONResponder(url, responder) {
+        useJSONResponder(url, responder, options = {}) {
             const handler = rest.post(url, async (req, res, ctx) => {
+                const args = [];
+                if (options.delay) {
+                    args.push(ctx.delay(options.delay));
+                }
                 const response = await responder(req, res);
                 if (response) {
-                    return res(ctx.json(response));
+                    args.push(ctx.json(response));
                 }
+                return res(...args);
             });
             this.worker.use(handler);
         }
@@ -146,6 +151,14 @@ define(['msw'], (msw) => {
         }, 3000);
     }
 
+    function getProp(obj, path) {
+        const [key, ...rest] = path;
+        if (rest.length === 0) {
+            return obj[key];
+        }
+        return getProp(obj[key], rest);
+    }
+
     return {
         waitFor,
         tryFor,
@@ -153,5 +166,6 @@ define(['msw'], (msw) => {
         findTab,
         expectCell,
         findTabContent,
+        getProp,
     };
 });

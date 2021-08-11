@@ -167,10 +167,9 @@ define([
                 const duplicateValues = updateDuplicateOutputValues();
                 if (duplicateValues.includes(newValue)) {
                     paramsBus.emit('invalid-param-value', {
-                        parameter: parameterSpec.id
+                        parameter: parameterSpec.id,
                     });
-                }
-                else {
+                } else {
                     paramsBus.emit('parameter-changed', {
                         parameter: parameterSpec.id,
                         newValue: newValue,
@@ -650,8 +649,7 @@ define([
                     if (!isOutput) {
                         // if it's not an "output", it's a file
                         fileParamIds.push(id);
-                    }
-                    else {
+                    } else {
                         outputParamIds.push(id);
                     }
                 }
@@ -704,8 +702,7 @@ define([
                 for (const [rowId, value] of Object.entries(outputValues)) {
                     if (!value) {
                         return counts;
-                    }
-                    else if (!(value in counts)) {
+                    } else if (!(value in counts)) {
                         counts[value] = [];
                     }
                     counts[value].push({ rowId, paramId });
@@ -735,7 +732,7 @@ define([
             //        duplicateRows: [rowId, rowId]
             //    }
             // }
-            const duplicates = { };
+            const duplicates = {};
             Object.values(values).forEach((dupArr) => {
                 const allRows = dupArr.reduce((rowIds, entry) => {
                     rowIds.add(dataModel.rowIdToIndex[entry.rowId] + 1);
@@ -746,7 +743,7 @@ define([
                     const rowIdx = dataModel.rowIdToIndex[rowId] + 1;
                     const paramInfo = {
                         widget: dataModel.rows[rowId].widgets[entry.paramId],
-                        duplicateRows: [...allRows].filter(x => x !== rowIdx)
+                        duplicateRows: [...allRows].filter((x) => x !== rowIdx),
                     };
                     if (paramInfo.duplicateRows.length === 0) {
                         paramInfo.duplicateRows.push(rowIdx);
@@ -759,13 +756,13 @@ define([
             });
             const outputParams = new Set(getAllOutputParameterWidgets());
 
-            Object.values(duplicates).forEach(duplicateEntry => {
-                Object.values(duplicateEntry).forEach(entry => {
+            Object.values(duplicates).forEach((duplicateEntry) => {
+                Object.values(duplicateEntry).forEach((entry) => {
                     entry.widget.setDuplicateValue(entry.duplicateRows);
                     outputParams.delete(entry.widget);
                 });
             });
-            outputParams.forEach(widget => widget.clearDuplicateValue());
+            outputParams.forEach((widget) => widget.clearDuplicateValue());
 
             return Object.keys(values);
         }

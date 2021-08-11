@@ -30,7 +30,7 @@ define([
         },
         state = {
             isValid: true,
-            isDuplicate: false
+            isDuplicate: false,
         };
 
     function factory(config) {
@@ -78,18 +78,14 @@ define([
                         id: ids.inputControl,
                         dataElement: 'input-control',
                     }),
-                    div(
-                        {
-                            class: `${messageBaseClass} hidden`,
-                            dataElement: 'message-panel',
-                        },
-                    ),
-                    div(
-                        {
-                            class: `${messageBaseClass}__duplicate hidden`,
-                            dataElement: 'duplicate-message-panel'
-                        },
-                    ),
+                    div({
+                        class: `${messageBaseClass} hidden`,
+                        dataElement: 'message-panel',
+                    }),
+                    div({
+                        class: `${messageBaseClass}__duplicate hidden`,
+                        dataElement: 'duplicate-message-panel',
+                    }),
                 ]
             );
 
@@ -118,14 +114,19 @@ define([
         }
 
         function generateMessage(messageInfo, text) {
-            return span({
-                class: `${messageInfo.messageClass}__title`,
-            }, [
-                iTag({
-                    class: messageInfo.icon,
-                }),
-                strong(` ${messageInfo.prefix}: `),
-            ]) + text;
+            return (
+                span(
+                    {
+                        class: `${messageInfo.messageClass}__title`,
+                    },
+                    [
+                        iTag({
+                            class: messageInfo.icon,
+                        }),
+                        strong(` ${messageInfo.prefix}: `),
+                    ]
+                ) + text
+            );
         }
 
         function renderMessage(messageInfo, text, messagePanelSelector) {
@@ -148,8 +149,8 @@ define([
         function clearMessage(selector) {
             if (state.isValid && !state.isDuplicate) {
                 parent
-                .querySelector(`.${cssBaseClass}__rowCell`)
-                .classList.remove(`${cssBaseClass}__error_message`);
+                    .querySelector(`.${cssBaseClass}__rowCell`)
+                    .classList.remove(`${cssBaseClass}__error_message`);
             }
             const msgPanel = parent.querySelector(`.${selector}`);
             msgPanel.className = `${selector} hidden`;
@@ -235,7 +236,7 @@ define([
                     }
                     bus.stop();
                     return null;
-                })
+                });
         }
 
         return {
@@ -243,7 +244,7 @@ define([
             stop,
             bus,
             setDuplicateValue,
-            clearDuplicateValue
+            clearDuplicateValue,
         };
     }
 

@@ -51,8 +51,10 @@ define([
                 this.options.workspaceID = id[0];
             }
 
-            this.$mainPanel = $('<div>').addClass('').hide();
+            this.$mainPanel = $('<div>').attr('data-testid', 'main-panel').hide();
             this.$elem.append(this.$mainPanel);
+
+            this.token = this.authToken();
 
             if (!this.options.featureset_name) {
                 this.renderError('No FeatureSet to render!');
@@ -60,9 +62,6 @@ define([
                 this.renderError('No workspace given!');
             } else if (!this.options.kbCache && !this.authToken()) {
                 this.renderError('No cache given, and not logged in!');
-            } else {
-                this.token = this.authToken();
-                this.render();
             }
 
             return this;
@@ -81,16 +80,16 @@ define([
                 token: this.token,
                 timeout: TIMEOUT,
             });
-            this.$mainPanel.hide();
-            this.$mainPanel.empty();
             this.loadFeatureSet();
         },
 
         features: null,
 
         loadFeatureSet: function () {
-            this.features = {};
+            this.$mainPanel.hide();
+            this.$mainPanel.empty();
             this.loading(true);
+            this.features = {};
             this.workspace
                 .callFunc('get_objects', [
                     {
@@ -98,19 +97,24 @@ define([
                     },
                 ])
                 .then((data) => {
-                    const fs = data[0].data;
-                    if (fs.description) {
+                    const featureSet = data[0].data;
+                    if (featureSet.description) {
                         this.$mainPanel.append(
-                            $('<div data-testid="description">')
-                                .append('<i data-testid="label">Description</i>: ')
-                                .append(`<span data-testid='value'>${fs.description}</value>`)
+                            $('<div>')
+                                .attr('data-testid', 'description')
+                                .append($('<i>').attr('data-testid', 'label').text('Description: '))
+                                .append(
+                                    $('<span>')
+                                        .attr('data-testid', 'value')
+                                        .text(featureSet.description)
+                                )
                         );
                     }
 
-                    for (const fid in fs.elements) {
-                        if (fid in fs.elements) {
-                            for (let k = 0; k < fs.elements[fid].length; k++) {
-                                const gid = fs.elements[fid][k];
+                    for (const fid in featureSet.elements) {
+                        if (fid in featureSet.elements) {
+                            for (let k = 0; k < featureSet.elements[fid].length; k++) {
+                                const gid = featureSet.elements[fid][k];
                                 if (gid in this.features) {
                                     this.features[gid].push(fid);
                                 } else {
@@ -299,19 +303,6 @@ define([
         },
 
         renderError: function (error) {
-            // let errString;
-            // if (typeof error === 'string') {
-            //     errString = error;
-            // } else if (error.error && error.error.message) {
-            //     errString = error.error.message;
-            // } else {
-            //     errString = error.message;
-            // }
-
-            // const $errorDiv = $('<div>')
-            //     .addClass('alert alert-danger')
-            //     .append('<b>Error:</b>')
-            //     .append('<br>' + errString);
             this.$elem.empty();
             this.$elem.append($ErrorMessage(error));
         },
@@ -353,10 +344,8 @@ define([
         },
 
         loggedInCallback: function (event, auth) {
-            if (this.token == null) {
-                this.token = auth.token;
-                this.render();
-            }
+            this.token = auth.token;
+            this.render();
             return this;
         },
 

@@ -27,6 +27,10 @@ define([
                 messageClass: `${messageBaseClass}__warning`,
                 icon: 'fa fa-exclamation-circle',
             },
+        },
+        state = {
+            isValid: true,
+            isDuplicate: false
         };
 
     function factory(config) {
@@ -79,11 +83,12 @@ define([
                             class: `${messageBaseClass} hidden`,
                             dataElement: 'message-panel',
                         },
-                        [
-                            div({
-                                class: `${messageBaseClass}__body`,
-                            }),
-                        ]
+                    ),
+                    div(
+                        {
+                            class: `${messageBaseClass}__duplicate hidden`,
+                            dataElement: 'duplicate-message-panel'
+                        },
                     ),
                 ]
             );
@@ -112,37 +117,42 @@ define([
             };
         }
 
-        function showMessage(messageInfo, text) {
-            const message =
-                span(
-                    {
-                        class: `${messageInfo.messageClass}__title`,
-                    },
-                    [
-                        iTag({
-                            class: messageInfo.icon,
-                        }),
-                        strong(` ${messageInfo.prefix}: `),
-                    ]
-                ) + text;
+        function generateMessage(messageInfo, text) {
+            return span({
+                class: `${messageInfo.messageClass}__title`,
+            }, [
+                iTag({
+                    class: messageInfo.icon,
+                }),
+                strong(` ${messageInfo.prefix}: `),
+            ]) + text;
+        }
 
+        function renderMessage(messageInfo, text, messagePanelSelector) {
+            const message = generateMessage(messageInfo, text);
             if (messageInfo.containerClass) {
                 parent
                     .querySelector(`.${cssBaseClass}__rowCell`)
                     .classList.add(messageInfo.containerClass);
             }
-            parent.querySelector(`.${messageBaseClass}__body`).innerHTML = message;
-            const msgPanel = parent.querySelector(`.${messageBaseClass}`);
+            const msgPanel = parent.querySelector(messagePanelSelector);
+            msgPanel.innerHTML = message;
             msgPanel.classList.add(messageInfo.messageClass);
             msgPanel.classList.remove('hidden');
         }
 
-        function clearMessage() {
-            parent
+        function showMessage(messageInfo, text) {
+            renderMessage(messageInfo, text, `.${messageBaseClass}`);
+        }
+
+        function clearMessage(selector) {
+            if (state.isValid && !state.isDuplicate) {
+                parent
                 .querySelector(`.${cssBaseClass}__rowCell`)
                 .classList.remove(`${cssBaseClass}__error_message`);
-            const msgPanel = parent.querySelector(`.${messageBaseClass}`);
-            msgPanel.className = `${messageBaseClass} hidden`;
+            }
+            const msgPanel = parent.querySelector(`.${selector}`);
+            msgPanel.className = `${selector} hidden`;
         }
 
         /**
@@ -162,18 +172,36 @@ define([
          */
         function validateField(message) {
             // always clear the existing message to start with
-            clearMessage();
             switch (message.diagnosis) {
                 case 'required-missing':
                 case 'invalid':
+                    state.isValid = false;
                     showMessage(MESSAGE.error, message.errorMessage);
                     break;
                 case 'suspect':
+                    state.isValid = true;
                     showMessage(MESSAGE.warning, message.shortMessage);
                     break;
                 default:
+                    state.isValid = true;
+                    clearMessage(messageBaseClass);
                     break;
             }
+        }
+
+        function setDuplicateValue(duplicateRows) {
+            state.isDuplicate = true;
+            let message = 'duplicate value found on row';
+            if (duplicateRows.length > 1) {
+                message += 's';
+            }
+            message += ' ' + duplicateRows.join(', ');
+            renderMessage(MESSAGE.error, message, `.${messageBaseClass}__duplicate`);
+        }
+
+        function clearDuplicateValue() {
+            state.isDuplicate = false;
+            clearMessage(`${messageBaseClass}__duplicate`);
         }
 
         function start(arg) {
@@ -198,27 +226,24 @@ define([
         function stop() {
             return inputControl
                 .stop()
-                .then(() => {
+                .catch((err) => {
+                    console.error('Error stopping fieldTableCellWidget: ', err);
+                })
+                .finally(() => {
                     if (parent && container) {
                         parent.removeChild(container);
                     }
                     bus.stop();
                     return null;
                 })
-                .catch((err) => {
-                    console.error('Error stopping fieldTableCellWidget: ', err);
-                    if (parent && container) {
-                        parent.removeChild(container);
-                    }
-                    bus.stop();
-                    return null;
-                });
         }
 
         return {
             start,
             stop,
             bus,
+            setDuplicateValue,
+            clearDuplicateValue
         };
     }
 

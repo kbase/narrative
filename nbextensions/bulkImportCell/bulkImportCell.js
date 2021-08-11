@@ -31,7 +31,7 @@ define([
     BusEventManager,
     Events,
     html,
-    JobManager,
+    JobManagerModule,
     Jobs,
     Props,
     Runtime,
@@ -54,8 +54,9 @@ define([
     States
 ) => {
     'use strict';
-    const CELL_TYPE = 'app-bulk-import';
+    const { JobManager } = JobManagerModule;
 
+    const CELL_TYPE = 'app-bulk-import';
     const div = html.tag('div'),
         p = html.tag('p'),
         cssCellType = 'kb-bulk-import';

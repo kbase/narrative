@@ -327,8 +327,29 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
      * @param {class} Base
      * @returns
      */
-    const defaultHandlerMixin = (Base) =>
+    const DefaultHandlerMixin = (Base) =>
         class extends Base {
+            constructor(config) {
+                // run the constructor for the base class
+                super(config);
+                this.addDefaultHandlers();
+            }
+
+            addDefaultHandlers() {
+                const defaultHandlers = {
+                    'job-does-not-exist': this.handleJobDoesNotExist,
+                    'job-info': this.handleJobInfo,
+                    'job-retry-response': this.handleJobRetry,
+                    'job-status': this.handleJobStatus,
+                };
+
+                Object.keys(defaultHandlers).forEach((event) => {
+                    this.addHandler(event, {
+                        __default: defaultHandlers[event],
+                    });
+                }, this);
+            }
+
             /**
              * parse job info and update the appropriate part of the model
              *
@@ -429,24 +450,9 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
                 // otherwise, update the state
                 self.updateModel([jobState]);
             }
-
-            addDefaultHandlers() {
-                const defaultHandlers = {
-                    'job-does-not-exist': this.handleJobDoesNotExist,
-                    'job-info': this.handleJobInfo,
-                    'job-retry-response': this.handleJobRetry,
-                    'job-status': this.handleJobStatus,
-                };
-
-                Object.keys(defaultHandlers).forEach((event) => {
-                    this.addHandler(event, {
-                        __default: defaultHandlers[event],
-                    });
-                }, this);
-            }
         };
 
-    const jobActionsMixin = (Base) =>
+    const JobActionsMixin = (Base) =>
         class extends Base {
             /* JOB ACTIONS */
 
@@ -654,7 +660,6 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
             _initJobs(args) {
                 const { allJobIds, batchId } = args;
 
-                this.addDefaultHandlers();
                 this.addListener('job-status', allJobIds);
                 this.addListener('job-does-not-exist', allJobIds);
 
@@ -681,7 +686,13 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
             }
         };
 
-    class JobManager extends BatchInitMixin(jobActionsMixin(defaultHandlerMixin(JobManagerCore))) {}
+    class JobManager extends BatchInitMixin(JobActionsMixin(DefaultHandlerMixin(JobManagerCore))) {}
 
-    return JobManager;
+    return {
+        JobManagerCore,
+        DefaultHandlerMixin,
+        JobActionsMixin,
+        BatchInitMixin,
+        JobManager,
+    };
 });

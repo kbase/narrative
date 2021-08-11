@@ -8,8 +8,9 @@ define([
     'common/runtime',
     'testUtil',
     '/test/data/jobsData',
-], ($, Promise, JobStatusTable, Jobs, JobManager, Props, Runtime, TestUtil, JobsData) => {
+], ($, Promise, JobStatusTable, Jobs, JobManagerModule, Props, Runtime, TestUtil, JobsData) => {
     'use strict';
+    const { JobManager } = JobManagerModule;
 
     const cssBaseClass = JobStatusTable.cssBaseClass;
     const jobArray = JobsData.allJobsWithBatchParent;

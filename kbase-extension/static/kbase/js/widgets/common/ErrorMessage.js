@@ -82,13 +82,6 @@ define([
         } else if (err instanceof errors.ClientError) {
             return $('<div>')
                 .append($renderText(err.message, 'p'))
-                .append(
-                    $renderJSONObject({
-                        url: err.url,
-                        method: err.method,
-                        code: errors.code,
-                    })
-                )
                 .append($('<div>').text('Details'))
                 .append($renderJSON(err.toJSON()));
         } else if (err instanceof Error) {

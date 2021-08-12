@@ -179,7 +179,7 @@ define(['uuid', './errors', './jsonrpcErrors'], (Uuid, errors, jsonrpcErrors) =>
                 throw new ClientParseError('Error parsing response', {
                     method,
                     // because params may be undefined.
-                    params: params,
+                    params,
                     url,
                     responseCode: response.status,
                     responseText,
@@ -327,7 +327,6 @@ define(['uuid', './errors', './jsonrpcErrors'], (Uuid, errors, jsonrpcErrors) =>
                         }
                     );
                 }
-                console.error('EX', ex);
                 throw new ClientRequestError('Network error', {
                     method,
                     params,

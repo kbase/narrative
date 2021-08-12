@@ -9,7 +9,7 @@
         "@wdio/browserstack-service": "7.7.8",
         "@wdio/cli": "7.7.8",
         "@wdio/local-runner": "7.7.8",
-        "@wdio/mocha-framework": "7.7.7",
+        "@wdio/mocha-framework": "7.9.1",
         "@wdio/selenium-standalone-service": "7.7.7",
         "@wdio/spec-reporter": "7.7.7",
         "bower": "1.8.12",

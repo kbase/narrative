@@ -48,16 +48,17 @@ define([
             };
         };
         return (req) => {
-            const method = req.body.method;
-            const [params] = req.body.params;
+            const rpc = JSON.parse(req.body);
+            const method = rpc.method;
+            const [params] = rpc.params;
             switch (method) {
                 case 'SampleService.get_samples':
                     try {
-                        return handleGetSamples(params, req.body.id);
+                        return handleGetSamples(params, rpc.id);
                     } catch (ex) {
                         return {
                             version: '1.1',
-                            id: req.body.id,
+                            id: rpc.id,
                             error: {
                                 name: 'JSONRPCError',
                                 code: 100,
@@ -68,7 +69,7 @@ define([
                 default:
                     return {
                         version: '1.1',
-                        id: req.body.id,
+                        id: rpc.id,
                         error: {
                             name: 'JSONRPCError',
                             code: -32601,
@@ -88,17 +89,6 @@ define([
      */
     function workspaceHandler(sampleSetName) {
         const handleGetObjects2 = (params, id) => {
-            // just handle ref for now.
-            // const objects = await Promise.all(
-            //     params.objects.map((objectSpec) => {
-            //         const { ref } = objectSpec;
-            //         // make object ref into a filesystem friendly name
-            //         // E.g. 53116/17/1 = > 53116-17-1
-            //         const fileName = `object_${ref.replace(/\//g, '_')}.json`;
-            //         return pRequire(`json!./data/${sampleSetName}/${fileName}`);
-            //     })
-            // );
-
             const objects = params.objects.map((objectSpec) => {
                 // make object ref into a filesystem friendly name
                 // E.g. 53116/17/1 = > 53116-17-1
@@ -121,16 +111,18 @@ define([
         };
 
         return (req) => {
-            const method = req.body.method;
-            const [params] = req.body.params;
+            const rpc = JSON.parse(req.body);
+            const method = rpc.method;
+            // console.log('BODY', req.body);
+            const [params] = rpc.params;
             switch (method) {
                 case 'Workspace.get_objects2':
                     try {
-                        return handleGetObjects2(params, req.body.id);
+                        return handleGetObjects2(params, rpc.id);
                     } catch (ex) {
                         return {
                             version: '1.1',
-                            id: req.body.id,
+                            id: rpc.id,
                             error: {
                                 name: 'JSONRPCError',
                                 code: 100,
@@ -141,7 +133,7 @@ define([
                 default:
                     return {
                         version: '1.1',
-                        id: req.body.id,
+                        id: rpc.id,
                         error: {
                             name: 'JSONRPCError',
                             code: -32601,

@@ -8,7 +8,7 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/ServiceClient', './helpers'], (
     const { MockWorker, waitFor } = mswUtils;
     const { makeErrorResponse, URL } = helpers;
 
-    function makeSDKResponse(req, result) {
+    function makeSDKResponse(rpc, result) {
         const defaultResult = [
             {
                 bar: 'foo',
@@ -16,7 +16,7 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/ServiceClient', './helpers'], (
         ];
         return {
             version: '1.1',
-            id: req.body.id,
+            id: rpc.id,
             result: result || defaultResult,
         };
     }
@@ -37,14 +37,14 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/ServiceClient', './helpers'], (
         // call normal service endpoint, params, success
         it('should be able to make a request with a token and get a response', async () => {
             const mock = await new MockWorker().start();
-            mock.useJSONResponder(URL, (req) => {
+            mock.useJSONResponder(URL, (req, _res, rpc) => {
                 if (req.headers.get('authorization') !== 'token') {
                     return makeErrorResponse(req, {
                         code: 100,
                         message: 'No authorization',
                     });
                 }
-                return makeSDKResponse(req);
+                return makeSDKResponse(rpc);
             });
 
             const constructorParams = {
@@ -66,8 +66,8 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/ServiceClient', './helpers'], (
         it('should be able to make a request and get a response', async () => {
             // We need to set up the listener for the RPC sub-layer.
             const mock = await new MockWorker().start();
-            mock.useJSONResponder(URL, (req) => {
-                return makeSDKResponse(req);
+            mock.useJSONResponder(URL, (_req, _res, rpc) => {
+                return makeSDKResponse(rpc);
             });
 
             const constructorParams = {
@@ -89,8 +89,8 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/ServiceClient', './helpers'], (
         it('should be able to make a request without params and get a response', async () => {
             // We need to set up the listener for the RPC sub-layer.
             const mock = await new MockWorker().start();
-            mock.useJSONResponder(URL, (req) => {
-                return makeSDKResponse(req);
+            mock.useJSONResponder(URL, (_req, _res, rpc) => {
+                return makeSDKResponse(rpc);
             });
 
             const constructorParams = {
@@ -109,8 +109,8 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/ServiceClient', './helpers'], (
         it('a response with an error should throw', async () => {
             // We need to set up the listener for the RPC sub-layer.
             const mock = await new MockWorker().start();
-            mock.useJSONResponder(URL, (req) => {
-                return makeErrorResponse(req, {
+            mock.useJSONResponder(URL, (_req, _res, rpc) => {
+                return makeErrorResponse(rpc, {
                     code: 123,
                     message: 'Error message',
                 });
@@ -173,9 +173,9 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/ServiceClient', './helpers'], (
 
         it('a timeout should trigger an exception', async () => {
             const mock = await new MockWorker().start();
-            mock.useJSONResponder(URL, async (req) => {
+            mock.useJSONResponder(URL, async (_req, _res, rpc) => {
                 await waitFor(2000);
-                return makeSDKResponse(req);
+                return makeSDKResponse(rpc);
             });
 
             const constructorParams = {
@@ -195,9 +195,9 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/ServiceClient', './helpers'], (
 
         it('aborting before timeout should trigger an exception', async () => {
             const mock = await new MockWorker().start();
-            mock.useJSONResponder(URL, async (req) => {
+            mock.useJSONResponder(URL, async (_req, _res, rpc) => {
                 await waitFor(2000);
-                return makeSDKResponse(req);
+                return makeSDKResponse(rpc);
             });
 
             const constructorParams = {
@@ -221,10 +221,10 @@ define(['../../util/mswUtils', 'jsonrpc/1.1/ServiceClient', './helpers'], (
         it('returning a non-array should throw', async () => {
             // We need to set up the listener for the RPC sub-layer.
             const mock = await new MockWorker().start();
-            mock.useJSONResponder(URL, (req) => {
+            mock.useJSONResponder(URL, (_req, _res, rpc) => {
                 return {
                     version: '1.1',
-                    id: req.body.id,
+                    id: rpc.id,
                     result: 'foo',
                 };
             });

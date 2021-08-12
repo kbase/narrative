@@ -30,14 +30,14 @@ define(['jsonrpc/1.1/JSONRPCClient'], (JSONRPCClient) => {
         return new JSONRPCClient(constructorParams);
     }
 
-    function makeResponse(req, result, { replace } = {}) {
+    function makeResponse(rpc, result, { replace } = {}) {
         const response = {
             version: '1.1',
             result,
         };
 
-        if (typeof req.body.id !== 'undefined') {
-            response.id = req.body.id;
+        if (typeof rpc.id !== 'undefined') {
+            response.id = rpc.id;
         }
 
         if (replace) {
@@ -53,14 +53,14 @@ define(['jsonrpc/1.1/JSONRPCClient'], (JSONRPCClient) => {
         return response;
     }
 
-    function makeErrorResponse(req, error, { replace } = {}) {
+    function makeErrorResponse(rpc, error, { replace } = {}) {
         const response = {
             version: '1.1',
             error,
         };
 
-        if (typeof req.body.id !== 'undefined') {
-            response.id = req.body.id;
+        if (typeof rpc.id !== 'undefined') {
+            response.id = rpc.id;
         }
 
         if (replace) {

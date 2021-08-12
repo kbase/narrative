@@ -59,23 +59,30 @@ define(['msw'], (msw) => {
         // way to use msw in tests.
 
         useJSONResponder(url, responder, options = {}) {
-            const handler = rest.post(url, async (req, res, ctx) => {
+            const handler = rest.post(url, (req, res, ctx) => {
                 const args = [];
-                if (options.delay) {
-                    args.push(ctx.delay(options.delay));
+                let rpc;
+                if (typeof req.body === 'string') {
+                    rpc = JSON.parse(req.body);
+                } else {
+                    rpc = req.body;
                 }
-                const response = await responder(req, res);
+
+                const response = responder(req, res, rpc);
                 if (response) {
+                    if (options.delay) {
+                        args.push(ctx.delay(options.delay));
+                    }
                     args.push(ctx.json(response));
+                    return res(...args);
                 }
-                return res(...args);
             });
             this.worker.use(handler);
         }
 
         useTextResponder(url, responder) {
-            const handler = rest.post(url, async (req, res, ctx) => {
-                const response = await responder(req);
+            const handler = rest.post(url, (req, res, ctx) => {
+                const response = responder(req);
                 if (response) {
                     return res(ctx.text(response));
                 }

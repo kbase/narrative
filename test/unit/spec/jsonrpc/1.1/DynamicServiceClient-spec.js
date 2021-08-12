@@ -14,9 +14,9 @@ define([
     const DYNAMIC_SERVICE_URL = 'https://ci.kbase.us/dynserv/ABC.ADynamicService';
 
     // A responder for the dynamic service request
-    function makeSDKResponse(req) {
-        const method = req.body.method;
-        const [params] = req.body.params;
+    function makeSDKResponse(rpc) {
+        const method = rpc.method;
+        const [params] = rpc.params;
 
         switch (method) {
             case 'ADynamicService.function1':
@@ -24,7 +24,7 @@ define([
                     // Actually, KB SDK apps require params to be present, yet empty.
                     return {
                         version: '1.1',
-                        id: req.body.id,
+                        id: rpc.id,
                         result: [
                             {
                                 bath: 'salt',
@@ -34,7 +34,7 @@ define([
                 }
                 if (Array.isArray(params)) {
                     if (params.length > 0) {
-                        return makeErrorResponse(req, {
+                        return makeErrorResponse(rpc, {
                             name: 'JSONRPCError',
                             code: -32602,
                             message: 'Wrong parameter count for method ADynamicService.function1',
@@ -43,7 +43,7 @@ define([
                     }
                     return {
                         version: '1.1',
-                        id: req.body.id,
+                        id: rpc.id,
                         result: [
                             {
                                 bath: 'salt',
@@ -51,7 +51,7 @@ define([
                         ],
                     };
                 }
-                return makeErrorResponse(req, {
+                return makeErrorResponse(rpc, {
                     name: 'JSONRPCError',
                     code: -32602,
                     message: 'No "params" expected, but was provided',
@@ -61,7 +61,7 @@ define([
                 });
             case 'ADynamicService.function2':
                 if (typeof params === 'undefined') {
-                    return makeErrorResponse(req, {
+                    return makeErrorResponse(rpc, {
                         name: 'JSONRPCError',
                         code: -32602,
                         message: '"params" expected, but was not provided',
@@ -71,7 +71,7 @@ define([
                     if (params.foo === 'bar') {
                         return {
                             version: '1.1',
-                            id: req.body.id,
+                            id: rpc.id,
                             result: [
                                 {
                                     bar: 'foo',
@@ -79,7 +79,7 @@ define([
                             ],
                         };
                     } else {
-                        return makeErrorResponse(req, {
+                        return makeErrorResponse(rpc, {
                             name: 'JSONRPCError',
                             code: -32602,
                             message: 'Param "foo" should be "bar", but is not',
@@ -87,13 +87,13 @@ define([
                     }
                 }
                 // simulate param missing error
-                return makeErrorResponse(req, {
+                return makeErrorResponse(rpc, {
                     name: 'JSONRPCError',
                     code: -32602,
                     message: 'Param "foo" expected, but was not provided',
                 });
             default:
-                return makeErrorResponse(req, {
+                return makeErrorResponse(rpc, {
                     name: 'JSONRPCError',
                     code: -32601,
                     message: 'Method not found',
@@ -105,9 +105,9 @@ define([
     }
 
     // A responder for the service wizard response.
-    function makeServiceWizardResponse(req) {
-        const method = req.body.method;
-        const [params] = req.body.params;
+    function makeServiceWizardResponse(rpc) {
+        const method = rpc.method;
+        const [params] = rpc.params;
 
         const version = (() => {
             if (typeof params !== 'undefined' && 'version' in params) {
@@ -120,7 +120,7 @@ define([
         if (!['dev', 'beta', 'release', null].includes(version)) {
             return {
                 version: '1.1',
-                id: req.body.id,
+                id: rpc.id,
                 error: {
                     name: 'Server error',
                     code: -32000,
@@ -134,7 +134,7 @@ define([
             case 'ServiceWizard.get_service_status':
                 return {
                     version: '1.1',
-                    id: req.body.id,
+                    id: rpc.id,
                     result: [
                         {
                             git_commit_hash: 'abc',
@@ -152,7 +152,7 @@ define([
             default:
                 return {
                     version: '1.1',
-                    id: req.body.id,
+                    id: rpc.id,
                     error: {
                         name: 'JSONRPCError',
                         code: -32601,
@@ -188,12 +188,12 @@ define([
         // Happy Paths
 
         it('should be able to make an unauthorized request (without a token) and get a response', async () => {
-            mock.useJSONResponder(SERVICE_WIZARD_URL, (req) => {
-                return makeServiceWizardResponse(req);
+            mock.useJSONResponder(SERVICE_WIZARD_URL, (_req, _res, rpc) => {
+                return makeServiceWizardResponse(rpc);
             });
 
-            mock.useJSONResponder(DYNAMIC_SERVICE_URL, (req) => {
-                return makeSDKResponse(req);
+            mock.useJSONResponder(DYNAMIC_SERVICE_URL, (_req, _res, rpc) => {
+                return makeSDKResponse(rpc);
             });
 
             const constructorParams = {
@@ -213,20 +213,20 @@ define([
 
         // call normal service endpoint, params, success
         it('should be able to make an authorized request with a token and get a response', async () => {
-            mock.useJSONResponder(SERVICE_WIZARD_URL, (req) => {
-                return makeServiceWizardResponse(req);
+            mock.useJSONResponder(SERVICE_WIZARD_URL, (_req, _res, rpc) => {
+                return makeServiceWizardResponse(rpc);
             });
 
-            mock.useJSONResponder(DYNAMIC_SERVICE_URL, (req) => {
+            mock.useJSONResponder(DYNAMIC_SERVICE_URL, (req, _res, rpc) => {
                 if (req.headers.get('authorization') !== 'token') {
-                    return makeErrorResponse(req, {
+                    return makeErrorResponse(rpc, {
                         name: 'JSONRPCError',
                         code: -32500,
                         message: 'No authorization',
                         trace: ['some long', 'trace', 'here'].join('\n'),
                     });
                 }
-                return makeSDKResponse(req);
+                return makeSDKResponse(rpc);
             });
 
             const constructorParams = {
@@ -244,19 +244,19 @@ define([
         });
 
         it('should be able to make an authorized request without a token and get an error response', async () => {
-            mock.useJSONResponder(SERVICE_WIZARD_URL, (req) => {
-                return makeServiceWizardResponse(req);
+            mock.useJSONResponder(SERVICE_WIZARD_URL, (_req, _res, rpc) => {
+                return makeServiceWizardResponse(rpc);
             });
 
-            mock.useJSONResponder(DYNAMIC_SERVICE_URL, (req) => {
+            mock.useJSONResponder(DYNAMIC_SERVICE_URL, (req, _res, rpc) => {
                 if (req.headers.get('authorization') !== 'token') {
-                    return makeErrorResponse(req, {
+                    return makeErrorResponse(rpc, {
                         name: 'JSONRPCError',
                         code: 100,
                         message: 'No authorization',
                     });
                 }
-                return makeSDKResponse(req);
+                return makeSDKResponse(rpc);
             });
 
             const constructorParams = {
@@ -277,12 +277,12 @@ define([
 
         // call parameter-less service endpoint
         it('should be able to make a request without params and get a response', async () => {
-            mock.useJSONResponder(SERVICE_WIZARD_URL, (req) => {
-                return makeServiceWizardResponse(req);
+            mock.useJSONResponder(SERVICE_WIZARD_URL, (_req, _res, rpc) => {
+                return makeServiceWizardResponse(rpc);
             });
 
-            mock.useJSONResponder(DYNAMIC_SERVICE_URL, (req) => {
-                return makeSDKResponse(req);
+            mock.useJSONResponder(DYNAMIC_SERVICE_URL, (_req, _res, rpc) => {
+                return makeSDKResponse(rpc);
             });
 
             const constructorParams = {
@@ -298,12 +298,12 @@ define([
         });
 
         it('should be able to make a request with empty params and get a response', async () => {
-            mock.useJSONResponder(SERVICE_WIZARD_URL, (req) => {
-                return makeServiceWizardResponse(req);
+            mock.useJSONResponder(SERVICE_WIZARD_URL, (_req, _res, rpc) => {
+                return makeServiceWizardResponse(rpc);
             });
 
-            mock.useJSONResponder(DYNAMIC_SERVICE_URL, (req) => {
-                return makeSDKResponse(req);
+            mock.useJSONResponder(DYNAMIC_SERVICE_URL, (_req, _res, rpc) => {
+                return makeSDKResponse(rpc);
             });
 
             const constructorParams = {
@@ -319,12 +319,12 @@ define([
         });
 
         it('should be able to make a request for each type of version tag', async () => {
-            mock.useJSONResponder(SERVICE_WIZARD_URL, (req) => {
-                return makeServiceWizardResponse(req);
+            mock.useJSONResponder(SERVICE_WIZARD_URL, (_req, _res, rpc) => {
+                return makeServiceWizardResponse(rpc);
             });
 
-            mock.useJSONResponder(DYNAMIC_SERVICE_URL, (req) => {
-                return makeSDKResponse(req);
+            mock.useJSONResponder(DYNAMIC_SERVICE_URL, (_req, _res, rpc) => {
+                return makeSDKResponse(rpc);
             });
 
             for (const version of ['dev', 'beta', 'release', null]) {
@@ -345,12 +345,12 @@ define([
 
         // // call endpoint which returns error
         it('a response with an error should throw', async () => {
-            mock.useJSONResponder(SERVICE_WIZARD_URL, (req) => {
-                return makeServiceWizardResponse(req);
+            mock.useJSONResponder(SERVICE_WIZARD_URL, (_req, _res, rpc) => {
+                return makeServiceWizardResponse(rpc);
             });
 
-            mock.useJSONResponder(DYNAMIC_SERVICE_URL, (req) => {
-                return makeErrorResponse(req, {
+            mock.useJSONResponder(DYNAMIC_SERVICE_URL, (_req, _res, rpc) => {
+                return makeErrorResponse(rpc, {
                     name: 'JSONRPCError',
                     code: 123,
                     message: 'Error message',
@@ -372,12 +372,12 @@ define([
         });
 
         it('should receive errors for invalid version tags', async () => {
-            mock.useJSONResponder(SERVICE_WIZARD_URL, (req) => {
-                return makeServiceWizardResponse(req);
+            mock.useJSONResponder(SERVICE_WIZARD_URL, (_req, _res, rpc) => {
+                return makeServiceWizardResponse(rpc);
             });
 
-            mock.useJSONResponder(DYNAMIC_SERVICE_URL, (req) => {
-                return makeSDKResponse(req);
+            mock.useJSONResponder(DYNAMIC_SERVICE_URL, (_req, _res, rpc) => {
+                return makeSDKResponse(rpc);
             });
 
             for (const version of ['x', 1, 12.34, true, false, {}, []]) {
@@ -440,16 +440,16 @@ define([
         it('a timeout should trigger an exception for a long running service wizard request', async () => {
             mock.useJSONResponder(
                 SERVICE_WIZARD_URL,
-                (req) => {
-                    return makeServiceWizardResponse(req);
+                (_req, _res, rpc) => {
+                    return makeServiceWizardResponse(rpc);
                 },
                 {
                     delay: 500,
                 }
             );
 
-            mock.useJSONResponder(DYNAMIC_SERVICE_URL, (req) => {
-                return makeSDKResponse(req);
+            mock.useJSONResponder(DYNAMIC_SERVICE_URL, (_req, _res, rpc) => {
+                return makeSDKResponse(rpc);
             });
 
             const constructorParams = {
@@ -463,27 +463,18 @@ define([
                 return client.callFunc('function');
             };
 
-            // try {
-            //     const response = await shouldTimeout();
-            //     console.log('GOT', response);
-            // } catch (ex) {
-            //     console.error('EX', ex);
-            // }
-
             await expectAsync(shouldTimeout()).toBeRejectedWithError(ClientAbortError);
         });
 
         it('a timeout should trigger an exception for a long running request', async () => {
-            // let cancelRequest = null;
-
-            mock.useJSONResponder(SERVICE_WIZARD_URL, (req) => {
-                return makeServiceWizardResponse(req);
+            mock.useJSONResponder(SERVICE_WIZARD_URL, (_req, _res, rpc) => {
+                return makeServiceWizardResponse(rpc);
             });
 
             mock.useJSONResponder(
                 DYNAMIC_SERVICE_URL,
-                (req) => {
-                    return makeSDKResponse(req);
+                (_req, _res, rpc) => {
+                    return makeSDKResponse(rpc);
                 },
                 {
                     delay: 200,
@@ -492,7 +483,7 @@ define([
 
             const constructorParams = {
                 url: SERVICE_WIZARD_URL,
-                module: 'Module',
+                module: 'ADynamicService',
                 timeout: 100,
             };
 

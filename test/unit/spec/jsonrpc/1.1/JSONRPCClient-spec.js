@@ -6,7 +6,7 @@ define([
     './helpers',
 ], (mswUtils, JSONRPCClient, errors, jsonrpcErrors, helpers) => {
     'use strict';
-    const { MockWorker, waitFor } = mswUtils;
+    const { MockWorker } = mswUtils;
     const { makeJSONRPCClient, makeResponse, makeErrorResponse, URL } = helpers;
 
     describe('The JSONRPCClient', () => {
@@ -21,8 +21,8 @@ define([
         // for later tests.)
         it('should be able to make a request and get a response', async () => {
             const mock = await new MockWorker().start();
-            mock.useJSONResponder(URL, (req) => {
-                return makeResponse(req, {
+            mock.useJSONResponder(URL, (_req, _res, rpc) => {
+                return makeResponse(rpc, {
                     bar: 'foo',
                 });
             });
@@ -59,8 +59,8 @@ define([
             ];
 
             const mock = await new MockWorker().start();
-            mock.useJSONResponder(URL, (req) => {
-                return makeResponse(req, rpcResult);
+            mock.useJSONResponder(URL, (_req, _res, rpc) => {
+                return makeResponse(rpc, rpcResult);
             });
 
             const client = makeJSONRPCClient();
@@ -71,8 +71,8 @@ define([
 
         it('should be able to make a request with no params', async () => {
             const mock = await new MockWorker().start();
-            mock.useJSONResponder(URL, (req) => {
-                return makeResponse(req, {
+            mock.useJSONResponder(URL, (_req, _res, rpc) => {
+                return makeResponse(rpc, {
                     bar: 'foo',
                 });
             });
@@ -85,15 +85,15 @@ define([
 
         it('should be able to make a request with authorization', async () => {
             const mock = await new MockWorker().start();
-            mock.useJSONResponder(URL, (req) => {
+            mock.useJSONResponder(URL, (req, _res, rpc) => {
                 if (req.headers.get('authorization') !== 'token') {
-                    return makeErrorResponse(req, {
+                    return makeErrorResponse(rpc, {
                         code: 100,
                         message: 'No authorization',
                     });
                 }
 
-                return makeResponse(req, {
+                return makeResponse(rpc, {
                     bar: 'foo',
                 });
             });
@@ -128,8 +128,8 @@ define([
 
         it('making a request without a method should throw', async () => {
             const mock = await new MockWorker().start();
-            mock.useJSONResponder(URL, (req) => {
-                return makeResponse(req, {
+            mock.useJSONResponder(URL, (_req, _res, rpc) => {
+                return makeResponse(rpc, {
                     bar: 'foo',
                 });
             });
@@ -147,12 +147,17 @@ define([
         // Timeout
         it('a timeout should trigger an exception', async () => {
             const mock = await new MockWorker().start();
-            mock.useJSONResponder(URL, async (req) => {
-                await waitFor(100);
-                return makeResponse(req, {
-                    bar: 'foo',
-                });
-            });
+            mock.useJSONResponder(
+                URL,
+                (_req, _res, rpc) => {
+                    return makeResponse(rpc, {
+                        bar: 'foo',
+                    });
+                },
+                {
+                    delay: 100,
+                }
+            );
 
             const client = makeJSONRPCClient({ extraArgs: { timeout: 1 } });
 
@@ -166,12 +171,17 @@ define([
 
         it('aborting before timeout should trigger an exception', async () => {
             const mock = await new MockWorker().start();
-            mock.useJSONResponder(URL, async (req) => {
-                await waitFor(2000);
-                return makeResponse(req, {
-                    bar: 'foo',
-                });
-            });
+            mock.useJSONResponder(
+                URL,
+                (_req, _res, rpc) => {
+                    return makeResponse(rpc, {
+                        bar: 'foo',
+                    });
+                },
+                {
+                    delay: 200,
+                }
+            );
 
             const client = makeJSONRPCClient({ extraArgs: { timeout: 3000 } });
 
@@ -232,9 +242,9 @@ define([
 
         it('no id in response in strict mode should throw', async () => {
             const mock = await new MockWorker().start();
-            mock.useJSONResponder(URL, (req) => {
+            mock.useJSONResponder(URL, (_req, _res, rpc) => {
                 return makeResponse(
-                    req,
+                    rpc,
                     {
                         bar: 'foo',
                     },
@@ -254,9 +264,9 @@ define([
 
         it('mismatching id in response in strict mode should throw', async () => {
             const mock = await new MockWorker().start();
-            mock.useJSONResponder(URL, (req) => {
+            mock.useJSONResponder(URL, (_req, _res, rpc) => {
                 return makeResponse(
-                    req,
+                    rpc,
                     {
                         bar: 'foo',
                     },
@@ -276,9 +286,9 @@ define([
 
         it('no version in the response should throw', async () => {
             const mock = await new MockWorker().start();
-            mock.useJSONResponder(URL, (req) => {
+            mock.useJSONResponder(URL, (_req, _res, rpc) => {
                 return makeResponse(
-                    req,
+                    rpc,
                     {
                         bar: 'foo',
                     },
@@ -298,9 +308,9 @@ define([
 
         it('a version other than "1.1" in the response should throw', async () => {
             const mock = await new MockWorker().start();
-            mock.useJSONResponder(URL, (req) => {
+            mock.useJSONResponder(URL, (_req, _res, rpc) => {
                 return makeResponse(
-                    req,
+                    rpc,
                     {
                         bar: 'foo',
                     },
@@ -321,8 +331,8 @@ define([
         // Actual JSON RPC error conditions.
         it('method returning an error should throw', async () => {
             const mock = await new MockWorker().start();
-            mock.useJSONResponder(URL, (req) => {
-                return makeErrorResponse(req, {
+            mock.useJSONResponder(URL, (_req, _res, rpc) => {
+                return makeErrorResponse(rpc, {
                     name: 'JSONRPCError',
                     code: 123,
                     message: 'Error message',
@@ -372,9 +382,9 @@ define([
 
         it('neither a result or a error should throw', async () => {
             const mock = await new MockWorker().start();
-            mock.useJSONResponder(URL, (req) => {
+            mock.useJSONResponder(URL, (_req, _res, rpc) => {
                 return makeResponse(
-                    req,
+                    rpc,
                     {
                         bar: 'foo',
                     },
@@ -397,9 +407,9 @@ define([
 
         it('both a result and an error should throw', async () => {
             const mock = await new MockWorker().start();
-            mock.useJSONResponder(URL, (req) => {
+            mock.useJSONResponder(URL, (_req, _res, rpc) => {
                 return makeResponse(
-                    req,
+                    rpc,
                     {
                         bar: 'foo',
                     },
@@ -423,9 +433,9 @@ define([
         // Client errors
         it('a response without an id but an id is in the request should return an error', async () => {
             const mock = await new MockWorker().start();
-            mock.useJSONResponder(URL, (req) => {
+            mock.useJSONResponder(URL, (_req, _res, rpc) => {
                 return makeResponse(
-                    req,
+                    rpc,
                     {
                         bar: 'foo',
                     },
@@ -458,9 +468,9 @@ define([
             }
             for (const [code] of codes) {
                 const mock = await new MockWorker().start();
-                mock.useJSONResponder(URL, (req) => {
+                mock.useJSONResponder(URL, (_req, _res, rpc) => {
                     return makeErrorResponse(
-                        req,
+                        rpc,
                         {
                             name: 'JSONRPCError',
                             code,
@@ -478,9 +488,9 @@ define([
 
         it('a response without an id but not in strict mode should not return an error', async () => {
             const mock = await new MockWorker().start();
-            mock.useJSONResponder(URL, (req) => {
+            mock.useJSONResponder(URL, (_req, _res, rpc) => {
                 return makeResponse(
-                    req,
+                    rpc,
                     {
                         bar: 'foo',
                     },
@@ -500,9 +510,9 @@ define([
 
         it('a response without an id and an id is absent the request should not return an error', async () => {
             const mock = await new MockWorker().start();
-            mock.useJSONResponder(URL, (req) => {
+            mock.useJSONResponder(URL, (_req, _res, rpc) => {
                 return makeResponse(
-                    req,
+                    rpc,
                     {
                         bar: 'foo',
                     },

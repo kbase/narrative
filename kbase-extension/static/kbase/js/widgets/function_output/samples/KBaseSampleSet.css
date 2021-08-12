@@ -85,3 +85,20 @@ over table styles, globally within a cell.
 table.SampleSetTable > tbody > tr > td {
     background-color: white;
 }
+
+/* styling for the header's unit row, which is slightly different than the header above
+   it to visually distinguish them. */
+table.SampleSetTable tr.-unitsRow {
+    font-style: italic;
+}
+
+/* Limits height of the samples table, and ensures scrollable */
+.KBaseSampleSet .samplesContainer {
+    overflow: auto;
+    max-height: 40em;
+}
+
+/* Add spacing to top of kbaseTabs tab content containers */
+.KBaseSampleSet .tab-content {
+    margin-top: 10px;
+}

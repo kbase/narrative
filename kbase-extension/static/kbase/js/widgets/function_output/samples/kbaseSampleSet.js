@@ -179,9 +179,10 @@ define([
          */
         render: function () {
             this.$elem.empty();
+            this.$elem.addClass('KBaseSampleSet');
 
-            const $summaryTab = $('<div>').css('margin-top', '10px');
-            const $samplesTab = $('<div>').css('margin-top', '10px');
+            const $summaryTab = $('<div>');
+            const $samplesTab = $('<div>');
             const $tabPane = $('<div>').appendTo(this.$elem);
 
             new kbaseTabs($tabPane, {
@@ -309,7 +310,7 @@ define([
             }
 
             // create units header
-            const $unitsHeaderRow = $('<tr>').css('font-style', 'italic').attr('role', 'row');
+            const $unitsHeaderRow = $('<tr>').addClass('-unitsRow').attr('role', 'row');
             $thead.append($unitsHeaderRow);
             for (const header of this.model.headerFields) {
                 const unit = () => {
@@ -356,7 +357,7 @@ define([
          * @returns {jQuery} the rendered samples
          */
         $renderSamples: function () {
-            const $tableDiv = $('<div>').css('overflow', 'auto').css('max-height', '40em');
+            const $tableDiv = $('<div>').addClass('-samplesContainer');
             $tableDiv.append(this.$renderTable());
             return $tableDiv;
         },

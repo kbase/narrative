@@ -96,7 +96,8 @@ define(['msw'], (msw) => {
                 quiet: true,
                 onUnhandledRequest: this.onUnhandledRequest,
             });
-            // TODO: the promise above is resolving before the listener is ready.
+            // Workaround to ensure that the worker is fully started before we
+            // proceed.
             await waitFor(MSW_FUDGE_FACTOR);
             return this;
         }
@@ -159,11 +160,11 @@ define(['msw'], (msw) => {
     }
 
     function getProp(obj, path) {
-        const [key, ...rest] = path;
-        if (rest.length === 0) {
-            return obj[key];
+        const [pathElement, ...restOfPath] = path;
+        if (restOfPath.length === 0) {
+            return obj[pathElement];
         }
-        return getProp(obj[key], rest);
+        return getProp(obj[pathElement], restOfPath);
     }
 
     return {

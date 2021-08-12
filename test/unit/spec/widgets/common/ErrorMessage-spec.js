@@ -61,7 +61,6 @@ define(['widgets/common/ErrorMessage', 'jsonrpc/1.1/errors', 'jsonrpc/1.1/jsonrp
                     param2: [1, 2, true, false, null],
                 },
                 url: 'https://ci.kbase.us/services/MyModule',
-                // originalMessage: 'why?',
                 error: {
                     name: 'JSONRPCError',
                     code: 123,
@@ -100,7 +99,6 @@ define(['widgets/common/ErrorMessage', 'jsonrpc/1.1/errors', 'jsonrpc/1.1/jsonrp
                 expect($testDiv.text()).toContain(message);
                 expect($testDiv.text()).toContain(errorData.method);
                 expect($testDiv.text()).toContain(errorData.url);
-                // expect($testDiv.text()).toContain(errorData.originalMessage);
                 expect($testDiv.text()).toContain(errorData.error.code);
                 expect($testDiv.text()).toContain(errorData.error.message);
                 expect($testDiv.text()).toContain(errorData.error.error.arrayfield[0]);

@@ -1,0 +1,104 @@
+/*
+    Summary table.
+    Note that these are primarily overrides of the Jupyter styles stomping on bootstrap.
+*/
+
+table.SummaryTable.table tr:not(:hover) td {
+    background-color: white;
+}
+
+table.SummaryTable > tbody > tr:hover,
+table.SummaryTable > tbody > tr:hover > td {
+    background-color: white;
+}
+
+table.SummaryTable.table tr:hover th,
+table.SummaryTable.table tr:not(:hover) th {
+    background-color: rgba(247, 247, 247, 1);
+}
+
+table.SummaryTable.table th {
+    color: rgba(100, 100, 100, 1);
+    text-align: left;
+}
+
+/* Samples table, scrolling */
+
+table.SampleSetTable {
+    width: 100%;
+    position: relative;
+    border-collapse: separate;
+    border: thin solid rgba(220, 220, 220, 1);
+}
+
+table.SampleSetTable > thead {
+    position: sticky;
+    top: 0;
+    color: rgba(100, 100, 100, 1);
+}
+
+table.SampleSetTable > thead > tr {
+    padding: 0;
+}
+
+/* Body rows */
+
+table.SampleSetTable > tbody > tr {
+    cursor: pointer;
+}
+
+table.SampleSetTable > tbody > tr:hover,
+table.SampleSetTable > tbody > tr:hover > td {
+    background-color: #f5f5f5;
+}
+
+/* All cells */
+
+table.SampleSetTable th,
+table.SampleSetTable td {
+    border: thin solid rgba(220, 220, 220, 1);
+    padding: 8px;
+    text-align: left;
+}
+
+/* Header cells */
+
+table.SampleSetTable th {
+    background-color: rgba(247, 247, 247, 1);
+}
+
+table.SampleSetTable > thead > tr:nth-child(1) > th {
+    font-size: 110%;
+}
+
+table.SampleSetTable div.-content {
+    max-width: 20em;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 
+Required to reset the cell styles; Jupyter's rendered_html otherwise stomps all
+over table styles, globally within a cell.
+*/
+table.SampleSetTable > tbody > tr > td {
+    background-color: white;
+}
+
+/* styling for the header's unit row, which is slightly different than the header above
+   it to visually distinguish them. */
+table.SampleSetTable tr.-unitsRow {
+    font-style: italic;
+}
+
+/* Limits height of the samples table, and ensures scrollable */
+.KBaseSampleSet .ScrollingContainer {
+    overflow: auto;
+    max-height: 40em;
+}
+
+/* Add spacing to top of kbaseTabs tab content containers */
+.KBaseSampleSet .tab-content {
+    margin-top: 10px;
+}

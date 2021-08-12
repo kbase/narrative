@@ -11,6 +11,7 @@
                     {
                         "cell": 3,
                         "description": "Genome Feature Set",
+                        "title": "Vibrio_alginolyticus_feature_set",
                         "rowCount": 6,
                         "row": 3,
                         "cols": [
@@ -59,6 +60,7 @@
                     {
                         "cell": 4,
                         "description": "BLASTp_Search filtered",
+                        "title": "compost_hq_bins_blastp_output",
                         "rowCount": 7,
                         "row": 4,
                         "cols": [
@@ -107,6 +109,7 @@
                     {
                         "cell": 5,
                         "description": "Merged Feature Sets",
+                        "title": "merged_feature_sets",
                         "rowCount": 10,
                         "row": 4,
                         "cols": [
@@ -155,6 +158,7 @@
                     {
                         "cell": 5,
                         "description": "Merged Feature Sets",
+                        "title": "merged_feature_sets",
                         "rowCount": 10,
                         "row": 9,
                         "cols": [

@@ -1,0 +1,146 @@
+{
+    "data": {
+        "description": "enigma sample set first 10 samples",
+        "samples": [
+            {
+                "id": "1e476e13-20be-4133-bf8a-6a5681423070",
+                "name": "0408-FW021.46.11.27.12.02",
+                "version": 1
+            },
+            {
+                "id": "6cc0ff4a-ed1e-44e1-9cef-7c671b10f9ac",
+                "name": "0408-FW021.46.11.27.12.10",
+                "version": 1
+            },
+            {
+                "id": "a5b11201-f549-43cd-933c-65a15fdd4029",
+                "name": "0408-FW021.7.26.12.02",
+                "version": 1
+            },
+            {
+                "id": "5665586d-07fe-468f-9627-9eade5786a5f",
+                "name": "0408-FW021.7.26.12.3",
+                "version": 1
+            },
+            {
+                "id": "c4a79fdd-8468-49f8-aac1-ae8ac7eb8c89",
+                "name": "0408-FW106.7.25.12.02",
+                "version": 1
+            },
+            {
+                "id": "578c4932-3fcf-4f45-a801-e67d8ded3f50",
+                "name": "0408-FW233.2.17.99.11.28.12.02",
+                "version": 1
+            },
+            {
+                "id": "318065ec-ea25-4a98-bade-2d51fa060b3d",
+                "name": "0408-FW233.2.17.99.11.28.12.10",
+                "version": 1
+            },
+            {
+                "id": "3c1640db-4dfc-4ced-b9d7-8f918d87f3ea",
+                "name": "0408-FW303.11.10.23.12.02",
+                "version": 1
+            },
+            {
+                "id": "acc84d08-cbd6-4348-948c-aaf84f472b18",
+                "name": "0408-FW303.11.10.23.12.10",
+                "version": 1
+            },
+            {
+                "id": "01eac6d0-6b57-4043-80aa-ac6f96f2e53e",
+                "name": "0408-FW303.11.2.20.13.02",
+                "version": 1
+            }
+        ]
+    },
+    "info": [
+        34,
+        "ENIGMA_SampleMetaData_AddedENVO_May4-2_first_10.csv_sample_set",
+        "KBaseSets.SampleSet-3.0",
+        "2021-08-09T14:10:52+0000",
+        1,
+        "kbaseuitest",
+        53116,
+        "kbaseuitest:narrative_1597424579769",
+        "aa327fdda1ca95de24aed8f8f3b16540",
+        990,
+        {
+            "num_samples": "10"
+        }
+    ],
+    "path": [
+        "53116/34/1"
+    ],
+    "provenance": [
+        {
+            "time": "2021-08-09T14:10:27+0000",
+            "epoch": 1628518227000,
+            "service": "sample_uploader",
+            "service_ver": "6b4dc79b657832a247deacbbbb5a045a7f27b1b9",
+            "method": "import_samples",
+            "method_params": [
+                {
+                    "workspace_name": "kbaseuitest:narrative_1597424579769",
+                    "workspace_id": 53116,
+                    "sample_file": "ENIGMA_SampleMetaData_AddedENVO_May4-2_first_10.csv",
+                    "file_format": "enigma",
+                    "set_name": "ENIGMA_SampleMetaData_AddedENVO_May4-2_first_10.csv_sample_set",
+                    "name_field": null,
+                    "header_row_index": null,
+                    "description": "enigma sample set first 10 samples",
+                    "sample_set_ref": null,
+                    "output_format": null,
+                    "taxonomy_source": "n/a",
+                    "num_otus": 20,
+                    "incl_seq": 0,
+                    "otu_prefix": "OTU",
+                    "incl_input_in_output": 1,
+                    "share_within_workspace": 1,
+                    "prevalidate": 1,
+                    "keep_existing_samples": 1,
+                    "ignore_warnings": 1
+                }
+            ],
+            "input_ws_objects": [],
+            "resolved_ws_objects": [],
+            "external_data": [],
+            "subactions": [
+                {
+                    "name": "sample_uploader",
+                    "ver": "6b4dc79b657832a247deacbbbb5a045a7f27b1b9",
+                    "code_url": "https://github.com/kbaseapps/sample_uploader",
+                    "commit": "6b4dc79b657832a247deacbbbb5a045a7f27b1b9"
+                },
+                {
+                    "name": "DataFileUtil",
+                    "ver": "release",
+                    "code_url": "https://github.com/kbaseapps/DataFileUtil",
+                    "commit": "b640d1ce826f46d1bff497a2f475a4c7de016a18"
+                }
+            ],
+            "custom": {},
+            "description": "KBase SDK method run via the KBase Execution Engine"
+        }
+    ],
+    "creator": "kbaseuitest",
+    "orig_wsid": 53116,
+    "created": "2021-08-09T14:10:52+0000",
+    "epoch": 1628518252016,
+    "refs": [],
+    "copy_source_inaccessible": 0,
+    "extracted_ids": {
+        "sample": [
+            "01eac6d0-6b57-4043-80aa-ac6f96f2e53e",
+            "1e476e13-20be-4133-bf8a-6a5681423070",
+            "acc84d08-cbd6-4348-948c-aaf84f472b18",
+            "318065ec-ea25-4a98-bade-2d51fa060b3d",
+            "5665586d-07fe-468f-9627-9eade5786a5f",
+            "6cc0ff4a-ed1e-44e1-9cef-7c671b10f9ac",
+            "578c4932-3fcf-4f45-a801-e67d8ded3f50",
+            "c4a79fdd-8468-49f8-aac1-ae8ac7eb8c89",
+            "a5b11201-f549-43cd-933c-65a15fdd4029",
+            "3c1640db-4dfc-4ced-b9d7-8f918d87f3ea"
+        ]
+    }
+}

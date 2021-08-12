@@ -26,6 +26,13 @@ describe('Test kbaseFeatureSet', () => {
             const cell = await t.waitForCell(notebookContainer, cellCase.cell);
 
             // Test description display.
+            const titleEl = await cell.$('.title-container > .title  [data-element="title"]');
+
+            await browser.waitUntil(async () => {
+                const title = await titleEl.getText();
+                return title === cellCase.title;
+            });
+
             const description = await cell.$('[data-testid="description"] > [data-testid="value"]');
             await expect(description).toHaveText(cellCase.description);
 

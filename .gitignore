@@ -11,6 +11,7 @@ kbase-extension/log/
 kbase-extension/kbase_templates/old/
 kbase-extension/static/components/
 kbase-extension/static/ext_components/
+kbase-extension/static/ext_modules/
 node_modules/
 install.log
 /src/build/

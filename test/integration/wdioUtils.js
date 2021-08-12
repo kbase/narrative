@@ -119,11 +119,18 @@ async function openNarrative(workspaceId) {
     });
 }
 
-function waitForClass(el, className) {
+function waitForClass(el, className, options = {}) {
     return browser.waitUntil(async () => {
         const elClass = await el.getAttribute('class');
         return elClass.split(' ').includes(className);
-    });
+    }, options);
+}
+
+function waitForText(el, text, options = {}) {
+    return browser.waitUntil(async () => {
+        const title = await el.getText();
+        return title === text;
+    }, options);
 }
 
 module.exports = {
@@ -133,5 +140,6 @@ module.exports = {
     openNarrative,
     clickWhenReady,
     waitForClass,
+    waitForText,
     range,
 };

@@ -228,11 +228,6 @@ define([
                 handle: function (message) {
                     if (message.parameterName) {
                         return dataModel.rows[rowId].values[message.parameterName];
-                        // return paramsBus.request(message, {
-                        //     key: {
-                        //         type: 'get-parameter',
-                        //     },
-                        // });
                     }
                     return null;
                 },

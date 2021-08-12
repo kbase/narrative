@@ -27,10 +27,6 @@ define([
                 messageClass: `${messageBaseClass}__warning`,
                 icon: 'fa fa-exclamation-circle',
             },
-        },
-        state = {
-            isValid: true,
-            isDuplicate: false,
         };
 
     function factory(config) {
@@ -39,7 +35,11 @@ define([
                 description: 'Field bus',
             }),
             inputControlFactory = config.inputControlFactory,
-            spec = config.parameterSpec;
+            spec = config.parameterSpec,
+            state = {
+                isValid: true,
+                isDuplicate: false,
+            };
         let places, parent, container, inputControl;
 
         try {
@@ -143,6 +143,7 @@ define([
         }
 
         function showMessage(messageInfo, text) {
+            clearMessage(messageBaseClass);
             renderMessage(messageInfo, text, `.${messageBaseClass}`);
         }
 

@@ -1,5 +1,11 @@
 import biokbase.narrative.clients as clients
-from .job import Job, TERMINAL_STATUSES, EXCLUDED_JOB_STATE_FIELDS, get_dne_job_state
+from .job import (
+    Job,
+    TERMINAL_STATUSES,
+    EXCLUDED_JOB_STATE_FIELDS,
+    JOB_INIT_EXCLUDED_JOB_STATE_FIELDS,
+    get_dne_job_state,
+)
 from biokbase.narrative.common import kblogging
 from IPython.display import HTML
 from jinja2 import Template
@@ -26,10 +32,6 @@ instance in its current state.
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 __version__ = "0.0.1"
 
-JOB_INIT_EXCLUDED_JOB_STATE_FIELDS = [
-    f for f in EXCLUDED_JOB_STATE_FIELDS if f != "job_input"
-]
-
 
 class JobManager(object):
     """
@@ -50,7 +52,8 @@ class JobManager(object):
             JobManager.__instance = object.__new__(cls)
         return JobManager.__instance
 
-    def _reorder_parents_children(self, states: dict) -> dict:
+    @staticmethod
+    def _reorder_parents_children(states: dict) -> dict:
         ordering = []
         for job_id, state in states.items():
             if state.get("batch_job"):
@@ -99,7 +102,7 @@ class JobManager(object):
                 ]
 
             self.register_new_job(
-                job=Job.from_state(job_state, children=child_jobs),
+                job=Job(job_state, children=child_jobs),
                 refresh=int(job_state.get("status") not in TERMINAL_STATUSES),
             )
 
@@ -121,7 +124,7 @@ class JobManager(object):
         )
         for job_state in job_states.values():
             # set new jobs to be automatically refreshed
-            self.register_new_job(job=Job.from_state(job_state), refresh=1)
+            self.register_new_job(job=Job(job_state), refresh=1)
 
         return job_states
 
@@ -538,7 +541,9 @@ class JobManager(object):
                 if child_id in self._running_jobs:
                     child_job = self._running_jobs[child_id]["job"]
                 else:
-                    child_job = Job.from_attributes(job_id=child_id)
+                    child_job = Job.from_job_id(
+                        job_id=child_id
+                    )
                     self.register_new_job(
                         job=child_job,
                         refresh=int(

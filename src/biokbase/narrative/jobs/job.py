@@ -24,9 +24,27 @@ EXCLUDED_JOB_STATE_FIELDS = [
     "scheduler_type",
     "scheduler_id",
 ]
+JOB_INIT_EXCLUDED_JOB_STATE_FIELDS = [
+    f for f in EXCLUDED_JOB_STATE_FIELDS if f != "job_input"
+]
 
 EXTRA_JOB_STATE_FIELDS = ["batch_id", "cell_id", "run_id"]
 
+
+# The app_id and app_version should both align with what's available in
+# the Narrative Method Store service.
+#
+# app_id (str): identifier for the app
+# app_version (str): service version string
+# batch_id (str): for batch jobs, the ID of the parent job
+# batch_job (bool): whether or not this is a batch job
+# child_jobs (list[str]): IDs of child jobs in a batch
+# cell_id (str): ID of the cell that initiated the job (if applicable)
+# job_id (str): the ID of the job
+# params (dict): input parameters
+# user (str): the user who started the job
+# run_id (str): unique run ID for the job
+# tag (str): the application tag (dev/beta/release)
 JOB_ATTR_DEFAULTS = {
     "app_id": None,
     "app_version": None,
@@ -79,7 +97,19 @@ class Job(object):
     _acc_state = None  # accumulates state
 
     def __init__(self, ee2_state, extra_data=None, children=None):
-        # verify job_id
+        """
+        Parameters:
+        -----------
+        job_state - dict
+            the job information returned from ee2.check_job, or something in that format
+        extra_data (dict): currently only used by the legacy batch job interface;
+            format:
+                batch_app: ID of app being run,
+                batch_tag: app tag
+                batch_size: number of jobs being run
+        children (list): applies to batch parent jobs, Job instances of this Job's child jobs
+        """
+        # verify job_id ... TODO validate ee2_state
         if ee2_state.get("job_id") is None:
             raise ValueError("Cannot create a job without a job ID!")
 
@@ -92,65 +122,21 @@ class Job(object):
         self.children = children
 
     @classmethod
-    def from_state(cls, ee2_state, children=None):
-        """
-        Parameters:
-        -----------
-        job_state - dict
-            the job information returned from ee2.check_job, or something in that format
-        """
-        return cls(ee2_state=ee2_state, children=children)
+    def from_job_id(cls, job_id, extra_data=None, children=None):
+        state = cls.query_ee2_state(job_id, init=True)
+        return cls(state, extra_data=extra_data, children=children)
 
     @classmethod
-    def from_attributes(cls, **kwargs):
-        """
-        Initializes a new Job with the attributes supplied in the kwargs.
-        The app_id and app_version should both align with what's available in
-        the Narrative Method Store service.
+    def from_job_ids(cls, job_ids, return_list=True):
+        states = cls.query_ee2_states(job_ids, init=True)
+        jobs = dict()
+        for job_id, state in states.items():
+            jobs[job_id] = cls(state)
 
-        required args:
-        job_id (str): the ID of the job
-
-        optional args:
-        app_id (str): identifier for the app
-        app_version (str): service version string
-        batch_id (str): for batch jobs, the ID of the parent job
-        batch_job (bool): whether or not this is a batch job
-        child_jobs (list[str]): IDs of child jobs in a batch
-        cell_id (str): ID of the cell that initiated the job (if applicable)
-        extra_data (dict): currently only used by the legacy batch job interface;
-            format:
-                batch_app: ID of app being run,
-                batch_tag: app tag
-                batch_size: number of jobs being run
-        params (dict): input parameters
-        user (str): the user who started the job
-        run_id (str): unique run ID for the job
-        tag (str): the application tag (dev/beta/release)
-        children (list): applies to batch parent jobs, Job instances of this Job's child jobs
-        """
-        # reconstruct the ee2 job state object
-        narr_cell_info = {
-            key: kwargs[key] for key in NARR_CELL_INFO_ATTRS if key in kwargs
-        }
-        job_input = {
-            **{
-                _attr_to_ee2(key): kwargs[key]
-                for key in JOB_INPUT_ATTRS
-                if key in kwargs
-            },
-            "narrative_cell_info": narr_cell_info,
-        }
-        ee2_state = {
-            **{key: kwargs[key] for key in STATE_ATTRS if key in kwargs},
-            "job_input": job_input,
-        }
-
-        return cls(
-            ee2_state=ee2_state,
-            extra_data=kwargs.get("extra_data"),
-            children=kwargs.get("children"),
-        )
+        if return_list:
+            return list(jobs.values())
+        else:
+            return jobs
 
     def __getattr__(self, name):
         """
@@ -228,17 +214,12 @@ class Job(object):
         # otherwise, child jobs may be retried
         if self._acc_state.get("batch_job"):
             for child_job in self.children:
-                if (
-                    child_job._acc_state
-                    and child_job._acc_state.get("status") != COMPLETED_STATUS
-                ):
+                if child_job._acc_state.get("status") != COMPLETED_STATUS:
                     return False
             return True
 
         else:
-            return (
-                self._acc_state and self._acc_state.get("status") in TERMINAL_STATUSES
-            )
+            return self._acc_state.get("status") in TERMINAL_STATUSES
 
     @property
     def final_state(self):
@@ -322,20 +303,46 @@ class Job(object):
         if self.was_terminal and not force_refresh:
             state = copy.deepcopy(self._acc_state)
         else:
-            try:
-                state = clients.get("execution_engine2").check_job(
-                    {"job_id": self.job_id, "exclude_fields": EXCLUDED_JOB_STATE_FIELDS}
-                )
-                state = self.update_state(state)
-
-            except Exception as e:
-                raise Exception(f"Unable to fetch info for job {self.job_id} - {e}")
+            state = self.query_ee2_state(self.job_id, False)
+            state = self.update_state(state)
 
         for field in EXCLUDED_JOB_STATE_FIELDS:
             if field in state and field != "job_input":
                 del state[field]
 
         return state
+
+    @staticmethod
+    def query_ee2_state(
+        job_id: str,
+        init: bool = True,
+    ) -> dict:
+        return clients.get("execution_engine2").check_job(
+            {
+                "job_id": job_id,
+                "exclude_fields": (
+                    JOB_INIT_EXCLUDED_JOB_STATE_FIELDS
+                    if init else
+                    EXCLUDED_JOB_STATE_FIELDS
+                )
+            }
+        )
+
+    @staticmethod
+    def query_ee2_states(
+        job_ids: List[str],
+        init: bool = True,
+    ) -> dict:
+        return clients.get("execution_engine2").check_jobs(
+            {
+                "job_ids": job_ids,
+                "exclude_fields": (
+                    JOB_INIT_EXCLUDED_JOB_STATE_FIELDS
+                    if init else
+                    EXCLUDED_JOB_STATE_FIELDS
+                )
+            }
+        )
 
     def output_state(self, state=None) -> dict:
         """

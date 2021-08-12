@@ -212,7 +212,7 @@ class MockClients:
         return self.test_job_id
 
     def run_job_batch(self, batch_job_inputs, batch_params):
-        child_job_ids = [self.test_job_id for i in range(len(batch_job_inputs))]
+        child_job_ids = [self.test_job_id + f"_child_{i}" for i in range(len(batch_job_inputs))]
         return {BATCH_ID_KEY: self.test_job_id, "child_job_ids": child_job_ids}
 
     def cancel_job(self, job_id):
@@ -462,6 +462,9 @@ class FailingMockClient:
 
     def check_workspace_jobs(self, params):
         raise ServerError("JSONRPCError", -32000, "Job lookup failed.")
+
+    def check_job(self, params):
+        raise ServerError("JSONRPCError", -32000, "Check job failed")
 
     def cancel_job(self, params):
         raise ServerError("JSONRPCError", -32000, "Can't cancel job")

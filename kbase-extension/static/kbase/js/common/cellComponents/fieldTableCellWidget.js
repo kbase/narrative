@@ -231,7 +231,7 @@ define([
                     parent.removeChild(container);
                 }
                 bus.stop();
-            }
+            };
             return inputControl
                 .stop()
                 .then(() => {

@@ -226,17 +226,21 @@ define([
         }
 
         function stop() {
+            const clearElements = () => {
+                if (parent && container) {
+                    parent.removeChild(container);
+                }
+                bus.stop();
+            }
             return inputControl
                 .stop()
+                .then(() => {
+                    clearElements();
+                    return null;
+                })
                 .catch((err) => {
                     console.error('Error stopping fieldTableCellWidget: ', err);
-                })
-                .finally(() => {
-                    if (parent && container) {
-                        parent.removeChild(container);
-                    }
-                    bus.stop();
-                    return null;
+                    clearElements();
                 });
         }
 

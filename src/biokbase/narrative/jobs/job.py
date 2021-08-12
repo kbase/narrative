@@ -324,7 +324,7 @@ class Job(object):
                     JOB_INIT_EXCLUDED_JOB_STATE_FIELDS
                     if init else
                     EXCLUDED_JOB_STATE_FIELDS
-                )
+                ),
             }
         )
 
@@ -340,7 +340,8 @@ class Job(object):
                     JOB_INIT_EXCLUDED_JOB_STATE_FIELDS
                     if init else
                     EXCLUDED_JOB_STATE_FIELDS
-                )
+                ),
+                "return_list": 0,
             }
         )
 

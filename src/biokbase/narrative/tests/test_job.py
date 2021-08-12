@@ -715,7 +715,7 @@ class JobTest(unittest.TestCase):
             got = Job.query_ee2_state(job_id, init=False)
             self.assertEqual(exp, got)
 
-    @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client) 
+    @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def test_query_job_states(self):
         states = Job.query_ee2_states(ALL_JOBS, init=True)
         for job_id, got in states.items():

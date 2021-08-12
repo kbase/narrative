@@ -93,7 +93,7 @@ table.SampleSetTable tr.-unitsRow {
 }
 
 /* Limits height of the samples table, and ensures scrollable */
-.KBaseSampleSet .samplesContainer {
+.KBaseSampleSet .ScrollingContainer {
     overflow: auto;
     max-height: 40em;
 }

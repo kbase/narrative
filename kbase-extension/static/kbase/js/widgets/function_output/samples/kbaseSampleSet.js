@@ -357,7 +357,7 @@ define([
          * @returns {jQuery} the rendered samples
          */
         $renderSamples: function () {
-            const $tableDiv = $('<div>').addClass('-samplesContainer');
+            const $tableDiv = $('<div>').addClass('ScrollingContainer');
             $tableDiv.append(this.$renderTable());
             return $tableDiv;
         },

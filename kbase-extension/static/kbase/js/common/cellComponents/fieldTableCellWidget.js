@@ -191,13 +191,18 @@ define([
             }
         }
 
-        function setDuplicateValue(duplicateRows) {
+        function setDuplicateValue(rows) {
             state.isDuplicate = true;
-            let message = 'duplicate value found on row';
-            if (duplicateRows.length > 1) {
-                message += 's';
+            let message = 'duplicate value found';
+            if (rows) {
+                message += ' on row';
+                const numRows = rows.length;
+                if (numRows > 1) {
+                    const comma = numRows > 2 ? ',' : '';
+                    message += `s ${rows.slice(0, numRows - 1).join(', ')}${comma} and`;
+                }
+                message += ' ' + rows[rows.length - 1];
             }
-            message += ' ' + duplicateRows.join(', ');
             renderMessage(MESSAGE.error, message, `.${messageBaseClass}__duplicate`);
         }
 

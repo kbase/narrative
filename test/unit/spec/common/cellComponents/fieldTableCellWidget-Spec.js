@@ -25,13 +25,16 @@ define([
 
     describe('The Field Table Cell Widget instance', () => {
         let container;
+        const baseClass = 'kb-field-cell',
+            cellClass = `${baseClass}__rowCell`,
+            messagePanelClass = `${baseClass}__message_panel`,
+            duplicatePanelClass = `${messagePanelClass}__duplicate`,
+            cellErrorClass = `${baseClass}__error_message`;
+
         const parameterSpec = {
             data: {
                 constraints: {
-                    required: false,
-                    options: undefined,
-                    min_length: 1,
-                    max_length: 10000,
+                    required: true,
                 },
                 defaultValue: '',
                 nullValue: '',
@@ -47,14 +50,11 @@ define([
                 description:
                     'Valid file extensions for FASTA: .fasta, .fna, .fa   Valid file extensions for FASTQ: .fastq, .fnq, .fq; Compressed files (containing files with vaild extentions): .zip, .gz, .bz2, .tar.gz, .tar.bz2',
                 disabled: 0,
-                dynamic_dropdown_options: {
-                    data_source: 'ftp_staging',
-                    multiselection: 0,
-                    query_on_empty_input: 1,
-                    result_array_index: 0,
-                    service_params: null,
+                text_options: {
+                    is_output_name: 0,
+                    placeholder: '',
                 },
-                field_type: 'dynamic_dropdown',
+                field_type: 'text',
                 id: 'fastq_fwd_staging_file_name',
                 optional: 1,
                 short_hint: 'Short read file containing a paired end library in FASTA/FASTQ format',
@@ -64,12 +64,12 @@ define([
             ui: {
                 advanced: false,
                 class: 'parameter',
-                control: 'dynamic_dropdown',
+                control: 'text',
                 description:
                     'Valid file extensions for FASTA: .fasta, .fna, .fa   Valid file extensions for FASTQ: .fastq, .fnq, .fq; Compressed files (containing files with vaild extentions): .zip, .gz, .bz2, .tar.gz, .tar.bz2',
                 hint: 'Short read file containing a paired end library in FASTA/FASTQ format',
                 label: 'Forward/Left FASTA/FASTQ File Path',
-                type: 'dynamic_dropdown',
+                type: 'text',
             },
         };
 
@@ -144,7 +144,7 @@ define([
         });
 
         it('has the required methods', function () {
-            ['bus', 'start', 'stop'].forEach((fn) => {
+            ['bus', 'start', 'stop', 'setDuplicateValue', 'clearDuplicateValue'].forEach((fn) => {
                 expect(this.fieldCellWidgetInstance[fn]).toBeDefined();
             });
         });
@@ -164,6 +164,173 @@ define([
             const result = await this.fieldCellWidgetInstance.stop();
             expect(result).toBeNull();
             this.fieldCellWidgetInstance = null;
+        });
+
+        [
+            {
+                rows: null,
+                text: 'duplicate value found',
+                label: 'without rows',
+            },
+            {
+                rows: [1],
+                text: 'duplicate value found on row 1',
+                label: 'on one row',
+            },
+            {
+                rows: [1, 2],
+                text: 'duplicate value found on rows 1 and 2',
+                label: 'on two rows',
+            },
+            {
+                rows: [1, 2, 3],
+                text: 'duplicate value found on rows 1, 2, and 3',
+                label: 'on more than two rows',
+            },
+        ].forEach((testCase) => {
+            it(`can set its state to display an error for duplicate values ${testCase.label}`, async function () {
+                await this.fieldCellWidgetInstance.start({
+                    node: this.node,
+                });
+                // dupMsg is the div that holds the error itself
+                const dupMsg = this.node.querySelector('.' + duplicatePanelClass);
+                // container is the wrapper around everything in the cell - we want to
+                // make sure it has the right error class applied at the right time
+                const container = this.node.querySelector('.' + cellClass);
+
+                expect(container.classList).not.toContain(cellErrorClass);
+                expect(dupMsg.classList).toContain('hidden');
+                this.fieldCellWidgetInstance.setDuplicateValue(testCase.rows);
+
+                expect(container.classList).toContain(cellErrorClass);
+                expect(dupMsg.classList).not.toContain('hidden');
+                expect(dupMsg.innerHTML).toContain(testCase.text);
+            });
+        });
+
+        it('can have its state cleared to remove the duplicate value error', async function () {
+            await this.fieldCellWidgetInstance.start({
+                node: this.node,
+            });
+            const dupMsg = this.node.querySelector('.' + duplicatePanelClass);
+            const container = this.node.querySelector('.' + cellClass);
+
+            expect(container.classList).not.toContain(cellErrorClass);
+            expect(dupMsg.classList).toContain('hidden');
+
+            this.fieldCellWidgetInstance.setDuplicateValue();
+            expect(dupMsg.classList).not.toContain('hidden');
+            expect(container.classList).toContain(cellErrorClass);
+
+            this.fieldCellWidgetInstance.clearDuplicateValue();
+            expect(container.classList).not.toContain(cellErrorClass);
+            expect(dupMsg.classList).toContain('hidden');
+        });
+
+        [
+            {
+                validMsg: {
+                    isValid: false,
+                    diagnosis: 'invalid',
+                    errorMessage: 'data is invalid',
+                },
+                label: 'invalid',
+            },
+            {
+                validMsg: {
+                    isValid: false,
+                    diagnosis: 'required-missing',
+                    errorMessage: 'value is required',
+                },
+                label: 'required-missing',
+            },
+            {
+                validMsg: {
+                    isValid: true,
+                    diagnosis: 'suspect',
+                    shortMessage: 'value is sus',
+                },
+                label: 'suspect',
+            },
+        ].forEach((testCase) => {
+            it(`should show a response to validation message: ${testCase.label}`, async function () {
+                await this.fieldCellWidgetInstance.start({
+                    node: this.node,
+                });
+
+                const msg = testCase.validMsg;
+                const msgPanel = this.node.querySelector('.' + messagePanelClass);
+                expect(msgPanel.classList).toContain('hidden');
+                await TestUtil.waitForElementChange(msgPanel, () => {
+                    this.fieldCellWidgetInstance.bus.emit('validation', msg);
+                });
+                expect(msgPanel.classList).not.toContain('hidden');
+
+                const msgText = msg.isValid ? msg.shortMessage : msg.errorMessage;
+                expect(msgPanel.innerHTML).toContain(msgText);
+
+                const container = this.node.querySelector('.' + cellClass);
+                if (msg.isValid) {
+                    expect(container.classList).not.toContain(cellErrorClass);
+                } else {
+                    expect(container.classList).toContain(cellErrorClass);
+                }
+            });
+        });
+
+        it('should not show a message with a valid input validation', async function () {
+            await this.fieldCellWidgetInstance.start({
+                node: this.node,
+            });
+            const msgPanel = this.node.querySelector('.' + messagePanelClass);
+            const container = this.node.querySelector('.' + cellClass);
+
+            expect(msgPanel.classList).toContain('hidden');
+            expect(container.classList).not.toContain(cellErrorClass);
+            await TestUtil.waitForElementChange(msgPanel, () => {
+                this.fieldCellWidgetInstance.bus.emit('validation', { isValid: true });
+            });
+            expect(msgPanel.classList).toContain('hidden');
+            expect(container.classList).not.toContain(cellErrorClass);
+        });
+
+        it(`can show both validation and duplicate value errors, and remove them`, async function () {
+            await this.fieldCellWidgetInstance.start({
+                node: this.node,
+            });
+            const msgPanel = this.node.querySelector('.' + messagePanelClass);
+            const dupPanel = this.node.querySelector('.' + duplicatePanelClass);
+            const container = this.node.querySelector('.' + cellClass);
+            expect(msgPanel.classList).toContain('hidden');
+            expect(dupPanel.classList).toContain('hidden');
+            expect(container.classList).not.toContain(cellErrorClass);
+
+            this.fieldCellWidgetInstance.setDuplicateValue();
+            expect(msgPanel.classList).toContain('hidden');
+            expect(dupPanel.classList).not.toContain('hidden');
+            expect(container.classList).toContain(cellErrorClass);
+
+            await TestUtil.waitForElementChange(msgPanel, () => {
+                this.fieldCellWidgetInstance.bus.emit('validation', {
+                    isValid: false,
+                    diagnosis: 'invalid',
+                });
+            });
+            expect(msgPanel.classList).not.toContain('hidden');
+            expect(dupPanel.classList).not.toContain('hidden');
+            expect(container.classList).toContain(cellErrorClass);
+
+            this.fieldCellWidgetInstance.clearDuplicateValue();
+            expect(msgPanel.classList).not.toContain('hidden');
+            expect(dupPanel.classList).toContain('hidden');
+            expect(container.classList).toContain(cellErrorClass);
+
+            await TestUtil.waitForElementChange(msgPanel, () => {
+                this.fieldCellWidgetInstance.bus.emit('validation', { isValid: true });
+            });
+            expect(msgPanel.classList).toContain('hidden');
+            expect(dupPanel.classList).toContain('hidden');
+            expect(container.classList).not.toContain(cellErrorClass);
         });
     });
 });

@@ -248,20 +248,15 @@ define([
                         input2.dispatchEvent(new Event('change'));
                     }
                 );
-                expect(row1.querySelector(rowCellSelector).classList).toContain(
-                    'kb-field-cell__error_message'
-                );
-                expect(row2.querySelector(rowCellSelector).classList).toContain(
-                    'kb-field-cell__error_message'
-                );
-                expect(row1.querySelector(dupMsgSelector).classList).toContain(
-                    'kb-field-cell__message_panel__error'
-                );
-                expect(row2.querySelector(dupMsgSelector).classList).toContain(
-                    'kb-field-cell__message_panel__error'
-                );
-                expect(row1.querySelector(dupMsgSelector).classList).not.toContain('hidden');
-                expect(row2.querySelector(dupMsgSelector).classList).not.toContain('hidden');
+                [row1, row2].forEach((row) => {
+                    expect(row.querySelector(rowCellSelector).classList).toContain(
+                        'kb-field-cell__error_message'
+                    );
+                    expect(row.querySelector(dupMsgSelector).classList).toContain(
+                        'kb-field-cell__message_panel__error'
+                    );
+                    expect(row.querySelector(dupMsgSelector).classList).not.toContain('hidden');
+                });
             });
         });
     });

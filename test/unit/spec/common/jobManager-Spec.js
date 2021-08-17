@@ -479,6 +479,12 @@ define([
                     expect(this.jobManagerInstance.listeners).toEqual({});
                 });
 
+                it('will not add undefined or null listeners', function () {
+                    expect(this.jobManagerInstance.listeners).toEqual({});
+                    this.jobManagerInstance.addListener('job-status', [null, '', undefined]);
+                    expect(this.jobManagerInstance.listeners).toEqual({});
+                });
+
                 it('will take a list of job IDs', function () {
                     const type = 'job-info',
                         jobIdList = ['fee', 'fi', 'fo', 'fum'];
@@ -770,7 +776,7 @@ define([
                     const updateModelCallArgs = this.jobManagerInstance.updateModel.calls.allArgs();
                     expect(updateModelCallArgs).toEqual([[[jobState]]]);
                     // job status listener should have been removed
-                    expect(this.jobManagerInstance.listeners[jobId]['job-status']).toBeUndefined();
+                    expect(this.jobManagerInstance.listeners[jobId]).toBeUndefined();
                     // stop job updates should have been called
                     expect(this.bus.emit).toHaveBeenCalledTimes(1);
                     const callArgs = this.bus.emit.calls.allArgs();
@@ -912,15 +918,30 @@ define([
                         ).toBeDefined();
                         expect(this.jobManagerInstance.listeners[_jobId]['job-info']).toBeDefined();
                     });
-                    expect(this.bus.emit).toHaveBeenCalledTimes(2);
                     const callArgs = this.bus.emit.calls.allArgs();
-                    expect(callArgs[0][0]).toEqual('request-job-updates-start');
-                    expect(callArgs[1][0]).toEqual('request-job-status');
-                    [0, 1].forEach((n) => {
-                        expect(callArgs[n][1].jobIdList.sort()).toEqual(
-                            batchParentUpdate.child_jobs.sort()
-                        );
+
+                    // temp hack until we can submit job id lists / batch ids to `request-job-updates-start`
+                    expect(this.bus.emit).toHaveBeenCalledTimes(
+                        batchParentUpdate.child_jobs.length + 1
+                    );
+                    batchParentUpdate.child_jobs.forEach((job_id, ix) => {
+                        expect(callArgs[ix]).toEqual([
+                            'request-job-updates-start',
+                            { jobId: job_id },
+                        ]);
                     });
+                    expect(callArgs[batchParentUpdate.child_jobs.length]).toEqual([
+                        'request-job-status',
+                        { jobIdList: jasmine.arrayWithExactContents(batchParentUpdate.child_jobs) },
+                    ]);
+                    // expect(this.bus.emit).toHaveBeenCalledTimes(2);
+                    // expect(callArgs[0][0]).toEqual('request-job-updates-start');
+                    // expect(callArgs[1][0]).toEqual('request-job-status');
+                    // [0, 1].forEach((n) => {
+                    //     expect(callArgs[n][1].jobIdList.sort()).toEqual(
+                    //         batchParentUpdate.child_jobs.sort()
+                    //     );
+                    // });
                 });
             });
         });

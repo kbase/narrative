@@ -5,8 +5,10 @@ define([
     'common/runtime',
     'common/spec',
     'testUtil',
+    'narrativeMocks',
+    'narrativeConfig',
     'json!/test/data/NarrativeTest.test_input_params.spec.json',
-], (Jupyter, FilePathWidget, $, Runtime, Spec, TestUtil, TestSpec) => {
+], (Jupyter, FilePathWidget, $, Runtime, Spec, TestUtil, Mocks, Config, TestSpec) => {
     'use strict';
 
     describe('The file path widget module', () => {
@@ -46,6 +48,10 @@ define([
                     {
                         actual_input_object: 'foo',
                         actual_output_object: 'bar',
+                    },
+                    {
+                        actual_input_object: 'foo2',
+                        actual_output_object: 'bar2',
                     },
                 ],
                 paramIds: ['actual_input_object', 'actual_output_object'],
@@ -121,6 +127,7 @@ define([
 
         describe('the started widget', () => {
             beforeEach(async function () {
+                jasmine.Ajax.install();
                 this.filePathWidgetInstance = makeFilePathWidget(this.fpwArgs);
                 await this.filePathWidgetInstance.start({
                     node: this.node,
@@ -131,6 +138,7 @@ define([
 
             afterEach(async function () {
                 await this.filePathWidgetInstance.stop();
+                jasmine.Ajax.uninstall();
             });
 
             it('should start and render itself', function () {
@@ -151,7 +159,7 @@ define([
             it('should add a row when Add Row button is clicked', function () {
                 const $node = $(this.node);
                 const preClickNumberOfRows = $node.find('li').length;
-                expect(preClickNumberOfRows).toEqual(1);
+                expect(preClickNumberOfRows).toEqual(2);
                 this.node.querySelector('.kb-file-path__button--add_row').click();
 
                 return TestUtil.waitForElementChange(
@@ -159,14 +167,14 @@ define([
                 ).then(() => {
                     // there should now be two rows of file paths
                     const postClickNumberOfRows = $node.find('li').length;
-                    expect(postClickNumberOfRows).toEqual(2);
+                    expect(postClickNumberOfRows).toEqual(3);
                 });
             });
 
             it('should delete a row when trashcan button is clicked', function () {
                 const $node = $(this.node);
                 const preClickNumberOfRows = $node.find('li.kb-file-path__list_item').length;
-                expect(preClickNumberOfRows).toEqual(1);
+                expect(preClickNumberOfRows).toEqual(2);
                 const listNode = this.node.querySelector('ol.kb-file-path__list');
                 const deleteBtn = listNode.querySelector('button.kb-file-path__button--delete');
 
@@ -196,7 +204,58 @@ define([
                 }).then(() => {
                     // the file path list should be empty
                     const postClickNumberOfRows = $node.find('li.kb-file-path__list_item').length;
-                    expect(postClickNumberOfRows).toEqual(0);
+                    expect(postClickNumberOfRows).toEqual(1);
+                });
+            });
+
+            it('should check for duplicate values when an input is changed', async function () {
+                // this might be more of an integration test?
+                // the first couple selectors depend on info from the input widget DOM structure itself,
+                // so, not exactly black box.
+
+                // We're testing duplicate values of output objects. The validator calls out
+                // to the workspace to see if there's already an object of this name - crashes
+                // seem to occur when it can't get there.
+                Mocks.mockJsonRpc1Call({
+                    url: Config.url('workspace'),
+                    body: /get_object_info_new/,
+                    response: {
+                        data: [[null]],
+                    },
+                });
+                const row1 = this.node.querySelector('li.kb-file-path__list_item:first-child');
+                const row2 = this.node.querySelector('li.kb-file-path__list_item:nth-child(2)');
+                const widgetSelector = 'div[data-parameter="actual_output_object"]';
+                const rowCellSelector = `${widgetSelector} .kb-field-cell__rowCell`;
+                const inputSelector = `${widgetSelector} input.form-control`;
+                const dupMsgSelector = `${rowCellSelector} .kb-field-cell__message_panel__duplicate`;
+
+                // wait on the inputs to get rendered
+                const input1 = await TestUtil.waitForElement(row1, inputSelector);
+                const input2 = await TestUtil.waitForElement(row2, inputSelector);
+
+                // wait for the error class to get put on the main widget after a duplicate
+                // value is set
+                await TestUtil.waitForElementState(
+                    this.node,
+                    () => {
+                        return row1
+                            .querySelector(rowCellSelector)
+                            .classList.contains('kb-field-cell__error_message');
+                    },
+                    () => {
+                        input2.setAttribute('value', input1.getAttribute('value'));
+                        input2.dispatchEvent(new Event('change'));
+                    }
+                );
+                [row1, row2].forEach((row) => {
+                    expect(row.querySelector(rowCellSelector).classList).toContain(
+                        'kb-field-cell__error_message'
+                    );
+                    expect(row.querySelector(dupMsgSelector).classList).toContain(
+                        'kb-field-cell__message_panel__error'
+                    );
+                    expect(row.querySelector(dupMsgSelector).classList).not.toContain('hidden');
                 });
             });
         });

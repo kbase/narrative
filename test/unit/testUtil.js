@@ -101,19 +101,19 @@ define('testUtil', ['bluebird', 'json!/test/testConfig.json'], (Promise, TestCon
      */
     function waitForElement(documentElement, selector, doThisFirst) {
         return new Promise((resolve) => {
-            const element = document.querySelector(selector);
+            const element = documentElement.querySelector(selector);
             if (element) {
                 resolve(element);
             }
 
             const observer = new MutationObserver(() => {
-                const el = document.querySelector(selector);
+                const el = documentElement.querySelector(selector);
                 if (el) {
                     observer.disconnect();
                     resolve(el);
                 }
             });
-            observer.observe(documentElement, { childList: true });
+            observer.observe(documentElement, { childList: true, subtree: true });
             if (doThisFirst) {
                 doThisFirst();
             }

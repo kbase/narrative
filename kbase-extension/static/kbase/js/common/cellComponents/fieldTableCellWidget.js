@@ -3,8 +3,9 @@ define([
     'common/html',
     'common/runtime',
     'widgets/appWidgets2/errorControl',
+    'util/string',
     'css!google-code-prettify/prettify.css',
-], (PR, html, Runtime, ErrorControlFactory) => {
+], (PR, html, Runtime, ErrorControlFactory, StringUtil) => {
     'use strict';
 
     const t = html.tag,
@@ -35,7 +36,11 @@ define([
                 description: 'Field bus',
             }),
             inputControlFactory = config.inputControlFactory,
-            spec = config.parameterSpec;
+            spec = config.parameterSpec,
+            state = {
+                isValid: true,
+                isDuplicate: false,
+            };
         let places, parent, container, inputControl;
 
         try {
@@ -74,17 +79,14 @@ define([
                         id: ids.inputControl,
                         dataElement: 'input-control',
                     }),
-                    div(
-                        {
-                            class: `${messageBaseClass} hidden`,
-                            dataElement: 'message-panel',
-                        },
-                        [
-                            div({
-                                class: `${messageBaseClass}__body`,
-                            }),
-                        ]
-                    ),
+                    div({
+                        class: `${messageBaseClass} hidden`,
+                        dataElement: 'message-panel',
+                    }),
+                    div({
+                        class: `${messageBaseClass}__duplicate hidden`,
+                        dataElement: 'duplicate-message-panel',
+                    }),
                 ]
             );
 
@@ -112,8 +114,8 @@ define([
             };
         }
 
-        function showMessage(messageInfo, text) {
-            const message =
+        function generateMessage(messageInfo, text) {
+            return (
                 span(
                     {
                         class: `${messageInfo.messageClass}__title`,
@@ -124,25 +126,36 @@ define([
                         }),
                         strong(` ${messageInfo.prefix}: `),
                     ]
-                ) + text;
+                ) + text
+            );
+        }
 
+        function renderMessage(messageInfo, text, messagePanelSelector) {
+            const message = generateMessage(messageInfo, text);
             if (messageInfo.containerClass) {
                 parent
                     .querySelector(`.${cssBaseClass}__rowCell`)
                     .classList.add(messageInfo.containerClass);
             }
-            parent.querySelector(`.${messageBaseClass}__body`).innerHTML = message;
-            const msgPanel = parent.querySelector(`.${messageBaseClass}`);
+            const msgPanel = parent.querySelector(messagePanelSelector);
+            msgPanel.innerHTML = message;
             msgPanel.classList.add(messageInfo.messageClass);
             msgPanel.classList.remove('hidden');
         }
 
-        function clearMessage() {
-            parent
-                .querySelector(`.${cssBaseClass}__rowCell`)
-                .classList.remove(`${cssBaseClass}__error_message`);
-            const msgPanel = parent.querySelector(`.${messageBaseClass}`);
-            msgPanel.className = `${messageBaseClass} hidden`;
+        function showMessage(messageInfo, text) {
+            clearMessage(messageBaseClass);
+            renderMessage(messageInfo, text, `.${messageBaseClass}`);
+        }
+
+        function clearMessage(selector) {
+            if (state.isValid && !state.isDuplicate) {
+                parent
+                    .querySelector(`.${cssBaseClass}__rowCell`)
+                    .classList.remove(`${cssBaseClass}__error_message`);
+            }
+            const msgPanel = parent.querySelector(`.${selector}`);
+            msgPanel.className = `${selector} hidden`;
         }
 
         /**
@@ -162,18 +175,43 @@ define([
          */
         function validateField(message) {
             // always clear the existing message to start with
-            clearMessage();
             switch (message.diagnosis) {
                 case 'required-missing':
                 case 'invalid':
+                    state.isValid = false;
                     showMessage(MESSAGE.error, message.errorMessage);
                     break;
                 case 'suspect':
+                    state.isValid = true;
                     showMessage(MESSAGE.warning, message.shortMessage);
                     break;
                 default:
+                    state.isValid = true;
+                    clearMessage(messageBaseClass);
                     break;
             }
+        }
+
+        function setDuplicateValue(rows) {
+            state.isDuplicate = true;
+            let message = 'duplicate value';
+            let rowMessage = '';
+
+            if (rows) {
+                rowMessage = ' on row';
+                if (rows.length > 1) {
+                    message += 's';
+                    rowMessage += 's';
+                }
+                rowMessage += ' ' + StringUtil.arrayToEnglish(rows);
+            }
+            message += ' found' + rowMessage;
+            renderMessage(MESSAGE.error, message, `.${messageBaseClass}__duplicate`);
+        }
+
+        function clearDuplicateValue() {
+            state.isDuplicate = false;
+            clearMessage(`${messageBaseClass}__duplicate`);
         }
 
         function start(arg) {
@@ -196,22 +234,21 @@ define([
         }
 
         function stop() {
+            const clearElements = () => {
+                if (parent && container) {
+                    parent.removeChild(container);
+                }
+                bus.stop();
+            };
             return inputControl
                 .stop()
                 .then(() => {
-                    if (parent && container) {
-                        parent.removeChild(container);
-                    }
-                    bus.stop();
+                    clearElements();
                     return null;
                 })
                 .catch((err) => {
                     console.error('Error stopping fieldTableCellWidget: ', err);
-                    if (parent && container) {
-                        parent.removeChild(container);
-                    }
-                    bus.stop();
-                    return null;
+                    clearElements();
                 });
         }
 
@@ -219,6 +256,8 @@ define([
             start,
             stop,
             bus,
+            setDuplicateValue,
+            clearDuplicateValue,
         };
     }
 

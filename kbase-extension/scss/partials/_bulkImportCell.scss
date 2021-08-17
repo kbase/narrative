@@ -200,7 +200,7 @@ $tab-widget-padding: 4px;
   }
 
   // kb-field-cell__message_panel
-  &__message_panel {
+  &__message_panel, &__message_panel__duplicate {
     border: 1px solid $component-border;
     padding: 0.5em;
 

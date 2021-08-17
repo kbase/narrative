@@ -151,15 +151,33 @@ define([
             // put that in the filePathWidget's data model, then push all the values up the main
             // params bus.
             fieldWidget.bus.on('changed', (message) => {
-                dataModel.rows[rowId].values[parameterSpec.id] = message.newValue;
+                const newValue = message.newValue;
+                dataModel.rows[rowId].values[parameterSpec.id] = newValue;
                 updateDisabledFileValues();
-                paramsBus.emit('parameter-changed', {
-                    parameter: parameterSpec.id,
-                    newValue: message.newValue,
-                    isError: message.isError,
-                    rowId: rowId,
-                    rowIndex: dataModel.rowIdToIndex[rowId],
-                });
+                // "changed" means that the value has successfully been changed to something valid
+                // And the line above updates the dataModel, so we're up to date with what's set
+                // everywhere
+                // TODO: get up to date with all values across uploaders
+                // But it still might be a duplicate! So do the following on each change.
+                // 1. Get all output values
+                // 2. If duplicates, mark those
+                // 2a. emit 'invalid-param-value' messages for the duplicates
+                // 3. Send results to all widgets
+                // 4. All widgets update their state
+                const duplicateValues = updateDuplicateOutputValues();
+                if (duplicateValues.includes(newValue)) {
+                    paramsBus.emit('invalid-param-value', {
+                        parameter: parameterSpec.id,
+                    });
+                } else {
+                    paramsBus.emit('parameter-changed', {
+                        parameter: parameterSpec.id,
+                        newValue: newValue,
+                        isError: message.isError,
+                        rowId: rowId,
+                        rowIndex: dataModel.rowIdToIndex[rowId],
+                    });
+                }
             });
 
             fieldWidget.bus.on('validation', (message) => {
@@ -209,11 +227,7 @@ define([
                 },
                 handle: function (message) {
                     if (message.parameterName) {
-                        return paramsBus.request(message, {
-                            key: {
-                                type: 'get-parameter',
-                            },
-                        });
+                        return dataModel.rows[rowId].values[message.parameterName];
                     }
                     return null;
                 },
@@ -512,6 +526,7 @@ define([
                 });
                 e.target.closest('li').remove();
                 updateDisabledFileValues();
+                updateDuplicateOutputValues();
                 syncDataModel();
             });
         }
@@ -616,7 +631,8 @@ define([
             // get the parameter specs in the right order.
             const parameterSpecs = [];
             const defaultParams = {};
-            const fileParams = [];
+            const fileParamIds = [];
+            const outputParamIds = [];
             arg.parameters.layout.forEach((id) => {
                 if (paramIds.includes(id)) {
                     const paramSpec = arg.parameters.specs[id];
@@ -627,13 +643,16 @@ define([
                         paramSpec.original.text_options.is_output_name === 1;
                     if (!isOutput) {
                         // if it's not an "output", it's a file
-                        fileParams.push(id);
+                        fileParamIds.push(id);
+                    } else {
+                        outputParamIds.push(id);
                     }
                 }
             });
-            model.setItem('fileParamIds', fileParams);
+            model.setItem('fileParamIds', fileParamIds);
             model.setItem('parameterSpecs', parameterSpecs);
             model.setItem('defaultParams', defaultParams);
+            model.setItem('outputParamIds', outputParamIds);
             return Promise.all(
                 initialParams.map((paramRow) => {
                     return addRow(paramRow);
@@ -646,6 +665,7 @@ define([
                     // TODO: set this widget up to link filetypes to parameter ids. Work also needed in
                     // bulkImportWidget.js and configure.js.
                     updateDisabledFileValues();
+                    updateDuplicateOutputValues();
                 })
                 .catch((error) => {
                     throw new Error(`Unable to start filePathWidget: ${error}`);
@@ -661,6 +681,97 @@ define([
             getAllFileParameterWidgets().forEach((widget) => {
                 widget.bus.emit('set-disabled-values', { values });
             });
+        }
+
+        /**
+         * Steps.
+         * 1. Get all values from output parameters, ignore null values
+         * 2. Filter down to those with duplicates
+         * 3. Send those to just the inputs those came from.
+         * 4. Up to widgets to act accordingly
+         * 5. Return the row ids that are duplicates
+         */
+        function updateDuplicateOutputValues() {
+            const outputValueCounts = model.getItem('outputParamIds').reduce((counts, paramId) => {
+                const outputValues = getParameterValuesByRow(paramId);
+                for (const [rowId, value] of Object.entries(outputValues)) {
+                    if (!value) {
+                        return counts;
+                    } else if (!(value in counts)) {
+                        counts[value] = [];
+                    }
+                    counts[value].push({ rowId, paramId });
+                }
+                return counts;
+            }, {});
+            const values = Object.keys(outputValueCounts).reduce((duplicateValues, value) => {
+                if (outputValueCounts[value].length > 1) {
+                    duplicateValues[value] = outputValueCounts[value];
+                }
+                return duplicateValues;
+            }, {});
+            // values should now look like:
+            // {
+            //   'field_value': [{ rowId1, paramId }, { rowId2, paramId }]
+            // }
+            // with only entries where there are at least two row ids
+            // translate to something easier to work with -
+            // {
+            //    rowId: {
+            //      paramId1: {
+            //        widget: Object
+            //        duplicateRows: [rowId, rowId]
+            //      },
+            //      paramId2: {
+            //        widget: Object,
+            //        duplicateRows: [rowId, rowId]
+            //    }
+            // }
+            const duplicates = {};
+            Object.values(values).forEach((dupArr) => {
+                const allRows = dupArr.reduce((rowIds, entry) => {
+                    rowIds.add(dataModel.rowIdToIndex[entry.rowId] + 1);
+                    return rowIds;
+                }, new Set());
+                dupArr.forEach((entry) => {
+                    const rowId = entry.rowId;
+                    const rowIdx = dataModel.rowIdToIndex[rowId] + 1;
+                    const paramInfo = {
+                        widget: dataModel.rows[rowId].widgets[entry.paramId],
+                        duplicateRows: [...allRows].filter((x) => x !== rowIdx),
+                    };
+                    if (paramInfo.duplicateRows.length === 0) {
+                        paramInfo.duplicateRows.push(rowIdx);
+                    }
+                    if (!(rowId in duplicates)) {
+                        duplicates[rowId] = {};
+                    }
+                    duplicates[rowId][entry.paramId] = paramInfo;
+                });
+            });
+            const outputParams = new Set(getAllOutputParameterWidgets());
+
+            Object.values(duplicates).forEach((duplicateEntry) => {
+                Object.values(duplicateEntry).forEach((entry) => {
+                    entry.widget.setDuplicateValue(entry.duplicateRows);
+                    outputParams.delete(entry.widget);
+                });
+            });
+            outputParams.forEach((widget) => widget.clearDuplicateValue());
+
+            return Object.keys(values);
+        }
+
+        /**
+         *
+         * @param {Object} paramId maps from rowId -> value for this parameter, includes nulls
+         */
+        function getParameterValuesByRow(paramId) {
+            const valueMap = {};
+            for (const [rowId, entry] of Object.entries(dataModel.rows)) {
+                valueMap[rowId] = entry.values[paramId];
+            }
+            return valueMap;
         }
 
         /**
@@ -687,8 +798,26 @@ define([
          * @returns an array of widgets
          */
         function getAllFileParameterWidgets() {
-            return model.getItem('fileParamIds').reduce((acc, paramId) => {
-                return acc.concat(getParameterWidgets(paramId));
+            return getWidgetsByType('fileParamIds');
+        }
+
+        /**
+         *
+         * @returns an object where keys are row ids and values are a list of
+         * output parameter widgets
+         */
+        function getAllOutputParameterWidgets() {
+            return getWidgetsByType('outputParamIds');
+        }
+
+        /**
+         *
+         * @param {string} type one of 'fileParamIds', 'outputParamIds'
+         * @returns an object with widgets keyed on their row.
+         */
+        function getWidgetsByType(type) {
+            return model.getItem(type).reduce((widgets, paramId) => {
+                return widgets.concat(getParameterWidgets(paramId));
             }, []);
         }
 

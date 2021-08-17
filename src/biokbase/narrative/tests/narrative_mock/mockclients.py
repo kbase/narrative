@@ -6,6 +6,8 @@ import copy
 RANDOM_DATE = "2018-08-10T16:47:36+0000"
 RANDOM_TYPE = "ModuleA.TypeA-1.0"
 
+WSID_STANDARD = 12345
+
 
 class MockClients:
     """
@@ -81,13 +83,13 @@ class MockClients:
     def get_workspace_info(self, params):
         """
         Some magic workspace ids.
-        12345 - the standard one.
+        12345 (WSID_STANDARD) - the standard one.
         678 - doesn't have useful narrative info in its metadata
         789 - raises a permissions error
         890 - raises a deleted workspace error
         otherwise, returns workspace info with narrative = 1, and narrative name = 'Fake'
         """
-        wsid = params.get("id", 12345)
+        wsid = params.get("id", WSID_STANDARD)
         name = params.get("workspace", "some_workspace")
         if wsid == 678:
             return [
@@ -159,7 +161,7 @@ class MockClients:
                         "2018-06-26T19:31:41+0000",
                         1,
                         "wjriehl",
-                        12345,
+                        WSID_STANDARD,
                         "random_workspace",
                         "a20f2df66f973de41b84164f2c2bedd3",
                         765,
@@ -175,7 +177,7 @@ class MockClients:
                         "2018-08-13T23:13:09+0000",
                         1,
                         "wjriehl",
-                        12345,
+                        WSID_STANDARD,
                         "random_workspace",
                         "9f014a3c08368537a40fa2e4b90f9cab",
                         757,
@@ -311,7 +313,7 @@ class MockClients:
                         ws_id,
                         ws_name,
                         "checksum",
-                        12345,
+                        WSID_STANDARD,
                         None,
                     ]
                 },
@@ -326,7 +328,7 @@ class MockClients:
                         ws_id,
                         ws_name,
                         "checksum",
-                        12345,
+                        WSID_STANDARD,
                         None,
                     ]
                 },
@@ -341,7 +343,7 @@ class MockClients:
                         ws_id,
                         ws_name,
                         "checksum",
-                        12345,
+                        WSID_STANDARD,
                         None,
                     ]
                 },
@@ -356,7 +358,7 @@ class MockClients:
                         ws_id,
                         ws_name,
                         "checksum",
-                        12345,
+                        WSID_STANDARD,
                         None,
                     ]
                 },
@@ -371,7 +373,7 @@ class MockClients:
                         ws_id,
                         ws_name,
                         "checksum",
-                        12345,
+                        WSID_STANDARD,
                         None,
                     ]
                 },
@@ -386,7 +388,7 @@ class MockClients:
                         ws_id,
                         ws_name,
                         "checksum",
-                        12345,
+                        WSID_STANDARD,
                         None,
                     ]
                 },
@@ -401,7 +403,7 @@ class MockClients:
                         ws_id,
                         ws_name,
                         "checksum",
-                        12345,
+                        WSID_STANDARD,
                         None,
                     ],
                     "dp_info": {"ref": dp_ref, "refs": [dp_ref]},
@@ -417,7 +419,7 @@ class MockClients:
                         ws_id,
                         ws_name,
                         "checksum",
-                        12345,
+                        WSID_STANDARD,
                         None,
                     ],
                     "dp_info": {"ref": dp_ref, "refs": [dp_ref]},

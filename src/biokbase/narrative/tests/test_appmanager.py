@@ -6,11 +6,15 @@ from biokbase.narrative.jobs.jobmanager import JobManager
 import biokbase.narrative.jobs.specmanager as specmanager
 import biokbase.narrative.app_util as app_util
 from biokbase.narrative.jobs.job import Job, JOB_ATTRS, JOB_ATTR_DEFAULTS
+from biokbase.narrative.tests.test_job import get_test_spec
 from IPython.display import HTML, Javascript
 import unittest
 import mock
 from mock import MagicMock
-from .narrative_mock.mockclients import get_mock_client
+from .narrative_mock.mockclients import (
+    get_mock_client,
+    WSID_STANDARD,
+)
 import os
 from typing import List
 import sys
@@ -19,11 +23,16 @@ import copy
 from .util import ConfigTests
 
 SEMANTIC_VER_ERROR = "Semantic versions only apply to released app modules."
-TOKEN_ID = "12345"
+TOKEN_ID = "ABCDE12345"
 
 
 def mock_agent_token(*args, **kwargs):
     return dict({"user": "testuser", "id": TOKEN_ID, "token": "abcde"})
+
+
+def get_method(tag, app_id, live=False):
+    spec = get_test_spec(tag, app_id, live=live)
+    return spec["behavior"]["kb_service_name"] + "." + spec["behavior"]["kb_service_method"]
 
 
 class AppManagerTestCase(unittest.TestCase):
@@ -198,18 +207,22 @@ class AppManagerTestCase(unittest.TestCase):
     def test_run_app__dry_run(self, auth, c):
         mock_comm = MagicMock()
         c.return_value.send_comm_message = mock_comm
+        expected = {
+            "method": self.test_app_id.replace("/", "."),
+            "service_ver": self.test_app_version,
+            "params": [
+                self.expected_app_params
+            ],
+            "app_id": self.test_app_id,
+            "meta": {
+                "tag": self.test_tag
+            },
+            "wsid": WSID_STANDARD
+        }
         output = self.am.run_app(
             self.test_app_id, self.test_app_params, tag=self.test_tag, dry_run=True
         )
-        self.assertIsInstance(output, dict)
-        self.assertEqual(output["app_id"], self.test_app_id)
-        self.assertIsInstance(output["params"], list)
-        self.assertEqual(output["params"], [self.expected_app_params])
-        self.assertIn("method", output)
-        self.assertIn("service_ver", output)
-        self.assertIn("meta", output)
-        self.assertIn("tag", output["meta"])
-        self.assertIn("wsid", output)
+        self.assertEqual(expected, output)
         self.assertEqual(mock_comm.call_count, 0)
 
     @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)
@@ -354,11 +367,11 @@ class AppManagerTestCase(unittest.TestCase):
                     "method_name": self.test_app_method_name,
                     "module_name": self.test_app_module_name,
                     "service_ver": self.test_app_version,
-                    "wsid": 12345,
+                    "wsid": WSID_STANDARD,
                 }
             ],
             "service_ver": BATCH_APP["VERSION"],
-            "wsid": 12345,
+            "wsid": WSID_STANDARD,
         }
 
         self.assertEqual(job_runner_inputs, expected)
@@ -548,31 +561,44 @@ class AppManagerTestCase(unittest.TestCase):
 
         test_input = self.bulk_run_good_inputs
 
-        child_job_params = [
-            copy.deepcopy(test_input[0]["params"][0]),
-            copy.deepcopy(test_input[0]["params"][1]),
-            copy.deepcopy(test_input[1]["params"][0]),
-        ]
-        for param_set in child_job_params:
-            for key, value in param_set.items():
-                if value == "":
-                    param_set[key] = None
-            param_set["workspace_name"] = self.public_ws
-
         dry_run_results = self.am.run_app_bulk(test_input, dry_run=True)
+        batch_run_params = dry_run_results["batch_run_params"]
+        batch_params = dry_run_results["batch_params"]
 
-        self.assertIsInstance(dry_run_results, dict)
-        for key in ["batch_run_params", "batch_params"]:
-            self.assertIn(key, dry_run_results)
         expected_batch_run_keys = set(
             ["method", "service_ver", "params", "app_id", "meta"]
         )
         # expect only the above keys in each batch run params (note the missing wsid key)
-        for param_set in dry_run_results["batch_run_params"]:
+        for param_set in batch_run_params:
             self.assertTrue(expected_batch_run_keys == set(param_set.keys()))
-        for param_set, exp in zip(dry_run_results["batch_run_params"], child_job_params):
-            self.assertEqual(param_set["params"], [exp])
-        self.assertTrue(set(["wsid"]) == set(dry_run_results["batch_params"].keys()))
+        self.assertTrue(set(["wsid"]) == set(batch_params.keys()))
+
+        def mod(param_set):
+            for key, value in param_set.items():
+                if value == "":
+                    param_set[key] = None
+            param_set["workspace_name"] = self.public_ws
+            return param_set
+
+        exp_batch_run_params = [
+            {
+                "method": get_method(test_input[i]["tag"], test_input[i]["app_id"], live=True),
+                "service_ver": test_input[i]["version"],
+                "params": [mod(test_input[i]["params"][j])],
+                "app_id": test_input[i]["app_id"],
+                "meta": {
+                    "tag": test_input[i]["tag"]
+                }
+            }
+            for i, j in [(0, 0), (0, 1), (1, 0)]  # i is idx in test_input, j is idx of params
+        ]
+        exp_batch_params = {
+            "wsid": WSID_STANDARD
+        }
+
+        self.assertEqual(exp_batch_run_params, batch_run_params)
+        self.assertEqual(exp_batch_params, batch_params)
+
         self.assertEqual(mock_comm.call_count, 0)
 
     @mock.patch("biokbase.narrative.jobs.appmanager.clients.get", get_mock_client)

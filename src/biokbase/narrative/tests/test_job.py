@@ -36,15 +36,18 @@ def capture_stdout():
 
 
 config = ConfigTests()
+sm = SpecManager()
 TEST_JOBS = config.load_json_file(config.get("jobs", "ee2_job_info_file"))
 with mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client):
-    sm = SpecManager()
     sm.reload()
     TEST_SPECS = copy.deepcopy(sm.app_specs)
+sm.reload()  # get live data
+LIVE_SPECS = copy.deepcopy(sm.app_specs)
 
 
-def get_test_spec(tag, app_id):
-    return copy.deepcopy(TEST_SPECS[tag][app_id])
+def get_test_spec(tag, app_id, live=False):
+    specs = LIVE_SPECS if live else TEST_SPECS
+    return copy.deepcopy(specs[tag][app_id])
 
 
 def get_test_job(job_id):

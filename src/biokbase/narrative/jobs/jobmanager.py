@@ -526,32 +526,30 @@ class JobManager(object):
         Update a batch job and create child jobs if necessary
         """
         parent_job = self.get_job(batch_id)
-
         if not parent_job.batch_job:
             raise NotBatchException("Not a batch job")
 
         old_child_ids = parent_job.child_jobs
         parent_job.state(force_refresh=True)
-        child_ids = parent_job.child_jobs
+        cur_child_ids = parent_job.child_jobs
 
-        if sorted(child_ids) != sorted(old_child_ids):
+        if sorted(old_child_ids) != sorted(cur_child_ids):
+            reg_cur_child_ids = [job_id for job_id in cur_child_ids if job_id in self._running_jobs]
+            unreg_cur_child_ids = [job_id for job_id in cur_child_ids if job_id not in self._running_jobs]
 
-            child_jobs = []
-            for child_id in child_ids:
-                if child_id in self._running_jobs:
-                    child_job = self._running_jobs[child_id]["job"]
-                else:
-                    child_job = Job.from_job_id(
-                        job_id=child_id
-                    )
-                    self.register_new_job(
-                        job=child_job,
-                        refresh=int(
-                            child_job.state().get("status") not in TERMINAL_STATUSES
-                        ),
-                    )
-                child_jobs.append(child_job)
+            reg_cur_child_jobs = [self.get_job(job_id) for job_id in reg_cur_child_ids]
+            unreg_cur_child_jobs = Job.from_job_ids(unreg_cur_child_ids)
 
-            parent_job.update_children(child_jobs)
+            cur_child_jobs = reg_cur_child_jobs + unreg_cur_child_jobs
 
-        return [batch_id] + child_ids
+            for job in unreg_cur_child_jobs:
+                self.register_new_job(
+                    job=job,
+                    refresh=int(
+                        job.state().get("status") not in TERMINAL_STATUSES
+                    ),
+                )
+
+            parent_job.update_children(cur_child_jobs)
+
+        return [batch_id] + cur_child_ids

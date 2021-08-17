@@ -3,8 +3,9 @@ define([
     'common/html',
     'common/runtime',
     'widgets/appWidgets2/errorControl',
+    'util/string',
     'css!google-code-prettify/prettify.css',
-], (PR, html, Runtime, ErrorControlFactory) => {
+], (PR, html, Runtime, ErrorControlFactory, StringUtil) => {
     'use strict';
 
     const t = html.tag,
@@ -193,16 +194,18 @@ define([
 
         function setDuplicateValue(rows) {
             state.isDuplicate = true;
-            let message = 'duplicate value found';
+            let message = 'duplicate value';
+            let rowMessage = '';
+
             if (rows) {
-                message += ' on row';
-                const numRows = rows.length;
-                if (numRows > 1) {
-                    const comma = numRows > 2 ? ',' : '';
-                    message += `s ${rows.slice(0, numRows - 1).join(', ')}${comma} and`;
+                rowMessage = ' on row';
+                if (rows.length > 1) {
+                    message += 's';
+                    rowMessage += 's';
                 }
-                message += ' ' + rows[rows.length - 1];
+                rowMessage += ' ' + StringUtil.arrayToEnglish(rows);
             }
+            message += ' found' + rowMessage;
             renderMessage(MESSAGE.error, message, `.${messageBaseClass}__duplicate`);
         }
 

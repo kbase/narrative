@@ -179,12 +179,12 @@ define([
             },
             {
                 rows: [1, 2],
-                text: 'duplicate value found on rows 1 and 2',
+                text: 'duplicate values found on rows 1 and 2',
                 label: 'on two rows',
             },
             {
                 rows: [1, 2, 3],
-                text: 'duplicate value found on rows 1, 2, and 3',
+                text: 'duplicate values found on rows 1, 2, and 3',
                 label: 'on more than two rows',
             },
         ].forEach((testCase) => {

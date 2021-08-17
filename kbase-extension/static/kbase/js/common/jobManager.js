@@ -179,28 +179,32 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
                 jobIdList = [jobIdList];
             }
 
-            jobIdList.forEach((jobId) => {
-                if (!this.listeners[jobId]) {
-                    this.listeners[jobId] = {};
-                }
+            jobIdList
+                .filter((jobId) => {
+                    return jobId && jobId.length > 0 ? 1 : 0;
+                })
+                .forEach((jobId) => {
+                    if (!this.listeners[jobId]) {
+                        this.listeners[jobId] = {};
+                    }
 
-                if (!this.listeners[jobId][type]) {
-                    this.listeners[jobId][type] = this.bus.listen({
-                        channel: {
-                            jobId: jobId,
-                        },
-                        key: {
-                            type: type,
-                        },
-                        handle: (message) => {
-                            if (!this._isValidMessage(type, message)) {
-                                return;
-                            }
-                            this.runHandler(type, message, jobId);
-                        },
-                    });
-                }
-            });
+                    if (!this.listeners[jobId][type]) {
+                        this.listeners[jobId][type] = this.bus.listen({
+                            channel: {
+                                jobId: jobId,
+                            },
+                            key: {
+                                type: type,
+                            },
+                            handle: (message) => {
+                                if (!this._isValidMessage(type, message)) {
+                                    return;
+                                }
+                                this.runHandler(type, message, jobId);
+                            },
+                        });
+                    }
+                });
 
             // add the handler -- the message type is used as the event
             if (handlerObject) {
@@ -360,7 +364,6 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
                 if (error) {
                     return;
                 }
-
                 self.model.setItem(`exec.jobs.params.${jobInfo.job_id}`, jobInfo.job_params[0]);
                 self.removeListener(jobInfo.job_id, 'job-info');
             }
@@ -370,12 +373,6 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
                 if (error) {
                     return;
                 }
-
-                // copy over the params
-                self.model.setItem(
-                    `exec.jobs.params.${retry.jobState.job_id}`,
-                    self.model.getItem(`exec.jobs.params.${job.jobState.job_id}`)
-                );
 
                 // request job updates for the new job
                 self.addListener('job-status', [retry.jobState.job_id]);
@@ -406,12 +403,15 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
              */
             handleJobStatus(self, message) {
                 const { jobId, jobState } = message;
-                const status = jobState.status;
+                const { status, updated } = jobState;
 
                 // if the job is in a terminal state and cannot be retried,
                 // stop listening for updates
                 if (Jobs.isTerminalStatus(status) && !Jobs.canRetry(jobState)) {
                     self.removeListener(jobId, 'job-status');
+                    if (status === 'does_not_exist') {
+                        self.removeJobListeners(jobId);
+                    }
                     self.bus.emit('request-job-updates-stop', {
                         jobId,
                     });
@@ -421,7 +421,7 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
 
                 // check if the job object has been updated since we last saved it
                 const previousUpdate = self.model.getItem(`exec.jobs.byId.${jobId}.updated`);
-                if (previousUpdate === jobState.updated) {
+                if (updated && previousUpdate === updated) {
                     return;
                 }
 
@@ -436,8 +436,14 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
                     if (missingJobIds.length) {
                         self.addListener('job-status', missingJobIds);
                         self.addListener('job-info', missingJobIds);
-                        self.bus.emit('request-job-updates-start', {
-                            jobIdList: missingJobIds,
+                        // until we can submit multiple IDs to job-updates-start
+                        // self.bus.emit('request-job-updates-start', {
+                        //     jobIdList: missingJobIds,
+                        // });
+                        missingJobIds.forEach((id) => {
+                            self.bus.emit('request-job-updates-start', {
+                                jobId: id,
+                            });
                         });
                         // this can be deleted once the narrative BE responds to `request-job-updates-start`
                         // by sending back the most recent job statuses

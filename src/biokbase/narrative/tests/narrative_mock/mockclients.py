@@ -313,7 +313,7 @@ class MockClients:
                         ws_id,
                         ws_name,
                         "checksum",
-                        WSID_STANDARD,
+                        12345,
                         None,
                     ]
                 },
@@ -328,7 +328,7 @@ class MockClients:
                         ws_id,
                         ws_name,
                         "checksum",
-                        WSID_STANDARD,
+                        12345,
                         None,
                     ]
                 },
@@ -343,7 +343,7 @@ class MockClients:
                         ws_id,
                         ws_name,
                         "checksum",
-                        WSID_STANDARD,
+                        12345,
                         None,
                     ]
                 },
@@ -358,7 +358,7 @@ class MockClients:
                         ws_id,
                         ws_name,
                         "checksum",
-                        WSID_STANDARD,
+                        12345,
                         None,
                     ]
                 },
@@ -373,7 +373,7 @@ class MockClients:
                         ws_id,
                         ws_name,
                         "checksum",
-                        WSID_STANDARD,
+                        12345,
                         None,
                     ]
                 },
@@ -388,7 +388,7 @@ class MockClients:
                         ws_id,
                         ws_name,
                         "checksum",
-                        WSID_STANDARD,
+                        12345,
                         None,
                     ]
                 },
@@ -403,7 +403,7 @@ class MockClients:
                         ws_id,
                         ws_name,
                         "checksum",
-                        WSID_STANDARD,
+                        12345,
                         None,
                     ],
                     "dp_info": {"ref": dp_ref, "refs": [dp_ref]},
@@ -419,7 +419,7 @@ class MockClients:
                         ws_id,
                         ws_name,
                         "checksum",
-                        WSID_STANDARD,
+                        12345,
                         None,
                     ],
                     "dp_info": {"ref": dp_ref, "refs": [dp_ref]},

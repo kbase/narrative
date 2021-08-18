@@ -289,21 +289,14 @@ class AppManager(object):
             kblogging.log_event(self._log, "run_batch_app_error", log_info)
             raise transform_job_exception(e)
 
-        new_job = Job.from_attributes(
-            app_id=BATCH_APP["APP_ID"],
-            app_version=BATCH_APP["VERSION"],
-            cell_id=cell_id,
+        new_job = Job.from_job_id(
+            job_id,
             extra_data={
                 # this data is not preserved in the ee2 record
                 "batch_app": app_id,
                 "batch_tag": tag,
                 "batch_size": len(params),
             },
-            job_id=job_id,
-            user=system_variable("user_id"),
-            params=batch_params,
-            run_id=run_id,
-            tag=BATCH_APP["TAG"],
         )
 
         self._send_comm_message(
@@ -393,15 +386,8 @@ class AppManager(object):
             kblogging.log_event(self._log, "run_app_error", log_info)
             raise transform_job_exception(e)
 
-        new_job = Job.from_attributes(
-            app_id=app_id,
-            app_version=job_runner_inputs["service_ver"],
-            cell_id=cell_id,
-            job_id=job_id,
-            user=system_variable("user_id"),
-            params=job_runner_inputs["params"],
-            run_id=run_id,
-            tag=tag,
+        new_job = Job.from_job_id(
+            job_id
         )
 
         self._send_comm_message(
@@ -539,6 +525,9 @@ class AppManager(object):
             kblogging.log_event(self._log, "run_job_bulk_error", log_info)
             raise transform_job_exception(e)
 
+        batch_id = batch_submission[BATCH_ID_KEY]
+        child_ids = batch_submission["child_job_ids"]
+
         self._send_comm_message(
             "run_status",
             {
@@ -546,46 +535,18 @@ class AppManager(object):
                 "event_at": datetime.datetime.utcnow().isoformat() + "Z",
                 "cell_id": cell_id,
                 "run_id": run_id,
-                BATCH_ID_KEY: batch_submission[BATCH_ID_KEY],
-                "child_job_ids": batch_submission["child_job_ids"],
+                BATCH_ID_KEY: batch_id,
+                "child_job_ids": child_ids,
             },
         )
 
-        child_jobs = list()
-        user_id = system_variable("user_id")
-        for idx, child_job_id in enumerate(batch_submission["child_job_ids"]):
-            job_info = batch_run_inputs[idx]
-            child_jobs.append(
-                Job.from_attributes(
-                    app_id=job_info["app_id"],
-                    app_version=job_info["service_ver"],
-                    batch_id=batch_submission[BATCH_ID_KEY],
-                    cell_id=cell_id,
-                    job_id=child_job_id,
-                    user=user_id,
-                    params=job_info["params"][0],
-                    run_id=run_id,
-                    tag=job_info["meta"].get("tag"),
-                )
-            )
+        child_jobs = Job.from_job_ids(
+            child_ids,
+            return_list=True
+        )
 
-        # TODO make something more reasonable / complete for a parent job
-        parent_job = Job.from_state(
-            {
-                "batch_id": batch_submission[BATCH_ID_KEY],
-                "batch_job": True,
-                "child_jobs": [job.job_id for job in child_jobs],
-                "job_id": batch_submission[BATCH_ID_KEY],
-                "job_input": {
-                    "app_id": "batch",  # value given by ee2
-                    "method": "batch",
-                    "narrative_cell_info": {},
-                    "service_ver": "batch",  # value given by ee2
-                    "source_ws_objects": [],
-                },
-                "status": "created",
-                "user": user_id,
-            },
+        parent_job = Job.from_job_id(
+            batch_id,
             children=child_jobs,
         )
 

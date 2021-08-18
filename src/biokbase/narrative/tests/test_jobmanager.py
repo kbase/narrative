@@ -4,6 +4,7 @@ Tests for job management
 from src.biokbase.narrative.jobs.job import (
     COMPLETED_STATUS,
     EXCLUDED_JOB_STATE_FIELDS,
+    JOB_INIT_EXCLUDED_JOB_STATE_FIELDS,
     JOB_ATTR_DEFAULTS,
     get_dne_job_state,
 )
@@ -660,18 +661,9 @@ class JobManagerTest(unittest.TestCase):
 
         m.assert_has_calls(
             [
-                mock.call(
-                    {
-                        "job_id": BATCH_PARENT,
-                        "exclude_fields": EXCLUDED_JOB_STATE_FIELDS,
-                    }
-                ),
-                mock.call(
-                    {
-                        "job_id": JOB_NOT_FOUND,
-                        "exclude_fields": EXCLUDED_JOB_STATE_FIELDS,
-                    }
-                ),
+                mock.call({"job_id": BATCH_PARENT, "exclude_fields": EXCLUDED_JOB_STATE_FIELDS}),
+                mock.call({"job_id": JOB_NOT_FOUND, "exclude_fields": JOB_INIT_EXCLUDED_JOB_STATE_FIELDS}),
+                mock.call({"job_id": JOB_NOT_FOUND, "exclude_fields": EXCLUDED_JOB_STATE_FIELDS})
             ]
         )
 

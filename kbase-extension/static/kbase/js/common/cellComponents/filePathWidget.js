@@ -667,7 +667,7 @@ define([
                     // bulkImportWidget.js and configure.js.
                     updateDisabledFileValues();
                     const dups = updateDuplicateOutputValues();
-                    // if there's any duplicates, we need to send a message that this is an
+                    // if there are any duplicates, we need to send a message that this is an
                     // invalid setup
                     if (dups.length) {
                         paramsBus.emit('invalid-param-value');

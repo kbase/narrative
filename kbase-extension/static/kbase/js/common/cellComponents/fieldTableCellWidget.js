@@ -225,7 +225,7 @@ define([
             }
 
             if (rowMessage.length && tabMessage.length) {
-                rowTabSeparator = ', and ';
+                rowTabSeparator = ', and';
                 plural = true;
             }
             message += (plural ? 's' : '') + ' found' + rowMessage + rowTabSeparator;

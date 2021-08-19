@@ -70,12 +70,6 @@ define([
 
         beforeEach(function () {
             this.bus = Bus.make();
-            // this.bus.respond({
-            //     key: {
-            //         type: 'get-unselected-outputs',
-            //     },
-            //     handle: () => { return {}; }
-            // });
             container = document.createElement('div');
             this.node = document.createElement('div');
             document.body.append(container);
@@ -272,6 +266,57 @@ define([
                     expect(row.querySelector(dupMsgSelector).classList).not.toContain('hidden');
                 });
             });
+        });
+
+        it('should check for cross-tab duplicate values at start', async function () {
+            this.fpwArgs.unselectedOutputValues = {
+                bar: {
+                    someTab: [1],
+                },
+            };
+            const fpw = makeFilePathWidget(this.fpwArgs);
+            await fpw.start({
+                node: this.node,
+                appSpec: this.appSpec,
+                parameters: this.parameters,
+            });
+
+            // We're testing duplicate values of output objects. The validator calls out
+            // to the workspace to see if there's already an object of this name - crashes
+            // seem to occur when it can't get there.
+            jasmine.Ajax.install();
+            Mocks.mockJsonRpc1Call({
+                url: Config.url('workspace'),
+                body: /get_object_info_new/,
+                response: {
+                    data: [[null]],
+                },
+            });
+            const row1 = this.node.querySelector('li.kb-file-path__list_item:first-child');
+            const widgetSelector = 'div[data-parameter="actual_output_object"]';
+            const rowCellSelector = `${widgetSelector} .kb-field-cell__rowCell`;
+            const inputSelector = `${widgetSelector} input.form-control`;
+            const dupMsgSelector = `${rowCellSelector} .kb-field-cell__message_panel__duplicate`;
+
+            // wait on the inputs to get rendered
+            await TestUtil.waitForElement(row1, inputSelector);
+
+            // wait for the error class to get put on the main widget after a duplicate
+            // value is set
+            await TestUtil.waitForElementState(this.node, () => {
+                return row1
+                    .querySelector(rowCellSelector)
+                    .classList.contains('kb-field-cell__error_message');
+            });
+            expect(row1.querySelector(rowCellSelector).classList).toContain(
+                'kb-field-cell__error_message'
+            );
+            expect(row1.querySelector(dupMsgSelector).classList).toContain(
+                'kb-field-cell__message_panel__error'
+            );
+            expect(row1.querySelector(dupMsgSelector).classList).not.toContain('hidden');
+            await fpw.stop();
+            jasmine.Ajax.uninstall();
         });
     });
 });

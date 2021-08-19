@@ -197,6 +197,16 @@ $tab-widget-padding: 4px;
       border-color: use_color('error');
       color: use_color('error');
     }
+
+    // select2 is picky and needs its classes overridden.
+    // making a note here in case a select2 update breaks this.
+    .select2-selection {
+      border-color: use_color('error');
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__placeholder {
+      color: use_color('error');
+    }
   }
 
   // kb-field-cell__message_panel

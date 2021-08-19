@@ -250,7 +250,9 @@ define([
                 const outputNode = container.querySelector('div[data-parameter="name"]');
                 const rowCell = outputNode.querySelector('.kb-field-cell__rowCell');
                 expect(rowCell.classList).toContain('kb-field-cell__error_message');
-                const dupMessage = rowCell.querySelector('.kb-field-cell__message_panel__duplicate');
+                const dupMessage = rowCell.querySelector(
+                    '.kb-field-cell__message_panel__duplicate'
+                );
                 expect(dupMessage.classList).not.toContain('hidden');
                 expect(dupMessage.innerHTML).toContain('duplicate value found');
                 await configure.stop();

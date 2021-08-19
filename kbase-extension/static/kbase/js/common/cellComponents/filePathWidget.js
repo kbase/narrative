@@ -147,17 +147,10 @@ define([
              * messages like "sync-params" are only used by a few inputs, none of which are
              * expected here.
              */
-
-            // When the field widget gets its value changed (or communicates that it's changed),
-            // put that in the filePathWidget's data model, then push all the values up the main
-            // params bus.
-            fieldWidget.bus.on('changed', async (message) => {
+            fieldWidget.bus.on('changed', (message) => {
                 const newValue = message.newValue;
                 dataModel.rows[rowId].values[parameterSpec.id] = newValue;
                 updateDisabledFileValues();
-                // "changed" means that the value has successfully been changed to something valid
-                // And the line above updates the dataModel, so we're up to date with what's set
-                // everywhere
                 // TODO: get up to date with all values across uploaders
                 // But it still might be a duplicate! So do the following on each change.
                 // 1. Get all output values
@@ -165,12 +158,15 @@ define([
                 // 2a. emit 'invalid-param-value' messages for the duplicates
                 // 3. Send results to all widgets
                 // 4. All widgets update their state
-                let paramOk = true;
+                let duplicateValues = [];
                 if (model.getItem('outputParamIds').includes(parameterSpec.id)) {
-                    const duplicateValues = await updateDuplicateOutputValues();
-                    paramOk = !duplicateValues.includes(newValue);
+                    duplicateValues = updateDuplicateOutputValues();
                 }
-                if (paramOk) {
+                if (duplicateValues.includes(newValue)) {
+                    paramsBus.emit('invalid-param-value', {
+                        parameter: parameterSpec.id,
+                    });
+                } else {
                     paramsBus.emit('parameter-changed', {
                         parameter: parameterSpec.id,
                         newValue: newValue,
@@ -178,17 +174,17 @@ define([
                         rowId: rowId,
                         rowIndex: dataModel.rowIdToIndex[rowId],
                     });
-                } else {
-                    paramsBus.emit('invalid-param-value', {
-                        parameter: parameterSpec.id,
-                    });
                 }
             });
 
             fieldWidget.bus.on('validation', (message) => {
                 // only propagate if invalid. value changes come through
                 // the 'changed' message
-                if (!message.isValid) {
+                let duplicateValues = [];
+                if (model.getItem('outputParamIds').includes(parameterSpec.id)) {
+                    duplicateValues = updateDuplicateOutputValues();
+                }
+                if (!message.isValid || duplicateValues.length) {
                     paramsBus.emit('invalid-param-value', {
                         parameter: parameterSpec.id,
                     });
@@ -670,7 +666,12 @@ define([
                     // TODO: set this widget up to link filetypes to parameter ids. Work also needed in
                     // bulkImportWidget.js and configure.js.
                     updateDisabledFileValues();
-                    updateDuplicateOutputValues();
+                    const dups = updateDuplicateOutputValues();
+                    // if there's any duplicates, we need to send a message that this is an
+                    // invalid setup
+                    if (dups.length) {
+                        paramsBus.emit('invalid-param-value');
+                    }
                 })
                 .catch((error) => {
                     throw new Error(`Unable to start filePathWidget: ${error}`);

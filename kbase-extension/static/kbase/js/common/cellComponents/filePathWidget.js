@@ -150,7 +150,7 @@ define([
             // When the field widget gets its value changed (or communicates that it's changed),
             // put that in the filePathWidget's data model, then push all the values up the main
             // params bus.
-            fieldWidget.bus.on('changed', (message) => {
+            fieldWidget.bus.on('changed', async (message) => {
                 const newValue = message.newValue;
                 dataModel.rows[rowId].values[parameterSpec.id] = newValue;
                 updateDisabledFileValues();
@@ -164,18 +164,22 @@ define([
                 // 2a. emit 'invalid-param-value' messages for the duplicates
                 // 3. Send results to all widgets
                 // 4. All widgets update their state
-                const duplicateValues = updateDuplicateOutputValues();
-                if (duplicateValues.includes(newValue)) {
-                    paramsBus.emit('invalid-param-value', {
-                        parameter: parameterSpec.id,
-                    });
-                } else {
+                let paramOk = true;
+                if (model.getItem('outputParamIds').includes(parameterSpec.id)) {
+                    const duplicateValues = await updateDuplicateOutputValues();
+                    paramOk = !duplicateValues.includes(newValue);
+                }
+                if (paramOk) {
                     paramsBus.emit('parameter-changed', {
                         parameter: parameterSpec.id,
                         newValue: newValue,
                         isError: message.isError,
                         rowId: rowId,
                         rowIndex: dataModel.rowIdToIndex[rowId],
+                    });
+                } else {
+                    paramsBus.emit('invalid-param-value', {
+                        parameter: parameterSpec.id,
                     });
                 }
             });
@@ -691,7 +695,28 @@ define([
          * 4. Up to widgets to act accordingly
          * 5. Return the row ids that are duplicates
          */
-        function updateDuplicateOutputValues() {
+        async function updateDuplicateOutputValues() {
+            /* otherTabValues = all output values from other tabs, what tab they're in, and which row.
+             *
+             * looks like this:
+             * {
+             *   value: {
+             *     tabId: [rowIds, rowIdx]
+             *   }
+             * }
+             */
+            const otherTabValues = await paramsBus.request(
+                {},
+                { key: { type: 'get-unselected-outputs' } }
+            );
+
+            /* First, set up the output value counts for this tab.
+             * outputValueCounts will look like this:
+             * {
+             *   value: [{rowId, paramId}]
+             * }
+             * for each value.
+             */
             const outputValueCounts = model.getItem('outputParamIds').reduce((counts, paramId) => {
                 const outputValues = getParameterValuesByRow(paramId);
                 for (const [rowId, value] of Object.entries(outputValues)) {
@@ -704,51 +729,76 @@ define([
                 }
                 return counts;
             }, {});
+            /* Second, set up values to only track duplicates, and fold in the
+             * results from all other tabs.
+             *
+             * values should now look like:
+             * {
+             *   'field_value': {
+             *     otherTabs: {
+             *        tabId: [rows],
+             *     },
+             *     thisTab: {
+             *        [{ rowId1, paramId }, { rowId2, paramId }]
+             *     }
+             *   }
+             * }
+             * with only entries where there are at least two row ids, or
+             * a value found from another tab
+             */
             const values = Object.keys(outputValueCounts).reduce((duplicateValues, value) => {
-                if (outputValueCounts[value].length > 1) {
-                    duplicateValues[value] = outputValueCounts[value];
+                const dup = {};
+                if (outputValueCounts[value].length > 1 || value in otherTabValues) {
+                    dup.thisTab = outputValueCounts[value];
+                }
+                if (value in otherTabValues) {
+                    dup.otherTabs = otherTabValues[value];
+                }
+                if (Object.keys(dup).length) {
+                    duplicateValues[value] = dup;
                 }
                 return duplicateValues;
             }, {});
-            // values should now look like:
-            // {
-            //   'field_value': [{ rowId1, paramId }, { rowId2, paramId }]
-            // }
-            // with only entries where there are at least two row ids
-            // translate to something easier to work with -
-            // {
-            //    rowId: {
-            //      paramId1: {
-            //        widget: Object
-            //        duplicateRows: [rowId, rowId]
-            //      },
-            //      paramId2: {
-            //        widget: Object,
-            //        duplicateRows: [rowId, rowId]
-            //    }
-            // }
+            /* Get the parameter widgets and translate to something easier to work with -
+             * {
+             *    rowId: {
+             *      paramId1: {
+             *        widget: Object
+             *        duplicateRows: {
+             *          thisTab: [rowId, rowId],
+             *          otherTabs: {
+             *              tabId1: [rowIdx, rowIdx]
+             *          }
+             *      },
+             *    }
+             * }
+             *
+             * otherTabs may not exist, though thisTab must (since we're looking at this tab's
+             * duplicate values).
+             */
             const duplicates = {};
-            Object.values(values).forEach((dupArr) => {
-                const allRows = dupArr.reduce((rowIds, entry) => {
-                    rowIds.add(dataModel.rowIdToIndex[entry.rowId] + 1);
-                    return rowIds;
-                }, new Set());
-                dupArr.forEach((entry) => {
-                    const rowId = entry.rowId;
-                    const rowIdx = dataModel.rowIdToIndex[rowId] + 1;
-                    const paramInfo = {
-                        widget: dataModel.rows[rowId].widgets[entry.paramId],
-                        duplicateRows: [...allRows].filter((x) => x !== rowIdx),
-                    };
-                    if (paramInfo.duplicateRows.length === 0) {
-                        paramInfo.duplicateRows.push(rowIdx);
-                    }
+            Object.values(values).forEach((dupEntry) => {
+                const allRowsThisTab = new Set();
+                dupEntry.thisTab.forEach((entry) => {
+                    allRowsThisTab.add(dataModel.rowIdToIndex[entry.rowId] + 1);
+                });
+                dupEntry.thisTab.forEach((entry) => {
+                    const rowId = entry.rowId,
+                        rowIdx = dataModel.rowIdToIndex[rowId] + 1,
+                        paramInfo = {
+                            widget: dataModel.rows[rowId].widgets[entry.paramId],
+                            duplicateRows: {
+                                thisTab: [...allRowsThisTab].filter((x) => x !== rowIdx),
+                                otherTabs: dupEntry.otherTabs || {},
+                            },
+                        };
                     if (!(rowId in duplicates)) {
                         duplicates[rowId] = {};
                     }
                     duplicates[rowId][entry.paramId] = paramInfo;
                 });
             });
+
             const outputParams = new Set(getAllOutputParameterWidgets());
 
             Object.values(duplicates).forEach((duplicateEntry) => {

@@ -192,20 +192,39 @@ define([
             }
         }
 
+        /**
+         *
+         * @param {object} rows
+         */
         function setDuplicateValue(rows) {
             state.isDuplicate = true;
             let message = 'duplicate value';
             let rowMessage = '';
+            let tabMessage = '';
+            let tabPrefix = ' on tab';
 
-            if (rows) {
+            if (rows && rows.thisTab && rows.thisTab.length) {
                 rowMessage = ' on row';
-                if (rows.length > 1) {
-                    message += 's';
+                if (rows.thisTab.length > 1) {
                     rowMessage += 's';
                 }
-                rowMessage += ' ' + StringUtil.arrayToEnglish(rows);
+                rowMessage += ' ' + StringUtil.arrayToEnglish(rows.thisTab);
+            }
+
+            if (rows && rows.otherTabs) {
+                const tabs = Object.keys(rows.otherTabs); // don't use rows for now, as there's something funny about the reporting
+                tabMessage = StringUtil.arrayToEnglish(tabs.map((x) => `"${x}"`));
+                if (tabs.length > 1) {
+                    tabPrefix += 's';
+                }
             }
             message += ' found' + rowMessage;
+            if (rowMessage.length && tabMessage.length) {
+                message += ', and ';
+            }
+            if (tabMessage.length) {
+                message += tabPrefix + ' ' + tabMessage;
+            }
             renderMessage(MESSAGE.error, message, `.${messageBaseClass}__duplicate`);
         }
 

@@ -43,7 +43,20 @@ define([
             paramsWidget,
             fileTypePanel,
             selectedFileType = model.getItem('state.selectedFileType'),
+            unselectedOutputValues,
             ui;
+
+        const fileTypesDisplay = {},
+            fileTypeMapping = {},
+            uploaders = Config.get('uploaders');
+        for (const uploader of uploaders.dropdown_order) {
+            fileTypeMapping[uploader.id] = uploader.name;
+        }
+        for (const fileType of Object.keys(typesToFiles)) {
+            fileTypesDisplay[fileType] = {
+                label: fileTypeMapping[fileType] || `Unknown type "${fileType}"`,
+            };
+        }
 
         /**
          * args includes:
@@ -65,7 +78,57 @@ define([
             });
         }
 
+        /**
+         * Makes a cache of the output parameter values from the unselected file type,
+         * which will make it easier to look for duplicate values.
+         *
+         * Since this is focused on being used for duplicate values, with a row to point
+         * to, it gets structured like this:
+         * {
+         *   value1: {
+         *     fileType: [rows],
+         *     fileType2: [rows]
+         *   },
+         *   value2: {
+         *     fileType: [rows]
+         *   }
+         * }
+         *
+         * nulls / undefineds are ignored.
+         */
+        function cacheUnselectedOutputValues() {
+            unselectedOutputValues = {};
+            const unselectedTypes = new Set(Object.keys(typesToFiles));
+            if (unselectedTypes.size === 1) {
+                return; // skip everything if there's only one file type
+            }
+
+            unselectedTypes.delete(selectedFileType);
+            const allParams = model.getItem('params');
+            const allOutputParamIds = model.getItem('app.outputParamIds');
+            unselectedTypes.forEach((type) => {
+                const outputParamIds = allOutputParamIds[type];
+                for (let i = 0; i < allParams[type].filePaths.length; i++) {
+                    outputParamIds.forEach((paramId) => {
+                        const value = allParams[type].filePaths[i][paramId];
+                        if (value === null || value === undefined) {
+                            return;
+                        }
+                        if (!(value in unselectedOutputValues)) {
+                            unselectedOutputValues[value] = {};
+                        }
+                        const displayType = fileTypesDisplay[type].label;
+                        if (!(type in unselectedOutputValues[value])) {
+                            unselectedOutputValues[value][displayType] = [];
+                        }
+                        unselectedOutputValues[value][displayType].push(i + 1);
+                    });
+                }
+            });
+        }
+
         function startInputWidgets() {
+            cacheUnselectedOutputValues();
             const appSpec = specs[typesToFiles[selectedFileType].appId];
             const filePathNode = ui.getElement('input-container.file-paths');
             const paramNode = ui.getElement('input-container.params');
@@ -116,17 +179,17 @@ define([
          * @param {DOMElement} node - the node that should be used for the left column
          */
         function buildFileTypePanel(node) {
-            const fileTypesDisplay = {},
-                fileTypeMapping = {},
-                uploaders = Config.get('uploaders');
-            for (const uploader of uploaders.dropdown_order) {
-                fileTypeMapping[uploader.id] = uploader.name;
-            }
-            for (const fileType of Object.keys(typesToFiles)) {
-                fileTypesDisplay[fileType] = {
-                    label: fileTypeMapping[fileType] || `Unknown type "${fileType}"`,
-                };
-            }
+            // const fileTypesDisplay = {},
+            //     fileTypeMapping = {},
+            //     uploaders = Config.get('uploaders');
+            // for (const uploader of uploaders.dropdown_order) {
+            //     fileTypeMapping[uploader.id] = uploader.name;
+            // }
+            // for (const fileType of Object.keys(typesToFiles)) {
+            //     fileTypesDisplay[fileType] = {
+            //         label: fileTypeMapping[fileType] || `Unknown type "${fileType}"`,
+            //     };
+            // }
             fileTypePanel = FileTypePanel.make({
                 bus: cellBus,
                 header: {
@@ -249,6 +312,17 @@ define([
                     model.setItem(['params', selectedFileType, FILE_PATH_TYPE], message.values);
                     updateAppConfigState();
                 }
+            });
+
+            // Responds with the cached set of output parameters from all not-currently-selected
+            // file types.
+            paramBus.respond({
+                key: {
+                    type: 'get-unselected-outputs',
+                },
+                handle: () => {
+                    return unselectedOutputValues;
+                },
             });
 
             /* Here, we need to

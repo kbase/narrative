@@ -78,8 +78,9 @@ define([
         }
 
         /**
-         * Makes a cache of the output parameter values from the unselected file type,
-         * which will make it easier to look for duplicate values.
+         * Returns the output parameter values from the unselected file types,
+         * which will make it easier to look for duplicate values against the active file
+         * type.
          *
          * Since this is focused on being used for duplicate values, with a row to point
          * to, it gets structured like this:
@@ -93,7 +94,11 @@ define([
          *   }
          * }
          *
-         * nulls / undefineds are ignored.
+         * The `fileType` fields above are the display name, just to make writing the alerts
+         * easier. This does come with the assumption that those names are all unique,
+         * but they really should be unless we want to be extra confusing to our users.
+         *
+         * Nulls, undefineds, and empty strings are ignored.
          */
         function getUnselectedOutputValues() {
             const unselectedTypes = new Set(Object.keys(typesToFiles));
@@ -110,7 +115,7 @@ define([
                 for (let i = 0; i < allParams[type].filePaths.length; i++) {
                     outputParamIds.forEach((paramId) => {
                         const value = allParams[type].filePaths[i][paramId];
-                        if (value === null || value === undefined) {
+                        if (!value) {
                             return;
                         }
                         if (!(value in unselectedOutputValues)) {

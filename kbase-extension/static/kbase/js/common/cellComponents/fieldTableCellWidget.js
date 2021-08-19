@@ -235,9 +235,11 @@ define([
             // get text for other tab rows
             if (rows && rows.otherTabs) {
                 const tabs = Object.keys(rows.otherTabs);
-                tabMessage = StringUtil.arrayToEnglish(tabs.map((tab) => {
-                    return `"${tab}" ${buildRowsText(rows.otherTabs[tab])}`;
-                }));
+                tabMessage = StringUtil.arrayToEnglish(
+                    tabs.map((tab) => {
+                        return `"${tab}" ${buildRowsText(rows.otherTabs[tab])}`;
+                    })
+                );
                 if (tabs.length > 1) {
                     tabPrefix += 's';
                     plural = true;

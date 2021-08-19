@@ -45,6 +45,18 @@ define([
             selectedFileType = model.getItem('state.selectedFileType'),
             ui;
 
+        const fileTypesDisplay = {},
+            fileTypeMapping = {},
+            uploaders = Config.get('uploaders');
+        for (const uploader of uploaders.dropdown_order) {
+            fileTypeMapping[uploader.id] = uploader.name;
+        }
+        for (const fileType of Object.keys(typesToFiles)) {
+            fileTypesDisplay[fileType] = {
+                label: fileTypeMapping[fileType] || `Unknown type "${fileType}"`,
+            };
+        }
+
         /**
          * args includes:
          *  - node - the DOM node to act as this widget's container
@@ -63,6 +75,61 @@ define([
 
                 return Promise.all(initPromises);
             });
+        }
+
+        /**
+         * Returns the output parameter values from the unselected file types,
+         * which will make it easier to look for duplicate values against the active file
+         * type.
+         *
+         * Since this is focused on being used for duplicate values, with a row to point
+         * to, it gets structured like this:
+         * {
+         *   value1: {
+         *     fileType: [rows],
+         *     fileType2: [rows]
+         *   },
+         *   value2: {
+         *     fileType: [rows]
+         *   }
+         * }
+         *
+         * The `fileType` fields above are the display name, just to make writing the alerts
+         * easier. This does come with the assumption that those names are all unique,
+         * but they really should be unless we want to be extra confusing to our users.
+         *
+         * Nulls, undefineds, and empty strings are ignored.
+         */
+        function getUnselectedOutputValues() {
+            const unselectedTypes = new Set(Object.keys(typesToFiles));
+            if (unselectedTypes.size === 1) {
+                return {}; // skip everything if there's only one file type
+            }
+
+            const unselectedOutputValues = {};
+            unselectedTypes.delete(selectedFileType);
+            const allParams = model.getItem('params');
+            const allOutputParamIds = model.getItem('app.outputParamIds');
+            unselectedTypes.forEach((type) => {
+                const outputParamIds = allOutputParamIds[type];
+                for (let i = 0; i < allParams[type].filePaths.length; i++) {
+                    outputParamIds.forEach((paramId) => {
+                        const value = allParams[type].filePaths[i][paramId];
+                        if (!value) {
+                            return;
+                        }
+                        if (!(value in unselectedOutputValues)) {
+                            unselectedOutputValues[value] = {};
+                        }
+                        const displayType = fileTypesDisplay[type].label;
+                        if (!(displayType in unselectedOutputValues[value])) {
+                            unselectedOutputValues[value][displayType] = [];
+                        }
+                        unselectedOutputValues[value][displayType].push(i + 1);
+                    });
+                }
+            });
+            return unselectedOutputValues;
         }
 
         function startInputWidgets() {
@@ -116,17 +183,6 @@ define([
          * @param {DOMElement} node - the node that should be used for the left column
          */
         function buildFileTypePanel(node) {
-            const fileTypesDisplay = {},
-                fileTypeMapping = {},
-                uploaders = Config.get('uploaders');
-            for (const uploader of uploaders.dropdown_order) {
-                fileTypeMapping[uploader.id] = uploader.name;
-            }
-            for (const fileType of Object.keys(typesToFiles)) {
-                fileTypesDisplay[fileType] = {
-                    label: fileTypeMapping[fileType] || `Unknown type "${fileType}"`,
-                };
-            }
             fileTypePanel = FileTypePanel.make({
                 bus: cellBus,
                 header: {
@@ -264,6 +320,7 @@ define([
                 initialParams: model.getItem(['params', selectedFileType, FILE_PATH_TYPE]),
                 availableFiles: model.getItem(['inputs', selectedFileType, 'files']),
                 viewOnly,
+                unselectedOutputValues: getUnselectedOutputValues(),
             });
 
             return widget

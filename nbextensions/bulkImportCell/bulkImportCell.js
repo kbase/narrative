@@ -250,19 +250,20 @@ define([
          */
         function filterFileParameters(appSpec) {
             const fileParams = appSpec.parameters.filter((param) => {
-                if (param.text_options && param.text_options.is_output_name) {
-                    return true;
-                }
                 return (
                     param.dynamic_dropdown_options &&
                     param.dynamic_dropdown_options.data_source === 'ftp_staging'
                 );
             });
+            const outputParams = appSpec.parameters.filter((param) => {
+                return param.text_options && param.text_options.is_output_name;
+            });
             const allParamIds = appSpec.parameters.map((param) => param.id);
-            const fileParamIds = fileParams.map((param) => param.id);
+            const outputParamIds = outputParams.map((param) => param.id);
+            const fileParamIds = fileParams.map((param) => param.id).concat(outputParamIds);
             const fileParamIdSet = new Set(fileParamIds); // for the efficient has() function
             const nonFileParamIds = allParamIds.filter((id) => !fileParamIdSet.has(id));
-            return [fileParamIds, nonFileParamIds];
+            return [fileParamIds, nonFileParamIds, outputParamIds];
         }
 
         function setupAppSpecs(appSpecs) {
@@ -300,6 +301,7 @@ define([
             const initialParams = {},
                 fileParamIds = {},
                 otherParamIds = {},
+                outputParamIds = {},
                 initialParamStates = {};
             setupAppSpecs(appSpecs);
             /* Initialize the parameters set.
@@ -316,7 +318,11 @@ define([
                     params: {},
                 };
                 initialParamStates[fileType] = 'incomplete';
-                [fileParamIds[fileType], otherParamIds[fileType]] = filterFileParameters(spec);
+                [
+                    fileParamIds[fileType],
+                    otherParamIds[fileType],
+                    outputParamIds[fileType],
+                ] = filterFileParameters(spec);
                 if (fileParamIds[fileType].length < 3) {
                     initialParams[fileType].filePaths = typesToFiles[fileType].files.map(
                         (inputFile) => {
@@ -362,8 +368,9 @@ define([
                         inputs: typesToFiles,
                         params: initialParams,
                         app: {
-                            fileParamIds: fileParamIds,
-                            otherParamIds: otherParamIds,
+                            fileParamIds,
+                            otherParamIds,
+                            outputParamIds,
                             specs: appSpecs,
                             tag: 'release',
                         },

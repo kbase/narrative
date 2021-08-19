@@ -192,20 +192,69 @@ define([
             }
         }
 
+        /**
+         * Most of the code here is wrangling the English language.
+         * This translates a structure like
+         * {
+         *   thisTab: [1, 2],
+         *   otherTabs: {
+         *     "Elsewhere": [3]
+         *   }
+         * }
+         * into text like:
+         * "duplicate values found on rows 1 and 2, and on tab "Elsewhere" row 3"
+         * @param {object} rows
+         */
         function setDuplicateValue(rows) {
             state.isDuplicate = true;
             let message = 'duplicate value';
             let rowMessage = '';
+            let tabMessage = '';
+            let tabPrefix = ' on tab';
+            let rowTabSeparator = '';
+            let plural = false;
 
-            if (rows) {
-                rowMessage = ' on row';
+            function buildRowsText(rows) {
+                let rowsText = 'row';
                 if (rows.length > 1) {
-                    message += 's';
-                    rowMessage += 's';
+                    rowsText += 's';
                 }
-                rowMessage += ' ' + StringUtil.arrayToEnglish(rows);
+                rowsText += ' ' + StringUtil.arrayToEnglish(rows);
+                return rowsText;
             }
-            message += ' found' + rowMessage;
+
+            // text for this tab's rows
+            if (rows && rows.thisTab && rows.thisTab.length) {
+                rowMessage = ' on ';
+                if (rows.thisTab.length > 1) {
+                    plural = true;
+                }
+                rowMessage += buildRowsText(rows.thisTab);
+            }
+
+            // get text for other tab rows
+            if (rows && rows.otherTabs) {
+                const tabs = Object.keys(rows.otherTabs);
+                tabMessage = StringUtil.arrayToEnglish(
+                    tabs.map((tab) => {
+                        return `"${tab}" ${buildRowsText(rows.otherTabs[tab])}`;
+                    })
+                );
+                if (tabs.length > 1) {
+                    tabPrefix += 's';
+                    plural = true;
+                }
+            }
+
+            // if we have dups on both this tab and other tab(s), combine them
+            if (rowMessage.length && tabMessage.length) {
+                rowTabSeparator = ', and';
+                plural = true;
+            }
+            message += (plural ? 's' : '') + ' found' + rowMessage + rowTabSeparator;
+            if (tabMessage.length) {
+                message += tabPrefix + ' ' + tabMessage;
+            }
             renderMessage(MESSAGE.error, message, `.${messageBaseClass}__duplicate`);
         }
 

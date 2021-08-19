@@ -173,19 +173,65 @@ define([
                 label: 'without rows',
             },
             {
-                rows: [1],
+                rows: {
+                    thisTab: [1],
+                },
                 text: 'duplicate value found on row 1',
                 label: 'on one row',
             },
             {
-                rows: [1, 2],
+                rows: {
+                    thisTab: [1, 2],
+                },
                 text: 'duplicate values found on rows 1 and 2',
                 label: 'on two rows',
             },
             {
-                rows: [1, 2, 3],
+                rows: {
+                    thisTab: [1, 2, 3],
+                },
                 text: 'duplicate values found on rows 1, 2, and 3',
                 label: 'on more than two rows',
+            },
+            {
+                rows: {
+                    thisTab: [1],
+                    otherTabs: {
+                        foobar: [1],
+                    },
+                },
+                text: 'duplicate values found on row 1, and on tab "foobar" row 1',
+                label: 'on a row and a tab',
+            },
+            {
+                rows: {
+                    otherTabs: {
+                        foobar: [1],
+                    },
+                },
+                text: 'duplicate value found on tab "foobar" row 1',
+                label: 'on a tab',
+            },
+            {
+                rows: {
+                    otherTabs: {
+                        foobar: [1],
+                        baz: [1],
+                    },
+                },
+                text: 'duplicate values found on tabs "foobar" row 1 and "baz" row 1',
+                label: 'on two tabs',
+            },
+            {
+                rows: {
+                    otherTabs: {
+                        a: [1],
+                        b: [2],
+                        c: [3],
+                    },
+                },
+                text: 'duplicate values found on tabs "a" row 1, "b" row 2, and "c" row 3',
+                label: 'on more than two tabs',
             },
         ].forEach((testCase) => {
             it(`can set its state to display an error for duplicate values ${testCase.label}`, async function () {

@@ -762,7 +762,7 @@ define([
              *      paramId1: {
              *        widget: Object
              *        duplicateRows: {
-             *          thisTab: [rowId, rowId],
+             *          thisTab: [rowIdx, rowIdx],
              *          otherTabs: {
              *              tabId1: [rowIdx, rowIdx]
              *          }

@@ -122,7 +122,7 @@ define([
                             unselectedOutputValues[value] = {};
                         }
                         const displayType = fileTypesDisplay[type].label;
-                        if (!(type in unselectedOutputValues[value])) {
+                        if (!(displayType in unselectedOutputValues[value])) {
                             unselectedOutputValues[value][displayType] = [];
                         }
                         unselectedOutputValues[value][displayType].push(i + 1);

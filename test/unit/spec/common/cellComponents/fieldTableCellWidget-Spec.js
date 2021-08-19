@@ -200,7 +200,7 @@ define([
                         foobar: [1],
                     },
                 },
-                text: 'duplicate values found on row 1, and on tab "foobar"',
+                text: 'duplicate values found on row 1, and on tab "foobar" row 1',
                 label: 'on a row and a tab',
             },
             {
@@ -209,7 +209,7 @@ define([
                         foobar: [1],
                     },
                 },
-                text: 'duplicate value found on tab "foobar"',
+                text: 'duplicate value found on tab "foobar" row 1',
                 label: 'on a tab',
             },
             {
@@ -219,7 +219,7 @@ define([
                         baz: [1],
                     },
                 },
-                text: 'duplicate values found on tabs "foobar" and "baz"',
+                text: 'duplicate values found on tabs "foobar" row 1 and "baz" row 1',
                 label: 'on two tabs',
             },
             {
@@ -230,7 +230,7 @@ define([
                         c: [3],
                     },
                 },
-                text: 'duplicate values found on tabs "a", "b", and "c"',
+                text: 'duplicate values found on tabs "a" row 1, "b" row 2, and "c" row 3',
                 label: 'on more than two tabs',
             },
         ].forEach((testCase) => {

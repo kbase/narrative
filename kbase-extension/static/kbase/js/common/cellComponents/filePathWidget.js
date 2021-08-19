@@ -42,6 +42,7 @@ define([
             paramsBus = config.bus,
             model = Props.make(),
             availableFiles = config.availableFiles,
+            otherTabOutputValues = config.unselectedOutputValues,
             /**
              * Internal data model
              * The data model / view model is a structure that maintains the overall internal
@@ -695,7 +696,7 @@ define([
          * 4. Up to widgets to act accordingly
          * 5. Return the row ids that are duplicates
          */
-        async function updateDuplicateOutputValues() {
+        function updateDuplicateOutputValues() {
             /* otherTabValues = all output values from other tabs, what tab they're in, and which row.
              *
              * looks like this:
@@ -705,10 +706,6 @@ define([
              *   }
              * }
              */
-            const otherTabValues = await paramsBus.request(
-                {},
-                { key: { type: 'get-unselected-outputs' } }
-            );
 
             /* First, set up the output value counts for this tab.
              * outputValueCounts will look like this:
@@ -748,11 +745,11 @@ define([
              */
             const values = Object.keys(outputValueCounts).reduce((duplicateValues, value) => {
                 const dup = {};
-                if (outputValueCounts[value].length > 1 || value in otherTabValues) {
+                if (outputValueCounts[value].length > 1 || value in otherTabOutputValues) {
                     dup.thisTab = outputValueCounts[value];
                 }
-                if (value in otherTabValues) {
-                    dup.otherTabs = otherTabValues[value];
+                if (value in otherTabOutputValues) {
+                    dup.otherTabs = otherTabOutputValues[value];
                 }
                 if (Object.keys(dup).length) {
                     duplicateValues[value] = dup;

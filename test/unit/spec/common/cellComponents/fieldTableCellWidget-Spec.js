@@ -173,17 +173,23 @@ define([
                 label: 'without rows',
             },
             {
-                rows: [1],
+                rows: {
+                    thisTab: [1],
+                },
                 text: 'duplicate value found on row 1',
                 label: 'on one row',
             },
             {
-                rows: [1, 2],
+                rows: {
+                    thisTab: [1, 2],
+                },
                 text: 'duplicate values found on rows 1 and 2',
                 label: 'on two rows',
             },
             {
-                rows: [1, 2, 3],
+                rows: {
+                    thisTab: [1, 2, 3],
+                },
                 text: 'duplicate values found on rows 1, 2, and 3',
                 label: 'on more than two rows',
             },

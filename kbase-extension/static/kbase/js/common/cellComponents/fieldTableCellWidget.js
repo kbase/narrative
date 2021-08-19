@@ -202,26 +202,33 @@ define([
             let rowMessage = '';
             let tabMessage = '';
             let tabPrefix = ' on tab';
+            let rowTabSeparator = '';
+            let plural = false;
 
             if (rows && rows.thisTab && rows.thisTab.length) {
                 rowMessage = ' on row';
                 if (rows.thisTab.length > 1) {
                     rowMessage += 's';
+                    plural = true;
                 }
                 rowMessage += ' ' + StringUtil.arrayToEnglish(rows.thisTab);
             }
 
             if (rows && rows.otherTabs) {
-                const tabs = Object.keys(rows.otherTabs); // don't use rows for now, as there's something funny about the reporting
+                const tabs = Object.keys(rows.otherTabs);
+                // don't use rows for now, as there's something funny about the reporting
                 tabMessage = StringUtil.arrayToEnglish(tabs.map((x) => `"${x}"`));
                 if (tabs.length > 1) {
                     tabPrefix += 's';
+                    plural = true;
                 }
             }
-            message += ' found' + rowMessage;
+
             if (rowMessage.length && tabMessage.length) {
-                message += ', and ';
+                rowTabSeparator = ', and ';
+                plural = true;
             }
+            message += (plural ? 's' : '') + ' found' + rowMessage + rowTabSeparator;
             if (tabMessage.length) {
                 message += tabPrefix + ' ' + tabMessage;
             }

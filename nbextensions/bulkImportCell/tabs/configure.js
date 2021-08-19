@@ -43,7 +43,6 @@ define([
             paramsWidget,
             fileTypePanel,
             selectedFileType = model.getItem('state.selectedFileType'),
-            unselectedOutputValues,
             ui;
 
         const fileTypesDisplay = {},
@@ -96,13 +95,13 @@ define([
          *
          * nulls / undefineds are ignored.
          */
-        function cacheUnselectedOutputValues() {
-            unselectedOutputValues = {};
+        function getUnselectedOutputValues() {
             const unselectedTypes = new Set(Object.keys(typesToFiles));
             if (unselectedTypes.size === 1) {
-                return; // skip everything if there's only one file type
+                return {}; // skip everything if there's only one file type
             }
 
+            const unselectedOutputValues = {};
             unselectedTypes.delete(selectedFileType);
             const allParams = model.getItem('params');
             const allOutputParamIds = model.getItem('app.outputParamIds');
@@ -125,10 +124,10 @@ define([
                     });
                 }
             });
+            return unselectedOutputValues;
         }
 
         function startInputWidgets() {
-            cacheUnselectedOutputValues();
             const appSpec = specs[typesToFiles[selectedFileType].appId];
             const filePathNode = ui.getElement('input-container.file-paths');
             const paramNode = ui.getElement('input-container.params');
@@ -179,17 +178,6 @@ define([
          * @param {DOMElement} node - the node that should be used for the left column
          */
         function buildFileTypePanel(node) {
-            // const fileTypesDisplay = {},
-            //     fileTypeMapping = {},
-            //     uploaders = Config.get('uploaders');
-            // for (const uploader of uploaders.dropdown_order) {
-            //     fileTypeMapping[uploader.id] = uploader.name;
-            // }
-            // for (const fileType of Object.keys(typesToFiles)) {
-            //     fileTypesDisplay[fileType] = {
-            //         label: fileTypeMapping[fileType] || `Unknown type "${fileType}"`,
-            //     };
-            // }
             fileTypePanel = FileTypePanel.make({
                 bus: cellBus,
                 header: {
@@ -314,17 +302,6 @@ define([
                 }
             });
 
-            // Responds with the cached set of output parameters from all not-currently-selected
-            // file types.
-            paramBus.respond({
-                key: {
-                    type: 'get-unselected-outputs',
-                },
-                handle: () => {
-                    return unselectedOutputValues;
-                },
-            });
-
             /* Here, we need to
              * 1. Get the list of file path params.
              * 2. Get the initial parameters (this will be an array that's serialized in the model right now)
@@ -338,6 +315,7 @@ define([
                 initialParams: model.getItem(['params', selectedFileType, FILE_PATH_TYPE]),
                 availableFiles: model.getItem(['inputs', selectedFileType, 'files']),
                 viewOnly,
+                unselectedOutputValues: getUnselectedOutputValues(),
             });
 
             return widget

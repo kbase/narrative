@@ -18,6 +18,9 @@ define(['./jobsData', 'common/jobs'], (JobsData, Jobs) => {
                     'insert_size_mean',
                 ],
             },
+            outputParamIds: {
+                fastq_reads: ['name'],
+            },
             specs: {
                 'kb_uploadmethods/import_fastq_sra_as_reads_from_staging': {
                     tag: 'release',

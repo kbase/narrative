@@ -2,13 +2,13 @@ define([
     'base/js/namespace',
     'common/cellComponents/filePathWidget',
     'jquery',
-    'common/runtime',
     'common/spec',
     'testUtil',
     'narrativeMocks',
     'narrativeConfig',
+    'common/monoBus',
     'json!/test/data/NarrativeTest.test_input_params.spec.json',
-], (Jupyter, FilePathWidget, $, Runtime, Spec, TestUtil, Mocks, Config, TestSpec) => {
+], (Jupyter, FilePathWidget, $, Spec, TestUtil, Mocks, Config, Bus, TestSpec) => {
     'use strict';
 
     describe('The file path widget module', () => {
@@ -56,6 +56,7 @@ define([
                 ],
                 paramIds: ['actual_input_object', 'actual_output_object'],
                 availableFiles: ['file1', 'file2'],
+                unselectedOutputValues: {},
             };
             this.appSpec = Spec.make({
                 appSpec: TestSpec,
@@ -68,7 +69,13 @@ define([
         });
 
         beforeEach(function () {
-            this.bus = Runtime.make().bus();
+            this.bus = Bus.make();
+            // this.bus.respond({
+            //     key: {
+            //         type: 'get-unselected-outputs',
+            //     },
+            //     handle: () => { return {}; }
+            // });
             container = document.createElement('div');
             this.node = document.createElement('div');
             document.body.append(container);
@@ -160,10 +167,12 @@ define([
                 const $node = $(this.node);
                 const preClickNumberOfRows = $node.find('li').length;
                 expect(preClickNumberOfRows).toEqual(2);
-                this.node.querySelector('.kb-file-path__button--add_row').click();
 
                 return TestUtil.waitForElementChange(
-                    this.node.querySelector('ol.kb-file-path__list')
+                    this.node.querySelector('ol.kb-file-path__list'),
+                    () => {
+                        this.node.querySelector('.kb-file-path__button--add_row').click();
+                    }
                 ).then(() => {
                     // there should now be two rows of file paths
                     const postClickNumberOfRows = $node.find('li').length;
@@ -239,9 +248,14 @@ define([
                 await TestUtil.waitForElementState(
                     this.node,
                     () => {
-                        return row1
-                            .querySelector(rowCellSelector)
-                            .classList.contains('kb-field-cell__error_message');
+                        return (
+                            row1
+                                .querySelector(rowCellSelector)
+                                .classList.contains('kb-field-cell__error_message') &&
+                            row2
+                                .querySelector(rowCellSelector)
+                                .classList.contains('kb-field-cell__error_message')
+                        );
                     },
                     () => {
                         input2.setAttribute('value', input1.getAttribute('value'));

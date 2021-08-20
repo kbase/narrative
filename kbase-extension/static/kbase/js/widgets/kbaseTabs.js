@@ -152,6 +152,13 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
                                         type: 'shown',
                                         relatedTarget: previous,
                                     });
+                                    if (tab.whenShown) {
+                                        try {
+                                            tab.whenShown($tab);
+                                        } catch (ex) {
+                                            console.error('Error in onSelect for tab', ex);
+                                        }
+                                    }
                                 }
                             );
 

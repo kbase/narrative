@@ -1,11 +1,11 @@
 define([
     'common/cellComponents/tabs/jobStatus/jobActionDropdown',
-    'common/jobMessages',
+    'common/dialogMessages',
     'common/jobs',
     'common/props',
     'testUtil',
     '/test/data/jobsData',
-], (JobActionDropdown, JobMessages, Jobs, Props, TestUtil, JobsData) => {
+], (JobActionDropdown, DialogMessages, Jobs, Props, TestUtil, JobsData) => {
     'use strict';
 
     let container, jobActionDropdownInstance;
@@ -219,7 +219,7 @@ define([
                 this.clickTarget.setAttribute('data-target', target);
                 spyOn(this.jobManager, 'getCurrentJobsByStatus').and.returnValue(returnValue);
                 spyOn(this.jobManager, 'doJobAction');
-                spyOn(JobMessages, 'showDialog').and.resolveTo(false);
+                spyOn(DialogMessages, 'showDialog').and.resolveTo(false);
                 const outcome = await jobActionDropdownInstance.doBatchJobAction({
                     target: this.clickTarget,
                 });
@@ -252,7 +252,7 @@ define([
                 this.clickTarget.setAttribute('data-target', target);
                 spyOn(this.jobManager, 'getCurrentJobsByStatus').and.returnValue(returnValue);
                 spyOn(this.jobManager, 'doJobAction');
-                spyOn(JobMessages, 'showDialog').and.resolveTo(true);
+                spyOn(DialogMessages, 'showDialog').and.resolveTo(true);
                 const outcome = await jobActionDropdownInstance.doBatchJobAction({
                     target: this.clickTarget,
                 });

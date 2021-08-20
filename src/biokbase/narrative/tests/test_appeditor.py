@@ -4,13 +4,13 @@ Some tests for the App Editor module.
 import unittest
 from biokbase.narrative.appeditor import generate_app_cell
 import json
-from .util import TestConfig
+from .util import ConfigTests
 
 
 class AppEditorTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        config = TestConfig()
+        config = ConfigTests()
         cls.specs_list = config.load_json_file(config.get("specs", "app_specs_file"))
         cls.spec_json = config.load_json_file(config.get("specs", "simple_spec_json"))
         with open(config.file_path(config.get("specs", "simple_display_yaml"))) as f:

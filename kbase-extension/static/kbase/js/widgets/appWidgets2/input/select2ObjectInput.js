@@ -14,19 +14,7 @@ define([
     'select2',
     'bootstrap',
     'css!font-awesome',
-], (
-    Promise,
-    $,
-    html,
-    utils,
-    Data,
-    Events,
-    Runtime,
-    UI,
-    Validation,
-    TimeFormat,
-    WidgetCommon,
-) => {
+], (Promise, $, html, utils, Data, Events, Runtime, UI, Validation, TimeFormat, WidgetCommon) => {
     'use strict';
 
     // Constants
@@ -50,9 +38,7 @@ define([
                 availableValuesMap: {},
                 value: undefined,
             };
-        let parent,
-            container,
-            ui;
+        let parent, container, ui;
 
         // TODO: getting rid of blacklist temporarily until we work out how to state-ify everything by reference.
         model.blacklistValues = []; //config.blacklist || [];

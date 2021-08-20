@@ -31,7 +31,8 @@
         - `source ./venv/bin/activate`
     - build the narrative locally
         - `make install`
-- obtain a kbase login (or dev) CI token
+- obtain a KBase login (or dev) CI token
+  - it must be either for the "narrativetest" account, or account which has view access to the same narratives as narrativetest (e.g. kbaseuitest).
   - log into `https://ci.kbase.us`
   - in the browser console issue
     - `document.cookie`

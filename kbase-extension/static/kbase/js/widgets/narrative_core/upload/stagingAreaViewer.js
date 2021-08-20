@@ -243,8 +243,8 @@ define([
 
         renderError: function (error) {
             const errorElem = `
-                <div class="file-path pull-left"></div>
-                <div style="margin-top:2em" class="alert alert-danger">
+                <div class='file-path pull-left'></div>
+                <div style='margin-top:2em' class='alert alert-danger'>
                     <b>An error occurred while fetching your files:</b> ${error}
                 </div>
             `;
@@ -535,15 +535,18 @@ define([
 
                     const $upaField = $.jqElem('span').append('<i class="fa fa-spinner fa-spin">');
 
-                    const $upa = data.UPA
-                        ? $.jqElem('li')
-                              .append(
-                                  $.jqElem('span')
-                                      .addClass('kb-data-staging-metadata-list')
-                                      .append('Imported as')
-                              )
-                              .append($upaField)
-                        : '';
+                    const $upa = (() => {
+                        if (data.UPA) {
+                            return $('<li>')
+                                .append(
+                                    $('<span>')
+                                        .addClass('kb-data-staging-metadata-list')
+                                        .text('Imported as')
+                                )
+                                .append($upaField);
+                        }
+                        return '';
+                    })();
 
                     self.workspaceClient
                         .get_object_info_new({
@@ -717,7 +720,7 @@ define([
                 }
                 if (appInfo.app_static_params) {
                     for (const p in appInfo.app_static_params) {
-                        if (appInfo.app_static_params.hasOwnProperty(p)) {
+                        if (Object.prototype.hasOwnProperty.call(appInfo.app_static_params, p)) {
                             inputs[p] = appInfo.app_static_params[p];
                         }
                     }
@@ -729,10 +732,7 @@ define([
 
         startTour: function () {
             if (!this.tour) {
-                this.tour = new UploadTour.Tour(
-                    this.$elem.parent(),
-                    this.globus_name
-                );
+                this.tour = new UploadTour.Tour(this.$elem.parent(), this.globus_name);
             }
             this.tour.start();
         },

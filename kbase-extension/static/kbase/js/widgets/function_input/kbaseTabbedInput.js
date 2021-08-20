@@ -12,6 +12,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseTabs', 'kbaseNarrativeMethodInp
     kbaseTabs,
     kbaseNarrativeMethodInput
 ) => {
+    'use strict';
     return KBWidget({
         name: 'kbaseTabbedInput',
         parent: kbaseNarrativeMethodInput,
@@ -54,18 +55,17 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseTabs', 'kbaseNarrativeMethodInp
                 //console.log(tabParamSpec);
                 self.paramIdToTab = {};
                 const tabIdToParamCount = {};
-                for (var tabId in tabParamSpec.tab_options.tab_id_to_param_ids) {
+                for (const tabId in tabParamSpec.tab_options.tab_id_to_param_ids) {
                     const paramIds = tabParamSpec.tab_options.tab_id_to_param_ids[tabId];
                     tabIdToParamCount[tabId] = paramIds.length;
                     for (const paramPosInTab in paramIds) {
-                        paramId = paramIds[paramPosInTab];
-                        self.paramIdToTab[paramId] = tabId;
+                        self.paramIdToTab[paramIds[paramPosInTab]] = tabId;
                     }
                 }
                 const tabNamesRaw = tabParamSpec.tab_options.tab_id_to_tab_name;
                 if (this.options.isInSidePanel) {
                     self.tabNames = {};
-                    for (var tabId in tabNamesRaw) {
+                    for (const tabId in tabNamesRaw) {
                         if (tabIdToParamCount[tabId] && tabIdToParamCount[tabId] > 0)
                             self.tabNames[tabId] = tabNamesRaw[tabId];
                     }
@@ -78,17 +78,20 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseTabs', 'kbaseNarrativeMethodInp
                 if (self.options.isInSidePanel) {
                     self.buildTabs(self.tabPane);
                 } else {
-                    self.tabPaneWidget = new kbaseTabs(self.tabPane, { canDelete: true, tabs: [] });
+                    self.tabPaneWidget = new kbaseTabs(self.tabPane, {
+                        canDelete: true,
+                        tabs: [],
+                    });
                 }
                 self.tabs = {};
                 self.tabParamToSpec = {};
                 let tabCount = 0;
                 for (const tabPos in tabParamSpec.tab_options.tab_id_order) {
-                    var tabId = tabParamSpec.tab_options.tab_id_order[tabPos];
+                    const tabId = tabParamSpec.tab_options.tab_id_order[tabPos];
                     const tabName = self.tabNames[tabId];
                     if (!tabName) continue;
-                    tab = $('<div/>');
-                    const isShown = tabCount == 0;
+                    const tab = $('<div/>');
+                    const isShown = tabCount === 0;
                     self.tabPaneWidget.addTab({
                         tab: tabName,
                         content: tab,
@@ -172,13 +175,13 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseTabs', 'kbaseNarrativeMethodInp
         },
 
         putInTab: function (paramSpec, $stepDiv, $optionsDiv, tabId) {
-            if ($optionsDiv.children().length == 0) $stepDiv.css({ 'margin-top': '5px' });
+            if ($optionsDiv.children().length === 0) $stepDiv.css({ 'margin-top': '5px' });
             if (!this.tabPaneWasAdded) {
                 $optionsDiv.append(this.tabPane);
                 this.tabPaneWasAdded = true;
             }
             const tab = this.tabs[tabId];
-            if (tab.children().length == 0) tab.css({ 'margin-top': '5px' });
+            if (tab.children().length === 0) tab.css({ 'margin-top': '5px' });
             tab.append($stepDiv);
             this.tabParamToSpec[tabId][paramSpec.id] = paramSpec;
         },
@@ -201,8 +204,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseTabs', 'kbaseNarrativeMethodInp
 
         getState: function () {
             const state = this._superMethod('getState');
-            const selectedParameterTab = this.getSelectedTabId();
-            state['selectedParameterTab'] = selectedParameterTab;
+            state['selectedParameterTab'] = this.getSelectedTabId();
             return state;
         },
 
@@ -267,4 +269,4 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseTabs', 'kbaseNarrativeMethodInp
             }
         },
     });
-})(jQuery);
+});

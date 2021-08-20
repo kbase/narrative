@@ -38,7 +38,7 @@ build-travis-narrative:
 test: test-backend test-frontend
 	@echo "done running backend and frontend test scripts"
 
-# test-backend should use nose, or the like, to test our
+# test-backend uses pytest to test our
 # Python extensions to the IPython notebook.
 #
 # Testing the IPython notebook itself is out of the scope

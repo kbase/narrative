@@ -7,29 +7,39 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 ### Unreleased
 
 - SCT-3097 - Fix pop-ups and long timeouts & browser tab crash for expression feature clustering viewer
+
+### Version 4.5.0
+- PTV-1561 - SampleSet viewer fixes to allow AMA features; not complete support for AMA features as GenomeSearchUtil does not yet support AMA.
+- SCT-3100 - Improve SampleSet viewer; add improved JSON-RPC 1.1 client and associatedKBase service client; add msw (Mock Service Worker) support;
 - SCT-3084 - Fixed broken (non-functional) search in the data panel
 - SCT-3602 - refseq public data tool now searches by lineage as well; for all public data tools: automatically focus the search input; fix paging bug.
 - No ticket - migrate from `nosetests` to `pytest` for testing the Python stack.
 - Python dependency updates
-  - pillow 8.2.0 -> 8.3.0
+  - bokeh 2.3.2 -> 2.3.3
+  - pillow 8.2.0 -> 8.3.1
   - plotly 4.14.3 -> 5.1.0
+  - pymongo 3.11.4 -> 3.12.0
   - pytest 6.2.3. -> 6.2.4
   - pytest-cov 2.11.1 -> 2.12.1
+  - requests 2.25.1 -> 2.26.0
+  - setuptools 57.0.0 -> 57.4.0
 - Javascript dependency updates
-  - @wdio/browserstack-service 7.7.3 -> 7.7.4
-  - @wdio/cli 7.7.3 -> 7.7.4
-  - @wdio/local-runner 7.7.3 -> 7.7.4
-  - @wdio/mocha-framework 7.7.3 -> 7.7.4
+  - @types/puppeteer 5.0.0 -> 5.4.4
+  - @wdio/browserstack-service 7.7.3 -> 7.9.0
+  - @wdio/cli 7.7.3 -> 7.9.0
+  - @wdio/local-runner 7.7.3 -> 7.9.0
+  - @wdio/mocha-framework 7.7.3 -> 7.9.0
   - @wdio/selenium-standalone-service 7.7.3 -> 7.7.4
+  - @wdio/spec-reporter 7.7.7 -> 7.9.0
   - chromedriver 91.0.0 -> 91.0.1
-  - eslint 7.28.0 -> 7.29.0
-  - husky 6.0.0 -> 7.0.0
+  - eslint 7.28.0 -> 7.32.0
+  - husky 6.0.0 -> 7.0.1
   - karma 6.3.3. -> 6.3.4
   - puppeteer 10.0.0 -> 10.1.0
   - selenium-standalone 6.23.0 -> 7.1.0
   - terser 5.7.0 -> 5.7.1
   - wdio-chromedriver-service 7.1.0 -> 7.1.1
-  - webdriverio 7.7.3 -> 7.7.4
+  - webdriverio 7.7.3 -> 7.9.1
 
 ### Version 4.4.0
 -   No ticket: boatloads of code cleanup and fixes to the unit and internal testing

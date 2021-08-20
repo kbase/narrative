@@ -39,7 +39,7 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
     kbaseDeletePrompt
 ) => {
     'use strict';
-
+    
     return KBWidget({
         name: 'kbaseTabs',
 
@@ -218,7 +218,6 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
         },
 
         showTab: function (tab) {
-            // TODO: cap history at N items.
             this.data('nav')[tab].find('a').trigger('click');
         },
 

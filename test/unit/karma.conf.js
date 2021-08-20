@@ -3,7 +3,7 @@ module.exports = function (config) {
     'use strict';
     config.set({
         basePath: '../../',
-        frameworks: ['jasmine', 'requirejs', 'es6-shim'],
+        frameworks: ['jasmine', 'requirejs', 'es6-shim', 'jasmine-matchers'],
         client: {
             jasmine: {
                 failFast: false,
@@ -15,6 +15,7 @@ module.exports = function (config) {
         },
         plugins: [
             'karma-jasmine',
+            'karma-jasmine-matchers',
             'karma-chrome-launcher',
             'karma-firefox-launcher',
             'karma-requirejs',
@@ -27,9 +28,8 @@ module.exports = function (config) {
         ],
         preprocessors: {
             'kbase-extension/static/kbase/js/**/!(api)/*.js': ['coverage'],
-            'kbase-extension/static/kbase/js/api/!(*[Cc]lient*|Catalog|KBaseFeatureValues|NarrativeJobServiceWrapper|NewWorkspace)*.js': [
-                'coverage',
-            ],
+            'kbase-extension/static/kbase/js/api/!(*[Cc]lient*|Catalog|KBaseFeatureValues|NarrativeJobServiceWrapper|NewWorkspace)*.js':
+                ['coverage'],
             'kbase-extension/static/kbase/js/api/RestAPIClient.js': ['coverage'],
             'nbextensions/appcell2/widgets/tabs/*.js': ['coverage'],
             'kbase-extension/static/kbase/js/*.js': ['coverage'],
@@ -43,6 +43,7 @@ module.exports = function (config) {
             'test/unit/mocks.js',
             'test/unit/test-main.js',
             { pattern: 'test/unit/spec/**/*.js', included: false },
+            { pattern: 'test/unit/spec/**/*.json', included: false },
             { pattern: 'test/testConfig.json', included: false, nocache: true },
             { pattern: 'test/*.tok', included: false, nocache: true },
             { pattern: 'test/data/**/*', included: false },
@@ -128,6 +129,9 @@ module.exports = function (config) {
             '/narrative/static/bidi': 'http://localhost:32323/narrative/static/bidi',
             '/static/kbase/config': '/base/kbase-extension/static/kbase/config',
             '/test/': '/base/test/',
+            // This ensures that the msw api (msw.js) can find mockServerWorker.js service
+            // worker library at the canonical location.
+            '/mockServiceWorker.js': '/narrative/static/ext_modules/msw/mockServiceWorker.js',
         },
         concurrency: Infinity,
     });

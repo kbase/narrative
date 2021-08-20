@@ -1,4 +1,5 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-npm run husky_msg && npm run prettier_check
+#npm run husky_msg && npm run prettier_check
+npx lint-staged

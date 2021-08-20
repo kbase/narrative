@@ -2,10 +2,10 @@ define([
     'jquery',
     'bluebird',
     'common/html',
-    'common/jobMessages',
+    'common/dialogMessages',
     'common/jobs',
     'util/developerMode',
-], ($, Promise, html, JobMessages, Jobs, DevMode) => {
+], ($, Promise, html, DialogMessages, Jobs, DevMode) => {
     'use strict';
 
     const t = html.tag,
@@ -106,20 +106,22 @@ define([
                 return Promise.resolve(false);
             }
 
-            return JobMessages.showDialog({ action, statusList, jobList }).then((confirmed) => {
-                if (confirmed) {
-                    const jobIdList =
-                        action === 'retry'
-                            ? jobList.map((job) => {
-                                  return job.retry_parent || job.job_id;
-                              })
-                            : jobList.map((job) => {
-                                  return job.job_id;
-                              });
-                    jobManager.doJobAction(action, jobIdList);
+            return DialogMessages.showDialog({ action: `${action}Jobs`, statusList, jobList }).then(
+                (confirmed) => {
+                    if (confirmed) {
+                        const jobIdList =
+                            action === 'retry'
+                                ? jobList.map((job) => {
+                                      return job.retry_parent || job.job_id;
+                                  })
+                                : jobList.map((job) => {
+                                      return job.job_id;
+                                  });
+                        jobManager.doJobAction(action, jobIdList);
+                    }
+                    return Promise.resolve(confirmed);
                 }
-                return Promise.resolve(confirmed);
-            });
+            );
         }
 
         function createActionsDropdown() {

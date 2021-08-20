@@ -1,4 +1,4 @@
-define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
+define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
     'use strict';
 
     const validOutgoingMessageTypes = [
@@ -521,7 +521,11 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
                     return Promise.resolve(false);
                 }
 
-                return JobMessages.showDialog({ action, statusList, jobList }).then((confirmed) => {
+                return DialogMessages.showDialog({
+                    action: `${action}Jobs`,
+                    statusList,
+                    jobList,
+                }).then((confirmed) => {
                     if (confirmed) {
                         const jobIdList =
                             action === 'retry'
@@ -534,7 +538,7 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
                                   });
                         this.doJobAction(action, jobIdList);
                     }
-                    return confirmed;
+                    return Promise.resolve(confirmed);
                 });
             }
 
@@ -670,8 +674,14 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
                 this.addListener('job-does-not-exist', allJobIds);
 
                 // request job updates
-                this.bus.emit('request-job-updates-start', {
-                    batchId: batchId,
+                // this.bus.emit('request-job-updates-start', { batchId });
+                // TODO: this can be removed and the line above
+                // uncommented once the narrative backend changes
+                // are in place
+                [batchId].concat(allJobIds).forEach((jobId) => {
+                    this.bus.emit('request-job-updates-start', {
+                        jobId,
+                    });
                 });
                 // can be deleted once `request-job-updates-start` responds with current job state
                 this.bus.emit('request-job-status', {

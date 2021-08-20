@@ -22,6 +22,7 @@ define([
     'bootstrap',
     'knhx',
     'kbaseTreechart',
+    'css!widgets/function_output/kbaseExpressionFeatureClusters.css'
 ], (
     $,
     Jupyter,
@@ -220,10 +221,8 @@ define([
                 show: true,
             });
             const tableOver = $(
-                '<table class="table table-striped table-bordered" ' +
-                    'style="width: 100%; margin-left: 0px; margin-right: 0px;" id="' +
-                    pref +
-                    'overview-table"/>'
+                '<table class="table table-striped table-bordered OverviewTable" ' +
+                'id="' + pref + 'overview-table"/>'
             );
             tabOverview.append(tableOver);
             tableOver
@@ -238,8 +237,8 @@ define([
                     )
                 )
                 .append(self.makeRow('Expression matrix', self.expMatrixName))
-                .append(self.makeRow('Expression matrix: #conditions', self.matrixColIds.length))
-                .append(self.makeRow('Expression matrix: #genes', self.matrixRowIds.length));
+                .append(self.makeRow('Expression matrix: # conditions', self.matrixColIds.length))
+                .append(self.makeRow('Expression matrix: # genes', self.matrixRowIds.length));
 
             ///////////////////////////////////// Clusters tab ////////////////////////////////////////////
 
@@ -249,6 +248,9 @@ define([
                 content: $tabClusters,
                 canDelete: false,
                 show: false,
+                whenShown: ($tab) => {
+                    $clustersTable.DataTable().columns.adjust().draw();
+                }
             });
 
             ///////////////////////////////////// Clusters table ////////////////////////////////////////////
@@ -265,11 +267,13 @@ define([
 
             const $clustersTable = $(
                 '<table id="' +
-                    pref +
-                    'clusters-table" \
-                class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">\
+                pref +
+                'clusters-table" \
+                class="table table-bordered table-striped ClustersTable">\
                 </table>'
-            ).appendTo($tabClusters);
+            )
+            
+            $clustersTable.appendTo($tabClusters);
 
             $clustersTable.dataTable({
                 sDom: 'lftip',
@@ -331,6 +335,9 @@ define([
                 content: featureTabDiv,
                 canDelete: false,
                 show: false,
+                whenShown: ($tab) => {
+                    featureTabDiv.find('table').DataTable().columns.adjust().draw();
+                }
             });
             self.buildClusterFeaturesTable(featureTabDiv, null, () => {
                 updateClusterLinks('clusters2');
@@ -533,8 +540,7 @@ define([
             const self = this;
             const tableData = [];
             const table = $(
-                '<table class="table table-bordered table-striped" ' +
-                    'style="width: 100%; margin-left: 0px; margin-right: 0px;"></table>'
+                '<table class="table table-bordered table-striped ClusterFeaturesTable"></table>'
             );
             tabDiv.append(table);
 
@@ -597,17 +603,26 @@ define([
             const columns = [];
             columns.push({ sTitle: 'Feature ID', mData: 'fid', width: '7em' });
             if (pos === null) {
-                columns.push({ sTitle: 'Cluster', mData: 'cid' });
+                columns.push({ sTitle: 'Cluster', mData: 'cid', width: '7em' });
             }
             columns.push({ sTitle: 'Aliases', mData: 'ali' });
-            columns.push({ sTitle: 'Genome', mData: 'gid' });
+            columns.push({ sTitle: 'Genome', mData: 'gid'});
+            // Leave this disabled approach to controlling width of this column
+            // for now, while sorting out the best solution.
+            // ,render: (data, type, row, meta) => {
+            //     return $('<div>')
+            //         .css('min-width', '15em')
+            //         .html(data)
+            //         .get(0)
+            //         .outerHTML;
+            // }});
             columns.push({ sTitle: 'Type', mData: 'type' });
             columns.push({ sTitle: 'Function', mData: 'func' });
             table.dataTable({
                 sDom: 'lftip',
                 aaData: tableData,
                 aoColumns: columns,
-                fnDrawCallback: events,
+                fnDrawCallback: events
             });
 
             return tabDiv;
@@ -621,9 +636,9 @@ define([
         },
 
         makeRow: function (name, value) {
-            const $row = $('<tr/>')
-                .append($('<th />').css('width', '20%').append(name))
-                .append($('<td />').append(value));
+            const $row = $('<tr>')
+                .append($('<th>').css('width', '16em').css('text-align', 'left').append(name))
+                .append($('<td>').append(value));
             return $row;
         },
 

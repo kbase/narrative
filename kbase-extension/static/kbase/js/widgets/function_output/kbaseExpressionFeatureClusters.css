@@ -1,0 +1,26 @@
+/*
+Note that the cell vertical centering adjustment needs high 
+specificity and to include the bootstrap ".table" class in 
+order to override bootstrap.
+*/
+table.table.ClusterFeaturesTable {
+    width: 100%;
+}
+table.table.ClusterFeaturesTable > tbody > tr > td {
+    vertical-align: middle;
+}
+
+table.table.ClusterFeaturesTable > tbody > tr > td:nth-child(4) {
+    min-width: 15em;
+    max-width: 25em;
+} 
+
+
+table.table.ClustersTable {
+    width: 100%;
+}
+
+
+table.table.ClustersTable > tbody > tr > td {
+    vertical-align: middle;
+}

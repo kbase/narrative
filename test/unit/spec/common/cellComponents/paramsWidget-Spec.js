@@ -5,8 +5,8 @@ define([
     'common/props',
     'common/spec',
     'testUtil',
-    '/test/data/testAppObj',
-], (Jupyter, ParamsWidget, Runtime, Props, Spec, TestUtil, TestAppObject) => {
+    '/test/data/testBulkImportObj',
+], (Jupyter, ParamsWidget, Runtime, Props, Spec, TestUtil, TestBulkImportObject) => {
     'use strict';
 
     describe('The Parameter module', () => {
@@ -52,7 +52,7 @@ define([
             container.appendChild(this.node);
 
             this.model = Props.make({
-                data: TestAppObject,
+                data: TestBulkImportObject,
                 onUpdate: () => {},
             });
 

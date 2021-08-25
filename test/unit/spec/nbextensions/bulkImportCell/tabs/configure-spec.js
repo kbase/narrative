@@ -5,8 +5,8 @@ define([
     'common/props',
     'common/spec',
     'testUtil',
-    '/test/data/testAppObj',
-], (ConfigureTab, Jupyter, Runtime, Props, Spec, TestUtil, TestAppObject) => {
+    '/test/data/testBulkImportObj',
+], (ConfigureTab, Jupyter, Runtime, Props, Spec, TestUtil, TestBulkImportObject) => {
     'use strict';
 
     describe('test the bulk import cell configure tab', () => {
@@ -18,7 +18,7 @@ define([
                 },
             },
             appSpec = Spec.make({
-                appSpec: TestAppObject.app.specs[appId],
+                appSpec: TestBulkImportObject.app.specs[appId],
             }),
             specs = {},
             fakeUser = 'aFakeUser';
@@ -104,7 +104,7 @@ define([
         ].forEach((testCase) => {
             it(`should start in ${testCase.label} mode`, () => {
                 const model = Props.make({
-                    data: Object.assign({}, TestAppObject, { state: initialState }),
+                    data: Object.assign({}, TestBulkImportObject, { state: initialState }),
                     onUpdate: () => {
                         /* intentionally left blank */
                     },
@@ -135,7 +135,7 @@ define([
 
         it('should stop itself and empty the node it was in', () => {
             const model = Props.make({
-                data: Object.assign({}, TestAppObject, { state: initialState }),
+                data: Object.assign({}, TestBulkImportObject, { state: initialState }),
                 onUpdate: () => {
                     /* intentionally left blank */
                 },
@@ -170,7 +170,7 @@ define([
             }
 
             it('should start with invalid inputs and show errors', async () => {
-                const modelData = Object.assign({}, TestAppObject, { state: initialState });
+                const modelData = Object.assign({}, TestBulkImportObject, { state: initialState });
                 modelData.params.fastq_reads.filePaths[0].name = null;
 
                 const model = Props.make({
@@ -203,7 +203,7 @@ define([
                     responseText: JSON.stringify([]),
                 });
 
-                const modelData = Object.assign({}, TestAppObject, { state: initialState });
+                const modelData = Object.assign({}, TestBulkImportObject, { state: initialState });
                 modelData.params.fastq_reads.filePaths[0].fastq_fwd_staging_file_name = 'file1.txt';
 
                 const model = Props.make({
@@ -238,7 +238,7 @@ define([
                     },
                     selectedFileType: 'dataType1',
                 };
-                const modelData = Object.assign({}, TestAppObject, { state: initialState });
+                const modelData = Object.assign({}, TestBulkImportObject, { state: initialState });
                 ['dataType1', 'dataType2'].forEach((dataType) => {
                     modelData.app.fileParamIds[dataType] = modelData.app.fileParamIds.fastq_reads;
                     modelData.app.otherParamIds[dataType] = modelData.app.otherParamIds.fastq_reads;

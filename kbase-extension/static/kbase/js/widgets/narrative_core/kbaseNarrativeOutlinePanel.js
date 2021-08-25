@@ -41,7 +41,7 @@ define([
                         $('<div>').addClass('kb-narr-outline__item').append(
                             $('<a>').text(title).attr('href', '#')
                                 .click(() => {
-                                    cell.element[0].scrollIntoView();
+                                    cell.element[0].scrollIntoView({behavior:"smooth"});
                                     cell.element[0].click();
                                 })
                         )

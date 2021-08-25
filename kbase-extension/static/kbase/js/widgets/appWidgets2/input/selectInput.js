@@ -66,7 +66,7 @@ define([
         function validate(value) {
             return Validation.validate(value, spec, {
                 invalidValues: model.invalidValues,
-                invalidError
+                invalidError,
             });
         }
 

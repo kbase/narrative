@@ -418,7 +418,6 @@ define([
         function getValuesForValidation(type) {
             // a set of key-value pairs
             const values = model.getItem('params', selectedFileType, type);
-
         }
 
         /**

@@ -7,8 +7,18 @@ define([
     'common/cellComponents/fieldTableCellWidget',
     'widgets/appWidgets2/paramResolver',
     'common/runtime',
-    'StagingServiceClient'
-], (Promise, html, UI, Events, Props, FieldWidget, ParamResolver, Runtime, StagingServiceClient) => {
+    'StagingServiceClient',
+], (
+    Promise,
+    html,
+    UI,
+    Events,
+    Props,
+    FieldWidget,
+    ParamResolver,
+    Runtime,
+    StagingServiceClient
+) => {
     'use strict';
 
     const tag = html.tag,
@@ -118,7 +128,9 @@ define([
             bus = runtime.bus().makeChannelBus({
                 description: 'A file path widget',
             });
-        let container, ui, missingFiles = [];
+        let container,
+            ui,
+            missingFiles = [];
 
         function makeFieldWidget(rowId, inputWidget, appSpec, parameterSpec, value) {
             const fieldWidget = FieldWidget.make({
@@ -614,19 +626,20 @@ define([
                 root: runtime.config('services.staging_api_url.url'),
                 token: runtime.authToken(),
             });
-            return Promise.resolve(stagingService.list())
-                .then((data) => {
-                    // turn data into a Set of files with the first path (the root, username)
-                    // stripped, as those don't get used.
-                    const serverFiles = new Set(JSON.parse(data).map((file) => {
+            return Promise.resolve(stagingService.list()).then((data) => {
+                // turn data into a Set of files with the first path (the root, username)
+                // stripped, as those don't get used.
+                const serverFiles = new Set(
+                    JSON.parse(data).map((file) => {
                         return file.path.slice(file.path.indexOf('/') + 1);
-                    }));
+                    })
+                );
 
-                    // we really just need the missing files - those in the given files array
-                    // that don't exist in serverFiles. So filter out those that don't exist.
+                // we really just need the missing files - those in the given files array
+                // that don't exist in serverFiles. So filter out those that don't exist.
 
-                    return availableFiles.filter((file) => !serverFiles.has(file));
-                });
+                return availableFiles.filter((file) => !serverFiles.has(file));
+            });
         }
 
         /**

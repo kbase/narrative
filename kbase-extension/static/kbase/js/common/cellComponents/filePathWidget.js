@@ -138,7 +138,7 @@ define([
                     };
                 }),
                 invalidValues: missingFiles,
-                invalidError: 'file not found, sucka!',
+                invalidError: 'file not found',
                 disabledValues: getAllSelectedFiles(),
             });
 

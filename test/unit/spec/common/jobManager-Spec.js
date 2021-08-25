@@ -938,8 +938,8 @@ define([
                     // expect(callArgs[0][0]).toEqual('request-job-updates-start');
                     // expect(callArgs[1][0]).toEqual('request-job-status');
                     // [0, 1].forEach((n) => {
-                    //     expect(callArgs[n][1].jobIdList.sort()).toEqual(
-                    //         batchParentUpdate.child_jobs.sort()
+                    //     expect(callArgs[n][1].jobIdList).toEqual(
+                    //         jasmine.arrayWithExactContents(batchParentUpdate.child_jobs)
                     //     );
                     // });
                 });
@@ -1081,12 +1081,14 @@ define([
                             const callArgs = this.bus.emit.calls.allArgs();
                             const actionString = actionStatusMatrix[action].request;
                             // all the jobs of status `status` should be included
-                            const expectedJobIds = Object.values(JobsData.jobsByStatus[status])
-                                .map((jobState) => jobState.job_id)
-                                .sort();
+                            const expectedJobIds = Object.values(JobsData.jobsByStatus[status]).map(
+                                (jobState) => jobState.job_id
+                            );
                             expect(callArgs.length).toEqual(1);
                             expect(callArgs[0][0]).toEqual(`request-job-${actionString}`);
-                            expect(callArgs[0][1].jobIdList.sort()).toEqual(expectedJobIds);
+                            expect(callArgs[0][1].jobIdList).toEqual(
+                                jasmine.arrayWithExactContents(expectedJobIds)
+                            );
                         });
 
                         it(`can ${action} a batch of jobs, including retries, in status ${status}`, async function () {
@@ -1097,15 +1099,13 @@ define([
                                 devMode: true,
                             });
                             expect(
-                                Object.keys(
-                                    this.jobManagerInstance.model.getItem('exec.jobs.byId')
-                                ).sort()
+                                Object.keys(this.jobManagerInstance.model.getItem('exec.jobs.byId'))
                             ).toEqual(
-                                allJobs
-                                    .map((job) => {
+                                jasmine.arrayWithExactContents(
+                                    allJobs.map((job) => {
                                         return job.job_id;
                                     })
-                                    .sort()
+                                )
                             );
 
                             spyOn(this.bus, 'emit');
@@ -1124,11 +1124,12 @@ define([
                                     }
                                     return [jobState.job_id + '-retry', jobState.job_id + '-v2'];
                                 })
-                                .flat()
-                                .sort();
+                                .flat();
                             expect(callArgs.length).toEqual(1);
                             expect(callArgs[0][0]).toEqual(`request-job-${actionString}`);
-                            expect(callArgs[0][1].jobIdList.sort()).toEqual(expectedJobIds);
+                            expect(callArgs[0][1].jobIdList).toEqual(
+                                jasmine.arrayWithExactContents(expectedJobIds)
+                            );
                         });
                     });
                 });
@@ -1223,6 +1224,16 @@ define([
             describe('cancelBatchJob', () => {
                 it('cancels the current batch parent job', function () {
                     spyOn(this.bus, 'emit');
+                    expect(
+                        Object.keys(this.jobManagerInstance.model.getItem('exec.jobs.byId'))
+                    ).toEqual(
+                        jasmine.arrayWithExactContents(
+                            JobsData.allJobsWithBatchParent.map((jobState) => {
+                                return jobState.job_id;
+                            })
+                        )
+                    );
+                    expect(this.jobManagerInstance.listeners).toBeDefined();
                     this.jobManagerInstance.cancelBatchJob();
                     expect(this.bus.emit).toHaveBeenCalled();
                     // check the args to bus.emit were correct
@@ -1231,19 +1242,22 @@ define([
                     expect(callArgs).toEqual([
                         [actionRequest, { jobIdList: [JobsData.batchParentJob.job_id] }],
                     ]);
+                    // the job model should have been reset and job listeners removed
+                    expect(this.jobManagerInstance.model.getItem('exec')).not.toBeDefined();
+                    expect(this.jobManagerInstance.listeners).toEqual({});
                 });
             });
 
             describe('resetJobs', () => {
                 it('can reset the stored jobs and listeners', function () {
                     expect(
-                        Object.keys(this.jobManagerInstance.model.getItem('exec.jobs.byId')).sort()
+                        Object.keys(this.jobManagerInstance.model.getItem('exec.jobs.byId'))
                     ).toEqual(
-                        JobsData.allJobsWithBatchParent
-                            .map((jobState) => {
+                        jasmine.arrayWithExactContents(
+                            JobsData.allJobsWithBatchParent.map((jobState) => {
                                 return jobState.job_id;
                             })
-                            .sort()
+                        )
                     );
                     expect(this.jobManagerInstance.listeners).toBeDefined();
                     this.jobManagerInstance.resetJobs();
@@ -1253,6 +1267,48 @@ define([
             });
         });
 
+        /**
+         * @param {object} ctx  this context
+         * @param {object} args with keys
+         *          batchId         batch job ID
+         *          allJobIds       IDs of batch job and all children
+         *          listenerArray   listeners expected to be active; array of strings, e.g.
+         *                          ['job-status', 'job-info']
+         */
+        function check_initJobs(ctx, args) {
+            const { batchId, allJobIds, listenerArray } = args;
+
+            expect(Object.keys(ctx.jobManagerInstance.listeners)).toEqual(
+                jasmine.arrayWithExactContents(allJobIds)
+            );
+
+            Object.keys(ctx.jobManagerInstance.listeners).forEach((jobId) => {
+                expect(Object.keys(ctx.jobManagerInstance.listeners[jobId])).toEqual(
+                    jasmine.arrayWithExactContents(listenerArray)
+                );
+            });
+
+            // TODO: uncomment line below once narrative backend
+            // accepts batchIds for `request-job-updates-start`
+            // and `request-job-updates-start` responds with current job states
+            // const busCallArgs = ['request-job-updates-start', { batchId }],
+
+            // TODO: remove statement once batchIds are accepted for updates-start
+            const busCallArgs = allJobIds
+                .map((jobId) => {
+                    return ['request-job-updates-start', { jobId }];
+                })
+                .concat([['request-job-status', { batchId }]]);
+
+            if (listenerArray.includes('job-info')) {
+                busCallArgs.push(['request-job-info', { batchId }]);
+            }
+
+            expect(ctx.jobManagerInstance.bus.emit.calls.allArgs()).toEqual(
+                jasmine.arrayWithExactContents(busCallArgs)
+            );
+        }
+
         describe('initBatchJob', () => {
             beforeEach(function () {
                 this.jobManagerInstance = createJobManagerInstance(
@@ -1260,6 +1316,8 @@ define([
                     BatchInitMixin(JobManagerCore)
                 );
             });
+            const childIds = ['this', 'that', 'the other'],
+                batchId = 'something';
 
             const invalidInput = [
                 {},
@@ -1278,45 +1336,104 @@ define([
                 });
             });
 
-            it('replaces any existing job data with the new input', function () {
-                const childIds = ['this', 'that', 'the other'],
-                    batchId = 'something';
-                expect(
-                    Object.keys(this.jobManagerInstance.model.getItem('exec.jobs.byId')).sort()
-                ).toEqual(
-                    JobsData.allJobsWithBatchParent
-                        .map((job) => {
-                            return job.job_id;
-                        })
-                        .sort()
-                );
-                expect(this.jobManagerInstance.model.getItem('exec.jobState')).toEqual(
-                    JobsData.batchParentJob
-                );
-
+            it('adds job data when given the appropriate input', function () {
+                this.model = Props.make({
+                    data: {},
+                });
+                this.jobManagerInstance.model = this.model;
+                ['exec.jobs.byId', 'exec.jobState'].forEach((modelItem) => {
+                    expect(this.jobManagerInstance.model.getItem(modelItem)).toEqual(undefined);
+                });
+                expect(this.jobManagerInstance.listeners).toEqual({});
+                spyOn(this.jobManagerInstance.bus, 'emit');
                 this.jobManagerInstance.initBatchJob({
                     batch_id: batchId,
                     child_job_ids: childIds,
                 });
                 expect(
-                    Object.keys(this.jobManagerInstance.model.getItem('exec.jobs.byId')).sort()
-                ).toEqual([batchId, 'that', 'the other', 'this']);
+                    Object.keys(this.jobManagerInstance.model.getItem('exec.jobs.byId'))
+                ).toEqual(jasmine.arrayWithExactContents([batchId, 'that', 'the other', 'this']));
                 expect(this.jobManagerInstance.model.getItem('exec.jobState').job_id).toEqual(
                     batchId
                 );
+                // check that the appropriate messages have been sent out
+                check_initJobs(this, {
+                    batchId,
+                    allJobIds: childIds.concat([batchId]),
+                    listenerArray: ['job-status', 'job-does-not-exist', 'job-info'],
+                });
+            });
+
+            it('replaces any existing job data with the new input', function () {
+                expect(
+                    Object.keys(this.jobManagerInstance.model.getItem('exec.jobs.byId'))
+                ).toEqual(
+                    jasmine.arrayWithExactContents(
+                        JobsData.allJobsWithBatchParent.map((job) => {
+                            return job.job_id;
+                        })
+                    )
+                );
+                expect(this.jobManagerInstance.model.getItem('exec.jobState')).toEqual(
+                    JobsData.batchParentJob
+                );
+
+                spyOn(this.jobManagerInstance.bus, 'emit');
+                this.jobManagerInstance.initBatchJob({
+                    batch_id: batchId,
+                    child_job_ids: childIds,
+                });
+                expect(
+                    Object.keys(this.jobManagerInstance.model.getItem('exec.jobs.byId'))
+                ).toEqual(jasmine.arrayWithExactContents([batchId, 'that', 'the other', 'this']));
+                expect(this.jobManagerInstance.model.getItem('exec.jobState').job_id).toEqual(
+                    batchId
+                );
+                // check that the appropriate messages have been sent out
+                check_initJobs(this, {
+                    batchId,
+                    allJobIds: childIds.concat([batchId]),
+                    listenerArray: ['job-status', 'job-does-not-exist', 'job-info'],
+                });
             });
         });
 
         describe('restoreFromSaved', () => {
             beforeEach(function () {
+                this.model = Props.make({
+                    data: {},
+                });
+            });
+            it('does nothing if there are no jobs saved', function () {
                 this.jobManagerInstance = createJobManagerInstance(
                     this,
                     BatchInitMixin(JobManagerCore)
                 );
+                spyOn(this.jobManagerInstance.bus, 'emit');
+                expect(this.jobManagerInstance.listeners).toEqual({});
+                expect(this.jobManagerInstance.model.getItem('exec')).toEqual(undefined);
+
+                this.jobManagerInstance.restoreFromSaved();
+                expect(this.jobManagerInstance.listeners).toEqual({});
+                expect(this.jobManagerInstance.bus.emit.calls.allArgs()).toEqual([]);
+                expect(this.jobManagerInstance.model.getItem('exec')).toEqual(undefined);
             });
 
-            it('is defined', function () {
-                expect(this.jobManagerInstance.restoreFromSaved).toEqual(jasmine.any(Function));
+            it('sets up the appropriate listeners if there is data saved', function () {
+                Jobs.populateModelFromJobArray(this.model, JobsData.allJobsWithBatchParent);
+                this.jobManagerInstance = createJobManagerInstance(
+                    this,
+                    BatchInitMixin(JobManagerCore)
+                );
+                expect(this.jobManagerInstance.listeners).toEqual({});
+                spyOn(this.jobManagerInstance.bus, 'emit');
+                this.jobManagerInstance.restoreFromSaved();
+
+                check_initJobs(this, {
+                    batchId: JobsData.batchParentJob.job_id,
+                    allJobIds: JobsData.allJobsWithBatchParent.map((job) => job.job_id),
+                    listenerArray: ['job-status', 'job-does-not-exist'],
+                });
             });
         });
 

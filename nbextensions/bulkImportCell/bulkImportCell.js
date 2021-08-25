@@ -2,6 +2,7 @@ define([
     'uuid',
     'util/icon',
     'common/busEventManager',
+    'common/dialogMessages',
     'common/events',
     'common/html',
     'common/jobManager',
@@ -25,10 +26,12 @@ define([
     'common/cellComponents/tabs/results/resultsTab',
     'common/errorDisplay',
     './bulkImportCellStates',
+    'util/developerMode',
 ], (
     Uuid,
     Icon,
     BusEventManager,
+    DialogMessages,
     Events,
     html,
     JobManagerModule,
@@ -51,14 +54,14 @@ define([
     JobStatusTabWidget,
     ResultsWidget,
     ErrorTabWidget,
-    States
+    States,
+    DevMode
 ) => {
     'use strict';
     const { JobManager } = JobManagerModule;
 
     const CELL_TYPE = 'app-bulk-import';
     const div = html.tag('div'),
-        p = html.tag('p'),
         cssCellType = 'kb-bulk-import';
 
     /**
@@ -117,6 +120,8 @@ define([
         if (options.cell.cell_type !== 'code') {
             throw new Error('Can only create Bulk Import Cells out of code cells!');
         }
+
+        const developerMode = options.devMode || DevMode.mode;
 
         const cell = options.cell,
             runtime = Runtime.make(),
@@ -213,7 +218,6 @@ define([
         });
         // gets updated in total later by updateState
         let state = getInitialState();
-
         setupCell();
 
         /**
@@ -472,6 +476,7 @@ define([
         }
 
         function handleRunStatus(message) {
+            busEventManager.remove(runStatusListener);
             switch (message.event) {
                 case 'launched_job_batch':
                     // remove any existing jobs
@@ -605,9 +610,8 @@ define([
             cell.metadata = meta;
             render()
                 .then(() => {
-                    // add in the control panel so we can update the job status in the cell header
                     jobManager.addHandler('modelUpdate', {
-                        controlPanel: (jobManagerContext) => {
+                        execMessage: (jobManagerContext) => {
                             // Update the execMessage panel with details of the active jobs
                             controlPanel.setExecMessage(
                                 Jobs.createCombinedJobState(
@@ -626,8 +630,11 @@ define([
                     });
 
                     // TODO: assess cell state, update job info if required
-                    // jobManager.restorefromSaved()
-
+                    try {
+                        jobManager.restoreFromSaved();
+                    } catch (e) {
+                        console.error(e);
+                    }
                     return BulkImportUtil.evaluateConfigReadyState(model, specs);
                 })
                 .then((appReadyState) => {
@@ -774,28 +781,23 @@ define([
          * 3. Return to the editing state, trigger updateEditingState.
          */
         async function doCancelCellAction() {
-            if (runStatusListener !== null) {
-                const dialogArgs = {
-                    title: 'Cancel job batch?',
-                    body: div([
-                        p([
-                            'Canceling the job will halt any currently running jobs. ',
-                            'Any output objects already created will remain in your narrative and can be removed from the Data panel.',
-                        ]),
-                        p('Continue to Cancel the running job batch?'),
-                    ]),
-                };
+            const confirmed = await DialogMessages.showDialog({ action: 'cancelBulkImport' });
 
-                const confirmed = await UI.showConfirmDialog(dialogArgs);
-                if (!confirmed) {
-                    return;
+            if (confirmed) {
+                controlPanel.setExecMessage('Canceling...');
+                // if exec.jobs is not yet populated,
+                // set up the runStatusListener to cancel the batch job
+                // when it receives the job message
+                if (runStatusListener === null) {
+                    jobManager.cancelBatchJob();
                 }
-                busEventManager.remove(runStatusListener);
-            } else {
-                await jobManager.cancelJobsByStatus(['created', 'estimating', 'queued', 'running']);
+
+                handleRunStatus.runStatusListener = cellBus.on('run-status', handleRunStatus);
+                busEventManager.add(runStatusListener);
+
+                doResetCellAction();
             }
-            updateEditingState();
-            toggleTab('configure');
+            return Promise.resolve(confirmed);
         }
 
         /**
@@ -806,20 +808,24 @@ define([
             if (runStatusListener !== null) {
                 busEventManager.remove(runStatusListener);
             }
-            jobManager.model.deleteItem('exec');
-            controlPanel.setExecMessage('');
+            jobManager.resetJobs();
             updateEditingState();
+            // Jupyter.notebook.save_checkpoint();
             toggleTab('configure');
         }
 
         /**
          * Deletes the cell from the notebook after doing internal cleanup.
          */
-        function deleteCell() {
-            busEventManager.removeAll();
-            stopWidget();
-            const cellIndex = Jupyter.notebook.find_cell_index(cell);
-            Jupyter.notebook.delete_cell(cellIndex);
+        async function deleteCell() {
+            const confirmed = await DialogMessages.showDialog({ action: 'deleteCell' });
+            if (confirmed) {
+                busEventManager.removeAll();
+                stopWidget();
+                const cellIndex = Jupyter.notebook.find_cell_index(cell);
+                Jupyter.notebook.delete_cell(cellIndex);
+            }
+            return Promise.resolve(confirmed);
         }
 
         /**
@@ -860,7 +866,16 @@ define([
             cellTabs.setState(state.tab);
             controlPanel.setActionState(state.action);
             // TODO: add in the FSM state
-            // controlPanel.setExecMessage(...)
+            if (!model.getItem('exec.jobState')) {
+                if (!newUiState) {
+                    newUiState = model.getItem('state.state');
+                }
+                const stateMessage = {
+                    editingComplete: 'Ready to run',
+                    launching: 'Launching',
+                };
+                controlPanel.setExecMessage(stateMessage[newUiState] || '');
+            }
 
             FSMBar.showFsmBar({
                 ui: ui,
@@ -973,10 +988,16 @@ define([
          * The factory returns an accessor to the underlying Jupyter cell, and the
          * deleteCell function. Everything else should just run internally.
          */
-        return {
+        const api = {
             cell,
             deleteCell,
         };
+
+        if (developerMode) {
+            api.jobManager = jobManager;
+        }
+
+        return api;
     }
 
     /**

@@ -3,8 +3,8 @@ define([
     'common/props',
     'common/spec',
     'testUtil',
-    '/test/data/testAppObj',
-], (Util, Props, Spec, TestUtil, TestAppObj) => {
+    '/test/data/testBulkImportObj',
+], (Util, Props, Spec, TestUtil, TestBulkImportObject) => {
     'use strict';
 
     const testFileType = 'someFileType';
@@ -20,7 +20,7 @@ define([
         'insert_size_mean',
     ];
     // all of these tests use the 'kb_uploadmethods/import_fastq_sra_as_reads_from_staging'
-    // spec as given in test/data/testAppObj
+    // spec as given in test/data/testBulkImportObj
     /**
      * This builds a quick and dirty test "model" around one or more instances of the same app
      * spec. It just gets used multiple times (we're testing whether the model validates, not the
@@ -78,7 +78,7 @@ define([
     describe('BulkImportCell Utility tests', () => {
         let spec;
         beforeAll(() => {
-            spec = Spec.make({ appSpec: TestAppObj.app.specs[testAppId] });
+            spec = Spec.make({ appSpec: TestBulkImportObject.app.specs[testAppId] });
         });
 
         afterEach(() => {

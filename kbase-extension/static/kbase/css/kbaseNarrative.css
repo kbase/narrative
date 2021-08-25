@@ -810,6 +810,47 @@ p#site-title {
   height: 50%;
 }
 
+.kb-narr-outline {
+  --kb-narr-outline: 2px solid #cecece;
+}
+
+.kb-narr-outline ul  {
+  position: relative;
+  list-style: none;
+  padding-left: 1.25em;
+}
+
+.kb-narr-outline li {
+  position: relative;
+}
+
+.kb-narr-outline li:not(:last-of-type)::before {
+  content: "";
+  position: absolute;
+  border-left: var(--kb-narr-outline); 
+  height: calc(100% + 0.25em);
+  left: -1em;
+  top: 0;
+}
+
+.kb-narr-outline li .kb-narr-outline__item  {
+  position: relative;
+  top:0;
+  left:0;
+  padding-bottom: 0.25em;
+}
+
+.kb-narr-outline .kb-narr-outline__item::before {
+  content: "";
+  position: absolute;
+  width: 0.5em;
+  border-bottom: var(--kb-narr-outline);
+  border-left: var(--kb-narr-outline); 
+  height: calc(50% - 0.25em);
+  bottom: calc(50% + 1px);
+  left: -1em;
+}
+
 .kb-overlay-dimmer {
   position: fixed;
   z-index: 10;

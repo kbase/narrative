@@ -40,10 +40,12 @@ define([
             runtime = Runtime.make(),
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(config.channelName),
+            invalidError = config.invalidError,
             model = {
                 availableValues: config.availableValues || spec.data.constraints.options || [],
                 value: config.initialValue,
                 disabledValues: new Set(config.disabledValues || []),
+                invalidValues: new Set(config.invalidValues || []),
             };
         let parent, ui, container;
         model.availableValuesSet = new Set(model.availableValues.map((valueObj) => valueObj.value));
@@ -58,14 +60,13 @@ define([
         // VALIDATION
 
         function importControlValue() {
-            return Promise.try(() => {
-                return Validation.importString(getControlValue());
-            });
+            return Validation.importString(getControlValue());
         }
 
         function validate(value) {
-            return Promise.try(() => {
-                return Validation.validate(value, spec);
+            return Validation.validate(value, spec, {
+                invalidValues: model.invalidValues,
+                invalidError
             });
         }
 
@@ -78,24 +79,17 @@ define([
         // DOM EVENTS
 
         function handleChanged() {
-            importControlValue()
-                .then((value) => {
-                    setModelValue(value);
-                    channel.emit('changed', {
-                        newValue: value,
-                    });
-                    return validate(value);
-                })
+            const value = importControlValue();
+            setModelValue(value);
+            channel.emit('changed', {
+                newValue: value,
+            });
+            return validate(value)
                 .then((result) => {
-                    if (result.isValid) {
-                        if (config.showOwnMessages) {
+                    if (config.showOwnMessages) {
+                        if (result.isValid) {
                             ui.setContent('input-container.message', '');
-                        }
-                    } else if (result.diagnosis === 'required-missing') {
-                        // nothing??
-                    } else {
-                        if (config.showOwnMessages) {
-                            // show error message -- new!
+                        } else {
                             const message = inputUtils.buildMessageAlert({
                                 title: 'ERROR',
                                 type: 'danger',

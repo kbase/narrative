@@ -84,15 +84,16 @@ define(['bluebird', 'common/lang', 'common/sdk', 'widgets/appWidgets2/validators
          * This returns a Promise that resolves into key-value pairs of parameter id ->
          * validation response.
          * @param {array} paramIds - the array of parameter ids to validate
-         * @param {object} values - a key-value pair structure of values to validate. Keys should
-         *   be parameter ids.
+         * @param {object} values - an object where the key is the parameter id, and the value has
+         *  both the value, and arbitrary options to be passed to the specific validator.
          */
-        function validateParams(paramIds, values) {
+        function validateParams(paramIds, values, options) {
             const validationMap = {};
             paramIds.forEach((id) => {
                 validationMap[id] = validationResolver.validate(
-                    values[id],
-                    spec.parameters.specs[id]
+                    values[id].value,
+                    spec.parameters.specs[id],
+                    values[id].options
                 );
             });
             return Promise.props(validationMap);

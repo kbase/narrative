@@ -8,9 +8,13 @@ define([], () => {
      * @returns a Promise that resolves into either 'complete' or 'incomplete' strings,
      * based on the config state.
      * @param {Array} paramIds
-     * @param {Object} paramValues
+     * @param {Object} paramValues - keys = param ids, values = structure with
+     *  value (parameter value) and
+     *  options (options for validation)
      * @param {Array} filePathIds
-     * @param {Object} filePathValues
+     * @param {Object} filePathValues - keys = param ids, values = structure with
+     *  value (parameter value) and
+     *  options (options for validation)
      * @param {Object} spec - the post-processed Spec object
      * @returns
      */

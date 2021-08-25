@@ -313,6 +313,7 @@ define([
              * 3. Pass those along to the filepathwidget
              */
             // this is an array of parameter ids from the current spec.
+
             const widget = FilePathWidget.make({
                 bus: paramBus,
                 workspaceId: runtime.workspaceId(),
@@ -412,6 +413,12 @@ define([
             });
 
             return bus;
+        }
+
+        function getValuesForValidation(type) {
+            // a set of key-value pairs
+            const values = model.getItem('params', selectedFileType, type);
+
         }
 
         /**

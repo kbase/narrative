@@ -69,10 +69,6 @@ define([
             },
         };
 
-    function JSONcopy(obj) {
-        return JSON.parse(JSON.stringify(obj));
-    }
-
     function makeModel(jobs) {
         const tempModel = Props.make({
             data: {},
@@ -578,7 +574,7 @@ define([
                 describe('table init with job info', () => {
                     beforeEach(function () {
                         container = document.createElement('div');
-                        this.job = JSONcopy(paramTestsJobArray[0]);
+                        this.job = TestUtil.JSONcopy(paramTestsJobArray[0]);
                         this.jobManager = new JobManager({
                             model: makeModel(paramTestsJobArray),
                             bus: Runtime.make().bus(),
@@ -729,7 +725,7 @@ define([
 
                         await createJobStatusTableWithContext(
                             this,
-                            JSONcopy(JobsData.jobsById['job-finished-with-success'])
+                            TestUtil.JSONcopy(JobsData.jobsById['job-finished-with-success'])
                         );
                         container = this.container;
                     });
@@ -753,7 +749,7 @@ define([
                         it('clicking should trigger a job action', async function () {
                             await createJobStatusTableWithContext(
                                 this,
-                                JSONcopy(JobsData.jobsById[cancelRetryArgs[action]])
+                                TestUtil.JSONcopy(JobsData.jobsById[cancelRetryArgs[action]])
                             );
                             container = this.container;
                             const button = container.querySelector('tbody tr button[data-target]');
@@ -793,7 +789,7 @@ define([
 
                             _checkRowStructure(this.row, this.job);
                             this.state = state;
-                            this.input = JSONcopy(this.state);
+                            this.input = TestUtil.JSONcopy(this.state);
                             this.input.job_id = this.job.job_id;
                             // make sure that the retryTarget is updated
                             this.input.meta.retryTarget = this.job.job_id;
@@ -836,7 +832,7 @@ define([
                         it(`with status ${state.status}`, async function () {
                             _checkRowStructure(this.row, this.job);
                             this.state = state;
-                            this.input = JSONcopy(this.state);
+                            this.input = TestUtil.JSONcopy(this.state);
                             // make sure that the retry_parent is updated
                             this.input.retry_parent = this.job.job_id;
                             this.input.meta.retryTarget = this.job.job_id;
@@ -984,11 +980,13 @@ define([
                             },
                         });
 
-                        const estimatingUpdate = JSONcopy(batchJob.jobsById['job-estimating']);
+                        const estimatingUpdate = TestUtil.JSONcopy(
+                            batchJob.jobsById['job-estimating']
+                        );
                         estimatingUpdate.updated += 10;
                         estimatingUpdate.status = 'queued';
 
-                        const jobDiedWithErrorUpdate = JSONcopy(
+                        const jobDiedWithErrorUpdate = TestUtil.JSONcopy(
                             batchJob.jobsById['job-died-with-error']
                         );
                         jobDiedWithErrorUpdate.updated += 15;
@@ -1027,10 +1025,10 @@ define([
 
                         const updateTableLoop = async function (index, ctx) {
                             const update = updates[index];
-                            const updatedBatchJob = JSONcopy(batchParentJob);
+                            const updatedBatchJob = TestUtil.JSONcopy(batchParentJob);
                             updatedBatchJob.updated += 5 * index + 1;
 
-                            const input = JSONcopy(update.retry || update.update);
+                            const input = TestUtil.JSONcopy(update.retry || update.update);
                             const retryParent = batchJob.jobsById[input.retry_parent];
                             if (update.retry) {
                                 updatedBatchJob.child_jobs.push(input.job_id);
@@ -1111,7 +1109,11 @@ define([
                                 _checkRowStructure(this.row, this.job);
                                 // add in the correct jobId
                                 test.input.job_id = this.jobId;
-                                this.input = Object.assign({}, JSONcopy(this.job), test.input);
+                                this.input = Object.assign(
+                                    {},
+                                    TestUtil.JSONcopy(this.job),
+                                    test.input
+                                );
                                 this.input.meta.paramsRegex = test.regex;
 
                                 spyOn(this.jobManager, 'removeListener').and.callThrough();
@@ -1191,7 +1193,7 @@ define([
                         expect(ctx.container.querySelectorAll('#' + indicatorId).length).toEqual(1);
                         // add in the correct jobId
                         test.input.job_id = ctx.jobId;
-                        ctx.input = Object.assign({}, JSONcopy(ctx.job), test.input);
+                        ctx.input = Object.assign({}, TestUtil.JSONcopy(ctx.job), test.input);
                         ctx.input.meta.paramsRegex = test.regex;
 
                         spyOn(ctx.jobManager, 'removeListener').and.callThrough();
@@ -1212,7 +1214,7 @@ define([
 
                     beforeEach(async function () {
                         await createJobStatusTableWithContext(this, paramTestsJobArray);
-                        this.job = JSONcopy(paramTestsJobArray[0]);
+                        this.job = TestUtil.JSONcopy(paramTestsJobArray[0]);
                         this.jobManager.addListener('job-info', [
                             'job_update_test',
                             'generic_retry_parent',

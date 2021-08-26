@@ -1,4 +1,4 @@
-define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
+define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
     'use strict';
 
     const validOutgoingMessageTypes = [
@@ -521,7 +521,11 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
                     return Promise.resolve(false);
                 }
 
-                return JobMessages.showDialog({ action, statusList, jobList }).then((confirmed) => {
+                return DialogMessages.showDialog({
+                    action: `${action}Jobs`,
+                    statusList,
+                    jobList,
+                }).then((confirmed) => {
                     if (confirmed) {
                         const jobIdList =
                             action === 'retry'
@@ -534,7 +538,7 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
                                   });
                         this.doJobAction(action, jobIdList);
                     }
-                    return confirmed;
+                    return Promise.resolve(confirmed);
                 });
             }
 
@@ -593,23 +597,28 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
              */
             cancelBatchJob() {
                 this.doJobAction('cancel', [this.model.getItem('exec.jobState.job_id')]);
-                // TODO: should this reset jobs or listeners?
+                this.resetJobs();
             }
 
             /**
              * Reset the job manager, removing all listeners and stored job data
              */
             resetJobs() {
-                const allJobs = this.model.getItem('exec.jobs.byId');
+                const allJobs = this.model.getItem('exec.jobs.byId'),
+                    parentJob = this.model.getItem('exec.jobState');
                 if (!allJobs || !Object.keys(allJobs).length) {
+                    this.model.deleteItem('exec');
                     return;
                 }
-                const parentJob = this.model.getItem('exec.jobState');
-                Object.keys(allJobs)
-                    .concat(parentJob)
-                    .forEach((jobId) => {
-                        this.removeJobListeners(jobId);
-                    });
+
+                if (parentJob && !allJobs[parentJob.job_id]) {
+                    allJobs[parentJob.job_id] = parentJob;
+                }
+
+                Object.keys(allJobs).forEach((jobId) => {
+                    this.removeJobListeners(jobId);
+                });
+
                 this.model.deleteItem('exec');
             }
         };
@@ -670,17 +679,34 @@ define(['common/jobMessages', 'common/jobs'], (JobMessages, Jobs) => {
                 this.addListener('job-does-not-exist', allJobIds);
 
                 // request job updates
-                this.bus.emit('request-job-updates-start', {
-                    batchId: batchId,
+                // this.bus.emit('request-job-updates-start', { batchId });
+                // TODO: this can be removed and the line above
+                // uncommented once the narrative backend changes
+                // are in place
+                if (!allJobIds.includes(batchId)) {
+                    allJobIds.push(batchId);
+                }
+                allJobIds.forEach((jobId) => {
+                    this.bus.emit('request-job-updates-start', {
+                        jobId,
+                    });
                 });
                 // can be deleted once `request-job-updates-start` responds with current job state
                 this.bus.emit('request-job-status', {
-                    batchId: batchId,
+                    batchId,
                 });
             }
 
             restoreFromSaved() {
-                // TODO
+                const batchJob = this.model.getItem('exec.jobState'),
+                    allJobs = this.model.getItem('exec.jobs.byId');
+                if (!batchJob || !allJobs) {
+                    return;
+                }
+                this._initJobs({
+                    batchId: batchJob.job_id,
+                    allJobIds: Object.keys(allJobs),
+                });
             }
 
             /**

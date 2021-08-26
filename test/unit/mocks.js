@@ -39,13 +39,14 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
         const $toolbar = $('<div>').addClass('celltoolbar');
         $toolbar.append($icon);
         const metadata = kbaseCellType ? buildMockExtensionCellMetadata(kbaseCellType, data) : {};
+        const inputArea = $('<div>').addClass('input_area');
         const mockCell = {
             metadata: { kbase: metadata },
             cell_type: cellType,
             renderMinMax: () => {},
             set_text: () => {},
             element: $cellContainer,
-            input: $('<div>').addClass('input').append('<div>').addClass('input_area'),
+            input: $('<div>').addClass('input').append(inputArea),
             output: $('<div>').addClass('output_wrapper').append('<div>').addClass('output'),
             celltoolbar: {
                 rebuild: () => {},

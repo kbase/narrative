@@ -51,6 +51,10 @@ define('testUtil', ['bluebird', 'json!/test/testConfig.json'], (Promise, TestCon
         });
     }
 
+    function JSONcopy(structure) {
+        return JSON.parse(JSON.stringify(structure));
+    }
+
     function wait(timeMs) {
         return Promise.delay(timeMs);
     }
@@ -178,6 +182,7 @@ define('testUtil', ['bluebird', 'json!/test/testConfig.json'], (Promise, TestCon
         getAuthToken,
         pendingIfNoToken,
         getUserId,
+        JSONcopy,
         wait,
         waitFor,
         waitForElement,

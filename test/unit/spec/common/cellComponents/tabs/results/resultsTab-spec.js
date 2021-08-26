@@ -3,8 +3,8 @@ define([
     'base/js/namespace',
     'common/props',
     'testUtil',
-    '/test/data/testAppObj',
-], (ResultsTab, Jupyter, Props, TestUtil, TestAppObject) => {
+    '/test/data/testBulkImportObj',
+], (ResultsTab, Jupyter, Props, TestUtil, TestBulkImportObject) => {
     'use strict';
 
     const reportObject = {
@@ -38,7 +38,7 @@ define([
             Jupyter.narrative = {
                 getAuthToken: () => 'fakeToken',
             };
-            expect(TestAppObject).toBeDefined();
+            expect(TestBulkImportObject).toBeDefined();
         });
 
         beforeEach(function () {
@@ -48,7 +48,7 @@ define([
             };
             container = document.createElement('div');
             this.model = Props.make({
-                data: TestAppObject,
+                data: TestBulkImportObject,
                 onUpdate: () => {},
             });
         });

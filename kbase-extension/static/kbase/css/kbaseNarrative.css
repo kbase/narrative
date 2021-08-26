@@ -840,6 +840,27 @@ p#site-title {
   padding-bottom: 0.25em;
 }
 
+.kb-narr-outline__item-icon-wrapper {
+  display: inline-block;
+  height: 2em;
+  max-width: 2.5em;
+  overflow: hidden;
+  vertical-align: middle;
+}
+
+.kb-narr-outline__item-icon {
+  display: inline-block;
+  transform-origin: top left;
+  transform: scale(0.5);
+}
+
+.kb-narr-outline__item-content  {
+  display: inline-block;
+  max-width: 2em; /*Hacky way to force overflow, should rewrite for flexbox*/
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
 .kb-narr-outline .kb-narr-outline__item::before {
   content: "";
   position: absolute;

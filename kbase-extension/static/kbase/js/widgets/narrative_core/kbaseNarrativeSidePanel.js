@@ -32,6 +32,7 @@ define([
         heightPanelOffset: 110, // in px, space taken by just the header, the rest is for the full panel size, which is the
         // case for the narratives/jobs panels
         $narrativesWidget: null,
+        $outlineWidget: null,
         $overlay: null,
 
         hideButtonSize: 4, //percent width
@@ -414,6 +415,7 @@ define([
 
             const fullSize = h - this.heightPanelOffset;
             this.$narrativesWidget.setHeight(fullSize);
+            this.$outlineWidget.setHeight(fullSize);
         },
 
         render: function () {

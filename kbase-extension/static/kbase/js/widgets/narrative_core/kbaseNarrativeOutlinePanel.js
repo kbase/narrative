@@ -32,53 +32,50 @@ define([
             this.$mainPanel.append(
                 $('<h5>').text('KBase Narrative Outline')
             )
-            const $outline = $('<div>').addClass('kb-narr-outline').appendTo(this.$mainPanel);
-            const $outline_ul = $('<ul>').appendTo($outline);
+            
+            // Extract Outline Items and their depth from notebook cells
+            const outline_items = [];
             Jupyter.notebook.get_cells().forEach((cell) => {
-                const title = cell.metadata.kbase.attributes.title;
-                $outline_ul.append(
-                    $('<li>').append(
-                        $('<div>').addClass('kb-narr-outline__item').append(
-                            $('<a>').text(title).attr('href', '#')
-                                .click(() => {
-                                    cell.element[0].scrollIntoView({behavior:"smooth"});
-                                    cell.element[0].click();
-                                })
-                        )
-                    )
-                )
+                // Find any headers in the cell
+                const inner_headers = cell.element[0].querySelectorAll('h1, h2, h3');
+
+                if (cell.cell_type === 'markdown' && inner_headers.length !== 0) {
+                    const md_items = Array.from(inner_headers).map(h=>({
+                        title: h.innerText,
+                        depth: parseInt(h.nodeName[1]),
+                        element: h
+                    }));
+                    Array.prototype.push.apply(outline_items, md_items)
+                } else {
+                    outline_items.push({
+                        depth: 4,
+                        title: cell.metadata.kbase.attributes.title || 'Untitled Cell',
+                        element: cell.element[0]
+                    })
+                }               
             });
 
-            //     this.$mainPanel.html(
-            //         `
-            //         <h2>
-            //             KBase Narrative Outline
-            //         </h2>
-            //         <div class="kb-narr-outline">
-            //             <ul>
-            //             <li><span class="kb-narr-outline__item">md Cell with H1</span>
-            //                 <ul>
-            //                 <li><div class="kb-narr-outline__item">App Cell</div></li>
-            //                 <li><div class="kb-narr-outline__item">App Cell</div></li>
-            //                 <li><div class="kb-narr-outline__item">App Cell</div></li>
-            //                 <li><div class="kb-narr-outline__item"><button>Some chunky thing</button></div>
-            //                     <ul>
-            //                     <li><span class="kb-narr-outline__item">Another App Cell</span></li></ul></li></ul></li>
-            //             <li><span class="kb-narr-outline__item">nother md Cell with H1</span></li>
-            //               <li>
-            //                 <div class="kb-narr-outline__item">
-            //                   <img
-            //   src="https://cdn.glitch.com/a9975ea6-8949-4bab-addb-8a95021dc2da%2Fillustration.svg?v=1618177344016"
-            //   class="illustration"
-            //   alt="Editor illustration"
-            //   title="Click the image!"
-            // />
-            //                 </div>
-            //               </li>
-            //             </ul>
-            //         </div>
-            //         `
-            //     );
+            // Create the outline root node
+            const $outline = $('<div>').addClass('kb-narr-outline').appendTo(this.$mainPanel);
+            const root_node = {content:$outline, children:[], depth:0};
+
+            // Use a stack to nest the outline nodes based on item depth
+            const stack = [root_node];
+            outline_items.forEach((item) => {
+                while (stack[stack.length-1].depth >= item.depth) {
+                    stack.pop();
+                }
+                const node = {
+                    item:item,
+                    children: [],
+                    depth: item.depth,
+                }
+                stack[stack.length-1].children.push(node);
+                stack.push(node);
+            });
+
+            // Render the outline tree
+            this.renderOutlineNode(root_node);
 
             // the string name of the workspace.
             this.ws_name = Jupyter.narrative.getWorkspaceName();
@@ -92,5 +89,26 @@ define([
             this.$elem.find('.kb-title').hide();
             return this;
         },
+
+        renderOutlineNode: function (node) {
+            if(!node.content){
+                node.content = $('<div>').addClass('kb-narr-outline__item').append(
+                    $('<a>').text(node.item.title).attr('href', '#')
+                        .click(() => {
+                            node.item.element.scrollIntoView({behavior:"smooth"});
+                            node.item.element.click();
+                        })
+                );
+            }
+            const ul = $('<ul>');
+            node.children.forEach((child) => {
+                ul.append(  this.renderOutlineNode(child) ); 
+            });
+            if(node.depth === 0) {
+                return node.content.append(ul);
+            } else {
+                return $('<li>').append(node.content).append(ul);
+            }
+        }
     });
 });

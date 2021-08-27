@@ -36,7 +36,15 @@ define([
             const stagingServiceUrl = runtime.config('services.staging_api_url.url');
             jasmine.Ajax.install();
             // lifted from the used files in this test spec
-            const allFakeFiles = ['file1.txt', 'file1', 'file2', 'file3', 'file4', 'fastq_fwd_1', 'fastq_fwd_2'];
+            const allFakeFiles = [
+                'file1.txt',
+                'file1',
+                'file2',
+                'file3',
+                'file4',
+                'fastq_fwd_1',
+                'fastq_fwd_2',
+            ];
             const fakeStagingResponse = allFakeFiles.map((fileName) => {
                 return {
                     name: fileName,
@@ -163,17 +171,16 @@ define([
                     bus,
                     model,
                     specs,
-                    typesToFiles
+                    typesToFiles,
                 });
 
-                const paramErrorSelector = '[data-parameter="name"] .kb-field-cell__message_panel'
+                const paramErrorSelector = '[data-parameter="name"] .kb-field-cell__message_panel';
                 await configure.start({ node: container });
-                await TestUtil.waitForElementState(
-                    container,
-                    () => {
-                        return !container.querySelector(paramErrorSelector).classList.contains('hidden');
-                    }
-                );
+                await TestUtil.waitForElementState(container, () => {
+                    return !container
+                        .querySelector(paramErrorSelector)
+                        .classList.contains('hidden');
+                });
                 expect(container.querySelector(paramErrorSelector).innerHTML).toContain('required');
                 await configure.stop();
             });
@@ -200,18 +207,20 @@ define([
                     bus,
                     model,
                     specs,
-                    typesToFiles
+                    typesToFiles,
                 });
 
                 await configure.start({ node: container });
-                const paramErrorSelector = '[data-parameter="fastq_fwd_staging_file_name"] .kb-field-cell__message_panel'
-                await TestUtil.waitForElementState(
-                    container,
-                    () => {
-                        return !container.querySelector(paramErrorSelector).classList.contains('hidden');
-                    }
+                const paramErrorSelector =
+                    '[data-parameter="fastq_fwd_staging_file_name"] .kb-field-cell__message_panel';
+                await TestUtil.waitForElementState(container, () => {
+                    return !container
+                        .querySelector(paramErrorSelector)
+                        .classList.contains('hidden');
+                });
+                expect(container.querySelector(paramErrorSelector).innerHTML).toContain(
+                    'file not found'
                 );
-                expect(container.querySelector(paramErrorSelector).innerHTML).toContain('file not found');
                 await configure.stop();
             });
         });

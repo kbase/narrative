@@ -20,7 +20,15 @@ define(['common/runtime', 'StagingServiceClient'], (Runtime, StagingServiceClien
      * @param {Object} spec - the post-processed Spec object
      * @returns a promise that resolves into "complete" or "incomplete" strings
      */
-    function evaluateAppConfig(paramIds, paramValues, paramOptions, filePathIds, filePathValues, filePathOptions, spec) {
+    function evaluateAppConfig(
+        paramIds,
+        paramValues,
+        paramOptions,
+        filePathIds,
+        filePathValues,
+        filePathOptions,
+        spec
+    ) {
         /* 2 parts.
          * 1 - eval the set of parameters using something in the spec module.
          * 2 - eval the array of file inputs and outputs.

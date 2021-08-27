@@ -87,10 +87,6 @@ define(['bluebird', './common'], (Promise, common) => {
         });
     }
 
-    /*
-    Each validator must supply:
-    validateText - validate a
-    */
     return {
         importString,
         validate,

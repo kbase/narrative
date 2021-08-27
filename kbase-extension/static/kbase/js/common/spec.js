@@ -90,6 +90,7 @@ define(['bluebird', 'common/lang', 'common/sdk', 'widgets/appWidgets2/validators
          */
         function validateParams(paramIds, values, options) {
             const validationMap = {};
+            options = options || {};
             paramIds.forEach((id) => {
                 validationMap[id] = validationResolver.validate(
                     values[id],

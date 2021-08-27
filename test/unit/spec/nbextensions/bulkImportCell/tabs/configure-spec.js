@@ -20,7 +20,8 @@ define([
             appSpec = Spec.make({
                 appSpec: TestAppObject.app.specs[appId],
             }),
-            specs = {};
+            specs = {},
+            fakeUser = 'aFakeUser';
         let bus, container, initialState, runtime;
 
         beforeAll(() => {
@@ -32,6 +33,28 @@ define([
 
         beforeEach(() => {
             runtime = Runtime.make();
+            const stagingServiceUrl = runtime.config('services.staging_api_url.url');
+            jasmine.Ajax.install();
+            // lifted from the used files in this test spec
+            const allFakeFiles = ['file1', 'file2', 'file3', 'file4', 'fastq_fwd_1', 'fastq_fwd_2'];
+            const fakeStagingResponse = allFakeFiles.map((fileName) => {
+                return {
+                    name: fileName,
+                    path: fakeUser + '/' + fileName,
+                    mtime: 1532738637499,
+                    size: 34,
+                    isFolder: false,
+                };
+            });
+
+            jasmine.Ajax.stubRequest(new RegExp(`${stagingServiceUrl}/list/`)).andReturn({
+                status: 200,
+                statusText: 'success',
+                contentType: 'text/plain',
+                responseHeaders: '',
+                responseText: JSON.stringify(fakeStagingResponse),
+            });
+
             bus = runtime.bus();
             container = document.createElement('div');
             initialState = {
@@ -44,6 +67,7 @@ define([
         });
 
         afterEach(() => {
+            jasmine.Ajax.uninstall();
             container.remove();
             runtime.destroy();
         });

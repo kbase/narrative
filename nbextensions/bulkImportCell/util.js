@@ -60,13 +60,17 @@ define(['common/runtime', 'StagingServiceClient'], (Runtime, StagingServiceClien
     function evaluateConfigReadyState(model, specs) {
         const fileTypes = Object.keys(model.getItem(['inputs']));
         const evalPromises = fileTypes.map((fileType) => {
+            const filePathValues = model.getItem(['params', fileType, 'filePaths']);
+            // make an array of empty options with the same length as the
+            // number of file path values
+            const filePathOptions = Array.from({ length: filePathValues.length }, () => ({}));
             return evaluateAppConfig(
                 model.getItem(['app', 'otherParamIds', fileType]),
                 model.getItem(['params', fileType, 'params']),
                 {},
                 model.getItem(['app', 'fileParamIds', fileType]),
                 model.getItem(['params', fileType, 'filePaths']),
-                {},
+                filePathOptions,
                 specs[model.getItem(['inputs', fileType, 'appId'])]
             );
         });

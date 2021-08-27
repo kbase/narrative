@@ -72,11 +72,7 @@ define(['bluebird', 'common/lang', 'common/sdk', 'widgets/appWidgets2/validators
          * structure
          */
         function validateModel(model) {
-            const modModel = {};
-            for (const [id, value] of Object.entries(model)) {
-                modModel[id] = { value, options: {} };
-            }
-            return validateParams(spec.parameters.layout, modModel);
+            return validateParams(spec.parameters.layout, model, {});
         }
 
         /**
@@ -92,13 +88,13 @@ define(['bluebird', 'common/lang', 'common/sdk', 'widgets/appWidgets2/validators
          *  both the value, and arbitrary options to be passed to the specific validator.
          * @param {object} options
          */
-        function validateParams(paramIds, values) {
+        function validateParams(paramIds, values, options) {
             const validationMap = {};
             paramIds.forEach((id) => {
                 validationMap[id] = validationResolver.validate(
-                    values[id].value,
+                    values[id],
                     spec.parameters.specs[id],
-                    values[id].options
+                    options[id] || {}
                 );
             });
             return Promise.props(validationMap);

@@ -422,32 +422,9 @@ define([
 
         /**
          *
-         */
-        function getParametersForValidation() {
-            // param vals don't need anything special to validate. Just reformat them
-            const paramVals = model.getItem(['params', selectedFileType, PARAM_TYPE]);
-            const paramInfo = {};
-            for (const [id, value] of Object.entries(paramVals)) {
-                paramInfo[id] = {
-                    value,
-                    options: {},
-                };
-            }
-            return paramInfo;
-        }
-
-        /**
-         *
          * @returns
          */
-        function getFilePathsForValidation() {
-            // file path params are split into one of 2 types.
-            // inputs = files being inputs, should be validated against present files
-            // outputs = objects being output, should be unique values
-            // these should have options:
-            // inputs - invalidValues: Set of invalid files
-            // outputs - maybe post-process and check for uniqueness?
-            //    should also check against the workspace for output type, file name
+        function getFilePathOptionsForValidation() {
             let fpIds = model.getItem(['app', 'fileParamIds', selectedFileType]);
             const outIds = model.getItem(['app', 'outputParamIds', selectedFileType]);
             fpIds = fpIds.filter((id) => !outIds.includes(id));
@@ -457,22 +434,17 @@ define([
             // outIds = file output ids
             // fpVals = Array of KVPs with id (either fpIds or outIds) -> value
 
-            const fpInfoArray = fpVals.map((filePath) => {
-                const fpInfo = {};
-                for (const [id, value] of Object.entries(filePath)) {
-                    fpInfo[id] = { value, options: {} };
+            const fpOptions = fpVals.map((filePath) => {
+                const options = {};
+                for (const id of Object.keys(filePath)) {
+                    options[id] = {};
                     if (fpIds.includes(id)) {
-                        fpInfo[id].options.invalidValues = unavailableFiles;
+                        options[id].invalidValues = unavailableFiles;
                     }
-                    // else {
-                    //     fpInfo[id].options = {
-                    //         // something else here
-                    //     };
-                    // }
                 }
-                return fpInfo;
+                return options;
             });
-            return fpInfoArray;
+            return fpOptions;
         }
 
         /**
@@ -490,15 +462,17 @@ define([
                     return 'error';
                 }
                 const paramIds = model.getItem(['app', 'otherParamIds', selectedFileType]),
-                    paramValues = getParametersForValidation(),
+                    paramValues = model.getItem(['params', selectedFileType, PARAM_TYPE]),
                     filePathIds = model.getItem(['app', 'fileParamIds', selectedFileType]),
-                    filePathValues = getFilePathsForValidation(),
+                    filePathValues = model.getItem(['params', selectedFileType, FILE_PATH_TYPE]),
                     spec = specs[typesToFiles[selectedFileType].appId];
                 return Util.evaluateAppConfig(
                     paramIds,
                     paramValues,
+                    {},
                     filePathIds,
                     filePathValues,
+                    getFilePathOptionsForValidation(),
                     spec
                 );
             }).then((state) => {

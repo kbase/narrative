@@ -9,7 +9,7 @@ define([
 ], (ConfigureTab, Jupyter, Runtime, Props, Spec, TestUtil, TestAppObject) => {
     'use strict';
 
-    describe('test the bulk import cell configure tab', () => {
+    fdescribe('test the bulk import cell configure tab', () => {
         const appId = 'kb_uploadmethods/import_fastq_sra_as_reads_from_staging',
             typesToFiles = {
                 fastq_reads: {
@@ -36,7 +36,7 @@ define([
             const stagingServiceUrl = runtime.config('services.staging_api_url.url');
             jasmine.Ajax.install();
             // lifted from the used files in this test spec
-            const allFakeFiles = ['file1', 'file2', 'file3', 'file4', 'fastq_fwd_1', 'fastq_fwd_2'];
+            const allFakeFiles = ['file1.txt', 'file1', 'file2', 'file3', 'file4', 'fastq_fwd_1', 'fastq_fwd_2'];
             const fakeStagingResponse = allFakeFiles.map((fileName) => {
                 return {
                     name: fileName,
@@ -147,6 +147,67 @@ define([
                 .then(() => {
                     expect(container.innerHTML).toEqual('');
                 });
+        });
+
+        describe('validation tests', () => {
+            it('should start with invalid inputs and show errors', async () => {
+                const modelData = Object.assign({}, TestAppObject, { state: initialState });
+                modelData.params.fastq_reads.filePaths[0].name = null;
+
+                const model = Props.make({
+                    data: modelData,
+                    onUpdate: () => {},
+                });
+
+                const configure = ConfigureTab.make({
+                    bus,
+                    model,
+                    specs,
+                    typesToFiles
+                });
+
+                await configure.start({ node: container });
+                console.log(container.innerHTML);
+                expect(container.innerHTML).toContain('required');
+                await configure.stop();
+            });
+
+            it('should start with missing files and show errors', async () => {
+                const stagingServiceUrl = runtime.config('services.staging_api_url.url');
+                jasmine.Ajax.stubRequest(new RegExp(`${stagingServiceUrl}/list/`)).andReturn({
+                    status: 200,
+                    statusText: 'success',
+                    contentType: 'text/plain',
+                    responseHeaders: '',
+                    responseText: JSON.stringify([]),
+                });
+
+                const modelData = Object.assign({}, TestAppObject, { state: initialState });
+                modelData.params.fastq_reads.filePaths[0].fastq_fwd_staging_file_name = 'file1.txt';
+
+                const model = Props.make({
+                    data: modelData,
+                    onUpdate: () => {},
+                });
+
+                const configure = ConfigureTab.make({
+                    bus,
+                    model,
+                    specs,
+                    typesToFiles
+                });
+
+                await configure.start({ node: container });
+
+                // await TestUtil.waitForElementState(
+                //     container,
+                //     () => {
+                //         container.querySelector('[data-parameter="')
+                //     },
+                // );
+                expect(container.innerHTML).toContain('file not found');
+                await configure.stop();
+            });
         });
 
         describe('multi-data-type tests', () => {

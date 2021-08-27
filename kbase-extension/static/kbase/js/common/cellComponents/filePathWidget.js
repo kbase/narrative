@@ -610,28 +610,6 @@ define([
             });
         }
 
-        // function verifyFiles() {
-        //     const runtime = Runtime.make();
-        //     const stagingService = new StagingServiceClient({
-        //         root: runtime.config('services.staging_api_url.url'),
-        //         token: runtime.authToken(),
-        //     });
-        //     return Promise.resolve(stagingService.list()).then((data) => {
-        //         // turn data into a Set of files with the first path (the root, username)
-        //         // stripped, as those don't get used.
-        //         const serverFiles = new Set(
-        //             JSON.parse(data).map((file) => {
-        //                 return file.path.slice(file.path.indexOf('/') + 1);
-        //             })
-        //         );
-
-        //         // we really just need the missing files - those in the given files array
-        //         // that don't exist in serverFiles. So filter out those that don't exist.
-
-        //         return availableFiles.filter((file) => !serverFiles.has(file));
-        //     });
-        // }
-
         /**
          * Build the layout structure.
          * Populate with initial parameter rows

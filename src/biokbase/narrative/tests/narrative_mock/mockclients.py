@@ -510,6 +510,19 @@ class MockStagingHelper:
 
 
 class assert_obj_method_called(object):
+    """
+    Invocations:
+
+    with assert_obj_method_called(MyTargetClass, "my_target_method"):
+    with assert_obj_method_called(MyTargetClass, "my_target_method", False) as aomc:
+
+    aomc.assert_has_calls(
+        [
+            mock.call("fish", 1),
+            mock.call("dog", 2),
+        ]
+    )
+    """
     def __init__(self, target, method_name, call_status=True):
         self.target = target
         self.method_name = method_name

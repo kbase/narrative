@@ -7,6 +7,7 @@ from biokbase.narrative.exception_util import NarrativeException, NoJobException
 from biokbase.narrative.common import kblogging
 
 UNKNOWN_REASON = "Unknown reason"
+NO_JOB_ERR = "No valid job ids"
 
 
 class JobRequest:
@@ -205,7 +206,7 @@ class JobComm:
         req.job_id_list[:] = [job_id for job_id in req.job_id_list if job_id]
         if len(req.job_id_list) == 0:
             self.send_error_message("job_does_not_exist", req)
-            raise NoJobException("No valid job ids")
+            raise NoJobException(NO_JOB_ERR)
 
     def start_job_status_loop(self, *args, **kwargs) -> None:
         """

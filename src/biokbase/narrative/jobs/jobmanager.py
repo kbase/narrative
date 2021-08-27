@@ -17,7 +17,7 @@ from biokbase.narrative.exception_util import (
     NotBatchException,
 )
 import copy
-from typing import List
+from typing import List, Tuple
 
 """
 KBase Job Manager
@@ -128,7 +128,7 @@ class JobManager(object):
 
         return job_states
 
-    def _check_job_list(self, input_ids: List[str] = []):
+    def _check_job_list(self, input_ids: List[str] = []) -> Tuple[List[str], List[str]]:
         """
         Deduplicates the input job list, maintaining insertion order
         Any jobs not present in self._running_jobs are added to an error list
@@ -526,11 +526,16 @@ class JobManager(object):
             raise NotBatchException("Not a batch job")
 
         child_ids = batch_job.child_jobs
-        reg_child_jobs = [self.get_job(job_id) for job_id in child_ids if job_id in self._running_jobs]
 
-        unreg_child_ids = [job_id for job_id in child_ids if job_id not in self._running_jobs]
+        reg_child_jobs = []
+        unreg_child_ids = []
+        for job_id in child_ids:
+            if job_id in self._running_jobs:
+                reg_child_jobs.append(self.get_job(job_id))
+            else:
+                unreg_child_ids.append(job_id)
+
         unreg_child_jobs = []
-
         if unreg_child_ids:
             unreg_child_jobs = Job.from_job_ids(unreg_child_ids)
             for job in unreg_child_jobs:

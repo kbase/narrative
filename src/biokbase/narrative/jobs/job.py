@@ -161,8 +161,11 @@ class Job(object):
             .get("narrative_cell_info", {})
             .get("cell_id", JOB_ATTR_DEFAULTS["cell_id"]),
             child_jobs=lambda: copy.deepcopy(
+                # TODO
                 # Only batch container jobs have a child_jobs field
-                # and need the state refresh
+                # and need the state refresh.
+                # But KBParallel/KB Batch App jobs may not have the
+                # batch_job field
                 self.state(force_refresh=True)
                 .get("child_jobs", JOB_ATTR_DEFAULTS["child_jobs"])
                 if self.batch_job else

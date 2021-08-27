@@ -5,7 +5,10 @@ import os
 from biokbase.narrative.jobs.job import get_dne_job_state, JOB_ATTR_DEFAULTS
 import biokbase.narrative.jobs.jobcomm
 import biokbase.narrative.jobs.jobmanager
-from biokbase.narrative.jobs.jobcomm import JobRequest
+from biokbase.narrative.jobs.jobcomm import (
+    JobRequest,
+    NO_JOB_ERR,
+)
 from biokbase.narrative.exception_util import (
     NarrativeException,
     NoJobException,
@@ -211,7 +214,7 @@ class JobCommTestCase(unittest.TestCase):
     def test_lookup_job_states__no_job(self):
         job_id_list = [None]
         req = make_comm_msg("job_status", job_id_list, True)
-        with self.assertRaisesRegex(NoJobException, "No valid job ids"):
+        with self.assertRaisesRegex(NoJobException, NO_JOB_ERR):
             self.jc._lookup_job_states(req)
         msg = self.jc._comm.last_message
         self.assertEqual(
@@ -338,7 +341,7 @@ class JobCommTestCase(unittest.TestCase):
     def test_lookup_job_info__no_job(self):
         job_id_list = [None]
         req = make_comm_msg("job_info", job_id_list, True)
-        with self.assertRaisesRegex(NoJobException, "No valid job ids"):
+        with self.assertRaisesRegex(NoJobException, NO_JOB_ERR):
             self.jc._lookup_job_info(req)
         msg = self.jc._comm.last_message
         self.assertEqual(
@@ -497,7 +500,7 @@ class JobCommTestCase(unittest.TestCase):
 
         job_id_list = [None, ""]
         req = make_comm_msg("cancel_job", job_id_list, True)
-        with self.assertRaisesRegex(NoJobException, "No valid job ids"):
+        with self.assertRaisesRegex(NoJobException, NO_JOB_ERR):
             self.jc._cancel_jobs(req)
         msg = self.jc._comm.last_message
         self.assertEqual(
@@ -607,9 +610,8 @@ class JobCommTestCase(unittest.TestCase):
     def test_retry_jobs_no_job(self):
         job_id_list = [None, ""]
         req = make_comm_msg("retry_job", job_id_list, True)
-        with self.assertRaises(ValueError) as e:
+        with self.assertRaisesRegex(ValueError, NO_JOB_ERR):
             self.jc._retry_jobs(req)
-        self.assertIn("No valid job ids", str(e.exception))
         msg = self.jc._comm.last_message
         self.assertEqual(
             {"job_id_list": [], "source": "retry_job"}, msg["data"]["content"]

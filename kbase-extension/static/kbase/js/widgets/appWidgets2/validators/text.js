@@ -92,8 +92,8 @@ define(['bluebird', './common'], (Promise, common) => {
     validateText - validate a
     */
     return {
-        importString: importString,
-        validate: validate,
-        applyConstraints: applyConstraints,
+        importString,
+        validate,
+        applyConstraints,
     };
 });

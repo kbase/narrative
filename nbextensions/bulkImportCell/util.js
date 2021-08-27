@@ -1,4 +1,4 @@
-define([], () => {
+define(['common/runtime', 'StagingServiceClient'], (Runtime, StagingServiceClient) => {
     'use strict';
 
     /**
@@ -16,7 +16,7 @@ define([], () => {
      *  value (parameter value) and
      *  options (options for validation)
      * @param {Object} spec - the post-processed Spec object
-     * @returns
+     * @returns a promise that resolves into "complete" or "incomplete" strings
      */
     function evaluateAppConfig(paramIds, paramValues, filePathIds, filePathValues, spec) {
         /* 2 parts.
@@ -67,8 +67,36 @@ define([], () => {
         });
     }
 
+    /**
+     *
+     * @param {Array} expectedFiles
+     * @returns
+     */
+    function getMissingFiles(expectedFiles) {
+        const runtime = Runtime.make();
+        const stagingService = new StagingServiceClient({
+            root: runtime.config('services.staging_api_url.url'),
+            token: runtime.authToken(),
+        });
+        return Promise.resolve(stagingService.list()).then((data) => {
+            // turn data into a Set of files with the first path (the root, username)
+            // stripped, as those don't get used.
+            const serverFiles = new Set(
+                JSON.parse(data).map((file) => {
+                    return file.path.slice(file.path.indexOf('/') + 1);
+                })
+            );
+
+            // we really just need the missing files - those in the given files array
+            // that don't exist in serverFiles. So filter out those that don't exist.
+
+            return expectedFiles.filter((file) => !serverFiles.has(file));
+        });
+    }
+
     return {
         evaluateAppConfig,
         evaluateConfigReadyState,
+        getMissingFiles,
     };
 });

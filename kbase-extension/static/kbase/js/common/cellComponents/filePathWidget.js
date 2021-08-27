@@ -7,18 +7,7 @@ define([
     'common/cellComponents/fieldTableCellWidget',
     'widgets/appWidgets2/paramResolver',
     'common/runtime',
-    'StagingServiceClient',
-], (
-    Promise,
-    html,
-    UI,
-    Events,
-    Props,
-    FieldWidget,
-    ParamResolver,
-    Runtime,
-    StagingServiceClient
-) => {
+], (Promise, html, UI, Events, Props, FieldWidget, ParamResolver, Runtime) => {
     'use strict';
 
     const tag = html.tag,
@@ -41,12 +30,15 @@ define([
      *  - initialParams - Array of objects. Each item represents a row of parameter values.
      *    So each item has an object with parameter id -> value
      *  - availableFiles - Array of strings, one for each file that should be available here.
+     *  - unavailableFiles - Set of strings, for files that the cell thinks are available, but
+     *      are no longer available through the staging service
      *  - viewOnly - boolean, if true start with the view version of input widgets
+     *  - unselectedOutputValues
      * @returns
      */
     function factory(config) {
         const viewOnly = config.viewOnly || false;
-        const { workspaceId, initialParams, paramIds, availableFiles } = config;
+        const { workspaceId, initialParams, paramIds, availableFiles, unavailableFiles } = config;
         const runtime = Runtime.make(),
             // paramsBus is used to communicate from this parameter container to the parent that
             // created and owns it
@@ -128,9 +120,7 @@ define([
             bus = runtime.bus().makeChannelBus({
                 description: 'A file path widget',
             });
-        let container,
-            ui,
-            missingFiles = [];
+        let container, ui;
 
         function makeFieldWidget(rowId, inputWidget, appSpec, parameterSpec, value) {
             const fieldWidget = FieldWidget.make({
@@ -149,7 +139,7 @@ define([
                         display: filename,
                     };
                 }),
-                invalidValues: missingFiles,
+                invalidValues: unavailableFiles,
                 invalidError: 'file not found',
                 disabledValues: getAllSelectedFiles(),
             });
@@ -620,27 +610,27 @@ define([
             });
         }
 
-        function verifyFiles() {
-            const runtime = Runtime.make();
-            const stagingService = new StagingServiceClient({
-                root: runtime.config('services.staging_api_url.url'),
-                token: runtime.authToken(),
-            });
-            return Promise.resolve(stagingService.list()).then((data) => {
-                // turn data into a Set of files with the first path (the root, username)
-                // stripped, as those don't get used.
-                const serverFiles = new Set(
-                    JSON.parse(data).map((file) => {
-                        return file.path.slice(file.path.indexOf('/') + 1);
-                    })
-                );
+        // function verifyFiles() {
+        //     const runtime = Runtime.make();
+        //     const stagingService = new StagingServiceClient({
+        //         root: runtime.config('services.staging_api_url.url'),
+        //         token: runtime.authToken(),
+        //     });
+        //     return Promise.resolve(stagingService.list()).then((data) => {
+        //         // turn data into a Set of files with the first path (the root, username)
+        //         // stripped, as those don't get used.
+        //         const serverFiles = new Set(
+        //             JSON.parse(data).map((file) => {
+        //                 return file.path.slice(file.path.indexOf('/') + 1);
+        //             })
+        //         );
 
-                // we really just need the missing files - those in the given files array
-                // that don't exist in serverFiles. So filter out those that don't exist.
+        //         // we really just need the missing files - those in the given files array
+        //         // that don't exist in serverFiles. So filter out those that don't exist.
 
-                return availableFiles.filter((file) => !serverFiles.has(file));
-            });
-        }
+        //         return availableFiles.filter((file) => !serverFiles.has(file));
+        //     });
+        // }
 
         /**
          * Build the layout structure.
@@ -690,15 +680,11 @@ define([
             model.setItem('parameterSpecs', parameterSpecs);
             model.setItem('defaultParams', defaultParams);
             model.setItem('outputParamIds', outputParamIds);
-            return verifyFiles()
-                .then((missing) => {
-                    missingFiles = missing;
-                    return Promise.all(
-                        initialParams.map((paramRow) => {
-                            return addRow(paramRow);
-                        })
-                    );
+            return Promise.all(
+                initialParams.map((paramRow) => {
+                    return addRow(paramRow);
                 })
+            )
                 .then(() => {
                     // once all rows are set up and we have the data model
                     // disable all relevant files from each input widget.

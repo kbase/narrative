@@ -72,7 +72,11 @@ define(['bluebird', 'common/lang', 'common/sdk', 'widgets/appWidgets2/validators
          * structure
          */
         function validateModel(model) {
-            return validateParams(spec.parameters.layout, model);
+            const modModel = {};
+            for (const [id, value] of Object.entries(model)) {
+                modModel[id] = { value, options: {} };
+            }
+            return validateParams(spec.parameters.layout, modModel);
         }
 
         /**
@@ -86,8 +90,9 @@ define(['bluebird', 'common/lang', 'common/sdk', 'widgets/appWidgets2/validators
          * @param {array} paramIds - the array of parameter ids to validate
          * @param {object} values - an object where the key is the parameter id, and the value has
          *  both the value, and arbitrary options to be passed to the specific validator.
+         * @param {object} options
          */
-        function validateParams(paramIds, values, options) {
+        function validateParams(paramIds, values) {
             const validationMap = {};
             paramIds.forEach((id) => {
                 validationMap[id] = validationResolver.validate(

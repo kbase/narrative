@@ -9,7 +9,7 @@ define([
 ], (ConfigureTab, Jupyter, Runtime, Props, Spec, TestUtil, TestAppObject) => {
     'use strict';
 
-    fdescribe('test the bulk import cell configure tab', () => {
+    describe('test the bulk import cell configure tab', () => {
         const appId = 'kb_uploadmethods/import_fastq_sra_as_reads_from_staging',
             typesToFiles = {
                 fastq_reads: {
@@ -166,9 +166,15 @@ define([
                     typesToFiles
                 });
 
+                const paramErrorSelector = '[data-parameter="name"] .kb-field-cell__message_panel'
                 await configure.start({ node: container });
-                console.log(container.innerHTML);
-                expect(container.innerHTML).toContain('required');
+                await TestUtil.waitForElementState(
+                    container,
+                    () => {
+                        return !container.querySelector(paramErrorSelector).classList.contains('hidden');
+                    }
+                );
+                expect(container.querySelector(paramErrorSelector).innerHTML).toContain('required');
                 await configure.stop();
             });
 
@@ -198,14 +204,14 @@ define([
                 });
 
                 await configure.start({ node: container });
-
-                // await TestUtil.waitForElementState(
-                //     container,
-                //     () => {
-                //         container.querySelector('[data-parameter="')
-                //     },
-                // );
-                expect(container.innerHTML).toContain('file not found');
+                const paramErrorSelector = '[data-parameter="fastq_fwd_staging_file_name"] .kb-field-cell__message_panel'
+                await TestUtil.waitForElementState(
+                    container,
+                    () => {
+                        return !container.querySelector(paramErrorSelector).classList.contains('hidden');
+                    }
+                );
+                expect(container.querySelector(paramErrorSelector).innerHTML).toContain('file not found');
                 await configure.stop();
             });
         });

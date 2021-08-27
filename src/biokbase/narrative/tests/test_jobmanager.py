@@ -179,34 +179,34 @@ class JobManagerTest(unittest.TestCase):
         job_d = "job_d"
         self.assertEqual(
             self.jm._check_job_list([job_c]),
-            {
-                "error": [job_c],
-                "job_id_list": [],
-            },
+            (
+                [],
+                [job_c],
+            ),
         )
 
         self.assertEqual(
             self.jm._check_job_list([job_c, None, "", job_c, job_c, None, job_d]),
-            {
-                "error": [job_c, job_d],
-                "job_id_list": [],
-            },
+            (
+                [],
+                [job_c, job_d],
+            )
         )
 
         self.assertEqual(
             self.jm._check_job_list([job_c, None, "", None, job_a, job_a, job_a]),
-            {
-                "error": [job_c],
-                "job_id_list": [job_a],
-            },
+            (
+                [job_a],
+                [job_c],
+            ),
         )
 
         self.assertEqual(
             self.jm._check_job_list([None, job_a, None, "", None, job_b]),
-            {
-                "error": [],
-                "job_id_list": [job_a, job_b],
-            },
+            (
+                [job_a, job_b],
+                [],
+            ),
         )
 
     def test__construct_job_state_set__empty_list(self):
@@ -654,16 +654,13 @@ class JobManagerTest(unittest.TestCase):
             else:
                 raise Exception()
 
-        with mock.patch.object(
-            MockClients, "check_job", side_effect=mock_check_job
-        ) as m:
+        with mock.patch.object(MockClients, "check_job", side_effect=mock_check_job) as m:
             job_ids = self.jm.update_batch_job(BATCH_PARENT)
 
         m.assert_has_calls(
             [
                 mock.call({"job_id": BATCH_PARENT, "exclude_fields": EXCLUDED_JOB_STATE_FIELDS}),
                 mock.call({"job_id": JOB_NOT_FOUND, "exclude_fields": JOB_INIT_EXCLUDED_JOB_STATE_FIELDS}),
-                mock.call({"job_id": JOB_NOT_FOUND, "exclude_fields": EXCLUDED_JOB_STATE_FIELDS})
             ]
         )
 
@@ -671,10 +668,13 @@ class JobManagerTest(unittest.TestCase):
         self.assertCountEqual(new_child_ids, job_ids[1:])
 
         batch_job = self.jm.get_job(BATCH_PARENT)
-        reg_child_jobs = [self.jm.get_job(job_id) for job_id in batch_job.child_jobs]
+        reg_child_jobs = [self.jm.get_job(job_id) for job_id in batch_job._acc_state["child_jobs"]]
 
-        self.assertCountEqual(batch_job.child_jobs, new_child_ids)
         self.assertCountEqual(batch_job.children, reg_child_jobs)
+        self.assertCountEqual(batch_job._acc_state["child_jobs"], new_child_ids)
+
+        with mock.patch.object(MockClients, "check_job", side_effect=mock_check_job) as m:
+            self.assertCountEqual(batch_job.child_jobs, new_child_ids)
 
 
 if __name__ == "__main__":

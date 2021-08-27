@@ -175,35 +175,63 @@ def get_widget_info(job_id):
     }
 
 
-def get_test_job_states():
-    # generate full job state objects
-    job_states = {}
-    for job_id in TEST_JOBS.keys():
-        state = get_test_job(job_id)
-        job_input = state.get("job_input", {})
-        narr_cell_info = job_input.get("narrative_cell_info", {})
+def get_test_job_state(job_id):
+    state = get_test_job(job_id)
+    job_input = state.get("job_input", {})
+    narr_cell_info = job_input.get("narrative_cell_info", {})
 
-        state.update(
-            {
-                "batch_id": state.get(
-                    "batch_id", job_id if state.get("batch_job", False) else None
-                ),
-                "cell_id": narr_cell_info.get("cell_id", None),
-                "run_id": narr_cell_info.get("run_id", None),
-                "job_output": state.get("job_output", {}),
-                "child_jobs": state.get("child_jobs", []),
-            }
-        )
-        for f in EXCLUDED_JOB_STATE_FIELDS:
-            if f in state:
-                del state[f]
-        job_states[job_id] = {
-            "state": state,
-            "widget_info": get_widget_info(job_id),
-            "user": state.get("user"),
+    state.update(
+        {
+            "batch_id": state.get(
+                "batch_id", job_id if state.get("batch_job", False) else None
+            ),
+            "cell_id": narr_cell_info.get("cell_id", None),
+            "run_id": narr_cell_info.get("run_id", None),
+            "job_output": state.get("job_output", {}),
+            "child_jobs": state.get("child_jobs", []),
         }
+    )
+    for f in EXCLUDED_JOB_STATE_FIELDS:
+        if f in state:
+            del state[f]
+    output_state = {
+        "state": state,
+        "widget_info": get_widget_info(job_id),
+        "user": state.get("user"),
+    }
+    return output_state
 
-    return job_states
+
+def get_test_job_states(job_ids=TEST_JOBS.keys()):
+    # generate full job state objects
+    return {
+        job_id: get_test_job_state(job_id)
+        for job_id in job_ids
+    }
+
+
+@mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
+def get_batch_family_jobs(return_list=False):
+    """
+    As invoked in appmanager's run_app_bulk, i.e.,
+    with from_job_id(s)
+    """
+    child_jobs = Job.from_job_ids(BATCH_CHILDREN, return_list=True)
+    batch_job = Job.from_job_id(
+        BATCH_PARENT,
+        children=child_jobs
+    )
+
+    if return_list:
+        return [batch_job] + child_jobs
+    else:
+        return {
+            BATCH_PARENT: batch_job,
+            **{
+                child_id: child_job
+                for child_id, child_job in zip(BATCH_CHILDREN, child_jobs)
+            }
+        }
 
 
 class JobTest(unittest.TestCase):
@@ -232,29 +260,6 @@ class JobTest(unittest.TestCase):
         with mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client):
             SpecManager().reload()
 
-    @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
-    def _get_batch_family_jobs(self, return_list=False):
-        """
-        As invoked in appmanager's run_app_bulk, i.e.,
-        with from_job_id(s)
-        """
-        child_jobs = Job.from_job_ids(BATCH_CHILDREN, return_list=True)
-        batch_job = Job.from_job_id(
-            BATCH_PARENT,
-            children=child_jobs
-        )
-
-        if return_list:
-            return [batch_job] + child_jobs
-        else:
-            return {
-                BATCH_PARENT: batch_job,
-                **{
-                    child_id: child_job
-                    for child_id, child_job in zip(BATCH_CHILDREN, child_jobs)
-                }
-            }
-
     def check_jobs_equal(self, jobl, jobr):
         self.assertEqual(
             jobl._acc_state,
@@ -276,26 +281,33 @@ class JobTest(unittest.TestCase):
     def check_job_attrs_custom(self, job, exp_attr={}):
         attr = dict(JOB_ATTR_DEFAULTS)
         attr.update(exp_attr)
-        for name, value in attr.items():
-            self.assertEqual(value, getattr(job, name))
-
-    def check_job_attrs(self, job, job_id, exp_attrs={}):
-        # TODO check _acc_state full vs pruned, extra_data
-        state = create_state_from_ee2(job_id)
         with mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client):
-            self.assertEqual(
-                state,
-                job.state()
-            )
+            for name, value in attr.items():
+                self.assertEqual(value, getattr(job, name))
+
+    def check_job_attrs(self, job, job_id, exp_attrs={}, skip_state=False):
+        # TODO check _acc_state full vs pruned, extra_data
+
+        # Check state() if no special values expected
+        if not exp_attrs and not skip_state:
+            state = create_state_from_ee2(job_id)
+            with mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client):
+                self.assertEqual(
+                    state,
+                    job.state()
+                )
 
         attrs = create_attrs_from_ee2(job_id)
         attrs.update(exp_attrs)
 
-        for name, value in attrs.items():
-            self.assertEqual(
-                value,
-                getattr(job, name)
-            )
+        # Mock here because job.child_jobs and job.retry_ids can
+        # cause EE2 query
+        with mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client):
+            for name, value in attrs.items():
+                self.assertEqual(
+                    value,
+                    getattr(job, name)
+                )
 
     def test_job_init__error_no_job_id(self):
 
@@ -354,7 +366,7 @@ class JobTest(unittest.TestCase):
         """
         test job initialization, as is done by run_app_bulk
         """
-        batch_jobs = self._get_batch_family_jobs(return_list=False)
+        batch_jobs = get_batch_family_jobs(return_list=False)
 
         for job_id, job in batch_jobs.items():
             self.check_job_attrs(job, job_id)
@@ -685,12 +697,14 @@ class JobTest(unittest.TestCase):
             out = job.get_viewer_params(state)
             self.assertIsNone(out)
 
+    @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def test_get_viewer_params__finished(self):
         for job_id in FINISHED_JOBS:
             job = create_job_from_ee2(job_id)
             state = create_state_from_ee2(job_id)
-            out = job.get_viewer_params(state)
-            self.assertEqual(get_widget_info(job_id), out)
+            exp = get_widget_info(job_id)
+            got = job.get_viewer_params(state)
+            self.assertEqual(exp, got)
 
     def test_get_viewer_params__batch_parent(self):
         """
@@ -729,3 +743,62 @@ class JobTest(unittest.TestCase):
         for job_id, got in states.items():
             exp = create_state_from_ee2(job_id, exclude_fields=EXCLUDED_JOB_STATE_FIELDS)
             self.assertEqual(exp, got)
+
+    NEW_RETRY_IDS = ["hello", "goodbye"]
+    NEW_CHILD_JOBS = ["cerulean", "magenta"]
+
+    def test_refresh_attrs__non_batch_active(self):
+        """
+        retry_ids should be refreshed
+        """
+        job_id = JOB_CREATED
+        job = create_job_from_ee2(job_id)
+        self.check_job_attrs(job, job_id)
+
+        def mock_check_job(self_, params):
+            assert params["job_id"] == job_id
+            return {"retry_ids": self.NEW_RETRY_IDS}
+
+        with mock.patch.object(MockClients, "check_job", mock_check_job):
+            self.check_job_attrs(job, job_id, {"retry_ids": self.NEW_RETRY_IDS})
+
+    def test_refresh_attrs__non_batch_terminal(self):
+        """
+        retry_ids should be refreshed
+        """
+        job_id = JOB_TERMINATED
+        job = create_job_from_ee2(job_id)
+        self.check_job_attrs(job, job_id)
+
+        def mock_check_job(self_, params):
+            assert params["job_id"] == job_id
+            return {"retry_ids": self.NEW_RETRY_IDS}
+
+        with mock.patch.object(MockClients, "check_job", mock_check_job):
+            self.check_job_attrs(job, job_id, {"retry_ids": self.NEW_RETRY_IDS})
+
+    def test_refresh_attrs__non_batch__is_retry(self):
+        """
+        neither retry_ids/child_jobs should be refreshed
+        """
+        job_id = BATCH_RETRY_RUNNING
+        job = create_job_from_ee2(job_id)
+        self.check_job_attrs(job, job_id)
+
+        with assert_obj_method_called(MockClients, "check_job", call_status=False):
+            self.check_job_attrs(job, job_id, skip_state=True)
+
+    def test_refresh_attrs__batch(self):
+        """
+        child_jobs should be refreshed
+        """
+        job_id = BATCH_PARENT
+        job = get_batch_family_jobs()[job_id]
+        self.check_job_attrs(job, job_id)
+
+        def mock_check_job(self_, params):
+            assert params["job_id"] == job_id
+            return {"child_jobs": self.NEW_CHILD_JOBS}
+
+        with mock.patch.object(MockClients, "check_job", mock_check_job):
+            self.check_job_attrs(job, job_id, {"child_jobs": self.NEW_CHILD_JOBS})

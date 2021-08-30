@@ -1,41 +1,41 @@
 /* eslint-env browser */
 /**
  * Widget for Narrative Outline Panel
- * @author David Lton  <dlyon@lbl.gov>
+ * @author David Lyon  <dlyon@lbl.gov>
  * @public
  */
-define([
-    'jquery',
-    'base/js/namespace',
-    'kbwidget',
-    'kbaseNarrativeControlPanel'
-], (
+define(['jquery', 'base/js/namespace', 'kbwidget', 'kbaseNarrativeControlPanel'], (
     $,
     Jupyter,
     KBWidget,
-    ControlPanel,
+    ControlPanel
 ) => {
     'use strict';
     return new KBWidget({
         name: 'kbaseNarrativeOutlinePanel',
         parent: ControlPanel,
         version: '1.0.0',
-        options: {},
-        ws_name: null,
-        $mainPanel: null,
-        SHOW_ALL_HEADERS: false,
+        options: {
+            /** If true, all markdown H1-H3 will be outline items
+             * If false, only the first header will be an outline item */
+            showAllHeaders: false,
+            /** Header height for visibility & scroll functionality */
+            headerHeight: 80,
+            /** Refresh throttle rate in ms */
+            refreshRate: 100,
+        },
+
+        isActive: false,
+        body: undefined,
+        drawnState: '', // string representing the items drawn used to eliminate excess dom manipulation
 
         init: function (options) {
             this._super(options);
+            this.body = $(this.body());
 
-            this.$mainPanel = $('<div>').css({"padding":"0 1em 0 1em"}).appendTo(this.body());
-
-            // the string name of the workspace.
-            this.ws_name = Jupyter.narrative.getWorkspaceName();
-            
-            
             const refresh = this.refresh.bind(this);
-            // Trigger refresh
+            // Trigger refresh on the following events
+            $([Jupyter.events]).on('notebook_loaded.Notebook', refresh);
             $([Jupyter.events]).on('notebook_saved.Notebook', refresh);
             $([Jupyter.events]).on('notebook_renamed.Notebook', refresh);
             $([Jupyter.events]).on('command_mode.Notebook', refresh); // Clicking out of a cell
@@ -43,145 +43,163 @@ define([
             $([Jupyter.events]).on('delete.Cell', refresh);
             $([Jupyter.events]).on('select.Cell', refresh); // Triggers on cell move
             $('#notebook-container').scroll(refresh);
-            
 
-            // doesn't need a title, so just hide it to avoid padding.
-            // yes, it's a hack. mea culpa.
+            // Hide panel header
             this.$elem.find('.kb-title').hide();
+
             return this;
         },
 
         activate: function () {
-            this.refresh();
+            // Render when the panel is activated
+            this.renderOutline();
+            this.isActive = true;
+        },
+
+        deactivate: function () {
+            this.isActive = false;
         },
 
         refresh: function () {
-            if (this.refresh_timeout) return;
+            if (this.refresh_timeout || !this.isActive) return;
             this.refresh_timeout = setTimeout(() => {
                 this.refresh_timeout = undefined;
-                this.doRefresh();
-            }, 100);
+                this.renderOutline();
+            }, this.options.refreshRate);
         },
 
-        doRefresh: function () {
+        renderOutline: function () {
             // Extract Outline Items and their depth from notebook cells
             const outline_items = [];
             Jupyter.notebook.get_cells().forEach((cell) => {
                 // Find any headers in the cell
                 let inner_headers = cell.element[0].querySelectorAll('h1, h2, h3');
-
+                // Differentiate between cell types for creating items
                 if (cell.cell_type === 'markdown' && inner_headers.length !== 0) {
-                    if (!this.SHOW_ALL_HEADERS) inner_headers  = [inner_headers[0]];
-                    const md_items = Array.from(inner_headers).map((h,i)=>({
+                    // Create header items for markdown cell
+                    if (!this.options.showAllHeaders) inner_headers = [inner_headers[0]];
+                    const md_items = Array.from(inner_headers).map((h, i) => ({
                         title: h.innerText,
                         depth: parseInt(h.nodeName[1]),
-                        element: h,
-                        in_view: this.elementInView(cell.element[0]),
+                        element: i === 0 ? cell.element[0] : h,
+                        in_view: this.cellInView(cell.element[0]),
                         selected: cell.selected,
-                        icon: i===0?cell.getIcon():''
+                        icon: i === 0 ? cell.getIcon() : '',
                     }));
-                    Array.prototype.push.apply(outline_items, md_items)
+                    Array.prototype.push.apply(outline_items, md_items);
                 } else {
+                    // Create cell items for any other cell type
                     outline_items.push({
-                        depth: 4,
                         title: cell.metadata.kbase.attributes.title || 'Untitled Cell',
+                        depth: 4,
                         element: cell.element[0],
-                        in_view: this.elementInView(cell.element[0]),
+                        in_view: this.cellInView(cell.element[0]),
                         selected: cell.selected,
-                        icon: cell.getIcon()
-                    })
-                }               
+                        icon: cell.getIcon(),
+                    });
+                }
             });
 
-            // Create the outline root node
-            const $outline = $('<div>').addClass('kb-narr-outline');
-            const root_node = {content:$outline, children:[], depth:0};
+            const stateStr = outline_items.reduce((stateStr, item) => {
+                return stateStr + '|' + [item.depth, item.title, item.icon].join('|');
+            }, '');
 
-            // Use a stack to nest the outline nodes based on item depth
-            const stack = [root_node];
-            outline_items.forEach((item) => {
-                while (stack[stack.length-1].depth >= item.depth) {
-                    stack.pop();
-                }
-                const node = {
-                    item:item,
-                    children: [],
-                    depth: item.depth,
-                }
-                stack[stack.length-1].children.push(node);
-                stack.push(node);
-            });
+            if (stateStr !== this.drawnState) {
+                // Create root nested outline node
+                const root_node = { content: null, children: [], depth: 0 };
+                // Use a stack to nest outline nodes based on item depth
+                const stack = [root_node];
+                outline_items.forEach((item) => {
+                    while (stack[stack.length - 1].depth >= item.depth) {
+                        stack.pop();
+                    }
+                    const node = {
+                        item: item,
+                        children: [],
+                        depth: item.depth,
+                    };
+                    stack[stack.length - 1].children.push(node);
+                    stack.push(node);
+                });
 
-            // Render the outline tree
-            this.renderOutlineNode(root_node);
-            // Mount the outline tree
-            this.$mainPanel.empty();
-            this.$mainPanel.append(
-                $('<h5>').css({
-                    "color": "#006698",
-                    "font-weight": "bold",
-                    "font-size": "15px"
-                }).text(Jupyter.notebook.metadata.name)
-            ).append($outline);
-        },
-
-        elementInView: function (el) {
-            const box = el.getBoundingClientRect();
-            const header_height = 80;
-            const window_height = $(window).height();
-            if ( // Fully visible or spanning the screen
-                box.top <= header_height && box.bottom >= window_height ||
-                box.top >= header_height && box.bottom <= window_height
-            ) {
-                return true;
-            } else if ( // Partially visible at either top or bottom
-                box.top >= header_height && box.top <= window_height ||
-                box.bottom >= header_height && box.bottom <= window_height
-            ){
-                return true;
+                // Render the outline tree
+                this.body.empty();
+                this.body.append(
+                    $('<div>').addClass('kb-narr-outline').append(this.renderOutlineNode(root_node))
+                );
+                this.drawnState = stateStr;
             }
-            return false
+
+            // Highlight Items
+            this.body.find('.kb-narr-outline__item').each(function (i) {
+                const item = outline_items[i];
+                $(this).toggleClass('kb-narr-outline__item--highlight', item.in_view);
+                $(this).toggleClass('kb-narr-outline__item--highlight-selected', item.selected);
+            });
         },
 
+        /** Render a nested outline node and its children recursively */
         renderOutlineNode: function (node) {
-            if(!node.content){
-                node.content = $('<div>').addClass('kb-narr-outline__item')
+            // If not the root node, create the item
+            if (node.depth !== 0) {
+                node.content = $('<div>')
+                    .addClass('kb-narr-outline__item')
                     .append(
-                        $('<span>').addClass('kb-narr-outline__item-icon-wrapper')
-                            .append(
-                                $(node.item.icon).addClass('kb-narr-outline__item-icon')
-                            )
+                        $('<span>')
+                            .addClass('kb-narr-outline__item-icon-wrapper')
+                            .append($(node.item.icon).addClass('kb-narr-outline__item-icon'))
                     )
                     .append(
-                        $('<a>').text(node.item.title).attr('href', '#')
+                        $('<a>')
+                            .text(node.item.title)
+                            .attr('href', '#')
                             .addClass('kb-narr-outline__item-content')
-                            .click(() => {
-                                const nb = $("#notebook-container");
-                                const scroll_to = nb.scrollTop() + $(node.item.element).offset().top;
-                                nb.get(0).scrollTo({
-                                    top: scroll_to - 80, // scroll further to account for header
-                                    behavior:"smooth",
-                                })
-                                node.item.element.click(); // select the cell
-                            })
+                            .click(() => this.scrollToItem(node.item))
                     );
+            }
 
-                if(node.item.in_view || node.item.selected){
-                    node.content.addClass('kb-narr-outline__highlight');
-                    if(node.item.selected){
-                        node.content.addClass('kb-narr-outline__highlight--selected');
-                    } 
-                } 
-            }
-            const ul = $('<ul>');
+            // Render the children
+            const children = $('<ul>');
             node.children.forEach((child) => {
-                ul.append(  this.renderOutlineNode(child) ); 
+                children.append(this.renderOutlineNode(child));
             });
-            if(node.depth === 0) {
-                return node.content.append(ul);
+
+            if (node.depth === 0) {
+                return children;
             } else {
-                return $('<li>').append(node.content).append(ul);
+                return $('<li>').append(node.content).append(children);
             }
-        }
+        },
+
+        scrollToItem: function (item) {
+            const nb = $('#notebook-container');
+            const scroll_to = nb.scrollTop() + $(item.element).offset().top;
+            nb.get(0).scrollTo({
+                // scroll further down to account for header
+                top: scroll_to - this.options.headerHeight,
+                behavior: 'smooth',
+            });
+            item.element.click(); // select the cell
+        },
+
+        cellInView: function (el) {
+            const box = el.getBoundingClientRect();
+            const headerHeight = this.options.headerHeight;
+            const windowHeight = $(window).height();
+            if (
+                // Fully visible or spanning the screen
+                (box.top <= headerHeight && box.bottom >= windowHeight) ||
+                (box.top >= headerHeight && box.bottom <= windowHeight)
+            ) {
+                return true;
+            } else if (
+                // Partially visible at either top or bottom
+                (box.top >= headerHeight && box.top <= windowHeight) ||
+                (box.bottom >= headerHeight && box.bottom <= windowHeight)
+            ) {
+                return true;
+            }
+            return false;
+        },
     });
 });

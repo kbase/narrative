@@ -161,6 +161,14 @@ class Job(object):
             .get("narrative_cell_info", {})
             .get("cell_id", JOB_ATTR_DEFAULTS["cell_id"]),
             child_jobs=lambda: copy.deepcopy(
+                # TODO
+                # Only batch container jobs have a child_jobs field
+                # and need the state refresh.
+                # But KBParallel/KB Batch App jobs may not have the
+                # batch_job field
+                self.state(force_refresh=True)
+                .get("child_jobs", JOB_ATTR_DEFAULTS["child_jobs"])
+                if self.batch_job else
                 self._acc_state.get("child_jobs", JOB_ATTR_DEFAULTS["child_jobs"])
             ),
             job_id=lambda: self._acc_state.get("job_id"),
@@ -169,8 +177,13 @@ class Job(object):
                     "params", JOB_ATTR_DEFAULTS["params"]
                 )
             ),
-            retry_ids=lambda: self._acc_state.get(
-                "retry_ids", JOB_ATTR_DEFAULTS["retry_ids"]
+            retry_ids=lambda: copy.deepcopy(
+                # Batch container and retry parent jobs don't have a
+                # retry_ids field so skip the state refresh
+                self._acc_state.get("retry_ids", JOB_ATTR_DEFAULTS["retry_ids"])
+                if self.batch_job or self.retry_parent else
+                self.state(force_refresh=True)
+                .get("retry_ids", JOB_ATTR_DEFAULTS["retry_ids"])
             ),
             retry_parent=lambda: self._acc_state.get(
                 "retry_parent", JOB_ATTR_DEFAULTS["retry_parent"]
@@ -225,7 +238,6 @@ class Job(object):
     def final_state(self):
         if self.was_terminal is True:
             return self.state()
-        # refresh?
         return None
 
     def info(self):
@@ -300,14 +312,14 @@ class Job(object):
         Queries the job service to see the state of the current job.
         """
 
-        if self.was_terminal and not force_refresh:
+        if not force_refresh and self.was_terminal:
             state = copy.deepcopy(self._acc_state)
         else:
-            state = self.query_ee2_state(self.job_id, False)
+            state = self.query_ee2_state(self.job_id, init=False)
             state = self.update_state(state)
 
-        for field in EXCLUDED_JOB_STATE_FIELDS:
-            if field in state and field != "job_input":
+        for field in JOB_INIT_EXCLUDED_JOB_STATE_FIELDS:
+            if field in state:
                 del state[field]
 
         return state
@@ -596,7 +608,7 @@ class Job(object):
             )
 
         inst_child_ids = [job.job_id for job in children]
-        if sorted(inst_child_ids) != sorted(self.child_jobs):
+        if sorted(inst_child_ids) != sorted(self._acc_state.get("child_jobs")):
             raise ValueError("Child job id mismatch")
 
     def update_children(self, children: List["Job"]) -> None:

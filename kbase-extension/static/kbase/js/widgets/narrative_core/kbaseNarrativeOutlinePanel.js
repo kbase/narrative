@@ -42,6 +42,7 @@ define([
             $([Jupyter.events]).on('create.Cell', refresh);
             $([Jupyter.events]).on('delete.Cell', refresh);
             $([Jupyter.events]).on('select.Cell', refresh); // Triggers on cell move
+            $('#notebook-container').scroll(refresh);
             
 
             // doesn't need a title, so just hide it to avoid padding.
@@ -55,8 +56,9 @@ define([
         },
 
         refresh: function () {
-            clearTimeout(this.refresh_timeout);
+            if (this.refresh_timeout) return;
             this.refresh_timeout = setTimeout(() => {
+                this.refresh_timeout = undefined;
                 this.doRefresh();
             }, 100);
         },
@@ -74,6 +76,8 @@ define([
                         title: h.innerText,
                         depth: parseInt(h.nodeName[1]),
                         element: h,
+                        in_view: this.elementInView(cell.element[0]),
+                        selected: cell.selected,
                         icon: i===0?cell.getIcon():''
                     }));
                     Array.prototype.push.apply(outline_items, md_items)
@@ -82,6 +86,8 @@ define([
                         depth: 4,
                         title: cell.metadata.kbase.attributes.title || 'Untitled Cell',
                         element: cell.element[0],
+                        in_view: this.elementInView(cell.element[0]),
+                        selected: cell.selected,
                         icon: cell.getIcon()
                     })
                 }               
@@ -119,6 +125,24 @@ define([
             ).append($outline);
         },
 
+        elementInView: function (el) {
+            const box = el.getBoundingClientRect();
+            const header_height = 80;
+            const window_height = $(window).height();
+            if ( // Fully visible or spanning the screen
+                box.top <= header_height && box.bottom >= window_height ||
+                box.top >= header_height && box.bottom <= window_height
+            ) {
+                return true;
+            } else if ( // Partially visible at either top or bottom
+                box.top >= header_height && box.top <= window_height ||
+                box.bottom >= header_height && box.bottom <= window_height
+            ){
+                return true;
+            }
+            return false
+        },
+
         renderOutlineNode: function (node) {
             if(!node.content){
                 node.content = $('<div>').addClass('kb-narr-outline__item')
@@ -132,10 +156,22 @@ define([
                         $('<a>').text(node.item.title).attr('href', '#')
                             .addClass('kb-narr-outline__item-content')
                             .click(() => {
-                                node.item.element.scrollIntoView({behavior:"smooth"});
-                                node.item.element.click();
+                                const nb = $("#notebook-container");
+                                const scroll_to = nb.scrollTop() + $(node.item.element).offset().top;
+                                nb.get(0).scrollTo({
+                                    top: scroll_to - 80, // scroll further to account for header
+                                    behavior:"smooth",
+                                })
+                                node.item.element.click(); // select the cell
                             })
                     );
+
+                if(node.item.in_view || node.item.selected){
+                    node.content.addClass('kb-narr-outline__highlight');
+                    if(node.item.selected){
+                        node.content.addClass('kb-narr-outline__highlight--selected');
+                    } 
+                } 
             }
             const ul = $('<ul>');
             node.children.forEach((child) => {

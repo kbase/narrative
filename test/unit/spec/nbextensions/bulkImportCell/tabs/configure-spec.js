@@ -105,7 +105,9 @@ define([
             it(`should start in ${testCase.label} mode`, () => {
                 const model = Props.make({
                     data: Object.assign({}, TestAppObject, { state: initialState }),
-                    onUpdate: () => {},
+                    onUpdate: () => {
+                        /* intentionally left blank */
+                    },
                 });
                 const configure = testCase.widget.make({
                     bus,
@@ -134,7 +136,9 @@ define([
         it('should stop itself and empty the node it was in', () => {
             const model = Props.make({
                 data: Object.assign({}, TestAppObject, { state: initialState }),
-                onUpdate: () => {},
+                onUpdate: () => {
+                    /* intentionally left blank */
+                },
             });
             const configure = ConfigureTab.make({
                 bus,
@@ -158,13 +162,22 @@ define([
         });
 
         describe('validation tests', () => {
+            async function expectErrorMessage(selector, error) {
+                await TestUtil.waitForElementState(container, () => {
+                    return !container.querySelector(selector).classList.contains('hidden');
+                });
+                expect(container.querySelector(selector).innerHTML).toContain(error);
+            }
+
             it('should start with invalid inputs and show errors', async () => {
                 const modelData = Object.assign({}, TestAppObject, { state: initialState });
                 modelData.params.fastq_reads.filePaths[0].name = null;
 
                 const model = Props.make({
                     data: modelData,
-                    onUpdate: () => {},
+                    onUpdate: () => {
+                        /* intentionally left blank */
+                    },
                 });
 
                 const configure = ConfigureTab.make({
@@ -176,12 +189,7 @@ define([
 
                 const paramErrorSelector = '[data-parameter="name"] .kb-field-cell__message_panel';
                 await configure.start({ node: container });
-                await TestUtil.waitForElementState(container, () => {
-                    return !container
-                        .querySelector(paramErrorSelector)
-                        .classList.contains('hidden');
-                });
-                expect(container.querySelector(paramErrorSelector).innerHTML).toContain('required');
+                await expectErrorMessage(paramErrorSelector, 'required');
                 await configure.stop();
             });
 
@@ -200,7 +208,9 @@ define([
 
                 const model = Props.make({
                     data: modelData,
-                    onUpdate: () => {},
+                    onUpdate: () => {
+                        /* intentionally left blank */
+                    },
                 });
 
                 const configure = ConfigureTab.make({
@@ -210,17 +220,10 @@ define([
                     typesToFiles,
                 });
 
-                await configure.start({ node: container });
                 const paramErrorSelector =
                     '[data-parameter="fastq_fwd_staging_file_name"] .kb-field-cell__message_panel';
-                await TestUtil.waitForElementState(container, () => {
-                    return !container
-                        .querySelector(paramErrorSelector)
-                        .classList.contains('hidden');
-                });
-                expect(container.querySelector(paramErrorSelector).innerHTML).toContain(
-                    'file not found'
-                );
+                await configure.start({ node: container });
+                await expectErrorMessage(paramErrorSelector, 'file not found');
                 await configure.stop();
             });
         });
@@ -249,7 +252,9 @@ define([
                 });
                 this._model = Props.make({
                     data: modelData,
-                    onUpdate: () => {},
+                    onUpdate: () => {
+                        /* intentionally left blank */
+                    },
                 });
                 this._typesToFiles = {
                     dataType1: {

@@ -421,8 +421,13 @@ define([
         }
 
         /**
+         * Gets the collection of file path parameter validation options. This is returned as
+         * an Array of objects, one for each file path row. Each object has a key for each
+         * file path id, and value is the options for that input.
          *
-         * @returns
+         * Currently this only sets the invalidValues option for text validation. I.e., the
+         * files that are not available.
+         * @returns a list of file path options for each file input row.
          */
         function getFilePathOptionsForValidation() {
             let fpIds = model.getItem(['app', 'fileParamIds', selectedFileType]);
@@ -434,17 +439,16 @@ define([
             // outIds = file output ids
             // fpVals = Array of KVPs with id (either fpIds or outIds) -> value
 
-            const fpOptions = fpVals.map((filePath) => {
-                const options = {};
+            return fpVals.map((filePath) => {
+                const fpOptions = {};
                 for (const id of Object.keys(filePath)) {
-                    options[id] = {};
+                    fpOptions[id] = {};
                     if (fpIds.includes(id)) {
-                        options[id].invalidValues = unavailableFiles;
+                        fpOptions[id].invalidValues = unavailableFiles;
                     }
                 }
-                return options;
+                return fpOptions;
             });
-            return fpOptions;
         }
 
         /**

@@ -33,7 +33,8 @@ define([
      *  - unavailableFiles - Set of strings, for files that the cell thinks are available, but
      *      are no longer available through the staging service
      *  - viewOnly - boolean, if true start with the view version of input widgets
-     *  - unselectedOutputValues
+     *  - unselectedOutputValues - the set of output values from the other file types, rather
+     *      than this one.
      * @returns
      */
     function factory(config) {

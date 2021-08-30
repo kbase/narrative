@@ -204,8 +204,10 @@ $tab-widget-padding: 4px;
       border-color: use_color('error');
     }
 
-    .select2-container--default .select2-selection--single .select2-selection__placeholder {
-      color: use_color('error');
+    .select2-container--default .select2-selection--single {
+      .select2-selection__placeholder, .select2-selection__rendered {
+        color: use_color('error');
+      }
     }
   }
 

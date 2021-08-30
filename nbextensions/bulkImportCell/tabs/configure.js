@@ -43,6 +43,7 @@ define([
             paramsWidget,
             fileTypePanel,
             selectedFileType = model.getItem('state.selectedFileType'),
+            unavailableFiles,
             ui;
 
         const fileTypesDisplay = {},
@@ -63,18 +64,21 @@ define([
          * @param {object} args
          */
         function start(args) {
-            return Promise.try(() => {
-                container = args.node;
-                ui = UI.make({ node: container });
+            return Util.getMissingFiles(model.getItem(['inputs', selectedFileType, 'files'])).then(
+                (missingFiles) => {
+                    unavailableFiles = new Set(missingFiles);
+                    container = args.node;
+                    ui = UI.make({ node: container });
 
-                const layout = renderLayout();
-                container.innerHTML = layout;
+                    const layout = renderLayout();
+                    container.innerHTML = layout;
 
-                const fileTypeNode = ui.getElement('filetype-panel');
-                const initPromises = [buildFileTypePanel(fileTypeNode), startInputWidgets()];
+                    const fileTypeNode = ui.getElement('filetype-panel');
+                    const initPromises = [buildFileTypePanel(fileTypeNode), startInputWidgets()];
 
-                return Promise.all(initPromises);
-            });
+                    return Promise.all(initPromises);
+                }
+            );
         }
 
         /**
@@ -313,12 +317,14 @@ define([
              * 3. Pass those along to the filepathwidget
              */
             // this is an array of parameter ids from the current spec.
+
             const widget = FilePathWidget.make({
                 bus: paramBus,
                 workspaceId: runtime.workspaceId(),
                 paramIds: model.getItem(['app', 'fileParamIds', selectedFileType]),
                 initialParams: model.getItem(['params', selectedFileType, FILE_PATH_TYPE]),
                 availableFiles: model.getItem(['inputs', selectedFileType, 'files']),
+                unavailableFiles,
                 viewOnly,
                 unselectedOutputValues: getUnselectedOutputValues(),
             });
@@ -415,6 +421,37 @@ define([
         }
 
         /**
+         * Gets the collection of file path parameter validation options. This is returned as
+         * an Array of objects, one for each file path row. Each object has a key for each
+         * file path id, and value is the options for that input.
+         *
+         * Currently this only sets the invalidValues option for text validation. I.e., the
+         * files that are not available.
+         * @returns a list of file path options for each file input row.
+         */
+        function getFilePathOptionsForValidation() {
+            let fpIds = model.getItem(['app', 'fileParamIds', selectedFileType]);
+            const outIds = model.getItem(['app', 'outputParamIds', selectedFileType]);
+            fpIds = fpIds.filter((id) => !outIds.includes(id));
+            const fpVals = model.getItem(['params', selectedFileType, FILE_PATH_TYPE]);
+
+            // fpIds = file input ids
+            // outIds = file output ids
+            // fpVals = Array of KVPs with id (either fpIds or outIds) -> value
+
+            return fpVals.map((filePath) => {
+                const fpOptions = {};
+                for (const id of Object.keys(filePath)) {
+                    fpOptions[id] = {};
+                    if (fpIds.includes(id)) {
+                        fpOptions[id].invalidValues = unavailableFiles;
+                    }
+                }
+                return fpOptions;
+            });
+        }
+
+        /**
          * Updates the configuration state for the currently loaded app. If the state has
          * changed from what's in the current model, this updates it and sends a message
          * up the cellBus.
@@ -436,8 +473,10 @@ define([
                 return Util.evaluateAppConfig(
                     paramIds,
                     paramValues,
+                    {},
                     filePathIds,
                     filePathValues,
+                    getFilePathOptionsForValidation(),
                     spec
                 );
             }).then((state) => {

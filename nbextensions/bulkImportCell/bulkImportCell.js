@@ -10,9 +10,7 @@ define([
     'common/runtime',
     'common/spec',
     'common/ui',
-    'common/unodep',
     'common/utils',
-    './util',
     'common/pythonInterop',
     'base/js/namespace',
     'kb_service/client/workspace',
@@ -37,9 +35,7 @@ define([
     Runtime,
     Spec,
     UI,
-    SimpleUtil,
     Utils,
-    BulkImportUtil,
     PythonInterop,
     Jupyter,
     Workspace,
@@ -602,54 +598,34 @@ define([
             const meta = cell.metadata;
             meta.kbase.attributes.lastLoaded = new Date().toUTCString();
             cell.metadata = meta;
-            render()
-                .then(() => {
-                    // add in the control panel so we can update the job status in the cell header
-                    jobManager.addHandler('modelUpdate', {
-                        controlPanel: (jobManagerContext) => {
-                            // Update the execMessage panel with details of the active jobs
-                            controlPanel.setExecMessage(
-                                Jobs.createCombinedJobState(
-                                    jobManagerContext.model.getItem('exec.jobs.byStatus')
-                                )
-                            );
-                        },
-                        fsmState: (jobManagerContext) => {
-                            const fsmState = Jobs.getFsmStateFromJobs(
+            render().then(() => {
+                // add in the control panel so we can update the job status in the cell header
+                jobManager.addHandler('modelUpdate', {
+                    controlPanel: (jobManagerContext) => {
+                        // Update the execMessage panel with details of the active jobs
+                        controlPanel.setExecMessage(
+                            Jobs.createCombinedJobState(
                                 jobManagerContext.model.getItem('exec.jobs.byStatus')
-                            );
-                            if (fsmState) {
-                                updateState(fsmState);
-                            }
-                        },
-                    });
-
-                    // TODO: assess cell state, update job info if required
-                    // jobManager.restorefromSaved()
-
-                    return BulkImportUtil.evaluateConfigReadyState(model, specs);
-                })
-                .then((appReadyState) => {
-                    const curState = model.getItem('state');
-                    const curReadyState = curState.params;
-                    const updatedReadyState = !SimpleUtil.isEqual(appReadyState, curReadyState);
-
-                    if (updatedReadyState) {
-                        model.setItem(['state', 'params'], appReadyState);
-                    }
-                    if (
-                        updatedReadyState &&
-                        ['editingComplete', 'editingIncomplete'].includes(curState.state)
-                    ) {
-                        updateEditingState();
-                    } else {
-                        updateState();
-                    }
-                    cell.renderMinMax();
-                    // // force toolbar refresh
-                    // // eslint-disable-next-line no-self-assign
-                    runTab(state.tab.selected);
+                            )
+                        );
+                    },
+                    fsmState: (jobManagerContext) => {
+                        const fsmState = Jobs.getFsmStateFromJobs(
+                            jobManagerContext.model.getItem('exec.jobs.byStatus')
+                        );
+                        if (fsmState) {
+                            updateState(fsmState);
+                        }
+                    },
                 });
+
+                // TODO: assess cell state, update job info if required
+                // jobManager.restorefromSaved()
+
+                updateState();
+                cell.renderMinMax();
+                runTab(state.tab.selected);
+            });
         }
 
         function getWorkspaceClient() {

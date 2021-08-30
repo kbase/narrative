@@ -30,18 +30,21 @@ define([
      *  - initialParams - Array of objects. Each item represents a row of parameter values.
      *    So each item has an object with parameter id -> value
      *  - availableFiles - Array of strings, one for each file that should be available here.
+     *  - unavailableFiles - Set of strings, for files that the cell thinks are available, but
+     *      are no longer available through the staging service
      *  - viewOnly - boolean, if true start with the view version of input widgets
+     *  - unselectedOutputValues - the set of output values from the other file types, rather
+     *      than this one.
      * @returns
      */
     function factory(config) {
         const viewOnly = config.viewOnly || false;
-        const { workspaceId, initialParams, paramIds } = config;
+        const { workspaceId, initialParams, paramIds, availableFiles, unavailableFiles } = config;
         const runtime = Runtime.make(),
             // paramsBus is used to communicate from this parameter container to the parent that
             // created and owns it
             paramsBus = config.bus,
             model = Props.make(),
-            availableFiles = config.availableFiles,
             otherTabOutputValues = config.unselectedOutputValues,
             /**
              * Internal data model
@@ -137,6 +140,8 @@ define([
                         display: filename,
                     };
                 }),
+                invalidValues: unavailableFiles,
+                invalidError: 'file not found',
                 disabledValues: getAllSelectedFiles(),
             });
 

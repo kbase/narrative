@@ -20,7 +20,8 @@ define([
             appSpec = Spec.make({
                 appSpec: TestAppObject.app.specs[appId],
             }),
-            specs = {};
+            specs = {},
+            fakeUser = 'aFakeUser';
         let bus, container, initialState, runtime;
 
         beforeAll(() => {
@@ -32,6 +33,36 @@ define([
 
         beforeEach(() => {
             runtime = Runtime.make();
+            const stagingServiceUrl = runtime.config('services.staging_api_url.url');
+            jasmine.Ajax.install();
+            // lifted from the used files in this test spec
+            const allFakeFiles = [
+                'file1.txt',
+                'file1',
+                'file2',
+                'file3',
+                'file4',
+                'fastq_fwd_1',
+                'fastq_fwd_2',
+            ];
+            const fakeStagingResponse = allFakeFiles.map((fileName) => {
+                return {
+                    name: fileName,
+                    path: fakeUser + '/' + fileName,
+                    mtime: 1532738637499,
+                    size: 34,
+                    isFolder: false,
+                };
+            });
+
+            jasmine.Ajax.stubRequest(new RegExp(`${stagingServiceUrl}/list/`)).andReturn({
+                status: 200,
+                statusText: 'success',
+                contentType: 'text/plain',
+                responseHeaders: '',
+                responseText: JSON.stringify(fakeStagingResponse),
+            });
+
             bus = runtime.bus();
             container = document.createElement('div');
             initialState = {
@@ -44,6 +75,7 @@ define([
         });
 
         afterEach(() => {
+            jasmine.Ajax.uninstall();
             container.remove();
             runtime.destroy();
         });
@@ -73,7 +105,9 @@ define([
             it(`should start in ${testCase.label} mode`, () => {
                 const model = Props.make({
                     data: Object.assign({}, TestAppObject, { state: initialState }),
-                    onUpdate: () => {},
+                    onUpdate: () => {
+                        /* intentionally left blank */
+                    },
                 });
                 const configure = testCase.widget.make({
                     bus,
@@ -102,7 +136,9 @@ define([
         it('should stop itself and empty the node it was in', () => {
             const model = Props.make({
                 data: Object.assign({}, TestAppObject, { state: initialState }),
-                onUpdate: () => {},
+                onUpdate: () => {
+                    /* intentionally left blank */
+                },
             });
             const configure = ConfigureTab.make({
                 bus,
@@ -123,6 +159,73 @@ define([
                 .then(() => {
                     expect(container.innerHTML).toEqual('');
                 });
+        });
+
+        describe('validation tests', () => {
+            async function expectErrorMessage(selector, error) {
+                await TestUtil.waitForElementState(container, () => {
+                    return !container.querySelector(selector).classList.contains('hidden');
+                });
+                expect(container.querySelector(selector).innerHTML).toContain(error);
+            }
+
+            it('should start with invalid inputs and show errors', async () => {
+                const modelData = Object.assign({}, TestAppObject, { state: initialState });
+                modelData.params.fastq_reads.filePaths[0].name = null;
+
+                const model = Props.make({
+                    data: modelData,
+                    onUpdate: () => {
+                        /* intentionally left blank */
+                    },
+                });
+
+                const configure = ConfigureTab.make({
+                    bus,
+                    model,
+                    specs,
+                    typesToFiles,
+                });
+
+                const paramErrorSelector = '[data-parameter="name"] .kb-field-cell__message_panel';
+                await configure.start({ node: container });
+                await expectErrorMessage(paramErrorSelector, 'required');
+                await configure.stop();
+            });
+
+            it('should start with missing files and show errors', async () => {
+                const stagingServiceUrl = runtime.config('services.staging_api_url.url');
+                jasmine.Ajax.stubRequest(new RegExp(`${stagingServiceUrl}/list/`)).andReturn({
+                    status: 200,
+                    statusText: 'success',
+                    contentType: 'text/plain',
+                    responseHeaders: '',
+                    responseText: JSON.stringify([]),
+                });
+
+                const modelData = Object.assign({}, TestAppObject, { state: initialState });
+                modelData.params.fastq_reads.filePaths[0].fastq_fwd_staging_file_name = 'file1.txt';
+
+                const model = Props.make({
+                    data: modelData,
+                    onUpdate: () => {
+                        /* intentionally left blank */
+                    },
+                });
+
+                const configure = ConfigureTab.make({
+                    bus,
+                    model,
+                    specs,
+                    typesToFiles,
+                });
+
+                const paramErrorSelector =
+                    '[data-parameter="fastq_fwd_staging_file_name"] .kb-field-cell__message_panel';
+                await configure.start({ node: container });
+                await expectErrorMessage(paramErrorSelector, 'file not found');
+                await configure.stop();
+            });
         });
 
         describe('multi-data-type tests', () => {
@@ -149,7 +252,9 @@ define([
                 });
                 this._model = Props.make({
                     data: modelData,
-                    onUpdate: () => {},
+                    onUpdate: () => {
+                        /* intentionally left blank */
+                    },
                 });
                 this._typesToFiles = {
                     dataType1: {

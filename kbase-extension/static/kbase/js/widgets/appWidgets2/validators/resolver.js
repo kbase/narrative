@@ -15,14 +15,14 @@ define(['require', 'bluebird'], (require, Promise) => {
         dynamicDropdown: 'dynamicDropdown',
     };
 
-    function validate(fieldValue, fieldSpec) {
+    function validate(fieldValue, fieldSpec, options) {
         return new Promise((resolve, reject) => {
             const fieldType = fieldSpec.data.type;
             if (!(fieldType in typeToValidatorModule)) {
                 reject(new Error(`No validator for type: ${fieldType}`));
             }
             require(['./' + typeToValidatorModule[fieldType]], (validator) => {
-                resolve(validator.validate(fieldValue, fieldSpec));
+                resolve(validator.validate(fieldValue, fieldSpec, options));
             }, (err) => {
                 reject(err);
             });

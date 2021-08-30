@@ -1,4 +1,6 @@
 define(['bluebird', './common'], (Promise, common) => {
+    'use strict';
+
     function importString(value) {
         if (value === undefined || value === null) {
             return null;
@@ -6,13 +8,14 @@ define(['bluebird', './common'], (Promise, common) => {
         return value;
     }
 
-    function applyConstraints(value, constraints) {
+    function applyConstraints(value, constraints, options) {
         let parsedValue,
             errorMessage,
             diagnosis = 'valid',
-            minLength = constraints.min_length,
-            maxLength = constraints.max_length,
             regexps;
+
+        const minLength = constraints.min_length,
+            maxLength = constraints.max_length;
 
         if (constraints.regexp) {
             regexps = constraints.regexp.map((item) => {
@@ -36,6 +39,9 @@ define(['bluebird', './common'], (Promise, common) => {
         } else if (typeof value !== 'string') {
             diagnosis = 'invalid';
             errorMessage = 'value must be a string (it is of type "' + typeof value + '")';
+        } else if (options.invalidValues && options.invalidValues.has(value)) {
+            diagnosis = 'invalid';
+            errorMessage = options.invalidError ? options.invalidError : 'value is invalid';
         } else {
             parsedValue = value;
             if (parsedValue.length < minLength) {
@@ -75,19 +81,15 @@ define(['bluebird', './common'], (Promise, common) => {
         };
     }
 
-    function validate(value, spec) {
+    function validate(value, spec, options) {
         return Promise.try(() => {
-            return applyConstraints(value, spec.data.constraints);
+            return applyConstraints(value, spec.data.constraints, options || {});
         });
     }
 
-    /*
-    Each validator must supply:
-    validateText - validate a 
-    */
     return {
-        importString: importString,
-        validate: validate,
-        applyConstraints: applyConstraints,
+        importString,
+        validate,
+        applyConstraints,
     };
 });

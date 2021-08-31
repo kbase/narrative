@@ -49,10 +49,8 @@ define([], () => {
         // for when the cell is in configuration mode, hasn't been run, has no jobs, no results
         editingIncomplete: {
             ui: {
-                tab: tabState(
-                    ['configure', 'info', 'jobStatus', 'results'],
-                    ['configure', 'info', 'jobStatus', 'results']
-                ),
+                tab: tabState(['configure', 'info'], ['configure', 'info', 'jobStatus', 'results']),
+                defaultTab: 'configure',
                 action: {
                     name: 'runApp',
                     disabled: true,
@@ -63,6 +61,7 @@ define([], () => {
         editingComplete: {
             ui: {
                 tab: tabState(['configure', 'info'], ['configure', 'info', 'jobStatus', 'results']),
+                defaultTab: 'configure',
                 action: {
                     name: 'runApp',
                     disabled: false,
@@ -76,6 +75,7 @@ define([], () => {
                     ['viewConfigure', 'info'],
                     ['viewConfigure', 'info', 'jobStatus', 'results']
                 ),
+                defaultTab: 'viewConfigure',
                 action: {
                     name: 'cancel',
                     disabled: false,
@@ -90,6 +90,7 @@ define([], () => {
                     ['viewConfigure', 'info', 'jobStatus'],
                     ['viewConfigure', 'info', 'jobStatus', 'results']
                 ),
+                defaultTab: 'jobStatus',
                 action: {
                     name: 'cancel',
                     disabled: false,
@@ -104,6 +105,7 @@ define([], () => {
                     ['viewConfigure', 'info', 'jobStatus', 'results'],
                     ['viewConfigure', 'info', 'jobStatus', 'results']
                 ),
+                defaultTab: 'jobStatus',
                 action: {
                     name: 'cancel',
                     disabled: false,
@@ -118,6 +120,7 @@ define([], () => {
                     ['viewConfigure', 'info', 'jobStatus'],
                     ['viewConfigure', 'info', 'jobStatus', 'results']
                 ),
+                defaultTab: 'jobStatus',
                 action: {
                     name: 'resetApp',
                     disabled: false,
@@ -132,19 +135,7 @@ define([], () => {
                     ['viewConfigure', 'info', 'jobStatus', 'results'],
                     ['viewConfigure', 'info', 'jobStatus', 'results']
                 ),
-                action: {
-                    name: 'resetApp',
-                    disabled: false,
-                },
-            },
-        },
-        // unrecoverable error(s) occurred during the app run
-        appError: {
-            ui: {
-                tab: tabState(
-                    ['viewConfigure', 'info', 'jobStatus', 'error'],
-                    ['viewConfigure', 'info', 'jobStatus', 'error']
-                ),
+                defaultTab: 'results',
                 action: {
                     name: 'resetApp',
                     disabled: false,
@@ -152,13 +143,15 @@ define([], () => {
             },
         },
         // something tragic and unrecoverable has happened to the cell
+        // or unrecoverable error(s) occurred during the app run
         // (not a job error -- those are handled by the jobStatus tab)
-        generalError: {
+        error: {
             ui: {
                 tab: tabState(
                     ['viewConfigure', 'info', 'jobStatus', 'error'],
                     ['viewConfigure', 'info', 'jobStatus', 'error']
                 ),
+                defaultTab: 'error',
                 action: {
                     name: 'resetApp',
                     disabled: false,

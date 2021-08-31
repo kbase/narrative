@@ -166,6 +166,7 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
             writable: !options.readOnly,
             insert_cell_above: (type, index, data) => insertCell(type, index - 1, data),
             insert_cell_below: (type, index, data) => insertCell(type, index + 1, data),
+            save_checkpoint: () => null,
         };
     }
 

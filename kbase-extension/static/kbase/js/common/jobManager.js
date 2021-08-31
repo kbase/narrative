@@ -596,7 +596,10 @@ define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
              * bulk cell
              */
             cancelBatchJob() {
-                this.doJobAction('cancel', [this.model.getItem('exec.jobState.job_id')]);
+                const batchId = this.model.getItem('exec.jobState.job_id');
+                if (batchId) {
+                    this.doJobAction('cancel', [batchId]);
+                }
                 this.resetJobs();
             }
 
@@ -615,7 +618,17 @@ define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
                     allJobs[parentJob.job_id] = parentJob;
                 }
 
+                // TODO: enable once backend can accept jobIdList / batchId
+                // this.bus.emit('request-job-updates-stop', {
+                //     batchId: parentJob.job_id,
+                // })
+
+                // ensure that job updates are turned off and listeners removed
                 Object.keys(allJobs).forEach((jobId) => {
+                    // TODO: remove once backend accepts jobIdList / batchId
+                    this.bus.emit('request-job-updates-stop', {
+                        jobId,
+                    });
                     this.removeJobListeners(jobId);
                 });
 

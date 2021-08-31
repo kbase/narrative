@@ -1221,6 +1221,12 @@ define([
                 });
             });
 
+            const resetJobsCallArgs = JobsData.allJobsWithBatchParent.map((jobState) => {
+                return ['request-job-updates-stop', { jobId: jobState.job_id }];
+            });
+            // TODO: uncomment when backend can accept batch IDs
+            // const resetJobsCallArgs = [['request-job-updates-stop', { batchId: JobsData.batchParentJob.job_id }]];
+
             describe('cancelBatchJob', () => {
                 it('cancels the current batch parent job', function () {
                     spyOn(this.bus, 'emit');
@@ -1235,13 +1241,17 @@ define([
                     );
                     expect(this.jobManagerInstance.listeners).toBeDefined();
                     this.jobManagerInstance.cancelBatchJob();
-                    expect(this.bus.emit).toHaveBeenCalled();
                     // check the args to bus.emit were correct
+                    expect(this.bus.emit).toHaveBeenCalled();
                     const callArgs = this.bus.emit.calls.allArgs();
                     const actionRequest = `request-job-${actionStatusMatrix.cancel.request}`;
-                    expect(callArgs).toEqual([
-                        [actionRequest, { jobIdList: [JobsData.batchParentJob.job_id] }],
-                    ]);
+                    expect(callArgs).toEqual(
+                        jasmine.arrayWithExactContents(
+                            resetJobsCallArgs.concat([
+                                [actionRequest, { jobIdList: [JobsData.batchParentJob.job_id] }],
+                            ])
+                        )
+                    );
                     // the job model should have been reset and job listeners removed
                     expect(this.jobManagerInstance.model.getItem('exec')).not.toBeDefined();
                     expect(this.jobManagerInstance.listeners).toEqual({});
@@ -1250,6 +1260,7 @@ define([
 
             describe('resetJobs', () => {
                 it('can reset the stored jobs and listeners', function () {
+                    spyOn(this.bus, 'emit');
                     expect(
                         Object.keys(this.jobManagerInstance.model.getItem('exec.jobs.byId'))
                     ).toEqual(
@@ -1263,6 +1274,10 @@ define([
                     this.jobManagerInstance.resetJobs();
                     expect(this.jobManagerInstance.model.getItem('exec')).not.toBeDefined();
                     expect(this.jobManagerInstance.listeners).toEqual({});
+                    // check the args to bus.emit were correct
+                    expect(this.bus.emit).toHaveBeenCalled();
+                    const callArgs = this.bus.emit.calls.allArgs();
+                    expect(callArgs).toEqual(jasmine.arrayWithExactContents(resetJobsCallArgs));
                 });
             });
         });

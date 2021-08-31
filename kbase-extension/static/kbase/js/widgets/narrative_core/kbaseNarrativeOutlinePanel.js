@@ -144,6 +144,7 @@ define(['jquery', 'base/js/namespace', 'kbwidget', 'kbaseNarrativeControlPanel']
             if (node.depth !== 0) {
                 node.content = $('<div>')
                     .addClass('kb-narr-outline__item')
+                    .attr('title', node.item.title)
                     .append(
                         $('<span>')
                             .addClass('kb-narr-outline__item-icon-wrapper')
@@ -153,9 +154,11 @@ define(['jquery', 'base/js/namespace', 'kbwidget', 'kbaseNarrativeControlPanel']
                         $('<a>')
                             .text(node.item.title)
                             .attr('href', '#')
+                            .attr('title', node.item.title)
                             .addClass('kb-narr-outline__item-content')
                             .click(() => this.scrollToItem(node.item))
-                    );
+                    )
+                    .click(() => this.scrollToItem(node.item));
             }
 
             // Render the children

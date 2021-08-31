@@ -849,6 +849,7 @@ p#site-title {
   padding: 0.1em;
   padding-bottom: 0.3em;
   position: relative;
+  cursor: pointer;
   top: 0;
 }
 

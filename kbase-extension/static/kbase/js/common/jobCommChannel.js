@@ -595,9 +595,16 @@ define([
         }
 
         getJobInitCode() {
+            const currentCells = Jupyter.notebook.get_cells();
             return [
                 'from biokbase.narrative.jobs.jobcomm import JobComm',
-                'JobComm().start_job_status_loop(init_jobs=True)',
+                'cell_list = ' +
+                    JSON.stringify(
+                        currentCells.map((cell) => {
+                            return cell.cell_id;
+                        })
+                    ),
+                'JobComm().start_job_status_loop(cell_list=cell_list, init_jobs=True)',
             ].join('\n');
         }
     }

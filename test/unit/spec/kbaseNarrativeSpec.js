@@ -65,6 +65,7 @@ define([
             Jupyter.notebook = {
                 _fully_loaded: DEFAULT_FULLY_LOADED,
                 writable: DEFAULT_WRITABLE,
+                get_cells: () => [],
                 keyboard_manager: {
                     edit_shortcuts: {
                         remove_shortcut: () => {},
@@ -75,7 +76,7 @@ define([
                 },
                 kernel: {
                     is_connected: () => false,
-                    comm_info: (comm_name, callback) => {
+                    comm_info: (_, callback) => {
                         callback({
                             content: {
                                 comms: {
@@ -89,7 +90,7 @@ define([
                     comm_manager: {
                         register_comm: () => {},
                     },
-                    execute: (code, callbacks) => {
+                    execute: (_, callbacks) => {
                         callbacks.shell.reply({
                             content: {},
                         });

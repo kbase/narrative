@@ -194,7 +194,8 @@ define([
             cellBus = null, // the parent cell bus that gets external messages
             controllerBus = null, // the main bus for this cell and its children
             ui = null,
-            tabWidget = null; // the widget currently in view
+            tabWidget = null, // the widget currently in view
+            cancelBatch = null; // whether or not to cancel the job
         // widgets this cell owns
         let cellTabs, controlPanel, jobManager;
         const specs = {};
@@ -472,14 +473,16 @@ define([
         }
 
         function handleRunStatus(message) {
-            busEventManager.remove(runStatusListener);
+            resetRunStatusListener();
             switch (message.event) {
                 case 'launched_job_batch':
                     // remove any existing jobs
                     jobManager.initBatchJob(message);
+                    if (cancelBatch) {
+                        cancelBatchJob();
+                        break;
+                    }
                     updateState('inProgress');
-                    // TODO: remove when cell state management is sorted out
-                    toggleTab('jobStatus');
                     break;
                 case 'error':
                     model.setItem('appError', {
@@ -491,12 +494,13 @@ define([
                         method: message.error_method,
                         exceptionType: message.error_type,
                     });
-                    updateState('appError');
-                    toggleTab('error');
+                    updateState('error');
+                    switchToTab('error');
                     break;
                 default:
                     console.warn(`Unknown run-status event ${message.event}!`);
-                    updateState('generalError');
+                    updateState('error');
+                    switchToTab('error');
                     break;
             }
         }
@@ -640,17 +644,14 @@ define([
         }
 
         /**
-         * Should do the following steps:
-         * 1. if there's a tab showing, stop() it and detach it
-         * 2. update the tabs state to be selected
+         * Switch tab display
+         * stops the current tab widget, runs `tab`
+         * and updates the model and cell tabs with the
+         * newly-selected tab
+         *
          * @param {string} tab id of the tab to display
          */
-        function toggleTab(tab) {
-            // if we're toggling the currently selected tab off,
-            // then it should be turned off.
-            if (tab === state.tab.selected && tab !== null) {
-                tab = null;
-            }
+        function _switchToTab(tab) {
             state.tab.selected = tab;
             return stopWidget().then(() => {
                 if (tab !== null) {
@@ -659,6 +660,35 @@ define([
                 model.setItem('state.selectedTab', tab);
                 cellTabs.setState(state.tab);
             });
+        }
+
+        /**
+         * Toggle the display of the specified tab
+         * If the tab is already being displayed, this will hide it
+         *
+         * @param {string} tab id of the tab to display
+         */
+        function toggleTab(tab) {
+            // if we're toggling the currently selected tab off,
+            // then it should be turned off.
+            if (tab === state.tab.selected && tab !== null) {
+                tab = null;
+            }
+            _switchToTab(tab);
+        }
+
+        /**
+         * Switch to displaying the specified tab
+         * If the tab is already displayed, this does nothing
+         *
+         * @param {string} tab id of the tab to display
+         */
+        function switchToTab(tab) {
+            // don't switch if the tab is null or already selected
+            if (tab === null || tab === state.tab.selected) {
+                return;
+            }
+            _switchToTab(tab);
         }
 
         function stopWidget() {
@@ -741,6 +771,7 @@ define([
             busEventManager.add(runStatusListener);
             cell.execute();
             updateState('launching');
+            switchToTab('viewConfigure');
         }
 
         /**
@@ -757,20 +788,31 @@ define([
             const confirmed = await DialogMessages.showDialog({ action: 'cancelBulkImport' });
 
             if (confirmed) {
+                // if the runStatusListener is not null,
+                // the FE has yet to receive data about the new batch job
+                // handleRunStatus will cancel the batch job when it receives that message
+                cancelBatch = true;
                 controlPanel.setExecMessage('Canceling...');
-                // if exec.jobs is not yet populated,
-                // set up the runStatusListener to cancel the batch job
-                // when it receives the job message
+
+                // if runStatusListener is null, the batch job data is available and
+                // the job can be cancelled immediately.
                 if (runStatusListener === null) {
-                    jobManager.cancelBatchJob();
+                    cancelBatchJob();
                 }
-
-                handleRunStatus.runStatusListener = cellBus.on('run-status', handleRunStatus);
-                busEventManager.add(runStatusListener);
-
-                doResetCellAction();
             }
             return Promise.resolve(confirmed);
+        }
+
+        function cancelBatchJob() {
+            jobManager.cancelBatchJob();
+            doResetCellAction();
+        }
+
+        function resetRunStatusListener() {
+            if (runStatusListener !== null) {
+                busEventManager.remove(runStatusListener);
+                runStatusListener = null;
+            }
         }
 
         /**
@@ -778,13 +820,12 @@ define([
          */
         function doResetCellAction() {
             // TODO: ensure this makes all the necessary changes
-            if (runStatusListener !== null) {
-                busEventManager.remove(runStatusListener);
-            }
+            resetRunStatusListener();
             jobManager.resetJobs();
+            cancelBatch = null;
             updateEditingState();
-            // Jupyter.notebook.save_checkpoint();
-            toggleTab('configure');
+            Jupyter.notebook.save_checkpoint();
+            switchToTab('configure');
         }
 
         /**
@@ -818,6 +859,7 @@ define([
                 currentState = defaultState;
             }
             const uiState = States[currentState].ui;
+            // FIXME: check if 'configure' tab is active in the current uiState
             uiState.tab.selected = model.getItem('state.selectedTab', 'configure');
             return uiState;
         }
@@ -829,6 +871,7 @@ define([
          */
         function updateState(newUiState) {
             if (newUiState && newUiState in States) {
+                // FIXME: this alters the States object
                 const stateDiff = Object.assign({}, States[newUiState].ui);
                 model.setItem('state.state', newUiState);
                 // update selections
@@ -838,7 +881,7 @@ define([
             }
             cellTabs.setState(state.tab);
             controlPanel.setActionState(state.action);
-            // TODO: add in the FSM state
+            // set the appropriate status line
             if (!model.getItem('exec.jobState')) {
                 if (!newUiState) {
                     newUiState = model.getItem('state.state');

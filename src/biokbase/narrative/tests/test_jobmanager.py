@@ -30,6 +30,7 @@ from .test_job import (
     BATCH_RETRY_RUNNING,
     BATCH_RETRY_ERROR,
     JOB_NOT_FOUND,
+    saved_jobs,
     ALL_JOBS,
     FINISHED_JOBS,
     ACTIVE_JOBS,
@@ -207,6 +208,13 @@ class JobManagerTest(unittest.TestCase):
                 [job_a, job_b],
                 [],
             ),
+        )
+
+    @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
+    def test__construct_job_state_set(self):
+        self.assertEqual(
+            self.jm._construct_job_state_set(ALL_JOBS),
+            get_test_job_states()
         )
 
     def test__construct_job_state_set__empty_list(self):
@@ -675,6 +683,39 @@ class JobManagerTest(unittest.TestCase):
 
         with mock.patch.object(MockClients, "check_job", side_effect=mock_check_job) as m:
             self.assertCountEqual(batch_job.child_jobs, new_child_ids)
+
+    def test_modify_job_refresh(self):
+        for job_id, terminality in saved_jobs.items():
+            print(job_id, terminality)
+            self.assertEqual(
+                self.jm._running_jobs[job_id]["refresh"],
+                int(not terminality)
+            )
+            self.jm.modify_job_refresh([job_id], -1)  # stop
+            self.assertEqual(
+                self.jm._running_jobs[job_id]["refresh"],
+                0
+            )
+            self.jm.modify_job_refresh([job_id], -1)  # stop
+            self.assertEqual(
+                self.jm._running_jobs[job_id]["refresh"],
+                0
+            )
+            self.jm.modify_job_refresh([job_id], 1)  # start
+            self.assertEqual(
+                self.jm._running_jobs[job_id]["refresh"],
+                1
+            )
+            self.jm.modify_job_refresh([job_id], 1)  # start
+            self.assertEqual(
+                self.jm._running_jobs[job_id]["refresh"],
+                2
+            )
+            self.jm.modify_job_refresh([job_id], -1)  # stop
+            self.assertEqual(
+                self.jm._running_jobs[job_id]["refresh"],
+                1
+            )
 
 
 if __name__ == "__main__":

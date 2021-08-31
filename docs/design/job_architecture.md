@@ -223,13 +223,17 @@ These are organized by the `request_type` field, followed by the expected respon
 
 `stop_update_loop` - request stopping the global job status update thread, no response
 
-`start_job_update` - request updating job(s) during the update thread, no specific response, but generally with `job_status`
+`start_job_update` - request updating job(s) during the update thread, responds with `job_status`
 * `job_id` - string OR `job_id_list` - array of strings
-* `parent_job_id` - optional string
 
 `stop_job_update` - request halting update for job(s) during the update thread, no response
 * `job_id` - string OR `job_id_list` - array of strings
-* `parent_job_id` - optional string
+
+`start_job_update_batch` - request updating batch container and children jobs, responds with `job_status`
+* `job_id` - string OR `job_id_list` - array of strings, but generally uses `job_id`
+
+`stop_job_update_batch` - request halting update for batch container and children jobs during the update thread, no response
+* `job_id` - string OR `job_id_list` - array of strings, but generally uses `job_id`
 
 `job_info` - request general information about job(s), responds with `job_info` for each job
 * `job_id` - string OR `job_id_list` - array of strings

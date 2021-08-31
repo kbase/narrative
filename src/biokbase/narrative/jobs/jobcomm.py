@@ -55,13 +55,13 @@ class JobRequest:
         "job_status_batch",
         "start_job_update_batch",
         "stop_job_update_batch",
-        "start_job_update",
-        "stop_job_update",
         "job_logs",
     ]
     REQUIRE_JOB_ID_LIST = [
         "job_info",
         "job_status",
+        "start_job_update",
+        "stop_job_update",
         "retry_job",
         "cancel_job",
     ]
@@ -186,10 +186,10 @@ class JobComm:
                 "job_info_batch": self._lookup_job_info_batch,
                 "start_update_loop": self.start_job_status_loop,
                 "stop_update_loop": self.stop_job_status_loop,
-                "start_job_update": self._modify_job_update,
-                "stop_job_update": self._modify_job_update,
-                "start_job_update_batch": None,
-                "stop_job_update_batch": None,
+                "start_job_update": self._modify_job_updates,
+                "stop_job_update": self._modify_job_updates,
+                "start_job_update_batch": self._modify_job_updates_batch,
+                "stop_job_update_batch": self._modify_job_updates_batch,
                 "cancel_job": self._cancel_jobs,
                 "retry_job": self._retry_jobs,
                 "job_logs": self._get_job_logs,
@@ -347,7 +347,7 @@ class JobComm:
         self.send_comm_message("job_status", output_states)
         return output_states
 
-    def _modify_job_update(self, req: JobRequest) -> None:
+    def _modify_job_updates(self, req: JobRequest) -> None:
         """
         Modifies how many things want to listen to a job update.
         If this is a request to start a job update, then this starts the update loop that
@@ -359,11 +359,42 @@ class JobComm:
         If the given job_id in the request doesn't exist in the current Narrative, or is None,
         this raises a ValueError.
         """
-        self._verify_job_id(req)
-        update_adjust = 1 if req.request == "start_job_update" else -1
-        self._jm.modify_job_refresh(req.job_id, update_adjust)
+        self._verify_job_id_list(req)
+
+        if req.request == "start_job_update":
+            update_adjust = 1
+        elif req.request == "stop_job_update":
+            update_adjust = -1
+        else:
+            raise ValueError()
+
+        self._jm.modify_job_refresh(req.job_id_list, update_adjust)
+        output_states = self._jm.get_job_states(req.job_id_list)
+
         if update_adjust == 1:
             self.start_job_status_loop()
+            self.send_comm_message("job_status", output_states)
+
+    def _modify_job_updates_batch(self, req: JobRequest) -> None:
+        self._verify_job_id(req)
+
+        try:
+            job_ids = self._jm.update_batch_job(req.job_id)
+        except NoJobException:
+            self.send_error_message("job_does_not_exist", req)
+            raise
+
+        req = JobRequest(
+            {
+                "content": {
+                    "data": {
+                        "request_type": req.request.replace("_batch", ""),
+                        "job_id_list": job_ids
+                    }
+                }
+            }
+        )
+        self._modify_job_updates(req)
 
     def _cancel_jobs(self, req: JobRequest) -> None:
         """

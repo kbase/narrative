@@ -290,13 +290,14 @@ class JobManager(object):
         infos = dict()
         for job_id in job_ids:
             job = self.get_job(job_id)
-            infos[job_id] = {
-                "app_id": job.app_id,
-                "app_name": job.app_spec()["info"]["name"],
-                "job_id": job_id,
-                "job_params": job.params,
-                "batch_id": job.batch_id,
-            }
+            if not job.batch_job:
+                infos[job_id] = {
+                    "app_id": job.app_id,
+                    "app_name": job.app_spec()["info"]["name"],
+                    "job_id": job_id,
+                    "job_params": job.params,
+                    "batch_id": job.batch_id,
+                }
         for error_id in error_ids:
             infos[error_id] = "does_not_exist"
         return infos
@@ -505,17 +506,18 @@ class JobManager(object):
             output_states[error_id] = get_dne_job_state(error_id)
         return output_states
 
-    def modify_job_refresh(self, job_id: str, update_adjust: int) -> None:
+    def modify_job_refresh(self, job_ids: List[str], update_adjust: int) -> None:
         """
         Modifies how many things want to get the job updated.
         If this sets the current "refresh" key to be less than 0, it gets reset to 0.
         If the job isn't present or None, a ValueError is raised.
         """
-        if job_id is None or job_id not in self._running_jobs:
-            raise ValueError(f"No job present with id {job_id}")
-        self._running_jobs[job_id]["refresh"] += update_adjust
-        if self._running_jobs[job_id]["refresh"] < 0:
-            self._running_jobs[job_id]["refresh"] = 0
+        job_ids, _ = self._check_job_list(job_ids)
+
+        for job_id in job_ids:
+            self._running_jobs[job_id]["refresh"] += update_adjust
+            if self._running_jobs[job_id]["refresh"] < 0:
+                self._running_jobs[job_id]["refresh"] = 0
 
     def update_batch_job(self, batch_id: str) -> List[str]:
         """

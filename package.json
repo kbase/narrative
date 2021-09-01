@@ -25,7 +25,7 @@
         "grunt-regex-replace": "0.4.0",
         "husky": "7.0.1",
         "jasmine-ajax": "4.0.0",
-        "jasmine-core": "3.8.0",
+        "jasmine-core": "3.9.0",
         "jasmine-jquery": "2.1.1",
         "karma": "6.3.4",
         "karma-brief-reporter": "0.2.1",

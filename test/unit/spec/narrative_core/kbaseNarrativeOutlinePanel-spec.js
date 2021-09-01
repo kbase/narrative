@@ -1,10 +1,15 @@
-define(['jquery', 'kbaseNarrativeOutlinePanel', 'base/js/namespace'], ($, Widget, Jupyter) => {
+define(['jquery', 'kbaseNarrativeOutlinePanel', 'base/js/namespace', 'narrativeMocks'], (
+    $,
+    Widget,
+    Jupyter,
+    { buildMockCell, buildMockNotebook }
+) => {
     'use strict';
     describe('The kbaseNarrativeOutlinePanel widget', () => {
         let widget, $target;
         beforeAll(() => {
             if (!Jupyter) Jupyter = {};
-            Jupyter.notebook = { get_cells: () => [] };
+            Jupyter.notebook = buildMockNotebook();
             $target = $(`<div id="test-div">`);
             widget = new Widget($target, {
                 widget: 'kbaseNarrativeOutlinePanel',
@@ -16,12 +21,16 @@ define(['jquery', 'kbaseNarrativeOutlinePanel', 'base/js/namespace'], ($, Widget
         });
 
         it('should render basic outline', () => {
-            Jupyter.notebook = {
-                get_cells: () => [
-                    mockCell('markdown', null, false, 'test-icon', '<h1>test header!!</h1>'),
-                    mockCell('code', 'My App', false),
+            Jupyter.notebook = buildMockNotebook({
+                cells: [
+                    buildMockCell('markdown', 'markdown', {
+                        output: '<h1>test header!!</h1>',
+                        iconContent: 'test-icon',
+                    }),
+                    buildMockCell('code', 'app'),
                 ],
-            };
+            });
+
             widget.renderOutline();
 
             expect(widget.body.find('.kb-narr-outline__item').length).toBe(2);
@@ -43,13 +52,14 @@ define(['jquery', 'kbaseNarrativeOutlinePanel', 'base/js/namespace'], ($, Widget
                     .find('.kb-narr-outline__item .kb-narr-outline__item-content')
                     .eq(1)
                     .text()
-            ).toBe('My App');
+            ).toBe('Untitled Cell');
         });
 
         it('should highlight selected', () => {
-            Jupyter.notebook = {
-                get_cells: () => [mockCell(null, null, true)],
-            };
+            Jupyter.notebook = buildMockNotebook({
+                cells: [buildMockCell('code', 'app', { selected: true })],
+            });
+
             widget.renderOutline();
             expect(widget.body.find('.kb-narr-outline__item').length).toBe(1);
             expect(
@@ -60,32 +70,32 @@ define(['jquery', 'kbaseNarrativeOutlinePanel', 'base/js/namespace'], ($, Widget
         });
 
         it('should render outline with nested items', () => {
-            Jupyter.notebook = {
-                get_cells: () => [
-                    mockCell('markdown', null, null, null, '<h6/>'),
-                    mockCell('markdown', null, null, null, '<h2/>'),
-                    mockCell('markdown', null, null, null, '<h1/>'),
-                    /**/ mockCell('markdown', null, null, null, '<h2/>'),
-                    /**/ /**/ mockCell('markdown', null, null, null, '<h3/>'),
-                    /**/ /**/ /**/ mockCell('markdown', null, null, null, '<h4/>'),
-                    /**/ /**/ /**/ mockCell('code', 'My App', false),
-                    /**/ /**/ /**/ mockCell('markdown', null, null, null, '<h5/>'),
-                    /**/ /**/ /**/ mockCell('markdown', null, null, null, '<h6/>'),
-                    /**/ mockCell('markdown', null, null, null, '<h2/>'),
-                    /**/ /**/ mockCell('markdown', null, null, null, '<h4/>'),
-                    mockCell('markdown', null, null, null, '<h1/>'),
-                    /**/ mockCell('code', 'My App', false),
-                    /**/ mockCell('markdown', null, null, null, '<h2/>'),
-                    /**/ /**/ mockCell('code', 'My App', false),
-                    /**/ /**/ mockCell('code', 'My App', false),
-                    /**/ /**/ mockCell('code', 'My App', false),
-                    /**/ /**/ mockCell('markdown', null, null, null, '<h3/>'),
-                    /**/ /**/ /**/ mockCell('code', 'My App', false),
-                    /**/ mockCell('markdown', null, null, null, '<h2/>'),
-                    /**/ /**/ mockCell('markdown', null, null, null, '<h4/>'),
-                    /**/ /**/ mockCell('code', 'My App', false),
-                ],
-            };
+            Jupyter.notebook = buildMockNotebook({
+                cells: [
+                    buildMockCell('markdown', 'markdown', { output: '<h6/>' }),
+                    buildMockCell('markdown', 'markdown', { output: '<h2/>' }),
+                    buildMockCell('markdown', 'markdown', { output: '<h1/>' }),
+                    /**/ buildMockCell('markdown', 'markdown', { output: '<h2/>' }),
+                    /**/ /**/ buildMockCell('markdown', 'markdown', { output: '<h3/>' }),
+                    /**/ /**/ /**/ buildMockCell('markdown', 'markdown', { output: '<h4/>' }),
+                    /**/ /**/ /**/ buildMockCell('code', 'app'),
+                    /**/ /**/ /**/ buildMockCell('markdown', 'markdown', { output: '<h5/>' }),
+                    /**/ /**/ /**/ buildMockCell('markdown', 'markdown', { output: '<h6/>' }),
+                    /**/ buildMockCell('markdown', 'markdown', { output: '<h2/>' }),
+                    /**/ /**/ buildMockCell('markdown', 'markdown', { output: '<h4/>' }),
+                    buildMockCell('markdown', 'markdown', { output: '<h1/>' }),
+                    /**/ buildMockCell('code', 'app'),
+                    /**/ buildMockCell('markdown', 'markdown', { output: '<h2/>' }),
+                    /**/ /**/ buildMockCell('code', 'app'),
+                    /**/ /**/ buildMockCell('code', 'app'),
+                    /**/ /**/ buildMockCell('code', 'app'),
+                    /**/ /**/ buildMockCell('markdown', 'markdown', { output: '<h3/>' }),
+                    /**/ /**/ /**/ buildMockCell('code', 'app'),
+                    /**/ buildMockCell('markdown', 'markdown', { output: '<h2/>' }),
+                    /**/ /**/ buildMockCell('markdown', 'markdown', { output: '<h4/>' }),
+                    /**/ /**/ buildMockCell('code', 'app'),
+                ]
+            });
             widget.renderOutline();
             expect(getItemDepths(widget.body)).toEqual([
                 0, 0, 0, 1, 2, 3, 3, 3, 3, 1, 2, 0, 1, 1, 2, 2, 2, 2, 3, 1, 2, 2,
@@ -105,27 +115,5 @@ define(['jquery', 'kbaseNarrativeOutlinePanel', 'base/js/namespace'], ($, Widget
                 return uls_and_lis / 2 - 1;
             })
             .get();
-    }
-
-    function mockCell(
-        type = 'code',
-        title = 'Some Cell',
-        selected = false,
-        iconContent = 'Some Icon',
-        elementContent = '<div>'
-    ) {
-        return {
-            cell_type: type,
-            metadata: {
-                kbase: {
-                    attributes: {
-                        title: title,
-                    },
-                },
-            },
-            element: $('<div>').append(elementContent),
-            selected: selected,
-            getIcon: () => $('<span>').append(iconContent)[0].outerHTML,
-        };
     }
 });

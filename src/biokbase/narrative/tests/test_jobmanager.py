@@ -30,7 +30,7 @@ from .test_job import (
     BATCH_RETRY_RUNNING,
     BATCH_RETRY_ERROR,
     JOB_NOT_FOUND,
-    saved_jobs,
+    JOBS_TERMINALITY,
     ALL_JOBS,
     FINISHED_JOBS,
     ACTIVE_JOBS,
@@ -685,8 +685,7 @@ class JobManagerTest(unittest.TestCase):
             self.assertCountEqual(batch_job.child_jobs, new_child_ids)
 
     def test_modify_job_refresh(self):
-        for job_id, terminality in saved_jobs.items():
-            print(job_id, terminality)
+        for job_id, terminality in JOBS_TERMINALITY.items():
             self.assertEqual(
                 self.jm._running_jobs[job_id]["refresh"],
                 int(not terminality)

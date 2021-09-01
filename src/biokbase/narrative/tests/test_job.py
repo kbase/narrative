@@ -81,7 +81,7 @@ BATCH_CHILDREN = [
     BATCH_RETRY_ERROR,
 ]
 
-saved_jobs = {
+JOBS_TERMINALITY = {
     JOB_COMPLETED: True,
     JOB_CREATED: False,
     JOB_RUNNING: False,
@@ -97,10 +97,10 @@ saved_jobs = {
     BATCH_RETRY_ERROR: True,
 }
 
-ALL_JOBS = list(saved_jobs.keys())
+ALL_JOBS = list(JOBS_TERMINALITY.keys())
 FINISHED_JOBS = []
 ACTIVE_JOBS = []
-for key, value in saved_jobs.items():
+for key, value in JOBS_TERMINALITY.items():
     if value:
         FINISHED_JOBS.append(key)
     else:

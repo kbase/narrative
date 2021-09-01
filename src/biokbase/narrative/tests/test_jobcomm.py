@@ -33,6 +33,7 @@ from .test_job import (
     BATCH_RETRY_RUNNING,
     BATCH_RETRY_ERROR,
     ALL_JOBS,
+    JOBS_TERMINALITY,
     FINISHED_JOBS,
     ACTIVE_JOBS,
     BATCH_CHILDREN,
@@ -118,6 +119,7 @@ class JobCommTestCase(unittest.TestCase):
     def setUp(self):
         self.jc._comm.clear_message_cache()
         self.jc._jm.initialize_jobs()
+        self.jc.stop_job_status_loop()
         self.job_states = get_test_job_states()
 
     def test_send_comm_msg_ok(self):
@@ -193,7 +195,7 @@ class JobCommTestCase(unittest.TestCase):
         "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get", get_mock_client
     )
     def test_lookup_job_states__2_ok(self):
-        job_id_list = [JOB_COMPLETED, JOB_ERROR]
+        job_id_list = [JOB_COMPLETED, BATCH_PARENT]
         req = make_comm_msg("job_status", job_id_list, True)
         output_states = self.jc._lookup_job_states(req)
         msg = self.jc._comm.last_message
@@ -326,8 +328,8 @@ class JobCommTestCase(unittest.TestCase):
         )
 
     def test_lookup_job_info__batch__ok(self):
-        job_id_list = [BATCH_RETRY_COMPLETED]
-        req = make_comm_msg("job_info", job_id_list, True)
+        job_id_list = [BATCH_ERROR_RETRIED, BATCH_RETRY_COMPLETED]
+        req = make_comm_msg("job_info", job_id_list + [BATCH_PARENT], True)
         self.jc._lookup_job_info(req)
         msg = self.jc._comm.last_message
         self.assertEqual(
@@ -742,6 +744,222 @@ class JobCommTestCase(unittest.TestCase):
         self.assertEqual("job_does_not_exist", msg["data"]["msg_type"])
 
     # ------------------------
+    # Modify job update
+    # ------------------------
+    @mock.patch(
+        "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get", get_mock_client
+    )
+    def test_modify_job_update__start__ok(self):
+        job_id_list = [JOB_COMPLETED, JOB_CREATED, BATCH_PARENT]
+        req = make_comm_msg("start_job_update", job_id_list, True)
+        self.jc._modify_job_updates(req)
+        msg = self.jc._comm.last_message
+        self.assertEqual(
+            {
+                "msg_type": "job_status",
+                "content": get_test_job_states(job_id_list)
+            },
+            msg["data"]
+        )
+        for job_id in ALL_JOBS:
+            if job_id in job_id_list:
+                self.assertEqual(
+                    self.jm._running_jobs[job_id]["refresh"],
+                    int(not JOBS_TERMINALITY[job_id]) + 1
+                )
+            else:
+                self.assertEqual(
+                    self.jm._running_jobs[job_id]["refresh"],
+                    int(not JOBS_TERMINALITY[job_id])
+                )
+        self.assertTrue(self.jc._lookup_timer)
+        self.assertTrue(self.jc._running_lookup_loop)
+
+    @mock.patch(
+        "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get", get_mock_client
+    )
+    def test_modify_job_update__stop__ok(self):
+        job_id_list = [JOB_COMPLETED, JOB_CREATED, BATCH_PARENT]
+        req = make_comm_msg("stop_job_update", job_id_list, True)
+        self.jc._modify_job_updates(req)
+        for job_id in ALL_JOBS:
+            if job_id in job_id_list:
+                self.assertEqual(
+                    self.jm._running_jobs[job_id]["refresh"],
+                    max(int(not JOBS_TERMINALITY[job_id]) - 1, 0)
+                )
+            else:
+                self.assertEqual(
+                    self.jm._running_jobs[job_id]["refresh"],
+                    int(not JOBS_TERMINALITY[job_id])
+                )
+        self.assertIsNone(self.jc._lookup_timer)
+        self.assertFalse(self.jc._running_lookup_loop)
+
+    def test_modify_job_update__no_job(self):
+        job_id_list = [None]
+        req = make_comm_msg("start_job_update", job_id_list, True)
+        with self.assertRaisesRegex(NoJobException, NO_JOB_ERR):
+            self.jc._modify_job_updates(req)
+        msg = self.jc._comm.last_message
+        self.assertEqual(
+            {
+                "msg_type": "job_does_not_exist",
+                "content": {
+                    "source": "start_job_update",
+                    "job_id_list": [],
+                },
+            },
+            msg["data"]
+        )
+
+    def test_modify_job_update__stop__ok_bad_job(self):
+        job_id_list = [JOB_COMPLETED]
+        req = make_comm_msg("stop_job_update", job_id_list + [JOB_NOT_FOUND], True)
+        self.jc._modify_job_updates(req)
+        for job_id in ALL_JOBS:
+            if job_id in job_id_list:
+                self.assertEqual(
+                    self.jm._running_jobs[job_id]["refresh"],
+                    max(int(not JOBS_TERMINALITY[job_id]) - 1, 0)
+                )
+            else:
+                self.assertEqual(
+                    self.jm._running_jobs[job_id]["refresh"],
+                    int(not JOBS_TERMINALITY[job_id])
+                )
+        self.assertIsNone(self.jc._lookup_timer)
+        self.assertFalse(self.jc._running_lookup_loop)
+
+    @mock.patch(
+        "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get", get_mock_client
+    )
+    def test_modify_job_update__stop__loop_still_running(self):
+        """Lookup loop should not get stopped"""
+        self.jc.start_job_status_loop()
+
+        job_id_list = [JOB_COMPLETED, BATCH_PARENT, JOB_RUNNING]
+        req = make_comm_msg("stop_job_update", job_id_list, True)
+        self.jc._modify_job_updates(req)
+        for job_id in ALL_JOBS:
+            if job_id in job_id_list:
+                self.assertEqual(
+                    self.jm._running_jobs[job_id]["refresh"],
+                    max(int(not JOBS_TERMINALITY[job_id]) - 1, 0)
+                )
+            else:
+                self.assertEqual(
+                    self.jm._running_jobs[job_id]["refresh"],
+                    int(not JOBS_TERMINALITY[job_id])
+                )
+        self.assertTrue(self.jc._lookup_timer)
+        self.assertTrue(self.jc._running_lookup_loop)
+
+    # ------------------------
+    # Modify job update batch
+    # ------------------------
+    @mock.patch(
+        "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get", get_mock_client
+    )
+    def test_modify_job_update_batch__start__ok(self):
+        job_id = BATCH_PARENT
+        job_id_list = [BATCH_PARENT] + BATCH_CHILDREN
+        req = make_comm_msg("start_job_update_batch", job_id, True)
+        self.jc._modify_job_updates_batch(req)
+        msg = self.jc._comm.last_message
+        self.assertEqual(
+            {
+                "msg_type": "job_status",
+                "content": get_test_job_states(job_id_list)
+            },
+            msg["data"]
+        )
+        for job_id in ALL_JOBS:
+            if job_id in job_id_list:
+                self.assertEqual(
+                    self.jm._running_jobs[job_id]["refresh"],
+                    int(not JOBS_TERMINALITY[job_id]) + 1
+                )
+            else:
+                self.assertEqual(
+                    self.jm._running_jobs[job_id]["refresh"],
+                    int(not JOBS_TERMINALITY[job_id])
+                )
+        self.assertTrue(self.jc._lookup_timer)
+        self.assertTrue(self.jc._running_lookup_loop)
+
+    @mock.patch(
+        "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get", get_mock_client
+    )
+    def test_modify_job_update_batch__stop__ok(self):
+        job_id = BATCH_PARENT
+        job_id_list = [BATCH_PARENT] + BATCH_CHILDREN
+        req = make_comm_msg("stop_job_update_batch", job_id, True)
+        self.jc._modify_job_updates_batch(req)
+        for job_id in ALL_JOBS:
+            if job_id in job_id_list:
+                self.assertEqual(
+                    self.jm._running_jobs[job_id]["refresh"],
+                    max(int(not JOBS_TERMINALITY[job_id]) - 1, 0)
+                )
+            else:
+                self.assertEqual(
+                    self.jm._running_jobs[job_id]["refresh"],
+                    int(not JOBS_TERMINALITY[job_id])
+                )
+        self.assertIsNone(self.jc._lookup_timer)
+        self.assertFalse(self.jc._running_lookup_loop)
+
+    def test_modify_job_update_batch__no_job(self):
+        job_id = None
+        req = make_comm_msg("start_job_update_batch", job_id, True)
+        with self.assertRaisesRegex(
+            NoJobException,
+            f"Job id required to process {req.request} request"
+        ):
+            self.jc._modify_job_updates_batch(req)
+        msg = self.jc._comm.last_message
+        self.assertEqual(
+            {
+                "msg_type": "job_does_not_exist",
+                "content": {
+                    "source": "start_job_update_batch",
+                    "job_id": job_id,
+                },
+            },
+            msg["data"]
+        )
+
+    def test_modify_job_update_batch__bad_job(self):
+        job_id = JOB_NOT_FOUND
+        req = make_comm_msg("start_job_update_batch", job_id, True)
+        with self.assertRaisesRegex(
+            NoJobException,
+            f"No job present with id {job_id}"
+        ):
+            self.jc._modify_job_updates_batch(req)
+        msg = self.jc._comm.last_message
+        self.assertEqual(
+            {
+                "msg_type": "job_does_not_exist",
+                "content": {
+                    "source": "start_job_update_batch",
+                    "job_id": job_id,
+                },
+            },
+            msg["data"]
+        )
+
+    def test_modify_job_update_batch__not_batch(self):
+        job_id = JOB_RUNNING
+        req = make_comm_msg("start_job_update_batch", job_id, True)
+        with self.assertRaisesRegex(
+            NotBatchException,
+            "Not a batch job"
+        ):
+            self.jc._modify_job_updates_batch(req)
+
+    # ------------------------
     # Handle bad comm messages
     # ------------------------
     def test_handle_comm_message_bad(self):
@@ -849,32 +1067,103 @@ class JobCommTestCase(unittest.TestCase):
         "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get", get_mock_client
     )
     def test_handle_start_job_update_msg(self):
-        job_id = JOB_COMPLETED
-        refresh_count = self.jm._running_jobs[job_id]["refresh"]
-        req = make_comm_msg("start_job_update", job_id, False)
+        job_id_list = [JOB_CREATED, JOB_COMPLETED, BATCH_PARENT]
+        req = make_comm_msg("start_job_update", job_id_list, False)
         self.jc._handle_comm_message(req)
         msg = self.jc._comm.last_message
-        self.assertEqual(msg["data"]["msg_type"], "job_status_all")
-        self.assertEqual(self.jm._running_jobs[job_id]["refresh"], refresh_count + 1)
-        self.assertTrue(self.jc._running_lookup_loop)
-        self.jc.stop_job_status_loop()
-
-    def test_handle_stop_job_update_msg(self):
-        job_id = JOB_COMPLETED
-        refresh_count = self.jm._running_jobs[job_id]["refresh"]
-        req = make_comm_msg("stop_job_update", job_id, False)
-        self.jc._handle_comm_message(req)
-        msg = self.jc._comm.last_message
-        self.assertIsNone(msg)
         self.assertEqual(
-            self.jm._running_jobs[job_id]["refresh"], max(refresh_count - 1, 0)
+            {
+                "msg_type": "job_status",
+                "content": get_test_job_states(job_id_list)
+            },
+            msg["data"]
         )
+        for job_id in ALL_JOBS:
+            if job_id in job_id_list:
+                self.assertEqual(
+                    self.jm._running_jobs[job_id]["refresh"],
+                    int(not JOBS_TERMINALITY[job_id]) + 1
+                )
+            else:
+                self.assertEqual(
+                    self.jm._running_jobs[job_id]["refresh"],
+                    int(not JOBS_TERMINALITY[job_id])
+                )
+        self.assertTrue(self.jc._lookup_timer)
+        self.assertTrue(self.jc._running_lookup_loop)
 
+    @mock.patch(
+        "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get", get_mock_client
+    )
+    def test_handle_stop_job_update_msg(self):
+        job_id_list = [JOB_CREATED, JOB_COMPLETED, BATCH_PARENT]
+        req = make_comm_msg("stop_job_update", job_id_list, False)
+        self.jc._handle_comm_message(req)
+        for job_id in ALL_JOBS:
+            if job_id in job_id_list:
+                self.assertEqual(
+                    self.jm._running_jobs[job_id]["refresh"],
+                    max(int(not JOBS_TERMINALITY[job_id]) - 1, 0)
+                )
+            else:
+                self.assertEqual(
+                    self.jm._running_jobs[job_id]["refresh"],
+                    int(not JOBS_TERMINALITY[job_id])
+                )
+        self.assertIsNone(self.jc._lookup_timer)
+        self.assertFalse(self.jc._running_lookup_loop)
+
+    @mock.patch(
+        "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get", get_mock_client
+    )
     def test_handle_start_job_update_batch_msg(self):
-        pass
+        job_id = BATCH_PARENT
+        job_id_list = [BATCH_PARENT] + BATCH_CHILDREN
+        req = make_comm_msg("start_job_update_batch", job_id, False)
+        self.jc._handle_comm_message(req)
+        msg = self.jc._comm.last_message
+        self.assertEqual(
+            {
+                "msg_type": "job_status",
+                "content": get_test_job_states(job_id_list)
+            },
+            msg["data"]
+        )
+        for job_id in ALL_JOBS:
+            if job_id in job_id_list:
+                self.assertEqual(
+                    self.jm._running_jobs[job_id]["refresh"],
+                    int(not JOBS_TERMINALITY[job_id]) + 1
+                )
+            else:
+                self.assertEqual(
+                    self.jm._running_jobs[job_id]["refresh"],
+                    int(not JOBS_TERMINALITY[job_id])
+                )
+        self.assertTrue(self.jc._lookup_timer)
+        self.assertTrue(self.jc._running_lookup_loop)
 
+    @mock.patch(
+        "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get", get_mock_client
+    )
     def test_handle_stop_job_update_batch_msg(self):
-        pass
+        job_id = BATCH_PARENT
+        job_id_list = [BATCH_PARENT] + BATCH_CHILDREN
+        req = make_comm_msg("stop_job_update_batch", job_id, False)
+        self.jc._handle_comm_message(req)
+        for job_id in ALL_JOBS:
+            if job_id in job_id_list:
+                self.assertEqual(
+                    self.jm._running_jobs[job_id]["refresh"],
+                    max(int(not JOBS_TERMINALITY[job_id]) - 1, 0)
+                )
+            else:
+                self.assertEqual(
+                    self.jm._running_jobs[job_id]["refresh"],
+                    int(not JOBS_TERMINALITY[job_id])
+                )
+        self.assertIsNone(self.jc._lookup_timer)
+        self.assertFalse(self.jc._running_lookup_loop)
 
     @mock.patch(
         "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get", get_mock_client

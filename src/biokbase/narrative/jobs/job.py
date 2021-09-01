@@ -92,6 +92,13 @@ def get_dne_job_state(job_id, output_state=True):
     return state
 
 
+def get_dne_job_states(job_ids, output_state=True):
+    return {
+        job_id: get_dne_job_state(job_id, output_state)
+        for job_id in job_ids
+    }
+
+
 class Job(object):
     _job_logs = list()
     _acc_state = None  # accumulates state
@@ -345,6 +352,9 @@ class Job(object):
         job_ids: List[str],
         init: bool = True,
     ) -> dict:
+        if not job_ids:
+            return {}
+
         return clients.get("execution_engine2").check_jobs(
             {
                 "job_ids": job_ids,

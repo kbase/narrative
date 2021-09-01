@@ -11,7 +11,6 @@ define([
 
     const DEFAULT_FULLY_LOADED = false,
         DEFAULT_WRITABLE = false,
-        DEFAULT_NOTEBOOK_NAME = 'some notebook',
         TEST_TOKEN = 'foo',
         TEST_USER = 'some_user';
 
@@ -62,42 +61,18 @@ define([
 
             // mock a jupyter notebook.
             // namespace should already be loaded
-            Jupyter.notebook = {
-                _fully_loaded: DEFAULT_FULLY_LOADED,
-                writable: DEFAULT_WRITABLE,
-                get_cells: () => [],
-                keyboard_manager: {
-                    edit_shortcuts: {
-                        remove_shortcut: () => {},
-                    },
-                    command_shortcuts: {
-                        remove_shortcut: () => {},
-                    },
-                },
-                kernel: {
-                    is_connected: () => false,
-                    comm_info: (_, callback) => {
-                        callback({
-                            content: {
-                                comms: {
-                                    some_comm_id: {
-                                        target_name: 'KBaseJobs',
-                                    },
-                                },
-                            },
-                        });
-                    },
-                    comm_manager: {
-                        register_comm: () => {},
-                    },
-                    execute: (_, callbacks) => {
-                        callbacks.shell.reply({
-                            content: {},
-                        });
+
+            Jupyter.notebook = Mocks.buildMockNotebook({
+                fullyLoaded: DEFAULT_FULLY_LOADED,
+                readOnly: !DEFAULT_WRITABLE,
+                commInfoReturn: {
+                    comms: {
+                        some_comm_id: {
+                            target_name: 'KBaseJobs',
+                        },
                     },
                 },
-                notebook_name: DEFAULT_NOTEBOOK_NAME,
-            };
+            });
             Jupyter.keyboard_manager = Jupyter.notebook.keyboard_manager;
 
             // The NarrativeLogin.init call invokes both of the above token/user profile calls.

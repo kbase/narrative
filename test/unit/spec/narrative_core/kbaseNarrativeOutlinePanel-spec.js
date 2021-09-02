@@ -2,9 +2,10 @@ define(['jquery', 'kbaseNarrativeOutlinePanel', 'base/js/namespace', 'narrativeM
     $,
     Widget,
     Jupyter,
-    { buildMockCell, buildMockNotebook }
+    Mocks
 ) => {
     'use strict';
+    const { buildMockCell, buildMockNotebook } = Mocks;
     describe('The kbaseNarrativeOutlinePanel widget', () => {
         let widget, $target;
         beforeAll(() => {

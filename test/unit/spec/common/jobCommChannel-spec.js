@@ -4,45 +4,17 @@ define([
     'common/runtime',
     '/test/data/jobsData',
     'testUtil',
-], (JobCommChannel, Jupyter, Runtime, JobsData, TestUtil) => {
+    'narrativeMocks',
+], (JobCommChannel, Jupyter, Runtime, JobsData, TestUtil, Mocks) => {
     'use strict';
 
-    const DEFAULT_COMM_INFO = {
-        content: {
-            comms: [],
-        },
-    };
-    const DEFAULT_COMM = {
-        on_msg: () => {
-            /* do nothing */
-        },
-        send: () => {
-            /* do nothing */
-        },
-        send_shell_message: () => {
-            /* do nothing */
-        },
-    };
-
-    function makeMockNotebook(commInfoReturn, registerTargetReturn, executeReply) {
-        commInfoReturn = commInfoReturn || DEFAULT_COMM_INFO;
-        registerTargetReturn = registerTargetReturn || DEFAULT_COMM;
-        executeReply = executeReply || {};
-        return {
-            save_checkpoint: () => {
-                /* no op */
-            },
-            kernel: {
-                comm_info: (name, cb) => cb(commInfoReturn),
-                execute: (code, cb) => cb.shell.reply({ content: executeReply }),
-                comm_manager: {
-                    register_comm: () => {
-                        /* do nothing */
-                    },
-                    register_target: (name, cb) => cb(registerTargetReturn, {}),
-                },
-            },
-        };
+    function makeMockNotebook(commInfoReturn, registerTargetReturn, executeReply, cells = []) {
+        return Mocks.buildMockNotebook({
+            commInfoReturn,
+            registerTargetReturn,
+            executeReply,
+            cells,
+        });
     }
 
     function makeCommMsg(msgType, content) {
@@ -131,6 +103,33 @@ define([
             return comm.initCommChannel().then(() => {
                 expect(comm.comm).not.toBeNull();
             });
+        });
+
+        it('should generate the correct python code for the cells', () => {
+            Jupyter.notebook = makeMockNotebook(null, null, null, [
+                { metadata: { kbase: { attributes: { id: '12345' } } } },
+                { metadata: { kbase: { attributes: { id: 'abcde' } } } },
+                { id: 'whatever' },
+                { metadata: { kbase: { attributes: { id: 'who cares?' } } } },
+            ]);
+            const comm = new JobCommChannel();
+            const jobCommInitString = comm.getJobInitCode();
+            expect(jobCommInitString.split('\n')).toEqual([
+                'from biokbase.narrative.jobs.jobcomm import JobComm',
+                'cell_list = ["12345","abcde","who cares?"]',
+                'JobComm().start_job_status_loop(cell_list=cell_list, init_jobs=True)',
+            ]);
+        });
+
+        it('should generate the correct python code for an empty narrative', () => {
+            Jupyter.notebook = makeMockNotebook();
+            const comm = new JobCommChannel();
+            const jobCommInitString = comm.getJobInitCode();
+            expect(jobCommInitString.split('\n')).toEqual([
+                'from biokbase.narrative.jobs.jobcomm import JobComm',
+                'cell_list = []',
+                'JobComm().start_job_status_loop(cell_list=cell_list, init_jobs=True)',
+            ]);
         });
 
         it('Should fail to initialize with a failed reply from the JobManager startup', async () => {

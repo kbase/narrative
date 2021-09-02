@@ -9,6 +9,8 @@ from biokbase.narrative.common import kblogging
 UNKNOWN_REASON = "Unknown reason"
 NO_JOB_ERR = "No valid job ids"
 
+LOOKUP_TIMER_INTERVAL = 10
+
 
 class JobRequest:
     """
@@ -197,7 +199,9 @@ class JobComm:
 
     def _verify_job_id(self, req: JobRequest) -> None:
         if not req.job_id:
-            self.send_error_message("job_does_not_exist", req)
+            self.send_error_message(
+                "job_comm_error", req, {"message": "No job ID supplied"}
+            )
             raise NoJobException(f"Job id required to process {req.request} request")
 
     def _verify_job_id_list(self, req: JobRequest) -> None:
@@ -205,8 +209,10 @@ class JobComm:
             raise TypeError("List expected for job_id_list")
         req.job_id_list[:] = [job_id for job_id in req.job_id_list if job_id]
         if len(req.job_id_list) == 0:
-            self.send_error_message("job_does_not_exist", req)
-            raise NoJobException(NO_JOB_ERR)
+            self.send_error_message(
+                "job_comm_error", req, {"message": "No job IDs supplied"}
+            )
+            raise NoJobException("No valid job ids")
 
     def start_job_status_loop(self, *args, **kwargs) -> None:
         """
@@ -246,14 +252,16 @@ class JobComm:
 
     def _lookup_job_status_loop(self) -> None:
         """
-        Run a loop that will look up job info. After running, this spawns a Timer thread on a 10
-        second loop to run itself again.
+        Run a loop that will look up job info. After running, this spawns a Timer thread on
+        a loop to run itself again. LOOKUP_TIMER_INTERVAL sets the frequency at which the loop runs.
         """
         all_job_states = self._lookup_all_job_states(None)
         if len(all_job_states) == 0 or not self._running_lookup_loop:
             self.stop_job_status_loop()
         else:
-            self._lookup_timer = threading.Timer(10, self._lookup_job_status_loop)
+            self._lookup_timer = threading.Timer(
+                LOOKUP_TIMER_INTERVAL, self._lookup_job_status_loop
+            )
             self._lookup_timer.start()
 
     def _lookup_all_job_states(self, req: JobRequest) -> dict:
@@ -307,9 +315,13 @@ class JobComm:
         and also returns the job state (or raises a ValueError if not found).
         """
         req = JobRequest(
-            {"content": {"data": {"request_type": "job_status", "job_id": job_id}}}
+            {
+                "content": {
+                    "data": {"request_type": "job_status", "job_id_list": [job_id]}
+                }
+            }
         )
-        return self._lookup_job_state(req)
+        return self._lookup_job_states(req)
 
     def _lookup_job_states(self, req: JobRequest) -> dict:
         """
@@ -389,7 +401,7 @@ class JobComm:
                 "content": {
                     "data": {
                         "request_type": req.request.replace("_batch", ""),
-                        "job_id_list": job_ids
+                        "job_id_list": job_ids,
                     }
                 }
             }

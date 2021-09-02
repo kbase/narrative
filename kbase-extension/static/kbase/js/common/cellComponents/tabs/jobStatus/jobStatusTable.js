@@ -121,7 +121,8 @@ define([
     function factory(config) {
         const widgetsById = {},
             bus = Runtime.make().bus(),
-            { jobManager, toggleTab } = config;
+            { jobManager, toggleTab } = config,
+            jobsByRetryParent = {};
 
         if (!jobManager.model || !jobManager.model.getItem('exec.jobs.byId')) {
             throw new Error('Cannot start JobStatusTable without a jobs object in the config');
@@ -135,13 +136,16 @@ define([
          * @returns {DataTable} datatable object
          */
         function renderTable(rows) {
-            const rowCount = rows.length;
+            // group jobs by their retry parents
+            const jobsByOriginalId = Jobs.getCurrentJobs(rows, jobsByRetryParent);
+            const rowCount = Object.keys(jobsByOriginalId).length;
+
             dataTable = $(container)
                 .find('table')
                 .dataTable({
-                    data: rows,
+                    data: Object.values(jobsByOriginalId),
                     rowId: (row) => {
-                        return 'job_' + row.job_id;
+                        return `job_${row.retry_parent || row.job_id}`;
                     },
                     searching: false,
                     pageLength: dataTablePageLength,
@@ -150,10 +154,15 @@ define([
                         {
                             className: `${cssBaseClass}__cell--object`,
                             render: (data, type, row) => {
-                                const params = jobManager.model.getItem(
-                                    `exec.jobs.params.${row.job_id}`
-                                );
-                                return params ? renderParams(params) : row.job_id;
+                                const params = jobManager.model.getItem('exec.jobs.params') || {};
+
+                                if (row.retry_parent && params[row.retry_parent]) {
+                                    return renderParams(params[row.retry_parent]);
+                                }
+                                if (params[row.job_id]) {
+                                    return renderParams(params[row.job_id]);
+                                }
+                                return row.job_id;
                             },
                         },
                         {
@@ -183,10 +192,14 @@ define([
                                     return '';
                                 }
                                 const jsActionString = jobAction.replace(/ /g, '-');
+                                const dataTarget =
+                                    jobAction === 'retry' && row.retry_parent
+                                        ? row.retry_parent
+                                        : row.job_id;
                                 return button(
                                     {
                                         role: 'button',
-                                        dataTarget: row.job_id,
+                                        dataTarget,
                                         dataAction: jsActionString,
                                         dataElement: 'job-action-button',
                                         class: `${cssBaseClass}__cell_action--${jsActionString}`,
@@ -324,31 +337,34 @@ define([
                     jobArray.forEach((jobState) => updateJobStatusInTable(jobState));
                 },
             });
+
+            const batchId = jobManager.model.getItem('exec.jobState.job_id');
             const paramsRequired = [];
             const jobIdList = [];
             jobs.forEach((jobState) => {
-                jobIdList.push(jobState.job_id);
-                if (!jobManager.model.getItem(`exec.jobs.params.${jobState.job_id}`)) {
-                    paramsRequired.push(jobState.job_id);
+                if (!jobState.batch_job) {
+                    jobIdList.push(jobState.job_id);
+                    if (
+                        !jobManager.model.getItem(`exec.jobs.params.${jobState.job_id}`) &&
+                        jobState.job_id !== batchId
+                    ) {
+                        paramsRequired.push(jobState.job_id);
+                    }
                 }
             });
+            jobManager.addListener('job-status', [batchId].concat(jobIdList));
 
             if (paramsRequired.length) {
                 jobManager.addListener('job-info', paramsRequired, {
                     jobStatusTable_info: handleJobInfo,
                 });
-                bus.emit('request-job-info', {
-                    jobIdList: paramsRequired,
-                });
+                const jobInfoRequestParams =
+                    paramsRequired.length === jobIdList.length
+                        ? { batchId }
+                        : { jobIdList: paramsRequired };
+                bus.emit('request-job-info', jobInfoRequestParams);
             }
-
-            // TODO: add listeners when the bulk import cell is initialised
-            jobManager.addListener('job-status', jobIdList, {
-                jobStatusTable_status: handleJobStatus,
-            });
-            jobManager.addListener('job-does-not-exist', jobIdList, {
-                jobStatusTable_dne: handleJobDoesNotExist,
-            });
+            bus.emit('request-job-status', { batchId });
         }
 
         /**
@@ -356,12 +372,30 @@ define([
          * @param {object} jobState
          */
         function updateJobStatusInTable(jobState) {
+            const rowIx = jobState.retry_parent || jobState.job_id;
+
+            if (!jobsByRetryParent[rowIx]) {
+                // irrelevant
+                return;
+            }
+
+            const jobIx = `${jobState.created || 0}__${jobState.job_id}`;
+            jobsByRetryParent[rowIx].jobs[jobIx] = jobState;
+
+            // make sure that this job is the most recent version
+            const sortedJobs = Object.keys(jobsByRetryParent[rowIx].jobs).sort();
+            const lastJob = sortedJobs[sortedJobs.length - 1];
+            const jobUpdateData = jobsByRetryParent[rowIx].jobs[lastJob];
+            // irrelevant update
+            if (jobUpdateData.job_id !== jobState.job_id) {
+                return;
+            }
             // select the appropriate row
-            dataTable
-                .DataTable()
-                .row('#job_' + jobState.job_id)
-                .data(jobState)
-                .draw();
+            try {
+                dataTable.DataTable().row(`#job_${rowIx}`).data(jobState);
+            } catch (e) {
+                console.error('Error trying to update jobs table:', e);
+            }
         }
 
         /**
@@ -370,61 +404,12 @@ define([
          * @param {object} message
          */
         function handleJobInfo(_, message) {
-            const jobId = message.jobId;
-            jobManager.model.setItem(`exec.jobs.params.${jobId}`, message.jobInfo.job_params[0]);
-            jobManager.removeListener(jobId, 'job-info');
-            // update the table
-            dataTable
-                .DataTable()
-                .row('#job_' + jobId)
-                .invalidate()
-                .draw();
-        }
-
-        /**
-         * @param {object} _ - job manager context
-         * @param {object} message
-         * @returns
-         */
-        function handleJobDoesNotExist(_, message) {
             const { jobId } = message;
-            jobManager.removeListener(message.jobId, 'job-info');
-            handleJobStatus({
-                jobId,
-                jobState: {
-                    job_id: jobId,
-                    status: 'does_not_exist',
-                },
-            });
-        }
+            const jobState = jobManager.model.getItem(`exec.jobs.byId.${jobId}`);
+            const rowIx = jobState && jobState.retry_parent ? jobState.retry_parent : jobId;
 
-        /**
-         * Update the job status table with the new job status
-         * @param {object} _ - job manager context
-         * @param {object} message
-         */
-        function handleJobStatus(_, message) {
-            const jobState = message.jobState;
-            const jobId = jobState.job_id;
-            const status = jobState.status;
-
-            jobManager.removeListener(jobId, 'job-does-not-exist');
-
-            if (Jobs.isTerminalStatus(status)) {
-                jobManager.removeListener(jobId, 'job-status');
-                if (status === 'does_not_exist') {
-                    jobManager.removeJobListeners(jobId);
-                }
-            }
-
-            // check if the status has changed; if not, ignore this update
-            const previousStatus = jobManager.model.getItem(`exec.jobs.byId.${jobId}.status`);
-            if (status === previousStatus) {
-                return;
-            }
-
-            // otherwise, update the model using the jobState object
-            jobManager.updateModel([jobState]);
+            // update the table
+            dataTable.DataTable().row(`#job_${rowIx}`).invalidate().draw();
         }
 
         /**
@@ -492,8 +477,6 @@ define([
             jobManager.removeHandler('modelUpdate', 'table');
             jobManager.removeHandler('modelUpdate', 'dropdown');
             jobManager.removeHandler('job-info', 'jobStatusTable_info');
-            jobManager.removeHandler('job-status', 'jobStatusTable_status');
-            jobManager.removeHandler('job-does-not-exist', 'jobStatusTable_dne');
 
             return dropdownWidget.stop();
         }

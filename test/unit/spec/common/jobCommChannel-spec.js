@@ -1,9 +1,10 @@
-define(['common/jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUtil'], (
-    JobCommChannel,
-    Jupyter,
-    Runtime,
-    TestUtil
-) => {
+define([
+    'common/jobCommChannel',
+    'base/js/namespace',
+    'common/runtime',
+    '/test/data/jobsData',
+    'testUtil',
+], (JobCommChannel, Jupyter, Runtime, JobsData, TestUtil) => {
     'use strict';
 
     const DEFAULT_COMM_INFO = {
@@ -12,9 +13,15 @@ define(['common/jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUti
         },
     };
     const DEFAULT_COMM = {
-        on_msg: () => {},
-        send: () => {},
-        send_shell_message: () => {},
+        on_msg: () => {
+            /* do nothing */
+        },
+        send: () => {
+            /* do nothing */
+        },
+        send_shell_message: () => {
+            /* do nothing */
+        },
     };
 
     function makeMockNotebook(commInfoReturn, registerTargetReturn, executeReply) {
@@ -29,7 +36,9 @@ define(['common/jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUti
                 comm_info: (name, cb) => cb(commInfoReturn),
                 execute: (code, cb) => cb.shell.reply({ content: executeReply }),
                 comm_manager: {
-                    register_comm: () => {},
+                    register_comm: () => {
+                        /* do nothing */
+                    },
                     register_target: (name, cb) => cb(registerTargetReturn, {}),
                 },
             },
@@ -55,6 +64,28 @@ define(['common/jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUti
         }
         return outputWidgetInfo ? { jobId, jobState, outputWidgetInfo } : { jobId, jobState };
     }
+
+    const convertToJobState = (acc, curr) => {
+        acc[curr.job_id] = {
+            state: curr,
+            widget_info: {},
+        };
+        return acc;
+    };
+
+    const convertToJobStateBusMessage = (job) => {
+        return [
+            {
+                jobId: job.job_id,
+                jobState: job,
+                outputWidgetInfo: {},
+            },
+            {
+                channel: { jobId: job.job_id },
+                key: { type: 'job-status' },
+            },
+        ];
+    };
 
     describe('The jobCommChannel widget', () => {
         let testBus;
@@ -121,7 +152,7 @@ define(['common/jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUti
                 expected: { request_type: 'ping', ping_id: 'ping!', pongId: 'pong!' },
             },
             {
-                channel: 'request-job-cancellation',
+                channel: 'request-job-cancel',
                 message: { jobId: 'someJob' },
                 expected: { request_type: 'cancel_job', job_id: 'someJob' },
             },
@@ -129,27 +160,6 @@ define(['common/jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUti
                 channel: 'request-job-retry',
                 message: { jobId: 'someJob' },
                 expected: { request_type: 'retry_job', job_id: 'someJob' },
-            },
-            {
-                channel: 'request-job-status',
-                message: { jobId: 'someJob' },
-                expected: {
-                    request_type: 'job_status',
-                    job_id: 'someJob',
-                },
-            },
-            {
-                channel: 'request-job-updates-start',
-                message: { jobId: 'someJob' },
-                expected: {
-                    request_type: 'start_job_update',
-                    job_id: 'someJob',
-                },
-            },
-            {
-                channel: 'request-job-updates-stop',
-                message: { jobId: 'someJob' },
-                expected: { request_type: 'stop_job_update', job_id: 'someJob' },
             },
             {
                 channel: 'request-job-log',
@@ -185,26 +195,47 @@ define(['common/jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUti
                     latest: true,
                 },
             },
-            {
-                channel: 'request-job-info',
-                message: { jobId: 'someJob' },
-                expected: {
-                    request_type: 'job_info',
-                    job_id: 'someJob',
-                },
-            },
-            {
-                channel: 'request-job-info',
-                message: { jobIdList: ['someJob', 'someOtherJob', 'aThirdJob'] },
-                expected: {
-                    request_type: 'job_info',
-                    job_id_list: ['someJob', 'someOtherJob', 'aThirdJob'],
-                },
-            },
         ];
 
+        const translated = {
+            info: 'job_info',
+            status: 'job_status',
+            'updates-start': 'start_job_update',
+            'updates-stop': 'stop_job_update',
+        };
+
+        // all these can have a single job ID, a job ID list, or a batch ID as input
+        Object.keys(translated).forEach((type) => {
+            busMsgCases.push(
+                {
+                    channel: `request-job-${type}`,
+                    message: { jobId: 'someJob' },
+                    expected: {
+                        request_type: translated[type],
+                        job_id: 'someJob',
+                    },
+                },
+                {
+                    channel: `request-job-${type}`,
+                    message: { jobIdList: ['someJob', 'someOtherJob', 'aThirdJob'] },
+                    expected: {
+                        request_type: translated[type],
+                        job_id_list: ['someJob', 'someOtherJob', 'aThirdJob'],
+                    },
+                },
+                {
+                    channel: `request-job-${type}`,
+                    message: { batchId: 'batch_job' },
+                    expected: {
+                        request_type: `${translated[type]}_batch`,
+                        job_id: 'batch_job',
+                    },
+                }
+            );
+        });
+
         busMsgCases.forEach((testCase) => {
-            it('Should handle a ' + testCase.channel + ' bus message', () => {
+            it(`should handle a ${testCase.channel} bus message`, () => {
                 const comm = new JobCommChannel();
                 return comm
                     .initCommChannel()
@@ -255,62 +286,361 @@ define(['common/jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUti
             });
         });
 
-        it('Should send a run_status message to the bus', () => {
-            const jobId = 'foo',
-                cellId = 'bar',
-                busMsg = {
-                    cell_id: cellId,
-                    job_id: jobId,
-                },
-                msg = makeCommMsg('run_status', busMsg);
-            const comm = new JobCommChannel();
-            spyOn(testBus, 'send');
-            return comm.initCommChannel().then(() => {
-                comm.handleCommMessages(msg);
-                expect(testBus.send).toHaveBeenCalledWith(busMsg, {
-                    channel: { cell: cellId },
-                    key: { type: 'run-status' },
-                });
-            });
-        });
+        const testJobId = 'someJob';
 
-        it('Should send a result message to the bus', () => {
-            const cellId = 'someCellId',
-                busMsg = {
-                    address: { cell_id: cellId },
-                    result: [1],
-                },
-                msg = makeCommMsg('result', busMsg),
-                comm = new JobCommChannel();
-            spyOn(testBus, 'send');
-            return comm.initCommChannel().then(() => {
-                comm.handleCommMessages(msg);
-                expect(testBus.send).toHaveBeenCalledWith(busMsg, {
-                    channel: { cell: cellId },
-                    key: { type: 'result' },
-                });
-            });
-        });
-
-        it('Should send job_status messages to the bus', () => {
-            const jobId = 'someJob',
-                msg = makeCommMsg('job_status', {
-                    state: {
-                        job_id: jobId,
+        const busTests = [
+            {
+                type: 'run_status',
+                message: { job_id: testJobId, cell_id: 'bar' },
+                expected: [
+                    { job_id: testJobId, cell_id: 'bar' },
+                    {
+                        channel: { cell: 'bar' },
+                        key: { type: 'run-status' },
                     },
-                    spec: {},
-                    widget_info: {},
+                ],
+            },
+            {
+                type: 'result',
+                message: {
+                    result: [1],
+                    address: { cell_id: 'bar' },
+                },
+                expected: [
+                    {
+                        result: [1],
+                        address: { cell_id: 'bar' },
+                    },
+                    {
+                        channel: { cell: 'bar' },
+                        key: { type: 'result' },
+                    },
+                ],
+            },
+            {
+                type: 'job_does_not_exist',
+                message: {
+                    job_id: testJobId,
+                    source: 'someSource',
+                },
+                expected: [
+                    {
+                        jobId: testJobId,
+                        source: 'someSource',
+                    },
+                    {
+                        channel: { jobId: testJobId },
+                        key: { type: 'job-does-not-exist' },
+                    },
+                ],
+            },
+            {
+                // does_not_exist from job status call => convert to job_status
+                type: 'job_does_not_exist',
+                message: {
+                    job_id: testJobId,
+                    source: 'job_status',
+                },
+                expected: [
+                    {
+                        jobId: testJobId,
+                        jobState: {
+                            job_id: testJobId,
+                            status: 'does_not_exist',
+                        },
+                    },
+                    {
+                        channel: { jobId: testJobId },
+                        key: { type: 'job-status' },
+                    },
+                ],
+            },
+            {
+                // info for a single job
+                type: 'job_info',
+                message: (() => {
+                    const output = {};
+                    output[JobsData.validInfo[0].job_id] = JobsData.validInfo[0];
+                    return output;
+                })(),
+                expected: [
+                    {
+                        jobId: JobsData.validInfo[0].job_id,
+                        jobInfo: JobsData.validInfo[0],
+                    },
+                    {
+                        channel: { jobId: JobsData.validInfo[0].job_id },
+                        key: { type: 'job-info' },
+                    },
+                ],
+            },
+            {
+                // info multiple jobs
+                type: 'job_info',
+                message: JobsData.validInfo.reduce((acc, curr) => {
+                    acc[curr.job_id] = curr;
+                    return acc;
+                }, {}),
+                expectedMultiple: JobsData.validInfo.map((info) => {
+                    return [
+                        {
+                            jobId: info.job_id,
+                            jobInfo: info,
+                        },
+                        {
+                            channel: { jobId: info.job_id },
+                            key: { type: 'job-info' },
+                        },
+                    ];
                 }),
-                busMsg = makeJobStatusMsg(jobId, null, {});
+            },
+            {
+                type: 'job_logs',
+                message: {
+                    job_id: testJobId,
+                    latest: true,
+                    logs: [
+                        {
+                            line: 'this',
+                        },
+                    ],
+                },
+                expected: [
+                    {
+                        jobId: testJobId,
+                        logs: {
+                            job_id: testJobId,
+                            latest: true,
+                            logs: [
+                                {
+                                    line: 'this',
+                                },
+                            ],
+                        },
+                        latest: true,
+                    },
+                    {
+                        channel: { jobId: testJobId },
+                        key: { type: 'job-logs' },
+                    },
+                ],
+            },
+            {
+                type: 'jobs_retried',
+                message: [
+                    {
+                        job: {
+                            widget_info: {},
+                            state: {
+                                job_id: testJobId,
+                                status: 'wherever',
+                            },
+                        },
+                        retry: {
+                            widget_info: 'whatever',
+                            state: {
+                                job_id: '1234567890abcdef',
+                                status: 'whenever',
+                            },
+                        },
+                    },
+                    {
+                        job: {
+                            state: {
+                                job_id: 'ping',
+                            },
+                            widget_info: 'ping',
+                        },
+                        retry: {},
+                    },
+                ],
+                expectedMultiple: [
+                    [
+                        {
+                            job: {
+                                jobState: {
+                                    job_id: testJobId,
+                                    status: 'wherever',
+                                },
+                                outputWidgetInfo: {},
+                            },
+                            retry: {
+                                jobState: {
+                                    job_id: '1234567890abcdef',
+                                    status: 'whenever',
+                                },
+                                outputWidgetInfo: 'whatever',
+                            },
+                        },
+                        {
+                            channel: { jobId: testJobId },
+                            key: { type: 'job-retry-response' },
+                        },
+                    ],
+                    [
+                        {
+                            job: {
+                                jobState: {
+                                    job_id: 'ping',
+                                },
+                                outputWidgetInfo: 'ping',
+                            },
+                            retry: {},
+                        },
+                        {
+                            channel: { jobId: 'ping' },
+                            key: { type: 'job-retry-response' },
+                        },
+                    ],
+                ],
+            },
+            {
+                // single job status message
+                type: 'job_status',
+                message: (() => {
+                    const output = {};
+                    output[JobsData.allJobs[0].job_id] = {
+                        state: JobsData.allJobs[0],
+                        widget_info: {},
+                    };
+                    return output;
+                })(),
+                expected: [
+                    {
+                        jobId: JobsData.allJobs[0].job_id,
+                        jobState: JobsData.allJobs[0],
+                        outputWidgetInfo: {},
+                    },
+                    {
+                        channel: { jobId: JobsData.allJobs[0].job_id },
+                        key: { type: 'job-status' },
+                    },
+                ],
+            },
+            {
+                // more than one job, indexed by job ID
+                type: 'job_status',
+                message: JobsData.allJobs.reduce(convertToJobState, {}),
+                expectedMultiple: JobsData.allJobs.map(convertToJobStateBusMessage),
+            },
+            {
+                // OK job and an errored job
+                type: 'job_status',
+                message: JobsData.allJobs
+                    .concat({
+                        job_id: '1234567890abcdef',
+                        status: 'does_not_exist',
+                    })
+                    .reduce(convertToJobState, {}),
+                expectedMultiple: JobsData.allJobs.map(convertToJobStateBusMessage).concat([
+                    [
+                        {
+                            jobId: '1234567890abcdef',
+                            jobState: {
+                                job_id: '1234567890abcdef',
+                                status: 'does_not_exist',
+                            },
+                            outputWidgetInfo: {},
+                        },
+                        {
+                            channel: { jobId: '1234567890abcdef' },
+                            key: { type: 'job-status' },
+                        },
+                    ],
+                ]),
+            },
+            {
+                type: 'job_status',
+                message: JobsData.allJobsWithBatchParent.reduce(convertToJobState, {}),
+                expectedMultiple: JobsData.allJobsWithBatchParent.map(convertToJobStateBusMessage),
+            },
+            {
+                type: 'job_comm_error',
+                message: {
+                    job_id: 'jobCancelWithErrors',
+                    message: 'cancel error',
+                    source: 'cancel_job',
+                },
+                expectedMultiple: [
+                    [
+                        {
+                            jobId: 'jobCancelWithErrors',
+                            message: 'cancel error',
+                            request: 'cancel_job',
+                        },
+                        {
+                            channel: { jobId: 'jobCancelWithErrors' },
+                            key: { type: 'job-error' },
+                        },
+                    ],
+                ],
+            },
+            {
+                type: 'job_comm_error',
+                message: {
+                    job_id: 'jobLogWithErrors',
+                    message: 'log error',
+                    source: 'job_logs',
+                },
+                expectedMultiple: [
+                    [
+                        {
+                            jobId: 'jobLogWithErrors',
+                            message: 'log error',
+                        },
+                        {
+                            channel: { jobId: 'jobLogWithErrors' },
+                            key: { type: 'job-log-deleted' },
+                        },
+                    ],
+                    [
+                        {
+                            jobId: 'jobLogWithErrors',
+                            error: 'log error',
+                        },
+                        {
+                            channel: { jobId: 'jobLogWithErrors' },
+                            key: { type: 'job-logs' },
+                        },
+                    ],
+                ],
+            },
+            {
+                // unrecognised error type
+                type: 'job_comm_error',
+                message: {
+                    source: 'some-unknown-error',
+                    job_id: 'unknownJobErrors',
+                    message: 'some random error',
+                },
+                expected: [
+                    {
+                        jobId: 'unknownJobErrors',
+                        message: 'some random error',
+                        request: 'some-unknown-error',
+                    },
+                    {
+                        channel: { jobId: 'unknownJobErrors' },
+                        key: { type: 'job-error' },
+                    },
+                ],
+            },
+        ];
 
-            const comm = new JobCommChannel();
-            spyOn(testBus, 'send');
-
-            return comm.initCommChannel().then(() => {
-                comm.handleCommMessages(msg);
-                expect(testBus.send).toHaveBeenCalledWith(busMsg, {
-                    channel: { jobId: jobId },
-                    key: { type: 'job-status' },
+        busTests.forEach((test) => {
+            it(`should send a ${test.type} message to the bus`, () => {
+                const msg = makeCommMsg(test.type, test.message),
+                    comm = new JobCommChannel();
+                spyOn(testBus, 'send');
+                return comm.initCommChannel().then(() => {
+                    comm.handleCommMessages(msg);
+                    if (test.expectedMultiple) {
+                        expect(testBus.send.calls.allArgs()).toEqual(
+                            jasmine.arrayWithExactContents(test.expectedMultiple)
+                        );
+                    } else if (test.expected) {
+                        expect(testBus.send.calls.allArgs()).toEqual([test.expected]);
+                    }
                 });
             });
         });
@@ -370,183 +700,6 @@ define(['common/jobCommChannel', 'base/js/namespace', 'common/runtime', 'testUti
                     ],
                 ];
                 expect(allArgs).toEqual(expected);
-            });
-        });
-
-        it('Should send a job_info message to the bus', () => {
-            const jobId = 'foo',
-                jobStateMsg = {
-                    job_id: jobId,
-                    state: {
-                        job_id: jobId,
-                    },
-                },
-                busMsg = {
-                    jobId: jobId,
-                    jobInfo: jobStateMsg,
-                },
-                msg = makeCommMsg('job_info', jobStateMsg);
-
-            const comm = new JobCommChannel();
-            spyOn(testBus, 'send');
-            return comm.initCommChannel().then(() => {
-                comm.handleCommMessages(msg);
-                expect(testBus.send).toHaveBeenCalledWith(busMsg, {
-                    channel: { jobId: jobId },
-                    key: { type: 'job-info' },
-                });
-            });
-        });
-
-        it('Should send job_does_not_exist messages to the bus', () => {
-            const jobId = 'foo-dne',
-                msg = makeCommMsg('job_does_not_exist', {
-                    job_id: jobId,
-                    source: 'someSource',
-                }),
-                comm = new JobCommChannel();
-            spyOn(testBus, 'send');
-            return comm.initCommChannel().then(() => {
-                comm.handleCommMessages(msg);
-                expect(testBus.send).toHaveBeenCalledWith(
-                    {
-                        jobId: jobId,
-                        source: 'someSource',
-                    },
-                    {
-                        channel: { jobId: jobId },
-                        key: { type: 'job-does-not-exist' },
-                    }
-                );
-            });
-        });
-
-        it('Should convert job_does_not_exist status messages into job_status messages', () => {
-            const jobId = 'foo-dne',
-                msg = makeCommMsg('job_does_not_exist', {
-                    job_id: jobId,
-                    source: 'job_status',
-                }),
-                comm = new JobCommChannel();
-            spyOn(testBus, 'send');
-            return comm.initCommChannel().then(() => {
-                comm.handleCommMessages(msg);
-                expect(testBus.send).toHaveBeenCalledWith(
-                    {
-                        jobId: jobId,
-                        jobState: {
-                            job_id: jobId,
-                            status: 'does_not_exist',
-                        },
-                    },
-                    {
-                        channel: { jobId: jobId },
-                        key: { type: 'job-status' },
-                    }
-                );
-            });
-        });
-
-        it('Should send job_logs to the bus', () => {
-            const jobId = 'foo-logs',
-                msg = makeCommMsg('job_logs', {
-                    job_id: jobId,
-                    latest: true,
-                    logs: [{}],
-                }),
-                comm = new JobCommChannel();
-            spyOn(testBus, 'send');
-            return comm.initCommChannel().then(() => {
-                comm.handleCommMessages(msg);
-                expect(testBus.send).toHaveBeenCalledWith(
-                    {
-                        jobId: jobId,
-                        logs: msg.content.data.content,
-                        latest: msg.content.data.content.latest,
-                    },
-                    {
-                        channel: { jobId: jobId },
-                        key: { type: 'job-logs' },
-                    }
-                );
-            });
-        });
-
-        const errCases = {
-            cancel_job: {
-                ok: 'job-canceled',
-                error: 'job-cancel-error',
-            },
-            job_logs: {
-                ok: 'job-logs',
-                error: 'job-log-deleted',
-            },
-        };
-
-        Object.keys(errCases).forEach((errCase) => {
-            it('Should handle job_comm_error of type ' + errCase, () => {
-                const jobId = 'job-' + errCase,
-                    errMsg = errCase + ' error happened!',
-                    msg = makeCommMsg('job_comm_error', {
-                        source: errCase,
-                        job_id: jobId,
-                        message: errMsg,
-                    }),
-                    comm = new JobCommChannel();
-                spyOn(testBus, 'send');
-                return comm.initCommChannel().then(() => {
-                    comm.handleCommMessages(msg);
-                    expect(testBus.send.calls.allArgs()).toEqual([
-                        [
-                            {
-                                jobId: jobId,
-                                message: errMsg,
-                            },
-                            {
-                                channel: { jobId: jobId },
-                                key: { type: errCases[errCase].error },
-                            },
-                        ],
-                        [
-                            {
-                                jobId: jobId,
-                                error: errMsg,
-                            },
-                            {
-                                channel: { jobId: jobId },
-                                key: { type: errCases[errCase].ok },
-                            },
-                        ],
-                    ]);
-                });
-            });
-        });
-
-        it('Handle unknown job errors generically', () => {
-            const jobId = 'jobWithErrors',
-                errMsg = 'some random error',
-                requestType = 'some-error',
-                busMsg = {
-                    source: requestType,
-                    job_id: jobId,
-                    message: errMsg,
-                },
-                msg = makeCommMsg('job_comm_error', busMsg),
-                comm = new JobCommChannel();
-            spyOn(testBus, 'send');
-            return comm.initCommChannel().then(() => {
-                comm.handleCommMessages(msg);
-                expect(testBus.send).toHaveBeenCalledWith(
-                    {
-                        jobId: jobId,
-                        message: errMsg,
-                        request: requestType,
-                    },
-                    {
-                        channel: { jobId: jobId },
-                        key: { type: 'job-error' },
-                    }
-                );
             });
         });
 

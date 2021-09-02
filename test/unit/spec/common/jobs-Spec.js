@@ -1,4 +1,9 @@
-define(['common/jobs', '/test/data/jobsData', 'testUtil'], (Jobs, JobsData, TestUtil) => {
+define(['common/jobs', '/test/data/jobsData', 'common/props', 'testUtil'], (
+    Jobs,
+    JobsData,
+    Props,
+    TestUtil
+) => {
     'use strict';
 
     function arrayToHTML(array) {
@@ -28,12 +33,6 @@ define(['common/jobs', '/test/data/jobsData', 'testUtil'], (Jobs, JobsData, Test
         'validJobStatuses',
         'validStatusesForAction',
     ];
-
-    const jobsByStatus = {};
-    // N.b. only one job of each status is saved here
-    JobsData.allJobs.forEach((job) => {
-        jobsByStatus[job.status] = job;
-    });
 
     describe('Test Jobs module', () => {
         afterEach(() => {
@@ -78,7 +77,7 @@ define(['common/jobs', '/test/data/jobsData', 'testUtil'], (Jobs, JobsData, Test
         });
 
         it('Should know how to tell good job states', () => {
-            JobsData.allJobs
+            JobsData.allJobsWithBatchParent
                 .concat([
                     {
                         job_id: 'zero_created',
@@ -126,7 +125,7 @@ define(['common/jobs', '/test/data/jobsData', 'testUtil'], (Jobs, JobsData, Test
             canRetry: 'retry',
         };
         describe(`the ${fn} function`, () => {
-            JobsData.allJobs.forEach((jobState) => {
+            JobsData.allJobsWithBatchParent.forEach((jobState) => {
                 it(`should respond ${jobState.meta[fn]} for ${jobState.job_id}`, () => {
                     expect(Jobs[fn](jobState)).toBe(jobState.meta[fn]);
                     expect(Jobs.canDo(actions[fn], jobState)).toBe(jobState.meta[fn]);
@@ -206,7 +205,7 @@ define(['common/jobs', '/test/data/jobsData', 'testUtil'], (Jobs, JobsData, Test
                 expect(Jobs.jobAction({ status: item })).toEqual(null);
             });
         });
-        JobsData.allJobs.forEach((state) => {
+        JobsData.allJobsWithBatchParent.forEach((state) => {
             it(`should generate a job action with the job state ${state.status}`, () => {
                 expect(Jobs.jobAction(state)).toEqual(state.meta.jobAction);
             });
@@ -524,48 +523,53 @@ define(['common/jobs', '/test/data/jobsData', 'testUtil'], (Jobs, JobsData, Test
         });
     });
 
+    describe('populateModelFromJobArray', () => {
+        it('dies without a model', () => {
+            expect(() => {
+                Jobs.populateModelFromJobArray();
+            }).toThrowError(/Missing a model to populate/);
+        });
+        it('create removes existing jobs and jobState data with an empty jobs array', () => {
+            const model = Props.make({
+                data: {
+                    exec: {
+                        jobs: {},
+                        jobState: {},
+                        limo: 'Rolls Royce',
+                    },
+                },
+            });
+            expect(model.getItem('exec')).toEqual({ jobs: {}, jobState: {}, limo: 'Rolls Royce' });
+            Jobs.populateModelFromJobArray(model, []);
+            expect(model.getItem('exec')).toEqual({ limo: 'Rolls Royce' });
+        });
+
+        it('adds the expected structures to jobs and jobState, batch job', () => {
+            const model = Props.make({
+                    data: {},
+                }),
+                batchData = JobsData.batchJob;
+            expect(model.getItem('exec')).toBeUndefined();
+            Jobs.populateModelFromJobArray(model, batchData.jobArray);
+            expect(model.getItem('exec.jobState')).toEqual(batchData.jobsById[batchData.batchId]);
+            expect(model.getItem('exec.jobs.byId')).toEqual(batchData.jobsById);
+        });
+    });
+
     describe('jobArrayToIndexedObject', () => {
         afterEach(() => {
             TestUtil.clearRuntime();
         });
 
-        it('creates a model with jobs indexed by ID and by status', () => {
-            const model = Jobs.jobArrayToIndexedObject(JobsData.allJobs);
-            const idIndex = model.byId,
-                statusIndex = model.byStatus;
-
-            const jobStatuses = {};
+        it('creates a model with jobs indexed by ID', () => {
+            const model = Jobs.jobArrayToIndexedObject(JobsData.allJobsWithBatchParent);
+            const idIndex = model.byId;
             expect(Object.keys(idIndex).sort()).toEqual(
-                JobsData.allJobs
+                JobsData.allJobsWithBatchParent
                     .map((jobState) => {
-                        jobStatuses[jobState.status] = 1;
                         return jobState.job_id;
                     })
                     .sort()
-            );
-
-            expect(Object.keys(statusIndex).sort()).toEqual(Object.keys(jobStatuses).sort());
-        });
-
-        it('collects retried jobs', () => {
-            const model = Jobs.jobArrayToIndexedObject(JobsData.batchJob.jobArray);
-            const idIndex = model.byId,
-                statusIndex = model.byStatus;
-
-            const jobStatuses = {};
-            expect(Object.keys(idIndex).sort()).toEqual(
-                JobsData.batchJob.jobArray
-                    .map((jobState) => {
-                        jobStatuses[jobState.status] = 1;
-                        return jobState.job_id;
-                    })
-                    .sort()
-            );
-
-            expect(Object.keys(statusIndex).sort()).toEqual(Object.keys(jobStatuses).sort());
-            expect(model.batchId).toEqual('job-created');
-            expect(Object.keys(model.jobsWithRetries).sort()).toEqual(
-                JobsData.batchJob.jobsWithRetries.sort()
             );
         });
 
@@ -573,13 +577,8 @@ define(['common/jobs', '/test/data/jobsData', 'testUtil'], (Jobs, JobsData, Test
             const model = Jobs.jobArrayToIndexedObject([]);
             expect(model).toEqual({
                 byId: {},
-                byStatus: {},
-                // jobsWithRetries: new Set(),
-                jobsWithRetries: {},
-                batchId: null,
             });
             expect(model.byId).toEqual({});
-            expect(model.byStatus).toEqual({});
         });
     });
 });

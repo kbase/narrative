@@ -3,12 +3,12 @@ define([
     'common/cellComponents/tabs/jobStatus/jobStatusTable',
     'common/props',
     'testUtil',
-    '/test/data/testAppObj',
-], (JobStatusTab, JobStatusTable, Props, TestUtil, TestAppObject) => {
+    '/test/data/testBulkImportObj',
+], (JobStatusTab, JobStatusTable, Props, TestUtil, TestBulkImportObject) => {
     'use strict';
 
     const model = Props.make({
-        data: TestAppObject,
+        data: TestBulkImportObject,
         onUpdate: () => {},
     });
     const jobTabContainerClass = 'kb-job__tab_container';

@@ -54,8 +54,6 @@ def get_test_job(job_id):
     return copy.deepcopy(TEST_JOBS[job_id])
 
 
-JOB_NOT_FOUND = "job_not_found"
-
 # test_jobs contains jobs in the following states
 JOB_COMPLETED = "5d64935ab215ad4128de94d6"
 JOB_CREATED = "5d64935cb215ad4128de94d7"
@@ -70,6 +68,7 @@ BATCH_ERROR_RETRIED = "60e7112887b7e512a899c8f5"
 BATCH_RETRY_COMPLETED = "60e71159fce9347f2adeaac6"
 BATCH_RETRY_RUNNING = "60e7165f3e91121969554d82"
 BATCH_RETRY_ERROR = "60e717d78ac80701062efe63"
+JOB_NOT_FOUND = "job_not_found"
 
 BATCH_CHILDREN = [
     BATCH_COMPLETED,
@@ -204,10 +203,7 @@ def get_test_job_state(job_id):
 
 def get_test_job_states(job_ids=TEST_JOBS.keys()):
     # generate full job state objects
-    return {
-        job_id: get_test_job_state(job_id)
-        for job_id in job_ids
-    }
+    return {job_id: get_test_job_state(job_id) for job_id in job_ids}
 
 
 @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
@@ -217,10 +213,7 @@ def get_batch_family_jobs(return_list=False):
     with from_job_id(s)
     """
     child_jobs = Job.from_job_ids(BATCH_CHILDREN, return_list=True)
-    batch_job = Job.from_job_id(
-        BATCH_PARENT,
-        children=child_jobs
-    )
+    batch_job = Job.from_job_id(BATCH_PARENT, children=child_jobs)
 
     if return_list:
         return [batch_job] + child_jobs
@@ -230,7 +223,7 @@ def get_batch_family_jobs(return_list=False):
             **{
                 child_id: child_job
                 for child_id, child_job in zip(BATCH_CHILDREN, child_jobs)
-            }
+            },
         }
 
 
@@ -261,22 +254,13 @@ class JobTest(unittest.TestCase):
             SpecManager().reload()
 
     def check_jobs_equal(self, jobl, jobr):
-        self.assertEqual(
-            jobl._acc_state,
-            jobr._acc_state
-        )
+        self.assertEqual(jobl._acc_state, jobr._acc_state)
 
         with mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client):
-            self.assertEqual(
-                jobl.state(),
-                jobr.state()
-            )
+            self.assertEqual(jobl.state(), jobr.state())
 
         for attr in JOB_ATTRS:
-            self.assertEqual(
-                getattr(jobl, attr),
-                getattr(jobr, attr)
-            )
+            self.assertEqual(getattr(jobl, attr), getattr(jobr, attr))
 
     def check_job_attrs_custom(self, job, exp_attr={}):
         attr = dict(JOB_ATTR_DEFAULTS)
@@ -292,10 +276,7 @@ class JobTest(unittest.TestCase):
         if not exp_attrs and not skip_state:
             state = create_state_from_ee2(job_id)
             with mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client):
-                self.assertEqual(
-                    state,
-                    job.state()
-                )
+                self.assertEqual(state, job.state())
 
         attrs = create_attrs_from_ee2(job_id)
         attrs.update(exp_attrs)
@@ -304,10 +285,7 @@ class JobTest(unittest.TestCase):
         # cause EE2 query
         with mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client):
             for name, value in attrs.items():
-                self.assertEqual(
-                    value,
-                    getattr(job, name)
-                )
+                self.assertEqual(value, getattr(job, name))
 
     def test_job_init__error_no_job_id(self):
 
@@ -712,10 +690,7 @@ class JobTest(unittest.TestCase):
         since it requires passing in child jobs
         """
         state = create_state_from_ee2(BATCH_PARENT)
-        batch_children = [
-            create_job_from_ee2(job_id)
-            for job_id in BATCH_CHILDREN
-        ]
+        batch_children = [create_job_from_ee2(job_id) for job_id in BATCH_CHILDREN]
 
         job = create_job_from_ee2(BATCH_PARENT, children=batch_children)
         out = job.get_viewer_params(state)
@@ -724,11 +699,15 @@ class JobTest(unittest.TestCase):
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def test_query_job_state(self):
         for job_id in ALL_JOBS:
-            exp = create_state_from_ee2(job_id, exclude_fields=JOB_INIT_EXCLUDED_JOB_STATE_FIELDS)
+            exp = create_state_from_ee2(
+                job_id, exclude_fields=JOB_INIT_EXCLUDED_JOB_STATE_FIELDS
+            )
             got = Job.query_ee2_state(job_id, init=True)
             self.assertEqual(exp, got)
 
-            exp = create_state_from_ee2(job_id, exclude_fields=EXCLUDED_JOB_STATE_FIELDS)
+            exp = create_state_from_ee2(
+                job_id, exclude_fields=EXCLUDED_JOB_STATE_FIELDS
+            )
             got = Job.query_ee2_state(job_id, init=False)
             self.assertEqual(exp, got)
 
@@ -736,12 +715,16 @@ class JobTest(unittest.TestCase):
     def test_query_job_states(self):
         states = Job.query_ee2_states(ALL_JOBS, init=True)
         for job_id, got in states.items():
-            exp = create_state_from_ee2(job_id, exclude_fields=JOB_INIT_EXCLUDED_JOB_STATE_FIELDS)
+            exp = create_state_from_ee2(
+                job_id, exclude_fields=JOB_INIT_EXCLUDED_JOB_STATE_FIELDS
+            )
             self.assertEqual(exp, got)
 
         states = Job.query_ee2_states(ALL_JOBS, init=False)
         for job_id, got in states.items():
-            exp = create_state_from_ee2(job_id, exclude_fields=EXCLUDED_JOB_STATE_FIELDS)
+            exp = create_state_from_ee2(
+                job_id, exclude_fields=EXCLUDED_JOB_STATE_FIELDS
+            )
             self.assertEqual(exp, got)
 
     NEW_RETRY_IDS = ["hello", "goodbye"]

@@ -32,7 +32,11 @@ def mock_agent_token(*args, **kwargs):
 
 def get_method(tag, app_id, live=False):
     spec = get_test_spec(tag, app_id, live=live)
-    return spec["behavior"]["kb_service_name"] + "." + spec["behavior"]["kb_service_method"]
+    return (
+        spec["behavior"]["kb_service_name"]
+        + "."
+        + spec["behavior"]["kb_service_method"]
+    )
 
 
 class AppManagerTestCase(unittest.TestCase):
@@ -210,14 +214,10 @@ class AppManagerTestCase(unittest.TestCase):
         expected = {
             "method": self.test_app_id.replace("/", "."),
             "service_ver": self.test_app_version,
-            "params": [
-                self.expected_app_params
-            ],
+            "params": [self.expected_app_params],
             "app_id": self.test_app_id,
-            "meta": {
-                "tag": self.test_tag
-            },
-            "wsid": WSID_STANDARD
+            "meta": {"tag": self.test_tag},
+            "wsid": WSID_STANDARD,
         }
         output = self.am.run_app(
             self.test_app_id, self.test_app_params, tag=self.test_tag, dry_run=True
@@ -582,19 +582,21 @@ class AppManagerTestCase(unittest.TestCase):
 
         exp_batch_run_params = [
             {
-                "method": get_method(test_input[i]["tag"], test_input[i]["app_id"], live=True),
+                "method": get_method(
+                    test_input[i]["tag"], test_input[i]["app_id"], live=True
+                ),
                 "service_ver": test_input[i]["version"],
                 "params": [mod(test_input[i]["params"][j])],
                 "app_id": test_input[i]["app_id"],
-                "meta": {
-                    "tag": test_input[i]["tag"]
-                }
+                "meta": {"tag": test_input[i]["tag"]},
             }
-            for i, j in [(0, 0), (0, 1), (1, 0)]  # i is idx in test_input, j is idx of params
+            for i, j in [
+                (0, 0),
+                (0, 1),
+                (1, 0),
+            ]  # i is idx in test_input, j is idx of params
         ]
-        exp_batch_params = {
-            "wsid": WSID_STANDARD
-        }
+        exp_batch_params = {"wsid": WSID_STANDARD}
 
         self.assertEqual(exp_batch_run_params, batch_run_params)
         self.assertEqual(exp_batch_params, batch_params)
@@ -634,7 +636,7 @@ class AppManagerTestCase(unittest.TestCase):
         self.assertEqual(len(child_jobs), 3)
         self.assertEqual(
             [job.job_id for job in child_jobs],
-            [f"{self.test_job_id}_child_{i}" for i in range(len(child_jobs))]
+            [f"{self.test_job_id}_child_{i}" for i in range(len(child_jobs))],
         )
         self._verify_comm_success(c.return_value.send_comm_message, True, num_jobs=4)
 
@@ -1055,7 +1057,12 @@ class AppManagerTestCase(unittest.TestCase):
             expected_messages.append("new_job")
             expected_keys.append(["job_id"])
             # job ids are new_job_id_child_0, new_job_id_child_1, ..., new_job_id
-            expected_values.append({"job_id": self.test_job_id + (f"_child_{i}" if i < num_jobs - 1 else "")})
+            expected_values.append(
+                {
+                    "job_id": self.test_job_id
+                    + (f"_child_{i}" if i < num_jobs - 1 else "")
+                }
+            )
         self._verify_comm_mock(
             comm_mock,
             1 + num_jobs,

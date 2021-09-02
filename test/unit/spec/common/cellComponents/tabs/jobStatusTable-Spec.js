@@ -640,13 +640,13 @@ define([
                     ).toEqual(0);
                 });
 
-                function checkOpenRow($currentRow, $nextRow) {
+                function checkOpenRow($currentRow) {
                     // the current row should be selected and have the class 'vertical_collapse--open'
                     expect($currentRow[0]).toHaveClass('vertical_collapse--open');
                     expect($currentRow[0]).toHaveClass(`${cssBaseClass}__row--selected`);
 
                     // check for the job log viewer in the row underneath the row that was clicked
-                    $nextRow = $currentRow.next();
+                    const $nextRow = $currentRow.next();
                     ['odd', 'even'].forEach((cls) => {
                         expect($nextRow[0]).not.toHaveClass(cls);
                     });
@@ -656,8 +656,7 @@ define([
                 it('can show and hide child rows', async () => {
                     const rows = container.querySelectorAll('tbody tr.odd, tbody tr.even');
 
-                    let $currentRow = $(rows[2]),
-                        $nextRow;
+                    let $currentRow = $(rows[2]);
                     await TestUtil.waitForElementState(
                         container.querySelector('tbody'),
                         () => {
@@ -672,7 +671,7 @@ define([
 
                     // after clicking, there should be one extra row
                     expect(container.querySelectorAll('tbody tr').length).toEqual(rows.length + 1);
-                    checkOpenRow($currentRow, $nextRow);
+                    checkOpenRow($currentRow);
 
                     // click on another row
                     $currentRow = $(rows[5]);
@@ -688,7 +687,7 @@ define([
                         }
                     );
                     expect(container.querySelectorAll('tbody tr').length).toEqual(rows.length + 2);
-                    checkOpenRow($currentRow, $nextRow);
+                    checkOpenRow($currentRow);
 
                     // click again to remove the row
                     await TestUtil.waitForElementState(

@@ -93,10 +93,7 @@ def get_dne_job_state(job_id, output_state=True):
 
 
 def get_dne_job_states(job_ids, output_state=True):
-    return {
-        job_id: get_dne_job_state(job_id, output_state)
-        for job_id in job_ids
-    }
+    return {job_id: get_dne_job_state(job_id, output_state) for job_id in job_ids}
 
 
 class Job(object):
@@ -173,10 +170,11 @@ class Job(object):
                 # and need the state refresh.
                 # But KBParallel/KB Batch App jobs may not have the
                 # batch_job field
-                self.state(force_refresh=True)
-                .get("child_jobs", JOB_ATTR_DEFAULTS["child_jobs"])
-                if self.batch_job else
-                self._acc_state.get("child_jobs", JOB_ATTR_DEFAULTS["child_jobs"])
+                self.state(force_refresh=True).get(
+                    "child_jobs", JOB_ATTR_DEFAULTS["child_jobs"]
+                )
+                if self.batch_job
+                else self._acc_state.get("child_jobs", JOB_ATTR_DEFAULTS["child_jobs"])
             ),
             job_id=lambda: self._acc_state.get("job_id"),
             params=lambda: copy.deepcopy(
@@ -188,9 +186,10 @@ class Job(object):
                 # Batch container and retry parent jobs don't have a
                 # retry_ids field so skip the state refresh
                 self._acc_state.get("retry_ids", JOB_ATTR_DEFAULTS["retry_ids"])
-                if self.batch_job or self.retry_parent else
-                self.state(force_refresh=True)
-                .get("retry_ids", JOB_ATTR_DEFAULTS["retry_ids"])
+                if self.batch_job or self.retry_parent
+                else self.state(force_refresh=True).get(
+                    "retry_ids", JOB_ATTR_DEFAULTS["retry_ids"]
+                )
             ),
             retry_parent=lambda: self._acc_state.get(
                 "retry_parent", JOB_ATTR_DEFAULTS["retry_parent"]
@@ -341,8 +340,8 @@ class Job(object):
                 "job_id": job_id,
                 "exclude_fields": (
                     JOB_INIT_EXCLUDED_JOB_STATE_FIELDS
-                    if init else
-                    EXCLUDED_JOB_STATE_FIELDS
+                    if init
+                    else EXCLUDED_JOB_STATE_FIELDS
                 ),
             }
         )
@@ -360,8 +359,8 @@ class Job(object):
                 "job_ids": job_ids,
                 "exclude_fields": (
                     JOB_INIT_EXCLUDED_JOB_STATE_FIELDS
-                    if init else
-                    EXCLUDED_JOB_STATE_FIELDS
+                    if init
+                    else EXCLUDED_JOB_STATE_FIELDS
                 ),
                 "return_list": 0,
             }

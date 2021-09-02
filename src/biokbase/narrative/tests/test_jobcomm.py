@@ -48,10 +48,7 @@ APP_NAME = "The Best App in the World"
 
 
 def get_test_job_infos(job_ids):
-    return {
-        job_id: get_test_job_info(job_id)
-        for job_id in job_ids
-    }
+    return {job_id: get_test_job_info(job_id) for job_id in job_ids}
 
 
 def get_test_job_info(job_id):
@@ -200,6 +197,26 @@ class JobCommTestCase(unittest.TestCase):
             self.assertIsInstance(job_id, str)
             validate_job_state(states[job_id])
 
+    def test_lookup_job_state__1_ok(self):
+        output_states = self.jc.lookup_job_state(JOB_COMPLETED)
+        msg = self.jc._comm.last_message
+        self.assertEqual(
+            {
+                "msg_type": "job_status",
+                "content": output_states,
+            },
+            msg["data"],
+        )
+        for job_id, state in output_states.items():
+            self.assertEqual(self.job_states[job_id], state)
+            validate_job_state(state)
+
+    def test_lookup_job_states__no_job(self):
+        with self.assertRaisesRegex(NoJobException, NO_JOB_ERR):
+            self.jc.lookup_job_state(None)
+        msg = self.jc._comm.last_message
+        self.check_no_input_error_job_id(msg, None, "job_status")
+
     # -----------------------
     # Lookup single job state
     # -----------------------
@@ -213,13 +230,10 @@ class JobCommTestCase(unittest.TestCase):
                 "msg_type": "job_status",
                 "content": output_states,
             },
-            msg["data"]
+            msg["data"],
         )
         for job_id, state in output_states.items():
-            self.assertEqual(
-                self.job_states[job_id],
-                state
-            )
+            self.assertEqual(self.job_states[job_id], state)
             validate_job_state(state)
 
     @mock.patch(
@@ -235,13 +249,10 @@ class JobCommTestCase(unittest.TestCase):
                 "msg_type": "job_status",
                 "content": output_states,
             },
-            msg["data"]
+            msg["data"],
         )
         for job_id, state in output_states.items():
-            self.assertEqual(
-                self.job_states[job_id],
-                state
-            )
+            self.assertEqual(self.job_states[job_id], state)
             validate_job_state(state)
 
     def test_lookup_job_states__no_job(self):
@@ -258,24 +269,15 @@ class JobCommTestCase(unittest.TestCase):
         output_states = self.jc._lookup_job_states(req)
         msg = self.jc._comm.last_message
         self.assertEqual(
-            {
-                "msg_type": "job_status",
-                "content": output_states
-            },
+            {"msg_type": "job_status", "content": output_states},
             msg["data"],
         )
         for job_id, state in output_states.items():
             if job_id in self.job_states:
-                self.assertEqual(
-                    self.job_states[job_id],
-                    state
-                )
+                self.assertEqual(self.job_states[job_id], state)
                 validate_job_state(state)
             else:
-                self.assertEqual(
-                    get_dne_job_state(job_id),
-                    state
-                )
+                self.assertEqual(get_dne_job_state(job_id), state)
 
     # -----------------------
     # Lookup batch job states
@@ -340,7 +342,7 @@ class JobCommTestCase(unittest.TestCase):
                 "msg_type": "job_info",
                 "content": get_test_job_infos(job_id_list),
             },
-            msg["data"]
+            msg["data"],
         )
 
     def test_lookup_job_info__batch__ok(self):
@@ -353,7 +355,7 @@ class JobCommTestCase(unittest.TestCase):
                 "msg_type": "job_info",
                 "content": get_test_job_infos(job_id_list),
             },
-            msg["data"]
+            msg["data"],
         )
 
     def test_lookup_job_info__no_job(self):
@@ -374,10 +376,10 @@ class JobCommTestCase(unittest.TestCase):
                 "msg_type": "job_info",
                 "content": {
                     JOB_COMPLETED: get_test_job_info(JOB_COMPLETED),
-                    JOB_NOT_FOUND: "does_not_exist"
-                }
+                    JOB_NOT_FOUND: "does_not_exist",
+                },
             },
-            msg["data"]
+            msg["data"],
         )
 
     # ------------
@@ -738,22 +740,19 @@ class JobCommTestCase(unittest.TestCase):
         self.jc._modify_job_updates(req)
         msg = self.jc._comm.last_message
         self.assertEqual(
-            {
-                "msg_type": "job_status",
-                "content": get_test_job_states(job_id_list)
-            },
-            msg["data"]
+            {"msg_type": "job_status", "content": get_test_job_states(job_id_list)},
+            msg["data"],
         )
         for job_id in ALL_JOBS:
             if job_id in job_id_list:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    int(not JOBS_TERMINALITY[job_id]) + 1
+                    int(not JOBS_TERMINALITY[job_id]) + 1,
                 )
             else:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    int(not JOBS_TERMINALITY[job_id])
+                    int(not JOBS_TERMINALITY[job_id]),
                 )
         self.assertTrue(self.jc._lookup_timer)
         self.assertTrue(self.jc._running_lookup_loop)
@@ -769,12 +768,12 @@ class JobCommTestCase(unittest.TestCase):
             if job_id in job_id_list:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    max(int(not JOBS_TERMINALITY[job_id]) - 1, 0)
+                    max(int(not JOBS_TERMINALITY[job_id]) - 1, 0),
                 )
             else:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    int(not JOBS_TERMINALITY[job_id])
+                    int(not JOBS_TERMINALITY[job_id]),
                 )
         self.assertIsNone(self.jc._lookup_timer)
         self.assertFalse(self.jc._running_lookup_loop)
@@ -795,12 +794,12 @@ class JobCommTestCase(unittest.TestCase):
             if job_id in job_id_list:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    max(int(not JOBS_TERMINALITY[job_id]) - 1, 0)
+                    max(int(not JOBS_TERMINALITY[job_id]) - 1, 0),
                 )
             else:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    int(not JOBS_TERMINALITY[job_id])
+                    int(not JOBS_TERMINALITY[job_id]),
                 )
         self.assertIsNone(self.jc._lookup_timer)
         self.assertFalse(self.jc._running_lookup_loop)
@@ -819,12 +818,12 @@ class JobCommTestCase(unittest.TestCase):
             if job_id in job_id_list:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    max(int(not JOBS_TERMINALITY[job_id]) - 1, 0)
+                    max(int(not JOBS_TERMINALITY[job_id]) - 1, 0),
                 )
             else:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    int(not JOBS_TERMINALITY[job_id])
+                    int(not JOBS_TERMINALITY[job_id]),
                 )
         self.assertTrue(self.jc._lookup_timer)
         self.assertTrue(self.jc._running_lookup_loop)
@@ -842,22 +841,19 @@ class JobCommTestCase(unittest.TestCase):
         self.jc._modify_job_updates_batch(req)
         msg = self.jc._comm.last_message
         self.assertEqual(
-            {
-                "msg_type": "job_status",
-                "content": get_test_job_states(job_id_list)
-            },
-            msg["data"]
+            {"msg_type": "job_status", "content": get_test_job_states(job_id_list)},
+            msg["data"],
         )
         for job_id in ALL_JOBS:
             if job_id in job_id_list:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    int(not JOBS_TERMINALITY[job_id]) + 1
+                    int(not JOBS_TERMINALITY[job_id]) + 1,
                 )
             else:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    int(not JOBS_TERMINALITY[job_id])
+                    int(not JOBS_TERMINALITY[job_id]),
                 )
         self.assertTrue(self.jc._lookup_timer)
         self.assertTrue(self.jc._running_lookup_loop)
@@ -874,12 +870,12 @@ class JobCommTestCase(unittest.TestCase):
             if job_id in job_id_list:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    max(int(not JOBS_TERMINALITY[job_id]) - 1, 0)
+                    max(int(not JOBS_TERMINALITY[job_id]) - 1, 0),
                 )
             else:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    int(not JOBS_TERMINALITY[job_id])
+                    int(not JOBS_TERMINALITY[job_id]),
                 )
         self.assertIsNone(self.jc._lookup_timer)
         self.assertFalse(self.jc._running_lookup_loop)
@@ -888,8 +884,7 @@ class JobCommTestCase(unittest.TestCase):
         job_id = None
         req = make_comm_msg("start_job_update_batch", job_id, True)
         with self.assertRaisesRegex(
-            NoJobException,
-            f"Job id required to process {req.request} request"
+            NoJobException, f"Job id required to process {req.request} request"
         ):
             self.jc._modify_job_updates_batch(req)
         msg = self.jc._comm.last_message
@@ -898,10 +893,7 @@ class JobCommTestCase(unittest.TestCase):
     def test_modify_job_update_batch__bad_job(self):
         job_id = JOB_NOT_FOUND
         req = make_comm_msg("start_job_update_batch", job_id, True)
-        with self.assertRaisesRegex(
-            NoJobException,
-            f"No job present with id {job_id}"
-        ):
+        with self.assertRaisesRegex(NoJobException, f"No job present with id {job_id}"):
             self.jc._modify_job_updates_batch(req)
         msg = self.jc._comm.last_message
         self.assertEqual(
@@ -912,16 +904,13 @@ class JobCommTestCase(unittest.TestCase):
                     "job_id": job_id,
                 },
             },
-            msg["data"]
+            msg["data"],
         )
 
     def test_modify_job_update_batch__not_batch(self):
         job_id = JOB_RUNNING
         req = make_comm_msg("start_job_update_batch", job_id, True)
-        with self.assertRaisesRegex(
-            NotBatchException,
-            "Not a batch job"
-        ):
+        with self.assertRaisesRegex(NotBatchException, "Not a batch job"):
             self.jc._modify_job_updates_batch(req)
 
     # ------------------------
@@ -976,11 +965,8 @@ class JobCommTestCase(unittest.TestCase):
         self.jc._handle_comm_message(req)
         msg = self.jc._comm.last_message
         self.assertEqual(
-            {
-                "msg_type": "job_info",
-                "content": {job_id: get_test_job_info(job_id)}
-            },
-            msg["data"]
+            {"msg_type": "job_info", "content": {job_id: get_test_job_info(job_id)}},
+            msg["data"],
         )
 
     @mock.patch(
@@ -994,9 +980,9 @@ class JobCommTestCase(unittest.TestCase):
         self.assertEqual(
             {
                 "msg_type": "job_status",
-                "content": get_test_job_states([BATCH_PARENT] + BATCH_CHILDREN)
+                "content": get_test_job_states([BATCH_PARENT] + BATCH_CHILDREN),
             },
-            msg["data"]
+            msg["data"],
         )
 
     @mock.patch(
@@ -1011,11 +997,10 @@ class JobCommTestCase(unittest.TestCase):
             {
                 "msg_type": "job_info",
                 "content": {
-                    job_id: get_test_job_info(job_id)
-                    for job_id in BATCH_CHILDREN
-                }
+                    job_id: get_test_job_info(job_id) for job_id in BATCH_CHILDREN
+                },
             },
-            msg["data"]
+            msg["data"],
         )
 
     @mock.patch(
@@ -1037,22 +1022,19 @@ class JobCommTestCase(unittest.TestCase):
         self.jc._handle_comm_message(req)
         msg = self.jc._comm.last_message
         self.assertEqual(
-            {
-                "msg_type": "job_status",
-                "content": get_test_job_states(job_id_list)
-            },
-            msg["data"]
+            {"msg_type": "job_status", "content": get_test_job_states(job_id_list)},
+            msg["data"],
         )
         for job_id in ALL_JOBS:
             if job_id in job_id_list:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    int(not JOBS_TERMINALITY[job_id]) + 1
+                    int(not JOBS_TERMINALITY[job_id]) + 1,
                 )
             else:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    int(not JOBS_TERMINALITY[job_id])
+                    int(not JOBS_TERMINALITY[job_id]),
                 )
         self.assertTrue(self.jc._lookup_timer)
         self.assertTrue(self.jc._running_lookup_loop)
@@ -1068,12 +1050,12 @@ class JobCommTestCase(unittest.TestCase):
             if job_id in job_id_list:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    max(int(not JOBS_TERMINALITY[job_id]) - 1, 0)
+                    max(int(not JOBS_TERMINALITY[job_id]) - 1, 0),
                 )
             else:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    int(not JOBS_TERMINALITY[job_id])
+                    int(not JOBS_TERMINALITY[job_id]),
                 )
         self.assertIsNone(self.jc._lookup_timer)
         self.assertFalse(self.jc._running_lookup_loop)
@@ -1088,22 +1070,19 @@ class JobCommTestCase(unittest.TestCase):
         self.jc._handle_comm_message(req)
         msg = self.jc._comm.last_message
         self.assertEqual(
-            {
-                "msg_type": "job_status",
-                "content": get_test_job_states(job_id_list)
-            },
-            msg["data"]
+            {"msg_type": "job_status", "content": get_test_job_states(job_id_list)},
+            msg["data"],
         )
         for job_id in ALL_JOBS:
             if job_id in job_id_list:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    int(not JOBS_TERMINALITY[job_id]) + 1
+                    int(not JOBS_TERMINALITY[job_id]) + 1,
                 )
             else:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    int(not JOBS_TERMINALITY[job_id])
+                    int(not JOBS_TERMINALITY[job_id]),
                 )
         self.assertTrue(self.jc._lookup_timer)
         self.assertTrue(self.jc._running_lookup_loop)
@@ -1120,12 +1099,12 @@ class JobCommTestCase(unittest.TestCase):
             if job_id in job_id_list:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    max(int(not JOBS_TERMINALITY[job_id]) - 1, 0)
+                    max(int(not JOBS_TERMINALITY[job_id]) - 1, 0),
                 )
             else:
                 self.assertEqual(
                     self.jm._running_jobs[job_id]["refresh"],
-                    int(not JOBS_TERMINALITY[job_id])
+                    int(not JOBS_TERMINALITY[job_id]),
                 )
         self.assertIsNone(self.jc._lookup_timer)
         self.assertFalse(self.jc._running_lookup_loop)

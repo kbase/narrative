@@ -259,7 +259,9 @@ class JobComm:
         if len(all_job_states) == 0 or not self._running_lookup_loop:
             self.stop_job_status_loop()
         else:
-            self._lookup_timer = threading.Timer(LOOKUP_TIMER_INTERVAL, self._lookup_job_status_loop)
+            self._lookup_timer = threading.Timer(
+                LOOKUP_TIMER_INTERVAL, self._lookup_job_status_loop
+            )
             self._lookup_timer.start()
 
     def _lookup_all_job_states(self, req: JobRequest) -> dict:
@@ -313,9 +315,13 @@ class JobComm:
         and also returns the job state (or raises a ValueError if not found).
         """
         req = JobRequest(
-            {"content": {"data": {"request_type": "job_status", "job_id": job_id}}}
+            {
+                "content": {
+                    "data": {"request_type": "job_status", "job_id_list": [job_id]}
+                }
+            }
         )
-        return self._lookup_job_state(req)
+        return self._lookup_job_states(req)
 
     def _lookup_job_states(self, req: JobRequest) -> dict:
         """
@@ -395,7 +401,7 @@ class JobComm:
                 "content": {
                     "data": {
                         "request_type": req.request.replace("_batch", ""),
-                        "job_id_list": job_ids
+                        "job_id_list": job_ids,
                     }
                 }
             }

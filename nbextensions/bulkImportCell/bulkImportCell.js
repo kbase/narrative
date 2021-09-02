@@ -629,7 +629,11 @@ define([
                 });
 
                 // TODO: assess cell state, update job info if required
-                jobManager.restorefromSaved();
+                try {
+                    jobManager.restoreFromSaved();
+                } catch (e) {
+                    console.log(e);
+                }
 
                 updateState();
                 cell.renderMinMax();

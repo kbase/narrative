@@ -541,9 +541,7 @@ class JobManager(object):
             for job in unreg_child_jobs:
                 self.register_new_job(
                     job=job,
-                    refresh=int(
-                        not job.was_terminal
-                    ),
+                    refresh=int(not job.was_terminal),
                 )
 
         batch_job.update_children(reg_child_jobs + unreg_child_jobs)

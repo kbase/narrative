@@ -386,9 +386,7 @@ class AppManager(object):
             kblogging.log_event(self._log, "run_app_error", log_info)
             raise transform_job_exception(e)
 
-        new_job = Job.from_job_id(
-            job_id
-        )
+        new_job = Job.from_job_id(job_id)
 
         self._send_comm_message(
             "run_status",
@@ -540,10 +538,7 @@ class AppManager(object):
             },
         )
 
-        child_jobs = Job.from_job_ids(
-            child_ids,
-            return_list=True
-        )
+        child_jobs = Job.from_job_ids(child_ids, return_list=True)
 
         parent_job = Job.from_job_id(
             batch_id,

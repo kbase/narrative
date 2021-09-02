@@ -9,6 +9,8 @@ from biokbase.narrative.common import kblogging
 UNKNOWN_REASON = "Unknown reason"
 NO_JOB_ERR = "No valid job ids"
 
+LOOKUP_TIMER_INTERVAL = 10
+
 
 class JobRequest:
     """
@@ -250,14 +252,14 @@ class JobComm:
 
     def _lookup_job_status_loop(self) -> None:
         """
-        Run a loop that will look up job info. After running, this spawns a Timer thread on a 10
-        second loop to run itself again.
+        Run a loop that will look up job info. After running, this spawns a Timer thread on
+        a loop to run itself again. LOOKUP_TIMER_INTERVAL sets the frequency at which the loop runs.
         """
         all_job_states = self._lookup_all_job_states(None)
         if len(all_job_states) == 0 or not self._running_lookup_loop:
             self.stop_job_status_loop()
         else:
-            self._lookup_timer = threading.Timer(10, self._lookup_job_status_loop)
+            self._lookup_timer = threading.Timer(LOOKUP_TIMER_INTERVAL, self._lookup_job_status_loop)
             self._lookup_timer.start()
 
     def _lookup_all_job_states(self, req: JobRequest) -> dict:

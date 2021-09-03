@@ -5,6 +5,11 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
 ### Version 4.5.1
+- Python dependency updates
+  - plotly 5.1.0 -> 5.3.1
+  - pygments 2.9.0 -> 2.10.0
+  - pytest 6.2.4 -> 6.2.5
+  - terminado 0.10.1 -> 0.11.1
 - Javascript dependency updates
   - @wdio/browserstack-service 7.9.1 -> 7.11.1
   - @wdio/cli 7.9.1 -> 7.11.1

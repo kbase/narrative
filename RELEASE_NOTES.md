@@ -4,6 +4,22 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
+### Version 4.5.1
+- Javascript dependency updates
+  - @wdio/browserstack-service 7.9.1 -> 7.11.1
+  - @wdio/cli 7.9.1 -> 7.11.1
+  - @wdio/local-runner 7.9.1 -> 7.11.1 
+  - @wdio/mocha-framework 7.9.1 -> 7.11.1
+  - @wdio/selenium-standalone-service 7.7.7 -> 7.10.1
+  - @wdio/spec-reporter 7.9.0 -> 7.10.1
+  - chromedriver 92.0.1 -> 92.0.2
+  - husky 7.0.1 -> 7.0.2
+  - jasmine-core 3.8.0 -> 3.9.0
+  - msw 0.34.0 -> 0.35.0
+  - puppeteer 10.1.0 -> 10.2.0
+  - terser 5.7.1 -> 5.7.2
+  - webdriverio 7.9.1 -> 7.11.1
+
 ### Version 4.5.0
 - PTV-1561 - SampleSet viewer fixes to allow AMA features; not complete support for AMA features as GenomeSearchUtil does not yet support AMA.
 - SCT-3100 - Improve SampleSet viewer; add improved JSON-RPC 1.1 client and associatedKBase service client; add msw (Mock Service Worker) support;

@@ -214,7 +214,11 @@ class JobComm:
             )
             raise NoJobException("No valid job ids")
 
-    def start_job_status_loop(self, *args, **kwargs) -> None:
+    def start_job_status_loop(
+        self,
+        init_jobs: bool = False,
+        cell_list: List[str] = None,
+    ) -> None:
         """
         Starts the job status lookup loop. This runs every 10 seconds.
         This has the bare *args and **kwargs to handle the case where this comes in as a job
@@ -224,9 +228,9 @@ class JobComm:
         from the workspace.
         """
         self._running_lookup_loop = True
-        if kwargs.get("init_jobs", False):
+        if init_jobs:
             try:
-                self._jm.initialize_jobs()
+                self._jm.initialize_jobs(cell_list)
             except Exception as e:
                 error = {
                     "error": "Unable to get initial jobs list",
@@ -269,7 +273,7 @@ class JobComm:
         Fetches status of all jobs in the current workspace and sends them to the front end.
         req can be None, as it's not used.
         """
-        all_job_states = self._jm.lookup_all_job_states(ignore_refresh_flag=True)
+        all_job_states = self._jm.lookup_all_job_states(ignore_refresh_flag=False)
         self.send_comm_message("job_status_all", all_job_states)
         return all_job_states
 

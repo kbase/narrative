@@ -241,6 +241,28 @@ class Job(object):
             return self._acc_state.get("status") in TERMINAL_STATUSES
 
     @property
+    def is_terminal(self):
+        self.state()
+        if self._acc_state.get("batch_job"):
+            for child_job in self.children:
+                if child_job._acc_state.get("status") != COMPLETED_STATUS:
+                    child_job.state(force_refresh=True)
+        return self.was_terminal
+
+    def in_cells(self, cell_ids):
+        """
+        For job initialization.
+        See if job is associated with present cells
+        """
+        if self.batch_job:
+            for child_job in self.children:
+                if child_job.cell_id in cell_ids:
+                    return True
+                return False
+        else:
+            return self.cell_id in cell_ids
+
+    @property
     def final_state(self):
         if self.was_terminal is True:
             return self.state()

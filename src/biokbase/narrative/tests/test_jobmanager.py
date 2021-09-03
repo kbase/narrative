@@ -10,10 +10,10 @@ from src.biokbase.narrative.jobs.job import (
 )
 import unittest
 import copy
+import itertools
 from unittest import mock
 import biokbase.narrative.jobs.jobmanager
 from biokbase.narrative.jobs.job import Job
-from biokbase.narrative.jobs.specmanager import SpecManager
 from .util import ConfigTests
 from .test_job import (
     JOB_COMPLETED,
@@ -32,13 +32,14 @@ from .test_job import (
     JOB_NOT_FOUND,
     JOBS_TERMINALITY,
     ALL_JOBS,
-    FINISHED_JOBS,
+    TERMINAL_JOBS,
     ACTIVE_JOBS,
     BATCH_CHILDREN,
     get_test_job,
     get_test_spec,
     TEST_JOBS,
     get_test_job_states,
+    get_cell_2_jobs,
 )
 import os
 from IPython.display import HTML
@@ -135,7 +136,7 @@ class JobManagerTest(unittest.TestCase):
         self.assertIn("Job lookup failed", str(e.exception))
 
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
-    def test_initialise_jobs(self):
+    def test_initialize_jobs(self):
         # all jobs have been removed from the JobManager
         self.jm._running_jobs = {}
         self.jm = biokbase.narrative.jobs.jobmanager.JobManager()
@@ -150,9 +151,8 @@ class JobManagerTest(unittest.TestCase):
             if d["job"].was_terminal
         ]
         self.assertEqual(
-            set(FINISHED_JOBS),
+            set(TERMINAL_JOBS),
             set(terminal_ids),
-            # set(JOB_COMPLETED, JOB_TERMINATED, JOB_ERROR)
         )
         self.assertEqual(set(self.job_ids), set(self.jm._running_jobs.keys()))
 
@@ -160,6 +160,32 @@ class JobManagerTest(unittest.TestCase):
             self.assertFalse(self.jm._running_jobs[job_id]["refresh"])
         for job_id in NON_TERMINAL_IDS:
             self.assertTrue(self.jm._running_jobs[job_id]["refresh"])
+
+    @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
+    def test_initialize_jobs__cell_ids(self):
+        """
+        Invoke initialize_jobs with cell_ids
+        """
+        cell_2_jobs = get_cell_2_jobs(instance=False)
+        cell_ids = list(cell_2_jobs.keys())
+        for combo_len in range(1, len(cell_ids) + 1):
+            for combo in itertools.combinations(cell_ids, combo_len):
+                exp_job_ids = [
+                    job_id
+                    for cell_id, job_ids in cell_2_jobs.items()
+                    for job_id in job_ids
+                    if cell_id in combo
+                ]
+                self.jm._running_jobs = {}
+                self.jm.initialize_jobs(cell_ids=combo)
+
+                for job_id, d in self.jm._running_jobs.items():
+                    refresh = d["refresh"]
+
+                    self.assertEqual(
+                        int(job_id in exp_job_ids and not JOBS_TERMINALITY[job_id]),
+                        refresh
+                    )
 
     def test__check_job_list_fail(self):
         with self.assertRaisesRegex(ValueError, NO_ID_ERR_STR):

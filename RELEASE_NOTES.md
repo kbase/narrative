@@ -4,6 +4,13 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
+### Version 4.5.1
+- Python dependency updates
+  - plotly 5.1.0 -> 5.3.1
+  - pygments 2.9.0 -> 2.10.0
+  - pytest 6.2.4 -> 6.2.5
+  - terminado 0.10.1 -> 0.11.1
+
 ### Version 4.5.0
 - PTV-1561 - SampleSet viewer fixes to allow AMA features; not complete support for AMA features as GenomeSearchUtil does not yet support AMA.
 - SCT-3100 - Improve SampleSet viewer; add improved JSON-RPC 1.1 client and associatedKBase service client; add msw (Mock Service Worker) support;

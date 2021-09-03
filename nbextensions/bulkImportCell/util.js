@@ -57,7 +57,7 @@ define(['common/runtime', 'StagingServiceClient'], (Runtime, StagingServiceClien
      * Runs evaluateAppConfig over all apps, given the BulkImportCell's model, and constructs
      * the ready state.
      */
-    function evaluateConfigReadyState(model, specs) {
+    function evaluateConfigReadyState(model, specs, expectedFiles=[]) {
         const fileTypes = Object.keys(model.getItem(['inputs']));
         const evalPromises = fileTypes.map((fileType) => {
             const filePathValues = model.getItem(['params', fileType, 'filePaths']);
@@ -85,8 +85,10 @@ define(['common/runtime', 'StagingServiceClient'], (Runtime, StagingServiceClien
 
     /**
      *
-     * @param {Array} expectedFiles
-     * @returns
+     * @param {Array} expectedFiles - the array of files that are expected to exist, and
+     *  are referenced by the bulk import cell
+     * @returns An array of files that are in expectedFiles, but not present in the
+     *  staging service.
      */
     function getMissingFiles(expectedFiles) {
         const runtime = Runtime.make();

@@ -64,7 +64,13 @@ define([
          * @param {object} args
          */
         function start(args) {
-            return Util.getMissingFiles(model.getItem(['inputs', selectedFileType, 'files'])).then(
+            const allFiles = new Set();
+            Object.values(typesToFiles).forEach((entry) => {
+                for (const file of entry.files) {
+                    allFiles.add(file);
+                }
+            });
+            return Util.getMissingFiles(Array.from(allFiles)).then(
                 (missingFiles) => {
                     unavailableFiles = new Set(missingFiles);
                     container = args.node;
@@ -72,6 +78,11 @@ define([
 
                     const layout = renderLayout();
                     container.innerHTML = layout;
+
+                    // should validate (pre-validate? check?) ALL file type parameter sets
+                    // here for whether they're ready to run.
+                    // then that can be sent to the fileTypePanel to initialize properly with
+                    // pass or fail for each side. Would avoid blinking.
 
                     const fileTypeNode = ui.getElement('filetype-panel');
                     const initPromises = [buildFileTypePanel(fileTypeNode), startInputWidgets()];

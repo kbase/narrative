@@ -5,11 +5,7 @@
 const testConfig = require('../testConfig');
 const fs = require('fs');
 
-// Import environment variables used to control the tests.
-// Note that most have defaults, and many are only applicable
-// to testing services
-
-// For testing services
+const CHROME_BINARY = require('puppeteer').executablePath();
 
 /**
  * Given a preset key, return set set of common configuration keys for a given service, os, and browser
@@ -175,14 +171,6 @@ const authToken = (() => {
 // Thus, we should keep the selenium-standalone dependency up to date to ensure
 // the most recent version of Firefox is supported.
 //
-// const drivers = {
-//     chrome: {
-//         version: '87.0.4280.20',
-//     },
-//     firefox: {
-//         version: '0.28.0'
-//     }
-// };
 
 const serviceConfigs = {
     'selenium-standalone': {
@@ -222,6 +210,7 @@ function makeCapabilities(config) {
                     maxInstances: 1,
                     'goog:chromeOptions': {
                         args,
+                        binary: CHROME_BINARY,
                     },
                 };
             })();
@@ -291,7 +280,7 @@ console.log('OS VERSION      : ' + testParams.OS_VERSION);
 console.log('HEADLESS        : ' + testParams.HEADLESS);
 console.log('TEST SERVICE    : ' + testParams.SERVICE);
 console.log('SERVICE USER    : ' + testParams.SERVICE_USER);
-console.log('SERVICE KEY     : ' + testParams.SERVICE_KEY);
+console.log('SERVICE KEY     : ' + (testParams.SERVICE_KEY ? 'set but hidden' : null));
 console.log('-----------------');
 
 const wdioConfig = {
@@ -564,7 +553,7 @@ const wdioConfig = {
      * @param {Object} exitCode 0 - success, 1 - fail
      * @param {Object} config wdio configuration object
      * @param {Array.<Object>} capabilities list of capabilities details
-     * @param {<Object>} results object containing test results
+     * @param {Object} results object containing test results
      */
     // onComplete: function(exitCode, config, capabilities, results) {
     // },

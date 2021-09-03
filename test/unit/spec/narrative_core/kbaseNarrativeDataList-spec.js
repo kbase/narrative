@@ -44,11 +44,59 @@ define([
         });
     }
 
+    /**
+     * Returns a promise which will resolve when the provided function returns true,
+     * and reject if it exceeds the provided timeout or default of 5s, or if the
+     * function throws an exception.
+     */
+    function waitFor(fun, timeout = 5000) {
+        const interval = 100;
+        let elapsed = 0;
+        const started = Date.now();
+        return new Promise((resolve, reject) => {
+            const tryIt = () => {
+                elapsed = Date.now() - started;
+                if (elapsed > timeout) {
+                    throw new Error(`waitFor expired without success after ${elapsed}ms`);
+                }
+                try {
+                    const result = fun();
+                    if (!result) {
+                        window.setTimeout(() => {
+                            tryIt();
+                        }, interval);
+                    } else {
+                        resolve(result);
+                        return;
+                    }
+                } catch (ex) {
+                    reject(ex);
+                }
+            };
+            tryIt();
+        });
+    }
+
     const OBJDATA = [
         {
             object_info: [
                 5,
                 'Rhodobacter_CACIA_14H1',
+                'KBaseGenomes.Genome-7.0',
+                '2020-10-03T01:15:14+0000',
+                1,
+                'testuser',
+                54640,
+                'testuser:narrative_1601675739009',
+                '53af8071b814a1db43f81eb490a35491',
+                3110399,
+                {},
+            ],
+        },
+        {
+            object_info: [
+                6,
+                'Rhodobacter_CACIA_x',
                 'KBaseGenomes.Genome-7.0',
                 '2020-10-03T01:15:14+0000',
                 1,
@@ -155,6 +203,37 @@ define([
             expect($addDataButton.length).toEqual(1);
             expect($addDataButton.is('button')).toBeTruthy();
             expect($addDataButton.css('display')).toEqual('inline-block');
+        });
+
+        it('Should render with data, conduct a search, and show a resulting data card', async () => {
+            mockNarrativeServiceListObjects(OBJDATA);
+            await dataListObj.refresh();
+
+            // There should initially be as many rows as test objects
+            const $initialRows = $dataList.find('.narrative-card-row');
+            expect($initialRows.length).toEqual(OBJDATA.length);
+
+            // Click the search button to expose the search input.
+            const $searchButton = $dataList.find('#kb-data-list-searchctl');
+            $searchButton.click();
+
+            // Simulate a search for the second object.
+            const $searchInput = $dataList.find('[data-testid="search-field"] input');
+            const objectName = OBJDATA[1].object_info[1];
+            $searchInput.val(objectName);
+            $searchInput.trigger('input');
+
+            const success = await waitFor(() => {
+                const $result = $dataList.find('.narrative-card-row');
+                // Wait for there to be only one row.
+                if ($result.length !== 1) {
+                    return false;
+                }
+                // And the result should be the object we searched for.
+                const $title = $result.find('.kb-data-list-name');
+                return $title.text() === objectName;
+            });
+            expect(success).toBeTrue();
         });
     });
 });

@@ -22,6 +22,7 @@ define([
             runtime,
             nms,
             reportRendered = false,
+            reportRenderTimeout = null,
             reportParams;
 
         function start(arg) {
@@ -98,19 +99,25 @@ define([
         }
 
         function lazyRenderReport() {
-            if (reportRendered) {
-                return;
+            const nbContainer = document.querySelector('#notebook-container');
+            // Add scroll event listener to the notebook container on first call.
+            if (!reportRenderTimeout) {
+                nbContainer.addEventListener("scroll", lazyRenderReport);
             }
-            const reportElem = ui.getElement('report-widget');
-            if (DisplayUtil.verticalInViewport(reportElem)) {
-                const reportViewer = new KBaseReportView($(reportElem), reportParams);
-                document
-                    .querySelector('#notebook-container')
-                    .removeEventListener('scroll', lazyRenderReport);
-                reportViewer.loadAndRender().then(() => {
+            // Use a debounce timeout to avoid rendering the report _while_ the user is scrolling.
+            clearTimeout(reportRenderTimeout);
+            reportRenderTimeout = setTimeout(() => {
+                const reportElem = ui.getElement('report-widget');
+                // Once scrolling stops...
+                if (!reportRendered && DisplayUtil.verticalInViewport(reportElem)) {
+                    new KBaseReportView($(reportElem), reportParams);
                     reportRendered = true;
-                });
-            }
+                }
+                if (reportRendered) {
+                    // Remove the scroll event listener if the report has been rendered.
+                    nbContainer.removeEventListener('scroll', lazyRenderReport);
+                }
+            }, 200);
         }
 
         function renderReportView(params) {
@@ -120,10 +127,6 @@ define([
             reportParams.showCreatedObjects = true;
             ui.setContent('report', div({ dataElement: 'report-widget' }));
             lazyRenderReport();
-            if (!reportRendered) {
-                const nbContainer = document.querySelector('#notebook-container');
-                nbContainer.addEventListener('scroll', lazyRenderReport);
-            }
         }
 
         function renderNextApps(apps) {

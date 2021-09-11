@@ -216,16 +216,18 @@ class JobComm:
 
     def start_job_status_loop(
         self,
+        req: JobRequest = None,
         init_jobs: bool = False,
         cell_list: List[str] = None,
     ) -> None:
         """
-        Starts the job status lookup loop. This runs every 10 seconds.
-        This has the bare *args and **kwargs to handle the case where this comes in as a job
-        channel request (gets a JobRequest arg), or has the "init_jobs" kwarg.
+        Starts the job status lookup loop. This runs every LOOKUP_TIMER_INTERVAL=10 seconds.
 
-        If init_jobs=True, this attempts to reinitialize the JobManager's list of known jobs
-        from the workspace.
+        :param req: first position is reserved for when this is invoked
+            as a job channel request (gets a JobRequest arg)
+        :param init_jobs: If init_jobs=True, this attempts to (re-)initialize
+            the JobManager's list of known jobs from the workspace.
+        :param cell_list: from FE, the list of extant cell IDs
         """
         self._running_lookup_loop = True
         if init_jobs:

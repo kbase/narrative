@@ -168,8 +168,10 @@ class JobManagerTest(unittest.TestCase):
         """
         cell_2_jobs = get_cell_2_jobs(instance=False)
         cell_ids = list(cell_2_jobs.keys())
+        # Iterate through all combinations of cell IDs
         for combo_len in range(1, len(cell_ids) + 1):
             for combo in itertools.combinations(cell_ids, combo_len):
+                # Get jobs expected to be associated with the cell IDs
                 exp_job_ids = [
                     job_id
                     for cell_id, job_ids in cell_2_jobs.items()

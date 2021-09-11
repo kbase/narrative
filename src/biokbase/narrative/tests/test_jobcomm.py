@@ -197,8 +197,9 @@ class JobCommTestCase(unittest.TestCase):
         cell_2_jobs = get_cell_2_jobs(instance=False)
         cell_ids = list(cell_2_jobs.keys())
         # Iterate through all combinations of cell IDs
-        for combo_len in range(1, len(cell_ids) + 1):
+        for combo_len in range(len(cell_ids) + 1):
             for combo in itertools.combinations(cell_ids, combo_len):
+                combo = list(combo)
                 # Get jobs expected to be associated with the cell IDs and are terminal
                 exp_job_ids = [
                     job_id
@@ -220,8 +221,12 @@ class JobCommTestCase(unittest.TestCase):
                     },
                     msg["data"]
                 )
-                self.assertTrue(self.jc._running_lookup_loop)
-                self.assertIsNotNone(self.jc._lookup_timer)
+                self.assertEqual(
+                    len(combo) > 0,
+                    self.jc._running_lookup_loop
+                )
+                assert_method = self.assertIsNotNone if len(combo) else self.assertIsNone
+                assert_method(self.jc._lookup_timer)
 
                 self.jc.stop_job_status_loop()
                 self.assertFalse(self.jc._running_lookup_loop)

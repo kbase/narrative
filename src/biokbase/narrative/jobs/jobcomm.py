@@ -144,9 +144,6 @@ class JobComm:
     * all_status - return job state for all jobs in this Narrative.
     * job_status - return the job state for a single job (requires a job_id)
     * job_info - return basic job info for a single job (requires a job_id)
-    * start_update_loop - starts a looping thread that runs returns all job info
-        for running jobs
-    * stop_update_loop - stops the automatic update loop
     * start_job_update - tells the update loop to include a job when updating (requires a job_id)
     * stop_job_update - has the update loop not include a job when updating (requires a job_id)
     * cancel_job - cancels a running job, if it hasn't otherwise terminated (requires a job_id)
@@ -186,8 +183,6 @@ class JobComm:
                 "job_status_batch": self._lookup_job_states_batch,
                 "job_info": self._lookup_job_info,
                 "job_info_batch": self._lookup_job_info_batch,
-                "start_update_loop": self.start_job_status_loop,
-                "stop_update_loop": self.stop_job_status_loop,
                 "start_job_update": self._modify_job_updates,
                 "stop_job_update": self._modify_job_updates,
                 "start_job_update_batch": self._modify_job_updates_batch,
@@ -216,15 +211,12 @@ class JobComm:
 
     def start_job_status_loop(
         self,
-        req: JobRequest = None,
         init_jobs: bool = False,
         cell_list: List[str] = None,
     ) -> None:
         """
-        Starts the job status lookup loop. This runs every LOOKUP_TIMER_INTERVAL=10 seconds.
+        Starts the job status lookup loop. This runs every LOOKUP_TIMER_INTERVAL seconds.
 
-        :param req: first position is reserved for when this is invoked
-            as a job channel request (gets a JobRequest arg)
         :param init_jobs: If init_jobs=True, this attempts to (re-)initialize
             the JobManager's list of known jobs from the workspace.
         :param cell_list: from FE, the list of extant cell IDs

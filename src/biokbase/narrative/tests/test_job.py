@@ -242,20 +242,32 @@ def get_all_jobs(return_list=False):
     return jobs
 
 
-def get_cell_2_jobs(instance=False):
-    cell_ids = {}
+def get_cell_2_jobs():
+    """
+    Returns a dict with keys being all the cell IDs
+    in the test data, and the values being a list of
+    jobs with that cell ID.
+
+    Batch jobs technically don't have cell IDs,
+    but they will take on the cell IDs of their children.
+    If their children are in different
+    cells, all children's cell IDs will map to the batch job
+    """
+    cell_and_jobs = []
     for job_id, job in get_all_jobs().items():
-        cell_id = (
-            job.children[0].cell_id  # choose arbitrary child for cell_id
-            if job.batch_job else
-            job.cell_id
-        )
-        payload = job if instance else job_id
-        if cell_id in cell_ids:
-            cell_ids[cell_id] += [payload]
+        if job.batch_job:
+            for child_job in job.children:
+                cell_and_jobs.append((child_job.cell_id, job_id))
         else:
-            cell_ids[cell_id] = [payload]
-    return cell_ids
+            cell_and_jobs.append((job.cell_id, job_id))
+
+    cell_2_jobs = {}
+    for cell_id, job_id in cell_and_jobs:
+        if cell_id in cell_2_jobs and job_id not in cell_2_jobs[cell_id]:
+            cell_2_jobs[cell_id] += [job_id]
+        else:
+            cell_2_jobs[cell_id] = [job_id]
+    return cell_2_jobs
 
 
 class JobTest(unittest.TestCase):
@@ -845,7 +857,7 @@ class JobTest(unittest.TestCase):
 
     def test_in_cells(self):
         all_jobs = get_all_jobs()
-        cell_2_jobs = get_cell_2_jobs(instance=False)
+        cell_2_jobs = get_cell_2_jobs()
         cell_ids = list(cell_2_jobs.keys())
         # Iterate through all combinations of cell IDs
         for combo_len in range(len(cell_ids) + 1):
@@ -864,7 +876,12 @@ class JobTest(unittest.TestCase):
                         job.in_cells(combo)
                     )
 
-    def test_in_cells__batch(self):
+    def test_in_cells__none(self):
+        job = create_job_from_ee2(JOB_COMPLETED)
+        with self.assertRaisesRegex(ValueError, "cell_ids cannot be None"):
+            job.in_cells(None)
+
+    def test_in_cells__batch__same_cell(self):
         batch_fam = get_batch_family_jobs(return_list=True)
         batch_job, child_jobs = batch_fam[0], batch_fam[1:]
 
@@ -874,6 +891,27 @@ class JobTest(unittest.TestCase):
         self.assertTrue(
             batch_job.in_cells(["hi", "hello"])
         )
+
+        self.assertFalse(
+            batch_job.in_cells(["goodbye", "hasta manana"])
+        )
+
+    def test_in_cells__batch__diff_cells(self):
+        batch_fam = get_batch_family_jobs(return_list=True)
+        batch_job, child_jobs = batch_fam[0], batch_fam[1:]
+
+        children_cell_ids = ["hi", "hello", "greetings"]
+        for job, cell_id in zip(
+            child_jobs,
+            itertools.cycle(children_cell_ids)
+        ):
+            job.cell_id = cell_id
+
+        for cell_id in children_cell_ids:
+            self.assertTrue(batch_job.in_cells([cell_id]))
+            self.assertTrue(batch_job.in_cells(["A", cell_id, "B"]))
+            self.assertTrue(batch_job.in_cells([cell_id, "B", "A"]))
+            self.assertTrue(batch_job.in_cells(["B", "A", cell_id]))
 
         self.assertFalse(
             batch_job.in_cells(["goodbye", "hasta manana"])

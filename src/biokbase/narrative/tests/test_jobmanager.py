@@ -166,7 +166,7 @@ class JobManagerTest(unittest.TestCase):
         """
         Invoke initialize_jobs with cell_ids
         """
-        cell_2_jobs = get_cell_2_jobs(instance=False)
+        cell_2_jobs = get_cell_2_jobs()
         cell_ids = list(cell_2_jobs.keys())
         # Iterate through all combinations of cell IDs
         for combo_len in range(len(cell_ids) + 1):

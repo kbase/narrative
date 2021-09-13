@@ -194,7 +194,7 @@ class JobCommTestCase(unittest.TestCase):
         "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get", get_mock_client
     )
     def test_start_job_status_loop__cell_ids(self):
-        cell_2_jobs = get_cell_2_jobs(instance=False)
+        cell_2_jobs = get_cell_2_jobs()
         cell_ids = list(cell_2_jobs.keys())
         # Iterate through all combinations of cell IDs
         for combo_len in range(len(cell_ids) + 1):
@@ -1211,27 +1211,6 @@ class JobCommTestCase(unittest.TestCase):
         self.jc._handle_comm_message(req)
         msg = self.jc._comm.last_message
         self.assertEqual(msg["data"]["msg_type"], "job_status")
-
-    @mock.patch(
-        "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get", get_mock_client
-    )
-    def test_handle_start_update_loop(self):
-        req = make_comm_msg("start_update_loop", None, False)
-        self.jc._handle_comm_message(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual(
-            {
-                "msg_type": "job_status_all",
-                "content": get_test_job_states(ACTIVE_JOBS)
-            },
-            msg["data"]
-        )
-
-    def test_handle_stop_update_loop(self):
-        req = make_comm_msg("stop_update_loop", None, False)
-        self.jc._handle_comm_message(req)
-        msg = self.jc._comm.last_message
-        self.assertIsNone(msg)
 
 
 class JobRequestTestCase(unittest.TestCase):

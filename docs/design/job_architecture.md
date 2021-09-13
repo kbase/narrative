@@ -209,10 +209,6 @@ These are organized by the `request_type` field, followed by the expected respon
 `job_status_batch` request job statuses, responds with `job_status`
 * `job_id` - string - job_id of batch container job
 
-`start_update_loop` - request starting the global job status update thread, no specific response, but generally with `job_status_all`
-
-`stop_update_loop` - request stopping the global job status update thread, no response
-
 `start_job_update` - request updating job(s) during the update thread, responds with `job_status`
 * `job_id` - string OR `job_id_list` - array of strings
 

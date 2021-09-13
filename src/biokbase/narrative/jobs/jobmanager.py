@@ -102,6 +102,8 @@ class JobManager(object):
 
             job = Job(job_state, children=child_jobs)
 
+            # Set to refresh when job is not in terminal state
+            # and when job is present in cells (if given)
             refresh = not job.was_terminal
             if cell_ids is not None:
                 refresh &= job.in_cells(cell_ids)

@@ -249,16 +249,22 @@ class Job(object):
                     child_job.state(force_refresh=True)
         return self.was_terminal
 
-    def in_cells(self, cell_ids):
+    def in_cells(self, cell_ids: List[str]) -> bool:
         """
         For job initialization.
         See if job is associated with present cells
+
+        A batch job technically can have children in different cells,
+        so consider it in any cell a child is in
         """
+        if cell_ids is None:
+            raise ValueError("cell_ids cannot be None")
+
         if self.batch_job:
             for child_job in self.children:
                 if child_job.cell_id in cell_ids:
                     return True
-                return False
+            return False
         else:
             return self.cell_id in cell_ids
 

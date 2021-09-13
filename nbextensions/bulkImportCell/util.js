@@ -53,24 +53,50 @@ define(['common/runtime', 'StagingServiceClient'], (Runtime, StagingServiceClien
         });
     }
 
+    function getFilePathOptionsForValidation(model, fileType, missingFiles) {
+        let fpIds = model.getItem(['app', 'fileParamIds', fileType]);
+        const outIds = model.getItem(['app', 'outputParamIds', fileType]);
+        fpIds = fpIds.filter((id) => !outIds.includes(id));
+        const fpVals = model.getItem(['params', fileType, 'filePaths']);
+
+        // fpIds = file input ids
+        // outIds = file output ids
+        // fpVals = Array of KVPs with id (either fpIds or outIds) -> value
+
+        return fpVals.map((filePath) => {
+            const fpOptions = {};
+            for (const id of Object.keys(filePath)) {
+                fpOptions[id] = {};
+                if (fpIds.includes(id)) {
+                    fpOptions[id].invalidValues = missingFiles;
+                }
+            }
+            return fpOptions;
+        });
+    }
+
     /**
      * Runs evaluateAppConfig over all apps, given the BulkImportCell's model, and constructs
      * the ready state.
+     * @param {Object} model the data model from the BulkImportCell, containing all the cell info
+     * @param {Object} specs keys = app id, values = app specs
+     * @param {Array} allowedFiles array of files that are allowed to be used
+     * @returns
      */
-    function evaluateConfigReadyState(model, specs, expectedFiles=[]) {
+    function evaluateConfigReadyState(model, specs, missingFiles) {
+        // given some missing files (precalcuate for now), set up options for evaluating all file inputs
+
         const fileTypes = Object.keys(model.getItem(['inputs']));
         const evalPromises = fileTypes.map((fileType) => {
-            const filePathValues = model.getItem(['params', fileType, 'filePaths']);
             // make an array of empty options with the same length as the
             // number of file path values
-            const filePathOptions = Array.from({ length: filePathValues.length }, () => ({}));
             return evaluateAppConfig(
                 model.getItem(['app', 'otherParamIds', fileType]),
                 model.getItem(['params', fileType, 'params']),
                 {},
                 model.getItem(['app', 'fileParamIds', fileType]),
                 model.getItem(['params', fileType, 'filePaths']),
-                filePathOptions,
+                getFilePathOptionsForValidation(model, fileType, missingFiles),
                 specs[model.getItem(['inputs', fileType, 'appId'])]
             );
         });

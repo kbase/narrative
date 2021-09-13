@@ -73,19 +73,22 @@ define([
             return Util.getMissingFiles(Array.from(allFiles)).then(
                 (missingFiles) => {
                     unavailableFiles = new Set(missingFiles);
+                    // should validate (pre-validate? check?) ALL file type parameter sets
+                    // here for whether they're ready to run.
+                    // then that can be sent to the fileTypePanel to initialize properly with
+                    // pass or fail for each side. Would avoid blinking.
+                    return Util.evaluateConfigReadyState(model, specs, unavailableFiles);
+                })
+                .then((readyState) => {
                     container = args.node;
                     ui = UI.make({ node: container });
 
                     const layout = renderLayout();
                     container.innerHTML = layout;
 
-                    // should validate (pre-validate? check?) ALL file type parameter sets
-                    // here for whether they're ready to run.
-                    // then that can be sent to the fileTypePanel to initialize properly with
-                    // pass or fail for each side. Would avoid blinking.
 
                     const fileTypeNode = ui.getElement('filetype-panel');
-                    const initPromises = [buildFileTypePanel(fileTypeNode), startInputWidgets()];
+                    const initPromises = [buildFileTypePanel(fileTypeNode, readyState), startInputWidgets()];
 
                     return Promise.all(initPromises);
                 }
@@ -197,7 +200,7 @@ define([
          * it up attached to the given DOM node.
          * @param {DOMElement} node - the node that should be used for the left column
          */
-        function buildFileTypePanel(node) {
+        function buildFileTypePanel(node, readyState) {
             fileTypePanel = FileTypePanel.make({
                 bus: cellBus,
                 header: {
@@ -207,7 +210,7 @@ define([
                 fileTypes: fileTypesDisplay,
                 toggleAction: toggleFileType,
             });
-            const state = getFileTypeState();
+            const state = getFileTypeState(readyState);
 
             return fileTypePanel.start({
                 node,
@@ -221,10 +224,10 @@ define([
          *   - selected {String} the selected file type
          *   - completed
          */
-        function getFileTypeState() {
+        function getFileTypeState(readyState) {
             const fileTypeCompleted = {};
-            const fileTypeState = model.getItem('state.params', {});
-            for (const [fileType, status] of Object.entries(fileTypeState)) {
+            readyState = readyState || model.getItem('state.params', {});
+            for (const [fileType, status] of Object.entries(readyState)) {
                 fileTypeCompleted[fileType] = status === 'complete';
             }
             return {

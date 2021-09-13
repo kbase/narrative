@@ -11,6 +11,8 @@ define([
     'common/spec',
     'common/ui',
     'common/utils',
+    './util',
+    'common/unodep',
     'common/pythonInterop',
     'base/js/namespace',
     'kb_service/client/workspace',
@@ -36,6 +38,8 @@ define([
     Spec,
     UI,
     Utils,
+    BulkImportUtil,
+    SimpleUtil,
     PythonInterop,
     Jupyter,
     Workspace,
@@ -622,7 +626,24 @@ define([
                 // TODO: assess cell state, update job info if required
                 // jobManager.restorefromSaved()
 
-                updateState();
+                return BulkImportUtil.evaluateConfigReadyState(model, specs);
+            })
+            .then((readyState) => {
+                const curState = model.getItem('state');
+                const curReadyState = curState.params;
+                const updatedReadyState = !SimpleUtil.isEqual(readyState, curReadyState);
+
+                if (updatedReadyState) {
+                    model.setItem(['state', 'params'], readyState);
+                }
+                if (
+                    updatedReadyState &&
+                    ['editingComplete', 'editingIncomplete'].includes(curState.state)
+                ) {
+                    updateEditingState();
+                } else {
+                    updateState();
+                }
                 cell.renderMinMax();
                 runTab(state.tab.selected);
             });

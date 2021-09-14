@@ -70,8 +70,8 @@ define([
                     allFiles.add(file);
                 }
             });
-            return Util.getMissingFiles(Array.from(allFiles)).then(
-                (missingFiles) => {
+            return Util.getMissingFiles(Array.from(allFiles))
+                .then((missingFiles) => {
                     unavailableFiles = new Set(missingFiles);
                     // should validate (pre-validate? check?) ALL file type parameter sets
                     // here for whether they're ready to run.
@@ -86,13 +86,14 @@ define([
                     const layout = renderLayout();
                     container.innerHTML = layout;
 
-
                     const fileTypeNode = ui.getElement('filetype-panel');
-                    const initPromises = [buildFileTypePanel(fileTypeNode, readyState), startInputWidgets()];
+                    const initPromises = [
+                        buildFileTypePanel(fileTypeNode, readyState),
+                        startInputWidgets(),
+                    ];
 
                     return Promise.all(initPromises);
-                }
-            );
+                });
         }
 
         /**

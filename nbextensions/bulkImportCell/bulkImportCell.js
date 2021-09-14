@@ -2,6 +2,7 @@ define([
     'uuid',
     'util/icon',
     'common/busEventManager',
+    'common/dialogMessages',
     'common/events',
     'common/html',
     'common/jobManager',
@@ -25,13 +26,15 @@ define([
     'common/cellComponents/tabs/results/resultsTab',
     'common/errorDisplay',
     './bulkImportCellStates',
+    'util/developerMode',
 ], (
     Uuid,
     Icon,
     BusEventManager,
+    DialogMessages,
     Events,
     html,
-    JobManager,
+    JobManagerModule,
     Jobs,
     Props,
     Runtime,
@@ -51,13 +54,14 @@ define([
     JobStatusTabWidget,
     ResultsWidget,
     ErrorTabWidget,
-    States
+    States,
+    DevMode
 ) => {
     'use strict';
-    const CELL_TYPE = 'app-bulk-import';
+    const { JobManager } = JobManagerModule;
 
+    const CELL_TYPE = 'app-bulk-import';
     const div = html.tag('div'),
-        p = html.tag('p'),
         cssCellType = 'kb-bulk-import';
 
     /**
@@ -116,6 +120,8 @@ define([
         if (options.cell.cell_type !== 'code') {
             throw new Error('Can only create Bulk Import Cells out of code cells!');
         }
+
+        const developerMode = options.devMode || DevMode.mode;
 
         const cell = options.cell,
             runtime = Runtime.make(),
@@ -192,7 +198,8 @@ define([
             cellBus = null, // the parent cell bus that gets external messages
             controllerBus = null, // the main bus for this cell and its children
             ui = null,
-            tabWidget = null; // the widget currently in view
+            tabWidget = null, // the widget currently in view
+            cancelBatch = null; // whether or not to cancel the job
         // widgets this cell owns
         let cellTabs, controlPanel, jobManager;
         const specs = {};
@@ -212,7 +219,6 @@ define([
         });
         // gets updated in total later by updateState
         let state = getInitialState();
-
         setupCell();
 
         /**
@@ -471,13 +477,16 @@ define([
         }
 
         function handleRunStatus(message) {
+            resetRunStatusListener();
             switch (message.event) {
                 case 'launched_job_batch':
                     // remove any existing jobs
                     jobManager.initBatchJob(message);
+                    if (cancelBatch) {
+                        cancelBatchJob();
+                        break;
+                    }
                     updateState('inProgress');
-                    // TODO: remove when cell state management is sorted out
-                    toggleTab('jobStatus');
                     break;
                 case 'error':
                     model.setItem('appError', {
@@ -489,12 +498,13 @@ define([
                         method: message.error_method,
                         exceptionType: message.error_type,
                     });
-                    updateState('appError');
-                    toggleTab('error');
+                    updateState('error');
+                    switchToTab('error');
                     break;
                 default:
                     console.warn(`Unknown run-status event ${message.event}!`);
-                    updateState('generalError');
+                    updateState('error');
+                    switchToTab('error');
                     break;
             }
         }
@@ -602,61 +612,60 @@ define([
             const meta = cell.metadata;
             meta.kbase.attributes.lastLoaded = new Date().toUTCString();
             cell.metadata = meta;
-            render()
-                .then(() => {
-                    // add in the control panel so we can update the job status in the cell header
-                    jobManager.addHandler('modelUpdate', {
-                        controlPanel: (jobManagerContext) => {
-                            // Update the execMessage panel with details of the active jobs
-                            controlPanel.setExecMessage(
-                                Jobs.createCombinedJobState(
-                                    jobManagerContext.model.getItem('exec.jobs.byStatus')
-                                )
-                            );
-                        },
-                        fsmState: (jobManagerContext) => {
-                            const fsmState = Jobs.getFsmStateFromJobs(
+            render().then(() => {
+                jobManager.addHandler('modelUpdate', {
+                    execMessage: (jobManagerContext) => {
+                        // Update the execMessage panel with details of the active jobs
+                        controlPanel.setExecMessage(
+                            Jobs.createCombinedJobState(
                                 jobManagerContext.model.getItem('exec.jobs.byStatus')
-                            );
-                            if (fsmState) {
-                                updateState(fsmState);
-                            }
-                        },
-                    });
-
-                    // TODO: assess cell state, update job info if required
-                    // jobManager.restorefromSaved()
-
-                    const expectedFiles = new Set();
-                    Object.values(model.getItem('inputs')).forEach((inputs) => {
-                        for (const f of inputs.files) {
-                            expectedFiles.add(f);
+                            )
+                        );
+                    },
+                    fsmState: (jobManagerContext) => {
+                        const fsmState = Jobs.getFsmStateFromJobs(
+                            jobManagerContext.model.getItem('exec.jobs.byStatus')
+                        );
+                        if (fsmState) {
+                            updateState(fsmState);
                         }
-                    });
-                    return BulkImportUtil.getMissingFiles(Array.from(expectedFiles));
-                })
-                .then((missingFiles) =>
-                    BulkImportUtil.evaluateConfigReadyState(model, specs, new Set(missingFiles))
-                )
-                .then((readyState) => {
-                    const curState = model.getItem('state');
-                    const curReadyState = curState.params;
-                    const updatedReadyState = !SimpleUtil.isEqual(readyState, curReadyState);
-
-                    if (updatedReadyState) {
-                        model.setItem(['state', 'params'], readyState);
-                    }
-                    if (
-                        updatedReadyState &&
-                        ['editingComplete', 'editingIncomplete'].includes(curState.state)
-                    ) {
-                        updateEditingState();
-                    } else {
-                        updateState();
-                    }
-                    cell.renderMinMax();
-                    runTab(state.tab.selected);
+                    },
                 });
+                try {
+                    jobManager.restoreFromSaved();
+                } catch (e) {
+                    console.error(e);
+                }
+                const expectedFiles = new Set();
+                Object.values(model.getItem('inputs')).forEach((inputs) => {
+                    for (const f of inputs.files) {
+                        expectedFiles.add(f);
+                    }
+                });
+                return BulkImportUtil.getMissingFiles(Array.from(expectedFiles));
+            })
+            .then((missingFiles) =>
+                BulkImportUtil.evaluateConfigReadyState(model, specs, new Set(missingFiles))
+            )
+            .then((readyState) => {
+                const curState = model.getItem('state');
+                const curReadyState = curState.params;
+                const updatedReadyState = !SimpleUtil.isEqual(readyState, curReadyState);
+
+                if (updatedReadyState) {
+                    model.setItem(['state', 'params'], readyState);
+                }
+                if (
+                    updatedReadyState &&
+                    ['editingComplete', 'editingIncomplete'].includes(curState.state)
+                ) {
+                    updateEditingState();
+                } else {
+                    updateState();
+                }
+                cell.renderMinMax();
+                runTab(state.tab.selected);
+            });
         }
 
         function getWorkspaceClient() {
@@ -666,17 +675,14 @@ define([
         }
 
         /**
-         * Should do the following steps:
-         * 1. if there's a tab showing, stop() it and detach it
-         * 2. update the tabs state to be selected
+         * Switch tab display
+         * stops the current tab widget, runs `tab`
+         * and updates the model and cell tabs with the
+         * newly-selected tab
+         *
          * @param {string} tab id of the tab to display
          */
-        function toggleTab(tab) {
-            // if we're toggling the currently selected tab off,
-            // then it should be turned off.
-            if (tab === state.tab.selected && tab !== null) {
-                tab = null;
-            }
+        function _switchToTab(tab) {
             state.tab.selected = tab;
             return stopWidget().then(() => {
                 if (tab !== null) {
@@ -685,6 +691,35 @@ define([
                 model.setItem('state.selectedTab', tab);
                 cellTabs.setState(state.tab);
             });
+        }
+
+        /**
+         * Toggle the display of the specified tab
+         * If the tab is already being displayed, this will hide it
+         *
+         * @param {string} tab id of the tab to display
+         */
+        function toggleTab(tab) {
+            // if we're toggling the currently selected tab off,
+            // then it should be turned off.
+            if (tab === state.tab.selected && tab !== null) {
+                tab = null;
+            }
+            _switchToTab(tab);
+        }
+
+        /**
+         * Switch to displaying the specified tab
+         * If the tab is already displayed, this does nothing
+         *
+         * @param {string} tab id of the tab to display
+         */
+        function switchToTab(tab) {
+            // don't switch if the tab is null or already selected
+            if (tab === null || tab === state.tab.selected) {
+                return;
+            }
+            _switchToTab(tab);
         }
 
         function stopWidget() {
@@ -767,6 +802,7 @@ define([
             busEventManager.add(runStatusListener);
             cell.execute();
             updateState('launching');
+            switchToTab('viewConfigure');
         }
 
         /**
@@ -780,28 +816,34 @@ define([
          * 3. Return to the editing state, trigger updateEditingState.
          */
         async function doCancelCellAction() {
-            if (runStatusListener !== null) {
-                const dialogArgs = {
-                    title: 'Cancel job batch?',
-                    body: div([
-                        p([
-                            'Canceling the job will halt any currently running jobs. ',
-                            'Any output objects already created will remain in your narrative and can be removed from the Data panel.',
-                        ]),
-                        p('Continue to Cancel the running job batch?'),
-                    ]),
-                };
+            const confirmed = await DialogMessages.showDialog({ action: 'cancelBulkImport' });
 
-                const confirmed = await UI.showConfirmDialog(dialogArgs);
-                if (!confirmed) {
-                    return;
+            if (confirmed) {
+                // if the runStatusListener is not null,
+                // the FE has yet to receive data about the new batch job
+                // handleRunStatus will cancel the batch job when it receives that message
+                cancelBatch = true;
+                controlPanel.setExecMessage('Canceling...');
+
+                // if runStatusListener is null, the batch job data is available and
+                // the job can be cancelled immediately.
+                if (runStatusListener === null) {
+                    cancelBatchJob();
                 }
-                busEventManager.remove(runStatusListener);
-            } else {
-                await jobManager.cancelJobsByStatus(['created', 'estimating', 'queued', 'running']);
             }
-            updateEditingState();
-            toggleTab('configure');
+            return Promise.resolve(confirmed);
+        }
+
+        function cancelBatchJob() {
+            jobManager.cancelBatchJob();
+            doResetCellAction();
+        }
+
+        function resetRunStatusListener() {
+            if (runStatusListener !== null) {
+                busEventManager.remove(runStatusListener);
+                runStatusListener = null;
+            }
         }
 
         /**
@@ -809,23 +851,26 @@ define([
          */
         function doResetCellAction() {
             // TODO: ensure this makes all the necessary changes
-            if (runStatusListener !== null) {
-                busEventManager.remove(runStatusListener);
-            }
-            jobManager.model.deleteItem('exec');
-            controlPanel.setExecMessage('');
+            resetRunStatusListener();
+            jobManager.resetJobs();
+            cancelBatch = null;
             updateEditingState();
-            toggleTab('configure');
+            Jupyter.notebook.save_checkpoint();
+            switchToTab('configure');
         }
 
         /**
          * Deletes the cell from the notebook after doing internal cleanup.
          */
-        function deleteCell() {
-            busEventManager.removeAll();
-            stopWidget();
-            const cellIndex = Jupyter.notebook.find_cell_index(cell);
-            Jupyter.notebook.delete_cell(cellIndex);
+        async function deleteCell() {
+            const confirmed = await DialogMessages.showDialog({ action: 'deleteCell' });
+            if (confirmed) {
+                busEventManager.removeAll();
+                stopWidget();
+                const cellIndex = Jupyter.notebook.find_cell_index(cell);
+                Jupyter.notebook.delete_cell(cellIndex);
+            }
+            return Promise.resolve(confirmed);
         }
 
         /**
@@ -845,6 +890,7 @@ define([
                 currentState = defaultState;
             }
             const uiState = States[currentState].ui;
+            // FIXME: check if 'configure' tab is active in the current uiState
             uiState.tab.selected = model.getItem('state.selectedTab', 'configure');
             return uiState;
         }
@@ -856,6 +902,7 @@ define([
          */
         function updateState(newUiState) {
             if (newUiState && newUiState in States) {
+                // FIXME: this alters the States object
                 const stateDiff = Object.assign({}, States[newUiState].ui);
                 model.setItem('state.state', newUiState);
                 // update selections
@@ -865,8 +912,17 @@ define([
             }
             cellTabs.setState(state.tab);
             controlPanel.setActionState(state.action);
-            // TODO: add in the FSM state
-            // controlPanel.setExecMessage(...)
+            // set the appropriate status line
+            if (!model.getItem('exec.jobState')) {
+                if (!newUiState) {
+                    newUiState = model.getItem('state.state');
+                }
+                const stateMessage = {
+                    editingComplete: 'Ready to run',
+                    launching: 'Launching',
+                };
+                controlPanel.setExecMessage(stateMessage[newUiState] || '');
+            }
 
             FSMBar.showFsmBar({
                 ui: ui,
@@ -979,10 +1035,16 @@ define([
          * The factory returns an accessor to the underlying Jupyter cell, and the
          * deleteCell function. Everything else should just run internally.
          */
-        return {
+        const api = {
             cell,
             deleteCell,
         };
+
+        if (developerMode) {
+            api.jobManager = jobManager;
+        }
+
+        return api;
     }
 
     /**

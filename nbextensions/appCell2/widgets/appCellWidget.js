@@ -1238,7 +1238,7 @@ define([
          * narrative metadata.
          */
         function cancelJob(jobId) {
-            runtime.bus().emit('request-job-cancellation', {
+            runtime.bus().emit('request-job-cancel', {
                 jobId: jobId,
             });
         }

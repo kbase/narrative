@@ -107,15 +107,15 @@ define([
         }
 
         return {
-            authToken: authToken,
+            authToken,
             config: getConfig,
-            bus: bus,
-            getUserSetting: getUserSetting,
-            setEnv: setEnv,
-            getEnv: getEnv,
-            workspaceId: workspaceId,
-            userId: userId,
-            destroy: destroy,
+            bus,
+            getUserSetting,
+            setEnv,
+            getEnv,
+            workspaceId,
+            userId,
+            destroy,
         };
     }
 

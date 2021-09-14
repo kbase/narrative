@@ -1,14 +1,24 @@
-define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', 'common/ui'], (
+define(['common/errorDisplay', 'common/format', 'common/html', 'common/ui'], (
     ErrorDisplay,
     Format,
     html,
-    Props,
     UI
 ) => {
     'use strict';
 
     const t = html.tag,
         span = t('span');
+
+    const JOB = {
+        created: 'created',
+        estimating: 'estimating',
+        queued: 'queued',
+        running: 'running',
+        completed: 'completed',
+        error: 'error',
+        terminated: 'terminated',
+        does_not_exist: 'does_not_exist',
+    };
 
     const cssBaseClass = 'kb-job-status',
         jobNotFound = [
@@ -18,17 +28,17 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
         jobStatusUnknown = ['Determining job state...'],
         // valid job states from ee2, plus 'does_not_exist'
         validJobStatuses = [
-            'created',
-            'estimating',
-            'queued',
-            'running',
-            'completed',
-            'error',
-            'terminated',
-            'does_not_exist',
+            JOB.created,
+            JOB.estimating,
+            JOB.queued,
+            JOB.running,
+            JOB.completed,
+            JOB.error,
+            JOB.terminated,
+            JOB.does_not_exist,
         ],
         // job states where there will be no more updates
-        terminalStates = ['completed', 'error', 'terminated', 'does_not_exist'];
+        terminalStates = [JOB.completed, JOB.error, JOB.terminated, JOB.does_not_exist];
 
     const jobStrings = {
         does_not_exist: {
@@ -93,7 +103,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
         const status =
             jobState.status && isValidJobStatus(jobState.status)
                 ? jobState.status
-                : 'does_not_exist';
+                : JOB.does_not_exist;
 
         return jobStrings[status][stringType];
     }
@@ -123,9 +133,9 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
             requiredProperties.every((prop) => prop in jobState) &&
             validJobStatuses.includes(jobState.status) &&
             // require the 'created' key if the status is not 'does_not_exist'
-            (jobState.status === 'does_not_exist'
+            (jobState.status === JOB.does_not_exist
                 ? true
-                : Object.prototype.hasOwnProperty.call(jobState, 'created'))
+                : Object.prototype.hasOwnProperty.call(jobState, JOB.created))
         );
     }
 
@@ -184,8 +194,8 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
     }
 
     const validStatusesForAction = {
-        cancel: ['created', 'estimating', 'queued', 'running'],
-        retry: ['created', 'estimating', 'queued', 'running', 'error', 'terminated'],
+        cancel: [JOB.created, JOB.estimating, JOB.queued, JOB.running],
+        retry: [JOB.created, JOB.estimating, JOB.queued, JOB.running, JOB.error, JOB.terminated],
     };
 
     /**
@@ -198,7 +208,8 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
     function canDo(action, jobState) {
         return (
             isValidJobStateObject(jobState) &&
-            validStatusesForAction[action].includes(jobState.status)
+            validStatusesForAction[action].includes(jobState.status) &&
+            !(action === 'retry' && jobState.batch_job)
         );
     }
 
@@ -237,7 +248,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
 
     function jobLabel(jobState, includeError = false) {
         const jobString = getJobString(jobState, 'status');
-        if (includeError && jobState.status && jobState.status === 'error') {
+        if (includeError && jobState.status && jobState.status === JOB.error) {
             return (
                 `${jobString}: ` + ErrorDisplay.normaliseErrorObject({ jobState: jobState }).type
             );
@@ -263,15 +274,15 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
         let label = jobStatus,
             cssClass = `--${jobStatus}`;
         switch (jobStatus) {
-            case 'does_not_exist':
+            case JOB.does_not_exist:
                 label = 'does not exist';
                 break;
-            case 'completed':
+            case JOB.completed:
                 label = 'success';
                 break;
-            case 'error':
+            case JOB.error:
                 break;
-            case 'terminated':
+            case JOB.terminated:
                 label = 'cancellation';
                 break;
             default:
@@ -332,43 +343,63 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
     }
 
     /**
-     * Given an array of jobState objects, create an object with jobs indexed by ID and by status
+     * Add an array of jobs to a model
+     *
+     * @param {object} model - the model to add the jobs to
+     * @param {array} jobArray - array of job state objects
+     */
+    function populateModelFromJobArray(model, jobArray = []) {
+        if (!model) {
+            throw new Error('Missing a model to populate');
+        }
+        const batchIds = new Set(),
+            batchJobs = new Set();
+
+        if (!jobArray.length) {
+            model.deleteItem('exec.jobs');
+            model.deleteItem('exec.jobState');
+            return;
+        }
+
+        jobArray.forEach((job) => {
+            if (job.batch_id) {
+                batchIds.add(job.batch_id);
+            }
+            if (job.batch_job) {
+                batchJobs.add(job);
+            }
+        });
+
+        if (batchIds.size > 1) {
+            // more than one batch present
+            throw new Error('More than one batch ID found');
+        }
+        if (batchJobs.size > 1) {
+            // more than one batch parent present
+            throw new Error('More than one batch parent found');
+        }
+
+        model.setItem('exec.jobs', jobArrayToIndexedObject(jobArray));
+
+        model.setItem('exec.jobState', Array.from(batchJobs)[0]);
+        return model;
+    }
+
+    /**
+     * Given an array of jobState objects, create an object with jobs indexed by ID
      *
      * @param {array} jobArray array of jobState objects
      * @returns {object} with indexed job data:
      *      byId        key: job_id, value: jobState object
-     *      byStatus    key: status, value: object whose keys are the job IDs
-     *                      of jobs with that status
      */
 
     function jobArrayToIndexedObject(jobArray = []) {
         const jobIx = {
             byId: {},
-            byStatus: {},
-            jobsWithRetries: {},
-            batchId: null,
         };
 
         jobArray.forEach((job) => {
-            const jobId = job.job_id,
-                status = job.status;
-            jobIx.byId[jobId] = job;
-            if (!jobIx.byStatus[status]) {
-                jobIx.byStatus[status] = {};
-            }
-            jobIx.byStatus[status][jobId] = true;
-
-            // any job with one or more retries
-            if (job.retry_ids && job.retry_ids.length) {
-                jobIx.jobsWithRetries[jobId] = true;
-            }
-
-            if (job.batch_job) {
-                if (jobIx.batchId && jobId !== jobIx.batchId) {
-                    console.error(`Error: two batch IDs present: ${jobIx.batchId} and ${jobId}`);
-                }
-                jobIx.batchId = job.batch_id;
-            }
+            jobIx.byId[job.job_id] = job;
         });
         return jobIx;
     }
@@ -427,7 +458,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
             return jobStatusUnknown;
         }
 
-        if (jobState.status === 'does_not_exist') {
+        if (jobState.status === JOB.does_not_exist) {
             return jobNotFound;
         }
 
@@ -592,7 +623,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
 
         if (Object.keys(jobLabelFreq).length === 1) {
             const status = Object.keys(jobLabelFreq)[0];
-            if (status === 'does_not_exist') {
+            if (status === JOB.does_not_exist) {
                 return `${batch} finished with error`;
             }
             return `${batch} ${_finishString(status).toLowerCase()}`;
@@ -612,8 +643,8 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
         Object.keys(jobsByStatus).forEach((status) => {
             const nJobs = jobsByStatus[status].size;
             // reduce down the queued states
-            if (status === 'estimating' || status === 'created') {
-                status = 'queued';
+            if (status === JOB.estimating || status === JOB.created) {
+                status = JOB.queued;
             }
             if (statuses[status]) {
                 statuses[status] += nJobs;
@@ -703,12 +734,12 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
 
         const textStatusSummary = _createBatchSummaryState(statuses);
         const orderedStatuses = [
-            'queued',
-            'running',
-            'completed',
-            'error',
-            'terminated',
-            'does_not_exist',
+            JOB.queued,
+            JOB.running,
+            JOB.completed,
+            JOB.error,
+            JOB.terminated,
+            JOB.does_not_exist,
         ];
         let summaryHtml =
             `${textStatusSummary}: ` +
@@ -749,7 +780,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
     /**
      * Get the FSM state for a bulk cell from the jobs
      *
-     * @param {object} jobsByStatus job IDs indexed by status
+     * @param {object} jobsIndex jobs index
      * @returns {string} FSM state
      */
     function getFsmStateFromJobs(jobsIndex) {
@@ -791,6 +822,7 @@ define(['common/errorDisplay', 'common/format', 'common/html', 'common/props', '
         jobStatusUnknown,
         jobStrings,
         niceState,
+        populateModelFromJobArray,
         updateJobModel,
         validJobStatuses,
         validStatusesForAction,

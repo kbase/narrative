@@ -5,8 +5,8 @@ define([
     'common/props',
     'common/spec',
     'testUtil',
-    '/test/data/testAppObj',
-], (Jupyter, FieldCellWidget, ParamResolver, Props, Spec, TestUtil, TestAppObject) => {
+    '/test/data/testBulkImportObj',
+], (Jupyter, FieldCellWidget, ParamResolver, Props, Spec, TestUtil, TestBulkImportObject) => {
     'use strict';
 
     describe('The Field Table Cell Widget module', () => {
@@ -96,7 +96,7 @@ define([
             container.appendChild(this.node);
 
             const model = Props.make({
-                data: TestAppObject,
+                data: TestBulkImportObject,
                 onUpdate: () => {},
             });
 

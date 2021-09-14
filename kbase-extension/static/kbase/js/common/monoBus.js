@@ -198,10 +198,10 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
                 channelName = canonicalizeChannelName(spec.channel),
                 channel = ensureChannel(channelName),
                 listener = {
-                    spec: spec,
-                    id: id,
+                    spec,
+                    id,
                     created: new Date(),
-                    channelName: channelName,
+                    channelName,
                 };
 
             if (spec.key) {
@@ -355,12 +355,12 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
             }
 
             channel.persistentMessages[key] = {
-                message: message,
-                envelope: envelope,
+                message,
+                envelope,
             };
             transientMessages.push({
-                message: message,
-                envelope: envelope,
+                message,
+                envelope,
             });
             run();
         }
@@ -374,7 +374,7 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
             envelope.listenerId = id;
             transientMessages.push({
                 message: persistentMessage.message,
-                envelope: envelope,
+                envelope,
             });
             run();
         }
@@ -392,7 +392,7 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
             const envelope = {
                 created: new Date(),
                 id: new Uuid(4).format(),
-                address: address,
+                address,
             };
 
             if (address.key) {
@@ -404,8 +404,8 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
             log('SEND', message, envelope);
 
             transientMessages.push({
-                message: message,
-                envelope: envelope,
+                message,
+                envelope,
             });
             run();
         }
@@ -417,7 +417,7 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
             const envelope = {
                 created: new Date(),
                 id: new Uuid(4).format(),
-                address: address,
+                address,
             };
 
             if (!address.key) {
@@ -516,7 +516,7 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
         function plisten(spec) {
             let initialized = false;
             let id;
-            const p = new Promise((resolve) => {
+            const promise = new Promise((resolve) => {
                 id = listen({
                     channel: spec.channel,
                     key: spec.key,
@@ -535,8 +535,8 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
                 });
             });
             return {
-                promise: p,
-                id: id,
+                promise,
+                id,
             };
         }
 
@@ -565,7 +565,7 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
         // convenience strategies.
         function on(type, handler, channel) {
             return listen({
-                channel: channel,
+                channel,
                 key: JSON.stringify({ type: type }),
                 handle: handler,
             });
@@ -634,7 +634,7 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
                 const address = {
                     channel: channelName,
                     key: {
-                        type: type,
+                        type,
                     },
                 };
                 return set(message, address);
@@ -700,21 +700,21 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
             }
 
             return {
-                on: on,
-                emit: emit,
+                on,
+                emit,
                 set: channelSet,
                 set2: channelSet2,
                 get: channelGet,
-                bus: bus,
+                bus,
                 listen: channelListen,
                 send: channelSend,
                 respond: channelRespond,
                 request: channelRequest,
                 when: channelWhen,
                 plisten: channelPlisten,
-                stop: stop,
-                channelName: channelName,
-                stats: stats,
+                stop,
+                channelName,
+                stats,
             };
         }
 
@@ -790,17 +790,17 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
                 }
 
                 return {
-                    on: on,
-                    emit: emit,
-                    listen: listen,
-                    send: send,
-                    respond: respond,
-                    request: request,
-                    plisten: plisten,
-                    set: set,
-                    get: get,
-                    when: when,
-                    stats: stats,
+                    on,
+                    emit,
+                    listen,
+                    send,
+                    respond,
+                    request,
+                    plisten,
+                    set,
+                    get,
+                    when,
+                    stats,
                 };
             }
 
@@ -829,10 +829,10 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
             }
 
             return {
-                channel: channel,
-                genName: genName,
-                stats: stats,
-                stop: stop,
+                channel,
+                genName,
+                stats,
+                stop,
                 // global listeners, etc.
                 listen: connectionListen,
             };
@@ -843,21 +843,21 @@ define(['uuid', 'bluebird', './lang', './unodep'], (Uuid, Promise, lang, utils) 
 
         // API
         const api = {
-            listen: listen,
-            send: send,
-            respond: respond,
-            request: request,
-            on: on,
-            emit: emit,
-            set: set,
-            plisten: plisten,
-            when: when,
-            makeChannelBus: makeChannelBus,
-            makeChannel: makeChannel,
-            removeChannel: removeChannel,
-            removeListener: removeListener,
-            removeListeners: removeListeners,
-            connect: connect,
+            listen,
+            send,
+            respond,
+            request,
+            on,
+            emit,
+            set,
+            plisten,
+            when,
+            makeChannelBus,
+            makeChannel,
+            removeChannel,
+            removeListener,
+            removeListeners,
+            connect,
             destroy,
         };
 

@@ -39,13 +39,14 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
         const $toolbar = $('<div>').addClass('celltoolbar');
         $toolbar.append($icon);
         const metadata = kbaseCellType ? buildMockExtensionCellMetadata(kbaseCellType, data) : {};
+        const inputArea = $('<div>').addClass('input_area');
         const mockCell = {
             metadata: { kbase: metadata },
             cell_type: cellType,
             renderMinMax: () => {},
             set_text: () => {},
             element: $cellContainer,
-            input: $('<div>').addClass('input').append('<div>').addClass('input_area'),
+            input: $('<div>').addClass('input').append(inputArea),
             output: $('<div>').addClass('output_wrapper').append('<div>').addClass('output'),
             celltoolbar: {
                 rebuild: () => {},
@@ -127,14 +128,31 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
      * Builds a mock Jupyter notebook object with a few keys, but mostly
      * an empty object for modification for whatever testing purposes.
      * @param {object} options a set of options for the mock notebook, with the following:
-     *  - deleteCallback: function to be called when `delete_cell` is called.
-     *  - fullyLoaded: boolean, if true, then treat the notebook as fully loaded
      *  - cells: a list of mocked cells (see buildMockCell)
+     *  - commInfoReturn: object - return from cell.kernel.comm_info()
+     *  - executeReply: object - response to cell.kernel.execute()
+     *  - fullyLoaded: boolean, if true, then treat the notebook as fully loaded
+     *  - deleteCallback: function to be called when `delete_cell` is called.
+     *  - notebookName: string, optional; the notebook name
      *  - readOnly: boolean, true if the Narrative should be read-only
+     *  - registerTargetReturn: object, keys are function names, values are functions
      */
+
+    const DEFAULT_COMM_INFO = {
+        comms: [],
+    };
+    const DEFAULT_COMM = {
+        on_msg: () => {},
+        send: () => {},
+        send_shell_message: () => {},
+    };
+
     function buildMockNotebook(options) {
         options = options || {};
         const cells = options.cells || [];
+        const commInfoReturn = options.commInfoReturn || DEFAULT_COMM_INFO;
+        const registerTargetReturn = options.registerTargetReturn || DEFAULT_COMM;
+        const executeReply = options.executeReply || {};
 
         function insertCell(type, index, data) {
             const cell = buildMockCell(type, '', data);
@@ -160,11 +178,46 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
                 }
                 return cells[index];
             },
+            insert_cell_above: (type, index, data) => insertCell(type, index - 1, data),
+            insert_cell_below: (type, index, data) => insertCell(type, index + 1, data),
+            save_checkpoint: () => {
+                /* no op */
+            },
             _fully_loaded: options.fullyLoaded,
             cells: cells,
             writable: !options.readOnly,
-            insert_cell_above: (type, index, data) => insertCell(type, index - 1, data),
-            insert_cell_below: (type, index, data) => insertCell(type, index + 1, data),
+            keyboard_manager: {
+                edit_shortcuts: {
+                    remove_shortcut: () => {
+                        /* no op */
+                    },
+                },
+                command_shortcuts: {
+                    remove_shortcut: () => {
+                        /* no op */
+                    },
+                },
+            },
+            kernel: {
+                is_connected: () => false,
+                comm_info: (_, cb) => {
+                    cb({
+                        content: commInfoReturn,
+                    });
+                },
+                comm_manager: {
+                    register_comm: () => {
+                        /* no op */
+                    },
+                    register_target: (_, cb) => cb(registerTargetReturn, {}),
+                },
+                execute: (_, cb) => {
+                    cb.shell.reply({
+                        content: executeReply,
+                    });
+                },
+            },
+            notebook_name: options.notebookName || 'some notebook',
         };
     }
 

@@ -56,40 +56,70 @@ define([
     'use strict';
 
     const COMM_NAME = 'KBaseJobs',
-        JOB_STATUS = 'job_status',
-        STOP_JOB_UPDATE = 'stop_job_update',
-        START_JOB_UPDATE = 'start_job_update',
-        CANCEL_JOB = 'cancel_job',
-        RETRY_JOB = 'retry_job',
-        JOB_LOGS = 'job_logs',
-        JOB_INFO = 'job_info',
+        CELL = 'cell',
         JOB = 'jobId',
-        CELL = 'cell';
+        RESULT = 'result',
+        // messages to be sent to backend for job request types
+        JOB_REQUESTS = {
+            CANCEL: 'cancel_job',
+            INFO: 'job_info',
+            LOGS: 'job_logs',
+            RETRY: 'retry_job',
+            STATUS: 'job_status',
+            START_UPDATE: 'start_job_update',
+            STOP_UPDATE: 'stop_job_update',
+        },
+        BACKEND_RESPONSES = {
+            DOES_NOT_EXIST: 'job_does_not_exist',
+            INFO: JOB_REQUESTS.INFO,
+            LOGS: JOB_REQUESTS.LOGS,
+            RESULT: RESULT,
+            RETRY: 'jobs_retried',
+            RUN_STATUS: 'run_status',
+            STATUS: JOB_REQUESTS.STATUS,
+        },
+        RESPONSES = {
+            DOES_NOT_EXIST: 'job-does-not-exist',
+            INFO: 'job-info',
+            LOGS: 'job-logs',
+            RESULT: RESULT,
+            RETRY: 'job-retry-response',
+            RUN_STATUS: 'run-status',
+            STATUS: 'job-status',
+        },
+        // these job request types also have a 'batch' version
+        batchRequests = ['INFO', 'STATUS', 'START_UPDATE', 'STOP_UPDATE'],
+        BATCH_JOB_REQUESTS = {};
+    // the batch version of JOB_REQUESTS[type]
+    batchRequests.forEach((type) => {
+        BATCH_JOB_REQUESTS[JOB_REQUESTS[type]] = JOB_REQUESTS[type] + '_batch';
+    });
 
     // Conversion of the message type of an incoming message
     // to the type used for the message to be sent to the backend
     const requestTranslation = {
         'ping-comm-channel': 'ping',
 
+        // cancels the job
+        'request-job-cancel': JOB_REQUESTS.CANCEL,
+
+        // Fetches info (not state) about a job, including the app id, name, and inputs.
+        'request-job-info': JOB_REQUESTS.INFO,
+
+        // Fetches job logs from kernel.
+        'request-job-log': JOB_REQUESTS.LOGS,
+
+        // retries the job
+        'request-job-retry': JOB_REQUESTS.RETRY,
+
         // Fetches job status from kernel.
-        'request-job-status': JOB_STATUS,
+        'request-job-status': JOB_REQUESTS.STATUS,
 
         // Requests job status updates for this job via the job channel, and also
         // ensures that job polling is running.
-        'request-job-updates-start': START_JOB_UPDATE,
+        'request-job-updates-start': JOB_REQUESTS.START_UPDATE,
         // Tells kernel to stop including a job in the lookup loop.
-        'request-job-updates-stop': STOP_JOB_UPDATE,
-
-        // cancels the job
-        'request-job-cancellation': CANCEL_JOB,
-        // retries the job
-        'request-job-retry': RETRY_JOB,
-
-        // Fetches info (not state) about a job, including the app id, name, and inputs.
-        'request-job-info': JOB_INFO,
-
-        // Fetches job logs from kernel.
-        'request-job-log': JOB_LOGS,
+        'request-job-updates-stop': JOB_REQUESTS.STOP_UPDATE,
     };
 
     class JobCommChannel {
@@ -117,18 +147,7 @@ define([
         }
 
         validOutgoingMessageTypes() {
-            return [
-                'job-cancel-error',
-                'job-canceled',
-                'job-does-not-exist',
-                'job-error',
-                'job-info',
-                'job-log-deleted',
-                'job-logs',
-                'job-status',
-                'result',
-                'run-status',
-            ];
+            return Object.values(RESPONSES).concat(['job-error', 'job-log-deleted']);
         }
 
         /**
@@ -189,6 +208,8 @@ define([
                 };
 
                 const translations = {
+                    // backend uses `job_id` instead of `batch_id`
+                    batchId: 'job_id',
                     jobId: 'job_id',
                     jobIdList: 'job_id_list',
                     pingId: 'ping_id',
@@ -198,6 +219,10 @@ define([
                     if (key !== 'options') {
                         const msgKey = translations[key] || key;
                         msg[msgKey] = value;
+                    }
+                    // convert to the batch form of the request
+                    if (key === 'batchId' && BATCH_JOB_REQUESTS[msgType]) {
+                        msg.request_type = BATCH_JOB_REQUESTS[msgType];
                     }
                 }
 
@@ -234,9 +259,9 @@ define([
          *   }
          * }
          * Where msg_type is one of:
-         * start, new_job, job_status, job_status_all, job_info, run_status, job_err, job_canceled,
-         * job_does_not_exist, job_logs, job_comm_err, job_init_err, job_init_partial_err,
-         * job_init_lookup_err, result.
+         * start, new_job, job_status, job_status_all, job_comm_err, job_init_err, job_init_lookup_err,
+         * or any of the values of BACKEND_RESPONSES
+         *
          * @param {object} msg
          */
         handleCommMessages(msg) {
@@ -252,23 +277,24 @@ define([
                     break;
 
                 // CELL messages
-                case 'run_status':
-                    // Send job status notifications on the default channel,
-                    // with a key on the message type and the job id, sending
-                    // a copy of the original message.
-                    // This allows widgets which are interested in the job
-                    // to subscribe to just that job, and nothing else.
-                    // If there is a need for a generic broadcast message, we
-                    // can either send a second message or implement key
-                    // filtering.
-                    this.sendBusMessage(CELL, msgData.cell_id, 'run-status', msgData);
+                case BACKEND_RESPONSES.RUN_STATUS:
+                    this.sendBusMessage(CELL, msgData.cell_id, RESPONSES.RUN_STATUS, msgData);
                     break;
 
-                case 'result':
-                    this.sendBusMessage(CELL, msgData.address.cell_id, 'result', msgData);
+                case BACKEND_RESPONSES.RESULT:
+                    this.sendBusMessage(CELL, msgData.address.cell_id, RESPONSES.RESULT, msgData);
                     break;
 
                 // JOB messages
+                // Send job-related notifications on the default channel,
+                // with a key on the message type and the job id.
+                // This allows widgets which are interested in the job
+                // to subscribe to just that job, and nothing else.
+                // If there is a need for a generic broadcast message, we
+                // can either send a second message or implement key
+                // filtering.
+
+                // errors
                 case 'job_comm_error':
                     console.error('Error from job comm:', msg);
                     if (!msgData) {
@@ -276,29 +302,18 @@ define([
                     }
                     jobId = msgData.job_id;
                     switch (msgData.source) {
-                        case 'cancel_job':
-                            this.sendBusMessage(JOB, jobId, 'job-cancel-error', {
-                                jobId,
-                                message: msgData.message,
-                            });
-                            this.sendBusMessage(JOB, jobId, 'job-canceled', {
+                        case JOB_REQUESTS.LOGS:
+                            this.sendBusMessage(JOB, jobId, RESPONSES.LOGS, {
                                 jobId,
                                 error: msgData.message,
                             });
-                            break;
-                        case 'job_logs':
-                        case 'job_logs_latest':
                             this.sendBusMessage(JOB, jobId, 'job-log-deleted', {
                                 jobId,
                                 message: msgData.message,
                             });
-                            this.sendBusMessage(JOB, jobId, 'job-logs', {
-                                jobId,
-                                error: msgData.message,
-                            });
                             break;
-                        case 'job_retried':
-                            this.sendBusMessage(JOB, jobId, 'job-retry-response', {
+                        case JOB_REQUESTS.RETRY:
+                            this.sendBusMessage(JOB, jobId, RESPONSES.RETRY, {
                                 jobId: jobId,
                                 error: msgData.message,
                             });
@@ -313,10 +328,17 @@ define([
                     }
                     break;
 
-                case 'job_does_not_exist':
+                case 'job_init_err':
+                case 'job_init_lookup_err':
+                    this.displayJobError(msgData);
+                    console.error('Error from job comm:', msg);
+                    break;
+
+                case BACKEND_RESPONSES.DOES_NOT_EXIST:
+                    jobId = msgData.job_id;
                     if (msgData.source === 'job_status') {
-                        this.sendBusMessage(JOB, msgData.job_id, 'job-status', {
-                            jobId: msgData.job_id,
+                        this.sendBusMessage(JOB, jobId, RESPONSES.STATUS, {
+                            jobId,
                             jobState: {
                                 job_id: msgData.job_id,
                                 status: 'does_not_exist',
@@ -324,60 +346,64 @@ define([
                         });
                         break;
                     }
-                    this.sendBusMessage(JOB, msgData.job_id, 'job-does-not-exist', {
-                        jobId: msgData.job_id,
+                    this.sendBusMessage(JOB, jobId, RESPONSES.DOES_NOT_EXIST, {
+                        jobId,
                         source: msgData.source,
                     });
                     break;
 
-                case 'job_info':
-                    this.sendBusMessage(JOB, msgData.job_id, 'job-info', {
-                        jobId: msgData.job_id,
-                        jobInfo: msgData,
+                // job information for one or more jobs
+                // Object with keys jobId and values { jobId: jobId, jobInfo: { ...job params... } }
+                case BACKEND_RESPONSES.INFO:
+                    Object.keys(msgData).forEach((_jobId) => {
+                        this.sendBusMessage(JOB, msgData[_jobId].job_id, RESPONSES.INFO, {
+                            jobId: msgData[_jobId].job_id,
+                            jobInfo: msgData[_jobId],
+                        });
                     });
                     break;
 
-                case 'job_init_err':
-                case 'job_init_lookup_err':
-                    this.displayJobError(msgData);
-                    console.error('Error from job comm:', msg);
-                    break;
-
-                case 'job_logs':
-                    this.sendBusMessage(JOB, msgData.job_id, 'job-logs', {
+                case BACKEND_RESPONSES.LOGS:
+                    this.sendBusMessage(JOB, msgData.job_id, RESPONSES.LOGS, {
                         jobId: msgData.job_id,
                         logs: msgData,
                         latest: msgData.latest,
                     });
                     break;
 
+                case BACKEND_RESPONSES.RETRY:
+                    msgData.forEach((jobRetried) => {
+                        this.sendBusMessage(JOB, jobRetried.job.state.job_id, RESPONSES.RETRY, {
+                            job: {
+                                jobState: jobRetried.job.state,
+                                outputWidgetInfo: jobRetried.job.widget_info,
+                            },
+                            retry: {
+                                jobState: jobRetried.retry.state,
+                                outputWidgetInfo: jobRetried.retry.widget_info,
+                            },
+                        });
+                    });
+                    break;
+
                 /*
                  * The job status for one or more jobs. See job_status_all
                  * for a message which covers all active jobs.
-                 * Note that these messages are additive to the job panel
-                 * cache, but the reverse logic does not apply.
+                 *
+                 * data structure: object with key jobId and value { jobState: job.state, outputWidgetInfo: job.widget_info }
                  */
-                case 'job_status':
-                    jobId = msgData.state.job_id;
-                    // We could just copy the entire message into the job
-                    // states cache, but referencing each individual property
-                    // is more explicit about the structure.
-                    this.jobStates[msgData.state.job_id] = {
-                        state: msgData.state,
-                        spec: msgData.spec,
-                        widgetParameters: msgData.widget_info,
-                    };
+                case BACKEND_RESPONSES.STATUS:
+                    Object.keys(msgData).forEach((_jobId) => {
+                        this.jobStates[_jobId] = msgData[_jobId].state;
 
-                    /*
-                     * Notify the front end about the changed or new job
-                     * states.
-                     */
-                    this.sendBusMessage(JOB, jobId, 'job-status', {
-                        jobId,
-                        jobState: msgData.state,
-                        outputWidgetInfo: msgData.widget_info,
+                        this.sendBusMessage(JOB, _jobId, RESPONSES.STATUS, {
+                            jobId: _jobId,
+                            jobState: msgData[_jobId].state,
+                            outputWidgetInfo: msgData[_jobId].widget_info,
+                        });
                     });
                     break;
+
                 /*
                  * This message must carry all jobs linked to this narrative.
                  * The job deletion logic, specifically, requires that the job
@@ -397,17 +423,10 @@ define([
                      */
                     for (jobId in msgData) {
                         const jobStateMessage = msgData[jobId];
-                        // We could just copy the entire message into the job
-                        // states cache, but referencing each individual property
-                        // is more explicit about the structure.
-                        this.jobStates[jobId] = {
-                            state: jobStateMessage.state,
-                            spec: jobStateMessage.spec,
-                            widgetParameters: jobStateMessage.widget_info,
-                            owner: jobStateMessage.owner,
-                        };
+                        // cache state data
+                        this.jobStates[jobId] = jobStateMessage.state;
 
-                        this.sendBusMessage(JOB, jobId, 'job-status', {
+                        this.sendBusMessage(JOB, jobId, RESPONSES.STATUS, {
                             jobId: jobId,
                             jobState: jobStateMessage.state,
                             outputWidgetInfo: jobStateMessage.widget_info,
@@ -419,7 +438,7 @@ define([
                             // If this job is not found in the incoming list of all
                             // jobs, then we must both delete it locally, and
                             // notify any interested parties.
-                            this.sendBusMessage(JOB, _jobId, 'job-status', {
+                            this.sendBusMessage(JOB, _jobId, RESPONSES.STATUS, {
                                 jobId: _jobId,
                                 jobState: {
                                     job_id: _jobId,
@@ -576,9 +595,23 @@ define([
         }
 
         getJobInitCode() {
+            const currentCells = Jupyter.notebook
+                .get_cells()
+                .map((cell) => {
+                    try {
+                        return cell.metadata.kbase.attributes.id;
+                    } catch (e) {
+                        // do nothing
+                    }
+
+                    return null;
+                })
+                .filter((cellId) => !!cellId);
+
             return [
                 'from biokbase.narrative.jobs.jobcomm import JobComm',
-                'JobComm().start_job_status_loop(init_jobs=True)',
+                'cell_list = ' + JSON.stringify(currentCells),
+                'JobComm().start_job_status_loop(cell_list=cell_list, init_jobs=True)',
             ].join('\n');
         }
     }

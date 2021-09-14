@@ -2,6 +2,8 @@ from ..util import ConfigTests
 from biokbase.workspace.baseclient import ServerError
 from biokbase.narrative.jobs.appmanager import BATCH_ID_KEY
 import copy
+import functools
+from unittest.mock import call
 
 RANDOM_DATE = "2018-08-10T16:47:36+0000"
 RANDOM_TYPE = "ModuleA.TypeA-1.0"
@@ -62,7 +64,10 @@ class MockClients:
         return "bar"
 
     def check_workspace_jobs(self, params):
-        return self.ee2_job_info
+        info = self.ee2_job_info
+        if params.get("return_list"):
+            info = list(info.values())
+        return info
 
     # ----- Narrative Method Store functions ------
 
@@ -214,7 +219,9 @@ class MockClients:
         return self.test_job_id
 
     def run_job_batch(self, batch_job_inputs, batch_params):
-        child_job_ids = [self.test_job_id + f"_child_{i}" for i in range(len(batch_job_inputs))]
+        child_job_ids = [
+            self.test_job_id + f"_child_{i}" for i in range(len(batch_job_inputs))
+        ]
         return {BATCH_ID_KEY: self.test_job_id, "child_job_ids": child_job_ids}
 
     def cancel_job(self, job_id):
@@ -252,6 +259,8 @@ class MockClients:
             infos[job] = self.check_job(
                 {"job_id": job, "exclude_fields": params.get("exclude_fields", [])}
             )
+        if params.get("return_list"):
+            infos = list(infos.values())
         return infos
 
     def get_job_logs(self, params):
@@ -503,29 +512,57 @@ class MockStagingHelper:
 
 
 class assert_obj_method_called(object):
-    def __init__(self, obj, method, call_status=True):
-        self.obj = obj
-        self.method = method
+    """
+    Invocations:
+
+    with assert_obj_method_called(MyTargetClass, "my_target_method"):
+    with assert_obj_method_called(MyTargetClass, "my_target_method", False) as aomc:
+
+    aomc.assert_has_calls(
+        [
+            mock.call("fish", 1),
+            mock.call("dog", 2),
+        ]
+    )
+    """
+
+    def __init__(self, target, method_name, call_status=True):
+        self.target = target
+        self.method_name = method_name
         self.call_status = call_status
 
-    def called(self, *args, **kwargs):
-        self.method_called = True
-        self.orig_method(*args, **kwargs)
-
     def __enter__(self):
-        self.orig_method = getattr(self.obj, self.method)
-        setattr(self.obj, self.method, self.called)
+        self.orig_method = getattr(self.target, self.method_name)
+
+        @functools.wraps(self.orig_method)
+        def called(*args, **kwargs):
+            self.method_called = True
+            self.calls.append(call(*args[1:], **kwargs))  # first arg is self
+            return self.orig_method(*args, **kwargs)
+
+        self.called = called
+
+        setattr(self.target, self.method_name, called)
         self.method_called = False
+        self.calls = []
+
+        return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        assert getattr(self.obj, self.method) == self.called, (
-            "method %s was modified during assertMethodIsCalled" % self.method
-        )
+        if exc_value:
+            return
 
-        setattr(self.obj, self.method, self.orig_method)
+        assert (
+            getattr(self.target, self.method_name) == self.called
+        ), f"Method {self.target.__name__}.{self.method_name} was modified during context managment with {self.__class__.name}"
+        setattr(self.target, self.method_name, self.orig_method)
 
-        # If an exception was thrown within the block, we've already failed.
-        if traceback is None:
-            assert (
-                self.method_called is self.call_status
-            ), "method %s of %s was not %s" % (self.method, self.obj, self.call_status)
+        self.assert_called(self.call_status)
+
+    def assert_has_calls(self, calls):
+        assert calls == self.calls, f"Expected:\n{calls}\nGot:\n{self.calls}"
+
+    def assert_called(self, call_status=True):
+        assert (
+            call_status and len(self.calls) or not call_status and not len(self.calls)
+        ), f"Call status of method {self.target.__name__}.{self.method_name} was not {call_status}"

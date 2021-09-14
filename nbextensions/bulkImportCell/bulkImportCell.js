@@ -612,60 +612,61 @@ define([
             const meta = cell.metadata;
             meta.kbase.attributes.lastLoaded = new Date().toUTCString();
             cell.metadata = meta;
-            render().then(() => {
-                jobManager.addHandler('modelUpdate', {
-                    execMessage: (jobManagerContext) => {
-                        // Update the execMessage panel with details of the active jobs
-                        controlPanel.setExecMessage(
-                            Jobs.createCombinedJobState(
+            render()
+                .then(() => {
+                    jobManager.addHandler('modelUpdate', {
+                        execMessage: (jobManagerContext) => {
+                            // Update the execMessage panel with details of the active jobs
+                            controlPanel.setExecMessage(
+                                Jobs.createCombinedJobState(
+                                    jobManagerContext.model.getItem('exec.jobs.byStatus')
+                                )
+                            );
+                        },
+                        fsmState: (jobManagerContext) => {
+                            const fsmState = Jobs.getFsmStateFromJobs(
                                 jobManagerContext.model.getItem('exec.jobs.byStatus')
-                            )
-                        );
-                    },
-                    fsmState: (jobManagerContext) => {
-                        const fsmState = Jobs.getFsmStateFromJobs(
-                            jobManagerContext.model.getItem('exec.jobs.byStatus')
-                        );
-                        if (fsmState) {
-                            updateState(fsmState);
-                        }
-                    },
-                });
-                try {
-                    jobManager.restoreFromSaved();
-                } catch (e) {
-                    console.error(e);
-                }
-                const expectedFiles = new Set();
-                Object.values(model.getItem('inputs')).forEach((inputs) => {
-                    for (const f of inputs.files) {
-                        expectedFiles.add(f);
+                            );
+                            if (fsmState) {
+                                updateState(fsmState);
+                            }
+                        },
+                    });
+                    try {
+                        jobManager.restoreFromSaved();
+                    } catch (e) {
+                        console.error(e);
                     }
-                });
-                return BulkImportUtil.getMissingFiles(Array.from(expectedFiles));
-            })
-            .then((missingFiles) =>
-                BulkImportUtil.evaluateConfigReadyState(model, specs, new Set(missingFiles))
-            )
-            .then((readyState) => {
-                const curState = model.getItem('state');
-                const curReadyState = curState.params;
-                const updatedReadyState = !SimpleUtil.isEqual(readyState, curReadyState);
+                    const expectedFiles = new Set();
+                    Object.values(model.getItem('inputs')).forEach((inputs) => {
+                        for (const f of inputs.files) {
+                            expectedFiles.add(f);
+                        }
+                    });
+                    return BulkImportUtil.getMissingFiles(Array.from(expectedFiles));
+                })
+                .then((missingFiles) =>
+                    BulkImportUtil.evaluateConfigReadyState(model, specs, new Set(missingFiles))
+                )
+                .then((readyState) => {
+                    const curState = model.getItem('state');
+                    const curReadyState = curState.params;
+                    const updatedReadyState = !SimpleUtil.isEqual(readyState, curReadyState);
 
-                if (updatedReadyState) {
-                    model.setItem(['state', 'params'], readyState);
-                }
-                if (
-                    updatedReadyState &&
-                    ['editingComplete', 'editingIncomplete'].includes(curState.state)
-                ) {
-                    updateEditingState();
-                } else {
-                    updateState();
-                }
-                cell.renderMinMax();
-                runTab(state.tab.selected);
-            });
+                    if (updatedReadyState) {
+                        model.setItem(['state', 'params'], readyState);
+                    }
+                    if (
+                        updatedReadyState &&
+                        ['editingComplete', 'editingIncomplete'].includes(curState.state)
+                    ) {
+                        updateEditingState();
+                    } else {
+                        updateState();
+                    }
+                    cell.renderMinMax();
+                    runTab(state.tab.selected);
+                });
         }
 
         function getWorkspaceClient() {

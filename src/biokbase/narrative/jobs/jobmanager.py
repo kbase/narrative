@@ -1,7 +1,6 @@
 import biokbase.narrative.clients as clients
 from .job import (
     Job,
-    TERMINAL_STATUSES,
     EXCLUDED_JOB_STATE_FIELDS,
     JOB_INIT_EXCLUDED_JOB_STATE_FIELDS,
     get_dne_job_state,
@@ -64,7 +63,7 @@ class JobManager(object):
 
         return states
 
-    def initialize_jobs(self):
+    def initialize_jobs(self, cell_ids: List[str] = None) -> None:
         """
         Initializes this JobManager.
         This is expected to be run by a running Narrative, and naturally linked to a workspace.
@@ -101,10 +100,15 @@ class JobManager(object):
                     for child_id in job_state.get("child_jobs", [])
                 ]
 
-            self.register_new_job(
-                job=Job(job_state, children=child_jobs),
-                refresh=int(job_state.get("status") not in TERMINAL_STATUSES),
-            )
+            job = Job(job_state, children=child_jobs)
+
+            # Set to refresh when job is not in terminal state
+            # and when job is present in cells (if given)
+            refresh = not job.was_terminal
+            if cell_ids is not None:
+                refresh = refresh and job.in_cells(cell_ids)
+
+            self.register_new_job(job, int(refresh))
 
     def _create_jobs(self, job_ids) -> dict:
         """

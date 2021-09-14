@@ -1,6 +1,7 @@
 import unittest
 import mock
 import copy
+import itertools
 from biokbase.workspace.baseclient import ServerError
 from biokbase.narrative.app_util import map_inputs_from_job, map_outputs_from_state
 from biokbase.narrative.jobs.job import (
@@ -97,11 +98,11 @@ JOBS_TERMINALITY = {
 }
 
 ALL_JOBS = list(JOBS_TERMINALITY.keys())
-FINISHED_JOBS = []
+TERMINAL_JOBS = []
 ACTIVE_JOBS = []
 for key, value in JOBS_TERMINALITY.items():
     if value:
-        FINISHED_JOBS.append(key)
+        TERMINAL_JOBS.append(key)
     else:
         ACTIVE_JOBS.append(key)
 
@@ -162,11 +163,12 @@ def get_widget_info(job_id):
     tag = narr_cell_info.get("tag", JOB_ATTR_DEFAULTS["tag"])
     app_id = job_input.get("app_id", JOB_ATTR_DEFAULTS["app_id"])
     spec = get_test_spec(tag, app_id)
-    output_widget, widget_params = map_outputs_from_state(
-        state,
-        map_inputs_from_job(params, spec),
-        spec,
-    )
+    with mock.patch("biokbase.narrative.app_util.clients.get", get_mock_client):
+        output_widget, widget_params = map_outputs_from_state(
+            state,
+            map_inputs_from_job(params, spec),
+            spec,
+        )
     return {
         "name": output_widget,
         "tag": narr_cell_info.get("tag", "release"),
@@ -225,6 +227,47 @@ def get_batch_family_jobs(return_list=False):
                 for child_id, child_job in zip(BATCH_CHILDREN, child_jobs)
             },
         }
+
+
+def get_all_jobs(return_list=False):
+    # do batch family because
+    # batch container job needs to be
+    # instantiated with child instances
+    jobs = get_batch_family_jobs()
+    for job_id in ALL_JOBS:
+        if job_id not in jobs:
+            jobs[job_id] = create_job_from_ee2(job_id)
+    if return_list:
+        jobs = list(jobs.values())
+    return jobs
+
+
+def get_cell_2_jobs():
+    """
+    Returns a dict with keys being all the cell IDs
+    in the test data, and the values being a list of
+    jobs with that cell ID.
+
+    Batch jobs technically don't have cell IDs,
+    but they will take on the cell IDs of their children.
+    If their children are in different
+    cells, all children's cell IDs will map to the batch job
+    """
+    cell_and_jobs = []
+    for job_id, job in get_all_jobs().items():
+        if job.batch_job:
+            for child_job in job.children:
+                cell_and_jobs.append((child_job.cell_id, job_id))
+        else:
+            cell_and_jobs.append((job.cell_id, job_id))
+
+    cell_2_jobs = {}
+    for cell_id, job_id in cell_and_jobs:
+        if cell_id in cell_2_jobs and job_id not in cell_2_jobs[cell_id]:
+            cell_2_jobs[cell_id] += [job_id]
+        else:
+            cell_2_jobs[cell_id] = [job_id]
+    return cell_2_jobs
 
 
 class JobTest(unittest.TestCase):
@@ -677,7 +720,7 @@ class JobTest(unittest.TestCase):
 
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def test_get_viewer_params__finished(self):
-        for job_id in FINISHED_JOBS:
+        for job_id in TERMINAL_JOBS:
             job = create_job_from_ee2(job_id)
             state = create_state_from_ee2(job_id)
             exp = get_widget_info(job_id)
@@ -739,7 +782,7 @@ class JobTest(unittest.TestCase):
         self.check_job_attrs(job, job_id)
 
         def mock_check_job(self_, params):
-            assert params["job_id"] == job_id
+            self.assertEqual(params["job_id"], job_id)
             return {"retry_ids": self.NEW_RETRY_IDS}
 
         with mock.patch.object(MockClients, "check_job", mock_check_job):
@@ -754,7 +797,7 @@ class JobTest(unittest.TestCase):
         self.check_job_attrs(job, job_id)
 
         def mock_check_job(self_, params):
-            assert params["job_id"] == job_id
+            self.assertEqual(params["job_id"], job_id)
             return {"retry_ids": self.NEW_RETRY_IDS}
 
         with mock.patch.object(MockClients, "check_job", mock_check_job):
@@ -780,8 +823,96 @@ class JobTest(unittest.TestCase):
         self.check_job_attrs(job, job_id)
 
         def mock_check_job(self_, params):
-            assert params["job_id"] == job_id
+            self.assertEqual(params["job_id"], job_id)
             return {"child_jobs": self.NEW_CHILD_JOBS}
 
         with mock.patch.object(MockClients, "check_job", mock_check_job):
             self.check_job_attrs(job, job_id, {"child_jobs": self.NEW_CHILD_JOBS})
+
+    def test_was_terminal(self):
+        all_jobs = get_all_jobs()
+
+        for job_id, job in all_jobs.items():
+            self.assertEqual(
+                JOBS_TERMINALITY[job_id],
+                job.was_terminal
+            )
+
+    @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
+    def test_was_terminal__batch(self):
+        batch_fam = get_batch_family_jobs(return_list=True)
+        batch_job, child_jobs = batch_fam[0], batch_fam[1:]
+
+        self.assertFalse(batch_job.was_terminal)
+
+        def mock_check_job(self_, params):
+            assert params["job_id"] in BATCH_CHILDREN
+            return {"status": COMPLETED_STATUS}
+
+        with mock.patch.object(MockClients, "check_job", mock_check_job):
+            for job in child_jobs:
+                job.state(force_refresh=True)
+
+        self.assertTrue(batch_job.was_terminal)
+
+    def test_in_cells(self):
+        all_jobs = get_all_jobs()
+        cell_2_jobs = get_cell_2_jobs()
+        cell_ids = list(cell_2_jobs.keys())
+        # Iterate through all combinations of cell IDs
+        for combo_len in range(len(cell_ids) + 1):
+            for combo in itertools.combinations(cell_ids, combo_len):
+                combo = list(combo)
+                # Get jobs expected to be associated with the cell IDs
+                exp_job_ids = [
+                    job_id
+                    for cell_id, job_ids in cell_2_jobs.items()
+                    for job_id in job_ids
+                    if cell_id in combo
+                ]
+                for job_id, job in all_jobs.items():
+                    self.assertEqual(
+                        job_id in exp_job_ids,
+                        job.in_cells(combo)
+                    )
+
+    def test_in_cells__none(self):
+        job = create_job_from_ee2(JOB_COMPLETED)
+        with self.assertRaisesRegex(ValueError, "cell_ids cannot be None"):
+            job.in_cells(None)
+
+    def test_in_cells__batch__same_cell(self):
+        batch_fam = get_batch_family_jobs(return_list=True)
+        batch_job, child_jobs = batch_fam[0], batch_fam[1:]
+
+        for job in child_jobs:
+            job.cell_id = "hello"
+
+        self.assertTrue(
+            batch_job.in_cells(["hi", "hello"])
+        )
+
+        self.assertFalse(
+            batch_job.in_cells(["goodbye", "hasta manana"])
+        )
+
+    def test_in_cells__batch__diff_cells(self):
+        batch_fam = get_batch_family_jobs(return_list=True)
+        batch_job, child_jobs = batch_fam[0], batch_fam[1:]
+
+        children_cell_ids = ["hi", "hello", "greetings"]
+        for job, cell_id in zip(
+            child_jobs,
+            itertools.cycle(children_cell_ids)
+        ):
+            job.cell_id = cell_id
+
+        for cell_id in children_cell_ids:
+            self.assertTrue(batch_job.in_cells([cell_id]))
+            self.assertTrue(batch_job.in_cells(["A", cell_id, "B"]))
+            self.assertTrue(batch_job.in_cells([cell_id, "B", "A"]))
+            self.assertTrue(batch_job.in_cells(["B", "A", cell_id]))
+
+        self.assertFalse(
+            batch_job.in_cells(["goodbye", "hasta manana"])
+        )

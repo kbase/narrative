@@ -240,11 +240,17 @@ define([
         if (rect.top === 0 && rect.bottom === 0) {
             return false;
         }
+        const notebookStart = document.querySelector('#notebook').getBoundingClientRect().y;
         return (
-            (rect.top >= 0 &&
+            // Top in View
+            (rect.top >= notebookStart &&
                 rect.top <= (window.innerHeight || document.documentElement.clientHeight)) ||
-            (rect.bottom >= 0 &&
-                rect.bottom <= (window.innerHeight || document.documentElement.clientHeight))
+            // Bottom in View
+            (rect.bottom >= notebookStart &&
+                rect.bottom <= (window.innerHeight || document.documentElement.clientHeight)) ||
+            // Top and Bottom span the whole view
+            (rect.top < notebookStart &&
+                rect.bottom > (window.innerHeight || document.documentElement.clientHeight))
         );
     }
 

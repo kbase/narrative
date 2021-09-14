@@ -3,11 +3,12 @@
  * @author David Lyon  <dlyon@lbl.gov>
  * @public
  */
-define(['jquery', 'base/js/namespace', 'kbwidget', 'kbaseNarrativeControlPanel'], (
+define(['jquery', 'base/js/namespace', 'kbwidget', 'kbaseNarrativeControlPanel', 'util/display'], (
     $,
     Jupyter,
     KBWidget,
-    ControlPanel
+    ControlPanel,
+    DisplayUtil
 ) => {
     'use strict';
     return new KBWidget({
@@ -18,8 +19,6 @@ define(['jquery', 'base/js/namespace', 'kbwidget', 'kbaseNarrativeControlPanel']
             // If true, all markdown H1-H3 will be outline items
             // If false, only the first header will be an outline item
             showAllHeaders: false,
-            // Header height for visibility & scroll functionality
-            headerHeight: 80,
             // Refresh throttle rate in ms
             refreshRate: 100,
         },
@@ -43,7 +42,7 @@ define(['jquery', 'base/js/namespace', 'kbwidget', 'kbaseNarrativeControlPanel']
                 'command_mode.Notebook', // Triggers on clicking out of editing cell
                 'create.Cell',
                 'delete.Cell',
-                'select.Cell' // Triggers on cell move
+                'select.Cell', // Triggers on cell move
             ];
             $([Jupyter.events]).on(refreshJupyterEvents.join(' '), refresh);
 
@@ -64,37 +63,38 @@ define(['jquery', 'base/js/namespace', 'kbwidget', 'kbaseNarrativeControlPanel']
         },
 
         refresh: function () {
-            if (this.refresh_timeout || !this.isActive) {
+            if (this.refreshTimeout || !this.isActive) {
                 return;
             }
-            this.refresh_timeout = setTimeout(() => {
-                this.refresh_timeout = undefined;
+            this.refreshTimeout = setTimeout(() => {
+                this.refreshTimeout = undefined;
                 this.renderOutline();
             }, this.options.refreshRate);
         },
 
         renderOutline: function () {
-            const outline_items = this.getOutlineItems();
+            const outlineItems = this.getOutlineItems();
 
             // Compute state string to determine if we need to redraw
-            const stateStr = JSON.stringify(outline_items.map(({ depth, title, icon }) => ([depth, title, icon])));
+            const stateStr = JSON.stringify(
+                outlineItems.map(({ depth, title, icon }) => [depth, title, icon])
+            );
             if (stateStr !== this.drawnState) {
-                const outline_root = this.nestOutlineItems(outline_items);
+                const outlineRoot = this.nestOutlineItems(outlineItems);
                 // Redraw the outline tree
                 this.body.empty();
                 this.body.append(
-                    $('<div>').addClass('kb-narr-outline')
-                        .append(
-                            this.renderOutlineNode(outline_root)
-                        )
+                    $('<div>')
+                        .addClass('kb-narr-outline')
+                        .append(this.renderOutlineNode(outlineRoot))
                 );
                 this.drawnState = stateStr;
             }
 
             // Apply highlights to each item in the outline as needed
             this.body.find('.kb-narr-outline__item').each(function (i) {
-                const item = outline_items[i];
-                $(this).toggleClass('kb-narr-outline__item--highlight', item.in_view);
+                const item = outlineItems[i];
+                $(this).toggleClass('kb-narr-outline__item--highlight', item.inView);
                 $(this).toggleClass('kb-narr-outline__item--highlight-selected', item.selected);
             });
         },
@@ -104,7 +104,7 @@ define(['jquery', 'base/js/namespace', 'kbwidget', 'kbaseNarrativeControlPanel']
          * @property {string} title - Title of the cell/item
          * @property {number} depth - Depth of the item in the outline tree
          * @property {jQuery} element - the cell's jquery element
-         * @property {boolean} in_view - Whether the cell is visible on screen
+         * @property {boolean} inView - Whether the cell is visible on screen
          * @property {boolean} selected - Whether the cell is selected
          * @property {string} icon - Icon HTML for the cell, pulled using cell.getIcon()
          */
@@ -114,38 +114,40 @@ define(['jquery', 'base/js/namespace', 'kbwidget', 'kbaseNarrativeControlPanel']
          * @returns {OutlineItem[]} - Array of outline items
          */
         getOutlineItems: function () {
-            const outline_items = [];
+            const outlineItems = [];
             Jupyter.notebook.get_cells().forEach((cell) => {
                 // Find any headers in the cell
-                let inner_headers = cell.element[0].querySelectorAll('h1, h2, h3');
+                let innerHeaders = cell.element[0].querySelectorAll('h1, h2, h3');
                 // Differentiate between cell types for creating items
-                if (cell.cell_type === 'markdown' && inner_headers.length !== 0) {
+                if (cell.cell_type === 'markdown' && innerHeaders.length !== 0) {
                     // Create header items for markdown cell
                     if (!this.options.showAllHeaders) {
-                        inner_headers = [inner_headers[0]];
+                        innerHeaders = [innerHeaders[0]];
                     }
-                    const md_items = Array.from(inner_headers).map((h, i) => ({
+                    const mdItems = Array.from(innerHeaders).map((h, i) => ({
                         title: h.innerText,
                         depth: parseInt(h.nodeName[1]),
                         element: i === 0 ? cell.element[0] : h,
-                        in_view: this.cellInView(cell.element[0]),
+                        inView: DisplayUtil.verticalInViewport(cell.element[0]),
                         selected: cell.selected,
                         icon: i === 0 ? cell.getIcon() : '',
+                        scrollTo: () => Jupyter.narrative.scrollToCell(cell, true),
                     }));
-                    Array.prototype.push.apply(outline_items, md_items);
+                    Array.prototype.push.apply(outlineItems, mdItems);
                 } else {
                     // Create cell items for any other cell type
-                    outline_items.push({
+                    outlineItems.push({
                         title: cell.metadata.kbase.attributes.title || 'Untitled Cell',
                         depth: 4,
                         element: cell.element[0],
-                        in_view: this.cellInView(cell.element[0]),
+                        inView: DisplayUtil.verticalInViewport(cell.element[0]),
                         selected: cell.selected,
                         icon: cell.getIcon(),
+                        scrollTo: () => Jupyter.narrative.scrollToCell(cell, true),
                     });
                 }
             });
-            return outline_items;
+            return outlineItems;
         },
 
         /**
@@ -156,33 +158,33 @@ define(['jquery', 'base/js/namespace', 'kbwidget', 'kbaseNarrativeControlPanel']
 
         /**
          * Create nodes from Outline Items and nests them based on depth
-         * @param {OutlineItem[]} outline_items - Array of outline items
+         * @param {OutlineItem[]} outlineItems - Array of outline items
          * @returns {OutlineNode} - Root node of the outline
          */
-        nestOutlineItems: function (outline_items) {
+        nestOutlineItems: function (outlineItems) {
             // Create root nested outline node
-            const root_node = { content: null, children: [], item: { depth: 0 } };
+            const rootNode = { content: null, children: [], item: { depth: 0 } };
             // Use a stack to nest outline nodes based on item depth
-            const stack = [root_node];
-            outline_items.forEach((item) => {
+            const stack = [rootNode];
+            outlineItems.forEach((item) => {
                 while (stack[stack.length - 1].item.depth >= item.depth) {
                     stack.pop();
                 }
                 const node = {
                     item: item,
-                    children: []
+                    children: [],
                 };
                 stack[stack.length - 1].children.push(node);
                 stack.push(node);
             });
-            return root_node;
+            return rootNode;
         },
 
-        /** 
-         * Render a nested outline node and its children recursively 
+        /**
+         * Render a nested outline node and its children recursively
          * @param {OutlineNode} node - The node to render
          * @returns {jQuery} - The rendered node
-        */
+         */
         renderOutlineNode: function (node) {
             // If not the root node, create the item
             if (node.item.depth !== 0) {
@@ -200,9 +202,9 @@ define(['jquery', 'base/js/namespace', 'kbwidget', 'kbaseNarrativeControlPanel']
                             .attr('href', '#')
                             .attr('title', node.item.title)
                             .addClass('kb-narr-outline__item-content')
-                            .click(() => this.scrollToItem(node.item))
+                            .click(() => node.item.scrollTo())
                     )
-                    .click(() => this.scrollToItem(node.item));
+                    .click(() => node.item.scrollTo());
             }
 
             // Render the children
@@ -216,45 +218,6 @@ define(['jquery', 'base/js/namespace', 'kbwidget', 'kbaseNarrativeControlPanel']
             } else {
                 return $('<li>').append(node.content).append(children);
             }
-        },
-
-        /**
-         * Scroll to the cell corresponding to the given outline item
-         * @param {OutlineItem} item - The outline item to scroll to
-         */
-        scrollToItem: function (item) {
-            const nb = $('#notebook-container');
-            const scroll_to = nb.scrollTop() + $(item.element).offset().top;
-            nb.get(0).scrollTo({
-                // scroll further down to account for header
-                top: scroll_to - this.options.headerHeight,
-                behavior: 'smooth',
-            });
-            item.element.click(); // select the cell
-        },
-
-        /**
-         * Check if the given cell element is visible on screen, accounting for header height
-         * @param {HTMLElement} el - The cell element to check
-         */
-        cellInView: function (el) {
-            const box = el.getBoundingClientRect();
-            const headerHeight = this.options.headerHeight;
-            const windowHeight = $(window).height();
-            if (
-                // Fully visible or spanning the screen
-                (box.top <= headerHeight && box.bottom >= windowHeight) ||
-                (box.top >= headerHeight && box.bottom <= windowHeight)
-            ) {
-                return true;
-            } else if (
-                // Partially visible at either top or bottom
-                (box.top >= headerHeight && box.top <= windowHeight) ||
-                (box.bottom >= headerHeight && box.bottom <= windowHeight)
-            ) {
-                return true;
-            }
-            return false;
         },
     });
 });

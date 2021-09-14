@@ -53,12 +53,18 @@ define(['common/runtime', 'StagingServiceClient'], (Runtime, StagingServiceClien
         });
     }
 
+    /**
+     *
+     * @param {Object} model
+     * @param {string} fileType
+     * @param {Set} missingFiles
+     * @returns
+     */
     function getFilePathOptionsForValidation(model, fileType, missingFiles) {
         let fpIds = model.getItem(['app', 'fileParamIds', fileType]);
         const outIds = model.getItem(['app', 'outputParamIds', fileType]);
-        fpIds = fpIds.filter((id) => !outIds.includes(id));
+        fpIds = new Set(fpIds.filter((id) => !outIds.includes(id)));
         const fpVals = model.getItem(['params', fileType, 'filePaths']);
-
         // fpIds = file input ids
         // outIds = file output ids
         // fpVals = Array of KVPs with id (either fpIds or outIds) -> value
@@ -67,7 +73,7 @@ define(['common/runtime', 'StagingServiceClient'], (Runtime, StagingServiceClien
             const fpOptions = {};
             for (const id of Object.keys(filePath)) {
                 fpOptions[id] = {};
-                if (fpIds.includes(id)) {
+                if (fpIds.has(id)) {
                     fpOptions[id].invalidValues = missingFiles;
                 }
             }
@@ -80,12 +86,21 @@ define(['common/runtime', 'StagingServiceClient'], (Runtime, StagingServiceClien
      * the ready state.
      * @param {Object} model the data model from the BulkImportCell, containing all the cell info
      * @param {Object} specs keys = app id, values = app specs
-     * @param {Array} allowedFiles array of files that are allowed to be used
+     * @param {Set} missingFiles Set of files that the app cell expects to be present,
+     *  but are missing from the staging area
      * @returns
      */
     function evaluateConfigReadyState(model, specs, missingFiles) {
         // given some missing files (precalcuate for now), set up options for evaluating all file inputs
-
+        // if (!missingFiles) {
+        //     const expectedFiles = new Set();
+        //     Object.values(model.getItem('inputs')).forEach((inputs) => {
+        //         for (const f of inputs.files) {
+        //             expectedFiles.add(f);
+        //         }
+        //     });
+        //     missingFiles = getMissingFiles(expectedFiles);
+        // }
         const fileTypes = Object.keys(model.getItem(['inputs']));
         const evalPromises = fileTypes.map((fileType) => {
             // make an array of empty options with the same length as the

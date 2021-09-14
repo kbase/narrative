@@ -626,8 +626,15 @@ define([
                 // TODO: assess cell state, update job info if required
                 // jobManager.restorefromSaved()
 
-                return BulkImportUtil.evaluateConfigReadyState(model, specs);
+                const expectedFiles = new Set();
+                Object.values(model.getItem('inputs')).forEach((inputs) => {
+                    for (const f of inputs.files) {
+                        expectedFiles.add(f);
+                    }
+                });
+                return BulkImportUtil.getMissingFiles(Array.from(expectedFiles));
             })
+            .then((missingFiles) => BulkImportUtil.evaluateConfigReadyState(model, specs, new Set(missingFiles)))
             .then((readyState) => {
                 const curState = model.getItem('state');
                 const curReadyState = curState.params;

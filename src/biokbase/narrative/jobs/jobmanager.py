@@ -106,7 +106,7 @@ class JobManager(object):
             # and when job is present in cells (if given)
             refresh = not job.was_terminal
             if cell_ids is not None:
-                refresh &= job.in_cells(cell_ids)
+                refresh = refresh and job.in_cells(cell_ids)
 
             self.register_new_job(job, int(refresh))
 

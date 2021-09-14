@@ -12,6 +12,7 @@ import unittest
 import copy
 import itertools
 from unittest import mock
+import re
 import biokbase.narrative.jobs.jobmanager
 from biokbase.narrative.jobs.job import Job
 from .util import ConfigTests
@@ -292,9 +293,19 @@ class JobManagerTest(unittest.TestCase):
         with mock.patch(
             "biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client
         ):
-            jobs_html_0 = self.jm.list_jobs()
-            jobs_html_1 = self.jm.list_jobs()
-            self.assertEqual(jobs_html_0.data, jobs_html_1.data)
+            jobs_html_0 = self.jm.list_jobs().data
+            jobs_html_1 = self.jm.list_jobs().data
+
+            try:
+                self.assertEqual(jobs_html_0, jobs_html_1)
+            except AssertionError:
+                # Sometimes the time is off by a second
+                # This will still fail if on the hour
+                pattern = r"(\d\d:)\d\d:\d\d"
+                sub = r"\1"
+                jobs_html_0 = re.sub(pattern, sub, jobs_html_0)
+                jobs_html_1 = re.sub(pattern, sub, jobs_html_1)
+                self.assertEqual(jobs_html_0, jobs_html_1)
 
     def test_cancel_jobs__bad_inputs(self):
         with self.assertRaisesRegex(ValueError, NO_ID_ERR_STR):

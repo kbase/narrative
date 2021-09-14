@@ -107,6 +107,7 @@ define(['jquery', 'base/js/namespace', 'kbwidget', 'kbaseNarrativeControlPanel',
          * @property {boolean} inView - Whether the cell is visible on screen
          * @property {boolean} selected - Whether the cell is selected
          * @property {string} icon - Icon HTML for the cell, pulled using cell.getIcon()
+         * @property {function} scrollTo - Calling this function will scroll the item's cell into view and select it
          */
 
         /**

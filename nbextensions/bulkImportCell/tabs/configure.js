@@ -71,12 +71,15 @@ define([
                 }
             });
             return Util.getMissingFiles(Array.from(allFiles))
-                .then((missingFiles) => {
+                .catch((error) => {
+                    // if the missing files call fails, just continue and let the cell render.
+                    console.error('Unable to get missing files from the Staging Service', error);
+                })
+                .then((missingFiles = []) => {
                     unavailableFiles = new Set(missingFiles);
-                    // should validate (pre-validate? check?) ALL file type parameter sets
-                    // here for whether they're ready to run.
-                    // then that can be sent to the fileTypePanel to initialize properly with
-                    // pass or fail for each side. Would avoid blinking.
+                    // Do a validation for all input parameters on all file types
+                    // This is then sent to the fileTypePanel to initialize properly with
+                    // pass or fail for each side, to properly render pass or fail icons.
                     return Util.evaluateConfigReadyState(model, specs, unavailableFiles);
                 })
                 .then((readyState) => {
@@ -200,6 +203,8 @@ define([
          * This builds the file type panel (the left column) of the cell and starts
          * it up attached to the given DOM node.
          * @param {DOMElement} node - the node that should be used for the left column
+         * @param {Object} readyState - keys = file type ids, values = string for whether
+         *  that type is ready to run (one of "complete", "incomplete", "error")
          */
         function buildFileTypePanel(node, readyState) {
             fileTypePanel = FileTypePanel.make({
@@ -220,10 +225,15 @@ define([
         }
 
         /**
-         *
+         * This calculates a state object for the fileTypePanel. It uses either a given
+         * readyState object, or the set of parameter states in the model if that isn't
+         * present.
+         * @param {Object} readyState (optional) keys = file type ids, values = string for whether
+         *  that type is ready to run (one of "complete", "incomplete", "error")
          * @returns {Object} with keys:
          *   - selected {String} the selected file type
-         *   - completed
+         *   - completed {Object} keys = file type ids, values = booleans (true if all parameters
+         *      are valid and ready)
          */
         function getFileTypeState(readyState) {
             const fileTypeCompleted = {};

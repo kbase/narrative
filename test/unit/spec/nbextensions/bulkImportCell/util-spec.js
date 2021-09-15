@@ -19,6 +19,7 @@ define([
         'insert_size_std_dev',
         'insert_size_mean',
     ];
+    const outputIds = ['name'];
     // all of these tests use the 'kb_uploadmethods/import_fastq_sra_as_reads_from_staging'
     // spec as given in test/data/testBulkImportObj
     /**
@@ -44,11 +45,13 @@ define([
             inputs = {},
             appParams = {},
             fileParamIds = {},
-            otherParamIds = {};
+            otherParamIds = {},
+            outputParamIds = {};
         fileTypes.forEach((fileType) => {
             const files = fileInputs[fileType];
             fileParamIds[fileType] = Object.assign([], filePathIds);
             otherParamIds[fileType] = Object.assign([], paramIds);
+            outputParamIds[fileType] = Object.assign([], outputIds);
             inputs[fileType] = {
                 appId: testAppId,
                 files,
@@ -67,7 +70,7 @@ define([
         });
         return Props.make({
             data: {
-                app: { fileParamIds, otherParamIds },
+                app: { fileParamIds, otherParamIds, outputParamIds },
                 inputs,
                 params: appParams,
             },
@@ -220,7 +223,7 @@ define([
                     const fileInputs = {};
                     fileInputs[testFileType] = testCase.files;
                     const model = buildModel(fileInputs);
-                    const readyState = await Util.evaluateConfigReadyState(model, specs);
+                    const readyState = await Util.evaluateConfigReadyState(model, specs, new Set());
                     const expected = {};
                     expected[testFileType] = testCase.label;
                     expect(readyState).toEqual(expected);
@@ -267,7 +270,7 @@ define([
                     }
                     const model = buildModel(fileInputs);
 
-                    const readyState = await Util.evaluateConfigReadyState(model, specs);
+                    const readyState = await Util.evaluateConfigReadyState(model, specs, new Set());
                     expect(readyState).toEqual(expected);
                 });
             });

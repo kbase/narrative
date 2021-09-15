@@ -643,9 +643,17 @@ define([
                             expectedFiles.add(f);
                         }
                     });
-                    return BulkImportUtil.getMissingFiles(Array.from(expectedFiles));
+                    return BulkImportUtil.getMissingFiles(Array.from(expectedFiles)).catch(
+                        (error) => {
+                            // if the missing files call fails, just continue.
+                            console.error(
+                                'Unable to fetch missing files from the Staging Service',
+                                error
+                            );
+                        }
+                    );
                 })
-                .then((missingFiles) =>
+                .then((missingFiles = []) =>
                     BulkImportUtil.evaluateConfigReadyState(model, specs, new Set(missingFiles))
                 )
                 .then((readyState) => {

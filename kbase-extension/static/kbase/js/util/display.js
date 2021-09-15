@@ -240,7 +240,8 @@ define([
         if (rect.top === 0 && rect.bottom === 0) {
             return false;
         }
-        const notebookStart = document.querySelector('#notebook').getBoundingClientRect().y;
+        const nbElement = document.querySelector('#notebook');
+        const notebookStart = nbElement ? nbElement.getBoundingClientRect().y : 0;
         return (
             // Top in View
             (rect.top >= notebookStart &&

@@ -10,18 +10,7 @@ define([
     'common/jupyter',
     './widgets/outputCell',
     'custom/custom',
-], (
-    Promise,
-    $,
-    Uuid,
-    Jupyter,
-    utils,
-    Icon,
-    Props,
-    PythonInterop,
-    jupyter,
-    OutputCell
-) => {
+], (Promise, $, Uuid, Jupyter, utils, Icon, Props, PythonInterop, jupyter, OutputCell) => {
     'use strict';
 
     function specializeCell(cell) {

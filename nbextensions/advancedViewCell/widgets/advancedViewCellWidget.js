@@ -812,7 +812,7 @@ define([
             return syncAppSpec(params.appId, params.appTag)
                 .then(() => {
                     const appRef = [model.getItem('app.id'), model.getItem('app.tag')]
-                            .filter(v => !!v)
+                            .filter((v) => !!v)
                             .join('/'),
                         url = '/#appcatalog/app/' + appRef;
                     utils.setCellMeta(

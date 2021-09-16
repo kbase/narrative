@@ -1360,7 +1360,7 @@ define([
                 .then(() => {
                     // Should not need to do this each time...
                     const appRef = [editorState.getItem('app').id, editorState.getItem('app').tag]
-                        .filter(v => !!v)
+                        .filter((v) => !!v)
                         .join('/');
                     const url = '/#appcatalog/app/' + appRef;
                     utils.setCellMeta(cell, 'kbase.attributes.title', env.appSpec.info.name);

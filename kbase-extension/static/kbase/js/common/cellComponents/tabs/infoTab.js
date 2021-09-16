@@ -50,7 +50,7 @@ define(['common/format'], (format) => {
             if (!appSpec && arg.currentApp) {
                 appSpec = model.getItem(`app.specs.${arg.currentApp}`); // for bulk cells
             }
-            const appRef = [appSpec.info.id, model.getItem('app').tag].filter(v => !!v).join('/');
+            const appRef = [appSpec.info.id, model.getItem('app').tag].filter((v) => !!v).join('/');
 
             const methodFullInfo = appSpec.full_info;
 

@@ -1,7 +1,4 @@
-define(['common/props', 'base/js/namespace'], (
-    Props,
-    Jupyter
-) => {
+define(['common/props', 'base/js/namespace'], (Props, Jupyter) => {
     'use strict';
 
     /**

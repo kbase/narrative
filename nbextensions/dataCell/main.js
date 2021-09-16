@@ -12,20 +12,7 @@ define([
     'kb_common/html',
     './widgets/dataCell',
     'custom/custom',
-], (
-    Promise,
-    $,
-    Uuid,
-    Jupyter,
-    utils,
-    Icon,
-    Props,
-    PythonInterop,
-    UI,
-    jupyter,
-    html,
-    DataCell
-) => {
+], (Promise, $, Uuid, Jupyter, utils, Icon, Props, PythonInterop, UI, jupyter, html, DataCell) => {
     'use strict';
 
     const t = html.tag,

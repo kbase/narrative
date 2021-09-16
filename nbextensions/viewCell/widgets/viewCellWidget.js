@@ -488,7 +488,7 @@ define([
                 })()
             );
             const appRef = [appSpec.info.namespace || 'l.m', appSpec.info.id]
-                    .filter(v => !!v)
+                    .filter((v) => !!v)
                     .join('/'),
                 link = a({ href: '/#appcatalog/app/' + appRef, target: '_blank' }, 'Catalog Page');
             ui.setContent('about-app.catalog-link', link);
@@ -1266,7 +1266,7 @@ define([
             return syncAppSpec(params.appId, params.appTag)
                 .then(() => {
                     const appRef = [model.getItem('app.id'), model.getItem('app.tag')]
-                            .filter(v => !!v)
+                            .filter((v) => !!v)
                             .join('/'),
                         url = '/#appcatalog/app/' + appRef;
                     utils.setCellMeta(

@@ -1,5 +1,5 @@
 define([
-    '../../../../../../narrative/nbextensions/bulkImportCell/bulkImportCell',
+    '/narrative/nbextensions/bulkImportCell/bulkImportCell',
     'base/js/namespace',
     'common/dialogMessages',
     'common/runtime',

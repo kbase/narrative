@@ -62,7 +62,7 @@ define([
         });
     }
 
-    describe('The bulk import cell module', () => {
+    xdescribe('The bulk import cell module', () => {
         let runtime;
         beforeAll(() => {
             Jupyter.narrative = {
@@ -93,7 +93,7 @@ define([
         });
 
         describe('construction', () => {
-            xit('should construct a bulk import cell class', () => {
+            it('should construct a bulk import cell class', () => {
                 const cell = Mocks.buildMockCell('code');
                 expect(cell.getIcon).not.toBeDefined();
                 expect(cell.renderIcon).not.toBeDefined();
@@ -234,7 +234,7 @@ define([
             });
         });
 
-        xdescribe('state changes', () => {
+        describe('state changes', () => {
             [
                 {
                     msgEvent: 'error',
@@ -394,7 +394,7 @@ define([
             });
         });
 
-        xdescribe('cancel', () => {
+        describe('cancel', () => {
             ['launching', 'inProgress', 'inProgressResultsAvailable'].forEach((testCase) => {
                 it(`should cancel the ${testCase} state and return to a previous state`, () => {
                     // init cell with the test case state and jobs (they're all run-related)

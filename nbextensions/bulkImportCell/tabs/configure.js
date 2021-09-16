@@ -7,16 +7,7 @@ define([
     'common/cellComponents/paramsWidget',
     'common/cellComponents/filePathWidget',
     'util/appCellUtil',
-], (
-    Promise,
-    Runtime,
-    html,
-    UI,
-    FileTypePanel,
-    ParamsWidget,
-    FilePathWidget,
-    Util
-) => {
+], (Promise, Runtime, html, UI, FileTypePanel, ParamsWidget, FilePathWidget, Util) => {
     'use strict';
 
     /**

@@ -1,4 +1,8 @@
-define(['common/runtime', 'narrativeConfig', 'StagingServiceClient'], (Runtime, Config, StagingServiceClient) => {
+define(['common/runtime', 'narrativeConfig', 'StagingServiceClient'], (
+    Runtime,
+    Config,
+    StagingServiceClient
+) => {
     'use strict';
 
     /**
@@ -198,7 +202,6 @@ define(['common/runtime', 'narrativeConfig', 'StagingServiceClient'], (Runtime, 
         }
         return { fileTypesDisplay, fileTypeMapping };
     }
-
 
     return {
         evaluateAppConfig,

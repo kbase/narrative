@@ -1131,7 +1131,11 @@ define([
             }
             const state = fsm.getCurrentState();
             try {
-                FSMBar.showFsmBar({ ui: ui, state: state, job: model.getItem('exec.jobState') });
+                FSMBar.showFsmBar({
+                    ui: ui,
+                    state: state,
+                    job: model.getItem('exec.jobState'),
+                });
             } catch (error) {
                 console.warn('Could not display FSM state:', error);
             }

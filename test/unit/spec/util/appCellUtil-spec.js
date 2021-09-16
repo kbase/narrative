@@ -1,10 +1,12 @@
 define([
-    '../../../../../../narrative/nbextensions/bulkImportCell/util',
+    'util/appCellUtil',
     'common/props',
     'common/spec',
     'testUtil',
+    'base/js/namespace',
+    'narrativeConfig',
     '/test/data/testBulkImportObj',
-], (Util, Props, Spec, TestUtil, TestBulkImportObject) => {
+], (Util, Props, Spec, TestUtil, Jupyter, Config, TestBulkImportObject) => {
     'use strict';
 
     const testFileType = 'someFileType';
@@ -19,6 +21,7 @@ define([
         'insert_size_std_dev',
         'insert_size_mean',
     ];
+    const outputIds = ['name'];
     // all of these tests use the 'kb_uploadmethods/import_fastq_sra_as_reads_from_staging'
     // spec as given in test/data/testBulkImportObj
     /**
@@ -44,11 +47,13 @@ define([
             inputs = {},
             appParams = {},
             fileParamIds = {},
-            otherParamIds = {};
+            otherParamIds = {},
+            outputParamIds = {};
         fileTypes.forEach((fileType) => {
             const files = fileInputs[fileType];
             fileParamIds[fileType] = Object.assign([], filePathIds);
             otherParamIds[fileType] = Object.assign([], paramIds);
+            outputParamIds[fileType] = Object.assign([], outputIds);
             inputs[fileType] = {
                 appId: testAppId,
                 files,
@@ -67,7 +72,7 @@ define([
         });
         return Props.make({
             data: {
-                app: { fileParamIds, otherParamIds },
+                app: { fileParamIds, otherParamIds, outputParamIds },
                 inputs,
                 params: appParams,
             },
@@ -78,6 +83,9 @@ define([
     describe('BulkImportCell Utility tests', () => {
         let spec;
         beforeAll(() => {
+            Jupyter.narrative = {
+                getAuthToken: () => 'fakeToken',
+            };
             spec = Spec.make({ appSpec: TestBulkImportObject.app.specs[testAppId] });
         });
 
@@ -220,7 +228,7 @@ define([
                     const fileInputs = {};
                     fileInputs[testFileType] = testCase.files;
                     const model = buildModel(fileInputs);
-                    const readyState = await Util.evaluateConfigReadyState(model, specs);
+                    const readyState = await Util.evaluateConfigReadyState(model, specs, new Set());
                     const expected = {};
                     expected[testFileType] = testCase.label;
                     expect(readyState).toEqual(expected);
@@ -267,9 +275,76 @@ define([
                     }
                     const model = buildModel(fileInputs);
 
-                    const readyState = await Util.evaluateConfigReadyState(model, specs);
+                    const readyState = await Util.evaluateConfigReadyState(model, specs, new Set());
                     expect(readyState).toEqual(expected);
                 });
+            });
+        });
+
+        describe('getMissingFiles tests', () => {
+            const stagingUrl = Config.url('staging_api_url');
+
+            beforeEach(() => {
+                jasmine.Ajax.install();
+                const fakeStagingResponse = ['file1', 'file2', 'file3'].map((fileName) => {
+                    return {
+                        name: fileName,
+                        path: 'someUser' + '/' + fileName,
+                        mtime: 1532738637499,
+                        size: 34,
+                        isFolder: false,
+                    };
+                });
+
+                jasmine.Ajax.stubRequest(new RegExp(`${stagingUrl}/list/`)).andReturn({
+                    status: 200,
+                    statusText: 'success',
+                    contentType: 'text/plain',
+                    responseHeaders: '',
+                    responseText: JSON.stringify(fakeStagingResponse),
+                });
+            });
+
+            afterEach(() => {
+                jasmine.Ajax.uninstall();
+            });
+
+            [
+                {
+                    files: ['file1', 'file2', 'file3'],
+                    expected: [],
+                    label: 'none missing',
+                },
+                {
+                    files: [],
+                    expected: [],
+                    label: 'no files',
+                },
+                {
+                    files: ['file1', 'file2', 'file4'],
+                    expected: ['file4'],
+                    label: 'missing file',
+                },
+            ].forEach((testCase) => {
+                it(`should return an array of missing files: ${testCase.label}`, async () => {
+                    const missing = await Util.getMissingFiles(testCase.files);
+                    expect(missing).toEqual(testCase.expected);
+                });
+            });
+
+            it('should throw an error if the staging area returns an error', async () => {
+                const error = 'Some Error';
+                jasmine.Ajax.stubRequest(new RegExp(`${stagingUrl}/list/`)).andReturn({
+                    status: 500,
+                    statusText: 'failed',
+                    contentType: 'text/plain',
+                    responseHeaders: '',
+                    responseText: error,
+                });
+
+                await expectAsync(Util.getMissingFiles(['someFile'])).toBeRejectedWith(
+                    new Error('Error while identifying missing files: ' + error)
+                );
             });
         });
     });

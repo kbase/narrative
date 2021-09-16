@@ -13,7 +13,7 @@ define([
     'kb_service/utils',
     'kb_sdk_clients/genericClient',
     'common/pythonInterop',
-    'common/utils',
+    'common/cellUtils',
     'common/ui',
     'common/fsm',
     'common/spec',
@@ -156,10 +156,6 @@ define([
             ui.setContent('fatal-error.advice', editorState.getItem('fatalError.advice'));
         }
 
-        function showFatalError(arg) {
-            ui.showElement('fatal-error');
-        }
-
         function renderSetting(settingName) {
             let setting = settings[settingName],
                 value;
@@ -178,13 +174,6 @@ define([
                     }
                     break;
             }
-        }
-
-        function toBoolean(value) {
-            if (value && value !== null) {
-                return true;
-            }
-            return false;
         }
 
         function buildLayout(events) {
@@ -1371,7 +1360,7 @@ define([
                 .then(() => {
                     // Should not need to do this each time...
                     const appRef = [editorState.getItem('app').id, editorState.getItem('app').tag]
-                        .filter(toBoolean)
+                        .filter(v => !!v)
                         .join('/');
                     const url = '/#appcatalog/app/' + appRef;
                     utils.setCellMeta(cell, 'kbase.attributes.title', env.appSpec.info.name);

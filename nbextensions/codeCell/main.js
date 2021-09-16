@@ -2,7 +2,7 @@ define([
     'jquery',
     'uuid',
     'base/js/namespace',
-    'common/utils',
+    'common/cellUtils',
     'kb_common/html',
     './widgets/codeCell',
     'custom/custom',

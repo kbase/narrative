@@ -13,7 +13,6 @@ define([
     'kb_service/client/catalog',
     'kb_service/client/narrativeMethodStore',
     'common/pythonInterop',
-    'common/utils',
     'common/unodep',
     'common/ui',
     'common/fsm',
@@ -48,7 +47,6 @@ define([
     Catalog,
     NarrativeMethodStore,
     PythonInterop,
-    utils,
     utils2,
     UI,
     Fsm,
@@ -75,7 +73,6 @@ define([
         a = t('a'),
         p = t('p'),
         blockquote = t('blockquote'),
-        { toBoolean } = utils,
         cssCellType = 'kb-app-cell';
 
     function factory(config) {
@@ -89,7 +86,7 @@ define([
             // that is, the extension.
             cellBus = runtime.bus().makeChannelBus({
                 name: {
-                    cell: utils.getMeta(cell, 'attributes', 'id'),
+                    cell: cellUtils.getMeta(cell, 'attributes', 'id'),
                 },
                 description: 'A cell channel',
             }),
@@ -139,9 +136,9 @@ define([
             },
             // INIT
             model = Props.make({
-                data: utils.getMeta(cell, 'appCell'),
+                data: cellUtils.getMeta(cell, 'appCell'),
                 onUpdate: function (props) {
-                    utils.setMeta(cell, 'appCell', props.getRawObject());
+                    cellUtils.setMeta(cell, 'appCell', props.getRawObject());
                 },
             }),
             spec = Spec.make({
@@ -1606,7 +1603,7 @@ define([
         }
 
         function createOutputCell(jobId) {
-            const cellId = utils.getMeta(cell, 'attributes', 'id'),
+            const cellId = cellUtils.getMeta(cell, 'attributes', 'id'),
                 cellIndex = Jupyter.notebook.find_cell_index(cell),
                 newCellId = new Uuid(4).format(),
                 setupData = {
@@ -2050,7 +2047,7 @@ define([
                     if (messages.length === 0 && !isError) {
                         buildPython(
                             cell,
-                            utils.getMeta(cell, 'attributes').id,
+                            cellUtils.getMeta(cell, 'attributes').id,
                             model.getItem('app'),
                             exportParams()
                         );
@@ -2129,14 +2126,14 @@ define([
             // If the app has been run before...
             // The app reference is already in the app cell metadata.
             return Promise.try(() => {
-                if (utils.getCellMeta(cell, 'kbase.type') !== 'devapp') {
+                if (cellUtils.getCellMeta(cell, 'kbase.type') !== 'devapp') {
                     return getAppSpec();
                 }
                 return {};
             })
                 .then((appSpec) => {
                     // Ensure that the current app spec matches our existing one.
-                    if (appSpec && utils.getCellMeta(cell, 'kbase.type') !== 'devapp') {
+                    if (appSpec && cellUtils.getCellMeta(cell, 'kbase.type') !== 'devapp') {
                         const warning = checkSpec(appSpec);
                         if (warning && warning.severity === 'warning') {
                             if (warning.type === 'app-spec-mismatched-commit') {
@@ -2147,21 +2144,21 @@ define([
                     }
 
                     const appRef = [model.getItem('app.id'), model.getItem('app.tag')]
-                            .filter(toBoolean)
+                            .filter(v => !!v)
                             .join('/'),
                         url = '/#appcatalog/app/' + appRef;
-                    utils.setCellMeta(
+                    cellUtils.setCellMeta(
                         cell,
                         'kbase.attributes.title',
                         model.getItem('app.spec.info.name')
                     );
-                    utils.setCellMeta(
+                    cellUtils.setCellMeta(
                         cell,
                         'kbase.attributes.subtitle',
                         model.getItem('app.spec.info.subtitle')
                     );
-                    utils.setCellMeta(cell, 'kbase.attributes.info.url', url);
-                    utils.setCellMeta(cell, 'kbase.attributes.info.label', 'more...');
+                    cellUtils.setCellMeta(cell, 'kbase.attributes.info.url', url);
+                    cellUtils.setCellMeta(cell, 'kbase.attributes.info.label', 'more...');
                 })
                 .then(() => {
                     // this will not change, so we can just render it here.

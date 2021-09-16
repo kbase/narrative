@@ -1,7 +1,7 @@
 define([
     'bluebird',
     'uuid',
-    'common/utils',
+    'common/cellUtils',
     'common/runtime',
     'common/html',
     'common/dom',

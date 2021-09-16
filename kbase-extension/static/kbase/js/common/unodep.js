@@ -1,52 +1,6 @@
 define([], () => {
     'use strict';
 
-    /*
-     * Show elapsed time in a friendly fashion.
-     */
-    function pad(string, width, char, right) {
-        if (!char) {
-            char = '0';
-        }
-        if (typeof string === 'number') {
-            string = String(string);
-        }
-        let padLen = width - string.length,
-            padding = '',
-            i;
-        if (padLen <= 0) {
-            return string;
-        }
-        for (i = 0; i < padLen; i += 1) {
-            padding += char;
-        }
-        if (right) {
-            return string + padding;
-        }
-        return padding + string;
-    }
-    function formatElapsedTime(value, defaultValue) {
-        if (!value) {
-            return defaultValue;
-        }
-        let temp = value;
-
-        const units = [1000, 60, 60, 24].map((unit) => {
-            const unitValue = temp % unit;
-            temp = (temp - unitValue) / unit;
-            return unitValue;
-        });
-
-        return [
-            [pad(units[3], 2), pad(units[2], 2), pad(units[1], 2)].join(':'),
-            pad(units[0], 3),
-        ].join('.');
-    }
-    function formatTime(time) {
-        if (time) {
-            return format.niceElapsedTime(time);
-        }
-    }
     function isEqual(v1, v2) {
         const path = [];
         function iseq(v1, v2) {
@@ -73,7 +27,7 @@ define([], () => {
                         if (v1.length !== v2.length) {
                             return false;
                         } else {
-                            for (var i = 0; i < v1.length; i++) {
+                            for (let i = 0; i < v1.length; i++) {
                                 path.push(i);
                                 if (!iseq(v1[i], v2[i])) {
                                     return false;
@@ -93,7 +47,7 @@ define([], () => {
                         if (k1.length !== k2.length) {
                             return false;
                         }
-                        for (var i = 0; i < k1.length; i++) {
+                        for (let i = 0; i < k1.length; i++) {
                             path.push(k1[i]);
                             if (!iseq(v1[k1[i]], v2[k1[i]])) {
                                 return false;
@@ -108,8 +62,6 @@ define([], () => {
     }
 
     return {
-        formatElapsedTime: formatElapsedTime,
-        formatTime: formatTime,
-        isEqual: isEqual,
+        isEqual,
     };
 });

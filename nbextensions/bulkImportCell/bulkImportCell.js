@@ -11,7 +11,7 @@ define([
     'common/runtime',
     'common/spec',
     'common/ui',
-    'common/utils',
+    'common/cellUtils',
     'util/appCellUtil',
     'common/unodep',
     'common/pythonInterop',

@@ -100,7 +100,6 @@ define([
     'common/specValidation',
     'common/ui',
     'common/unodep',
-    'common/utils',
     'common/validation',
     'util/icon',
 ], () => {

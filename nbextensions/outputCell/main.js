@@ -3,10 +3,9 @@ define([
     'jquery',
     'uuid',
     'base/js/namespace',
-    'common/utils',
+    'common/cellUtils',
     'util/icon',
     'common/props',
-    'common/cellUtils',
     'common/pythonInterop',
     'common/jupyter',
     './widgets/outputCell',
@@ -19,7 +18,6 @@ define([
     utils,
     Icon,
     Props,
-    cellUtils,
     PythonInterop,
     jupyter,
     OutputCell
@@ -174,7 +172,7 @@ define([
             utils.setCellMeta(cell, 'kbase.outputCell.user-settings.showCodeInputArea', false);
 
             // Get the title of the app which generated this output...
-            parentTitle = cellUtils.getTitle(
+            parentTitle = utils.getTitle(
                 Props.getDataItem(cell.metadata, 'kbase.outputCell.parentCellId')
             );
             if (parentTitle) {

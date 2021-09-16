@@ -107,7 +107,7 @@ define([
     'base/js/keyboard',
     'notebook/js/keyboardmanager',
     'notebook/js/cell',
-    'common/utils',
+    'common/cellUtils',
     'common/jupyter',
     'kb_common/html',
 

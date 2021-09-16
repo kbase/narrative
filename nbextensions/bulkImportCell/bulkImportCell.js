@@ -12,7 +12,7 @@ define([
     'common/spec',
     'common/ui',
     'common/utils',
-    './util',
+    'util/appCellUtil',
     'common/unodep',
     'common/pythonInterop',
     'base/js/namespace',

@@ -1,5 +1,5 @@
 define([
-    '../../../../../../narrative/nbextensions/bulkImportCell/util',
+    'util/appCellUtil',
     'common/props',
     'common/spec',
     'testUtil',

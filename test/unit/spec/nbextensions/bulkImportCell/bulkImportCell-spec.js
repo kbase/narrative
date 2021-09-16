@@ -93,7 +93,7 @@ define([
         });
 
         describe('construction', () => {
-            it('should construct a bulk import cell class', () => {
+            xit('should construct a bulk import cell class', () => {
                 const cell = Mocks.buildMockCell('code');
                 expect(cell.getIcon).not.toBeDefined();
                 expect(cell.renderIcon).not.toBeDefined();

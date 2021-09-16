@@ -76,7 +76,9 @@ define([
                 inputs,
                 params: appParams,
             },
-            onUpdate: () => {},
+            onUpdate: () => {
+                /* empty */
+            },
         });
     }
 
@@ -345,6 +347,58 @@ define([
                 await expectAsync(Util.getMissingFiles(['someFile'])).toBeRejectedWith(
                     new Error('Error while identifying missing files: ' + error)
                 );
+            });
+        });
+
+        const uploaders = {
+                dropdown_order: [
+                    { id: 'assembly', name: 'Assembly' },
+                    { id: 'fastq_reads_interleaved', name: 'FASTQ Reads Interleaved' },
+                    { id: 'fastq_reads_noninterleaved', name: 'FASTQ Reads NonInterleaved' },
+                    { id: 'sra_reads', name: 'SRA Reads' },
+                ],
+            },
+            ttf = {
+                assembly: {},
+                fastq_reads_interleaved: {},
+                sra_reads: {},
+                unknown_type: {},
+            },
+            expectedFileTypeMapping = {
+                assembly: 'Assembly',
+                fastq_reads_interleaved: 'FASTQ Reads Interleaved',
+                fastq_reads_noninterleaved: 'FASTQ Reads NonInterleaved',
+                sra_reads: 'SRA Reads',
+            };
+
+        describe('generateFileTypeMappings', () => {
+            it('generates type mappings with empty input', () => {
+                spyOn(Config, 'get').and.returnValue(uploaders);
+                const output = Util.generateFileTypeMappings();
+                expect(output).toEqual({
+                    fileTypesDisplay: {},
+                    fileTypeMapping: expectedFileTypeMapping,
+                });
+            });
+
+            it('generates type mappings and display info with input', () => {
+                spyOn(Config, 'get').and.returnValue(uploaders);
+                const output = Util.generateFileTypeMappings(ttf);
+                expect(output).toEqual({
+                    fileTypesDisplay: {
+                        assembly: { label: 'Assembly' },
+                        fastq_reads_interleaved: {
+                            label: 'FASTQ Reads Interleaved',
+                        },
+                        sra_reads: {
+                            label: 'SRA Reads',
+                        },
+                        unknown_type: {
+                            label: 'Unknown type "unknown_type"',
+                        },
+                    },
+                    fileTypeMapping: expectedFileTypeMapping,
+                });
             });
         });
     });

@@ -46,7 +46,6 @@ define(['widgets/appWidgets2/view/selectView', 'common/runtime', 'testUtil'], (
             this.paramSpec = buildParamSpec(TEST_VALUES, DEFAULT_VALUE);
             this.bus = Runtime.make().bus();
             this.node = document.createElement('div');
-            document.body.appendChild(this.node);
         });
 
         afterEach(function () {

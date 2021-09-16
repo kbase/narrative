@@ -295,7 +295,7 @@ class JobComm:
         self._verify_job_id(req)
         try:
             job_ids = self._jm.update_batch_job(req.job_id)
-            job_info_batch = self._jm.lookup_job_info(job_ids[1:])
+            job_info_batch = self._jm.lookup_job_info(job_ids)
         except NoJobException:
             self.send_error_message("job_does_not_exist", req)
             raise

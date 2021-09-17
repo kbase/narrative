@@ -3,6 +3,7 @@ define([
     'bluebird',
     'uuid',
     'base/js/namespace',
+    'common/lang',
     'common/runtime',
     'common/events',
     'common/html',
@@ -24,6 +25,7 @@ define([
     Promise,
     Uuid,
     JupyterNamespace,
+    Lang,
     Runtime,
     Events,
     html,
@@ -1050,19 +1052,9 @@ define([
             });
         }
 
-        function pRequire(ModulePath) {
-            return new Promise((resolve, reject) => {
-                require([ModulePath], (Widget) => {
-                    resolve(Widget);
-                }, (err) => {
-                    reject(err);
-                });
-            });
-        }
-
         // TODO: handle raciness of the paramsWidget...
         function loadInputParamsWidget() {
-            pRequire('nbextensions/viewCell/widgets/appParamsWidget').then((Widget) => {
+            Lang.pRequire(['nbextensions/viewCell/widgets/appParamsWidget']).spread((Widget) => {
                 const bus = runtime
                     .bus()
                     .makeChannelBus({ description: 'Parent comm bus for input widget' });
@@ -1133,7 +1125,7 @@ define([
         }
 
         function loadViewParamsWidget() {
-            pRequire('nbextensions/viewCell/widgets/appParamsViewWidget').then((Widget) => {
+            Lang.pRequire(['nbextensions/viewCell/widgets/appParamsViewWidget']).spread((Widget) => {
                 const bus = runtime
                     .bus()
                     .makeChannelBus({ description: 'Parent comm bus for input widget' });

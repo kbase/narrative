@@ -5,7 +5,7 @@
  *
  */
 
-define(['./unodep', 'common/runtime'], (utils, Runtime) => {
+define(['./lang', 'common/runtime'], (utils, Runtime) => {
     'use strict';
 
     function factory(config) {

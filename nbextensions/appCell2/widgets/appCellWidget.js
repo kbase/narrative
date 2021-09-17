@@ -13,7 +13,7 @@ define([
     'kb_service/client/catalog',
     'kb_service/client/narrativeMethodStore',
     'common/pythonInterop',
-    'common/unodep',
+    'common/lang',
     'common/ui',
     'common/fsm',
     'common/cellUtils',
@@ -47,7 +47,7 @@ define([
     Catalog,
     NarrativeMethodStore,
     PythonInterop,
-    utils2,
+    lang,
     UI,
     Fsm,
     cellUtils,
@@ -157,18 +157,8 @@ define([
 
         // TABS
 
-        function pRequire(module) {
-            return new Promise((resolve, reject) => {
-                require(module, (...args) => {
-                    resolve(args);
-                }, (err) => {
-                    reject(err);
-                });
-            });
-        }
-
         function loadParamsWidget(arg) {
-            return pRequire(['./appParamsWidget']).spread((Widget) => {
+            return lang.pRequire(['nbextensions/appCell2/widgets/appParamsWidget']).spread((Widget) => {
                 // TODO: widget should make own bus.
                 const widgetBus = runtime
                         .bus()
@@ -282,7 +272,7 @@ define([
         }
 
         function loadViewParamsWidget(arg) {
-            return pRequire(['./appParamsViewWidget']).spread((Widget) => {
+            return lang.pRequire(['nbextensions/appCell2/widgets/appParamsViewWidget']).spread((Widget) => {
                 // TODO: widget should make own bus.
                 const widgetBus = runtime
                         .bus()
@@ -1518,7 +1508,7 @@ define([
                         forceRender =
                             !Jobs.isValidJobStateObject(existingState) &&
                             Jobs.isValidJobStateObject(newJobState);
-                    if (!existingState || !utils2.isEqual(existingState, newJobState)) {
+                    if (!existingState || !lang.isEqual(existingState, newJobState)) {
                         model.setItem('exec.jobState', newJobState);
                         if (outputWidgetInfo) {
                             model.setItem('exec.outputWidgetInfo', outputWidgetInfo);

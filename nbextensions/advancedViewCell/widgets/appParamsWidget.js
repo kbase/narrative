@@ -5,6 +5,7 @@ define([
     'common/ui',
     'common/events',
     'common/props',
+    'common/lang',
     // Wrapper for inputs
     'common/cellComponents/inputWrapperWidget',
     'widgets/appWidgets2/paramResolver',
@@ -18,6 +19,7 @@ define([
     UI,
     Events,
     Props,
+    Lang,
     //Wrappers
     RowWidget,
     ParamResolver,
@@ -55,15 +57,6 @@ define([
         - intercepts messages in order to display status.
         */
 
-        function prequire(module) {
-            return new Promise((resolve, reject) => {
-                require([module], (Module) => {
-                    resolve(Module);
-                }, (err) => {
-                    reject(err);
-                });
-            });
-        }
 
         function makeFieldWidget(appSpec, parameterSpec, value) {
             // 'widgets/appWidgets2/fieldWidgetBare',
@@ -71,8 +64,8 @@ define([
 
             return Promise.all([
                 paramResolver.loadInputControl(parameterSpec),
-                prequire('widgets/appWidgets2/' + fieldWidgetModule),
-            ]).spread((inputWidget, FieldWidget) => {
+                Lang.pRequire(['widgets/appWidgets2/' + fieldWidgetModule]),
+            ]).spread((inputWidget, [FieldWidget]) => {
                 const fieldWidget = FieldWidget.make({
                     inputControlFactory: inputWidget,
                     showHint: true,

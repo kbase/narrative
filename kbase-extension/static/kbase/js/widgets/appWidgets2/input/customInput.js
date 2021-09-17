@@ -1,39 +1,26 @@
 define([
     'bluebird',
-    'require',
-    'kb_common/html',
     '../validators/text',
-    'common/events',
+    'common/lang',
     'common/ui',
     'common/props',
     'common/runtime',
 
     'bootstrap',
     'css!font-awesome',
-], (Promise, require, html, Validation, Events, UI, Props, Runtime) => {
+], (Promise, Validation, Lang, UI, Props, Runtime) => {
     'use strict';
 
     function factory(config) {
-        let spec = config.parameterSpec,
+        const spec = config.parameterSpec,
             runtime = Runtime.make(),
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(config.channelName),
-            subtype = spec.data.constraints.type,
-            parent,
+            subtype = spec.data.constraints.type;
+        let parent,
             container,
             ui,
-            model,
             inputWidget;
-
-        // CONTROL
-
-        function getControlValue() {
-            return ui.getElement('input-container.input').value;
-        }
-
-        function setControlValue(newValue) {
-            ui.getElement('input-container.input').value = newValue;
-        }
 
         // MODEL
 
@@ -54,19 +41,9 @@ define([
         // sync the dom to the model.
         function syncModelToControl() {
             console.log('syncing...', inputWidget, model.getItem('value', null));
-            // if (inputWidget) {
-            //     inputWidget.setValue(model.getItem('value', null));
-            // }
-            // setControlValue(model.getItem('value', null));
         }
 
         // VALIDATION
-
-        function importControlValue() {
-            return Promise.try(() => {
-                return Validation.importString(getControlValue());
-            });
-        }
 
         function validate(value) {
             return Promise.try(() => {
@@ -82,21 +59,11 @@ define([
 
         // DOM & RENDERING
 
-        function prequire(module) {
-            return new Promise((resolve, reject) => {
-                require([module], (Module) => {
-                    resolve(Module);
-                }, (err) => {
-                    reject(err);
-                });
-            });
-        }
-
-        function makeCustomWidget(arg) {
+        function makeCustomWidget() {
             // For now all custom inputs live in the
             // customInputs directory of the input collection directory
             // and are named like <type>Input.js
-            return prequire('./customInputs/' + subtype + 'Input').then((Module) => {
+            return Lang.pRequire(['./customInputs/' + subtype + 'Input']).spread((Module) => {
                 const inputWidget = Module.make({
                     runtime: runtime,
                 });
@@ -180,7 +147,7 @@ define([
 
         // INIT
 
-        model = Props.make({
+        const model = Props.make({
             data: {
                 value: null,
             },

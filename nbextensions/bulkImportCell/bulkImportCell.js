@@ -13,7 +13,7 @@ define([
     'common/ui',
     'common/cellUtils',
     'util/appCellUtil',
-    'common/unodep',
+    'common/lang',
     'common/pythonInterop',
     'base/js/namespace',
     'kb_service/client/workspace',

@@ -44,33 +44,10 @@ from .test_job import (
     get_test_job_states,
     get_cell_2_jobs,
 )
+from .test_jobmanager import get_test_job_info, get_test_job_infos
 
 
 APP_NAME = "The Best App in the World"
-
-
-def get_test_job_infos(job_ids):
-    return {job_id: get_test_job_info(job_id) for job_id in job_ids}
-
-
-def get_test_job_info(job_id):
-    test_job = get_test_job(job_id)
-    app_id = test_job.get("job_input", {}).get("app_id", None)
-    tag = (
-        test_job.get("job_input", {})
-        .get("narrative_cell_info", {})
-        .get("tag", "release")
-    )
-    test_spec = get_test_spec(tag, app_id)
-    params = test_job.get("job_input", {}).get("params", {})
-    batch_id = test_job.get("batch_id", JOB_ATTR_DEFAULTS["batch_id"])
-    return {
-        "app_id": app_id,
-        "app_name": test_spec["info"]["name"],
-        "job_id": job_id,
-        "job_params": params,
-        "batch_id": batch_id,
-    }
 
 
 def make_comm_msg(
@@ -392,21 +369,8 @@ class JobCommTestCase(unittest.TestCase):
     # Lookup job info
     # -----------------------
     def test_lookup_job_info__ok(self):
-        job_id_list = [JOB_COMPLETED]
+        job_id_list = ALL_JOBS
         req = make_comm_msg("job_info", job_id_list, True)
-        self.jc._lookup_job_info(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual(
-            {
-                "msg_type": "job_info",
-                "content": get_test_job_infos(job_id_list),
-            },
-            msg["data"],
-        )
-
-    def test_lookup_job_info__batch__ok(self):
-        job_id_list = [BATCH_ERROR_RETRIED, BATCH_RETRY_COMPLETED]
-        req = make_comm_msg("job_info", job_id_list + [BATCH_PARENT], True)
         self.jc._lookup_job_info(req)
         msg = self.jc._comm.last_message
         self.assertEqual(
@@ -455,9 +419,7 @@ class JobCommTestCase(unittest.TestCase):
         self.assertEqual(
             {
                 "msg_type": "job_info",
-                "content": {
-                    job_id: get_test_job_info(job_id) for job_id in BATCH_CHILDREN
-                },
+                "content": get_test_job_infos([BATCH_PARENT] + BATCH_CHILDREN),
             },
             msg["data"],
         )
@@ -1055,9 +1017,7 @@ class JobCommTestCase(unittest.TestCase):
         self.assertEqual(
             {
                 "msg_type": "job_info",
-                "content": {
-                    job_id: get_test_job_info(job_id) for job_id in BATCH_CHILDREN
-                },
+                "content": get_test_job_infos([BATCH_PARENT] + BATCH_CHILDREN),
             },
             msg["data"],
         )

@@ -439,10 +439,10 @@ class JobTest(unittest.TestCase):
         """
         # ee2_state is fully populated (includes job_input, no job_output)
         job = create_job_from_ee2(JOB_CREATED)
-        self.assertFalse(job.was_terminal)
+        self.assertFalse(job.was_terminal())
         self.assertIsNone(job.final_state)
         state = job.state()
-        self.assertFalse(job.was_terminal)
+        self.assertFalse(job.was_terminal())
         self.assertIsNone(job.final_state)
         self.assertEqual(state["status"], "created")
 
@@ -454,7 +454,7 @@ class JobTest(unittest.TestCase):
         test that a completed job emits its state without calling check_job
         """
         job = create_job_from_ee2(JOB_COMPLETED)
-        self.assertTrue(job.was_terminal)
+        self.assertTrue(job.was_terminal())
         self.assertIsNotNone(job.final_state)
         expected = create_state_from_ee2(JOB_COMPLETED)
         self.assertEqual(job.final_state, expected)
@@ -470,7 +470,7 @@ class JobTest(unittest.TestCase):
         test that the correct exception is thrown if check_job cannot be called
         """
         job = create_job_from_ee2(JOB_CREATED)
-        self.assertFalse(job.was_terminal)
+        self.assertFalse(job.was_terminal())
         self.assertIsNone(job.final_state)
         with self.assertRaisesRegex(ServerError, "Check job failed"):
             job.state()
@@ -506,9 +506,9 @@ class JobTest(unittest.TestCase):
         test that without a state object supplied, the job state is unchanged
         """
         job = create_job_from_ee2(JOB_CREATED)
-        self.assertFalse(job.was_terminal)
+        self.assertFalse(job.was_terminal())
         job.update_state(None)
-        self.assertFalse(job.was_terminal)
+        self.assertFalse(job.was_terminal())
 
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
     def test_job_update__invalid_job_id(self):
@@ -669,7 +669,7 @@ class JobTest(unittest.TestCase):
             children=child_jobs,
         )
 
-        self.assertFalse(parent_job.was_terminal)
+        self.assertFalse(parent_job.was_terminal())
 
         # Make all child jobs completed
         with mock.patch.object(
@@ -680,7 +680,7 @@ class JobTest(unittest.TestCase):
             for child_job in child_jobs:
                 child_job.state(force_refresh=True)
 
-        self.assertTrue(parent_job.was_terminal)
+        self.assertTrue(parent_job.was_terminal())
 
     def test_parent_children__fail(self):
         parent_state = create_state_from_ee2(BATCH_PARENT)
@@ -835,7 +835,7 @@ class JobTest(unittest.TestCase):
         for job_id, job in all_jobs.items():
             self.assertEqual(
                 JOBS_TERMINALITY[job_id],
-                job.was_terminal
+                job.was_terminal()
             )
 
     @mock.patch("biokbase.narrative.jobs.job.clients.get", get_mock_client)
@@ -843,7 +843,7 @@ class JobTest(unittest.TestCase):
         batch_fam = get_batch_family_jobs(return_list=True)
         batch_job, child_jobs = batch_fam[0], batch_fam[1:]
 
-        self.assertFalse(batch_job.was_terminal)
+        self.assertFalse(batch_job.was_terminal())
 
         def mock_check_job(self_, params):
             assert params["job_id"] in BATCH_CHILDREN
@@ -853,7 +853,7 @@ class JobTest(unittest.TestCase):
             for job in child_jobs:
                 job.state(force_refresh=True)
 
-        self.assertTrue(batch_job.was_terminal)
+        self.assertTrue(batch_job.was_terminal())
 
     def test_in_cells(self):
         all_jobs = get_all_jobs()
@@ -916,3 +916,11 @@ class JobTest(unittest.TestCase):
         self.assertFalse(
             batch_job.in_cells(["goodbye", "hasta manana"])
         )
+
+    def test_app_name(self):
+        for job in get_all_jobs().values():
+            if job.batch_job:
+                self.assertEqual("batch", job.app_name)
+            else:
+                test_spec = get_test_spec(job.tag, job.app_id)
+                self.assertEqual(test_spec["info"]["name"], job.app_name)

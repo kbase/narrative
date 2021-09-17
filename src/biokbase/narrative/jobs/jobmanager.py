@@ -104,7 +104,7 @@ class JobManager(object):
 
             # Set to refresh when job is not in terminal state
             # and when job is present in cells (if given)
-            refresh = not job.was_terminal
+            refresh = not job.was_terminal()
             if cell_ids is not None:
                 refresh = refresh and job.in_cells(cell_ids)
 
@@ -249,7 +249,7 @@ class JobManager(object):
         # These are already post-processed and ready to return.
         for job_id in job_ids:
             job = self.get_job(job_id)
-            if job.was_terminal:
+            if job.was_terminal():
                 job_states[job_id] = job.output_state()
             elif states and job_id in states:
                 state = states[job_id]
@@ -279,7 +279,6 @@ class JobManager(object):
 
     def lookup_job_info(self, job_ids: List[str]) -> dict:
         """
-        Will raise a NoJobException if job_id doesn't exist.
         Sends the info over the comm channel as these packets:
         {
             app_id: module/name,
@@ -288,20 +287,20 @@ class JobManager(object):
             job_params: dictionary,
             batch_id: string,
         }
+        Will set packet to "does_not_exist" if job_id doesn't exist.
         """
         job_ids, error_ids = self._check_job_list(job_ids)
 
         infos = dict()
         for job_id in job_ids:
             job = self.get_job(job_id)
-            if not job.batch_job:
-                infos[job_id] = {
-                    "app_id": job.app_id,
-                    "app_name": job.app_spec()["info"]["name"],
-                    "job_id": job_id,
-                    "job_params": job.params,
-                    "batch_id": job.batch_id,
-                }
+            infos[job_id] = {
+                "app_id": job.app_id,
+                "app_name": job.app_name,
+                "job_id": job_id,
+                "job_params": job.params,
+                "batch_id": job.batch_id,
+            }
         for error_id in error_ids:
             infos[error_id] = "does_not_exist"
         return infos
@@ -419,7 +418,7 @@ class JobManager(object):
         job_ids, error_ids = self._check_job_list(job_id_list)
 
         for job_id in job_ids:
-            if not self.get_job(job_id).was_terminal:
+            if not self.get_job(job_id).was_terminal():
                 self._cancel_job(job_id)
 
         job_states = self._construct_job_state_set(job_ids)
@@ -545,7 +544,7 @@ class JobManager(object):
             for job in unreg_child_jobs:
                 self.register_new_job(
                     job=job,
-                    refresh=int(not job.was_terminal),
+                    refresh=int(not job.was_terminal()),
                 )
 
         batch_job.update_children(reg_child_jobs + unreg_child_jobs)

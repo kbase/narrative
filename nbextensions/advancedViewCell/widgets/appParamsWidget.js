@@ -57,7 +57,6 @@ define([
         - intercepts messages in order to display status.
         */
 
-
         function makeFieldWidget(appSpec, parameterSpec, value) {
             // 'widgets/appWidgets2/fieldWidgetBare',
             const fieldWidgetModule = 'fieldWidgetBare';

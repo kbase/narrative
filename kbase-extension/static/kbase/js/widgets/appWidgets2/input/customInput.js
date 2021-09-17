@@ -17,10 +17,7 @@ define([
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(config.channelName),
             subtype = spec.data.constraints.type;
-        let parent,
-            container,
-            ui,
-            inputWidget;
+        let parent, container, ui, inputWidget;
 
         // MODEL
 

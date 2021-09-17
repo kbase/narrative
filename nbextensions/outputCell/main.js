@@ -120,9 +120,7 @@ define([
 
     function upgradeCell(cell, setupData) {
         return Promise.try(() => {
-            let meta = cell.metadata,
-                outputCode,
-                parentTitle,
+            const meta = cell.metadata,
                 cellId = setupData.cellId || new Uuid(4).format();
 
             // Set the initial metadata for the output cell.
@@ -147,7 +145,7 @@ define([
             // We just need to generate, set, and execute the output
             // the first time (for now).
 
-            outputCode = PythonInterop.buildOutputRunner(
+            const outputCode = PythonInterop.buildOutputRunner(
                 setupData.widget.name,
                 setupData.widget.tag,
                 cellId,
@@ -161,7 +159,7 @@ define([
             utils.setCellMeta(cell, 'kbase.outputCell.user-settings.showCodeInputArea', false);
 
             // Get the title of the app which generated this output...
-            parentTitle = utils.getTitle(
+            const parentTitle = utils.getTitle(
                 Props.getDataItem(cell.metadata, 'kbase.outputCell.parentCellId')
             );
             if (parentTitle) {

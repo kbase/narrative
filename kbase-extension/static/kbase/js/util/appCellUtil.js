@@ -97,11 +97,11 @@ define(['common/runtime', 'narrativeConfig', 'StagingServiceClient'], (
      *   are the validation options for each mapped input
      */
     function getFilePathOptionsForValidation(model, fileType, missingFiles) {
-        let fpIds = model.getItem(['app', 'fileParamIds', fileType]);
-        const outIds = model.getItem(['app', 'outputParamIds', fileType]);
+        let fpIds = model.getItem(['app', 'fileParamIds', fileType]) || [];
+        const outIds = model.getItem(['app', 'outputParamIds', fileType]) || [];
         // overwrite fpIds with JUST the file inputs (not the outputs)
         fpIds = new Set(fpIds.filter((id) => !outIds.includes(id)));
-        const fpVals = model.getItem(['params', fileType, 'filePaths']);
+        const fpVals = model.getItem(['params', fileType, 'filePaths']) || [];
 
         // fpVals = Array of input file path rows from the importer for the current fileType
 

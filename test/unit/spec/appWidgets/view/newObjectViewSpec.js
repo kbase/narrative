@@ -18,7 +18,6 @@ define(['widgets/appWidgets2/view/newObjectView', 'common/runtime', 'testUtil'],
         beforeEach(function () {
             this.bus = Runtime.make().bus();
             this.node = document.createElement('div');
-            document.body.appendChild(this.node);
         });
 
         afterEach(function () {

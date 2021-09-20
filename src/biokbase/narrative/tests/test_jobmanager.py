@@ -10,10 +10,11 @@ from src.biokbase.narrative.jobs.job import (
 )
 import unittest
 import copy
+import itertools
 from unittest import mock
+import re
 import biokbase.narrative.jobs.jobmanager
 from biokbase.narrative.jobs.job import Job
-from biokbase.narrative.jobs.specmanager import SpecManager
 from .util import ConfigTests
 from .test_job import (
     JOB_COMPLETED,
@@ -32,13 +33,14 @@ from .test_job import (
     JOB_NOT_FOUND,
     JOBS_TERMINALITY,
     ALL_JOBS,
-    FINISHED_JOBS,
+    TERMINAL_JOBS,
     ACTIVE_JOBS,
     BATCH_CHILDREN,
     get_test_job,
     get_test_spec,
     TEST_JOBS,
     get_test_job_states,
+    get_cell_2_jobs,
 )
 import os
 from IPython.display import HTML
@@ -89,6 +91,39 @@ def get_retry_job_state(orig_id, status="unmocked"):
     }
 
 
+def get_test_job_infos(job_ids):
+    return {
+        job_id: get_test_job_info(job_id)
+        for job_id in job_ids
+    }
+
+
+def get_test_job_info(job_id):
+    test_job = get_test_job(job_id)
+    job_id = test_job.get("job_id")
+    app_id = test_job.get("job_input", {}).get("app_id", None)
+    tag = (
+        test_job.get("job_input", {})
+        .get("narrative_cell_info", {})
+        .get("tag", "release")
+    )
+    params = test_job.get("job_input", {}).get("params", JOB_ATTR_DEFAULTS["params"])
+    batch_job = test_job.get("batch_job", JOB_ATTR_DEFAULTS["batch_job"])
+    app_name = (
+        "batch" if batch_job else get_test_spec(tag, app_id)["info"]["name"]
+    )
+    batch_id = (
+        job_id if batch_job else test_job.get("batch_id", JOB_ATTR_DEFAULTS["batch_id"])
+    )
+    return {
+        "app_id": app_id,
+        "app_name": app_name,
+        "job_id": job_id,
+        "job_params": params,
+        "batch_id": batch_id,
+    }
+
+
 class JobManagerTest(unittest.TestCase):
     @classmethod
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
@@ -135,7 +170,7 @@ class JobManagerTest(unittest.TestCase):
         self.assertIn("Job lookup failed", str(e.exception))
 
     @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
-    def test_initialise_jobs(self):
+    def test_initialize_jobs(self):
         # all jobs have been removed from the JobManager
         self.jm._running_jobs = {}
         self.jm = biokbase.narrative.jobs.jobmanager.JobManager()
@@ -147,12 +182,11 @@ class JobManagerTest(unittest.TestCase):
         terminal_ids = [
             job_id
             for job_id, d in self.jm._running_jobs.items()
-            if d["job"].was_terminal
+            if d["job"].was_terminal()
         ]
         self.assertEqual(
-            set(FINISHED_JOBS),
+            set(TERMINAL_JOBS),
             set(terminal_ids),
-            # set(JOB_COMPLETED, JOB_TERMINATED, JOB_ERROR)
         )
         self.assertEqual(set(self.job_ids), set(self.jm._running_jobs.keys()))
 
@@ -160,6 +194,35 @@ class JobManagerTest(unittest.TestCase):
             self.assertFalse(self.jm._running_jobs[job_id]["refresh"])
         for job_id in NON_TERMINAL_IDS:
             self.assertTrue(self.jm._running_jobs[job_id]["refresh"])
+
+    @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
+    def test_initialize_jobs__cell_ids(self):
+        """
+        Invoke initialize_jobs with cell_ids
+        """
+        cell_2_jobs = get_cell_2_jobs()
+        cell_ids = list(cell_2_jobs.keys())
+        # Iterate through all combinations of cell IDs
+        for combo_len in range(len(cell_ids) + 1):
+            for combo in itertools.combinations(cell_ids, combo_len):
+                combo = list(combo)
+                # Get jobs expected to be associated with the cell IDs
+                exp_job_ids = [
+                    job_id
+                    for cell_id, job_ids in cell_2_jobs.items()
+                    for job_id in job_ids
+                    if cell_id in combo
+                ]
+                self.jm._running_jobs = {}
+                self.jm.initialize_jobs(cell_ids=combo)
+
+                for job_id, d in self.jm._running_jobs.items():
+                    refresh = d["refresh"]
+
+                    self.assertEqual(
+                        int(job_id in exp_job_ids and not JOBS_TERMINALITY[job_id]),
+                        refresh
+                    )
 
     def test__check_job_list_fail(self):
         with self.assertRaisesRegex(ValueError, NO_ID_ERR_STR):
@@ -263,9 +326,19 @@ class JobManagerTest(unittest.TestCase):
         with mock.patch(
             "biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client
         ):
-            jobs_html_0 = self.jm.list_jobs()
-            jobs_html_1 = self.jm.list_jobs()
-            self.assertEqual(jobs_html_0.data, jobs_html_1.data)
+            jobs_html_0 = self.jm.list_jobs().data
+            jobs_html_1 = self.jm.list_jobs().data
+
+            try:
+                self.assertEqual(jobs_html_0, jobs_html_1)
+            except AssertionError:
+                # Sometimes the time is off by a second
+                # This will still fail if on the hour
+                pattern = r"(\d\d:)\d\d:\d\d"
+                sub = r"\1"
+                jobs_html_0 = re.sub(pattern, sub, jobs_html_0)
+                jobs_html_1 = re.sub(pattern, sub, jobs_html_1)
+                self.assertEqual(jobs_html_0, jobs_html_1)
 
     def test_cancel_jobs__bad_inputs(self):
         with self.assertRaisesRegex(ValueError, NO_ID_ERR_STR):
@@ -283,8 +356,8 @@ class JobManagerTest(unittest.TestCase):
     def test_cancel_jobs__job_already_finished(self):
         self.assertEqual(get_test_job(JOB_COMPLETED)["status"], "completed")
         self.assertEqual(get_test_job(JOB_TERMINATED)["status"], "terminated")
-        self.assertTrue(self.jm.get_job(JOB_COMPLETED).was_terminal)
-        self.assertTrue(self.jm.get_job(JOB_TERMINATED).was_terminal)
+        self.assertTrue(self.jm.get_job(JOB_COMPLETED).was_terminal())
+        self.assertTrue(self.jm.get_job(JOB_TERMINATED).was_terminal())
 
         with mock.patch(
             "biokbase.narrative.jobs.jobmanager.JobManager._cancel_job"
@@ -714,6 +787,16 @@ class JobManagerTest(unittest.TestCase):
             self.assertEqual(self.jm._running_jobs[job_id]["refresh"], 2)
             self.jm.modify_job_refresh([job_id], -1)  # stop
             self.assertEqual(self.jm._running_jobs[job_id]["refresh"], 1)
+
+    @mock.patch("biokbase.narrative.jobs.jobmanager.clients.get", get_mock_client)
+    def test_lookup_job_info(self):
+        infos = self.jm.lookup_job_info(ALL_JOBS)
+
+        self.assertCountEqual(ALL_JOBS, infos.keys())
+        self.assertEqual(
+            get_test_job_infos(ALL_JOBS),
+            infos
+        )
 
 
 if __name__ == "__main__":

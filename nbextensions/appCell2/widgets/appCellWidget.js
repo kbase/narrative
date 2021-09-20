@@ -1584,7 +1584,7 @@ define([
             jobListeners.push(ev);
 
             runtime.bus().emit('request-job-updates-start', {
-                jobId: jobId,
+                jobId,
             });
         }
 
@@ -1597,25 +1597,26 @@ define([
             const jobId = model.getItem('exec.jobState.job_id');
             if (jobId) {
                 runtime.bus().emit('request-job-updates-stop', {
-                    jobId: jobId,
+                    jobId,
                 });
             }
         }
 
         function createOutputCell(jobId) {
-            const cellId = cellUtils.getMeta(cell, 'attributes', 'id'),
+            const parentCellId = utils.getMeta(cell, 'attributes', 'id'),
                 cellIndex = Jupyter.notebook.find_cell_index(cell),
-                newCellId = new Uuid(4).format(),
+                // the new output cell ID
+                cellId = new Uuid(4).format(),
                 setupData = {
+                    cellId,
+                    jobId,
+                    parentCellId,
                     type: 'output',
-                    cellId: newCellId,
-                    parentCellId: cellId,
-                    jobId: jobId,
                     widget: model.getItem('exec.outputWidgetInfo'),
                 };
             Jupyter.notebook.insert_cell_below('code', cellIndex, setupData);
 
-            return newCellId;
+            return cellId;
         }
 
         function clearOutput() {

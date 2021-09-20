@@ -1,5 +1,5 @@
 define([
-    '../../../../../../../narrative/nbextensions/appCell2/widgets/appCellWidget',
+    '/narrative/nbextensions/appCell2/widgets/appCellWidget',
     'common/runtime',
     'testUtil',
     'base/js/namespace',

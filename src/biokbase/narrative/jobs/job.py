@@ -224,6 +224,13 @@ class Job(object):
             object.__setattr__(self, name, value)
 
     @property
+    def app_name(self):
+        return (
+            "batch"
+            if self.batch_job else
+            self.app_spec()["info"]["name"]
+        )
+
     def was_terminal(self):
         """
         Checks if last queried ee2 state (or those of its children) was terminal.
@@ -240,9 +247,36 @@ class Job(object):
         else:
             return self._acc_state.get("status") in TERMINAL_STATUSES
 
+    def is_terminal(self):
+        self.state()
+        if self._acc_state.get("batch_job"):
+            for child_job in self.children:
+                if child_job._acc_state.get("status") != COMPLETED_STATUS:
+                    child_job.state(force_refresh=True)
+        return self.was_terminal()
+
+    def in_cells(self, cell_ids: List[str]) -> bool:
+        """
+        For job initialization.
+        See if job is associated with present cells
+
+        A batch job technically can have children in different cells,
+        so consider it in any cell a child is in
+        """
+        if cell_ids is None:
+            raise ValueError("cell_ids cannot be None")
+
+        if self.batch_job:
+            for child_job in self.children:
+                if child_job.cell_id in cell_ids:
+                    return True
+            return False
+        else:
+            return self.cell_id in cell_ids
+
     @property
     def final_state(self):
-        if self.was_terminal is True:
+        if self.was_terminal() is True:
             return self.state()
         return None
 
@@ -318,7 +352,7 @@ class Job(object):
         Queries the job service to see the state of the current job.
         """
 
-        if not force_refresh and self.was_terminal:
+        if not force_refresh and self.was_terminal():
             state = copy.deepcopy(self._acc_state)
         else:
             state = self.query_ee2_state(self.job_id, init=False)

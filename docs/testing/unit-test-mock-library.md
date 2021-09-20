@@ -3,7 +3,7 @@
 ***Table of Contents***
 
   - [Introduction](#introduction)
-  - [General Usage](#general-usage)  
+  - [General Usage](#general-usage)
   - Functions
     - [buildMockCell](#buildmockcell)
     - [buildMockNotebook](#buildmocknotebook)
@@ -29,20 +29,20 @@ define([
 ```
 
 ## buildMockCell
-`buildMockCell(cellType, kbaseCellType, data)`  
+`buildMockCell(cellType, kbaseCellType, data)`
 This function builds a mock Jupyter notebook cell, given a Jupyter notebook cell type and an optional KBase cell type. It includes a minimal structure needed to portray a cell, including minimum required DOM elements. The returned object has these attributes:
 * `metadata`: object, with some basic metadata,
 * `cell_type`: string, the given cellType,
 * `renderMinMax`: a no-op function,
 * `celltoolbar`: an object with a rebuild function, that's a no-op
 * `element`: a jQuery node with a single div
-* `input`: a jQuery node with the DOM structure:  
+* `input`: a jQuery node with the DOM structure:
 ```
   <div class="input">
     <div class="input_area"></div>
   </div>
 ```
-* `output`: a jQuery node with the DOM structure:  
+* `output`: a jQuery node with the DOM structure:
 ```
   <div class="output_wrapper">
     <div class="output"></div>
@@ -57,7 +57,7 @@ This function builds a mock Jupyter notebook cell, given a Jupyter notebook cell
 **example**
 ```Javascript
 define([
-    '../../../../../../narrative/nbextensions/bulkImportCell/bulkImportCell',
+    '/narrative/nbextensions/bulkImportCell/bulkImportCell',
     'narrativeMocks'
 ], (BulkImportCell, Mocks) => {
     describe('Make a dummy cell for testing', () => {
@@ -83,24 +83,24 @@ define([
 ```
 
 ## buildMockNotebook
-`buildMockNotebook(options)`  
+`buildMockNotebook(options)`
 Builds a mock Jupyter notebook object with a few attributes, but mostly an empty object for modification for whatever testing purposes. One simple way to use this is to set it to the `Jupyter.notebook` global object for further usage. Be sure to clear it when you're done!
 
-**parameters**  
+**parameters**
 There's a single `options` parameter here, which is an object with several possible attributes:
 * `deleteCallback` - function - called when `delete_cell` is called
 * `fullyLoaded` - boolean - if true, treat the notebook as fully loaded
 * `cells` - Array - an array of mocked cells (see [buildMockCell](#buildmockcell))
 * `readOnly` - boolean - set true if the Narrative should be read-only
 
-**example**  
+**example**
 Example taken from the bulk import cell tests.
 
 ```Javascript
 define([
     'jquery',
-    '../../../../../../narrative/nbextensions/bulkImportCell/main',
-    '../../../../../../narrative/nbextensions/bulkImportCell/bulkImportCell',
+    '/narrative/nbextensions/bulkImportCell/main',
+    '/narrative/nbextensions/bulkImportCell/bulkImportCell',
     'base/js/namespace',
     'narrativeMocks',
 ], ($, Main, BulkImportCell, Jupyter, Mocks) => {
@@ -140,7 +140,7 @@ define([
 });
 ```
 ## mockServiceWizardLookup
-`mockServiceWizardLookup(args)`  
+`mockServiceWizardLookup(args)`
 There are a number of KBase dynamic services that get used in the Narrative (NarrativeService comes to mind as an obvious one, also several data providers). These work by having a generic Service Wizard client first query for the service's URL, then make the call to it. Which means that the service wizard needs its own special mocking function to be called first.
 
 This uses jasmine.Ajax to mock a request to the service wizard. It will return the proper dynamic service URL that will be requested by the client when the call is made. If it's to be mocked, be sure to have a mock for that endpoint as well.
@@ -149,14 +149,14 @@ The basic usage is that you'll need to provide the service wizard's URL, as well
 
 Note that this requires running `jasmine.Ajax.install()` first.
 
-**parameters**  
+**parameters**
 There's only a single parameter, `args`, that is an object. Its expected attributes are below:
 * `module` - string - the module to mock. This should be its registered name, e.g. `NarrativeService`
 * `url` - string - the fake url to return. Requests to this should be mocked, too!
 * `statusCode` - int, optional, default 200 - the HTTP status to return. Set to something in the 400 range to mock a user error, and in the 500 range to mock a service error.
 * `statusText` - optional, default 'OK' - a status text to return, if you're changing the mocked status from 200, this should get changed, too.
 
-**example**  
+**example**
 This is a partial test set taken from the App Panel tests.
 
 ```Javascript
@@ -182,8 +182,8 @@ define(['narrativeMocks', 'narrativeConfig'], (Mocks, Config) => {
     });
 });
 ```
-## mockJsonRpc1Call  
-`mockJsonRpc1Call(args)`  
+## mockJsonRpc1Call
+`mockJsonRpc1Call(args)`
 This mocks a KBase-style JSON-RPC 1.1 request, which is most KBase service calls. They're not exactly the JSON-RPC spec, but this sticks to what KBase does. Here are some simple usages:
 * **simple happy response:**
 ```Javascript
@@ -206,7 +206,7 @@ mockJsonRpc1Call({
 
 Note that this requires `jasmine.Ajax.install()` to be run first.
 
-**parameters**  
+**parameters**
 This takes a single object as a parameter. The allowed attributes are below:
 * `url` - string - the url endpoint to mock
 * `body` - optional - string or regex, default = empty string - something from the body to identify the request, either a string or regex. For a KBase service call, this can be a function method, for example.
@@ -257,7 +257,7 @@ This takes a single object as a parameter. The allowed attributes are below:
 });
 ```
 ## mockAuthRequest
-`mockAuthRequest(path, response, statusCode)`  
+`mockAuthRequest(path, response, statusCode)`
 A simple auth request mocker. This takes a path to the auth REST service, a response to return, and the status code, and builds a mock that satisfies all of that.
 
 Requires that `jasmine.Ajax.install()` has been run first.
@@ -267,7 +267,7 @@ Requires that `jasmine.Ajax.install()` has been run first.
 * `response` - object - the response object that the test expects to see
 * `statusCode` - int - the HTTP status code to return
 
-**example**  
+**example**
 This is an example from the Narrative Auth API tests, slightly tweaked.
 
 ```Javascript
@@ -298,20 +298,20 @@ define([
 });
 
 ```
-## setAuthToken  
-`setAuthToken(token)`  
+## setAuthToken
+`setAuthToken(token)`
 Sets an arbitrary string in the test browser's auth token cookie. From the tests' points of view, this appears to be a real auth token. Helpful for the cases where you want to appear logged in.
 
-**parameters**  
+**parameters**
 * `token` - string - the dummy auth token string to set.
 
-**example**  
+**example**
 ```Javascript
 // This example goes through an exercise with using an auth client, mocking an auth call,
 // and making sure the request sent was correct.
 define([
-    'narrativeMocks', 
-    'api/auth', 
+    'narrativeMocks',
+    'api/auth',
     'narrativeConfig'
 ], (Mocks, Auth, Config) => {
     describe('Some auth-mocking tests', () => {
@@ -338,13 +338,13 @@ define([
 });
 ```
 
-## clearAuthToken  
-`clearAuthToken()`  
+## clearAuthToken
+`clearAuthToken()`
 Clears any set auth token cookie.
 
-**parameters**  
-None  
-**example**  
+**parameters**
+None
+**example**
 ```Javascript
 define(['narrativeMocks'], (Mocks) => {
     describe('Some auth-mocking tests', () => {
@@ -353,7 +353,3 @@ define(['narrativeMocks'], (Mocks) => {
     });
 });
 ```
-
-
-
-

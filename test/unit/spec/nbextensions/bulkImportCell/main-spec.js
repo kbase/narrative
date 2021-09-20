@@ -1,7 +1,7 @@
 define([
     'jquery',
-    '../../../../../../narrative/nbextensions/bulkImportCell/main',
-    '../../../../../../narrative/nbextensions/bulkImportCell/bulkImportCell',
+    '/narrative/nbextensions/bulkImportCell/main',
+    '/narrative/nbextensions/bulkImportCell/bulkImportCell',
     'base/js/namespace',
     'narrativeMocks',
     'testUtil',

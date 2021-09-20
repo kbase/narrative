@@ -1,4 +1,8 @@
-define(['common/runtime', 'StagingServiceClient'], (Runtime, StagingServiceClient) => {
+define(['common/runtime', 'narrativeConfig', 'StagingServiceClient'], (
+    Runtime,
+    Config,
+    StagingServiceClient
+) => {
     'use strict';
 
     /**
@@ -184,9 +188,25 @@ define(['common/runtime', 'StagingServiceClient'], (Runtime, StagingServiceClien
             });
     }
 
+    function generateFileTypeMappings(typesToFiles = {}) {
+        const fileTypesDisplay = {},
+            fileTypeMapping = {},
+            uploaders = Config.get('uploaders');
+        for (const uploader of uploaders.dropdown_order) {
+            fileTypeMapping[uploader.id] = uploader.name;
+        }
+        for (const fileType of Object.keys(typesToFiles)) {
+            fileTypesDisplay[fileType] = {
+                label: fileTypeMapping[fileType] || `Unknown type "${fileType}"`,
+            };
+        }
+        return { fileTypesDisplay, fileTypeMapping };
+    }
+
     return {
         evaluateAppConfig,
         evaluateConfigReadyState,
         getMissingFiles,
+        generateFileTypeMappings,
     };
 });

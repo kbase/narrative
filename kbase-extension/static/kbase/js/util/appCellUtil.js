@@ -135,7 +135,7 @@ define(['common/runtime', 'narrativeConfig', 'StagingServiceClient'], (
             return evaluateAppConfig(
                 model.getItem(['app', 'otherParamIds', fileType]),
                 model.getItem(['params', fileType, 'params']),
-                {}, // no particular options for non-file parameters righ tnow
+                {}, // no particular options for non-file parameters right now
                 model.getItem(['app', 'fileParamIds', fileType]),
                 model.getItem(['params', fileType, 'filePaths']),
                 getFilePathOptionsForValidation(model, fileType, missingFiles),

@@ -1,4 +1,6 @@
 define(['bluebird'], (Promise) => {
+    'use strict';
+
     function copyValue(obj) {
         if (obj !== undefined) {
             return JSON.parse(JSON.stringify(obj));

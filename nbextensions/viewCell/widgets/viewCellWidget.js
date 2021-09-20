@@ -12,7 +12,7 @@ define([
     'kb_service/client/narrativeMethodStore',
     'kb_service/client/workspace',
     'common/pythonInterop',
-    'common/utils',
+    'common/cellUtils',
     'common/ui',
     'common/fsm',
     'common/spec',
@@ -333,10 +333,6 @@ define([
             ui.setContent('fatal-error.message', model.getItem('fatalError.message'));
         }
 
-        // function showFatalError(arg) {
-        //     ui.showElement('fatal-error');
-        // }
-
         function showFsmBar() {
             const currentState = fsm.getCurrentState(),
                 content = Object.keys(currentState.state)
@@ -474,13 +470,6 @@ define([
             });
         }
 
-        function toBoolean(value) {
-            if (value && value !== null) {
-                return true;
-            }
-            return false;
-        }
-
         function showAboutApp() {
             const appSpec = model.getItem('app.spec');
             ui.setContent('about-app.name', appSpec.info.name);
@@ -499,7 +488,7 @@ define([
                 })()
             );
             const appRef = [appSpec.info.namespace || 'l.m', appSpec.info.id]
-                    .filter(toBoolean)
+                    .filter((v) => !!v)
                     .join('/'),
                 link = a({ href: '/#appcatalog/app/' + appRef, target: '_blank' }, 'Catalog Page');
             ui.setContent('about-app.catalog-link', link);
@@ -1277,7 +1266,7 @@ define([
             return syncAppSpec(params.appId, params.appTag)
                 .then(() => {
                     const appRef = [model.getItem('app.id'), model.getItem('app.tag')]
-                            .filter(toBoolean)
+                            .filter((v) => !!v)
                             .join('/'),
                         url = '/#appcatalog/app/' + appRef;
                     utils.setCellMeta(

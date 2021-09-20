@@ -12,7 +12,7 @@ define([
     'kb_service/client/narrativeMethodStore',
     'kb_service/client/workspace',
     'common/pythonInterop',
-    'common/utils',
+    'common/cellUtils',
     'common/ui',
     'common/fsm',
     'common/spec',
@@ -141,17 +141,6 @@ define([
         function syncFatalError() {
             ui.setContent('fatal-error.title', model.getItem('fatalError.title'));
             ui.setContent('fatal-error.message', model.getItem('fatalError.message'));
-        }
-
-        function showFatalError() {
-            ui.showElement('fatal-error');
-        }
-
-        function toBoolean(value) {
-            if (value && value !== null) {
-                return true;
-            }
-            return false;
         }
 
         function validateModel() {
@@ -823,7 +812,7 @@ define([
             return syncAppSpec(params.appId, params.appTag)
                 .then(() => {
                     const appRef = [model.getItem('app.id'), model.getItem('app.tag')]
-                            .filter(toBoolean)
+                            .filter((v) => !!v)
                             .join('/'),
                         url = '/#appcatalog/app/' + appRef;
                     utils.setCellMeta(

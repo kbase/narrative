@@ -1,7 +1,5 @@
-define(['common/format', 'common/utils'], (format, utils) => {
+define(['common/format'], (format) => {
     'use strict';
-
-    const toBoolean = utils.toBoolean;
 
     const DOMTagA = function (innerHTML, options) {
         const tag = document.createElement('a');
@@ -52,7 +50,7 @@ define(['common/format', 'common/utils'], (format, utils) => {
             if (!appSpec && arg.currentApp) {
                 appSpec = model.getItem(`app.specs.${arg.currentApp}`); // for bulk cells
             }
-            const appRef = [appSpec.info.id, model.getItem('app').tag].filter(toBoolean).join('/');
+            const appRef = [appSpec.info.id, model.getItem('app').tag].filter((v) => !!v).join('/');
 
             const methodFullInfo = appSpec.full_info;
 

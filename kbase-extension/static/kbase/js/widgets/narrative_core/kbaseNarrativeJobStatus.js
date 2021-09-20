@@ -16,7 +16,7 @@ define([
     'kbaseReportView',
     'common/runtime',
     'common/semaphore',
-    'common/utils',
+    'common/cellUtils',
     'util/jobLogViewer',
     'text!kbase/templates/job_status/status_table.html',
     'text!kbase/templates/job_status/header.html',

@@ -23,7 +23,7 @@ define([
     './widgets/viewCellWidget',
     'common/runtime',
     'common/parameterSpec',
-    'common/utils',
+    'common/cellUtils',
     'common/clock',
     'common/dom',
     'common/props',

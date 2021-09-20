@@ -1,4 +1,4 @@
-define(['bluebird', 'jquery', 'base/js/namespace', 'common/utils'], (
+define(['bluebird', 'jquery', 'base/js/namespace', 'common/cellUtils'], (
     Promise,
     $,
     Jupyter,

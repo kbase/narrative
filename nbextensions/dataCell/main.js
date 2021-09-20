@@ -3,31 +3,16 @@ define([
     'jquery',
     'uuid',
     'base/js/namespace',
-    'common/utils',
+    'common/cellUtils',
     'util/icon',
     'common/props',
-    'common/cellUtils',
     'common/pythonInterop',
     'common/ui',
     'common/jupyter',
     'kb_common/html',
     './widgets/dataCell',
     'custom/custom',
-], (
-    Promise,
-    $,
-    Uuid,
-    Jupyter,
-    utils,
-    Icon,
-    Props,
-    cellUtils,
-    PythonInterop,
-    UI,
-    jupyter,
-    html,
-    DataCell
-) => {
+], (Promise, $, Uuid, Jupyter, utils, Icon, Props, PythonInterop, UI, jupyter, html, DataCell) => {
     'use strict';
 
     const t = html.tag,

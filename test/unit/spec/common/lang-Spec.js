@@ -36,6 +36,7 @@ define(['common/lang'], (Utils) => {
                 expect(copied).toEqual(obj);
                 copied.foo.bar = 'wat';
                 expect(copied).not.toEqual(obj);
+                expect(obj.foo.bar).toEqual('baz');
             });
         });
 

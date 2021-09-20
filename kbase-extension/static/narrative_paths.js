@@ -383,9 +383,7 @@ require.config({
         kbasePanel: 'kbase/js/widgets/kbasePanel',
         kbaseDeletePrompt: 'kbase/js/widgets/kbaseDeletePrompt',
     },
-    excludeShallow: [
-        'common/jobCommChannel',
-    ],
+    excludeShallow: ['common/jobCommChannel'],
     map: {
         '*': {
             css: 'ext_components/require-css/css',

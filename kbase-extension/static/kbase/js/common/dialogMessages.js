@@ -69,7 +69,8 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
      * @param {object} args with keys
      *      {string} actionString - what action is to occur (cancel or retry)
      *      {array} statusList - array of statuses that the action applies to
-     *      {array} jobList - array of job objects
+     *      {array} jobList    - array of job objects
+     *                           (only used to get the number of jobs)
      * @returns {object} arguments to create a modal to confirm or cancel the action
      */
     function generateCancelRetryDialogArgs(args) {
@@ -91,11 +92,15 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
         );
         const jobString = jobList.length === 1 ? '1 job' : jobList.length + ' jobs';
         const ucfirstAction = String.capitalize(actionString);
+        const synonym = {
+            cancel: 'terminate the processing of',
+            retry: 'rerun',
+        };
         return {
             title: `${ucfirstAction} ${jobLabelString} jobs`,
             body: div([
                 p([
-                    `${ucfirstAction}ing all ${jobLabelString} jobs will terminate the processing of ${jobString}. `,
+                    `${ucfirstAction}ing all ${jobLabelString} jobs will ${synonym[actionString]} ${jobString}. `,
                     outputObjectsBlurb,
                 ]),
                 statusList.includes('error')
@@ -114,7 +119,7 @@ define(['common/html', 'common/jobs', 'common/ui', 'util/string'], (html, Jobs, 
      * @returns {object} arguments to create a modal to confirm or cancel the action
      */
 
-    function generateDialogArgs(args) {
+    function generateDialogArgs(args = {}) {
         const { action } = args;
 
         if (action === 'retryJobs' || action === 'cancelJobs') {

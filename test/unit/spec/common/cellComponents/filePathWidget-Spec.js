@@ -72,7 +72,6 @@ define([
             this.bus = Bus.make();
             container = document.createElement('div');
             this.node = document.createElement('div');
-            document.body.append(container);
             container.appendChild(this.node);
             this.fpwArgs = Object.assign({ bus: this.bus }, this.defaultArgs);
         });

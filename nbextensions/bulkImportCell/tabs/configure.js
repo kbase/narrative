@@ -1,6 +1,5 @@
 define([
     'bluebird',
-    'narrativeConfig',
     'common/runtime',
     'common/html',
     'common/ui',
@@ -8,7 +7,7 @@ define([
     'common/cellComponents/paramsWidget',
     'common/cellComponents/filePathWidget',
     'util/appCellUtil',
-], (Promise, Config, Runtime, html, UI, FileTypePanel, ParamsWidget, FilePathWidget, Util) => {
+], (Promise, Runtime, html, UI, FileTypePanel, ParamsWidget, FilePathWidget, Util) => {
     'use strict';
 
     /**
@@ -46,17 +45,7 @@ define([
             unavailableFiles,
             ui;
 
-        const fileTypesDisplay = {},
-            fileTypeMapping = {},
-            uploaders = Config.get('uploaders');
-        for (const uploader of uploaders.dropdown_order) {
-            fileTypeMapping[uploader.id] = uploader.name;
-        }
-        for (const fileType of Object.keys(typesToFiles)) {
-            fileTypesDisplay[fileType] = {
-                label: fileTypeMapping[fileType] || `Unknown type "${fileType}"`,
-            };
-        }
+        const { fileTypesDisplay } = Util.generateFileTypeMappings(typesToFiles);
 
         /**
          * args includes:

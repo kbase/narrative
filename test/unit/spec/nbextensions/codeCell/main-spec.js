@@ -1,6 +1,6 @@
 define([
     'jquery',
-    '../../../../../../narrative/nbextensions/codeCell/main',
+    '/narrative/nbextensions/codeCell/main',
     'testUtil',
     'base/js/namespace',
     'narrativeMocks',

@@ -13,6 +13,7 @@ define([
     'util/timeFormat',
     './uploadTour',
     'util/kbaseApiUtil',
+    'util/stagingFileCache',
     'text!kbase/templates/data_staging/ftp_file_table.html',
     'text!kbase/templates/data_staging/ftp_file_header.html',
     'text!kbase/templates/data_staging/file_path.html',
@@ -34,6 +35,7 @@ define([
     TimeFormat,
     UploadTour,
     APIUtil,
+    StagingFileCache,
     FtpFileTableHtml,
     FtpFileHeaderHtml,
     FilePathHtml,
@@ -118,7 +120,7 @@ define([
         },
 
         updateView: function () {
-            return Promise.resolve(this.stagingServiceClient.list())
+            return StagingFileCache.getFileList(true)
                 .then((data) => {
                     const files = JSON.parse(data).map((f) => {
                         f.path = f.path.substring(f.path.indexOf('/') + 1);

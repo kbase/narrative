@@ -1,8 +1,4 @@
-define(['common/runtime', 'narrativeConfig', 'StagingServiceClient'], (
-    Runtime,
-    Config,
-    StagingServiceClient
-) => {
+define(['narrativeConfig', 'util/stagingFileCache'], (Config, StagingFileCache) => {
     'use strict';
 
     /**
@@ -164,12 +160,7 @@ define(['common/runtime', 'narrativeConfig', 'StagingServiceClient'], (
      *
      */
     function getMissingFiles(expectedFiles) {
-        const runtime = Runtime.make();
-        const stagingService = new StagingServiceClient({
-            root: runtime.config('services.staging_api_url.url'),
-            token: runtime.authToken(),
-        });
-        return Promise.resolve(stagingService.list())
+        return StagingFileCache.getFileList()
             .then((data) => {
                 // turn data into a Set of files with the first path (the root, username)
                 // stripped, as those don't get used.

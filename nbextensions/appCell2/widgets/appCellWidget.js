@@ -236,9 +236,7 @@ define([
                 },
                 handle: function () {
                     const canDoBatch = Config.get('features').batchAppMode;
-                    return (
-                        canDoBatch && (model.getItem('user-settings.batchMode') || false)
-                    );
+                    return canDoBatch && (model.getItem('user-settings.batchMode') || false);
                 },
             });
 
@@ -350,9 +348,7 @@ define([
                 },
                 handle: function () {
                     const canDoBatch = Config.get('features').batchAppMode;
-                    return (
-                        canDoBatch && (model.getItem('user-settings.batchMode') || false)
-                    );
+                    return canDoBatch && (model.getItem('user-settings.batchMode') || false);
                 },
             });
 

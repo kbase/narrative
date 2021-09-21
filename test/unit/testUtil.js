@@ -1,4 +1,4 @@
-define('testUtil', ['bluebird', 'json!/test/testConfig.json'], (Promise, TestConfig) => {
+define('testUtil', ['bluebird', 'util/stagingFileCache', 'json!/test/testConfig.json'], (Promise, StagingFileCache, TestConfig) => {
     'use strict';
 
     let token = null,
@@ -168,6 +168,9 @@ define('testUtil', ['bluebird', 'json!/test/testConfig.json'], (Promise, TestCon
         });
     }
 
+    /**
+     * Clears the global Runtime element and other KBase-used caches.
+     */
     function clearRuntime() {
         if (window.kbaseRuntime) {
             if (window.kbaseRuntime.clock) {
@@ -175,6 +178,7 @@ define('testUtil', ['bluebird', 'json!/test/testConfig.json'], (Promise, TestCon
             }
             window.kbaseRuntime = null;
         }
+        StagingFileCache.clearCache();
     }
 
     return {

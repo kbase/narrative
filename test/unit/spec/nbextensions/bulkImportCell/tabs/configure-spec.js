@@ -78,11 +78,11 @@ define([
             jasmine.Ajax.uninstall();
             container.remove();
             runtime.destroy();
+            TestUtil.clearRuntime();
         });
 
         afterAll(() => {
             Jupyter.narrative = null;
-            TestUtil.clearRuntime();
         });
 
         [

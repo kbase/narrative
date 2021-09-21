@@ -253,7 +253,7 @@ class JobComm:
         Run a loop that will look up job info. After running, this spawns a Timer thread on
         a loop to run itself again. LOOKUP_TIMER_INTERVAL sets the frequency at which the loop runs.
         """
-        all_job_states = self._lookup_all_job_states(None)
+        all_job_states = self._lookup_all_job_states()
         if len(all_job_states) == 0 or not self._running_lookup_loop:
             self.stop_job_status_loop()
         else:
@@ -262,12 +262,12 @@ class JobComm:
             )
             self._lookup_timer.start()
 
-    def _lookup_all_job_states(self, req: JobRequest) -> dict:
+    def _lookup_all_job_states(self, req: JobRequest = None) -> dict:
         """
         Fetches status of all jobs in the current workspace and sends them to the front end.
         req can be None, as it's not used.
         """
-        all_job_states = self._jm.lookup_all_job_states(ignore_refresh_flag=False)
+        all_job_states = self._jm.lookup_all_job_states(ignore_refresh_flag=True)
         self.send_comm_message("job_status_all", all_job_states)
         return all_job_states
 

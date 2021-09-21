@@ -93,7 +93,7 @@ class JobManager(object):
         job_states = self._reorder_parents_children(job_states)
 
         for job_state in job_states.values():
-            child_jobs = []
+            child_jobs = None
             if job_state.get("batch_job"):
                 child_jobs = [
                     self.get_job(child_id)
@@ -324,7 +324,7 @@ class JobManager(object):
             return self._construct_job_state_set(jobs_to_lookup)
         return dict()
 
-    def register_new_job(self, job: Job, refresh: int = 0) -> None:
+    def register_new_job(self, job: Job, refresh: int = None) -> None:
         """
         Registers a new Job with the manager and stores the job locally.
         This should only be invoked when a new Job gets started.
@@ -335,6 +335,9 @@ class JobManager(object):
             The new Job that was started.
         """
         kblogging.log_event(self._log, "register_new_job", {"job_id": job.job_id})
+
+        if refresh is None:
+            refresh = int(not job.was_terminal())
         self._running_jobs[job.job_id] = {"job": job, "refresh": refresh}
 
     def get_job(self, job_id):

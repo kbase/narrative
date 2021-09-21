@@ -14,7 +14,7 @@
  *
  *
  */
-define(['uuid', 'bluebird', './lang'], (Uuid, Promise, lang) => {
+define(['uuid', 'bluebird', 'underscore', './lang'], (Uuid, Promise, _, lang) => {
     'use strict';
 
     function factory(cfg) {
@@ -349,7 +349,7 @@ define(['uuid', 'bluebird', './lang'], (Uuid, Promise, lang) => {
 
             const existingMessage = channel.persistentMessages[key];
             if (existingMessage) {
-                if (lang.isEqual(existingMessage.message, message)) {
+                if (_.isEqual(existingMessage.message, message)) {
                     return;
                 }
             }

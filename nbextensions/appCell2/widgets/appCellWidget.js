@@ -1,6 +1,7 @@
 define([
     'require',
     'jquery',
+    'underscore',
     'bluebird',
     'uuid',
     'base/js/namespace',
@@ -13,7 +14,6 @@ define([
     'kb_service/client/catalog',
     'kb_service/client/narrativeMethodStore',
     'common/pythonInterop',
-    'common/lang',
     'common/ui',
     'common/fsm',
     'common/cellUtils',
@@ -37,6 +37,7 @@ define([
 ], (
     require,
     $,
+    _,
     Promise,
     Uuid,
     Jupyter,
@@ -49,7 +50,6 @@ define([
     Catalog,
     NarrativeMethodStore,
     PythonInterop,
-    lang,
     UI,
     Fsm,
     cellUtils,
@@ -1508,7 +1508,7 @@ define([
                         forceRender =
                             !Jobs.isValidJobStateObject(existingState) &&
                             Jobs.isValidJobStateObject(newJobState);
-                    if (!existingState || !lang.isEqual(existingState, newJobState)) {
+                    if (!existingState || !_.isEqual(existingState, newJobState)) {
                         model.setItem('exec.jobState', newJobState);
                         if (outputWidgetInfo) {
                             model.setItem('exec.outputWidgetInfo', outputWidgetInfo);

@@ -1,8 +1,8 @@
 define([
     'bluebird',
     'jquery',
+    'underscore',
     'kb_common/html',
-    'kb_common/utils',
     'kb_service/client/workspace',
     'kb_service/utils',
     '../validation',
@@ -11,7 +11,7 @@ define([
     'common/dom',
     'bootstrap',
     'css!font-awesome',
-], (Promise, $, html, utils, Workspace, serviceUtils, Validation, Events, Runtime, Dom) => {
+], (Promise, $, _, html, Workspace, serviceUtils, Validation, Events, Runtime, Dom) => {
     'use strict';
 
     // Constants
@@ -312,7 +312,7 @@ define([
             // there are a few thin
             fetchData().then((data) => {
                 // compare to availableData.
-                if (!utils.isEqual(data, model.availableValues)) {
+                if (!_.isEqual(data, model.availableValues)) {
                     model.availableValues = data;
                     const matching = model.availableValues.filter((value) => {
                         if (value.name === getObjectRef(value)) {

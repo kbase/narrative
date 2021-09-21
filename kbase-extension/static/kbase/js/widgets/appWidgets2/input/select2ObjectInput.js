@@ -1,8 +1,8 @@
 define([
     'bluebird',
     'jquery',
+    'underscore',
     'common/html',
-    'kb_common/utils',
     'common/data',
     'common/events',
     'common/runtime',
@@ -14,7 +14,7 @@ define([
     'select2',
     'bootstrap',
     'css!font-awesome',
-], (Promise, $, html, utils, Data, Events, Runtime, UI, Validation, TimeFormat, WidgetCommon) => {
+], (Promise, $, _, html, Data, Events, Runtime, UI, Validation, TimeFormat, WidgetCommon) => {
     'use strict';
 
     // Constants
@@ -403,7 +403,7 @@ define([
 
         function doWorkspaceUpdated(data) {
             // compare to availableData.
-            if (!utils.isEqual(data, model.availableValues)) {
+            if (!_.isEqual(data, model.availableValues)) {
                 model.availableValues = data;
                 model.availableValuesMap = {};
                 // our map is a little strange.

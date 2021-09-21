@@ -5,7 +5,7 @@
  *
  */
 
-define(['./lang', 'common/runtime'], (utils, Runtime) => {
+define(['underscore', 'common/runtime'], (_, Runtime) => {
     'use strict';
 
     function factory(config) {
@@ -40,7 +40,7 @@ define(['./lang', 'common/runtime'], (utils, Runtime) => {
 
         function findState(stateToFind) {
             const foundStates = allStates.filter((stateDef) => {
-                return utils.isEqual(stateToFind, stateDef.state);
+                return _.isEqual(stateToFind, stateDef.state);
             });
             if (foundStates.length === 1) {
                 return foundStates[0];
@@ -70,7 +70,7 @@ define(['./lang', 'common/runtime'], (utils, Runtime) => {
 
         function findNextState(stateList, stateToFind) {
             const foundStates = stateList.filter((state) => {
-                if (utils.isEqual(state, stateToFind)) {
+                if (_.isEqual(state, stateToFind)) {
                     return true;
                 }
             });
@@ -99,7 +99,7 @@ define(['./lang', 'common/runtime'], (utils, Runtime) => {
                 throw new Error('Next state found, but that state does not exist');
             }
 
-            if (utils.isEqual(_newState.state, currentState.state)) {
+            if (_.isEqual(_newState.state, currentState.state)) {
                 return;
             }
 

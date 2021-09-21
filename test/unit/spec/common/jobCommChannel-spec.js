@@ -28,15 +28,6 @@ define([
         };
     }
 
-    function makeJobStatusMsg(jobId, jobState, outputWidgetInfo) {
-        if (!jobState) {
-            jobState = {
-                job_id: jobId,
-            };
-        }
-        return outputWidgetInfo ? { jobId, jobState, outputWidgetInfo } : { jobId, jobState };
-    }
-
     const convertToJobState = (acc, curr) => {
         acc[curr.job_id] = {
             state: curr,
@@ -79,7 +70,6 @@ define([
         it('Should be instantiable and contain the right components', () => {
             const comm = new JobCommChannel();
             expect(comm.initCommChannel).toBeDefined();
-            expect(comm.jobStates).toEqual({});
         });
 
         it('Should initialize correctly in the base case', () => {
@@ -549,7 +539,7 @@ define([
                 ]),
             },
             {
-                type: 'job_status',
+                type: 'job_status_all',
                 message: JobsData.allJobsWithBatchParent.reduce(convertToJobState, {}),
                 expectedMultiple: JobsData.allJobsWithBatchParent.map(convertToJobStateBusMessage),
             },
@@ -641,64 +631,6 @@ define([
                         expect(testBus.send.calls.allArgs()).toEqual([test.expected]);
                     }
                 });
-            });
-        });
-
-        it('Should send a set of job statuses to the bus, and delete extras', () => {
-            const id1 = 'id1',
-                id2 = 'id2',
-                deletedJob = 'deletedJob';
-
-            const msg = makeCommMsg('job_status_all', {
-                id1: {
-                    state: {
-                        job_id: id1,
-                    },
-                },
-                id2: {
-                    state: {
-                        job_id: id2,
-                    },
-                },
-            });
-            const comm = new JobCommChannel();
-            comm.jobStates[deletedJob] = { state: { job_id: deletedJob } };
-            spyOn(testBus, 'send');
-            return comm.initCommChannel().then(() => {
-                comm.handleCommMessages(msg);
-                expect(testBus.send).toHaveBeenCalledTimes(3);
-
-                const allArgs = testBus.send.calls.allArgs();
-                const expected = [
-                    [
-                        makeJobStatusMsg(id1, null),
-                        {
-                            channel: { jobId: id1 },
-                            key: { type: 'job-status' },
-                        },
-                    ],
-                    [
-                        makeJobStatusMsg(id2, null),
-                        {
-                            channel: { jobId: id2 },
-                            key: { type: 'job-status' },
-                        },
-                    ],
-                    [
-                        {
-                            jobId: deletedJob,
-                            jobState: {
-                                job_id: deletedJob,
-                                status: 'does_not_exist',
-                            },
-                        },
-                        {
-                            channel: { jobId: deletedJob },
-                            key: { type: 'job-status' },
-                        },
-                    ],
-                ];
-                expect(allArgs).toEqual(expected);
             });
         });
 

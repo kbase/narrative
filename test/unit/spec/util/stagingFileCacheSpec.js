@@ -1,4 +1,9 @@
-define(['util/stagingFileCache', 'narrativeConfig', 'base/js/namespace', 'testUtil'], (StagingFileCache, Config, Jupyter, TestUtil) => {
+define(['util/stagingFileCache', 'narrativeConfig', 'base/js/namespace', 'testUtil'], (
+    StagingFileCache,
+    Config,
+    Jupyter,
+    TestUtil
+) => {
     'use strict';
 
     describe('staging file cache tests', () => {
@@ -15,7 +20,7 @@ define(['util/stagingFileCache', 'narrativeConfig', 'base/js/namespace', 'testUt
 
         beforeEach(() => {
             Jupyter.narrative = {
-                getAuthToken: () => 'fakeAuthToken'
+                getAuthToken: () => 'fakeAuthToken',
             };
             jasmine.Ajax.install();
             jasmine.Ajax.stubRequest(new RegExp(`${stagingUrl}/list/`)).andReturn({
@@ -69,7 +74,7 @@ define(['util/stagingFileCache', 'narrativeConfig', 'base/js/namespace', 'testUt
             const fileListResult = await StagingFileCache.getFileList();
             const fileList = JSON.parse(fileListResult);
 
-            expect(fileList.length).toBe(3);  // assume the response is the same as the other test, as long as there's 3 files
+            expect(fileList.length).toBe(3); // assume the response is the same as the other test, as long as there's 3 files
             const fakeStagingResponse2 = ['fileX', 'fileY'].map((fileName) => {
                 return {
                     name: fileName,
@@ -91,7 +96,9 @@ define(['util/stagingFileCache', 'narrativeConfig', 'base/js/namespace', 'testUt
             const duplicateCall = await StagingFileCache.getFileList();
             expect(fileListResult).toEqual(duplicateCall);
 
-            jasmine.clock().mockDate(new Date(Date.now() + StagingFileCache.REFRESH_INTERVAL + 100));
+            jasmine
+                .clock()
+                .mockDate(new Date(Date.now() + StagingFileCache.REFRESH_INTERVAL + 100));
 
             const newFileResult = await StagingFileCache.getFileList();
             expect(newFileResult).not.toEqual(fileListResult);

@@ -1,4 +1,8 @@
-define('testUtil', ['bluebird', 'util/stagingFileCache', 'json!/test/testConfig.json'], (Promise, StagingFileCache, TestConfig) => {
+define('testUtil', ['bluebird', 'util/stagingFileCache', 'json!/test/testConfig.json'], (
+    Promise,
+    StagingFileCache,
+    TestConfig
+) => {
     'use strict';
 
     let token = null,

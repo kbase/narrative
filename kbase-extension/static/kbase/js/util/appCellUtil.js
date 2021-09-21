@@ -1,7 +1,4 @@
-define(['narrativeConfig', 'util/stagingFileCache'], (
-    Config,
-    StagingFileCache
-) => {
+define(['narrativeConfig', 'util/stagingFileCache'], (Config, StagingFileCache) => {
     'use strict';
 
     /**

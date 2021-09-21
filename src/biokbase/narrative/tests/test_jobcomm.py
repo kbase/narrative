@@ -48,6 +48,7 @@ from .test_jobmanager import get_test_job_info, get_test_job_infos
 
 
 APP_NAME = "The Best App in the World"
+EXP_ALL_STATE_IDS = ALL_JOBS   # or ACTIVE_JOBS
 
 
 def make_comm_msg(
@@ -156,7 +157,7 @@ class JobCommTestCase(unittest.TestCase):
         self.assertEqual(
             {
                 "msg_type": "job_status_all",
-                "content": get_test_job_states(ACTIVE_JOBS)
+                "content": get_test_job_states(EXP_ALL_STATE_IDS)
             },
             msg["data"]
         )
@@ -177,13 +178,6 @@ class JobCommTestCase(unittest.TestCase):
         for combo_len in range(len(cell_ids) + 1):
             for combo in itertools.combinations(cell_ids, combo_len):
                 combo = list(combo)
-                # Get jobs expected to be associated with the cell IDs and are terminal
-                exp_job_ids = [
-                    job_id
-                    for cell_id, job_ids in cell_2_jobs.items()
-                    for job_id in job_ids
-                    if cell_id in combo and not JOBS_TERMINALITY[job_id]
-                ]
 
                 self.jm._running_jobs = {}
                 self.assertFalse(self.jc._running_lookup_loop)
@@ -194,16 +188,13 @@ class JobCommTestCase(unittest.TestCase):
                 self.assertEqual(
                     {
                         "msg_type": "job_status_all",
-                        "content": get_test_job_states(exp_job_ids)
+                        "content": get_test_job_states(EXP_ALL_STATE_IDS)  # consult version history for when this was exp_job_ids
                     },
                     msg["data"]
                 )
-                self.assertEqual(
-                    len(combo) > 0,
-                    self.jc._running_lookup_loop
-                )
-                assert_method = self.assertIsNotNone if len(combo) else self.assertIsNone
-                assert_method(self.jc._lookup_timer)
+
+                self.assertTrue(self.jc._running_lookup_loop)
+                self.assertTrue(self.jc._lookup_timer)
 
                 self.jc.stop_job_status_loop()
                 self.assertFalse(self.jc._running_lookup_loop)
@@ -222,7 +213,7 @@ class JobCommTestCase(unittest.TestCase):
         self.assertEqual(
             {
                 "msg_type": "job_status_all",
-                "content": get_test_job_states(ACTIVE_JOBS)
+                "content": get_test_job_states(EXP_ALL_STATE_IDS)
             },
             msg["data"]
         )

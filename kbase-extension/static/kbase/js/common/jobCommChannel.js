@@ -561,7 +561,7 @@ define([
             return [
                 'from biokbase.narrative.jobs.jobcomm import JobComm',
                 'cell_list = ' + JSON.stringify(currentCells),
-                'JobComm().start_job_status_loop(cell_list=cell_list, init_jobs=True)',
+                'JobComm().start_job_status_loop(init_jobs=True)',
             ].join('\n');
         }
     }

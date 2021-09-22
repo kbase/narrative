@@ -1,8 +1,8 @@
 define([
     'bluebird',
     'jquery',
+    'underscore',
     'kb_common/html',
-    'kb_common/utils',
     'kb_service/client/workspace',
     'kb_service/utils',
     'common/validation',
@@ -18,8 +18,8 @@ define([
 ], (
     Promise,
     $,
+    _,
     html,
-    utils,
     Workspace,
     serviceUtils,
     Validation,
@@ -349,7 +349,7 @@ define([
 
         function doWorkspaceUpdated(data) {
             // compare to availableData.
-            if (!utils.isEqual(data, model.availableValues)) {
+            if (!_.isEqual(data, model.availableValues)) {
                 model.availableValues = data;
                 model.availableValuesMap = {};
                 // our map is a little strange.

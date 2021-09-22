@@ -25,8 +25,6 @@ define([
     'widgets/appWidgets2/input/floatInput',
     'widgets/appWidgets2/input/intInput',
     'widgets/appWidgets2/input/newObjectInput',
-    // 'widgets/appWidgets2/input/objectInput',
-    // 'widgets/appWidgets2/input/objectRefInput',
     'widgets/appWidgets2/input/select2ObjectInput',
     'widgets/appWidgets2/input/selectInput',
     'widgets/appWidgets2/input/sequenceInput',
@@ -99,7 +97,6 @@ define([
     'common/spec',
     'common/specValidation',
     'common/ui',
-    'common/unodep',
     'common/validation',
     'util/icon',
 ], () => {

@@ -1,4 +1,5 @@
 define([
+    'underscore',
     'uuid',
     'util/icon',
     'common/busEventManager',
@@ -13,7 +14,6 @@ define([
     'common/ui',
     'common/cellUtils',
     'util/appCellUtil',
-    'common/unodep',
     'common/pythonInterop',
     'base/js/namespace',
     'kb_service/client/workspace',
@@ -28,6 +28,7 @@ define([
     './bulkImportCellStates',
     'util/developerMode',
 ], (
+    _,
     Uuid,
     Icon,
     BusEventManager,
@@ -42,7 +43,6 @@ define([
     UI,
     Utils,
     BulkImportUtil,
-    SimpleUtil,
     PythonInterop,
     Jupyter,
     Workspace,
@@ -660,7 +660,7 @@ define([
                 .then((readyState) => {
                     const curState = model.getItem('state');
                     const curReadyState = curState.params;
-                    const updatedReadyState = !SimpleUtil.isEqual(readyState, curReadyState);
+                    const updatedReadyState = !_.isEqual(readyState, curReadyState);
 
                     if (updatedReadyState) {
                         model.setItem(['state', 'params'], readyState);

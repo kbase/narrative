@@ -7,10 +7,16 @@ define(['bluebird'], (Promise) => {
         }
     }
 
-    function pRequire(require, module) {
+    /**
+     * This wraps a require call in a bluebird Promise. The Promise then resolves
+     * into an array of Widgets, one for each.
+     * @param {Array} modules an array of module paths for a require call.
+     * @returns a Promise that resolves into an array of modules.
+     */
+    function pRequire(modules) {
         return new Promise((resolve, reject) => {
-            require(module, function () {
-                resolve(arguments);
+            require(modules, (...args) => {
+                resolve(args);
             }, (err) => {
                 reject(err);
             });
@@ -19,6 +25,6 @@ define(['bluebird'], (Promise) => {
 
     return Object.freeze({
         copy: copyValue,
-        pRequire: pRequire,
+        pRequire,
     });
 });

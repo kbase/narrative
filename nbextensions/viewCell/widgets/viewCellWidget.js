@@ -3,6 +3,7 @@ define([
     'bluebird',
     'uuid',
     'base/js/namespace',
+    'common/lang',
     'common/runtime',
     'common/events',
     'common/html',
@@ -16,6 +17,8 @@ define([
     'common/ui',
     'common/fsm',
     'common/spec',
+    './appParamsWidget',
+    './appParamsViewWidget',
     'google-code-prettify/prettify',
     'css!google-code-prettify/prettify.css',
     'css!font-awesome.css',
@@ -24,6 +27,7 @@ define([
     Promise,
     Uuid,
     JupyterNamespace,
+    Lang,
     Runtime,
     Events,
     html,
@@ -37,6 +41,8 @@ define([
     Ui,
     Fsm,
     Spec,
+    AppParamsWidget,
+    AppParamsViewWidget,
     PR
 ) => {
     'use strict';
@@ -1050,156 +1056,142 @@ define([
             });
         }
 
-        function pRequire(ModulePath) {
-            return new Promise((resolve, reject) => {
-                require([ModulePath], (Widget) => {
-                    resolve(Widget);
-                }, (err) => {
-                    reject(err);
-                });
-            });
-        }
-
         // TODO: handle raciness of the paramsWidget...
         function loadInputParamsWidget() {
-            pRequire('nbextensions/viewCell/widgets/appParamsWidget').then((Widget) => {
-                const bus = runtime
-                    .bus()
-                    .makeChannelBus({ description: 'Parent comm bus for input widget' });
+            const bus = runtime
+                .bus()
+                .makeChannelBus({ description: 'Parent comm bus for input widget' });
 
-                paramsWidget = Widget.make({
-                    bus: bus,
-                    workspaceInfo: workspaceInfo,
-                });
+            paramsWidget = AppParamsWidget.make({
+                bus: bus,
+                workspaceInfo: workspaceInfo,
+            });
 
-                bus.on('parameter-sync', (message) => {
-                    const value = model.getItem(['params', message.parameter]);
+            bus.on('parameter-sync', (message) => {
+                const value = model.getItem(['params', message.parameter]);
+                bus.send(
+                    {
+                        parameter: message.parameter,
+                        value: value,
+                    },
+                    {
+                        // This points the update back to a listener on this key
+                        key: {
+                            type: 'update',
+                            parameter: message.parameter,
+                        },
+                    }
+                );
+            });
+
+            bus.on('sync-params', (message) => {
+                message.parameters.forEach((paramId) => {
                     bus.send(
                         {
-                            parameter: message.parameter,
-                            value: value,
+                            parameter: paramId,
+                            value: model.getItem(['params', message.parameter]),
                         },
                         {
-                            // This points the update back to a listener on this key
                             key: {
-                                type: 'update',
-                                parameter: message.parameter,
+                                type: 'parameter-value',
+                                parameter: paramId,
                             },
+                            channel: message.replyToChannel,
                         }
                     );
                 });
+            });
 
-                bus.on('sync-params', (message) => {
-                    message.parameters.forEach((paramId) => {
-                        bus.send(
-                            {
-                                parameter: paramId,
-                                value: model.getItem(['params', message.parameter]),
-                            },
-                            {
-                                key: {
-                                    type: 'parameter-value',
-                                    parameter: paramId,
-                                },
-                                channel: message.replyToChannel,
-                            }
-                        );
-                    });
-                });
+            bus.respond({
+                key: {
+                    type: 'get-parameter',
+                },
+                handle: function (message) {
+                    return {
+                        value: model.getItem(['params', message.parameterName]),
+                    };
+                },
+            });
 
-                bus.respond({
-                    key: {
-                        type: 'get-parameter',
-                    },
-                    handle: function (message) {
-                        return {
-                            value: model.getItem(['params', message.parameterName]),
-                        };
-                    },
-                });
-
-                bus.on('parameter-changed', (message) => {
-                    // We simply store the new value for the parameter.
-                    model.setItem(['params', message.parameter], message.newValue);
-                    evaluateAppState();
-                });
-                return paramsWidget.start({
-                    node: ui.getElement(['parameters-group', 'widget']),
-                    appSpec: model.getItem('app.spec'),
-                    parameters: spec.getSpec().parameters,
-                    params: model.getItem('params'),
-                });
+            bus.on('parameter-changed', (message) => {
+                // We simply store the new value for the parameter.
+                model.setItem(['params', message.parameter], message.newValue);
+                evaluateAppState();
+            });
+            return paramsWidget.start({
+                node: ui.getElement(['parameters-group', 'widget']),
+                appSpec: model.getItem('app.spec'),
+                parameters: spec.getSpec().parameters,
+                params: model.getItem('params'),
             });
         }
 
         function loadViewParamsWidget() {
-            pRequire('nbextensions/viewCell/widgets/appParamsViewWidget').then((Widget) => {
-                const bus = runtime
-                    .bus()
-                    .makeChannelBus({ description: 'Parent comm bus for input widget' });
+            const bus = runtime
+                .bus()
+                .makeChannelBus({ description: 'Parent comm bus for input widget' });
 
-                paramsWidget = Widget.make({
-                    bus: bus,
-                    workspaceInfo: workspaceInfo,
-                });
+            paramsWidget = AppParamsViewWidget.make({
+                bus: bus,
+                workspaceInfo: workspaceInfo,
+            });
 
-                bus.on('parameter-sync', (message) => {
-                    const value = model.getItem(['params', message.parameter]);
+            bus.on('parameter-sync', (message) => {
+                const value = model.getItem(['params', message.parameter]);
+                bus.send(
+                    {
+                        parameter: message.parameter,
+                        value: value,
+                    },
+                    {
+                        // This points the update back to a listener on this key
+                        key: {
+                            type: 'update',
+                            parameter: message.parameter,
+                        },
+                    }
+                );
+            });
+
+            bus.on('sync-params', (message) => {
+                message.parameters.forEach((paramId) => {
                     bus.send(
                         {
-                            parameter: message.parameter,
-                            value: value,
+                            parameter: paramId,
+                            value: model.getItem(['params', message.parameter]),
                         },
                         {
-                            // This points the update back to a listener on this key
                             key: {
-                                type: 'update',
-                                parameter: message.parameter,
+                                type: 'parameter-value',
+                                parameter: paramId,
                             },
+                            channel: message.replyToChannel,
                         }
                     );
                 });
+            });
 
-                bus.on('sync-params', (message) => {
-                    message.parameters.forEach((paramId) => {
-                        bus.send(
-                            {
-                                parameter: paramId,
-                                value: model.getItem(['params', message.parameter]),
-                            },
-                            {
-                                key: {
-                                    type: 'parameter-value',
-                                    parameter: paramId,
-                                },
-                                channel: message.replyToChannel,
-                            }
-                        );
-                    });
-                });
+            bus.respond({
+                key: {
+                    type: 'get-parameter',
+                },
+                handle: function (message) {
+                    return {
+                        value: model.getItem(['params', message.parameterName]),
+                    };
+                },
+            });
 
-                bus.respond({
-                    key: {
-                        type: 'get-parameter',
-                    },
-                    handle: function (message) {
-                        return {
-                            value: model.getItem(['params', message.parameterName]),
-                        };
-                    },
-                });
-
-                bus.on('parameter-changed', (message) => {
-                    // We simply store the new value for the parameter.
-                    model.setItem(['params', message.parameter], message.newValue);
-                    evaluateAppState();
-                });
-                return paramsWidget.start({
-                    node: ui.getElement(['parameters-group', 'widget']),
-                    appSpec: model.getItem('app.spec'),
-                    parameters: spec.getSpec().parameters,
-                    params: model.getItem('params'),
-                });
+            bus.on('parameter-changed', (message) => {
+                // We simply store the new value for the parameter.
+                model.setItem(['params', message.parameter], message.newValue);
+                evaluateAppState();
+            });
+            return paramsWidget.start({
+                node: ui.getElement(['parameters-group', 'widget']),
+                appSpec: model.getItem('app.spec'),
+                parameters: spec.getSpec().parameters,
+                params: model.getItem('params'),
             });
         }
 

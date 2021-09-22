@@ -561,6 +561,7 @@ define([
             return [
                 'from biokbase.narrative.jobs.jobcomm import JobComm',
                 'cell_list = ' + JSON.stringify(currentCells),
+                // DATAUP-575: temporarily removing cell_list
                 'JobComm().start_job_status_loop(init_jobs=True)',
             ].join('\n');
         }

@@ -146,7 +146,7 @@ define([
         }
 
         validOutgoingMessageTypes() {
-            return Object.values(RESPONSES).concat(['job-error', 'job-log-deleted']);
+            return Object.values(RESPONSES).concat(['job-error']);
         }
 
         /**
@@ -304,22 +304,19 @@ define([
                         case JOB_REQUESTS.LOGS:
                             this.sendBusMessage(JOB, jobId, RESPONSES.LOGS, {
                                 jobId,
-                                error: msgData.message,
-                            });
-                            this.sendBusMessage(JOB, jobId, 'job-log-deleted', {
-                                jobId,
-                                message: msgData.message,
+                                error: msgData,
                             });
                             break;
                         case JOB_REQUESTS.RETRY:
                             this.sendBusMessage(JOB, jobId, RESPONSES.RETRY, {
-                                jobId: jobId,
-                                error: msgData.message,
+                                jobId,
+                                error: msgData,
                             });
                             break;
                         default:
                             this.sendBusMessage(JOB, jobId, 'job-error', {
                                 jobId,
+                                error: msgData,
                                 message: msgData.message,
                                 request: msgData.source,
                             });

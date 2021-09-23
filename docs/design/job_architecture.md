@@ -115,10 +115,7 @@ When the kernel sends a message to the front end, the only module set up to list
   * `jobId` - string, the job id
   * `logs` - the raw message data from the kernel. (see the **Data Structures** section below)
   * `latest` - if truthy, then these are the latest logs, if falsy, then they don't have to be the latest logs.
-
-`job-log-deleted` - a log request has thrown an error
-  * `jobId` - string, the job id
-  * `message` - string, a reason for the error
+  * `error` - if exists, the log request has thrown an error. The error key contains the error details.
 
 `job-status` - contains the current job state
   * `jobId` - string, the job id
@@ -295,7 +292,7 @@ A general job comm error, capturing most errors that get thrown by the kernel
   * `job_id` - string OR `job_id_list` - array of strings, the job id(s) (if present)
   * `message` - string, an error message
 
-**bus** one of `job-cancel-error`, `job-log-deleted`, `job-error`
+**bus** `job-error`
 
 ### `job_info`
 Includes information about the running job

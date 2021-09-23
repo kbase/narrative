@@ -306,7 +306,7 @@ define([
             }
         });
 
-        describe('instance', () => {
+        describe('instance methods', () => {
             beforeEach(function () {
                 container = document.createElement('div');
                 this.jobStatusTableInstance = createInstance();
@@ -397,8 +397,8 @@ define([
                 instantiateJobStatusTable(this);
                 const jobData = this.jobManager.model.getItem('exec.jobs'),
                     jobIdList = Object.keys(jobData.byId);
-                jobData.params = jobIdList.reduce((acc, curr) => {
-                    acc[curr] = true;
+                jobData.info = jobIdList.reduce((acc, curr) => {
+                    acc[curr] = { job_params: [{}] };
                     return acc;
                 }, {});
                 this.jobManager.model.setItem('exec.jobs', jobData);
@@ -407,7 +407,7 @@ define([
                 await this.jobStatusTableInstance.start({
                     node: container,
                 });
-                // this table already has the params populated, so the 'jobStatusTable-info'
+                // this table already has the info populated, so the 'jobStatusTable-info'
                 // handler is not required
                 handlers.forEach((handler) => {
                     const { event, name } = handler;
@@ -422,18 +422,18 @@ define([
                     ['request-job-status', { batchId }],
                 ]);
             });
-            it('requests info for jobs that do not have params defined', async function () {
+            it('requests info for jobs that do not have info defined', async function () {
                 instantiateJobStatusTable(this);
                 const jobData = this.jobManager.model.getItem('exec.jobs'),
                     jobIdList = Object.keys(jobData.byId),
                     missingJobIds = [];
                 let bool = true;
 
-                // populate some job params but not others
-                jobData.params = jobIdList.reduce((acc, curr) => {
+                // populate some job info but not others
+                jobData.info = jobIdList.reduce((acc, curr) => {
                     bool = !bool;
                     if (bool) {
-                        acc[curr] = true;
+                        acc[curr] = { job_params: [{}] };
                     } else if (curr !== batchId) {
                         missingJobIds.push(curr);
                     }
@@ -447,7 +447,7 @@ define([
                     node: container,
                 });
                 expect(this.jobManager.bus.emit.calls.allArgs()).toEqual([
-                    // job info request for missing params
+                    // job info request for missing IDs
                     ['request-job-info', { jobIdList: this.missingJobIds }],
                     // job status request for the full batch
                     ['request-job-status', { batchId }],
@@ -585,9 +585,9 @@ define([
                         ]);
                     });
 
-                    async function runParamUpdateTest(ctx, test, jobParams) {
-                        // add the job params
-                        ctx.jobManager.model.setItem('exec.jobs.params', jobParams);
+                    async function runParamUpdateTest(ctx, test, jobInfo) {
+                        // add the job info
+                        ctx.jobManager.model.setItem('exec.jobs.info', jobInfo);
                         ctx.jobStatusTableInstance = await createStartedInstance(container, {
                             jobManager: ctx.jobManager,
                         });
@@ -595,27 +595,28 @@ define([
                         ctx.row = container.querySelector('tbody tr');
                         _checkRowStructure(ctx.row, ctx.job);
                     }
+
                     paramTests.forEach((test) => {
                         it(
-                            'initialises correctly using the job params: ' +
+                            'initialises correctly using the job info: ' +
                                 JSON.stringify(test.input),
                             async function () {
-                                const jobParams = {
-                                    job_update_test: test.input.job_params[0],
+                                const jobInfo = {
+                                    job_update_test: test.input,
                                 };
-                                await runParamUpdateTest(this, test, jobParams);
+                                await runParamUpdateTest(this, test, jobInfo);
                             }
                         );
 
                         // update to the retry parent info
                         it(
-                            'initialises correctly using the retry parent params: ' +
+                            'initialises correctly using the retry parent info: ' +
                                 JSON.stringify(test.input),
                             async function () {
-                                const jobParams = {
-                                    generic_retry_parent: test.input.job_params[0],
+                                const jobInfo = {
+                                    generic_retry_parent: test.input,
                                 };
-                                await runParamUpdateTest(this, test, jobParams);
+                                await runParamUpdateTest(this, test, jobInfo);
                             }
                         );
                     });
@@ -967,7 +968,7 @@ define([
                         container.append(indicator);
 
                         spyOn(this.jobManager, 'updateModel').and.callThrough();
-                        this.jobManager.addHandler('modelUpdate', {
+                        this.jobManager.addEventHandler('modelUpdate', {
                             zzz_table_update: function (_, args) {
                                 if (args[0].batch_job) {
                                     // for every batch job update, add a span element to the indicator div
@@ -1083,7 +1084,7 @@ define([
                             return Promise.resolve(index);
                         };
 
-                        const doUpdates = async function (startIndex, ctx) {
+                        const doUpdates = async (startIndex, ctx) => {
                             const ix = await updateTableLoop(startIndex, ctx);
                             if (ix < updates.length) {
                                 return doUpdates(ix, ctx);
@@ -1096,38 +1097,31 @@ define([
                 });
             });
 
-            describe('job params', () => {
+            describe('job info', () => {
                 paramTests.forEach((test) => {
                     describe('valid', () => {
                         beforeEach(async function () {
                             await createJobStatusTableWithContext(this, jobUpdateTestJob);
                         });
-                        it(
-                            'will update the params' + JSON.stringify(test.input),
-                            async function () {
-                                _checkRowStructure(this.row, this.job);
-                                // add in the correct jobId
-                                test.input.job_id = this.jobId;
-                                this.input = Object.assign(
-                                    {},
-                                    TestUtil.JSONcopy(this.job),
-                                    test.input
-                                );
-                                this.input.meta.paramsRegex = test.regex;
+                        it('will update the info ' + JSON.stringify(test.input), async function () {
+                            _checkRowStructure(this.row, this.job);
+                            // add in the correct jobId
+                            test.input.job_id = this.jobId;
+                            this.input = Object.assign({}, TestUtil.JSONcopy(this.job), test.input);
+                            this.input.meta.paramsRegex = test.regex;
 
-                                spyOn(this.jobManager, 'removeListener').and.callThrough();
-                                spyOn(this.jobManager, 'runHandler').and.callThrough();
-                                await TestUtil.waitForElementChange(this.row, () => {
-                                    updateInfo(this, test.input);
-                                });
-                                expect(this.jobManager.removeListener).toHaveBeenCalledTimes(1);
-                                expect(this.jobManager.removeListener.calls.allArgs()).toEqual([
-                                    [this.jobId, 'job-info'],
-                                ]);
-                                expect(this.jobManager.runHandler).toHaveBeenCalled();
-                                _checkRowStructure(this.row, this.job, this.input);
-                            }
-                        );
+                            spyOn(this.jobManager, 'removeListener').and.callThrough();
+                            spyOn(this.jobManager, 'runHandler').and.callThrough();
+                            await TestUtil.waitForElementChange(this.row, () => {
+                                updateInfo(this, test.input);
+                            });
+                            expect(this.jobManager.removeListener).toHaveBeenCalledTimes(1);
+                            expect(this.jobManager.removeListener.calls.allArgs()).toEqual([
+                                [this.jobId, 'job-info'],
+                            ]);
+                            expect(this.jobManager.runHandler).toHaveBeenCalled();
+                            _checkRowStructure(this.row, this.job, this.input);
+                        });
                     });
                 });
 
@@ -1221,7 +1215,7 @@ define([
                         this.indicatorDiv = document.createElement('div');
                         this.indicatorDiv.id = indicatorId;
                         this.container.append(this.indicatorDiv);
-                        this.jobManager.addHandler('job-info', {
+                        this.jobManager.addEventHandler('job-info', {
                             zzz_table_update: () => {
                                 this.indicatorDiv.textContent = 'BOOM!';
                             },
@@ -1230,7 +1224,7 @@ define([
 
                     paramTests.forEach((test) => {
                         it(
-                            'will update using the job params: ' + JSON.stringify(test.input),
+                            'will update using the job info: ' + JSON.stringify(test.input),
                             async function () {
                                 prepareForUpdate(this, test);
                                 await TestUtil.waitForElementChange(this.indicatorDiv, () => {
@@ -1250,7 +1244,7 @@ define([
 
                         // update to the retry parent info
                         it(
-                            'will update using the retry parent params: ' +
+                            'will update using the retry parent info: ' +
                                 JSON.stringify(test.input),
                             async function () {
                                 prepareForUpdate(this, test);

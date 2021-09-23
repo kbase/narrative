@@ -45,28 +45,24 @@ define([
                                 th(
                                     {
                                         class: `${cssBaseClass}__table_head_cell--import-type`,
-                                        style: 'width: 25%',
                                     },
                                     'Import type'
                                 ),
                                 th(
                                     {
                                         class: `${cssBaseClass}__table_head_cell--output`,
-                                        style: 'width: 50%',
                                     },
                                     'Output'
                                 ),
                                 th(
                                     {
                                         class: `${cssBaseClass}__table_head_cell--status`,
-                                        style: 'width: 10%',
                                     },
                                     'Status'
                                 ),
                                 th(
                                     {
                                         class: `${cssBaseClass}__table_head_cell--action`,
-                                        style: 'width: 15%',
                                     },
                                     'Action'
                                 ),
@@ -203,13 +199,14 @@ define([
             dataTable = $(container)
                 .find('table')
                 .dataTable({
+                    autoWidth: false,
                     data: Object.values(jobsByOriginalId),
                     rowId: (row) => {
                         return `job_${row.retry_parent || row.job_id}`;
                     },
-                    searching: false,
-                    pageLength: dataTablePageLength,
                     lengthChange: false,
+                    pageLength: dataTablePageLength,
+                    searching: false,
                     columns: [
                         {
                             className: `${cssBaseClass}__cell--import-type`,

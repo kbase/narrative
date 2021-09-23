@@ -5,8 +5,9 @@ define([
     'common/jobs',
     './jobActionDropdown',
     'util/jobLogViewer',
+    'util/appCellUtil',
     'jquery-dataTables',
-], ($, Promise, html, Jobs, JobActionDropdown, JobLogViewer) => {
+], ($, Promise, html, Jobs, JobActionDropdown, JobLogViewer, Util) => {
     'use strict';
 
     const t = html.tag,
@@ -28,6 +29,7 @@ define([
             {
                 class: `${cssBaseClass}__table`,
                 caption: 'Job Status',
+                style: 'width: 100%',
             },
             [
                 thead(
@@ -42,27 +44,31 @@ define([
                             [
                                 th(
                                     {
-                                        class: `${cssBaseClass}__table_head_cell--object`,
+                                        class: `${cssBaseClass}__table_head_cell--import-type`,
+                                        style: 'width: 25%',
                                     },
-                                    'Object'
+                                    'Import type'
+                                ),
+                                th(
+                                    {
+                                        class: `${cssBaseClass}__table_head_cell--output`,
+                                        style: 'width: 50%',
+                                    },
+                                    'Output'
                                 ),
                                 th(
                                     {
                                         class: `${cssBaseClass}__table_head_cell--status`,
+                                        style: 'width: 10%',
                                     },
                                     'Status'
                                 ),
                                 th(
                                     {
                                         class: `${cssBaseClass}__table_head_cell--action`,
+                                        style: 'width: 15%',
                                     },
                                     'Action'
-                                ),
-                                th(
-                                    {
-                                        class: `${cssBaseClass}__table_head_cell--log-view`,
-                                    },
-                                    'Status details'
                                 ),
                             ]
                         ),
@@ -75,9 +81,62 @@ define([
         );
     }
 
-    function renderParams(jobInfo) {
-        const params = jobInfo.job_params[0];
-        // coerce to a string
+    /**
+     * Compile the information required to display a job in the job status table
+     * @param {Object} args with keys
+     *      {Object} appData: specs and outputParamIds from the cell config
+     *      {Object} jobInfo: job data from the backend, including app ID and params
+     *      {Object} fileTypesDisplay: display text for each import type
+     *      {Object} typesToFiles: mapping of import type to app ID
+     * @returns
+     */
+
+    function generateJobDisplayData(args) {
+        const { appData, jobInfo, fileTypesDisplay, typesToFiles } = args;
+        let analysisType = '';
+        const params = {};
+        const outputParams = {};
+        Object.keys(typesToFiles).forEach((type) => {
+            if (typesToFiles[type].appId === jobInfo.app_id) {
+                analysisType = fileTypesDisplay.fileTypeMapping[type];
+                Object.keys(jobInfo.job_params[0]).forEach((param) => {
+                    const value = jobInfo.job_params[0][param];
+                    const label = appData.specs[jobInfo.app_id].parameters
+                        .filter((p) => {
+                            return param === p.id;
+                        })
+                        .map((p) => {
+                            return p.ui_name;
+                        })[0];
+                    params[param] = {
+                        value,
+                        label,
+                    };
+                });
+                const outputParamIds = appData.outputParamIds[type];
+                outputParamIds.forEach((param) => {
+                    outputParams[param] = params[param];
+                });
+            }
+        });
+
+        return {
+            analysisType,
+            outputParams,
+            params,
+        };
+    }
+
+    function displayAppType(typeName) {
+        return div(
+            {
+                class: `${cssBaseClass}__app_type`,
+            },
+            typeName
+        );
+    }
+
+    function displayParamList(params) {
         return ul(
             {
                 class: `${cssBaseClass}__param_list`,
@@ -94,13 +153,13 @@ define([
                                 {
                                     class: `${cssBaseClass}__param_key`,
                                 },
-                                `${key}: `
+                                `${params[key].label}: `
                             ),
                             span(
                                 {
                                     class: `${cssBaseClass}__param_value`,
                                 },
-                                `${params[key]}`
+                                `${params[key].value}`
                             ),
                         ]
                     );
@@ -122,7 +181,8 @@ define([
         const widgetsById = {},
             showHistory = true,
             { jobManager, toggleTab } = config,
-            jobsByRetryParent = {};
+            jobsByRetryParent = {},
+            fileTypesDisplay = Util.generateFileTypeMappings(config.typesToFiles);
 
         if (!jobManager.model || !jobManager.model.getItem('exec.jobs.byId')) {
             throw new Error('Cannot start JobStatusTable without a jobs object in the config');
@@ -152,17 +212,35 @@ define([
                     lengthChange: false,
                     columns: [
                         {
-                            className: `${cssBaseClass}__cell--object`,
+                            className: `${cssBaseClass}__cell--import-type`,
                             render: (data, type, row) => {
-                                const jobInfo = jobManager.model.getItem('exec.jobs.info') || {};
+                                const jobParams =
+                                    jobManager.model.getItem('exec.jobs.paramDisplayData') || {};
+                                const relevantJobId =
+                                    row.retry_parent && jobParams[row.retry_parent]
+                                        ? row.retry_parent
+                                        : row.job_id;
 
-                                if (row.retry_parent && jobInfo[row.retry_parent]) {
-                                    return renderParams(jobInfo[row.retry_parent]);
+                                if (jobParams[relevantJobId]) {
+                                    return displayAppType(jobParams[relevantJobId].analysisType);
                                 }
-                                if (jobInfo[row.job_id]) {
-                                    return renderParams(jobInfo[row.job_id]);
+                                return `Job ID: ${row.job_id}`;
+                            },
+                        },
+                        {
+                            className: `${cssBaseClass}__cell--output`,
+                            render: (data, type, row) => {
+                                const jobParams =
+                                    jobManager.model.getItem('exec.jobs.paramDisplayData') || {};
+                                const relevantJobId =
+                                    row.retry_parent && jobParams[row.retry_parent]
+                                        ? row.retry_parent
+                                        : row.job_id;
+
+                                if (jobParams[relevantJobId]) {
+                                    return displayParamList(jobParams[relevantJobId].outputParams);
                                 }
-                                return `${row.job_id}`;
+                                return '';
                             },
                         },
                         {
@@ -207,20 +285,6 @@ define([
                                     jobAction
                                 );
                             },
-                        },
-                        {
-                            className: `${cssBaseClass}__cell--log-view`,
-                            render: () => {
-                                return div(
-                                    {
-                                        class: `${cssBaseClass}__log_link`,
-                                        role: 'button',
-                                        dataToggle: 'vertical-collapse-after',
-                                    },
-                                    ['Status details']
-                                );
-                            },
-                            orderable: false,
                         },
                     ],
                     fnDrawCallback: () => {
@@ -416,9 +480,18 @@ define([
          * @param {object} message
          */
         function handleJobInfo(_, message) {
-            const { jobId } = message;
+            const { jobId, jobInfo } = message;
             const jobState = jobManager.model.getItem(`exec.jobs.byId.${jobId}`);
+            const appData = jobManager.model.getItem('app');
             const rowIx = jobState && jobState.retry_parent ? jobState.retry_parent : jobId;
+
+            const jobDisplayData = generateJobDisplayData({
+                jobInfo,
+                fileTypesDisplay,
+                appData,
+                typesToFiles: config.typesToFiles,
+            });
+            jobManager.model.setItem(`exec.jobs.paramDisplayData.${rowIx}`, jobDisplayData);
 
             // update the table
             dataTable.DataTable().row(`#job_${rowIx}`).invalidate().draw();
@@ -508,6 +581,7 @@ define([
         make: function (config) {
             return factory(config);
         },
+        generateJobDisplayData,
         cssBaseClass,
     };
 });

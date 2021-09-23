@@ -31,6 +31,7 @@ module.exports = function (config) {
                 'coverage',
             ],
             'kbase-extension/static/kbase/js/api/RestAPIClient.js': ['coverage'],
+            'nbextensions/appCell2/appCell.js': ['coverage'],
             'nbextensions/appCell2/widgets/tabs/*.js': ['coverage'],
             'nbextensions/bulkImportCell/**/*.js': ['coverage'],
             'nbextensions/codeCell/**/*.js': ['coverage'],

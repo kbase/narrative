@@ -17,14 +17,11 @@ define([
     'base/js/namespace',
     'bluebird',
     'common/runtime',
-    'common/clock',
     'common/error',
-    'kb_service/utils',
-    'kb_service/client/workspace',
     './appCell',
     'bootstrap',
     'custom/custom',
-], ($, Jupyter, Promise, Runtime, Clock, Error, serviceUtils, Workspace, AppCell) => {
+], ($, Jupyter, Promise, Runtime, Error, AppCell) => {
     'use strict';
     const runtime = Runtime.make();
 
@@ -112,13 +109,6 @@ define([
 
     // MAIN
     // module state instantiation
-
-    // TODO: move this to a another location!!
-    const clock = Clock.make({
-        bus: runtime.bus(),
-        resolution: 1000,
-    });
-    clock.start();
 
     function load() {
         /* Only initialize after the notebook is fully loaded. */

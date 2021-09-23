@@ -1,6 +1,7 @@
 define([
     'jquery',
     'bluebird',
+    'util/appCellUtil',
     'common/cellComponents/tabs/jobStatus/jobStatusTable',
     'common/jobs',
     'common/jobManager',
@@ -8,7 +9,18 @@ define([
     'common/runtime',
     'testUtil',
     '/test/data/jobsData',
-], ($, Promise, JobStatusTable, Jobs, JobManagerModule, Props, Runtime, TestUtil, JobsData) => {
+], (
+    $,
+    Promise,
+    AppCellUtil,
+    JobStatusTable,
+    Jobs,
+    JobManagerModule,
+    Props,
+    Runtime,
+    TestUtil,
+    JobsData
+) => {
     'use strict';
     const { JobManager } = JobManagerModule;
 
@@ -16,6 +28,85 @@ define([
     const allJobsWithBatchParent = JobsData.allJobsWithBatchParent;
     const allJobsNoBatchParent = JobsData.allJobs;
     const batchId = JobsData.batchParentJob.job_id;
+    const typesToFiles = {
+        assembly: {
+            appId: 'kb_uploadmethods/import_fasta_as_assembly_from_staging',
+            files: ['test_assembly.fa'],
+        },
+        fastq_reads_interleaved: {
+            appId: 'kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging',
+            files: ['small.forward.fq', 'small.reverse.fq'],
+        },
+        sra_reads: {
+            appId: 'kb_uploadmethods/import_sra_as_reads_from_staging',
+            files: ['SRR976988.1'],
+        },
+    };
+
+    const appData = {
+        outputParamIds: {
+            assembly: ['assembly_name'],
+            fastq_reads_interleaved: ['name'],
+            sra_reads: ['name'],
+        },
+        specs: {
+            'kb_uploadmethods/import_fasta_as_assembly_from_staging': {
+                parameters: [
+                    {
+                        id: 'staging_file_subdir_path',
+                        ui_name: 'FASTA file path',
+                    },
+                    {
+                        id: 'assembly_name',
+                        ui_name: 'Assembly object name',
+                    },
+                ],
+            },
+            'kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging': {
+                parameters: [
+                    {
+                        id: 'fastq_fwd_staging_file_name',
+                        ui_name: 'Forward/Left FASTQ File Path',
+                    },
+                    {
+                        id: 'name',
+                        ui_name: 'Reads Object Name',
+                    },
+                ],
+            },
+            'kb_uploadmethods/import_sra_as_reads_from_staging': {
+                parameters: [
+                    {
+                        id: 'sra_staging_file_name',
+                        ui_name: 'SRA File Path',
+                    },
+                    {
+                        id: 'name',
+                        ui_name: 'Reads Object Name',
+                    },
+                ],
+            },
+        },
+        tag: 'release',
+    };
+
+    const paramDisplayData = {
+        fastq_reads_interleaved: {
+            analysisType: 'FASTQ Reads Interleaved',
+            outputParams: { name: { value: 'some_old_file', label: 'Reads Object Name' } },
+            params: { name: { value: 'some_old_file', label: 'Reads Object Name' } },
+        },
+        assembly: {
+            analysisType: 'Assembly',
+            outputParams: {
+                assembly_name: { value: 'assembly_file.fa', label: 'Assembly object name' },
+            },
+            params: {
+                assembly_name: { value: 'assembly_file.fa', label: 'Assembly object name' },
+                staging_file_subdir_path: { value: '/path/to/dir', label: 'FASTA file path' },
+            },
+        },
+    };
 
     const paramTestsJobArray = [
             {
@@ -47,15 +138,26 @@ define([
         paramTests = [
             {
                 input: {
-                    job_params: [{ this: 'that' }],
+                    job_params: [{ name: 'some_old_file' }],
+                    app_id: 'kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging',
                 },
-                regex: /this: that/,
+                type: 'FASTQ Reads Interleaved',
+                object: /Reads Object Name: some_old_file/,
+                displayData: paramDisplayData.fastq_reads_interleaved,
             },
             {
                 input: {
-                    job_params: [{ tag_two: 'value two', tag_three: 'value three' }],
+                    app_id: 'kb_uploadmethods/import_fasta_as_assembly_from_staging',
+                    job_params: [
+                        {
+                            assembly_name: 'assembly_file.fa',
+                            staging_file_subdir_path: '/path/to/dir',
+                        },
+                    ],
                 },
-                regex: /tag_three: value three.*?tag_two: value two/ims,
+                type: 'Assembly',
+                object: /Assembly object name: assembly_file.fa/,
+                displayData: paramDisplayData.assembly,
             },
         ],
         jobUpdateTestJob = {
@@ -71,13 +173,16 @@ define([
 
     function makeModel(jobs) {
         const tempModel = Props.make({
-            data: {},
+            data: {
+                app: appData,
+            },
         });
         Jobs.populateModelFromJobArray(tempModel, jobs);
         return tempModel;
     }
 
     function createInstance(config = {}) {
+        // add in typesToFiles
         return JobStatusTable.make(
             Object.assign(
                 {},
@@ -86,6 +191,7 @@ define([
                         model: makeModel(allJobsWithBatchParent),
                         bus: Runtime.make().bus(),
                     }),
+                    typesToFiles,
                 },
                 config
             )
@@ -165,17 +271,21 @@ define([
         // row ID: may be specified in job.meta.row_id, e.g. if the job is a retry
         expect(row.id).toEqual(`job_${job.meta && job.meta.row_id ? job.meta.row_id : job.job_id}`);
 
-        // status details cell
-        const logViewEl = row.querySelector(`.${cssBaseClass}__cell--log-view`);
-        expect(logViewEl.textContent).toContain('Status details');
+        // type
+        const typeEl = row.querySelector(`.${cssBaseClass}__cell--import-type`);
+        if (input.meta.type) {
+            expect(typeEl.textContent).toMatch(input.meta.type);
+        } else {
+            expect(typeEl.textContent).toContain(input.job_id);
+        }
 
-        // object name
-        const objectEl = row.querySelector(`.${cssBaseClass}__cell--object`);
-        if (input.meta.paramsRegex) {
-            expect(objectEl.textContent).toMatch(input.meta.paramsRegex);
+        // output object name
+        const outputEl = row.querySelector(`.${cssBaseClass}__cell--output`);
+        if (input.meta.object) {
+            expect(outputEl.textContent).toMatch(input.meta.object);
         } else {
             // for a retried job, this should be input.job_id
-            expect(objectEl.textContent).toContain(input.job_id);
+            expect(outputEl.textContent).toEqual('');
         }
 
         // action
@@ -291,6 +401,24 @@ define([
         it('has a cssBaseClass variable', () => {
             expect(JobStatusTable.cssBaseClass).toEqual(jasmine.any(String));
             expect(JobStatusTable.cssBaseClass).toContain('kb-job-status');
+        });
+
+        describe('function generateJobDisplayData', () => {
+            it('exists and is a function', () => {
+                expect(JobStatusTable.generateJobDisplayData).toEqual(jasmine.any(Function));
+            });
+            it('can pull out the relevant info for displaying a job in a table', () => {
+                const fileTypesDisplay = AppCellUtil.generateFileTypeMappings(typesToFiles);
+                paramTests.forEach((test) => {
+                    const result = JobStatusTable.generateJobDisplayData({
+                        jobInfo: test.input,
+                        appData,
+                        fileTypesDisplay,
+                        typesToFiles,
+                    });
+                    expect(result).toEqual(test.displayData);
+                });
+            });
         });
     });
 
@@ -477,8 +605,8 @@ define([
 
                 const tableHeadCells = {
                     action: 'Action',
-                    'log-view': 'Status details',
-                    object: 'Object',
+                    'import-type': 'Import type',
+                    output: 'Output',
                     status: 'Status',
                 };
                 Object.keys(tableHeadCells).forEach((key) => {
@@ -587,11 +715,13 @@ define([
 
                     async function runParamUpdateTest(ctx, test, jobInfo) {
                         // add the job info
-                        ctx.jobManager.model.setItem('exec.jobs.info', jobInfo);
+                        ctx.jobManager.model.setItem('exec.jobs.paramDisplayData', jobInfo);
                         ctx.jobStatusTableInstance = await createStartedInstance(container, {
                             jobManager: ctx.jobManager,
                         });
-                        ctx.job.meta.paramsRegex = test.regex;
+                        ['type', 'object'].forEach((el) => {
+                            ctx.job.meta[el] = test[el];
+                        });
                         ctx.row = container.querySelector('tbody tr');
                         _checkRowStructure(ctx.row, ctx.job);
                     }
@@ -602,7 +732,7 @@ define([
                                 JSON.stringify(test.input),
                             async function () {
                                 const jobInfo = {
-                                    job_update_test: test.input,
+                                    job_update_test: test.displayData,
                                 };
                                 await runParamUpdateTest(this, test, jobInfo);
                             }
@@ -614,7 +744,7 @@ define([
                                 JSON.stringify(test.input),
                             async function () {
                                 const jobInfo = {
-                                    generic_retry_parent: test.input,
+                                    generic_retry_parent: test.displayData,
                                 };
                                 await runParamUpdateTest(this, test, jobInfo);
                             }
@@ -1108,7 +1238,8 @@ define([
                             // add in the correct jobId
                             test.input.job_id = this.jobId;
                             this.input = Object.assign({}, TestUtil.JSONcopy(this.job), test.input);
-                            this.input.meta.paramsRegex = test.regex;
+                            this.input.meta.type = test.type;
+                            this.input.meta.object = test.object;
 
                             spyOn(this.jobManager, 'removeListener').and.callThrough();
                             spyOn(this.jobManager, 'runHandler').and.callThrough();
@@ -1187,7 +1318,8 @@ define([
                         // add in the correct jobId
                         test.input.job_id = ctx.jobId;
                         ctx.input = Object.assign({}, TestUtil.JSONcopy(ctx.job), test.input);
-                        ctx.input.meta.paramsRegex = test.regex;
+                        ctx.input.meta.type = test.type;
+                        ctx.input.meta.object = test.object;
 
                         spyOn(ctx.jobManager, 'removeListener').and.callThrough();
                         spyOn(ctx.jobManager, 'runHandler').and.callThrough();

@@ -5,7 +5,6 @@ define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
         'job-does-not-exist',
         'job-error',
         'job-info',
-        'job-log-deleted',
         'job-logs',
         'job-retry-response',
         'job-status',
@@ -79,9 +78,9 @@ define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
          * @param {object} handlerObject with the handler name as keys and the handler function as values
          */
 
-        addHandler(event, handlerObject) {
+        addEventHandler(event, handlerObject) {
             if (!this._isValidEvent(event)) {
-                throw new Error(`addHandler: invalid event ${event} supplied`);
+                throw new Error(`addEventHandler: invalid event ${event} supplied`);
             }
 
             if (
@@ -90,7 +89,7 @@ define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
                 Object.keys(handlerObject).length === 0
             ) {
                 throw new Error(
-                    'addHandler: invalid handlerObject supplied (must be of type object)'
+                    'addEventHandler: invalid handlerObject supplied (must be of type object)'
                 );
             }
 
@@ -118,12 +117,13 @@ define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
         }
 
         /**
-         * Remove a handler
+         * Remove a handler from an event
          *
          * @param {string} event
          * @param {string} handlerName
+         * @returns {function} handlerFunction
          */
-        removeHandler(event, handlerName) {
+        removeEventHandler(event, handlerName) {
             if (this.handlers[event]) {
                 const handlerFunction = this.handlers[event][handlerName];
                 delete this.handlers[event][handlerName];
@@ -132,7 +132,7 @@ define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
         }
 
         /**
-         * Trigger the ${event} handlers. Handlers are executed alphabetically by name.
+         * Trigger the ${event} handlers. Event handlers are executed alphabetically by name.
          *
          * By default, the handler functions receive the jobManager context as
          * first argument and any additional arguments passed in by the caller
@@ -208,7 +208,7 @@ define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
 
             // add the handler -- the message type is used as the event
             if (handlerObject) {
-                this.addHandler(type, handlerObject);
+                this.addEventHandler(type, handlerObject);
             }
         }
 
@@ -348,7 +348,7 @@ define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
                 };
 
                 Object.keys(defaultHandlers).forEach((event) => {
-                    this.addHandler(event, {
+                    this.addEventHandler(event, {
                         __default: defaultHandlers[event],
                     });
                 }, this);
@@ -364,7 +364,7 @@ define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
                 if (error) {
                     return;
                 }
-                self.model.setItem(`exec.jobs.params.${jobInfo.job_id}`, jobInfo.job_params[0]);
+                self.model.setItem(`exec.jobs.info.${jobInfo.job_id}`, jobInfo);
                 self.removeListener(jobInfo.job_id, 'job-info');
             }
 
@@ -436,18 +436,7 @@ define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
                     if (missingJobIds.length) {
                         self.addListener('job-status', missingJobIds);
                         self.addListener('job-info', missingJobIds);
-                        // until we can submit multiple IDs to job-updates-start
-                        // self.bus.emit('request-job-updates-start', {
-                        //     jobIdList: missingJobIds,
-                        // });
-                        missingJobIds.forEach((id) => {
-                            self.bus.emit('request-job-updates-start', {
-                                jobId: id,
-                            });
-                        });
-                        // this can be deleted once the narrative BE responds to `request-job-updates-start`
-                        // by sending back the most recent job statuses
-                        self.bus.emit('request-job-status', {
+                        self.bus.emit('request-job-updates-start', {
                             jobIdList: missingJobIds,
                         });
                     }
@@ -608,27 +597,22 @@ define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
              */
             resetJobs() {
                 const allJobs = this.model.getItem('exec.jobs.byId'),
-                    parentJob = this.model.getItem('exec.jobState');
+                    batchJob = this.model.getItem('exec.jobState');
                 if (!allJobs || !Object.keys(allJobs).length) {
                     this.model.deleteItem('exec');
                     return;
                 }
 
-                if (parentJob && !allJobs[parentJob.job_id]) {
-                    allJobs[parentJob.job_id] = parentJob;
+                if (batchJob && !allJobs[batchJob.job_id]) {
+                    allJobs[batchJob.job_id] = batchJob;
                 }
 
-                // TODO: enable once backend can accept jobIdList / batchId
-                // this.bus.emit('request-job-updates-stop', {
-                //     batchId: parentJob.job_id,
-                // })
+                this.bus.emit('request-job-updates-stop', {
+                    batchId: batchJob.job_id,
+                });
 
                 // ensure that job updates are turned off and listeners removed
                 Object.keys(allJobs).forEach((jobId) => {
-                    // TODO: remove once backend accepts jobIdList / batchId
-                    this.bus.emit('request-job-updates-stop', {
-                        jobId,
-                    });
                     this.removeJobListeners(jobId);
                 });
 
@@ -690,24 +674,8 @@ define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
 
                 this.addListener('job-status', allJobIds);
                 this.addListener('job-does-not-exist', allJobIds);
-
                 // request job updates
-                // this.bus.emit('request-job-updates-start', { batchId });
-                // TODO: this can be removed and the line above
-                // uncommented once the narrative backend changes
-                // are in place
-                if (!allJobIds.includes(batchId)) {
-                    allJobIds.push(batchId);
-                }
-                allJobIds.forEach((jobId) => {
-                    this.bus.emit('request-job-updates-start', {
-                        jobId,
-                    });
-                });
-                // can be deleted once `request-job-updates-start` responds with current job state
-                this.bus.emit('request-job-status', {
-                    batchId,
-                });
+                this.bus.emit('request-job-updates-start', { batchId });
             }
 
             restoreFromSaved() {
@@ -720,6 +688,7 @@ define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
                     batchId: batchJob.job_id,
                     allJobIds: Object.keys(allJobs),
                 });
+                return this.getFsmStateFromJobs();
             }
 
             /**

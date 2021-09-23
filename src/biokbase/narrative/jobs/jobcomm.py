@@ -9,7 +9,7 @@ from biokbase.narrative.common import kblogging
 UNKNOWN_REASON = "Unknown reason"
 NO_JOB_ERR = "No valid job ids"
 
-LOOKUP_TIMER_INTERVAL = 10
+LOOKUP_TIMER_INTERVAL = 5
 
 
 class JobRequest:

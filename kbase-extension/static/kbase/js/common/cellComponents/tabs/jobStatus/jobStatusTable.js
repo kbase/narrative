@@ -3,11 +3,10 @@ define([
     'bluebird',
     'common/html',
     'common/jobs',
-    'common/runtime',
     './jobActionDropdown',
     'util/jobLogViewer',
     'jquery-dataTables',
-], ($, Promise, html, Jobs, Runtime, JobActionDropdown, JobLogViewer) => {
+], ($, Promise, html, Jobs, JobActionDropdown, JobLogViewer) => {
     'use strict';
 
     const t = html.tag,
@@ -76,7 +75,8 @@ define([
         );
     }
 
-    function renderParams(params) {
+    function renderParams(jobInfo) {
+        const params = jobInfo.job_params[0];
         // coerce to a string
         return ul(
             {
@@ -120,7 +120,7 @@ define([
      */
     function factory(config) {
         const widgetsById = {},
-            bus = Runtime.make().bus(),
+            showHistory = true,
             { jobManager, toggleTab } = config,
             jobsByRetryParent = {};
 
@@ -154,15 +154,15 @@ define([
                         {
                             className: `${cssBaseClass}__cell--object`,
                             render: (data, type, row) => {
-                                const params = jobManager.model.getItem('exec.jobs.params') || {};
+                                const jobInfo = jobManager.model.getItem('exec.jobs.info') || {};
 
-                                if (row.retry_parent && params[row.retry_parent]) {
-                                    return renderParams(params[row.retry_parent]);
+                                if (row.retry_parent && jobInfo[row.retry_parent]) {
+                                    return renderParams(jobInfo[row.retry_parent]);
                                 }
-                                if (params[row.job_id]) {
-                                    return renderParams(params[row.job_id]);
+                                if (jobInfo[row.job_id]) {
+                                    return renderParams(jobInfo[row.job_id]);
                                 }
-                                return row.job_id;
+                                return `${row.job_id}`;
                             },
                         },
                         {
@@ -272,7 +272,7 @@ define([
             dtRow.child(str).show();
 
             // add the log widget to the next `tr` element
-            widgetsById[jobState.job_id] = JobLogViewer.make({ jobManager, showHistory: true });
+            widgetsById[jobState.job_id] = JobLogViewer.make({ jobManager, showHistory });
             return Promise.try(() => {
                 widgetsById[jobState.job_id].start({
                     node: $currentRow.next().find('[data-element="job-log-container"]')[0],
@@ -323,13 +323,23 @@ define([
                 return false;
             }
             jobManager.doJobAction(action, [target]);
+
+            // if the job is being retried and the log viewer is open, close it
+            // TODO: a better fix!
+            if (
+                action === 'retry' &&
+                $(e.target).closest('tr')[0].classList.contains('vertical_collapse--open')
+            ) {
+                showHideChildRow(e);
+            }
+
             // disable the button to prevent further clicks
             e.target.disabled = true;
             return true;
         }
 
         function setUpListeners(jobs) {
-            jobManager.addHandler('modelUpdate', {
+            jobManager.addEventHandler('modelUpdate', {
                 dropdown: () => {
                     dropdownWidget.updateState();
                 },
@@ -345,7 +355,7 @@ define([
                 if (!jobState.batch_job) {
                     jobIdList.push(jobState.job_id);
                     if (
-                        !jobManager.model.getItem(`exec.jobs.params.${jobState.job_id}`) &&
+                        !jobManager.model.getItem(`exec.jobs.info.${jobState.job_id}`) &&
                         jobState.job_id !== batchId
                     ) {
                         paramsRequired.push(jobState.job_id);
@@ -362,9 +372,9 @@ define([
                     paramsRequired.length === jobIdList.length
                         ? { batchId }
                         : { jobIdList: paramsRequired };
-                bus.emit('request-job-info', jobInfoRequestParams);
+                jobManager.bus.emit('request-job-info', jobInfoRequestParams);
             }
-            bus.emit('request-job-status', { batchId });
+            jobManager.bus.emit('request-job-status', { batchId });
         }
 
         /**
@@ -386,12 +396,14 @@ define([
             const sortedJobs = Object.keys(jobsByRetryParent[rowIx].jobs).sort();
             const lastJob = sortedJobs[sortedJobs.length - 1];
             const jobUpdateData = jobsByRetryParent[rowIx].jobs[lastJob];
-            // irrelevant update
+            // irrelevant update -- data is not for the most recent retry
             if (jobUpdateData.job_id !== jobState.job_id) {
                 return;
             }
+
             // select the appropriate row
             try {
+                // update the row
                 dataTable.DataTable().row(`#job_${rowIx}`).data(jobState);
             } catch (e) {
                 console.error('Error trying to update jobs table:', e);
@@ -434,8 +446,14 @@ define([
             container = args.node;
             container.innerHTML = [
                 div({
-                    class: `${cssBaseClass}__dropdown_container`,
+                    class: `${cssBaseClass}__dropdown_container pull-right`,
                 }),
+                div(
+                    {
+                        class: `${cssBaseClass}__table_instructions`,
+                    },
+                    'Click on a row to view the job details and logs.'
+                ),
                 createTable(),
             ].join('\n');
 
@@ -474,10 +492,9 @@ define([
 
         function stop() {
             Object.values(widgetsById).map((widget) => widget.stop());
-            jobManager.removeHandler('modelUpdate', 'table');
-            jobManager.removeHandler('modelUpdate', 'dropdown');
-            jobManager.removeHandler('job-info', 'jobStatusTable_info');
-
+            jobManager.removeEventHandler('modelUpdate', 'table');
+            jobManager.removeEventHandler('modelUpdate', 'dropdown');
+            jobManager.removeEventHandler('job-info', 'jobStatusTable_info');
             return dropdownWidget.stop();
         }
 

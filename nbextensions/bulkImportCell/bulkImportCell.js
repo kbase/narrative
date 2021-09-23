@@ -614,7 +614,7 @@ define([
             cell.metadata = meta;
             render()
                 .then(() => {
-                    jobManager.addHandler('modelUpdate', {
+                    jobManager.addEventHandler('modelUpdate', {
                         execMessage: (jobManagerContext) => {
                             // Update the execMessage panel with details of the active jobs
                             controlPanel.setExecMessage(

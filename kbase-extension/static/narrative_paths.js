@@ -126,6 +126,7 @@ require.config({
         kbaseNarrativeSidePanel: 'kbase/js/widgets/narrative_core/kbaseNarrativeSidePanel',
         kbaseNarrativeAppPanel: 'kbase/js/widgets/narrative_core/kbaseNarrativeAppPanel',
         kbaseNarrativeManagePanel: 'kbase/js/widgets/narrative_core/kbaseNarrativeManagePanel',
+        kbaseNarrativeOutlinePanel: 'kbase/js/widgets/narrative_core/kbaseNarrativeOutlinePanel',
         kbaseNarrativeDownloadPanel: 'kbase/js/widgets/narrative_core/kbaseNarrativeDownloadPanel',
         kbaseNarrativeSharePanel: 'kbase/js/widgets/narrative_core/kbaseNarrativeSharePanel',
         kbaseNarrativeExampleDataTab:

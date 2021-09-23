@@ -6,6 +6,7 @@ This is built on the Jupyter Notebook v6.0.2 (more notes will follow).
 
 ### Version 4.5.1
 - Python dependency updates
+  - pillow 8.3.1 -> 8.3.2
   - plotly 5.1.0 -> 5.3.1
   - pygments 2.9.0 -> 2.10.0
   - pytest 6.2.4 -> 6.2.5

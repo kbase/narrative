@@ -1,5 +1,5 @@
 define([
-    '../../../../../../narrative/nbextensions/bulkImportCell/bulkImportCell',
+    '/narrative/nbextensions/bulkImportCell/bulkImportCell',
     'base/js/namespace',
     'common/dialogMessages',
     'common/runtime',
@@ -62,7 +62,7 @@ define([
         });
     }
 
-    describe('The bulk import cell module', () => {
+    xdescribe('The bulk import cell module', () => {
         let runtime;
         beforeAll(() => {
             Jupyter.narrative = {
@@ -234,7 +234,7 @@ define([
             });
         });
 
-        xdescribe('state changes', () => {
+        describe('state changes', () => {
             [
                 {
                     msgEvent: 'error',
@@ -394,7 +394,7 @@ define([
             });
         });
 
-        xdescribe('cancel', () => {
+        describe('cancel', () => {
             ['launching', 'inProgress', 'inProgressResultsAvailable'].forEach((testCase) => {
                 it(`should cancel the ${testCase} state and return to a previous state`, () => {
                     // init cell with the test case state and jobs (they're all run-related)

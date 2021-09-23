@@ -9,7 +9,7 @@ from biokbase.narrative.common import kblogging
 UNKNOWN_REASON = "Unknown reason"
 NO_JOB_ERR = "No valid job ids"
 
-LOOKUP_TIMER_INTERVAL = 10
+LOOKUP_TIMER_INTERVAL = 5
 
 
 class JobRequest:
@@ -144,9 +144,6 @@ class JobComm:
     * all_status - return job state for all jobs in this Narrative.
     * job_status - return the job state for a single job (requires a job_id)
     * job_info - return basic job info for a single job (requires a job_id)
-    * start_update_loop - starts a looping thread that runs returns all job info
-        for running jobs
-    * stop_update_loop - stops the automatic update loop
     * start_job_update - tells the update loop to include a job when updating (requires a job_id)
     * stop_job_update - has the update loop not include a job when updating (requires a job_id)
     * cancel_job - cancels a running job, if it hasn't otherwise terminated (requires a job_id)
@@ -186,8 +183,6 @@ class JobComm:
                 "job_status_batch": self._lookup_job_states_batch,
                 "job_info": self._lookup_job_info,
                 "job_info_batch": self._lookup_job_info_batch,
-                "start_update_loop": self.start_job_status_loop,
-                "stop_update_loop": self.stop_job_status_loop,
                 "start_job_update": self._modify_job_updates,
                 "stop_job_update": self._modify_job_updates,
                 "start_job_update_batch": self._modify_job_updates_batch,
@@ -214,19 +209,22 @@ class JobComm:
             )
             raise NoJobException("No valid job ids")
 
-    def start_job_status_loop(self, *args, **kwargs) -> None:
+    def start_job_status_loop(
+        self,
+        init_jobs: bool = False,
+        cell_list: List[str] = None,
+    ) -> None:
         """
-        Starts the job status lookup loop. This runs every 10 seconds.
-        This has the bare *args and **kwargs to handle the case where this comes in as a job
-        channel request (gets a JobRequest arg), or has the "init_jobs" kwarg.
+        Starts the job status lookup loop. This runs every LOOKUP_TIMER_INTERVAL seconds.
 
-        If init_jobs=True, this attempts to reinitialize the JobManager's list of known jobs
-        from the workspace.
+        :param init_jobs: If init_jobs=True, this attempts to (re-)initialize
+            the JobManager's list of known jobs from the workspace.
+        :param cell_list: from FE, the list of extant cell IDs
         """
         self._running_lookup_loop = True
-        if kwargs.get("init_jobs", False):
+        if init_jobs:
             try:
-                self._jm.initialize_jobs()
+                self._jm.initialize_jobs(cell_list)
             except Exception as e:
                 error = {
                     "error": "Unable to get initial jobs list",
@@ -255,7 +253,7 @@ class JobComm:
         Run a loop that will look up job info. After running, this spawns a Timer thread on
         a loop to run itself again. LOOKUP_TIMER_INTERVAL sets the frequency at which the loop runs.
         """
-        all_job_states = self._lookup_all_job_states(None)
+        all_job_states = self._lookup_all_job_states()
         if len(all_job_states) == 0 or not self._running_lookup_loop:
             self.stop_job_status_loop()
         else:
@@ -264,7 +262,7 @@ class JobComm:
             )
             self._lookup_timer.start()
 
-    def _lookup_all_job_states(self, req: JobRequest) -> dict:
+    def _lookup_all_job_states(self, req: JobRequest = None) -> dict:
         """
         Fetches status of all jobs in the current workspace and sends them to the front end.
         req can be None, as it's not used.
@@ -297,7 +295,7 @@ class JobComm:
         self._verify_job_id(req)
         try:
             job_ids = self._jm.update_batch_job(req.job_id)
-            job_info_batch = self._jm.lookup_job_info(job_ids[1:])
+            job_info_batch = self._jm.lookup_job_info(job_ids)
         except NoJobException:
             self.send_error_message("job_does_not_exist", req)
             raise

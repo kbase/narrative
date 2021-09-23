@@ -23,7 +23,7 @@ define([
     'kb_common/html',
     'common/runtime',
     'common/parameterSpec',
-    'common/utils',
+    'common/cellUtils',
     'common/clock',
     'common/dom',
     'util/icon',

@@ -1,6 +1,7 @@
 import unittest
 from unittest import mock
 import os
+import itertools
 
 from biokbase.narrative.jobs.job import get_dne_job_state, JOB_ATTR_DEFAULTS
 import biokbase.narrative.jobs.jobcomm
@@ -34,41 +35,20 @@ from .test_job import (
     BATCH_RETRY_ERROR,
     ALL_JOBS,
     JOBS_TERMINALITY,
-    FINISHED_JOBS,
+    TERMINAL_JOBS,
     ACTIVE_JOBS,
     BATCH_CHILDREN,
     get_test_job,
     get_test_spec,
     TEST_SPECS,
     get_test_job_states,
+    get_cell_2_jobs,
 )
+from .test_jobmanager import get_test_job_info, get_test_job_infos
 
 
 APP_NAME = "The Best App in the World"
-
-
-def get_test_job_infos(job_ids):
-    return {job_id: get_test_job_info(job_id) for job_id in job_ids}
-
-
-def get_test_job_info(job_id):
-    test_job = get_test_job(job_id)
-    app_id = test_job.get("job_input", {}).get("app_id", None)
-    tag = (
-        test_job.get("job_input", {})
-        .get("narrative_cell_info", {})
-        .get("tag", "release")
-    )
-    test_spec = get_test_spec(tag, app_id)
-    params = test_job.get("job_input", {}).get("params", {})
-    batch_id = test_job.get("batch_id", JOB_ATTR_DEFAULTS["batch_id"])
-    return {
-        "app_id": app_id,
-        "app_name": test_spec["info"]["name"],
-        "job_id": job_id,
-        "job_params": params,
-        "batch_id": batch_id,
-    }
+EXP_ALL_STATE_IDS = ALL_JOBS   # or ACTIVE_JOBS
 
 
 def make_comm_msg(
@@ -162,6 +142,9 @@ class JobCommTestCase(unittest.TestCase):
         )
         self.jc._comm.clear_message_cache()
 
+    # ---------------------
+    # Start job status loop
+    # ---------------------
     @mock.patch(
         "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get", get_mock_client
     )
@@ -171,7 +154,13 @@ class JobCommTestCase(unittest.TestCase):
 
         self.jc.start_job_status_loop()
         msg = self.jc._comm.last_message
-        self.assertIsNotNone(msg)
+        self.assertEqual(
+            {
+                "msg_type": "job_status_all",
+                "content": get_test_job_states(EXP_ALL_STATE_IDS)
+            },
+            msg["data"]
+        )
         self.assertTrue(self.jc._running_lookup_loop)
         self.assertIsNotNone(self.jc._lookup_timer)
 
@@ -179,24 +168,62 @@ class JobCommTestCase(unittest.TestCase):
         self.assertFalse(self.jc._running_lookup_loop)
         self.assertIsNone(self.jc._lookup_timer)
 
+    @mock.patch(
+        "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get", get_mock_client
+    )
+    def test_start_job_status_loop__cell_ids(self):
+        cell_2_jobs = get_cell_2_jobs()
+        cell_ids = list(cell_2_jobs.keys())
+        # Iterate through all combinations of cell IDs
+        for combo_len in range(len(cell_ids) + 1):
+            for combo in itertools.combinations(cell_ids, combo_len):
+                combo = list(combo)
+
+                self.jm._running_jobs = {}
+                self.assertFalse(self.jc._running_lookup_loop)
+                self.assertIsNone(self.jc._lookup_timer)
+
+                self.jc.start_job_status_loop(init_jobs=True, cell_list=combo)
+                msg = self.jc._comm.last_message
+                self.assertEqual(
+                    {
+                        "msg_type": "job_status_all",
+                        "content": get_test_job_states(EXP_ALL_STATE_IDS)  # consult version history for when this was exp_job_ids
+                    },
+                    msg["data"]
+                )
+
+                self.assertTrue(self.jc._running_lookup_loop)
+                self.assertTrue(self.jc._lookup_timer)
+
+                self.jc.stop_job_status_loop()
+                self.assertFalse(self.jc._running_lookup_loop)
+                self.assertIsNone(self.jc._lookup_timer)
+
     # ---------------------
     # Lookup all job states
     # ---------------------
     @mock.patch(
         "biokbase.narrative.jobs.jobcomm.jobmanager.clients.get", get_mock_client
     )
-    def test_lookup_all_job_states_ok(self):
+    def test_lookup_all_job_states__ok(self):
         req = make_comm_msg("all_status", None, True)
         states = self.jc._lookup_all_job_states(req)
         msg = self.jc._comm.last_message
-        self.assertEqual(states, msg["data"]["content"])
-        self.assertEqual("job_status_all", msg["data"]["msg_type"])
-        self.assertIsInstance(states, dict)
-        self.assertEqual(set(states.keys()), set(ALL_JOBS))
-        for job_id in states:
+        self.assertEqual(
+            {
+                "msg_type": "job_status_all",
+                "content": get_test_job_states(EXP_ALL_STATE_IDS)
+            },
+            msg["data"]
+        )
+        for job_id, state in states.items():
             self.assertIsInstance(job_id, str)
-            validate_job_state(states[job_id])
+            validate_job_state(state)
 
+    # -----------------------
+    # Lookup single job state
+    # -----------------------
     def test_lookup_job_state__1_ok(self):
         output_states = self.jc.lookup_job_state(JOB_COMPLETED)
         msg = self.jc._comm.last_message
@@ -211,14 +238,14 @@ class JobCommTestCase(unittest.TestCase):
             self.assertEqual(self.job_states[job_id], state)
             validate_job_state(state)
 
-    def test_lookup_job_states__no_job(self):
+    def test_lookup_job_state__no_job(self):
         with self.assertRaisesRegex(NoJobException, NO_JOB_ERR):
             self.jc.lookup_job_state(None)
         msg = self.jc._comm.last_message
-        self.check_no_input_error_job_id(msg, None, "job_status")
+        self.check_no_input_error_job_id_list(msg, [], "job_status")
 
     # -----------------------
-    # Lookup single job state
+    # Lookup select job states
     # -----------------------
     def test_lookup_job_states__1_ok(self):
         job_id_list = [JOB_COMPLETED]
@@ -333,21 +360,8 @@ class JobCommTestCase(unittest.TestCase):
     # Lookup job info
     # -----------------------
     def test_lookup_job_info__ok(self):
-        job_id_list = [JOB_COMPLETED]
+        job_id_list = ALL_JOBS
         req = make_comm_msg("job_info", job_id_list, True)
-        self.jc._lookup_job_info(req)
-        msg = self.jc._comm.last_message
-        self.assertEqual(
-            {
-                "msg_type": "job_info",
-                "content": get_test_job_infos(job_id_list),
-            },
-            msg["data"],
-        )
-
-    def test_lookup_job_info__batch__ok(self):
-        job_id_list = [BATCH_ERROR_RETRIED, BATCH_RETRY_COMPLETED]
-        req = make_comm_msg("job_info", job_id_list + [BATCH_PARENT], True)
         self.jc._lookup_job_info(req)
         msg = self.jc._comm.last_message
         self.assertEqual(
@@ -396,9 +410,7 @@ class JobCommTestCase(unittest.TestCase):
         self.assertEqual(
             {
                 "msg_type": "job_info",
-                "content": {
-                    job_id: get_test_job_info(job_id) for job_id in BATCH_CHILDREN
-                },
+                "content": get_test_job_infos([BATCH_PARENT] + BATCH_CHILDREN),
             },
             msg["data"],
         )
@@ -996,9 +1008,7 @@ class JobCommTestCase(unittest.TestCase):
         self.assertEqual(
             {
                 "msg_type": "job_info",
-                "content": {
-                    job_id: get_test_job_info(job_id) for job_id in BATCH_CHILDREN
-                },
+                "content": get_test_job_infos([BATCH_PARENT] + BATCH_CHILDREN),
             },
             msg["data"],
         )

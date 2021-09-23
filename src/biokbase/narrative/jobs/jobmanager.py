@@ -1,7 +1,6 @@
 import biokbase.narrative.clients as clients
 from .job import (
     Job,
-    TERMINAL_STATUSES,
     EXCLUDED_JOB_STATE_FIELDS,
     JOB_INIT_EXCLUDED_JOB_STATE_FIELDS,
     get_dne_job_state,
@@ -64,7 +63,7 @@ class JobManager(object):
 
         return states
 
-    def initialize_jobs(self):
+    def initialize_jobs(self, cell_ids: List[str] = None) -> None:
         """
         Initializes this JobManager.
         This is expected to be run by a running Narrative, and naturally linked to a workspace.
@@ -94,17 +93,22 @@ class JobManager(object):
         job_states = self._reorder_parents_children(job_states)
 
         for job_state in job_states.values():
-            child_jobs = []
+            child_jobs = None
             if job_state.get("batch_job"):
                 child_jobs = [
                     self.get_job(child_id)
                     for child_id in job_state.get("child_jobs", [])
                 ]
 
-            self.register_new_job(
-                job=Job(job_state, children=child_jobs),
-                refresh=int(job_state.get("status") not in TERMINAL_STATUSES),
-            )
+            job = Job(job_state, children=child_jobs)
+
+            # Set to refresh when job is not in terminal state
+            # and when job is present in cells (if given)
+            refresh = not job.was_terminal()
+            if cell_ids is not None:
+                refresh = refresh and job.in_cells(cell_ids)
+
+            self.register_new_job(job, int(refresh))
 
     def _create_jobs(self, job_ids) -> dict:
         """
@@ -245,7 +249,7 @@ class JobManager(object):
         # These are already post-processed and ready to return.
         for job_id in job_ids:
             job = self.get_job(job_id)
-            if job.was_terminal:
+            if job.was_terminal():
                 job_states[job_id] = job.output_state()
             elif states and job_id in states:
                 state = states[job_id]
@@ -275,7 +279,6 @@ class JobManager(object):
 
     def lookup_job_info(self, job_ids: List[str]) -> dict:
         """
-        Will raise a NoJobException if job_id doesn't exist.
         Sends the info over the comm channel as these packets:
         {
             app_id: module/name,
@@ -284,20 +287,20 @@ class JobManager(object):
             job_params: dictionary,
             batch_id: string,
         }
+        Will set packet to "does_not_exist" if job_id doesn't exist.
         """
         job_ids, error_ids = self._check_job_list(job_ids)
 
         infos = dict()
         for job_id in job_ids:
             job = self.get_job(job_id)
-            if not job.batch_job:
-                infos[job_id] = {
-                    "app_id": job.app_id,
-                    "app_name": job.app_spec()["info"]["name"],
-                    "job_id": job_id,
-                    "job_params": job.params,
-                    "batch_id": job.batch_id,
-                }
+            infos[job_id] = {
+                "app_id": job.app_id,
+                "app_name": job.app_name,
+                "job_id": job_id,
+                "job_params": job.params,
+                "batch_id": job.batch_id,
+            }
         for error_id in error_ids:
             infos[error_id] = "does_not_exist"
         return infos
@@ -321,7 +324,7 @@ class JobManager(object):
             return self._construct_job_state_set(jobs_to_lookup)
         return dict()
 
-    def register_new_job(self, job: Job, refresh: int = 0) -> None:
+    def register_new_job(self, job: Job, refresh: int = None) -> None:
         """
         Registers a new Job with the manager and stores the job locally.
         This should only be invoked when a new Job gets started.
@@ -332,6 +335,9 @@ class JobManager(object):
             The new Job that was started.
         """
         kblogging.log_event(self._log, "register_new_job", {"job_id": job.job_id})
+
+        if refresh is None:
+            refresh = int(not job.was_terminal())
         self._running_jobs[job.job_id] = {"job": job, "refresh": refresh}
 
     def get_job(self, job_id):
@@ -415,7 +421,7 @@ class JobManager(object):
         job_ids, error_ids = self._check_job_list(job_id_list)
 
         for job_id in job_ids:
-            if not self.get_job(job_id).was_terminal:
+            if not self.get_job(job_id).was_terminal():
                 self._cancel_job(job_id)
 
         job_states = self._construct_job_state_set(job_ids)
@@ -541,7 +547,7 @@ class JobManager(object):
             for job in unreg_child_jobs:
                 self.register_new_job(
                     job=job,
-                    refresh=int(not job.was_terminal),
+                    refresh=int(not job.was_terminal()),
                 )
 
         batch_job.update_children(reg_child_jobs + unreg_child_jobs)

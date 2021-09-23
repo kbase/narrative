@@ -28,15 +28,6 @@ define([
         };
     }
 
-    function makeJobStatusMsg(jobId, jobState, outputWidgetInfo) {
-        if (!jobState) {
-            jobState = {
-                job_id: jobId,
-            };
-        }
-        return outputWidgetInfo ? { jobId, jobState, outputWidgetInfo } : { jobId, jobState };
-    }
-
     const convertToJobState = (acc, curr) => {
         acc[curr.job_id] = {
             state: curr,
@@ -79,7 +70,6 @@ define([
         it('Should be instantiable and contain the right components', () => {
             const comm = new JobCommChannel();
             expect(comm.initCommChannel).toBeDefined();
-            expect(comm.jobStates).toEqual({});
         });
 
         it('Should initialize correctly in the base case', () => {
@@ -117,7 +107,9 @@ define([
             expect(jobCommInitString.split('\n')).toEqual([
                 'from biokbase.narrative.jobs.jobcomm import JobComm',
                 'cell_list = ["12345","abcde","who cares?"]',
-                'JobComm().start_job_status_loop(cell_list=cell_list, init_jobs=True)',
+                // DATAUP-575: temporary disabling of cell_list
+                // 'JobComm().start_job_status_loop(cell_list=cell_list, init_jobs=True)',
+                'JobComm().start_job_status_loop(init_jobs=True)',
             ]);
         });
 
@@ -128,7 +120,9 @@ define([
             expect(jobCommInitString.split('\n')).toEqual([
                 'from biokbase.narrative.jobs.jobcomm import JobComm',
                 'cell_list = []',
-                'JobComm().start_job_status_loop(cell_list=cell_list, init_jobs=True)',
+                // DATAUP-575: temporary disabling of cell_list
+                // 'JobComm().start_job_status_loop(cell_list=cell_list, init_jobs=True)',
+                'JobComm().start_job_status_loop(init_jobs=True)',
             ]);
         });
 
@@ -549,7 +543,7 @@ define([
                 ]),
             },
             {
-                type: 'job_status',
+                type: 'job_status_all',
                 message: JobsData.allJobsWithBatchParent.reduce(convertToJobState, {}),
                 expectedMultiple: JobsData.allJobsWithBatchParent.map(convertToJobStateBusMessage),
             },
@@ -559,19 +553,24 @@ define([
                     job_id: 'jobCancelWithErrors',
                     message: 'cancel error',
                     source: 'cancel_job',
+                    code: 'RED',
                 },
-                expectedMultiple: [
-                    [
-                        {
-                            jobId: 'jobCancelWithErrors',
+                expected: [
+                    {
+                        jobId: 'jobCancelWithErrors',
+                        error: {
+                            job_id: 'jobCancelWithErrors',
                             message: 'cancel error',
-                            request: 'cancel_job',
+                            source: 'cancel_job',
+                            code: 'RED',
                         },
-                        {
-                            channel: { jobId: 'jobCancelWithErrors' },
-                            key: { type: 'job-error' },
-                        },
-                    ],
+                        message: 'cancel error',
+                        request: 'cancel_job',
+                    },
+                    {
+                        channel: { jobId: 'jobCancelWithErrors' },
+                        key: { type: 'job-error' },
+                    },
                 ],
             },
             {
@@ -580,28 +579,22 @@ define([
                     job_id: 'jobLogWithErrors',
                     message: 'log error',
                     source: 'job_logs',
+                    code: -32000,
                 },
-                expectedMultiple: [
-                    [
-                        {
-                            jobId: 'jobLogWithErrors',
+                expected: [
+                    {
+                        jobId: 'jobLogWithErrors',
+                        error: {
+                            job_id: 'jobLogWithErrors',
                             message: 'log error',
+                            source: 'job_logs',
+                            code: -32000,
                         },
-                        {
-                            channel: { jobId: 'jobLogWithErrors' },
-                            key: { type: 'job-log-deleted' },
-                        },
-                    ],
-                    [
-                        {
-                            jobId: 'jobLogWithErrors',
-                            error: 'log error',
-                        },
-                        {
-                            channel: { jobId: 'jobLogWithErrors' },
-                            key: { type: 'job-logs' },
-                        },
-                    ],
+                    },
+                    {
+                        channel: { jobId: 'jobLogWithErrors' },
+                        key: { type: 'job-logs' },
+                    },
                 ],
             },
             {
@@ -611,10 +604,17 @@ define([
                     source: 'some-unknown-error',
                     job_id: 'unknownJobErrors',
                     message: 'some random error',
+                    code: 404,
                 },
                 expected: [
                     {
                         jobId: 'unknownJobErrors',
+                        error: {
+                            source: 'some-unknown-error',
+                            job_id: 'unknownJobErrors',
+                            message: 'some random error',
+                            code: 404,
+                        },
                         message: 'some random error',
                         request: 'some-unknown-error',
                     },
@@ -641,64 +641,6 @@ define([
                         expect(testBus.send.calls.allArgs()).toEqual([test.expected]);
                     }
                 });
-            });
-        });
-
-        it('Should send a set of job statuses to the bus, and delete extras', () => {
-            const id1 = 'id1',
-                id2 = 'id2',
-                deletedJob = 'deletedJob';
-
-            const msg = makeCommMsg('job_status_all', {
-                id1: {
-                    state: {
-                        job_id: id1,
-                    },
-                },
-                id2: {
-                    state: {
-                        job_id: id2,
-                    },
-                },
-            });
-            const comm = new JobCommChannel();
-            comm.jobStates[deletedJob] = { state: { job_id: deletedJob } };
-            spyOn(testBus, 'send');
-            return comm.initCommChannel().then(() => {
-                comm.handleCommMessages(msg);
-                expect(testBus.send).toHaveBeenCalledTimes(3);
-
-                const allArgs = testBus.send.calls.allArgs();
-                const expected = [
-                    [
-                        makeJobStatusMsg(id1, null),
-                        {
-                            channel: { jobId: id1 },
-                            key: { type: 'job-status' },
-                        },
-                    ],
-                    [
-                        makeJobStatusMsg(id2, null),
-                        {
-                            channel: { jobId: id2 },
-                            key: { type: 'job-status' },
-                        },
-                    ],
-                    [
-                        {
-                            jobId: deletedJob,
-                            jobState: {
-                                job_id: deletedJob,
-                                status: 'does_not_exist',
-                            },
-                        },
-                        {
-                            channel: { jobId: deletedJob },
-                            key: { type: 'job-status' },
-                        },
-                    ],
-                ];
-                expect(allArgs).toEqual(expected);
             });
         });
 

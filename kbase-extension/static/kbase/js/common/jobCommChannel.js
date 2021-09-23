@@ -129,7 +129,6 @@ define([
          */
         constructor(config = {}) {
             this.runtime = Runtime.make();
-            this.jobStates = {};
             this.handleBusMessages();
             this.devMode = config.devMode || devMode.mode;
             this.debug = this.devMode
@@ -147,7 +146,7 @@ define([
         }
 
         validOutgoingMessageTypes() {
-            return Object.values(RESPONSES).concat(['job-error', 'job-log-deleted']);
+            return Object.values(RESPONSES).concat(['job-error']);
         }
 
         /**
@@ -305,22 +304,19 @@ define([
                         case JOB_REQUESTS.LOGS:
                             this.sendBusMessage(JOB, jobId, RESPONSES.LOGS, {
                                 jobId,
-                                error: msgData.message,
-                            });
-                            this.sendBusMessage(JOB, jobId, 'job-log-deleted', {
-                                jobId,
-                                message: msgData.message,
+                                error: msgData,
                             });
                             break;
                         case JOB_REQUESTS.RETRY:
                             this.sendBusMessage(JOB, jobId, RESPONSES.RETRY, {
-                                jobId: jobId,
-                                error: msgData.message,
+                                jobId,
+                                error: msgData,
                             });
                             break;
                         default:
                             this.sendBusMessage(JOB, jobId, 'job-error', {
                                 jobId,
+                                error: msgData,
                                 message: msgData.message,
                                 request: msgData.source,
                             });
@@ -387,68 +383,19 @@ define([
                     break;
 
                 /*
-                 * The job status for one or more jobs. See job_status_all
-                 * for a message which covers all active jobs.
+                 * The job status for one or more jobs.
+                 * The job_status_all message covers all active jobs.
                  *
                  * data structure: object with key jobId and value { jobState: job.state, outputWidgetInfo: job.widget_info }
                  */
                 case BACKEND_RESPONSES.STATUS:
+                case 'job_status_all':
                     Object.keys(msgData).forEach((_jobId) => {
-                        this.jobStates[_jobId] = msgData[_jobId].state;
-
                         this.sendBusMessage(JOB, _jobId, RESPONSES.STATUS, {
                             jobId: _jobId,
                             jobState: msgData[_jobId].state,
                             outputWidgetInfo: msgData[_jobId].widget_info,
                         });
-                    });
-                    break;
-
-                /*
-                 * This message must carry all jobs linked to this narrative.
-                 * The job deletion logic, specifically, requires that the job
-                 * actually not exist in the job service.
-                 * NB there is logic in the job management back end to allow
-                 * job notification to be turned off per job -- this would
-                 * be incompatible with the logic here and we should address
-                 * that.
-                 * E.g. if that behavior is allowed, then deletion detection
-                 * would need to move to the back end, since that is the only
-                 * place that would truly know about all jobs for this narrative.
-                 */
-                case 'job_status_all':
-                    /*
-                     * Ensure there is a locally cached copy of each job.
-                     *
-                     */
-                    for (jobId in msgData) {
-                        const jobStateMessage = msgData[jobId];
-                        // cache state data
-                        this.jobStates[jobId] = jobStateMessage.state;
-
-                        this.sendBusMessage(JOB, jobId, RESPONSES.STATUS, {
-                            jobId: jobId,
-                            jobState: jobStateMessage.state,
-                            outputWidgetInfo: jobStateMessage.widget_info,
-                        });
-                    }
-
-                    Object.keys(this.jobStates).forEach((_jobId) => {
-                        if (!msgData[_jobId]) {
-                            // If this job is not found in the incoming list of all
-                            // jobs, then we must both delete it locally, and
-                            // notify any interested parties.
-                            this.sendBusMessage(JOB, _jobId, RESPONSES.STATUS, {
-                                jobId: _jobId,
-                                jobState: {
-                                    job_id: _jobId,
-                                    status: 'does_not_exist',
-                                },
-                            });
-
-                            // it is safe to delete properties here
-                            delete this.jobStates[_jobId];
-                        }
                     });
                     break;
 
@@ -611,7 +558,8 @@ define([
             return [
                 'from biokbase.narrative.jobs.jobcomm import JobComm',
                 'cell_list = ' + JSON.stringify(currentCells),
-                'JobComm().start_job_status_loop(cell_list=cell_list, init_jobs=True)',
+                // DATAUP-575: temporarily removing cell_list
+                'JobComm().start_job_status_loop(init_jobs=True)',
             ].join('\n');
         }
     }

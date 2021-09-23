@@ -1,9 +1,10 @@
-define(['require', 'common/jupyter', 'common/utils', 'common/runtime'], (
+define(['require', 'common/jupyter', 'common/cellUtils', 'common/runtime'], (
     require,
     jupyter,
     utils,
     Runtime
 ) => {
+    'use strict';
     /*
      id: '{{input_id}}',
                     data: {{input_data}},

@@ -3,7 +3,7 @@ define([
     'common/html',
     'common/events',
     'base/js/namespace',
-    'common/utils',
+    'common/cellUtils',
     'narrativeConfig',
     'common/jobs',
     'custom/custom',

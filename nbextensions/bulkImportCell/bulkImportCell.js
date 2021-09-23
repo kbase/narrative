@@ -1,4 +1,5 @@
 define([
+    'underscore',
     'uuid',
     'util/icon',
     'common/busEventManager',
@@ -11,7 +12,8 @@ define([
     'common/runtime',
     'common/spec',
     'common/ui',
-    'common/utils',
+    'common/cellUtils',
+    'util/appCellUtil',
     'common/pythonInterop',
     'base/js/namespace',
     'kb_service/client/workspace',
@@ -26,6 +28,7 @@ define([
     './bulkImportCellStates',
     'util/developerMode',
 ], (
+    _,
     Uuid,
     Icon,
     BusEventManager,
@@ -39,6 +42,7 @@ define([
     Spec,
     UI,
     Utils,
+    BulkImportUtil,
     PythonInterop,
     Jupyter,
     Workspace,
@@ -608,37 +612,70 @@ define([
             const meta = cell.metadata;
             meta.kbase.attributes.lastLoaded = new Date().toUTCString();
             cell.metadata = meta;
-            render().then(() => {
-                jobManager.addHandler('modelUpdate', {
-                    execMessage: (jobManagerContext) => {
-                        // Update the execMessage panel with details of the active jobs
-                        controlPanel.setExecMessage(
-                            Jobs.createCombinedJobState(
-                                jobManagerContext.model.getItem('exec.jobs.byStatus')
-                            )
-                        );
-                    },
-                    fsmState: (jobManagerContext) => {
-                        const fsmState = Jobs.getFsmStateFromJobs(
-                            jobManagerContext.model.getItem('exec.jobs.byStatus')
-                        );
+            render()
+                .then(() => {
+                    jobManager.addEventHandler('modelUpdate', {
+                        execMessage: (jobManagerContext) => {
+                            // Update the execMessage panel with details of the active jobs
+                            controlPanel.setExecMessage(
+                                Jobs.createCombinedJobState(
+                                    jobManagerContext.model.getItem('exec.jobs')
+                                )
+                            );
+                        },
+                        fsmState: () => {
+                            const fsmState = jobManager.getFsmStateFromJobs();
+                            if (fsmState) {
+                                updateState(fsmState);
+                            }
+                        },
+                    });
+                    try {
+                        const fsmState = jobManager.restoreFromSaved();
                         if (fsmState) {
                             updateState(fsmState);
                         }
-                    },
+                    } catch (e) {
+                        console.error(e);
+                    }
+                    const expectedFiles = new Set();
+                    Object.values(model.getItem('inputs')).forEach((inputs) => {
+                        for (const f of inputs.files) {
+                            expectedFiles.add(f);
+                        }
+                    });
+                    return BulkImportUtil.getMissingFiles(Array.from(expectedFiles)).catch(
+                        (error) => {
+                            // if the missing files call fails, just continue.
+                            console.error(
+                                'Unable to fetch missing files from the Staging Service',
+                                error
+                            );
+                        }
+                    );
+                })
+                .then((missingFiles = []) =>
+                    BulkImportUtil.evaluateConfigReadyState(model, specs, new Set(missingFiles))
+                )
+                .then((readyState) => {
+                    const curState = model.getItem('state');
+                    const curReadyState = curState.params;
+                    const updatedReadyState = !_.isEqual(readyState, curReadyState);
+
+                    if (updatedReadyState) {
+                        model.setItem(['state', 'params'], readyState);
+                    }
+                    if (
+                        updatedReadyState &&
+                        ['editingComplete', 'editingIncomplete'].includes(curState.state)
+                    ) {
+                        updateEditingState();
+                    } else {
+                        updateState();
+                    }
+                    cell.renderMinMax();
+                    runTab(state.tab.selected);
                 });
-
-                // TODO: assess cell state, update job info if required
-                try {
-                    jobManager.restoreFromSaved();
-                } catch (e) {
-                    console.log(e);
-                }
-
-                updateState();
-                cell.renderMinMax();
-                runTab(state.tab.selected);
-            });
         }
 
         function getWorkspaceClient() {

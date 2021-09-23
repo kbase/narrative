@@ -78,11 +78,11 @@ define([
             jasmine.Ajax.uninstall();
             container.remove();
             runtime.destroy();
+            TestUtil.clearRuntime();
         });
 
         afterAll(() => {
             Jupyter.narrative = null;
-            TestUtil.clearRuntime();
         });
 
         [
@@ -204,7 +204,7 @@ define([
                 });
 
                 const modelData = Object.assign({}, TestBulkImportObject, { state: initialState });
-                modelData.params.fastq_reads.filePaths[0].fastq_fwd_staging_file_name = 'file1.txt';
+                modelData.params.fastq_reads.filePaths[0].fastq_fwd_staging_file_name = 'file1';
 
                 const model = Props.make({
                     data: modelData,

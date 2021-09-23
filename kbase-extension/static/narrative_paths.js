@@ -21,7 +21,6 @@ require.config({
         'datatables.net-buttons-print':
             'ext_components/datatables.net-buttons/js/buttons.print.min',
         bloodhound: 'ext_components/corejs-typeahead/dist/bloodhound.min',
-        // css: 'ext_components/require-css/css',
         d3: 'ext_components/d3/d3.min',
         md5: 'ext_components/spark-md5/spark-md5',
         domReady: 'ext_components/requirejs/domReady',
@@ -68,7 +67,6 @@ require.config({
         jquery: 'ext_components/jquery/dist/jquery.min',
         jqueryui: 'components/jquery-ui/jquery-ui.min',
         bootstrap: 'ext_components/bootstrap/dist/js/bootstrap.min',
-        // 'css'                                   : 'ext_components/require-css/css.min',
 
         narrativeConfig: 'kbase/js/narrativeConfig',
         narrativeMain: 'narrativeMain',
@@ -389,6 +387,7 @@ require.config({
         kbasePanel: 'kbase/js/widgets/kbasePanel',
         kbaseDeletePrompt: 'kbase/js/widgets/kbaseDeletePrompt',
     },
+    excludeShallow: ['common/jobCommChannel'],
     map: {
         '*': {
             css: 'ext_components/require-css/css',
@@ -476,7 +475,6 @@ require.config({
                 'jquery',
                 'kbwidget',
                 'jquery-dataTables',
-                // 'jquery-dataTables-bootstrap',
                 'bootstrap',
                 'KBModeling',
                 'KBaseFBA.FBAModel',
@@ -501,7 +499,6 @@ require.config({
                 'kbwidget',
                 'KBModeling',
                 'jquery-dataTables',
-                // 'jquery-dataTables-bootstrap',
                 'bootstrap',
                 'msPathway',
             ],

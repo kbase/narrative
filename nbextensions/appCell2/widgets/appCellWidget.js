@@ -1,6 +1,7 @@
 define([
     'require',
     'jquery',
+    'underscore',
     'bluebird',
     'uuid',
     'base/js/namespace',
@@ -13,8 +14,6 @@ define([
     'kb_service/client/catalog',
     'kb_service/client/narrativeMethodStore',
     'common/pythonInterop',
-    'common/utils',
-    'common/unodep',
     'common/ui',
     'common/fsm',
     'common/cellUtils',
@@ -31,11 +30,14 @@ define([
     'common/errorDisplay',
     'common/cellComponents/tabs/infoTab',
     'common/cellComponents/fsmBar',
+    './appParamsWidget',
+    './appParamsViewWidget',
     'css!google-code-prettify/prettify.css',
     'css!font-awesome.css',
 ], (
     require,
     $,
+    _,
     Promise,
     Uuid,
     Jupyter,
@@ -48,8 +50,6 @@ define([
     Catalog,
     NarrativeMethodStore,
     PythonInterop,
-    utils,
-    utils2,
     UI,
     Fsm,
     cellUtils,
@@ -65,7 +65,9 @@ define([
     logTabWidget,
     errorTabWidget,
     infoTabWidget,
-    FSMBar
+    FSMBar,
+    AppParamsWidget,
+    AppParamsViewWidget
 ) => {
     'use strict';
 
@@ -75,7 +77,6 @@ define([
         a = t('a'),
         p = t('p'),
         blockquote = t('blockquote'),
-        { toBoolean } = utils,
         cssCellType = 'kb-app-cell';
 
     function factory(config) {
@@ -89,7 +90,7 @@ define([
             // that is, the extension.
             cellBus = runtime.bus().makeChannelBus({
                 name: {
-                    cell: utils.getMeta(cell, 'attributes', 'id'),
+                    cell: cellUtils.getMeta(cell, 'attributes', 'id'),
                 },
                 description: 'A cell channel',
             }),
@@ -139,9 +140,9 @@ define([
             },
             // INIT
             model = Props.make({
-                data: utils.getMeta(cell, 'appCell'),
+                data: cellUtils.getMeta(cell, 'appCell'),
                 onUpdate: function (props) {
-                    utils.setMeta(cell, 'appCell', props.getRawObject());
+                    cellUtils.setMeta(cell, 'appCell', props.getRawObject());
                 },
             }),
             spec = Spec.make({
@@ -160,52 +161,24 @@ define([
 
         // TABS
 
-        function pRequire(module) {
-            return new Promise((resolve, reject) => {
-                require(module, (...args) => {
-                    resolve(args);
-                }, (err) => {
-                    reject(err);
-                });
-            });
-        }
-
         function loadParamsWidget(arg) {
-            return pRequire(['./appParamsWidget']).spread((Widget) => {
-                // TODO: widget should make own bus.
-                const widgetBus = runtime
-                        .bus()
-                        .makeChannelBus({ description: 'Parent comm bus for input widget' }),
-                    widget = Widget.make({
-                        bus: widgetBus,
-                        initialParams: model.getItem('params'),
-                    });
-
-                widgetBus.on('sync-params', (message) => {
-                    message.parameters.forEach((paramId) => {
-                        widgetBus.send(
-                            {
-                                parameter: paramId,
-                                value: model.getItem(['params', message.parameter]),
-                            },
-                            {
-                                key: {
-                                    type: 'update',
-                                    parameter: message.parameter,
-                                },
-                            }
-                        );
-                    });
+            // TODO: widget should make own bus.
+            const widgetBus = runtime
+                    .bus()
+                    .makeChannelBus({ description: 'Parent comm bus for input widget' }),
+                widget = AppParamsWidget.make({
+                    bus: widgetBus,
+                    initialParams: model.getItem('params'),
                 });
 
-                widgetBus.on('parameter-sync', (message) => {
-                    const value = model.getItem(['params', message.parameter]);
+            widgetBus.on('sync-params', (message) => {
+                message.parameters.forEach((paramId) => {
                     widgetBus.send(
                         {
-                            value: value,
+                            parameter: paramId,
+                            value: model.getItem(['params', message.parameter]),
                         },
                         {
-                            // This points the update back to a listener on this key
                             key: {
                                 type: 'update',
                                 parameter: message.parameter,
@@ -213,113 +186,111 @@ define([
                         }
                     );
                 });
-
-                widgetBus.on('set-param-state', (message) => {
-                    model.setItem('paramState', message.id, message.state);
-                });
-
-                widgetBus.respond({
-                    key: {
-                        type: 'get-param-state',
-                    },
-                    handle: function (message) {
-                        return {
-                            state: model.getItem('paramState', message.id),
-                        };
-                    },
-                });
-
-                widgetBus.respond({
-                    key: {
-                        type: 'get-parameter',
-                    },
-                    handle: function (message) {
-                        return {
-                            value: model.getItem(['params', message.parameterName]),
-                        };
-                    },
-                });
-
-                widgetBus.respond({
-                    key: {
-                        type: 'get-batch-mode',
-                    },
-                    handle: function () {
-                        const canDoBatch = Config.get('features').batchAppMode;
-                        return canDoBatch && (model.getItem('user-settings.batchMode') || false);
-                    },
-                });
-
-                widgetBus.on('parameter-changed', (message) => {
-                    // TODO: should never get these in the following states....
-
-                    const { state } = fsm.getCurrentState();
-                    const isError = Boolean(message.isError);
-                    if (state.mode === 'editing') {
-                        model.setItem(['params', message.parameter], message.newValue);
-                        evaluateAppState(isError);
-                    } else {
-                        console.warn(
-                            'parameter-changed event detected when not in editing mode - ignored'
-                        );
-                    }
-                });
-
-                widgetBus.on('toggle-batch-mode', () => {
-                    toggleBatchMode();
-                });
-
-                return widget
-                    .start({
-                        node: arg.node,
-                        appSpec: model.getItem('app.spec'),
-                        parameters: spec.getSpec().parameters,
-                    })
-                    .then(() => {
-                        return {
-                            bus: widgetBus,
-                            instance: widget,
-                        };
-                    });
             });
+
+            widgetBus.on('parameter-sync', (message) => {
+                const value = model.getItem(['params', message.parameter]);
+                widgetBus.send(
+                    {
+                        value: value,
+                    },
+                    {
+                        // This points the update back to a listener on this key
+                        key: {
+                            type: 'update',
+                            parameter: message.parameter,
+                        },
+                    }
+                );
+            });
+
+            widgetBus.on('set-param-state', (message) => {
+                model.setItem('paramState', message.id, message.state);
+            });
+
+            widgetBus.respond({
+                key: {
+                    type: 'get-param-state',
+                },
+                handle: function (message) {
+                    return {
+                        state: model.getItem('paramState', message.id),
+                    };
+                },
+            });
+
+            widgetBus.respond({
+                key: {
+                    type: 'get-parameter',
+                },
+                handle: function (message) {
+                    return {
+                        value: model.getItem(['params', message.parameterName]),
+                    };
+                },
+            });
+
+            widgetBus.respond({
+                key: {
+                    type: 'get-batch-mode',
+                },
+                handle: function () {
+                    const canDoBatch = Config.get('features').batchAppMode;
+                    return canDoBatch && (model.getItem('user-settings.batchMode') || false);
+                },
+            });
+
+            widgetBus.on('parameter-changed', (message) => {
+                // TODO: should never get these in the following states....
+
+                const { state } = fsm.getCurrentState();
+                const isError = Boolean(message.isError);
+                if (state.mode === 'editing') {
+                    model.setItem(['params', message.parameter], message.newValue);
+                    evaluateAppState(isError);
+                } else {
+                    console.warn(
+                        'parameter-changed event detected when not in editing mode - ignored'
+                    );
+                }
+            });
+
+            widgetBus.on('toggle-batch-mode', () => {
+                toggleBatchMode();
+            });
+
+            return widget
+                .start({
+                    node: arg.node,
+                    appSpec: model.getItem('app.spec'),
+                    parameters: spec.getSpec().parameters,
+                })
+                .then(() => {
+                    return {
+                        bus: widgetBus,
+                        instance: widget,
+                    };
+                });
         }
 
         function loadViewParamsWidget(arg) {
-            return pRequire(['./appParamsViewWidget']).spread((Widget) => {
-                // TODO: widget should make own bus.
-                const widgetBus = runtime
-                        .bus()
-                        .makeChannelBus({ description: 'Parent comm bus for input widget' }),
-                    widget = Widget.make({
-                        bus: widgetBus,
-                        initialParams: model.getItem('params'),
-                    });
-
-                widgetBus.on('sync-params', (message) => {
-                    message.parameters.forEach((paramId) => {
-                        widgetBus.send(
-                            {
-                                parameter: paramId,
-                                value: model.getItem(['params', message.parameter]),
-                            },
-                            {
-                                key: {
-                                    type: 'update',
-                                    parameter: message.parameter,
-                                },
-                            }
-                        );
-                    });
+            // TODO: widget should make own bus.
+            const widgetBus = runtime
+                    .bus()
+                    .makeChannelBus({ description: 'Parent comm bus for input widget' }),
+                widget = AppParamsViewWidget.make({
+                    bus: widgetBus,
+                    initialParams: model.getItem('params'),
                 });
 
-                widgetBus.on('parameter-sync', (message) => {
-                    const value = model.getItem(['params', message.parameter]);
+            widgetBus.on('sync-params', (message) => {
+                message.parameters.forEach((paramId) => {
                     widgetBus.send(
                         {
-                            value: value,
+                            parameter: paramId,
+                            value: model.getItem(['params', message.parameter]),
                         },
                         {
-                            // This points the update back to a listener on this key
                             key: {
                                 type: 'update',
                                 parameter: message.parameter,
@@ -327,70 +298,86 @@ define([
                         }
                     );
                 });
-
-                widgetBus.on('set-param-state', (message) => {
-                    model.setItem('paramState', message.id, message.state);
-                });
-
-                widgetBus.respond({
-                    key: {
-                        type: 'get-param-state',
-                    },
-                    handle: function (message) {
-                        return {
-                            state: model.getItem('paramState', message.id),
-                        };
-                    },
-                });
-
-                widgetBus.respond({
-                    key: {
-                        type: 'get-parameter',
-                    },
-                    handle: function (message) {
-                        return {
-                            value: model.getItem(['params', message.parameterName]),
-                        };
-                    },
-                });
-
-                widgetBus.respond({
-                    key: {
-                        type: 'get-batch-mode',
-                    },
-                    handle: function () {
-                        const canDoBatch = Config.get('features').batchAppMode;
-                        return canDoBatch && (model.getItem('user-settings.batchMode') || false);
-                    },
-                });
-
-                widgetBus.on('parameter-changed', (message) => {
-                    // TODO: should never get these in the following states....
-
-                    const { state } = fsm.getCurrentState();
-                    if (state.mode === 'editing') {
-                        model.setItem(['params', message.parameter], message.newValue);
-                        evaluateAppState();
-                    } else {
-                        console.warn(
-                            'parameter-changed event detected when not in editing mode - ignored'
-                        );
-                    }
-                });
-
-                return widget
-                    .start({
-                        node: arg.node,
-                        appSpec: model.getItem('app.spec'),
-                        parameters: spec.getSpec().parameters,
-                    })
-                    .then(() => {
-                        return {
-                            bus: widgetBus,
-                            instance: widget,
-                        };
-                    });
             });
+
+            widgetBus.on('parameter-sync', (message) => {
+                const value = model.getItem(['params', message.parameter]);
+                widgetBus.send(
+                    {
+                        value: value,
+                    },
+                    {
+                        // This points the update back to a listener on this key
+                        key: {
+                            type: 'update',
+                            parameter: message.parameter,
+                        },
+                    }
+                );
+            });
+
+            widgetBus.on('set-param-state', (message) => {
+                model.setItem('paramState', message.id, message.state);
+            });
+
+            widgetBus.respond({
+                key: {
+                    type: 'get-param-state',
+                },
+                handle: function (message) {
+                    return {
+                        state: model.getItem('paramState', message.id),
+                    };
+                },
+            });
+
+            widgetBus.respond({
+                key: {
+                    type: 'get-parameter',
+                },
+                handle: function (message) {
+                    return {
+                        value: model.getItem(['params', message.parameterName]),
+                    };
+                },
+            });
+
+            widgetBus.respond({
+                key: {
+                    type: 'get-batch-mode',
+                },
+                handle: function () {
+                    const canDoBatch = Config.get('features').batchAppMode;
+                    return canDoBatch && (model.getItem('user-settings.batchMode') || false);
+                },
+            });
+
+            widgetBus.on('parameter-changed', (message) => {
+                // TODO: should never get these in the following states....
+
+                const { state } = fsm.getCurrentState();
+                if (state.mode === 'editing') {
+                    model.setItem(['params', message.parameter], message.newValue);
+                    evaluateAppState();
+                } else {
+                    console.warn(
+                        'parameter-changed event detected when not in editing mode - ignored'
+                    );
+                }
+            });
+
+            return widget
+                .start({
+                    node: arg.node,
+                    appSpec: model.getItem('app.spec'),
+                    parameters: spec.getSpec().parameters,
+                })
+                .then(() => {
+                    return {
+                        bus: widgetBus,
+                        instance: widget,
+                    };
+                });
         }
 
         function configureWidget() {
@@ -1131,7 +1118,11 @@ define([
             }
             const state = fsm.getCurrentState();
             try {
-                FSMBar.showFsmBar({ ui: ui, state: state, job: model.getItem('exec.jobState') });
+                FSMBar.showFsmBar({
+                    ui: ui,
+                    state: state,
+                    job: model.getItem('exec.jobState'),
+                });
             } catch (error) {
                 console.warn('Could not display FSM state:', error);
             }
@@ -1517,7 +1508,7 @@ define([
                         forceRender =
                             !Jobs.isValidJobStateObject(existingState) &&
                             Jobs.isValidJobStateObject(newJobState);
-                    if (!existingState || !utils2.isEqual(existingState, newJobState)) {
+                    if (!existingState || !_.isEqual(existingState, newJobState)) {
                         model.setItem('exec.jobState', newJobState);
                         if (outputWidgetInfo) {
                             model.setItem('exec.outputWidgetInfo', outputWidgetInfo);
@@ -1583,7 +1574,7 @@ define([
             jobListeners.push(ev);
 
             runtime.bus().emit('request-job-updates-start', {
-                jobId: jobId,
+                jobId,
             });
         }
 
@@ -1596,25 +1587,26 @@ define([
             const jobId = model.getItem('exec.jobState.job_id');
             if (jobId) {
                 runtime.bus().emit('request-job-updates-stop', {
-                    jobId: jobId,
+                    jobId,
                 });
             }
         }
 
         function createOutputCell(jobId) {
-            const cellId = utils.getMeta(cell, 'attributes', 'id'),
+            const parentCellId = utils.getMeta(cell, 'attributes', 'id'),
                 cellIndex = Jupyter.notebook.find_cell_index(cell),
-                newCellId = new Uuid(4).format(),
+                // the new output cell ID
+                cellId = new Uuid(4).format(),
                 setupData = {
+                    cellId,
+                    jobId,
+                    parentCellId,
                     type: 'output',
-                    cellId: newCellId,
-                    parentCellId: cellId,
-                    jobId: jobId,
                     widget: model.getItem('exec.outputWidgetInfo'),
                 };
             Jupyter.notebook.insert_cell_below('code', cellIndex, setupData);
 
-            return newCellId;
+            return cellId;
         }
 
         function clearOutput() {
@@ -2046,7 +2038,7 @@ define([
                     if (messages.length === 0 && !isError) {
                         buildPython(
                             cell,
-                            utils.getMeta(cell, 'attributes').id,
+                            cellUtils.getMeta(cell, 'attributes').id,
                             model.getItem('app'),
                             exportParams()
                         );
@@ -2125,14 +2117,14 @@ define([
             // If the app has been run before...
             // The app reference is already in the app cell metadata.
             return Promise.try(() => {
-                if (utils.getCellMeta(cell, 'kbase.type') !== 'devapp') {
+                if (cellUtils.getCellMeta(cell, 'kbase.type') !== 'devapp') {
                     return getAppSpec();
                 }
                 return {};
             })
                 .then((appSpec) => {
                     // Ensure that the current app spec matches our existing one.
-                    if (appSpec && utils.getCellMeta(cell, 'kbase.type') !== 'devapp') {
+                    if (appSpec && cellUtils.getCellMeta(cell, 'kbase.type') !== 'devapp') {
                         const warning = checkSpec(appSpec);
                         if (warning && warning.severity === 'warning') {
                             if (warning.type === 'app-spec-mismatched-commit') {
@@ -2143,21 +2135,21 @@ define([
                     }
 
                     const appRef = [model.getItem('app.id'), model.getItem('app.tag')]
-                            .filter(toBoolean)
+                            .filter((v) => !!v)
                             .join('/'),
                         url = '/#appcatalog/app/' + appRef;
-                    utils.setCellMeta(
+                    cellUtils.setCellMeta(
                         cell,
                         'kbase.attributes.title',
                         model.getItem('app.spec.info.name')
                     );
-                    utils.setCellMeta(
+                    cellUtils.setCellMeta(
                         cell,
                         'kbase.attributes.subtitle',
                         model.getItem('app.spec.info.subtitle')
                     );
-                    utils.setCellMeta(cell, 'kbase.attributes.info.url', url);
-                    utils.setCellMeta(cell, 'kbase.attributes.info.label', 'more...');
+                    cellUtils.setCellMeta(cell, 'kbase.attributes.info.url', url);
+                    cellUtils.setCellMeta(cell, 'kbase.attributes.info.label', 'more...');
                 })
                 .then(() => {
                     // this will not change, so we can just render it here.

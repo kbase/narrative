@@ -22,7 +22,7 @@ define([
     'base/js/namespace',
     './widgets/advancedViewCellWidget',
     'common/runtime',
-    'common/utils',
+    'common/cellUtils',
     'common/dom',
     'util/icon',
     'common/jupyter',

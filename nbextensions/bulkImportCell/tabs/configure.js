@@ -1,14 +1,13 @@
 define([
     'bluebird',
-    'narrativeConfig',
     'common/runtime',
     'common/html',
     'common/ui',
     './fileTypePanel',
     'common/cellComponents/paramsWidget',
     'common/cellComponents/filePathWidget',
-    '../util',
-], (Promise, Config, Runtime, html, UI, FileTypePanel, ParamsWidget, FilePathWidget, Util) => {
+    'util/appCellUtil',
+], (Promise, Runtime, html, UI, FileTypePanel, ParamsWidget, FilePathWidget, Util) => {
     'use strict';
 
     /**
@@ -46,17 +45,7 @@ define([
             unavailableFiles,
             ui;
 
-        const fileTypesDisplay = {},
-            fileTypeMapping = {},
-            uploaders = Config.get('uploaders');
-        for (const uploader of uploaders.dropdown_order) {
-            fileTypeMapping[uploader.id] = uploader.name;
-        }
-        for (const fileType of Object.keys(typesToFiles)) {
-            fileTypesDisplay[fileType] = {
-                label: fileTypeMapping[fileType] || `Unknown type "${fileType}"`,
-            };
-        }
+        const { fileTypesDisplay } = Util.generateFileTypeMappings(typesToFiles);
 
         /**
          * args includes:
@@ -64,9 +53,25 @@ define([
          * @param {object} args
          */
         function start(args) {
-            return Util.getMissingFiles(model.getItem(['inputs', selectedFileType, 'files'])).then(
-                (missingFiles) => {
+            const allFiles = new Set();
+            Object.values(typesToFiles).forEach((entry) => {
+                for (const file of entry.files) {
+                    allFiles.add(file);
+                }
+            });
+            return Util.getMissingFiles(Array.from(allFiles))
+                .catch((error) => {
+                    // if the missing files call fails, just continue and let the cell render.
+                    console.error('Unable to get missing files from the Staging Service', error);
+                })
+                .then((missingFiles = []) => {
                     unavailableFiles = new Set(missingFiles);
+                    // Do a validation for all input parameters on all file types
+                    // This is then sent to the fileTypePanel to initialize properly with
+                    // pass or fail for each side, to properly render pass or fail icons.
+                    return Util.evaluateConfigReadyState(model, specs, unavailableFiles);
+                })
+                .then((readyState) => {
                     container = args.node;
                     ui = UI.make({ node: container });
 
@@ -74,11 +79,13 @@ define([
                     container.innerHTML = layout;
 
                     const fileTypeNode = ui.getElement('filetype-panel');
-                    const initPromises = [buildFileTypePanel(fileTypeNode), startInputWidgets()];
+                    const initPromises = [
+                        buildFileTypePanel(fileTypeNode, readyState),
+                        startInputWidgets(),
+                    ];
 
                     return Promise.all(initPromises);
-                }
-            );
+                });
         }
 
         /**
@@ -185,8 +192,10 @@ define([
          * This builds the file type panel (the left column) of the cell and starts
          * it up attached to the given DOM node.
          * @param {DOMElement} node - the node that should be used for the left column
+         * @param {Object} readyState - keys = file type ids, values = string for whether
+         *  that type is ready to run (one of "complete", "incomplete", "error")
          */
-        function buildFileTypePanel(node) {
+        function buildFileTypePanel(node, readyState) {
             fileTypePanel = FileTypePanel.make({
                 bus: cellBus,
                 header: {
@@ -196,7 +205,7 @@ define([
                 fileTypes: fileTypesDisplay,
                 toggleAction: toggleFileType,
             });
-            const state = getFileTypeState();
+            const state = getFileTypeState(readyState);
 
             return fileTypePanel.start({
                 node,
@@ -205,15 +214,20 @@ define([
         }
 
         /**
-         *
+         * This calculates a state object for the fileTypePanel. It uses either a given
+         * readyState object, or the set of parameter states in the model if that isn't
+         * present.
+         * @param {Object} readyState (optional) keys = file type ids, values = string for whether
+         *  that type is ready to run (one of "complete", "incomplete", "error")
          * @returns {Object} with keys:
          *   - selected {String} the selected file type
-         *   - completed
+         *   - completed {Object} keys = file type ids, values = booleans (true if all parameters
+         *      are valid and ready)
          */
-        function getFileTypeState() {
+        function getFileTypeState(readyState) {
             const fileTypeCompleted = {};
-            const fileTypeState = model.getItem('state.params', {});
-            for (const [fileType, status] of Object.entries(fileTypeState)) {
+            readyState = readyState || model.getItem('state.params', {});
+            for (const [fileType, status] of Object.entries(readyState)) {
                 fileTypeCompleted[fileType] = status === 'complete';
             }
             return {

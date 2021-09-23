@@ -325,8 +325,7 @@ define(['bluebird', 'common/runtime', 'common/ui', 'common/format', 'common/html
                 return;
             }
             runtime.bus().emit('request-job-updates-start', {
-                jobId: jobId,
-                parentJobId: parentJobId,
+                jobId,
             });
             listeningForJob = true;
         }

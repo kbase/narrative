@@ -108,8 +108,8 @@ define([
             });
 
             [
-                'addHandler',
-                'removeHandler',
+                'addEventHandler',
+                'removeEventHandler',
                 'runHandler',
                 'updateModel',
                 'addListener',
@@ -209,7 +209,7 @@ define([
                     },
                 };
 
-                this.jobManagerInstance.addHandler('modelUpdate', {
+                this.jobManagerInstance.addEventHandler('modelUpdate', {
                     test: (context, extraArgs) => {
                         expect(context.model.getRawObject()).toEqual(expectedObject);
                         expect(extraArgs).toEqual([jobState]);
@@ -256,18 +256,18 @@ define([
                 this.jobManagerInstance = createJobManagerInstance(this, JobManagerCore);
             });
 
-            describe('addHandler', () => {
+            describe('addEventHandler', () => {
                 it('can have handlers added', function () {
                     const event = 'modelUpdate';
                     expect(this.jobManagerInstance.handlers).toEqual({});
-                    this.jobManagerInstance.addHandler(event, { scream: scream });
+                    this.jobManagerInstance.addEventHandler(event, { scream: scream });
                     expectHandlersDefined(this.jobManagerInstance, event, true, ['scream']);
                 });
 
                 it('can have numerous handlers', function () {
                     const event = 'job-info';
                     expect(this.jobManagerInstance.handlers).toEqual({});
-                    this.jobManagerInstance.addHandler(event, { scream, shout });
+                    this.jobManagerInstance.addEventHandler(event, { scream, shout });
                     expectHandlersDefined(this.jobManagerInstance, event, true, [
                         'scream',
                         'shout',
@@ -278,7 +278,7 @@ define([
                     const event = 'job-status';
                     expect(this.jobManagerInstance.handlers).toEqual({});
                     expect(() => {
-                        this.jobManagerInstance.addHandler(event, { shout: { key: 'value' } });
+                        this.jobManagerInstance.addEventHandler(event, { shout: { key: 'value' } });
                     }).toThrowError(
                         /Handlers must be of type function. Recheck these handlers: shout/
                     );
@@ -290,8 +290,8 @@ define([
                     const event = 'the-queens-birthday';
                     expect(this.jobManagerInstance.handlers).toEqual({});
                     expect(() => {
-                        this.jobManagerInstance.addHandler(event, { scream, shout });
-                    }).toThrowError(/addHandler: invalid event the-queens-birthday supplied/);
+                        this.jobManagerInstance.addEventHandler(event, { scream, shout });
+                    }).toThrowError(/addEventHandler: invalid event the-queens-birthday supplied/);
                     expectHandlersDefined(this.jobManagerInstance, event, false, ['shout']);
                     expect(this.jobManagerInstance.handlers).toEqual({});
                 });
@@ -300,7 +300,7 @@ define([
                     const event = 'modelUpdate';
                     expect(this.jobManagerInstance.handlers).toEqual({});
                     expect(() => {
-                        this.jobManagerInstance.addHandler(event, {
+                        this.jobManagerInstance.addEventHandler(event, {
                             scream,
                             shout,
                             let_it_all: {},
@@ -323,12 +323,12 @@ define([
                     const event = 'job-logs';
                     expect(this.jobManagerInstance.handlers).toEqual({});
                     spyOn(console, 'warn');
-                    this.jobManagerInstance.addHandler(event, { scream, shout });
+                    this.jobManagerInstance.addEventHandler(event, { scream, shout });
                     expectHandlersDefined(this.jobManagerInstance, event, true, [
                         'scream',
                         'shout',
                     ]);
-                    this.jobManagerInstance.addHandler(event, { shout: scream });
+                    this.jobManagerInstance.addEventHandler(event, { shout: scream });
                     expect(console.warn).toHaveBeenCalledTimes(1);
                     expect(console.warn.calls.allArgs()).toEqual([
                         ['A handler with the name shout already exists'],
@@ -354,31 +354,31 @@ define([
                         arg
                     )}`, function () {
                         expect(() => {
-                            this.jobManagerInstance.addHandler('modelUpdate', arg);
+                            this.jobManagerInstance.addEventHandler('modelUpdate', arg);
                         }).toThrowError(
-                            /addHandler: invalid handlerObject supplied \(must be of type object\)/
+                            /addEventHandler: invalid handlerObject supplied \(must be of type object\)/
                         );
                     });
                 });
             });
 
-            describe('removeHandler', () => {
+            describe('removeEventHandler', () => {
                 it('can have handlers removed', function () {
                     const event = 'job-logs';
                     this.jobManagerInstance.handlers[event] = {
-                        scream: scream,
+                        scream,
                     };
                     expect(this.jobManagerInstance.handlers[event].scream).toEqual(
                         jasmine.any(Function)
                     );
-                    this.jobManagerInstance.removeHandler(event, 'scream');
+                    this.jobManagerInstance.removeEventHandler(event, 'scream');
                     expectHandlersDefined(this.jobManagerInstance, event, false, ['scream']);
                 });
 
                 it('does not die if the handler name does not exist', function () {
                     const event = 'job-logs';
                     expect(this.jobManagerInstance.handlers[event]).toBeUndefined();
-                    this.jobManagerInstance.removeHandler(event, 'scream');
+                    this.jobManagerInstance.removeEventHandler(event, 'scream');
                     expectHandlersDefined(this.jobManagerInstance, event, false, ['scream']);
                 });
             });
@@ -584,7 +584,7 @@ define([
 
         /* defaultHandlerMixin */
         function setUpHandlerTest(context, event) {
-            context.jobManagerInstance.addHandler(event, { handler_1: scream });
+            context.jobManagerInstance.addEventHandler(event, { handler_1: scream });
             expect(Object.keys(context.jobManagerInstance.handlers[event]).sort()).toEqual([
                 '__default',
                 'handler_1',
@@ -644,15 +644,15 @@ define([
                     this.jobId = jobId;
                     setUpHandlerTest(this, event);
                     expect(
-                        this.jobManagerInstance.model.getItem(`exec.jobs.params.${jobId}`)
+                        this.jobManagerInstance.model.getItem(`exec.jobs.info.${jobId}`)
                     ).not.toBeDefined();
                     // rather than faffing around with sending messages over the bus,
                     // trigger the job handler directly
                     this.jobManagerInstance.runHandler('job-info', { jobInfo, jobId }, jobId);
 
                     expect(
-                        this.jobManagerInstance.model.getItem(`exec.jobs.params.${jobId}`)
-                    ).toEqual(jobParams);
+                        this.jobManagerInstance.model.getItem(`exec.jobs.info.${jobId}`)
+                    ).toEqual(jobInfo);
                     expect(this.jobManagerInstance.listeners[jobId][event]).not.toBeDefined();
                 });
 
@@ -919,29 +919,17 @@ define([
                         expect(this.jobManagerInstance.listeners[_jobId]['job-info']).toBeDefined();
                     });
                     const callArgs = this.bus.emit.calls.allArgs();
-
-                    // temp hack until we can submit job id lists / batch ids to `request-job-updates-start`
-                    expect(this.bus.emit).toHaveBeenCalledTimes(
-                        batchParentUpdate.child_jobs.length + 1
-                    );
-                    batchParentUpdate.child_jobs.forEach((job_id, ix) => {
-                        expect(callArgs[ix]).toEqual([
+                    expect(this.bus.emit).toHaveBeenCalledTimes(1);
+                    expect(callArgs).toEqual([
+                        [
                             'request-job-updates-start',
-                            { jobId: job_id },
-                        ]);
-                    });
-                    expect(callArgs[batchParentUpdate.child_jobs.length]).toEqual([
-                        'request-job-status',
-                        { jobIdList: jasmine.arrayWithExactContents(batchParentUpdate.child_jobs) },
+                            {
+                                jobIdList: jasmine.arrayWithExactContents(
+                                    batchParentUpdate.child_jobs
+                                ),
+                            },
+                        ],
                     ]);
-                    // expect(this.bus.emit).toHaveBeenCalledTimes(2);
-                    // expect(callArgs[0][0]).toEqual('request-job-updates-start');
-                    // expect(callArgs[1][0]).toEqual('request-job-status');
-                    // [0, 1].forEach((n) => {
-                    //     expect(callArgs[n][1].jobIdList).toEqual(
-                    //         jasmine.arrayWithExactContents(batchParentUpdate.child_jobs)
-                    //     );
-                    // });
                 });
             });
         });
@@ -1221,11 +1209,9 @@ define([
                 });
             });
 
-            const resetJobsCallArgs = JobsData.allJobsWithBatchParent.map((jobState) => {
-                return ['request-job-updates-stop', { jobId: jobState.job_id }];
-            });
-            // TODO: uncomment when backend can accept batch IDs
-            // const resetJobsCallArgs = [['request-job-updates-stop', { batchId: JobsData.batchParentJob.job_id }]];
+            const resetJobsCallArgs = [
+                ['request-job-updates-stop', { batchId: JobsData.batchParentJob.job_id }],
+            ];
 
             describe('cancelBatchJob', () => {
                 it('cancels the current batch parent job', function () {
@@ -1303,18 +1289,7 @@ define([
                 );
             });
 
-            // TODO: uncomment line below once narrative backend
-            // accepts batchIds for `request-job-updates-start`
-            // and `request-job-updates-start` responds with current job states
-            // const busCallArgs = ['request-job-updates-start', { batchId }],
-
-            // TODO: remove statement once batchIds are accepted for updates-start
-            const busCallArgs = allJobIds
-                .map((jobId) => {
-                    return ['request-job-updates-start', { jobId }];
-                })
-                .concat([['request-job-status', { batchId }]]);
-
+            const busCallArgs = [['request-job-updates-start', { batchId }]];
             if (listenerArray.includes('job-info')) {
                 busCallArgs.push(['request-job-info', { batchId }]);
             }

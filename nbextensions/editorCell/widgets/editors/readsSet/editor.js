@@ -14,7 +14,7 @@ define(
         'kb_service/utils',
         'kb_sdk_clients/genericClient',
         'common/pythonInterop',
-        'common/utils',
+        'common/cellUtils',
         'common/ui',
         'common/fsm',
         'common/spec',

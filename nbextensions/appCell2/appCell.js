@@ -31,22 +31,18 @@ define([
         div = t('div');
 
     function isAppCell(cell) {
-        if (cell.cell_type !== 'code') {
+        if (cell.cell_type !== 'code' || !cell.metadata.kbase) {
             return false;
         }
-        if (!cell.metadata.kbase) {
-            return false;
-        }
-        if (
-            cell.metadata.kbase.type === 'app2' ||
-            cell.metadata.kbase.type === 'app' ||
-            cell.metadata.kbase.type === 'devapp'
-        ) {
-            return true;
-        }
-        return false;
+        return ['app2', 'app', 'devapp'].includes(cell.metadata.kbase.type);
     }
 
+    /**
+     * Builds an App Cell without starting it.
+     * @param {Object} config - has keys:
+     *    cell {Object} - the Jupyter cell to upgrade to an App Cell
+     * @returns
+     */
     function factory(config) {
         const cell = config.cell,
             runtime = Runtime.make();

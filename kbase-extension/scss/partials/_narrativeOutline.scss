@@ -1,0 +1,105 @@
+.kb-narr-outline {
+  --kb-narr-outline: 2px solid #cecece;
+  padding: 0.5em 0.5em 0.5em 0.25em;
+}
+
+.kb-narr-outline ul {
+  list-style: none;
+  padding: 0;
+  position: relative;
+}
+
+.kb-narr-outline ul ul {
+  list-style: none;
+  padding-left: 1.5em;
+  position: relative;
+}
+
+.kb-narr-outline li {
+  position: relative;
+}
+
+.kb-narr-outline ul ul li:not(:last-of-type)::before {
+  border-left: var(--kb-narr-outline);
+  content: "";
+  height: calc(100% + 0.25em);
+  left: -0.5em;
+  position: absolute;
+  top: 0;
+}
+
+.kb-narr-outline__item {
+  align-items: center;
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: left;
+  left: 0;
+  padding: 0.1em;
+  padding-bottom: 0.3em;
+  position: relative;
+  cursor: pointer;
+  top: 0;
+}
+
+.kb-narr-outline ul ul .kb-narr-outline__item::after {
+  border-bottom: var(--kb-narr-outline);
+  border-left: var(--kb-narr-outline);
+  bottom: calc(50% + 1px);
+  content: "";
+  height: calc(50% - 0.25em);
+  left: -0.5em;
+  position: absolute;
+  width: 0.5em;
+}
+
+.kb-narr-outline__item-content {
+  display: block;
+  flex-grow: 0;
+  flex-shrink: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kb-narr-outline__item-icon {
+  display: inline-block;
+  transform: scale(0.5);
+  transform-origin: top left;
+}
+
+.kb-narr-outline__item-icon-wrapper {
+  border-radius: 10px;
+  display: block;
+  flex-grow: 0;
+  flex-shrink: 0;
+  height: 2em;
+  margin-left: 0.1em;
+  margin-right: 0.5em;
+  max-width: 2em;
+  overflow: hidden;
+}
+
+.kb-narr-outline__item::before {
+  border-radius: 0.333em;
+  bottom: 0.2em;
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 100%;
+  z-index: -1;
+  border: 1px solid transparent;
+  background-color: transparent;
+  -webkit-transition: background-color 100ms linear, border 100ms linear;
+  -ms-transition: background-color 100ms linear, border 100ms linear;
+  transition: background-color 100ms linear, border 100ms linear;
+}
+
+.kb-narr-outline__item--highlight::before {
+  border: 1px solid #cecece;
+  background-color: #eeeeee;
+}
+
+.kb-narr-outline__item--highlight-selected::before {
+  border: 1px solid #4bb856;
+  background-color: rgba(75, 184, 86, 0.15);
+}

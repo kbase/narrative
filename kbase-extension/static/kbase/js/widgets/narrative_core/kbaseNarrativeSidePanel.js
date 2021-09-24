@@ -5,7 +5,7 @@ define([
     'kbaseNarrativeDataPanel',
     'kbaseNarrativeAppPanel',
     'kbaseNarrativeManagePanel',
-    'kbaseNarrativeOutlinePanel'
+    'kbaseNarrativeOutlinePanel',
 ], (
     KBWidget,
     $,

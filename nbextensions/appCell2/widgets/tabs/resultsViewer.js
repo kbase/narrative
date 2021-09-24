@@ -102,7 +102,7 @@ define([
             const nbContainer = document.querySelector('#notebook-container');
             // Add scroll event listener to the notebook container on first call.
             if (!reportRenderTimeout) {
-                nbContainer.addEventListener("scroll", lazyRenderReport);
+                nbContainer.addEventListener('scroll', lazyRenderReport);
             }
             // Use a debounce timeout to avoid rendering the report _while_ the user is scrolling.
             clearTimeout(reportRenderTimeout);

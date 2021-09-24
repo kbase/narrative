@@ -39,18 +39,14 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
      * @param {string} options.iconContent if present, will be appended to a <span/> returned by cell.getIcon
      */
     function buildMockCell(cellType, kbaseCellType, options) {
-        const {
-            data,
-            title,
-            output,
-            selected = false,
-            iconContent = '',
-        } = options || {};
+        const { data, title, output, selected = false, iconContent = '' } = options || {};
         const $cellContainer = $(document.createElement('div'));
         const $icon = $('<div>').attr('data-element', 'icon');
         const $toolbar = $('<div>').addClass('celltoolbar');
         $toolbar.append($icon);
-        const metadata = kbaseCellType ? buildMockExtensionCellMetadata(kbaseCellType, data, title) : {};
+        const metadata = kbaseCellType
+            ? buildMockExtensionCellMetadata(kbaseCellType, data, title)
+            : {};
         const inputArea = $('<div>').addClass('input_area');
         const mockCell = {
             metadata: { kbase: metadata },
@@ -59,11 +55,15 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
             set_text: () => {},
             element: $cellContainer,
             input: $('<div>').addClass('input').append(inputArea),
-            output: $('<div>').addClass('output_wrapper').append('<div>').addClass('output').append(output),
+            output: $('<div>')
+                .addClass('output_wrapper')
+                .append('<div>')
+                .addClass('output')
+                .append(output),
             selected: selected,
             getIcon: () => $('<span>').append(iconContent)[0].outerHTML,
             celltoolbar: {
-                rebuild: () => { },
+                rebuild: () => {},
             },
         };
 

@@ -78,7 +78,8 @@ define([
                             [
                                 div(
                                     {
-                                        style: 'display:inline-block; width: 34px; vertical-align: top;',
+                                        style:
+                                            'display:inline-block; width: 34px; vertical-align: top;',
                                     },
                                     [
                                         span({

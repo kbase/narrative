@@ -29,7 +29,6 @@ define([
             {
                 class: `${cssBaseClass}__table`,
                 caption: 'Job Status',
-                style: 'width: 100%',
             },
             [
                 thead(
@@ -92,22 +91,31 @@ define([
         let analysisType = '';
         const params = {};
         const outputParams = {};
+        // unfortunate data structure makes generating this data long-winded
         Object.keys(typesToFiles).forEach((type) => {
+            // match app_id to get the abbreviated name for the analysis
             if (typesToFiles[type].appId === jobInfo.app_id) {
                 analysisType = fileTypesDisplay.fileTypeMapping[type];
                 Object.keys(jobInfo.job_params[0]).forEach((param) => {
-                    const value = jobInfo.job_params[0][param];
-                    const label = appData.specs[jobInfo.app_id].parameters
-                        .filter((p) => {
-                            return param === p.id;
-                        })
-                        .map((p) => {
-                            return p.ui_name;
-                        })[0];
-                    params[param] = {
-                        value,
-                        label,
-                    };
+                    // find each parameter in job_params in the app specs
+                    appData.specs[jobInfo.app_id].parameters.forEach((appParam) => {
+                        // only add values that are in the parameters
+                        // as these are the user-settable params
+                        if (appParam.id === param) {
+                            const value = jobInfo.job_params[0][param];
+                            const label = appData.specs[jobInfo.app_id].parameters
+                                .filter((p) => {
+                                    return param === p.id;
+                                })
+                                .map((p) => {
+                                    return p.ui_name;
+                                })[0];
+                            params[param] = {
+                                value,
+                                label,
+                            };
+                        }
+                    });
                 });
                 const outputParamIds = appData.outputParamIds[type];
                 outputParamIds.forEach((param) => {
@@ -284,7 +292,7 @@ define([
                             },
                         },
                     ],
-                    fnDrawCallback: () => {
+                    drawCallback: () => {
                         // Hide pagination controls if length is less than or equal to table length
                         if (rowCount <= dataTablePageLength) {
                             $(container).find('.dataTables_paginate').hide();

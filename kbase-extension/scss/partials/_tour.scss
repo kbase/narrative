@@ -1,27 +1,27 @@
 .kb-tour {
-  background-color: rgb(33 150 243);
+  background-color: use_color('mid-blue');
 
   &.popover {
     &.top > .arrow::after {
-      border-top-color: rgb(33 150 243);
+      border-top-color: use_color('mid-blue');
     }
 
     &.bottom > .arrow::after {
-      border-bottom-color: rgb(33 150 243);
+      border-bottom-color: use_color('mid-blue');
     }
 
     &.right > .arrow::after {
-      border-right-color: rgb(33 150 243);
+      border-right-color: use_color('mid-blue');
     }
 
     &.left > .arrow::after {
-      border-left-color: rgb(33 150 243);
+      border-left-color: use_color('mid-blue');
     }
   }
 
   > {
     h3.popover-title {
-      background-color: rgb(33 150 243);
+      background-color: use_color('mid-blue');
       color: rgb(255 255 255);
       font: 16px $typeface-page-text;
     }

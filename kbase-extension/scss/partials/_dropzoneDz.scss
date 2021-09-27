@@ -77,7 +77,7 @@
 }
 
 .kb-dropzone {
-  border: 2px dashed rgb(33 150 243) !important;
+  border: 2px dashed use_color('mid-blue') !important;
   margin-bottom: 5px;
   max-height: 150px;
   overflow-y: auto;

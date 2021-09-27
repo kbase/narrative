@@ -1,6 +1,8 @@
 define(['common/format'], (format) => {
     'use strict';
 
+    const cssBaseClass = 'kb-info-tab';
+
     const DOMTagA = function (innerHTML, options) {
         const tag = document.createElement('a');
         if (options) {
@@ -56,6 +58,7 @@ define(['common/format'], (format) => {
 
             // DESCRIPTION
             const description = document.createElement('div');
+            description.classList.add(`${cssBaseClass}__description`);
             description.innerHTML = methodFullInfo.description;
 
             // RUN COUNT AND AVERAGE RUNTIME
@@ -144,11 +147,17 @@ define(['common/format'], (format) => {
 
             // Populate info tab
             containerNode = arg.node;
-            containerNode.appendChild(description);
-            const infoList = document.createElement('ul');
-            appendChildren(infoList, listItems);
-            containerNode.appendChild(infoList);
 
+            const infoContainer = document.createElement('div');
+            infoContainer.classList.add(`${cssBaseClass}__container`);
+            infoContainer.appendChild(description);
+
+            const infoList = document.createElement('ul');
+            infoList.classList.add(`${cssBaseClass}__infoList`);
+            appendChildren(infoList, listItems);
+            infoContainer.appendChild(infoList);
+
+            containerNode.appendChild(infoContainer);
             return Promise.resolve(containerNode);
         }
 

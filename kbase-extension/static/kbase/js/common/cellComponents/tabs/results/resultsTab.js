@@ -163,13 +163,13 @@ define(['bluebird', 'common/ui', 'common/events', './outputWidget', './reportWid
 
             const objectNode = document.createElement('div');
             const reportNode = document.createElement('div');
+            const containerNode = document.createElement('div');
+            containerNode.classList.add('hidden', 'kb-result-tab__container');
             return fetchReportData(reports)
                 .then((reportData) => {
-                    container.appendChild(objectNode);
-                    objectNode.classList.add('hidden');
-
-                    container.appendChild(reportNode);
-                    reportNode.classList.add('hidden');
+                    container.appendChild(containerNode);
+                    containerNode.appendChild(objectNode);
+                    containerNode.appendChild(reportNode);
 
                     return Promise.all([
                         buildOutputWidget(objectNode, reportData),
@@ -178,8 +178,7 @@ define(['bluebird', 'common/ui', 'common/events', './outputWidget', './reportWid
                 })
                 .then(() => {
                     events.attachEvents(container);
-                    reportNode.classList.remove('hidden');
-                    objectNode.classList.remove('hidden');
+                    containerNode.classList.remove('hidden');
                 })
                 .finally(() => {
                     container.removeChild(spinnerNode);

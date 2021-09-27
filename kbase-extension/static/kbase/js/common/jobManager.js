@@ -191,10 +191,10 @@ define(['common/dialogMessages', 'common/jobs'], (DialogMessages, Jobs) => {
                     if (!this.listeners[jobId][type]) {
                         this.listeners[jobId][type] = this.bus.listen({
                             channel: {
-                                jobId: jobId,
+                                jobId,
                             },
                             key: {
-                                type: type,
+                                type,
                             },
                             handle: (message) => {
                                 if (!this._isValidMessage(type, message)) {

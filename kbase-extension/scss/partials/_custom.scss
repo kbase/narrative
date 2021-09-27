@@ -80,7 +80,7 @@ div {
 
     &.selected {
       background: none;
-      border: 1px solid rgb(75 184 86);
+      border: 1px solid use_color('mid-green');
       border-left-width: 5px;
       box-shadow: 0 1px 2px rgb(170 170 170), 0 5px 5px rgb(170 170 170);
       margin-left: 0;
@@ -232,7 +232,7 @@ div {
 
     &.selected.kb-cell {
       .rendered_html {
-        border-left: 1px solid rgb(75 184 86);
+        border-left: 1px solid use_color('mid-green');
       }
 
       &.kb-error .rendered_html {

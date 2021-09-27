@@ -1,5 +1,4 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-#npm run husky_msg && npm run prettier_check
-npx lint-staged
+npx lint-staged && npm run update_browserslist

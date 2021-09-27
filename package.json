@@ -108,8 +108,8 @@
     },
     "lint-staged": {
         "*.js": [
-            "eslint --check",
-            "prettier --check"
+            "eslint --fix",
+            "prettier --ignore-unknown --write"
         ]
     },
     "dependencies": {

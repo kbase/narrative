@@ -1,3 +1,5 @@
+$job_status_table_cols: 'action', 'import-type', 'output', 'status';
+
 .kb-job-status {
   box-shadow: none;
 
@@ -52,25 +54,12 @@
         }
       }
 
-      // .kb-job-status__table_head_cell
+      // .kb-job-status__table_head_cell--${col}
       &_cell {
-        &--action,
-        &--log-view,
-        &--object,
-        &--status {
-          @include table-cell;
-        }
-
-        &--status {
-          width: 14rem;
-        }
-
-        &--log-view {
-          width: 12rem;
-        }
-
-        &--action {
-          width: 14rem;
+        @each $col in $job_status_table_cols {
+          &--#{$col} {
+            @include table-cell;
+          }
         }
       }
     }
@@ -82,23 +71,29 @@
   }
 
   &__cell {
+    // .kb-job-status__cell--${col}
+    @each $col in $job_status_table_cols {
+      &--#{$col} {
+        @include table-cell;
+
+        white-space: nowrap;
+      }
+    }
+
     &--status {
       text-transform: capitalize;
-    }
-    // .kb-job-status__table_cell--action,
-    // .kb-job-status__table_cell--log-view,
-    // .kb-job-status__table_cell--object,
-    // .kb-job-status__table_cell--status
-    &--action,
-    &--log-view,
-    &--object,
-    &--status {
-      @include table-cell;
-
-      white-space: nowrap;
+      width: 10rem;
     }
 
-    // .kb-job-status__cell_action
+    &--action {
+      width: 15rem;
+    }
+
+    &--import-type {
+      width: 25rem;
+    }
+
+    // .kb-job-status__cell_action (action buttons)
     &_action {
       // .kb-job-status__cell_action--retry
       // .kb-job-status__cell_action--go-to-results

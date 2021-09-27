@@ -602,16 +602,17 @@ define([
             setupMessageBus();
             setupDomNode();
 
+            // finalize by updating the lastLoaded attribute, which triggers a toolbar re-render
+            const meta = cell.metadata;
+            meta.kbase.attributes.lastLoaded = new Date().toUTCString();
+            cell.metadata = meta;
+
             // initialise the job manager
             jobManager = new JobManager({
                 model: model,
                 bus: runtime.bus(),
             });
 
-            // finalize by updating the lastLoaded attribute, which triggers a toolbar re-render
-            const meta = cell.metadata;
-            meta.kbase.attributes.lastLoaded = new Date().toUTCString();
-            cell.metadata = meta;
             render()
                 .then(() => {
                     jobManager.addEventHandler('modelUpdate', {

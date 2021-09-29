@@ -127,6 +127,7 @@ require.config({
         jobCommChannel: 'kbase/js/widgets/narrative_core/jobCommChannel',
         kbaseNarrativeAppPanel: 'kbase/js/widgets/narrative_core/kbaseNarrativeAppPanel',
         kbaseNarrativeManagePanel: 'kbase/js/widgets/narrative_core/kbaseNarrativeManagePanel',
+        kbaseNarrativeOutlinePanel: 'kbase/js/widgets/narrative_core/kbaseNarrativeOutlinePanel',
         kbaseNarrativeDownloadPanel: 'kbase/js/widgets/narrative_core/kbaseNarrativeDownloadPanel',
         kbaseNarrativeSharePanel: 'kbase/js/widgets/narrative_core/kbaseNarrativeSharePanel',
         kbaseNarrativeExampleDataTab:

@@ -70,7 +70,7 @@ $tab-widget-padding: 4px;
   &-configure {
     &__container {
       display: flex;
-      margin: -($tab-widget-margin + $tab-widget-padding);
+      margin: -($tab-widget-margin);
     }
 
     // kb-bulk-import-configure__filetype_panel

@@ -3,7 +3,7 @@ module.exports = function (config) {
     'use strict';
     config.set({
         basePath: '../../',
-        frameworks: ['jasmine', 'requirejs', 'es6-shim'],
+        frameworks: ['jasmine', 'requirejs', 'es6-shim', 'jasmine-matchers'],
         client: {
             jasmine: {
                 failFast: false,
@@ -15,6 +15,7 @@ module.exports = function (config) {
         },
         plugins: [
             'karma-jasmine',
+            'karma-jasmine-matchers',
             'karma-chrome-launcher',
             'karma-firefox-launcher',
             'karma-requirejs',
@@ -45,6 +46,7 @@ module.exports = function (config) {
             { pattern: 'test/unit/mocks.js', nocache: true },
             { pattern: 'test/unit/test-main.js', nocache: true },
             { pattern: 'test/unit/spec/**/*.js', included: false, nocache: true },
+            { pattern: 'test/unit/spec/**/*.json', included: false, nocache: true },
             { pattern: 'test/testConfig.json', included: false, nocache: true },
             { pattern: 'test/*.tok', included: false, nocache: true },
             { pattern: 'test/data/**/*', included: false, nocache: true },
@@ -131,6 +133,9 @@ module.exports = function (config) {
             '/narrative/static/bidi': 'http://localhost:32323/narrative/static/bidi',
             '/static/kbase/config': '/base/kbase-extension/static/kbase/config',
             '/test/': '/base/test/',
+            // This ensures that the msw api (msw.js) can find mockServerWorker.js service
+            // worker library at the canonical location.
+            '/mockServiceWorker.js': '/narrative/static/ext_modules/msw/mockServiceWorker.js',
         },
         concurrency: Infinity,
     });

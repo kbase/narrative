@@ -1,0 +1,14 @@
+{
+    "envs": {
+        "ci": {
+            "CASE_1": {
+                "narrativeId": 31932
+            }
+        },
+        "narrative-dev": {
+            "CASE_1": {
+                "narrativeId": 78050
+            }
+        }
+    }
+}

@@ -31,14 +31,22 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
      * @param {string} cellType the type of cell it should be
      * @param {string} kbaseCellType if present, mock up an extended cell by adding some
      *      base metadata.
-     * @param {object} data if present, will populate the cell's metadata.
+     * @param {object} options extra options
+     * @param {object} options.data if present, will populate the cell's metadata.
+     * @param {string} options.title if present, will set the title of the cell.
+     * @param {string} options.output if present, will append to the output of the cell.
+     * @param {boolean} options.selected if true, will mark the cell as selected
+     * @param {string} options.iconContent if present, will be appended to a <span/> returned by cell.getIcon
      */
-    function buildMockCell(cellType, kbaseCellType, data) {
+    function buildMockCell(cellType, kbaseCellType, options) {
+        const { data, title, output, selected = false, iconContent = '' } = options || {};
         const $cellContainer = $(document.createElement('div'));
         const $icon = $('<div>').attr('data-element', 'icon');
         const $toolbar = $('<div>').addClass('celltoolbar');
         $toolbar.append($icon);
-        const metadata = kbaseCellType ? buildMockExtensionCellMetadata(kbaseCellType, data) : {};
+        const metadata = kbaseCellType
+            ? buildMockExtensionCellMetadata(kbaseCellType, data, title)
+            : {};
         const inputArea = $('<div>').addClass('input_area');
         const mockCell = {
             metadata: { kbase: metadata },
@@ -47,7 +55,13 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
             set_text: () => {},
             element: $cellContainer,
             input: $('<div>').addClass('input').append(inputArea),
-            output: $('<div>').addClass('output_wrapper').append('<div>').addClass('output'),
+            output: $('<div>')
+                .addClass('output_wrapper')
+                .append('<div>')
+                .addClass('output')
+                .append(output),
+            selected: selected,
+            getIcon: () => $('<span>').append(iconContent)[0].outerHTML,
             celltoolbar: {
                 rebuild: () => {},
             },
@@ -70,15 +84,17 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
      *  ... other cell metadata from Jupyter ...
      * }
      * @param {string} kbaseCellType
+     * @param {object} data
+     * @param {string} title
      */
-    function buildMockExtensionCellMetadata(kbaseCellType, data) {
-        let meta = {
+    function buildMockExtensionCellMetadata(kbaseCellType, data, title) {
+        const meta = {
             type: kbaseCellType,
             attributes: {
                 id: new UUID(4).format(),
                 status: 'new',
                 created: new Date().toUTCString(),
-                title: '',
+                title: title || '',
                 subtitle: '',
             },
             data: data,
@@ -117,8 +133,6 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
                 break;
 
             default:
-                // if we don't know the cell type, return a blank metadata
-                meta = {};
                 break;
         }
         return meta;
@@ -155,7 +169,7 @@ define('narrativeMocks', ['jquery', 'uuid', 'narrativeConfig'], ($, UUID, Config
         const executeReply = options.executeReply || {};
 
         function insertCell(type, index, data) {
-            const cell = buildMockCell(type, '', data);
+            const cell = buildMockCell(type, '', { data });
             if (index <= 0) {
                 index = 0;
             }

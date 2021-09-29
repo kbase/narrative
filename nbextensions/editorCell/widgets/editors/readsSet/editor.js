@@ -64,45 +64,44 @@ define([
         this.message = message;
         this.reason = reason;
     }
+
     CancellationError.prototype = Object.create(Error.prototype);
     CancellationError.prototype.constructor = CancellationError;
     CancellationError.prototype.name = 'ClientException';
 
     function factory(config) {
-        let cell = config.cell,
-            parentBus = config.bus,
-            hostNode,
-            container,
-            ui,
-            workspaceInfo = config.workspaceInfo,
-            runtime = Runtime.make(),
-            // TODO: the cell bus should be created and managed through main.js,
-            // that is, the extension.
-            cellBus,
-            bus = runtime.bus().makeChannelBus({ description: 'An editor cell widget' }),
-            env = {},
-            editorState,
-            model,
-            eventManager = BusEventManager.make({
-                bus: runtime.bus(),
-            }),
-            // HMM. Sync with metadata, or just keep everything there?
-            settings = {
-                showAdvanced: {
-                    label: 'Show advanced parameters',
-                    defaultValue: false,
-                    type: 'custom',
-                },
-                showNotifications: {
-                    label: 'Show the notifications panel',
-                    defaultValue: false,
-                    type: 'toggle',
-                    element: 'notifications',
-                },
+        const cell = config.cell;
+        const parentBus = config.bus;
+        let hostNode;
+        let container;
+        let ui;
+        const workspaceInfo = config.workspaceInfo;
+        const runtime = Runtime.make();
+        // TODO: the cell bus should be created and managed through main.js,
+        // that is, the extension.
+        let cellBus;
+        const bus = runtime.bus().makeChannelBus({ description: 'An editor cell widget' });
+        const env = {};
+        const eventManager = BusEventManager.make({
+            bus: runtime.bus(),
+        });
+        // HMM. Sync with metadata, or just keep everything there?
+        const settings = {
+            showAdvanced: {
+                label: 'Show advanced parameters',
+                defaultValue: false,
+                type: 'custom',
             },
-            widgets = {},
-            spec,
-            fsm;
+            showNotifications: {
+                label: 'Show the notifications panel',
+                defaultValue: false,
+                type: 'toggle',
+                element: 'notifications',
+            },
+        };
+        const widgets = {};
+        let spec;
+        let fsm;
 
         if (runtime.config('features.developer')) {
             settings.showDeveloper = {
@@ -156,24 +155,8 @@ define([
             ui.setContent('fatal-error.advice', editorState.getItem('fatalError.advice'));
         }
 
-        function renderSetting(settingName) {
-            let setting = settings[settingName],
-                value;
-
-            if (!setting) {
-                return;
-            }
-
-            value = editorState.getItem(['user-settings', settingName], setting.defaultValue);
-            switch (setting.type) {
-                case 'toggle':
-                    if (value) {
-                        ui.showElement(setting.element);
-                    } else {
-                        ui.hideElement(setting.element);
-                    }
-                    break;
-            }
+        function toBoolean(value) {
+            return !!value;
         }
 
         function buildLayout(events) {
@@ -461,7 +444,7 @@ define([
             }
         }
 
-        function toggleCodeInputArea(cell) {
+        function toggleCodeInputArea() {
             if (editorState.getItem('user-settings.showCodeInputArea')) {
                 editorState.setItem('user-settings.showCodeInputArea', false);
             } else {
@@ -516,28 +499,7 @@ define([
             renderNotifications();
         }
 
-        function clearNotifications() {
-            editorState.setItem('notifications', []);
-        }
-
         // WIDGETS
-
-        function showWidget(name, widgetModule, path) {
-            const bus = runtime.bus().makeChannelBus({ description: 'Bus for showWidget' }),
-                widget = widgetModule.make({
-                    bus: bus,
-                    workspaceInfo: workspaceInfo,
-                });
-            widgets[name] = {
-                path: path,
-                module: widgetModule,
-                instance: widget,
-            };
-            widget.start();
-            bus.emit('attach', {
-                node: ui.getElement(path),
-            });
-        }
 
         /*
          *
@@ -627,16 +589,10 @@ define([
         function loadErrorWidget(error) {
             console.error('ERROR', error);
             console.error(error.detail.replace('\n', '<br>'));
-            let detail;
-            if (error.detail) {
-                detail = error.detail.replace('\n', '<br>');
-            } else {
-                detail = '';
-            }
 
             const content = div(
                 {
-                    style: { border: '1px solid red' },
+                    style: { border: '1px red solid' },
                 },
                 [
                     div({ style: { color: 'red' } }, 'Error'),
@@ -654,17 +610,6 @@ define([
             );
 
             ui.setContent('editor.widget', content);
-        }
-
-        function setStatusFlag(flag, value) {
-            const flagNode = ui.getElement('editor-status.flags.' + flag);
-            if (flagNode) {
-                if (value) {
-                    flagNode.style.backgroundColor = 'green';
-                } else {
-                    flagNode.style.backgroundColor = 'white';
-                }
-            }
         }
 
         function loadUpdateEditor(controller) {
@@ -741,7 +686,7 @@ define([
                         evaluateAppState();
                     });
 
-                    bus.on('parameter-touched', (message) => {
+                    bus.on('parameter-touched', () => {
                         const state = fsm.getCurrentState(),
                             newState = JSON.parse(JSON.stringify(state.state));
                         newState.data = 'touched';
@@ -767,15 +712,6 @@ define([
                     console.error('ERROR', err);
                     reject(err);
                 });
-            });
-        }
-
-        function doShowMessage(message) {
-            const messageWidget = MessageWidget.make();
-            widgets.editor.instance = messageWidget;
-            return messageWidget.start({
-                content: message,
-                node: ui.getElement('editor.widget'),
             });
         }
 
@@ -855,12 +791,6 @@ define([
          * TODO: this really should be done through the spec, but we
          * are rapidly cutting corners here...
          */
-        function resetEditorModel(objectRef) {
-            model.setItem('params', {});
-            model.setItem('params.name', '');
-            model.setItem('params.description', '');
-            model.setItem('params.items', []);
-        }
 
         function doCreateNewSet(name) {
             const setApiClient = new GenericClient({
@@ -904,7 +834,6 @@ define([
         const editorControllers = {};
 
         function unloadEditorController(controller) {
-            const originalStatus = controller.status;
             controller.status = 'unloading';
             controller.cancelled = true;
             return Promise.try(() => {
@@ -940,7 +869,6 @@ define([
         // Widget controller
 
         function unloadWidgetController(controller) {
-            const originalStatus = controller.status;
             controller.status = 'unloading';
             controller.cancelled = true;
             return Promise.try(() => {
@@ -1168,6 +1096,7 @@ define([
                     });
                 }
             }
+
             harvestErrors(validationResult);
             return messages;
         }
@@ -1211,6 +1140,7 @@ define([
                     renderUI();
                 })
                 .catch((err) => {
+                    alert('internal error');
                     console.error('INTERNAL ERROR', err);
                 });
         }
@@ -1234,22 +1164,11 @@ define([
                     label = showing ? 'Hide Code' : 'Show Code';
                 ui.setButtonLabel('toggle-code-view', label);
             });
-            bus.on('show-notifications', () => {
-                doShowNotifications();
-            });
             bus.on('save', () => {
                 doSave();
             });
 
-            bus.on('on-success', () => {
-                doOnSuccess();
-            });
-
             // Events from widgets...
-
-            parentBus.on('newstate', (message) => {
-                console.log('GOT NEWSTATE', message);
-            });
 
             parentBus.on('reset-to-defaults', () => {
                 bus.emit('reset-to-defaults');
@@ -1360,7 +1279,7 @@ define([
                 .then(() => {
                     // Should not need to do this each time...
                     const appRef = [editorState.getItem('app').id, editorState.getItem('app').tag]
-                        .filter((v) => !!v)
+                        .filter(toBoolean)
                         .join('/');
                     const url = '/#appcatalog/app/' + appRef;
                     utils.setCellMeta(cell, 'kbase.attributes.title', env.appSpec.info.name);
@@ -1374,7 +1293,6 @@ define([
                     // only load the editor up if we have an existing set.
                     // NEW: get the most recent one, not just the most recently selected one.
                     if (editorState.getItem('current.set.info')) {
-                        console.log('START() -- LOADING OBJECT IN editor');
                         return doEditObject(editorState.getItem('current.set.info'));
                     } else {
                         return doShowWidget(MessageWidget, {
@@ -1426,14 +1344,14 @@ define([
 
         // INIT
 
-        model = Props.make({
+        const model = Props.make({
             data: {},
-            onUpdate: function (props) {
+            onUpdate: function () {
                 renderUI();
             },
         });
 
-        editorState = Props.make({
+        const editorState = Props.make({
             data: utils.getCellMeta(cell, 'kbase.editorCell'),
             onUpdate: function (props) {
                 utils.setCellMeta(cell, 'kbase.editorCell', props.getRawObject());

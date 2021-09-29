@@ -193,7 +193,6 @@ define([
                 },
             };
         let runStatusListener = null, // only used while listening for the jobs to start
-            readOnly = false,
             kbaseNode = null, // the DOM element used as the container for everything in this cell
             cellBus = null, // the parent cell bus that gets external messages
             controllerBus = null, // the main bus for this cell and its children
@@ -202,7 +201,8 @@ define([
             cancelBatch = null; // whether or not to cancel the job
         // widgets this cell owns
         let cellTabs, controlPanel, jobManager;
-        const specs = {};
+        const specs = {},
+            readOnly = false;
 
         if (options.initialize) {
             initialize(options.specs); // fills out the specs object
@@ -324,11 +324,8 @@ define([
                     params: {},
                 };
                 initialParamStates[fileType] = 'incomplete';
-                [
-                    fileParamIds[fileType],
-                    otherParamIds[fileType],
-                    outputParamIds[fileType],
-                ] = filterFileParameters(spec);
+                [fileParamIds[fileType], otherParamIds[fileType], outputParamIds[fileType]] =
+                    filterFileParameters(spec);
                 if (fileParamIds[fileType].length < 3) {
                     initialParams[fileType].filePaths = typesToFiles[fileType].files.map(
                         (inputFile) => {

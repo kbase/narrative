@@ -10,7 +10,7 @@ jobs:
       uses: actions/checkout@v2
     - name: Tag Deploy Environments  
       env:
-        DOCKER_ACTOR: jsfillman
+        DOCKER_ACTOR: ${{ secrets.GHCR_USERNAME }}
         DOCKER_TOKEN: ${{ secrets.GHCR_TOKEN  }}
         IMAGE_TAG: ${{ github.event.client_payload.image_tag }}
         SHA: ${{ github.event.pull_request.head.sha }}

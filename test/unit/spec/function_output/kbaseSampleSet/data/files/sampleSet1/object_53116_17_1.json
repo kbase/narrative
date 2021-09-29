@@ -1,0 +1,134 @@
+{
+    "data": {
+        "description": "whondrs 8 samples two user columns",
+        "samples": [
+            {
+                "id": "f911b06f-b115-4d1d-8e91-2e6e912c4203",
+                "name": "altamaha_2018_pw_15hr_WHONDRS-PP48-000107",
+                "version": 1
+            },
+            {
+                "id": "e57276ab-caba-48fb-8ec8-b55a0bcc4445",
+                "name": "altamaha_2018_sw_39hr_48hr_WHONDRS-SW48-000107",
+                "version": 1
+            },
+            {
+                "id": "346548a4-bd3d-43a1-8377-00cc8eb1b919",
+                "name": "columbia_2018_pw_45hr_WHONDRS-PP48-000066",
+                "version": 1
+            },
+            {
+                "id": "17a3815a-011c-4f0b-9dcd-85ba544c195f",
+                "name": "columbia_2018_sw_45hr_WHONDRS-SW48-000066",
+                "version": 1
+            },
+            {
+                "id": "11d293e2-b968-4efa-bba4-c16ca61cf4c6",
+                "name": "eastfork_2018_pw_27hr_WHONDRS-PP48-000043",
+                "version": 1
+            },
+            {
+                "id": "c0a64720-7053-458f-a033-2ef5031bbaca",
+                "name": "eastfork_2018_sw_27hr_WHONDRS-SW48-000043",
+                "version": 1
+            },
+            {
+                "id": "1437dc6e-1843-49e6-8344-15ebfe555750",
+                "name": "erpe_2018_pw_18hr_WHONDRS-PP48-000091",
+                "version": 1
+            },
+            {
+                "id": "ad4a1450-1c44-46cd-a046-cf71e2b28fb0",
+                "name": "erpe_2018_sw_18hr_WHONDRS-SW48-000091",
+                "version": 1
+            }
+        ]
+    },
+    "info": [
+        17,
+        "WHONDRS_8_samples_JE_TwoUserColumns.xlsx_-_Sheet1.csv_sample_set",
+        "KBaseSets.SampleSet-3.0",
+        "2021-07-17T17:55:07+0000",
+        1,
+        "kbaseuitest",
+        53116,
+        "kbaseuitest:narrative_1597424579769",
+        "3537a194e2dc097c944650be5f2af5fa",
+        933,
+        {
+            "num_samples": "8"
+        }
+    ],
+    "path": [
+        "53116/17/1"
+    ],
+    "provenance": [
+        {
+            "time": "2021-07-17T17:54:51+0000",
+            "epoch": 1626544491000,
+            "service": "sample_uploader",
+            "service_ver": "0548ad5e11a7d82e0917047259f62f6eb8eb7832",
+            "method": "import_samples",
+            "method_params": [
+                {
+                    "workspace_name": "kbaseuitest:narrative_1597424579769",
+                    "workspace_id": 53116,
+                    "sample_file": "WHONDRS_8_samples_JE_TwoUserColumns.xlsx - Sheet1.csv",
+                    "file_format": "sesar",
+                    "set_name": "WHONDRS_8_samples_JE_TwoUserColumns.xlsx_-_Sheet1.csv_sample_set",
+                    "name_field": null,
+                    "header_row_index": null,
+                    "description": "whondrs 8 samples two user columns",
+                    "sample_set_ref": null,
+                    "output_format": null,
+                    "taxonomy_source": "n/a",
+                    "num_otus": 20,
+                    "incl_seq": 0,
+                    "otu_prefix": "OTU",
+                    "incl_input_in_output": 1,
+                    "share_within_workspace": 1,
+                    "prevalidate": 1,
+                    "keep_existing_samples": 1,
+                    "ignore_warnings": 1
+                }
+            ],
+            "input_ws_objects": [],
+            "resolved_ws_objects": [],
+            "external_data": [],
+            "subactions": [
+                {
+                    "name": "sample_uploader",
+                    "ver": "0548ad5e11a7d82e0917047259f62f6eb8eb7832",
+                    "code_url": "https://github.com/kbaseapps/sample_uploader",
+                    "commit": "0548ad5e11a7d82e0917047259f62f6eb8eb7832"
+                },
+                {
+                    "name": "DataFileUtil",
+                    "ver": "release",
+                    "code_url": "https://github.com/kbaseapps/DataFileUtil",
+                    "commit": "b640d1ce826f46d1bff497a2f475a4c7de016a18"
+                }
+            ],
+            "custom": {},
+            "description": "KBase SDK method run via the KBase Execution Engine"
+        }
+    ],
+    "creator": "kbaseuitest",
+    "orig_wsid": 53116,
+    "created": "2021-07-17T17:55:07+0000",
+    "epoch": 1626544507330,
+    "refs": [],
+    "copy_source_inaccessible": 0,
+    "extracted_ids": {
+        "sample": [
+            "c0a64720-7053-458f-a033-2ef5031bbaca",
+            "f911b06f-b115-4d1d-8e91-2e6e912c4203",
+            "11d293e2-b968-4efa-bba4-c16ca61cf4c6",
+            "346548a4-bd3d-43a1-8377-00cc8eb1b919",
+            "1437dc6e-1843-49e6-8344-15ebfe555750",
+            "ad4a1450-1c44-46cd-a046-cf71e2b28fb0",
+            "e57276ab-caba-48fb-8ec8-b55a0bcc4445",
+            "17a3815a-011c-4f0b-9dcd-85ba544c195f"
+        ]
+    }
+}

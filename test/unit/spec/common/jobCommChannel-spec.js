@@ -553,19 +553,24 @@ define([
                     job_id: 'jobCancelWithErrors',
                     message: 'cancel error',
                     source: 'cancel_job',
+                    code: 'RED',
                 },
-                expectedMultiple: [
-                    [
-                        {
-                            jobId: 'jobCancelWithErrors',
+                expected: [
+                    {
+                        jobId: 'jobCancelWithErrors',
+                        error: {
+                            job_id: 'jobCancelWithErrors',
                             message: 'cancel error',
-                            request: 'cancel_job',
+                            source: 'cancel_job',
+                            code: 'RED',
                         },
-                        {
-                            channel: { jobId: 'jobCancelWithErrors' },
-                            key: { type: 'job-error' },
-                        },
-                    ],
+                        message: 'cancel error',
+                        request: 'cancel_job',
+                    },
+                    {
+                        channel: { jobId: 'jobCancelWithErrors' },
+                        key: { type: 'job-error' },
+                    },
                 ],
             },
             {
@@ -574,28 +579,22 @@ define([
                     job_id: 'jobLogWithErrors',
                     message: 'log error',
                     source: 'job_logs',
+                    code: -32000,
                 },
-                expectedMultiple: [
-                    [
-                        {
-                            jobId: 'jobLogWithErrors',
+                expected: [
+                    {
+                        jobId: 'jobLogWithErrors',
+                        error: {
+                            job_id: 'jobLogWithErrors',
                             message: 'log error',
+                            source: 'job_logs',
+                            code: -32000,
                         },
-                        {
-                            channel: { jobId: 'jobLogWithErrors' },
-                            key: { type: 'job-log-deleted' },
-                        },
-                    ],
-                    [
-                        {
-                            jobId: 'jobLogWithErrors',
-                            error: 'log error',
-                        },
-                        {
-                            channel: { jobId: 'jobLogWithErrors' },
-                            key: { type: 'job-logs' },
-                        },
-                    ],
+                    },
+                    {
+                        channel: { jobId: 'jobLogWithErrors' },
+                        key: { type: 'job-logs' },
+                    },
                 ],
             },
             {
@@ -605,10 +604,17 @@ define([
                     source: 'some-unknown-error',
                     job_id: 'unknownJobErrors',
                     message: 'some random error',
+                    code: 404,
                 },
                 expected: [
                     {
                         jobId: 'unknownJobErrors',
+                        error: {
+                            source: 'some-unknown-error',
+                            job_id: 'unknownJobErrors',
+                            message: 'some random error',
+                            code: 404,
+                        },
                         message: 'some random error',
                         request: 'some-unknown-error',
                     },

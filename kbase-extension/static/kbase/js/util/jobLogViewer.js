@@ -32,7 +32,10 @@ define([
         p = t('p'),
         cssBaseClass = 'kb-log',
         logContentStandardClass = `${cssBaseClass}__content`,
-        logContentExpandedClass = `${logContentStandardClass}--expanded`;
+        logContentExpandedClass = `${logContentStandardClass}--expanded`,
+        LOG_CONTAINER = 'log-container',
+        LOG_PANEL = 'log-panel',
+        LOG_LINES = 'log-lines';
 
     let logContentClass = logContentStandardClass;
 
@@ -433,11 +436,11 @@ define([
             scrollToEndOnNext = false;
 
         function getLogPanel() {
-            return ui.getElement('log-panel');
+            return ui.getElement(LOG_PANEL);
         }
 
         function getLastLogLine() {
-            return ui.getElement('log-lines').lastChild;
+            return ui.getElement(LOG_LINES).lastChild;
         }
 
         // VIEW ACTIONS
@@ -512,7 +515,7 @@ define([
             ui.showElement('spinner');
             awaitingLog = true;
             bus.emit('request-job-log', {
-                jobId: jobId,
+                jobId,
                 options: {
                     first_line: firstLine,
                 },
@@ -528,7 +531,7 @@ define([
             awaitingLog = true;
             ui.showElement('spinner');
             bus.emit('request-job-log', {
-                jobId: jobId,
+                jobId,
                 options: {
                     latest: true,
                 },
@@ -726,7 +729,7 @@ define([
                     div(
                         {
                             class: `${cssBaseClass}__logs_container`,
-                            dataElement: 'log-container',
+                            dataElement: LOG_CONTAINER,
                         },
                         [
                             div(
@@ -748,7 +751,7 @@ define([
                                 [
                                     renderControls(events),
                                     div({
-                                        dataElement: 'log-panel',
+                                        dataElement: LOG_PANEL,
                                         class: logContentClass,
                                     }),
                                 ]
@@ -842,7 +845,7 @@ define([
         function renderLog() {
             const lines = model.getItem('lines');
             if (!lines || lines.length === 0) {
-                ui.setContent('log-panel', 'No log entries to show.');
+                ui.setContent(LOG_PANEL, 'No log entries to show.');
                 return;
             }
 
@@ -850,7 +853,7 @@ define([
             panel.innerHTML = t('ol')(
                 {
                     class: `${cssBaseClass}__log_line_container`,
-                    dataElement: 'log-lines',
+                    dataElement: LOG_LINES,
                 },
                 lines.map((line) => renderLogLine(line)).join('\n')
             );
@@ -967,6 +970,11 @@ define([
             const jobStatus =
                     message.jobState && message.jobState.status ? message.jobState.status : null,
                 { mode } = fsm.getCurrentState().state;
+
+            if (jobStatus === 'does_not_exist') {
+                fsm.newState({ mode: 'job-not-found' });
+                return;
+            }
 
             // nothing has changed since last time.
             if (jobStatus === lastJobState.status && mode === lastMode) {
@@ -1114,6 +1122,9 @@ define([
              */
             awaitingLog = false;
 
+            if (message.error) {
+                return handleLogDeleted(message);
+            }
             if (message.logs.lines.length !== 0) {
                 const viewLines = message.logs.lines.map((line) => {
                     return {
@@ -1137,58 +1148,29 @@ define([
             }
         }
 
+        function handleLogDeleted(message) {
+            stopLogAutoFetch();
+            renderLog();
+            awaitingLog = false;
+            console.error(
+                `Error retrieving log for ${jobId}: ${JSON.stringify(message.error, null, 1)}`
+            );
+        }
+
         function startEventListeners() {
-            listenersByType['job-logs'] = bus.listen({
-                channel: {
-                    jobId: jobId,
-                },
-                key: {
-                    type: 'job-logs',
-                },
-                handle: handleJobLogs,
-            });
+            const handlers = {
+                'job-does-not-exist': handleJobDoesNotExistUpdate,
+                'job-logs': handleJobLogs,
+                'job-status': handleJobStatusUpdate,
+            };
 
-            // An error may encountered during the job fetch on the back end. It is
-            // reported as a job-comm-error, but translated by the jobs panel as a job-log-deleted
-            // TODO: we may want to rethink this. It might be beneficial to emit this as the
-            // original error, and let the widget sort it out? Or perhaps on the back end
-            // have the error emitted as a specific message. It is otherwise a little difficult
-            // to trace this.
-            listenersByType['job-log-deleted'] = bus.listen({
-                channel: {
-                    jobId: jobId,
-                },
-                key: {
-                    type: 'job-log-deleted',
-                },
-                handle: function (message) {
-                    stopLogAutoFetch();
-                    renderLog();
-                    awaitingLog = false;
-                    console.error(
-                        `Error retrieving log for ${jobId}: ${JSON.stringify(message, null, 1)}`
-                    );
-                },
-            });
-
-            listenersByType['job-status'] = bus.listen({
-                channel: {
-                    jobId: jobId,
-                },
-                key: {
-                    type: 'job-status',
-                },
-                handle: handleJobStatusUpdate,
-            });
-
-            listenersByType['job-does-not-exist'] = bus.listen({
-                channel: {
-                    jobId: jobId,
-                },
-                key: {
-                    type: 'job-does-not-exist',
-                },
-                handle: handleJobDoesNotExistUpdate,
+            Object.keys(handlers).forEach((type) => {
+                const handle = handlers[type];
+                listenersByType[type] = bus.listen({
+                    channel: { jobId },
+                    key: { type },
+                    handle,
+                });
             });
         }
 
@@ -1234,19 +1216,19 @@ define([
 
         function doOnQueued() {
             ui.setContent(
-                'log-panel',
+                LOG_PANEL,
                 p(['Job is queued; logs will be available when the job is running.'])
             );
         }
 
         function doExitQueued() {
             // clear the content of the job panel to make way for logs
-            ui.setContent('log-panel', '');
+            ui.setContent(LOG_PANEL, '');
         }
 
         function doJobNotFound() {
             // clear the log container
-            ui.setContent('log-container', '');
+            ui.setContent(LOG_CONTAINER, '');
             awaitingLog = false;
             // slightly hacky way to get the appropriate job status lines
             renderJobState({
@@ -1262,7 +1244,7 @@ define([
                 initialState: {
                     mode: 'new',
                 },
-                onNewState: function () {
+                onNewState: () => {
                     renderFSM();
                 },
             });
@@ -1282,7 +1264,7 @@ define([
 
         function startJobStatusUpdates() {
             bus.emit('request-job-updates-start', {
-                jobId: jobId,
+                jobId,
             });
             listeningForJob = true;
         }
@@ -1333,7 +1315,7 @@ define([
                 renderJobState(lastJobState || { job_id: jobId });
 
                 bus.emit('request-job-status', {
-                    jobId: jobId,
+                    jobId,
                 });
                 listeningForJob = true;
             }).catch((err) => {
@@ -1366,9 +1348,9 @@ define([
 
         // API
         return Object.freeze({
-            start: start,
-            stop: stop,
-            detach: detach,
+            start,
+            stop,
+            detach,
         });
     }
 

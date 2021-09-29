@@ -241,7 +241,7 @@ span#searchspan { /* FIXME */
 }
 
 .kb-nav-btn-upgrade {
-  background-color: rgb(75 184 86) !important;
+  background-color: use_color('mid-green') !important;
   display: none;
 
   .fa::before,
@@ -1454,8 +1454,8 @@ div#notebook_panel { /* FIXME Jupyter css */
 
 .selected .kb-toolbar-open {
   background-color: rgb(223 240 216);
-  border-bottom: 1px solid rgb(75 184 86);
-  border-left: 1px solid rgb(75 184 86);
+  border-bottom: 1px solid use_color('mid-green');
+  border-left: 1px solid use_color('mid-green');
 }
 
 .unselected .kb-toolbar-open {
@@ -1832,7 +1832,7 @@ control with padding, and then scooting the icon back into its column.
 }
 
 .kb-method-parameter-accepted-glyph {
-  color: rgb(75 184 86);
+  color: use_color('mid-green');
   margin-left: 7px;
 }
 
@@ -2361,7 +2361,7 @@ button.kb-data-obj {
 
 .kb-data-list-obj-row:hover,
 .narrative-card-row:hover {
-  border-left: 5px solid rgb(75 184 86);
+  border-left: 5px solid use_color('mid-green');
   box-shadow: 1px 1px 1px 1px rgb(170 170 170);
 }
 
@@ -2370,7 +2370,7 @@ button.kb-data-obj {
 }
 
 .kb-data-list-obj-row-selected {
-  border-left: 5px solid rgb(75 184 86);
+  border-left: 5px solid use_color('mid-green');
   box-shadow: 1px 1px 1px 1px rgb(170 170 170);
 }
 

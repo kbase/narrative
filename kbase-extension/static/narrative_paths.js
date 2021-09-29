@@ -58,6 +58,9 @@ require.config({
         kbaseInputTest: 'kbase/js/widgets/function_input/kbaseInputTest',
         api: 'kbase/js/api',
         util: 'kbase/js/util',
+        jsonrpc: 'kbase/js/jsonrpc',
+        config: 'kbase/config',
+        styles: 'kbase/css',
         narrative_core: 'kbase/js/widgets/narrative_core',
         configPath: 'kbase',
         narrativeViewers: 'kbase/js/widgets/narrative_core/narrativeViewers',
@@ -121,6 +124,7 @@ require.config({
         kbaseNarrativeSidePanel: 'kbase/js/widgets/narrative_core/kbaseNarrativeSidePanel',
         kbaseNarrativeAppPanel: 'kbase/js/widgets/narrative_core/kbaseNarrativeAppPanel',
         kbaseNarrativeManagePanel: 'kbase/js/widgets/narrative_core/kbaseNarrativeManagePanel',
+        kbaseNarrativeOutlinePanel: 'kbase/js/widgets/narrative_core/kbaseNarrativeOutlinePanel',
         kbaseNarrativeDownloadPanel: 'kbase/js/widgets/narrative_core/kbaseNarrativeDownloadPanel',
         kbaseNarrativeSharePanel: 'kbase/js/widgets/narrative_core/kbaseNarrativeSharePanel',
         kbaseNarrativeExampleDataTab:
@@ -302,7 +306,7 @@ require.config({
         kbaseAttributeMapping: 'kbase/js/widgets/function_output/kbaseAttributeMapping',
         kbaseConditionSetViewer: 'kbase/js/widgets/function_output/kbaseAttributeMapping',
         kbaseFeatureSet: 'kbase/js/widgets/function_output/kbaseFeatureSet',
-        kbaseSampleSetView: 'kbase/js/widgets/function_output/kbaseSampleSet',
+        kbaseSampleSetView: 'kbase/js/widgets/function_output/samples/kbaseSampleSet',
 
         kbaseExpressionMatrix: 'kbase/js/widgets/function_output/kbaseExpressionMatrix',
         kbaseExpressionGenesetBaseWidget:

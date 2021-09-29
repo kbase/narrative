@@ -16,6 +16,7 @@ docker build --build-arg BUILD_DATE="$DATE" \
              --build-arg BRANCH="$GITHUB_HEAD_REF" \
              --build-arg PULL_REQUEST="$PR" \
              --label us.kbase.vcs-pull-req="$PR" \
+             --label us.kbase.narrative-version="$NARRATIVE_VERSION_NUM" \
              -t ghcr.io/"$MY_ORG"/"$MY_APP":"pr-""$PR" .
 docker push ghcr.io/"$MY_ORG"/"$MY_APP":"pr-""$PR"
 
@@ -25,8 +26,8 @@ docker build -t ghcr.io/"$MY_ORG"/"$MY_APP2":"pr-""$PR" \
                 --build-arg BRANCH="$GITHUB_HEAD_REF" \
                 --build-arg PULL_REQUEST="$PR" \
                 --label us.kbase.vcs-pull-req="$PR" \
-                --build-arg NARRATIVE_VERSION=$NARRATIVE_VERSION_NUM \
-                --build-arg NARRATIVE_GIT_HASH=$NARRATIVE_GIT_HASH \
+                --build-arg NARRATIVE_VERSION="$NARRATIVE_VERSION_NUM" \
+                --build-arg NARRATIVE_GIT_HASH="$NARRATIVE_GIT_HASH" \
                 -f Dockerfile2 \
                 .
 docker push ghcr.io/"$MY_ORG"/"$MY_APP2":"pr-""$PR"

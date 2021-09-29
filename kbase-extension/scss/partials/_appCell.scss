@@ -107,7 +107,7 @@
   }
 
   .kb-app-parameter-accepted-glyph {
-    color: rgb(75 184 86);
+    color: use_color('mid-green');
   }
 
   .kb-app-advanced-options-controller-inactive,
@@ -375,7 +375,7 @@ Buttons
 
 .kb-app-status {
   &-ok {
-    color: rgb(75 184 86);
+    color: use_color('mid-green');
   }
 
   &-warning {

@@ -1,0 +1,207 @@
+{
+    "id": "ad4a1450-1c44-46cd-a046-cf71e2b28fb0",
+    "user": "kbaseuitest",
+    "name": "erpe_2018_sw_18hr_WHONDRS-SW48-000091",
+    "node_tree": [
+        {
+            "id": "erpe_2018_sw_18hr_WHONDRS-SW48-000091",
+            "type": "BioReplicate",
+            "parent": null,
+            "meta_controlled": {
+                "sesar:igsn": {
+                    "value": "IECUR0002Z"
+                },
+                "sesar:material": {
+                    "value": "Other"
+                },
+                "sesar:field_name": {
+                    "value": "Filter"
+                },
+                "description": {
+                    "value": "18 hour time point. Filter used for filtered surface water samples"
+                },
+                "sesar:collection_method_description": {
+                    "value": "0.22 micron filter used to filter water samples"
+                },
+                "purpose": {
+                    "value": "Microbial analyses (e.g. metagenomics, metatranscriptomics) for 48hr time series (whondrs.pnnl.gov) "
+                },
+                "latitude": {
+                    "units": "degrees",
+                    "value": 52.476416
+                },
+                "longitude": {
+                    "units": "degrees",
+                    "value": 13.625710199999999
+                },
+                "sesar:physiographic_feature_primary": {
+                    "value": "Stream"
+                },
+                "sesar:physiographic_feature_name": {
+                    "value": "Erpe River"
+                },
+                "location_description": {
+                    "value": "Persistently inundated location of the stream near to the shoreline."
+                },
+                "country": {
+                    "value": "Germany"
+                },
+                "sesar:field_program_cruise": {
+                    "value": "WHONDRS 48hr"
+                },
+                "sesar:collector_chief_scientist": {
+                    "value": " J\u00f6rg Lewandowski and Birgit Mueller"
+                },
+                "sesar:collection_date": {
+                    "value": "2018-09-26"
+                },
+                "sesar:collection_time": {
+                    "value": "06:00:00Z"
+                },
+                "sample_template": {
+                    "value": "SESAR"
+                }
+            },
+            "meta_user": {
+                "related_url_description": {
+                    "value": "Associated data from surface and pore water samples (i.e. anions, cations, FTICR) are published on ESS-DIVE"
+                },
+                "fil": {
+                    "value": "Surface Water"
+                },
+                "related_url_type": {
+                    "value": "DOI"
+                },
+                "related_url": {
+                    "value": "https://data.ess-dive.lbl.gov/view/doi:10.15485/1577260"
+                },
+                "tp": {
+                    "value": "18hr"
+                }
+            },
+            "source_meta": [
+                {
+                    "key": "sesar:igsn",
+                    "skey": "IGSN",
+                    "svalue": {
+                        "value": "IECUR0002Z"
+                    }
+                },
+                {
+                    "key": "sesar:material",
+                    "skey": "Material",
+                    "svalue": {
+                        "value": "Other"
+                    }
+                },
+                {
+                    "key": "sesar:field_name",
+                    "skey": "Field name (informal classification)",
+                    "svalue": {
+                        "value": "Filter"
+                    }
+                },
+                {
+                    "key": "description",
+                    "skey": "Sample description",
+                    "svalue": {
+                        "value": "18 hour time point. Filter used for filtered surface water samples"
+                    }
+                },
+                {
+                    "key": "sesar:collection_method_description",
+                    "skey": "Collection method description",
+                    "svalue": {
+                        "value": "0.22 micron filter used to filter water samples"
+                    }
+                },
+                {
+                    "key": "purpose",
+                    "skey": "Purpose",
+                    "svalue": {
+                        "value": "Microbial analyses (e.g. metagenomics, metatranscriptomics) for 48hr time series (whondrs.pnnl.gov) "
+                    }
+                },
+                {
+                    "key": "latitude",
+                    "skey": "Latitude",
+                    "svalue": {
+                        "value": 52.476416
+                    }
+                },
+                {
+                    "key": "longitude",
+                    "skey": "Longitude",
+                    "svalue": {
+                        "value": 13.625710199999999
+                    }
+                },
+                {
+                    "key": "sesar:physiographic_feature_primary",
+                    "skey": "Primary physiographic feature",
+                    "svalue": {
+                        "value": "Stream"
+                    }
+                },
+                {
+                    "key": "sesar:physiographic_feature_name",
+                    "skey": "Name of physiographic feature",
+                    "svalue": {
+                        "value": "Erpe River"
+                    }
+                },
+                {
+                    "key": "location_description",
+                    "skey": "Location description",
+                    "svalue": {
+                        "value": "Persistently inundated location of the stream near to the shoreline."
+                    }
+                },
+                {
+                    "key": "country",
+                    "skey": "Country",
+                    "svalue": {
+                        "value": "Germany"
+                    }
+                },
+                {
+                    "key": "sesar:field_program_cruise",
+                    "skey": "Field program/cruise",
+                    "svalue": {
+                        "value": "WHONDRS 48hr"
+                    }
+                },
+                {
+                    "key": "sesar:collector_chief_scientist",
+                    "skey": "Collector/Chief Scientist",
+                    "svalue": {
+                        "value": " J\u00f6rg Lewandowski and Birgit Mueller"
+                    }
+                },
+                {
+                    "key": "sesar:collection_date",
+                    "skey": "Collection date",
+                    "svalue": {
+                        "value": "2018-09-26"
+                    }
+                },
+                {
+                    "key": "sesar:collection_time",
+                    "skey": "Collection time",
+                    "svalue": {
+                        "value": "06:00:00Z"
+                    }
+                },
+                {
+                    "key": "sample_template",
+                    "skey": "sample_template",
+                    "svalue": {
+                        "value": "SESAR"
+                    }
+                }
+            ]
+        }
+    ],
+    "save_date": 1626544502980,
+    "version": 1
+}

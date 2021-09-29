@@ -1,0 +1,500 @@
+{
+    "id": "318065ec-ea25-4a98-bade-2d51fa060b3d",
+    "user": "kbaseuitest",
+    "name": "0408-FW233.2.17.99.11.28.12.10",
+    "node_tree": [
+        {
+            "id": "0408-FW233.2.17.99.11.28.12.10",
+            "type": "BioReplicate",
+            "parent": null,
+            "meta_controlled": {
+                "enigma:experiment_name": {
+                    "value": "100 Well"
+                },
+                "enigma:area_name": {
+                    "value": "Area 2"
+                },
+                "enigma:well_name": {
+                    "value": "FW233-17"
+                },
+                "env_package": {
+                    "value": "water"
+                },
+                "material": {
+                    "value": "ENVO:01001004"
+                },
+                "description": {
+                    "value": "filtered groundwater"
+                },
+                "enigma:filter": {
+                    "units": "micron",
+                    "value": 10
+                },
+                "enigma:date": {
+                    "value": "11/28/12"
+                },
+                "enigma:collection_time": {
+                    "value": "9:39:00 AM"
+                },
+                "enigma:time_zone": {
+                    "value": "UTC-4"
+                },
+                "latitude": {
+                    "value": 35.97574296,
+                    "units": "degrees"
+                },
+                "longitude": {
+                    "value": -84.27472299,
+                    "units": "degrees"
+                },
+                "depth_bgs": {
+                    "units": "cm",
+                    "value": 498.805199999999
+                },
+                "enigma:conductivity": {
+                    "units": "ms/cm",
+                    "value": 802.65
+                },
+                "ph": {
+                    "value": 6.465,
+                    "units": "pH"
+                },
+                "enigma:aodc": {
+                    "units": "cells/g",
+                    "value": 33553.8752362948
+                },
+                "enigma:organic_carbon": {
+                    "units": "mg/g",
+                    "value": 4.109
+                },
+                "enigma:well_type": {
+                    "value": "MP"
+                },
+                "enigma:top_of_casing_stickup": {
+                    "units": "ft",
+                    "value": 1.84
+                },
+                "enigma:top_of_casing_elevation": {
+                    "units": "ft",
+                    "value": 1000.9076
+                },
+                "enigma:ground_elevation": {
+                    "units": "ft",
+                    "value": 999.0627800000001
+                },
+                "enigma:installation_method": {
+                    "value": "Direct Push/GEOPROBE"
+                },
+                "enigma:boring": {
+                    "units": "ft",
+                    "value": 21.1
+                },
+                "enigma:boring_refusal": {
+                    "value": "N"
+                },
+                "enigma:boring_diameter": {
+                    "units": "in",
+                    "value": 3.25
+                },
+                "enigma:screen_type": {
+                    "value": "PVC/SL/.02"
+                },
+                "enigma:screened_interval": {
+                    "units": "ft",
+                    "value": 1.81
+                },
+                "enigma:screen_start_depth": {
+                    "units": "ft",
+                    "value": 15.46
+                },
+                "enigma:screen_end_depth": {
+                    "units": "ft",
+                    "value": 17.27
+                },
+                "enigma:screen_top_elevation": {
+                    "units": "ft",
+                    "value": 983.60278
+                },
+                "enigma:screen_bottom_elevation": {
+                    "units": "ft",
+                    "value": 981.7927800000001
+                },
+                "enigma:well_casing_type": {
+                    "value": "MP"
+                },
+                "enigma:well_casing_od": {
+                    "units": "in",
+                    "value": 1.05
+                },
+                "enigma:well_casing_id": {
+                    "units": "in",
+                    "value": 0.8240000000000001
+                },
+                "enigma:well_casing_depth": {
+                    "units": "ft",
+                    "value": 17.42
+                },
+                "enigma:drive_casing_type": {
+                    "value": "GP DT-32"
+                },
+                "enigma:drive_casing_id": {
+                    "units": "in",
+                    "value": 2.625
+                },
+                "enigma:drive_casing_od": {
+                    "units": "in",
+                    "value": 3.25
+                },
+                "enigma:packing_type": {
+                    "value": "SAND-2"
+                },
+                "enigma:packing_depth_start": {
+                    "units": "ft",
+                    "value": 15.08
+                },
+                "enigma:packing_depth_end": {
+                    "units": "ft",
+                    "value": 17.5
+                },
+                "enigma:upper_seal_type": {
+                    "value": "BENT"
+                },
+                "enigma:upper_seal_end_depth": {
+                    "units": "ft",
+                    "value": 15.08
+                },
+                "enigma:lower_seal_type": {
+                    "units": "ft",
+                    "value": "BENT"
+                },
+                "sample_template": {
+                    "value": "ENIGMA"
+                }
+            },
+            "meta_user": {
+                "redox_potential_?": {
+                    "value": -27.5
+                }
+            },
+            "source_meta": [
+                {
+                    "key": "enigma:experiment_name",
+                    "skey": "Experiment Name",
+                    "svalue": {
+                        "value": "100 Well"
+                    }
+                },
+                {
+                    "key": "enigma:area_name",
+                    "skey": "Area Name",
+                    "svalue": {
+                        "value": "Area 2"
+                    }
+                },
+                {
+                    "key": "enigma:well_name",
+                    "skey": "Well Name",
+                    "svalue": {
+                        "value": "FW233-17"
+                    }
+                },
+                {
+                    "key": "env_package",
+                    "skey": "Environmental Package",
+                    "svalue": {
+                        "value": "water"
+                    }
+                },
+                {
+                    "key": "material",
+                    "skey": "Material",
+                    "svalue": {
+                        "value": "ENVO:01001004"
+                    }
+                },
+                {
+                    "key": "description",
+                    "skey": "Description",
+                    "svalue": {
+                        "value": "filtered groundwater"
+                    }
+                },
+                {
+                    "key": "enigma:filter",
+                    "skey": "Filter (micron)",
+                    "svalue": {
+                        "value": "10"
+                    }
+                },
+                {
+                    "key": "enigma:date",
+                    "skey": "Date",
+                    "svalue": {
+                        "value": "11/28/12"
+                    }
+                },
+                {
+                    "key": "enigma:collection_time",
+                    "skey": "Collection Time",
+                    "svalue": {
+                        "value": "9:39:00 AM"
+                    }
+                },
+                {
+                    "key": "enigma:time_zone",
+                    "skey": "Time Zone",
+                    "svalue": {
+                        "value": "UTC-4"
+                    }
+                },
+                {
+                    "key": "latitude",
+                    "skey": "Latitude",
+                    "svalue": {
+                        "value": 35.97574296
+                    }
+                },
+                {
+                    "key": "longitude",
+                    "skey": "Longitude",
+                    "svalue": {
+                        "value": -84.27472299
+                    }
+                },
+                {
+                    "key": "depth_bgs",
+                    "skey": "Depth (cm bgs)",
+                    "svalue": {
+                        "value": 498.805199999999
+                    }
+                },
+                {
+                    "key": "enigma:conductivity",
+                    "skey": "Conductivity (mS/cm)",
+                    "svalue": {
+                        "value": 802.65
+                    }
+                },
+                {
+                    "key": "ph",
+                    "skey": "pH",
+                    "svalue": {
+                        "value": 6.465
+                    }
+                },
+                {
+                    "key": "enigma:aodc",
+                    "skey": "AODC (cells/g)",
+                    "svalue": {
+                        "value": 33553.8752362948
+                    }
+                },
+                {
+                    "key": "enigma:organic_carbon",
+                    "skey": "Organic Carbon (mg/g dry weight)",
+                    "svalue": {
+                        "value": 4.109
+                    }
+                },
+                {
+                    "key": "enigma:well_type",
+                    "skey": "Type of Well",
+                    "svalue": {
+                        "value": "MP"
+                    }
+                },
+                {
+                    "key": "enigma:top_of_casing_stickup",
+                    "skey": "Top of Casing Stickup (ft)",
+                    "svalue": {
+                        "value": 1.84
+                    }
+                },
+                {
+                    "key": "enigma:top_of_casing_elevation",
+                    "skey": "Top of Casing Elevation (ft AMSL)",
+                    "svalue": {
+                        "value": 1000.9076
+                    }
+                },
+                {
+                    "key": "enigma:ground_elevation",
+                    "skey": "Ground Elevation (ft AMSL)",
+                    "svalue": {
+                        "value": 999.0627800000001
+                    }
+                },
+                {
+                    "key": "enigma:installation_method",
+                    "skey": "Installation Method",
+                    "svalue": {
+                        "value": "Direct Push/GEOPROBE"
+                    }
+                },
+                {
+                    "key": "enigma:boring",
+                    "skey": "Boring (ft BGS)",
+                    "svalue": {
+                        "value": 21.1
+                    }
+                },
+                {
+                    "key": "enigma:boring_refusal",
+                    "skey": "Boring Refusal",
+                    "svalue": {
+                        "value": "N"
+                    }
+                },
+                {
+                    "key": "enigma:boring_diameter",
+                    "skey": "Boring Diameter (in)",
+                    "svalue": {
+                        "value": 3.25
+                    }
+                },
+                {
+                    "key": "enigma:screen_type",
+                    "skey": "Screen Type",
+                    "svalue": {
+                        "value": "PVC/SL/.02"
+                    }
+                },
+                {
+                    "key": "enigma:screened_interval",
+                    "skey": "Screened Interval (ft)",
+                    "svalue": {
+                        "value": 1.81
+                    }
+                },
+                {
+                    "key": "enigma:screen_start_depth",
+                    "skey": "Screen Start Depth (ft BGS)",
+                    "svalue": {
+                        "value": 15.46
+                    }
+                },
+                {
+                    "key": "enigma:screen_end_depth",
+                    "skey": "Screen End Depth (ft BGS)",
+                    "svalue": {
+                        "value": 17.27
+                    }
+                },
+                {
+                    "key": "enigma:screen_top_elevation",
+                    "skey": "Screen Top Elevation (ft AMSL)",
+                    "svalue": {
+                        "value": 983.60278
+                    }
+                },
+                {
+                    "key": "enigma:screen_bottom_elevation",
+                    "skey": "Screen Bottom Elevation (ft AMSL)",
+                    "svalue": {
+                        "value": 981.7927800000001
+                    }
+                },
+                {
+                    "key": "enigma:well_casing_type",
+                    "skey": "Well Casing Type",
+                    "svalue": {
+                        "value": "MP"
+                    }
+                },
+                {
+                    "key": "enigma:well_casing_od",
+                    "skey": "Well Casing OD (in)",
+                    "svalue": {
+                        "value": 1.05
+                    }
+                },
+                {
+                    "key": "enigma:well_casing_id",
+                    "skey": "Well Casing ID (in)",
+                    "svalue": {
+                        "value": 0.8240000000000001
+                    }
+                },
+                {
+                    "key": "enigma:well_casing_depth",
+                    "skey": "Well Casing Depth (ft BGS)",
+                    "svalue": {
+                        "value": 17.42
+                    }
+                },
+                {
+                    "key": "enigma:drive_casing_type",
+                    "skey": "Drive Casing Type",
+                    "svalue": {
+                        "value": "GP DT-32"
+                    }
+                },
+                {
+                    "key": "enigma:drive_casing_id",
+                    "skey": "Drive Casing ID (in)",
+                    "svalue": {
+                        "value": 2.625
+                    }
+                },
+                {
+                    "key": "enigma:drive_casing_od",
+                    "skey": "Drive Casing OD (in)",
+                    "svalue": {
+                        "value": 3.25
+                    }
+                },
+                {
+                    "key": "enigma:packing_type",
+                    "skey": "Packing Type",
+                    "svalue": {
+                        "value": "SAND-2"
+                    }
+                },
+                {
+                    "key": "enigma:packing_depth_start",
+                    "skey": "Packing Depth Start (ft BGS)",
+                    "svalue": {
+                        "value": 15.08
+                    }
+                },
+                {
+                    "key": "enigma:packing_depth_end",
+                    "skey": "Packing Depth End (ft BGS)",
+                    "svalue": {
+                        "value": 17.5
+                    }
+                },
+                {
+                    "key": "enigma:upper_seal_type",
+                    "skey": "Upper Seal Type",
+                    "svalue": {
+                        "value": "BENT"
+                    }
+                },
+                {
+                    "key": "enigma:upper_seal_end_depth",
+                    "skey": "Upper Seal End Depth (ft BGS)",
+                    "svalue": {
+                        "value": 15.08
+                    }
+                },
+                {
+                    "key": "enigma:lower_seal_type",
+                    "skey": "Lower Seal Type (ft BGS)",
+                    "svalue": {
+                        "value": "BENT"
+                    }
+                },
+                {
+                    "key": "sample_template",
+                    "skey": "sample_template",
+                    "svalue": {
+                        "value": "ENIGMA"
+                    }
+                }
+            ]
+        }
+    ],
+    "save_date": 1628518245623,
+    "version": 1
+}

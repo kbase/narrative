@@ -2,6 +2,7 @@
 
 // KBase colours (generated from the KBase logo)
 $kbase-palette: (
+
   // microbe orange
   //  Hex: #F78E1E HSL: 31 93% 54%
   "orange": rgb(247, 142, 30),
@@ -119,6 +120,9 @@ $kbase-palette: (
   "disabled-light": rgb(242, 239, 235),
   "disabled": rgb(222, 213, 203),
   "disabled-dark": rgb(157, 147, 137),
+
+  // other colours that pop up
+  "mid-green": rgb(75, 184, 86),
 );
 
 $icons: (
@@ -156,4 +160,9 @@ $palette: map-merge($kbase-palette, $job_status_colours);
   }
 
   @return map-get($palette, $key);
+}
+
+// use a colour from the palettes above with the specified opacity
+@function use_rgba_color($key, $opacity) {
+  @return rgba(use_color($key), $opacity);
 }

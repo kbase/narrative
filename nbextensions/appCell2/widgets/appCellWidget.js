@@ -147,17 +147,51 @@ define([
             }),
             spec = Spec.make({
                 appSpec: model.getItem('app.spec'),
-            });
+            }),
+            controlBarTabs = {
+                selectedTab: null,
+                tabs: {
+                    configure: {
+                        label: 'Configure',
+                        widget: configureWidget(),
+                    },
+                    viewConfigure: {
+                        label: 'View Configure',
+                        widget: viewConfigureWidget(),
+                    },
+                    info: {
+                        label: 'Info',
+                        widget: infoTabWidget,
+                    },
+                    jobStatus: {
+                        label: 'Job Status',
+                        widget: logTabWidget,
+                    },
+                    results: {
+                        label: 'Result',
+                        widget: resultsTabWidget,
+                    },
+                    error: {
+                        label: 'Error',
+                        type: 'danger',
+                        widget: errorTabWidget,
+                    },
+                },
+            };
 
         let hostNode,
             container,
             ui,
             actionButtonWidget,
             fsm,
-            controlBarTabs = {},
             selectedJobId,
             readOnly = false,
-            viewOnly = false;
+            viewOnly = false,
+            saveTimer = null,
+            jobListeners = [],
+            // Track whether the user has selected a tab.
+            // This is reset when the user closes a tab.
+            userSelectedTab = false;
 
         // TABS
 
@@ -581,14 +615,10 @@ define([
             // if the configure widget is selected, stop and start it.
         }
 
-        /*
+        /**
          * If tab not open, close any open one and open it.
          * If tab open, close it, leaving no tabs open.
          */
-        // Track whether the user has selected a tab.
-        // This is reset when the user closes a tab.
-        let userSelectedTab = false;
-
         function toggleTab(tabId) {
             if (controlBarTabs.selectedTab) {
                 if (controlBarTabs.selectedTab.id === tabId) {
@@ -618,37 +648,6 @@ define([
                     userSelectedTab = true;
                 });
         }
-
-        controlBarTabs = {
-            selectedTab: null,
-            tabs: {
-                configure: {
-                    label: 'Configure',
-                    widget: configureWidget(),
-                },
-                viewConfigure: {
-                    label: 'View Configure',
-                    widget: viewConfigureWidget(),
-                },
-                info: {
-                    label: 'Info',
-                    widget: infoTabWidget,
-                },
-                jobStatus: {
-                    label: 'Job Status',
-                    widget: logTabWidget,
-                },
-                results: {
-                    label: 'Result',
-                    widget: resultsTabWidget,
-                },
-                error: {
-                    label: 'Error',
-                    type: 'danger',
-                    widget: errorTabWidget,
-                },
-            },
-        };
 
         // DATA API
 
@@ -1204,7 +1203,6 @@ define([
             viewOnly = newViewOnly;
         }
 
-        let saveTimer = null;
 
         function saveNarrative() {
             if (saveTimer) {
@@ -1491,8 +1489,6 @@ define([
             });
         }
 
-        let jobListeners = [];
-
         function startListeningForJobMessages(jobId) {
             let ev = runtime.bus().listen({
                 channel: {
@@ -1593,7 +1589,7 @@ define([
         }
 
         function createOutputCell(jobId) {
-            const parentCellId = utils.getMeta(cell, 'attributes', 'id'),
+            const parentCellId = cellUtils.getMeta(cell, 'attributes', 'id'),
                 cellIndex = Jupyter.notebook.find_cell_index(cell),
                 // the new output cell ID
                 cellId = new Uuid(4).format(),

@@ -49,6 +49,15 @@ define([
 
         let spec, appCellWidget, cellBus;
 
+        /**
+         * Adds functions to the base cell objects. These are:
+         * - minimize: minimize the cell
+         * - maximize: restore / maxmize the cell
+         * - getIcon: figure out what Icon the cell should have
+         * - renderIcon: put the fetched icon into the cell's view
+         * - showInfo: opens a dialog that shows the cell's info
+         * - toggleBatch: toggles the alpha version of the batch mode (deprecated)
+         */
         function specializeCell() {
             cell.minimize = function () {
                 const inputArea = this.input.find('.input_area').get(0),
@@ -116,8 +125,7 @@ define([
                     return;
                 }
 
-                const cellElement = cell.element;
-                cellElement.addClass('kb-cell').addClass('kb-app-cell');
+                cell.element.addClass('kb-cell').addClass('kb-app-cell');
 
                 // Hide the code area. If it is to be displayed due to the cell
                 // settings, that will be handled by the app cell widget.

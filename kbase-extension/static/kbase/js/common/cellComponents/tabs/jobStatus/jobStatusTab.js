@@ -10,7 +10,7 @@ define(['bluebird', 'common/html', './jobStatusTable'], (Promise, html, JobStatu
 
         function renderLayout() {
             return div({
-                class: 'kb-job__container',
+                class: 'kb-job-status-tab__container',
                 dataElement: dataElementName,
             });
         }
@@ -25,7 +25,6 @@ define(['bluebird', 'common/html', './jobStatusTable'], (Promise, html, JobStatu
         function start(arg) {
             return Promise.try(() => {
                 container = arg.node;
-                container.classList.add('kb-job__tab_container');
                 container.innerHTML = renderLayout();
 
                 jobStatusTableWidget = JobStatusTable.make(config);

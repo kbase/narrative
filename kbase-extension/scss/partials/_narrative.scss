@@ -220,7 +220,7 @@ span#searchspan { /* FIXME */
 
 .navbar-right .fa::before {
   /* color nav icons */
-  color: rgb(33 150 243);
+  color: use_color('mid-blue');
 }
 
 .kb-navbar-container {
@@ -432,7 +432,7 @@ p#site-title { /* FIXME */
 }
 
 .kb-side-overlay-header {
-  background-color: rgb(33 150 243);
+  background-color: use_color('mid-blue');
   color: rgb(255 255 255);
   font-size: 16px;
   padding: 6px;
@@ -456,7 +456,7 @@ p#site-title { /* FIXME */
 }
 
 #kb-side-toggle-in {
-  background-color: rgb(33 150 243);
+  background-color: use_color('mid-blue');
   border-bottom: 6px solid rgb(206 206 206);
   border-right: 6px solid rgb(206 206 206);
   color: rgb(187 222 251);
@@ -478,9 +478,9 @@ p#site-title { /* FIXME */
 }
 
 .kb-side-toggle {
-  background-color: rgb(33 150 243);
-  border-bottom: 6px solid rgb(33 150 243);
-  border-top: 6px solid rgb(33 150 243);
+  background-color: use_color('mid-blue');
+  border-bottom: 6px solid use_color('mid-blue');
+  border-top: 6px solid use_color('mid-blue');
   color: rgb(187 222 251);
   cursor: pointer;
   display: inline-block;
@@ -496,9 +496,9 @@ p#site-title { /* FIXME */
 }
 
 .kb-side-header {
-  background-color: rgb(33 150 243);
-  border-bottom: 6px solid rgb(33 150 243);
-  border-top: 6px solid rgb(33 150 243);
+  background-color: use_color('mid-blue');
+  border-bottom: 6px solid use_color('mid-blue');
+  border-top: 6px solid use_color('mid-blue');
   color: rgb(187 222 251);
   cursor: pointer;
   display: inline-block;
@@ -1928,7 +1928,7 @@ control with padding, and then scooting the icon back into its column.
 }
 
 .kb-app-step-running {
-  border: 3px solid rgb(33 150 243);
+  border: 3px solid use_color('mid-blue');
   z-index: auto;
 }
 
@@ -1953,7 +1953,7 @@ control with padding, and then scooting the icon back into its column.
 
 .kb-app-next-hide,
 .kb-app-next-unhide {
-  color: rgb(33 150 243);
+  color: use_color('mid-blue');
   font: 0.9em $typeface-page-text;
   margin-top: 0.25em;
 }
@@ -1982,7 +1982,7 @@ control with padding, and then scooting the icon back into its column.
 button {
   &.kb-app-run,
   &.kb-method-run {
-    background-color: rgb(33 150 243);
+    background-color: use_color('mid-blue');
     border: 0;
     border-radius: 1px;
     box-shadow: 1px 1px 1px rgb(204 204 204);
@@ -2215,7 +2215,7 @@ button.kb-data-obj {
   padding: 0 5px;
 
   &.selected {
-    background-color: rgb(33 150 243);
+    background-color: use_color('mid-blue');
     color: rgb(255 255 255);
     cursor: default;
   }
@@ -2233,7 +2233,7 @@ button.kb-data-obj {
 /* default blue button in the new style */
 
 .kb-primary-btn {
-  background-color: rgb(33 150 243);
+  background-color: use_color('mid-blue');
   border: 0;
   border-radius: 1px;
   box-shadow: 1px 1px 3px rgb(170 170 170);
@@ -2407,7 +2407,7 @@ button.kb-data-obj {
 
 #kb-add-code-cell,
 #kb-add-md-cell {
-  background-color: rgb(33 150 243);
+  background-color: use_color('mid-blue');
   border-radius: 50%;
   bottom: 15px;
   box-shadow: 2px 2px 1px rgb(206 206 206);
@@ -2458,7 +2458,7 @@ button.kb-data-obj {
 /* buttons */
 
 .kb-data-list-btn {
-  background-color: rgb(33 150 243);
+  background-color: use_color('mid-blue');
   border: 0;
   border-radius: 1px;
   box-shadow: 1px 1px 3px rgb(170 170 170);
@@ -3021,7 +3021,7 @@ button.kb-data-obj {
 }
 
 #kb-view-mode-narr div {
-  color: rgb(33 150 243);
+  color: use_color('mid-blue');
   display: inline-block;
   font: normal 700 16px $typeface-page-text;
   margin-top: -3px;
@@ -3034,7 +3034,7 @@ button.kb-data-obj {
 /* little space for control-close icon */
 
 #kb-view-mode-narr-hide {
-  background-color: rgb(33 150 243);
+  background-color: use_color('mid-blue');
   color: rgb(187 222 251);
   cursor: pointer;
   display: block;
@@ -3076,5 +3076,6 @@ button.kb-data-obj {
 }
 
 .kb-loading-spinner {
+  padding: $padding-large-vertical;
   text-align: center;
 }

@@ -18,9 +18,14 @@ $counter-name: code-list-counter;
   white-space: normal;
 }
 
-.kb-log {
+.kb-log,
+.kb-job-status {
   // .kb-log__container
   &__container {
+    @include body-text;
+  }
+
+  &__status_container {
     @include body-text;
   }
 
@@ -106,5 +111,27 @@ $counter-name: code-list-counter;
     @include zero-box;
 
     padding: 0.5rem 1rem;
+  }
+}
+
+.kb-job-params {
+  &__params {
+    &_container {
+      @include body-text;
+    }
+
+    &_title {
+      @include font-h4;
+
+      margin-top: 1rem;
+    }
+  }
+
+  &__param_list {
+    @include body-text;
+
+    list-style-type: none;
+    margin: 1rem 0;
+    padding: 0;
   }
 }

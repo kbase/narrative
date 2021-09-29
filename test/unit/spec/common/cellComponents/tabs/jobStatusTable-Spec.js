@@ -60,6 +60,10 @@ define([
                         id: 'assembly_name',
                         ui_name: 'Assembly object name',
                     },
+                    {
+                        id: 'type',
+                        ui_name: 'Assembly type',
+                    },
                 ],
             },
             'kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging': {
@@ -94,7 +98,9 @@ define([
         fastq_reads_interleaved: {
             analysisType: 'FASTQ Reads Interleaved',
             outputParams: { name: { value: 'some_old_file', label: 'Reads Object Name' } },
-            params: { name: { value: 'some_old_file', label: 'Reads Object Name' } },
+            params: {
+                name: { value: 'some_old_file', label: 'Reads Object Name' },
+            },
         },
         assembly: {
             analysisType: 'Assembly',
@@ -104,6 +110,7 @@ define([
             params: {
                 assembly_name: { value: 'assembly_file.fa', label: 'Assembly object name' },
                 staging_file_subdir_path: { value: '/path/to/dir', label: 'FASTA file path' },
+                type: { value: 'draft isolate', label: 'Assembly type' },
             },
         },
     };
@@ -138,7 +145,12 @@ define([
         paramTests = [
             {
                 input: {
-                    job_params: [{ name: 'some_old_file' }],
+                    job_params: [
+                        {
+                            name: 'some_old_file',
+                            workspace_id: 'some_workspace_id',
+                        },
+                    ],
                     app_id: 'kb_uploadmethods/import_fastq_interleaved_as_reads_from_staging',
                 },
                 type: 'FASTQ Reads Interleaved',
@@ -152,6 +164,8 @@ define([
                         {
                             assembly_name: 'assembly_file.fa',
                             staging_file_subdir_path: '/path/to/dir',
+                            type: 'draft isolate',
+                            workspace_id: 'whatever',
                         },
                     ],
                 },

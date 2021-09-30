@@ -1,13 +1,14 @@
 define([
+    'React',
     '../../ShowError',
     'bootstrap'
-], function (
+], (
+    React,
     ShowError
-) {
+) => {
     'use strict';
 
-    // Ugly but true - preact is loaded globally by Jupyter and not as an AMD module.
-    const { h, Component } = window.preact;
+    const { createElement: e, Component } = React;
 
     const rowStyle = {
         flex: '0 0 auto',
@@ -29,12 +30,12 @@ define([
             super(props);
             this.state = {
                 error: null
-            }
+            };
             this.tabsRef = null;
         }
 
         renderError() {
-            return h(ShowError, {
+            return e(ShowError, {
                 error: this.state.error
             });
         }
@@ -49,7 +50,7 @@ define([
             if (!item) {
                 return;
             }
-            return h('a', {
+            return e('a', {
                 href: `/#spec/type/${item.objectInfo.type}`,
                 target: '_blank'
             }, item.objectInfo.type);
@@ -57,14 +58,14 @@ define([
 
         renderSelector() {
             return [
-                h('div', {
+                e('div', {
                     style: col1Style
                 }, 'Select alignment to view:'),
-                h('div', {
+                e('div', {
                     className: 'form-inline',
                     style: col2Style
-                }, h('div', { className: 'form-group' }, [
-                    h('select', {
+                }, e('div', { className: 'form-group' }, [
+                    e('select', {
                         onChange: this.selectItem.bind(this),
                         className: 'form-control',
                         style: {
@@ -73,8 +74,8 @@ define([
                         }
                     }, this.props.items.value.map((item) => {
                         const { label, ref, info } = item;
-                        return h('option', { value: item.ref }, [
-                            h('span', null, [
+                        return e('option', { value: item.ref }, [
+                            e('span', null, [
                                 item.objectInfo.name,
                                 '(', label, ')'
                             ])]);
@@ -84,24 +85,24 @@ define([
         }
 
         renderHeader() {
-            return h('div', {
+            return e('div', {
                 style: {
                     display: 'flex',
                     flexDirection: 'column ',
                     marginBottom: '10px'
                 }
             }, [
-                h('div', {
+                e('div', {
                     style: rowStyle
                 }, [
-                    h('div', {
+                    e('div', {
                         style: col1Style
                     }, 'Alignment type:'),
-                    h('div', {
+                    e('div', {
                         style: col2Style,
                     }, this.renderItemType())
                 ]),
-                h('div', {
+                e('div', {
                     style: rowStyle
                 }, this.renderSelector()),
             ]);
@@ -113,37 +114,37 @@ define([
             const tab = e.target.parentNode;
             const tabPanels = tab.parentNode.nextSibling;
             const panel = tabPanels.querySelector('#' + tabID);
-            console.log(tabID, tab, tabPanels);
+            // console.log(tabID, tab, tabPanels);
 
             // iterate through siblings until none are active.
             const tabs = tab.parentNode;
-            for (let tab of [].slice.call(tabs.childNodes)) {
+            for (const tab of [].slice.call(tabs.childNodes)) {
                 tab.classList.remove('active');
             }
 
             tab.classList.add('active');
 
             // same for panels
-            for (let panel of [].slice.call(tabPanels.childNodes)) {
+            for (const panel of [].slice.call(tabPanels.childNodes)) {
                 panel.classList.remove('active', 'in');
             }
             panel.classList.add('active', 'in');
         }
 
         renderTabs() {
-            return h('div', {
+            return e('div', {
                 ref: (x) => {
                     this.tabsRef = x;
                 }
             }, [
-                h('ul', {
+                e('ul', {
                     className: 'nav nav-tabs',
                     role: "tablist"
                 }, [
-                    h('li', {
+                    e('li', {
                         role: 'presentation',
                         className: 'active'
-                    }, h('a', {
+                    }, e('a', {
                         href: '#overview',
                         role: 'tab',
                         dataToggle: 'tab',
@@ -168,13 +169,13 @@ define([
                     //     onClick: this.clickTab.bind(this)
                     // }, 'Info'))
                 ]),
-                h('div', {
+                e('div', {
                     className: 'tab-content',
                     style: {
                         paddingTop: '10px'
                     }
                 }, [
-                    h('div', {
+                    e('div', {
                         role: 'tabpanel',
                         className: 'tab-pane fade in active',
                         id: 'overview'
@@ -187,19 +188,19 @@ define([
                     // }, 'info here')
 
                 ])
-            ])
+            ]);
         }
 
         renderOverview() {
-            return h('div', null, [
+            return e('div', null, [
                 this.renderHeader(),
                 // The item area
-                h('div', {
+                e('div', {
                     style: {
                         position: 'relative'
                     }
                 }, [
-                    h('div', {
+                    e('div', {
                         style: {
                             position: 'absolute',
                             left: 0,
@@ -208,7 +209,7 @@ define([
                             bottom: 0
                         }
                     }, this.renderLoading()),
-                    h('div', {
+                    e('div', {
                         style: {
                             minHeight: '5em'
                         }
@@ -218,7 +219,7 @@ define([
         }
 
         renderNoItems() {
-            return h('div', null, 'Sorry, no items');
+            return e('div', null, 'Sorry, no items');
         }
 
         renderLoading() {
@@ -226,7 +227,7 @@ define([
                 return;
             }
 
-            return h('div', {
+            return e('div', {
                 style: {
                     position: 'absolute',
                     left: 0,
@@ -239,7 +240,7 @@ define([
                     justifyContent: 'center',
                     alignItems: 'center'
                 }
-            }, h('i', {
+            }, e('i', {
                 className: `fa fa-spinner fa-3x fa-pulse fa-fw`
             }));
         }

@@ -1,15 +1,16 @@
 define([
+    'React',
     './base/SetComponent',
     './base/Loader',
     'bootstrap'
-], function (
+], (
+    React,
     SetComponent,
     Loader
-) {
+) => {
     'use strict';
 
-    // Ugly but true - preact is loaded globally by Jupyter and not as an AMD module.
-    const { h, Component } = window.preact;
+    const { createElement: e, Component } = React;
 
     class ReadsAlignmentSet extends SetComponent {
         constructor(props) {
@@ -98,14 +99,14 @@ define([
                     ]
                 }
             ];
-            return h('div', null, h('table', {
+            return e('div', null, e('table', {
                 className: 'table table-bordered table-striped'
-            }, h('tbody', null,
+            }, e('tbody', null,
                 rows.map(({ label, value }) => {
-                    return h('tr', null, [
-                        h('th', { width: '20%', style: { textAlign: 'left' } }, label),
-                        h('td', null, value)
-                    ])
+                    return e('tr', null, [
+                        e('th', { width: '20%', style: { textAlign: 'left' } }, label),
+                        e('td', null, value)
+                    ]);
                 }))
             ));
         }
@@ -116,7 +117,7 @@ define([
             super(props);
         }
         render() {
-            return h(Loader, {
+            return e(Loader, {
                 ...this.props,
                 method: 'get_reads_alignment_set_v1',
                 module: ReadsAlignmentSet

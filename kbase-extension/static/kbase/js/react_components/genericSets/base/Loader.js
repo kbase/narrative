@@ -1,18 +1,19 @@
 define([
+    'React',
     'kb_common/jsonRpc/genericClient',
     'kb_common/jsonRpc/dynamicServiceClient',
     'kb_service/utils',
     '../../ShowError'
-], function (
+], (
+    React,
     ServiceClient,
     DynamicServiceClient,
     ServiceUtils,
     ShowError
-) {
+) => {
     'use strict';
 
-    // Ugly but true - preact is loaded globally by Jupyter and not as an AMD module.
-    const { h, Component } = window.preact;
+    const { createElement: e, Component } = React;
 
     class Loader extends Component {
         constructor(props) {
@@ -81,7 +82,7 @@ define([
                     this.setState({
                         state: 'error',
                         error
-                    })
+                    });
                 });
         }
 
@@ -128,7 +129,7 @@ define([
                                 error: false
                             }
                         }
-                    })
+                    });
                 })
                 .catch((error) => {
                     this.setState({
@@ -140,7 +141,7 @@ define([
                                 error
                             }
                         }
-                    })
+                    });
                 });
         }
 
@@ -168,14 +169,14 @@ define([
         }
 
         renderError() {
-            return h(ShowError, {
+            return e(ShowError, {
                 error: this.state.error
             });
         }
 
         renderLoading() {
-            return h('div', {
-            }, h('i', {
+            return e('div', {
+            }, e('i', {
                 className: `fa fa-spinner fa-3x fa-pulse fa-fw`
             }));
         }
@@ -188,7 +189,7 @@ define([
                 case 'error':
                     return this.renderError();
                 case 'loaded':
-                    return h(this.module, {
+                    return e(this.module, {
                         items: this.state.data.items,
                         currentItem: this.state.data.currentItem,
                         selectItem: (itemRef) => {
@@ -198,7 +199,6 @@ define([
             }
         }
     }
-
 
     return Loader;
 });

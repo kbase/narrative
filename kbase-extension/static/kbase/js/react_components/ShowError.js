@@ -1,10 +1,11 @@
 define([
-], function (
-) {
+    'React'
+], (
+    React
+) => {
     'use strict';
 
-    // Ugly but true - preact is loaded globally by Jupyter and not as an AMD module.
-    const { h, Component } = window.preact;
+    const { createElement: e, Component } = React;
 
     class ShowError extends Component {
         render() {
@@ -19,7 +20,7 @@ define([
             } else {
                 message = error;
             }
-            return h('div', {
+            return e('div', {
                 className: 'alert alert-danger'
             }, [
                 'Error: ',
@@ -27,4 +28,6 @@ define([
             ]);
         }
     }
+
+    return ShowError;
 });

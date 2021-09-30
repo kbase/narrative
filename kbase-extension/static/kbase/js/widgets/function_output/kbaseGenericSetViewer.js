@@ -5,20 +5,24 @@ in the "KBaseSets" type module.
 At present just ReadsAlignmentSet and AssemblySet are supported; others should display
 an error message.
 
-Note that this widget is really just a wrapper, most of the implementation is in the preact
+Note that this widget is really just a wrapper, most of the implementation is in the React
 components referred two in the AMD dependencies.
 */
 define([
+    'React',
+    'ReactDOM',
     'kbwidget',
     'kbaseAuthenticatedWidget',
     'narrativeConfig',
     'kb_common/jsonRpc/genericClient',
     'kb_service/utils',
-    'preact_components/genericSets/ReadsAlignmentSet',
-    'preact_components/genericSets/AssemblySet',
-    'preact_components/ShowError',
+    'react_components/genericSets/ReadsAlignmentSet',
+    'react_components/genericSets/AssemblySet',
+    'react_components/ShowError',
     'bootstrap'
-], function (
+], (
+    React,
+    ReactDOM,
     KBWidget,
     kbaseAuthenticatedWidget,
     Config,
@@ -27,14 +31,13 @@ define([
     ReadsAlignmentSet,
     AssemblySet,
     ShowError
-) {
+) => {
     'use strict';
 
-    // Ugly but true - preact is loaded globally by Jupyter and not as an AMD module.
-    const { h, Component, render } = window.preact;
+    const { createElement: e, Component } = React;
 
     /*
-    Main - a preact component which primarily dispatches to the component which
+    Main - a React component which primarily dispatches to the component which
     matches the type of object provided by the prop 'objectRef'.
     */
     class Main extends Component {
@@ -75,15 +78,7 @@ define([
                     const objectType = [objectInfo.typeModule, objectInfo.typeName].join('.');
 
                     const mapping = this.setTypes[objectType];
-                    console.warn('about to map...', infos, this.props, this.state);
                     if (mapping) {
-                        // return h(mapping.module, {
-                        //     token: this.props.token,
-                        //     workspaceURL: this.props.workspaceURL,
-                        //     serviceWizardURL: this.props.serviceWizardURL,
-                        //     objectRef: this.props.objectRef
-                        // });
-                        console.log('mapping', mapping);
                         this.setState({
                             setType: objectType,
                             module: mapping.module
@@ -108,14 +103,14 @@ define([
 
         render() {
             if (this.state.error) {
-                return h(ShowError, {
+                return e(ShowError, {
                     error: this.state.error
                 });
             } else {
                 if (!this.state.module) {
-                    return h('div', null, 'Loading! I guess...');
+                    return e('div', null, 'Loading! I guess...');
                 }
-                return h(this.state.module, {
+                return e(this.state.module, {
                     token: this.props.token,
                     workspaceURL: this.props.workspaceURL,
                     serviceWizardURL: this.props.serviceWizardURL,
@@ -130,14 +125,18 @@ define([
         parent: kbaseAuthenticatedWidget,
         // Leaving this here for now, as it documents the original intention of this widget, to support
         // all the following types within KBaseSets.
+        // Also, see: https://github.com/kbase/NarrativeViewers/blob/dd1eeeba0ba1faacd6c3596a9413109aeb82e32e/ui/narrative/methods/view_generic_set/spec.json#L21
         // methodMap: {
-        //     "KBaseSets.DifferentialExpressionMatrixSet": 'get_differential_expression_matrix_set_v1',
-        //     "KBaseSets.FeatureSetSet": 'get_feature_set_set_v1',
-        //     "KBaseSets.ExpressionSet": 'get_expression_set_v1',
-        //     "KBaseSets.ReadsAlignmentSet": 'get_reads_alignment_set_v1',
-        //     "KBaseSets.ReadsSet": 'get_reads_set_v1',
-        //     "KBaseSets.AssemblySet": 'get_assembly_set_v1',
-        //     "KBaseSets.GenomeSet": 'get_genome_set_v1',
+        //     "KBaseSets.DifferentialExpressionMatrixSet": 'get_differential_expression_matrix_set_v1', DUP - https://github.com/kbase/NarrativeViewers/blob/dd1eeeba0ba1faacd6c3596a9413109aeb82e32e/ui/narrative/methods/view_differential_expression_matrix_set/spec.json
+        //           and the current viewer does not work
+        //     "KBaseSets.FeatureSetSet": 'get_feature_set_set_v1', OK - not implemented - can't find any data, or any app which outputs this type, or accepts as input (according to the app browser)
+        //     "KBaseSets.ExpressionSet": 'get_expression_set_v1', DUP - https://github.com/kbase/NarrativeViewers/blob/dd1eeeba0ba1faacd6c3596a9413109aeb82e32e/ui/narrative/methods/view_rnaseq_sample_expression/spec.json
+        //           and the current viewer doesn't work
+        //     "KBaseSets.ReadsAlignmentSet": 'get_reads_alignment_set_v1', OK implemented
+        //     "KBaseSets.ReadsSet": 'get_reads_set_v1', DUP - https://github.com/kbase/NarrativeViewers/blob/dd1eeeba0ba1faacd6c3596a9413109aeb82e32e/ui/narrative/methods/view_reads_set/spec.json
+        //           current viewer works
+        //     "KBaseSets.AssemblySet": 'get_assembly_set_v1', OK - implemented 
+        //     "KBaseSets.GenomeSet": 'get_genome_set_v1', OK - not implemented
         // },
         version: "1.0.0",
 
@@ -145,14 +144,14 @@ define([
             try {
                 this._super(options);
 
-                render(h(Main, {
+                ReactDOM.render(e(Main, {
                     workspaceURL: Config.url('workspace'),
                     serviceWizardURL: Config.url('service_wizard'),
                     token: this.authToken(),
                     objectRef: this.options.upas.obj_ref
                 }), this.$elem[0]);
             } catch (ex) {
-                return render(h(ShowError({
+                return ReactDOM.render(e(ShowError({
                     error: ex
                 })), this.$elem[0]);
             }

@@ -32,14 +32,13 @@
 
 */
 
-define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
+define(['kbwidget', 'jquery', 'kbaseDeletePrompt', 'bootstrap'], (
     KBWidget,
-    bootstrap,
     $,
     kbaseDeletePrompt
 ) => {
     'use strict';
-    
+
     return KBWidget({
         name: 'kbaseTabs',
 
@@ -199,7 +198,6 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseDeletePrompt'], (
                         )
                 );
 
-            // TODO: only add the button in the first place if the tab can be deleted.
             if (!tab.canDelete) {
                 $nav.find('button').remove();
             }

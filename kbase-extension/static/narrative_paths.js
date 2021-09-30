@@ -380,9 +380,11 @@ require.config({
         'code-cell': 'kbase/js/widgets/function_output/codeCellLauncher',
 
         /*
-            preact components
+            React components
         */
-        preact_components: 'kbase/js/preact_components',
+        React: 'kbase/js/react_components/globalReact',
+        ReactDOM: 'kbase/js/react_components/globalReactDOM',
+        react_components: 'kbase/js/react_components',
 
         /***
          * END CUSTOM OUTPUT WIDGETS
@@ -527,5 +529,18 @@ require.config({
         bootstrap: {
             deps: ['jquery', 'jqueryui'],
         },
+        // React: {
+        //     init: () => {
+        //         'use strict';
+        //         alert('hello?');
+        //         return window.React;
+        //     }
+        // },
+        // ReactDOM: {
+        //     init: () => {
+        //         'use strict';
+        //         return window.ReactDOM;
+        //     }
+        // }
     },
 });

@@ -5,13 +5,15 @@ define([
     'kbaseNarrativeDataPanel',
     'kbaseNarrativeAppPanel',
     'kbaseNarrativeManagePanel',
+    'kbaseNarrativeOutlinePanel'
 ], (
     KBWidget,
     $,
     Jupyter,
     kbaseNarrativeDataPanel,
     kbaseNarrativeAppPanel,
-    kbaseNarrativeManagePanel
+    kbaseNarrativeManagePanel,
+    kbaseNarrativeOutlinePanel
 ) => {
     'use strict';
     return KBWidget({
@@ -30,6 +32,7 @@ define([
         heightPanelOffset: 110, // in px, space taken by just the header, the rest is for the full panel size, which is the
         // case for the narratives/jobs panels
         $narrativesWidget: null,
+        $outlineWidget: null,
         $overlay: null,
 
         hideButtonSize: 4, //percent width
@@ -74,6 +77,16 @@ define([
             this.$narrativesWidget = manageWidgets['kbaseNarrativeManagePanel'];
             const $managePanel = manageWidgets['panelSet'];
 
+            const outlineWidgets = this.buildPanelSet([
+                {
+                    name: 'kbaseNarrativeOutlinePanel',
+                    params: { autopopulate: false, showTitle: false },
+                },
+            ]);
+
+            this.$outlineWidget = outlineWidgets['kbaseNarrativeOutlinePanel'];
+            const $outlinePanel = outlineWidgets['panelSet'];
+
             this.$tabs = this.buildTabs(
                 [
                     {
@@ -85,6 +98,11 @@ define([
                         tabName: 'Narratives',
                         content: $managePanel,
                         widgets: [this.$narrativesWidget],
+                    },
+                    {
+                        tabName: 'Outline',
+                        content: $outlinePanel,
+                        widgets: [this.$outlineWidget],
                     },
                 ],
                 true
@@ -327,6 +345,7 @@ define([
                     kbaseNarrativeDataPanel: kbaseNarrativeDataPanel,
                     kbaseNarrativeAppPanel: kbaseNarrativeAppPanel,
                     kbaseNarrativeManagePanel: kbaseNarrativeManagePanel,
+                    kbaseNarrativeOutlinePanel: kbaseNarrativeOutlinePanel,
                 };
                 retObj[widgetInfo.name] = new constructor_mapping[widgetInfo.name](
                     $widgetDiv,
@@ -396,6 +415,7 @@ define([
 
             const fullSize = h - this.heightPanelOffset;
             this.$narrativesWidget.setHeight(fullSize);
+            this.$outlineWidget.setHeight(fullSize);
         },
 
         render: function () {

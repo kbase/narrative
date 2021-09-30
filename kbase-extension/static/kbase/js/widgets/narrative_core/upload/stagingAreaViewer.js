@@ -535,15 +535,18 @@ define([
 
                     const $upaField = $.jqElem('span').append('<i class="fa fa-spinner fa-spin">');
 
-                    const $upa = data.UPA
-                        ? $.jqElem('li')
-                              .append(
-                                  $.jqElem('span')
-                                      .addClass('kb-data-staging-metadata-list')
-                                      .append('Imported as')
-                              )
-                              .append($upaField)
-                        : '';
+                    const $upa = (() => {
+                        if (data.UPA) {
+                            return $('<li>')
+                                .append(
+                                    $('<span>')
+                                        .addClass('kb-data-staging-metadata-list')
+                                        .text('Imported as')
+                                )
+                                .append($upaField);
+                        }
+                        return '';
+                    })();
 
                     self.workspaceClient
                         .get_object_info_new({

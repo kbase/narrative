@@ -11,6 +11,7 @@ kbase-extension/log/
 kbase-extension/kbase_templates/old/
 kbase-extension/static/components/
 kbase-extension/static/ext_components/
+kbase-extension/static/ext_modules/
 node_modules/
 install.log
 /src/build/
@@ -24,6 +25,7 @@ narrative_venv/
 new_narrative_env_2/
 js-coverage
 cover
+_attic
 
 # From https://github.com/github/gitignore/blob/master/Python.gitignore
 
@@ -100,3 +102,6 @@ target/
 .vscode
 /tags
 .idea
+
+# For yarn users
+yarn.lock

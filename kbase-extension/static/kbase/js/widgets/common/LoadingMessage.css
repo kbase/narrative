@@ -1,0 +1,11 @@
+.LoadingMessage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 10px auto;
+    max-width: 30em;
+}
+
+.LoadingMessage-icon {
+    margin-left: 1ex;
+}

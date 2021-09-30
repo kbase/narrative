@@ -18,17 +18,17 @@ function mergeObjects(listOfObjects) {
         // Note that the source object is not copied, since we don't care if
         // there is object sharing in the result, we just want to ensure that
         // we don't overwrite properties of shared objects.
-        const mergedObj = JSON.parse(JSON.stringify(targetObj));
+        targetObj = JSON.parse(JSON.stringify(targetObj));
 
         Object.keys(sourceObj).forEach((key) => {
-            if (isSimpleObject(mergedObj[key]) && isSimpleObject(sourceObj[key])) {
-                mergedObj[key] = merge(mergedObj[key], sourceObj[key]);
+            if (isSimpleObject(targetObj[key]) && isSimpleObject(sourceObj[key])) {
+                targetObj[key] = merge(targetObj[key], sourceObj[key]);
             } else {
-                mergedObj[key] = sourceObj[key];
+                targetObj[key] = sourceObj[key];
             }
         });
 
-        return mergedObj;
+        return targetObj;
     }
 
     const objectsToMerge = listOfObjects.map((obj, index) => {
@@ -41,7 +41,6 @@ function mergeObjects(listOfObjects) {
             return JSON.parse(JSON.stringify(obj));
         }
     });
-
     let merged = objectsToMerge[0];
     for (let i = 1; i < objectsToMerge.length; i += 1) {
         merged = merge(merged, objectsToMerge[i]);
@@ -68,16 +67,16 @@ class NarrativeTesting {
 
         // Top level test cases provide defaults (non-env-specific) per-case
         // test data.
-        const caseData = this.testData.cases[this.caseLabel];
+        const caseData = this.testData.cases[this.caseLabel] || {};
 
         // Each env can establish defaults (e.g. narrative id)
-        const envDefaults = this.testData[env].defaults;
+        const envDefaults = this.testData.envs[env].defaults || {};
 
         // Each test case is defined per environment as well, as the
         // state of services will be different.
-        const envcaseData = this.testData[env][this.caseLabel];
+        const envCaseData = this.testData.envs[env][this.caseLabel];
 
-        return mergeObjects([caseData, envDefaults, envcaseData]);
+        return mergeObjects([caseData, envDefaults, envCaseData]);
     }
 
     /**
@@ -114,12 +113,20 @@ class NarrativeTesting {
 
         await clickWhenReady(loginButton);
 
-        const realnameElement = await $('[data-testid="realname"]');
-        const usernameElement = await $('[data-testid="username"]');
-        await browser.waitUntil(async () => {
-            const text = await realnameElement.getText();
-            return text && text.length > 0;
-        });
+        const realnameElement = await $('[data-element="realname"]');
+        await realnameElement.waitForExist();
+        await browser.waitUntil(
+            async () => {
+                const text = await realnameElement.getText();
+                return text && text.length > 0;
+            },
+            {
+                timeoutMsg: 'Cannot locate realname element in login control',
+            }
+        );
+
+        const usernameElement = await $('[data-element="username"]');
+        await usernameElement.waitForExist();
         const realname = await realnameElement.getText();
         const username = await usernameElement.getText();
         console.warn(`Signed in as user "${realname}" (${username})`);

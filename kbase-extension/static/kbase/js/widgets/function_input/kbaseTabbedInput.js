@@ -13,7 +13,6 @@ define(['kbwidget', 'bootstrap', 'jquery', 'kbaseTabs', 'kbaseNarrativeMethodInp
     kbaseNarrativeMethodInput
 ) => {
     'use strict';
-
     return KBWidget({
         name: 'kbaseTabbedInput',
         parent: kbaseNarrativeMethodInput,

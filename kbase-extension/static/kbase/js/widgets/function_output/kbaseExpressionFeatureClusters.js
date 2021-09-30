@@ -248,7 +248,7 @@ define([
                 content: $tabClusters,
                 canDelete: false,
                 show: false,
-                whenShown: ($tab) => {
+                whenShown: () => {
                     $clustersTable.DataTable().columns.adjust().draw();
                 }
             });
@@ -271,8 +271,8 @@ define([
                 'clusters-table" \
                 class="table table-bordered table-striped ClustersTable">\
                 </table>'
-            )
-            
+            );
+
             $clustersTable.appendTo($tabClusters);
 
             $clustersTable.dataTable({
@@ -335,7 +335,7 @@ define([
                 content: featureTabDiv,
                 canDelete: false,
                 show: false,
-                whenShown: ($tab) => {
+                whenShown: () => {
                     featureTabDiv.find('table').DataTable().columns.adjust().draw();
                 }
             });
@@ -606,7 +606,7 @@ define([
                 columns.push({ sTitle: 'Cluster', mData: 'cid', width: '7em' });
             }
             columns.push({ sTitle: 'Aliases', mData: 'ali' });
-            columns.push({ sTitle: 'Genome', mData: 'gid'});
+            columns.push({ sTitle: 'Genome', mData: 'gid' });
             // Leave this disabled approach to controlling width of this column
             // for now, while sorting out the best solution.
             // ,render: (data, type, row, meta) => {
@@ -636,10 +636,9 @@ define([
         },
 
         makeRow: function (name, value) {
-            const $row = $('<tr>')
+            return $('<tr>')
                 .append($('<th>').css('width', '16em').css('text-align', 'left').append(name))
                 .append($('<td>').append(value));
-            return $row;
         },
 
         getData: function () {
